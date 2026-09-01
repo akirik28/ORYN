@@ -1,3 +1,5 @@
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+
 /**
  * Turns a caught provider error into the message a student should see when the fault is
  * ours, not theirs — or null when it isn't one of those and the caller's own wording applies.
@@ -19,17 +21,26 @@
  *
  * These strings are persisted (advisor_messages.error_message) and rendered, so they carry
  * no provider name, model, status code, or upstream text.
+ *
+ * `locale` is additive; the one caller that passes a custom `subject` (app/(app)/plan/actions.ts,
+ * "Your plan generator") isn't touched by this pass and keeps calling with no locale argument,
+ * so it stays English exactly as before — only lib/ai/advisor-failure.ts's call (default
+ * subject, now translated alongside it) gets the new Turkish branch.
  */
-export function aiServiceFailureMessage(error: unknown, subject = "The counselor"): string | null {
+export function aiServiceFailureMessage(error: unknown, subject = "The counselor", locale: Locale = DEFAULT_LOCALE): string | null {
   const status = typeof error === "object" && error !== null && "status" in error ? (error as { status: unknown }).status : undefined;
   if (typeof status !== "number") return null;
 
+  const resolvedSubject = locale === "tr" && subject === "The counselor" ? "Danışman" : subject;
+
   if (status === 429 || status >= 500) {
-    return `${subject} is busy right now. Try again in a few minutes.`;
+    return locale === "tr" ? `${resolvedSubject} şu anda meşgul. Birkaç dakika sonra tekrar dene.` : `${resolvedSubject} is busy right now. Try again in a few minutes.`;
   }
   // Account or configuration. No retry prompt: retrying is exactly what will not work.
   if (status === 400 || status === 401 || status === 403) {
-    return `${subject} is temporarily unavailable. This isn't something you did — it needs attention on our side.`;
+    return locale === "tr"
+      ? `${resolvedSubject} geçici olarak kullanılamıyor. Bu senin yaptığın bir şey değil — bizim tarafımızda ilgilenilmesi gerekiyor.`
+      : `${resolvedSubject} is temporarily unavailable. This isn't something you did — it needs attention on our side.`;
   }
   return null;
 }

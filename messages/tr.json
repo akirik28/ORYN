@@ -937,5 +937,74 @@
       "visitOfficialPage": "Resmi sayfayı ziyaret et",
       "any": "herhangi"
     }
+  },
+  "advisor": {
+    "page": {
+      "eyebrow": "Danışman",
+      "title": "Strateji odan.",
+      "description": "Oryn, gerçek profilinden yola çıkarak yanıt verir — dürüst cevap daha az yapman olduğunda bile.",
+      "talkItThrough": "Konuşarak değerlendir",
+      "talkItThroughDescription": "Profilin, hedeflerin veya sırada ne yapman gerektiği hakkında istediğini sor. Oryn kayıtlarından yola çıkarak yanıt verir — dürüst cevap daha az yapman olduğunda bile."
+    },
+    "chat": {
+      "startHere": "Buradan başla",
+      "headline": "Oryn'a ne yapman gerektiğini sor — ya da bir şeyin gerçekten yapmaya değip değmediğini.",
+      "subtext": "Oryn, profilin hakkında zaten bildiklerinden yola çıkarak yanıt verir ve dürüst cevap daha az yapman olduğunda bunu sana söyler.",
+      "prompts": {
+        "weakestPart": "Profilimin en zayıf yanı ne?",
+        "anotherClub": "Başka bir kulüp kursam mı?",
+        "thisWeek": "Bu hafta ne yapmalıyım?",
+        "universityListRealistic": "Üniversite listem gerçekçi mi?"
+      },
+      "couldntComplete": "Oryn bu yanıtı tamamlayamadı.",
+      "tryAgain": "Tekrar dene",
+      "placeholderReady": "Oryn'a sor…",
+      "placeholderNotConfigured": "Yapay zeka danışmanı henüz yapılandırılmadı",
+      "sendAriaLabel": "Mesajı gönder"
+    },
+    "usageMeter": {
+      "thisMonth": "Bu ay",
+      "ariaUnknown": "Bu ay kalan danışman mesaj sayısı yüklenemedi. Aylık hakkın {limit}.",
+      "ariaKnown": "Bu ay {limit} danışman mesajından {remaining} tanesi kaldı",
+      "unknown": "Kaç mesaj kullandığını yükleyemedik. {limit} mesajlık hakkın yine de geçerli ve {date} tarihinde yenilenir.",
+      "exhausted": "{limit} mesajın tamamı kullanıldı. {date} tarihinde yenilenir.",
+      "low": "Sadece {remaining} mesaj kaldı. {date} tarihinde yenilenir.",
+      "normal": "{remaining} danışman mesajı kaldı. {date} tarihinde yenilenir."
+    },
+    "strategyPanel": {
+      "ariaLabel": "Oryn'ın üzerinden çalıştığı bilgiler",
+      "whereYouStand": "Şu anda durumun",
+      "currentFocus": "Şu anki odak",
+      "nextDecision": "Sıradaki karar",
+      "timeAvailable": "Ayrılabilecek zaman",
+      "pastDue": "süresi geçti",
+      "today": "bugün",
+      "tomorrow": "yarın",
+      "inDays": "{days} gün sonra",
+      "timeBudget": {
+        "under2h": "Haftada 2 saatten az",
+        "2to5h": "Haftada 2–5 saat",
+        "5to10h": "Haftada 5–10 saat",
+        "10hPlus": "Haftada 10+ saat"
+      },
+      "basedOnSignals": "{count, plural, one {{formatted} profil sinyaline} other {{formatted} profil sinyaline}} dayanıyor"
+    },
+    "priorities": {
+      "level": {
+        "low": "Düşük",
+        "medium": "Orta",
+        "high": "Yüksek"
+      },
+      "whyThis": "Neden bu",
+      "impactEffort": "{impact} etki · {effort} emek",
+      "needsMoreInfoTitle": "Oryn'ın güvenilir öneriler yapabilmesi için biraz daha bilgiye ihtiyacı var",
+      "needsMoreInfoDescription": "Profil tamamlanma oranı: %{percent}. Aşağıdakiler önce eklemeye değer en yüksek etkili öğeler.",
+      "completeProfile": "Profilini tamamla",
+      "noRecommendationsTitle": "Şu anda doğrulanmış, uygun bir öneri yok",
+      "noRecommendationsDescription": "Oryn yalnızca doğrulayabildiği ve uygun olduğunu onaylayabildiği fırsatları ve gereklilikleri önerir — tahmin yürütmez. Daha fazla doğrulanmış veri geldikçe tekrar kontrol et, ya da doğrudan Fırsatlar ve Üniversiteler'i keşfet.",
+      "yourPriorities": "Önceliklerin",
+      "oneThingNotToDo": "Yapılmaması gereken bir şey",
+      "worthConsidering": "Değerlendirmeye değer"
+    }
   }
 }

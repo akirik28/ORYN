@@ -26,14 +26,18 @@ function recommendationId(candidate: RankedCandidate["candidate"]): string {
   return `${candidate.source.kind}:${sourceId(candidate)}`;
 }
 
-function nextActionFor(candidate: RankedCandidate["candidate"]): { label: string; type: NextActionType; href: string } {
+/** The counselor's own CTA button label — found still English-only while this candidate's
+ * `why` (a few lines below) was already correctly locale-threaded; the same class of gap
+ * CEO's morning sweep found in the AI prompt layer, this time in a plain button label. */
+function nextActionFor(candidate: RankedCandidate["candidate"], locale: Locale): { label: string; type: NextActionType; href: string } {
+  const tr = locale === "tr";
   switch (candidate.source.kind) {
     case "opportunity":
-      return { label: "View opportunity", type: "VIEW", href: `/opportunities/${candidate.source.opportunityId}` };
+      return { label: tr ? "Fırsatı görüntüle" : "View opportunity", type: "VIEW", href: `/opportunities/${candidate.source.opportunityId}` };
     case "requirement_action":
-      return { label: "Review university requirement", type: "VIEW", href: `/universities/${candidate.source.universityId}` };
+      return { label: tr ? "Üniversite gerekliliğini incele" : "Review university requirement", type: "VIEW", href: `/universities/${candidate.source.universityId}` };
     case "profile_task":
-      return { label: "Update profile", type: "COMPLETE_PROFILE", href: "/profile" };
+      return { label: tr ? "Profili güncelle" : "Update profile", type: "COMPLETE_PROFILE", href: "/profile" };
   }
 }
 
@@ -113,6 +117,6 @@ export function buildRecommendation(ranked: RankedCandidate, state: CounselorSta
     confidence: ranked.confidence,
     evidence: [{ sourceType: candidate.source.kind, sourceId: sourceId(candidate), sourceUrl: candidate.sourceUrl, verificationState: candidate.verificationState }],
     warnings: ranked.eligibility.verdict === "unknown" ? ranked.eligibility.notes : [],
-    nextAction: nextActionFor(candidate),
+    nextAction: nextActionFor(candidate, locale),
   };
 }

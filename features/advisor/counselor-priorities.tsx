@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Compass, TriangleAlert } from "lucide-react";
 import { SectionHeader } from "@/components/oryn/section-header";
 import { Eyebrow } from "@/components/oryn/eyebrow";
@@ -7,9 +8,15 @@ import { EmptyState } from "@/components/oryn/empty-state";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { StatusBadge } from "@/components/oryn/status-badge";
 import { Button } from "@/components/ui/button";
+import { resolveLocale } from "@/lib/i18n/locale";
+import type { Locale } from "@/lib/i18n/config";
 import type { CounselorRecommendation, CounselorResult } from "@/lib/counselor";
 
-const LEVEL_LABEL = { low: "Low", medium: "Medium", high: "High" } as const;
+/** Same TS2589-adjacent workaround as every other file in this i18n effort that passes a
+ * next-intl translator across a function boundary (see app/(app)/universities/[id]/page.tsx's
+ * own `Translator` alias) — the real type's `key` is a strict per-namespace literal union,
+ * which can't be assigned to a plain `(key: string) => string` parameter without this. */
+type Translator = (key: string, values?: Record<string, string | number>) => string;
 
 /**
  * One recommendation, argued rather than listed. UI-V3 § 14 asks the counselor to show its
@@ -21,7 +28,18 @@ const LEVEL_LABEL = { low: "Low", medium: "Medium", high: "High" } as const;
  * should sit in a visible frame), so the rail is doing that same "these belong together"
  * job inside a card instead of on bare background.
  */
-function RecommendationCard({ recommendation, index }: { recommendation: CounselorRecommendation; index: number }) {
+function RecommendationCard({
+  recommendation,
+  index,
+  locale,
+  t,
+}: {
+  recommendation: CounselorRecommendation;
+  index: number;
+  locale: Locale;
+  /** Scoped to advisor.priorities. */
+  t: Translator;
+}) {
   const unknownEligibility = recommendation.eligibility.verdict === "unknown";
   return (
     <li className="relative py-5 pl-5 before:absolute before:inset-y-0 before:left-0 before:w-px before:rounded-full before:bg-border before:content-['']">
@@ -37,7 +55,7 @@ function RecommendationCard({ recommendation, index }: { recommendation: Counsel
 
       {recommendation.why.length > 0 ? (
         <div className="mt-3.5">
-          <Eyebrow rule={false}>Why this</Eyebrow>
+          <Eyebrow rule={false} locale={locale}>{t("whyThis")}</Eyebrow>
           <ul className="mt-2 max-w-2xl space-y-1.5 text-sm leading-relaxed text-ink-2">
             {recommendation.why.map((line) => (
               <li key={line}>{line}</li>
@@ -47,7 +65,7 @@ function RecommendationCard({ recommendation, index }: { recommendation: Counsel
       ) : null}
 
       <p className="mt-3 text-xs text-ink-3">
-        {LEVEL_LABEL[recommendation.impact]} impact · {LEVEL_LABEL[recommendation.effort]} effort
+        {t("impactEffort", { impact: t(`level.${recommendation.impact}`), effort: t(`level.${recommendation.effort}`) })}
       </p>
 
       {unknownEligibility && recommendation.warnings[0] ? (
@@ -73,7 +91,9 @@ function RecommendationCard({ recommendation, index }: { recommendation: Counsel
  * came from the deterministic pipeline (lib/counselor/pipeline.ts) with real evidence
  * attached — no scores, no internal breakdown, no invented copy.
  */
-export function CounselorPriorities({ result }: { result: CounselorResult }) {
+export async function CounselorPriorities({ result }: { result: CounselorResult }) {
+  const locale = await resolveLocale();
+  const t = (await getTranslations("advisor.priorities")) as Translator;
   const doItems = result.recommendations.filter((r) => r.recommendationClass === "do");
   const considerItems = result.recommendations.filter((r) => r.recommendationClass === "consider");
   const avoidItem = result.recommendations.find((r) => r.recommendationClass === "avoid_for_now");
@@ -83,11 +103,11 @@ export function CounselorPriorities({ result }: { result: CounselorResult }) {
       <div className="space-y-6">
         <EmptyState
           icon={Compass}
-          title="Oryn needs a bit more information before it can make confident recommendations"
-          description={`Profile completeness: ${result.profileReadiness.completenessPercent}%. The items below are the highest-value ones to add first.`}
+          title={t("needsMoreInfoTitle")}
+          description={t("needsMoreInfoDescription", { percent: result.profileReadiness.completenessPercent })}
           action={
             <Button size="sm" render={<Link href="/profile" />} nativeButton={false}>
-              Complete your profile
+              {t("completeProfile")}
             </Button>
           }
         />
@@ -95,7 +115,7 @@ export function CounselorPriorities({ result }: { result: CounselorResult }) {
           <div className="glass-card-fast rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7">
             <ul>
               {doItems.map((r, i) => (
-                <RecommendationCard key={r.id} recommendation={r} index={i + 1} />
+                <RecommendationCard key={r.id} recommendation={r} index={i + 1} locale={locale} t={t} />
               ))}
             </ul>
           </div>
@@ -105,23 +125,17 @@ export function CounselorPriorities({ result }: { result: CounselorResult }) {
   }
 
   if (result.recommendations.length === 0) {
-    return (
-      <EmptyState
-        icon={Compass}
-        title="No verified, eligible recommendations right now"
-        description="Oryn only recommends opportunities and requirements it can verify and confirm you're eligible for — it doesn't guess. Check back as more verified data becomes available, or explore Opportunities and Universities directly."
-      />
-    );
+    return <EmptyState icon={Compass} title={t("noRecommendationsTitle")} description={t("noRecommendationsDescription")} />;
   }
 
   return (
     <div className="space-y-6">
       {doItems.length > 0 ? (
         <section className="glass-card space-y-3 rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7">
-          <SectionHeader title="Your priorities" />
+          <SectionHeader title={t("yourPriorities")} />
           <ul>
             {doItems.map((r, i) => (
-              <RecommendationCard key={r.id} recommendation={r} index={i + 1} />
+              <RecommendationCard key={r.id} recommendation={r} index={i + 1} locale={locale} t={t} />
             ))}
           </ul>
         </section>
@@ -129,7 +143,7 @@ export function CounselorPriorities({ result }: { result: CounselorResult }) {
 
       {avoidItem ? (
         <div className="glass-card-offset rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7">
-          <InsightCard variant="avoid" eyebrow="One thing not to do" title={avoidItem.title}>
+          <InsightCard variant="avoid" eyebrow={t("oneThingNotToDo")} title={avoidItem.title}>
             {avoidItem.why[0]}
           </InsightCard>
         </div>
@@ -137,10 +151,10 @@ export function CounselorPriorities({ result }: { result: CounselorResult }) {
 
       {considerItems.length > 0 ? (
         <section className="glass-card-offset2 space-y-3 rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7">
-          <SectionHeader title="Worth considering" />
+          <SectionHeader title={t("worthConsidering")} />
           <ul>
             {considerItems.map((r, i) => (
-              <RecommendationCard key={r.id} recommendation={r} index={i + 1} />
+              <RecommendationCard key={r.id} recommendation={r} index={i + 1} locale={locale} t={t} />
             ))}
           </ul>
         </section>

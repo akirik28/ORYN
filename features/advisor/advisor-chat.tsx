@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { ArrowUp, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AdvisorMessage, AdvisorMessageThinking } from "@/components/oryn/advisor-message";
 import { Eyebrow } from "@/components/oryn/eyebrow";
 import { sendAdvisorMessage, retryAdvisorMessage } from "@/app/(app)/advisor/actions";
+import type { Locale } from "@/lib/i18n/config";
 import type { AdvisorMessage as AdvisorMessageRow } from "@/types/database";
 
 interface LocalMessage {
@@ -20,16 +22,6 @@ interface LocalMessage {
   errorMessage?: string;
 }
 
-// Openers phrased as decisions a student is actually weighing, not feature prompts. The
-// second one matters most: it invites Oryn to say *no*, which is the behaviour the master
-// spec's Phase 39 is built around and the thing that most distinguishes it from a chatbot.
-const SUGGESTED_PROMPTS = [
-  "What's the weakest part of my profile?",
-  "Should I start another club?",
-  "What should I do this week?",
-  "Is my university list realistic?",
-];
-
 export function AdvisorChat({
   conversationId,
   initialMessages,
@@ -39,6 +31,21 @@ export function AdvisorChat({
   initialMessages: AdvisorMessageRow[];
   aiConfigured: boolean;
 }) {
+  const t = useTranslations("advisor.chat");
+  const locale = useLocale() as Locale;
+  // Openers phrased as decisions a student is actually weighing, not feature prompts. The
+  // second one matters most: it invites Oryn to say *no*, which is the behaviour the master
+  // spec's Phase 39 is built around and the thing that most distinguishes it from a chatbot.
+  // Translated, not just labeled — clicking one sends its actual text as the chat message
+  // (see submit() below), and the AI already answers in the student's language
+  // (lib/ai/output-language.ts), so a Turkish prompt here keeps the whole exchange coherent
+  // rather than opening a Turkish conversation with an English first line.
+  const SUGGESTED_PROMPTS = [
+    t("prompts.weakestPart"),
+    t("prompts.anotherClub"),
+    t("prompts.thisWeek"),
+    t("prompts.universityListRealistic"),
+  ];
   const [convId, setConvId] = useState(conversationId);
   const [messages, setMessages] = useState<LocalMessage[]>(
     initialMessages.map((m) => ({
@@ -126,14 +133,11 @@ export function AdvisorChat({
       <div ref={scrollRef} className="flex-1 space-y-10 overflow-y-auto pb-6">
         {messages.length === 0 ? (
           <div className="max-w-2xl">
-            <Eyebrow>Start here</Eyebrow>
+            <Eyebrow locale={locale}>{t("startHere")}</Eyebrow>
             <p className="mt-4 font-display text-2xl leading-[1.2] tracking-[-0.02em] text-balance">
-              Ask Oryn what to do — or whether something is worth doing at all.
+              {t("headline")}
             </p>
-            <p className="mt-3 leading-relaxed text-ink-2">
-              Oryn answers from what it already knows about your profile, and will tell you when
-              the honest answer is to do less.
-            </p>
+            <p className="mt-3 leading-relaxed text-ink-2">{t("subtext")}</p>
             <div className="mt-6 flex flex-col items-start gap-1">
               {SUGGESTED_PROMPTS.map((prompt) => (
                 <button
@@ -158,7 +162,7 @@ export function AdvisorChat({
             ) : message.failed ? (
               <AdvisorMessage key={message.id}>
                 <p className="text-ink-3">
-                  {message.errorMessage || "Oryn couldn't complete this response."}
+                  {message.errorMessage || t("couldntComplete")}
                 </p>
                 <p className="mt-3">
                   <Button
@@ -168,7 +172,7 @@ export function AdvisorChat({
                     disabled={retryingId === message.id}
                   >
                     <RotateCcw className="size-3.5" />
-                    Try again
+                    {t("tryAgain")}
                   </Button>
                 </p>
               </AdvisorMessage>
@@ -211,12 +215,12 @@ export function AdvisorChat({
               submit(input);
             }
           }}
-          placeholder={aiConfigured ? "Ask Oryn…" : "The AI counselor isn't configured yet"}
+          placeholder={aiConfigured ? t("placeholderReady") : t("placeholderNotConfigured")}
           disabled={!aiConfigured}
           rows={1}
           className="max-h-32 min-h-9 flex-1 resize-none"
         />
-        <Button type="submit" size="icon" aria-label="Send message" disabled={!aiConfigured || isPending || !input.trim()}>
+        <Button type="submit" size="icon" aria-label={t("sendAriaLabel")} disabled={!aiConfigured || isPending || !input.trim()}>
           <ArrowUp className="size-4" />
         </Button>
       </form>

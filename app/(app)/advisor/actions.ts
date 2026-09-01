@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { generateAdvisorReply } from "@/lib/ai/advisor-chat";
 import { classifyAdvisorFailure } from "@/lib/ai/advisor-failure";
 import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
@@ -11,15 +12,26 @@ import { logEvent } from "@/lib/analytics/log";
 import { isUuidLike } from "@/lib/validation/uuid";
 import type { AIMessage } from "@/lib/ai/provider";
 
+// Student-facing strings in this file are additive-locale-branched inline (`tr ?  : `),
+// matching lib/counselor/copy.ts's own established shape, rather than routed through the
+// message catalog — these are Server Action return values, not React-tree copy.
+// RateLimitExceededError's own default message (thrown from lib/ai/rate-limit.ts, caught
+// and passed through verbatim at both `error.message` sites below) is deliberately NOT
+// translated here: that class is shared by 15+ unrelated Server Actions across the app
+// (messages, plan, connections, profile, entities, onboarding, export-data, social...) —
+// translating its default would be an app-wide decision, not one this file's own scope covers.
+
 export async function sendAdvisorMessage(
   conversationId: string | null,
   content: string
 ): Promise<{ conversationId: string; assistantMessageId?: string; content?: string; error?: string }> {
   const session = await requireUser();
   const userId = session.userId!;
+  const locale = await resolveLocale();
+  const tr = locale === "tr";
   const trimmed = content.trim();
-  if (!trimmed) return { conversationId: conversationId ?? "", error: "Message can't be empty." };
-  if (conversationId && !isUuidLike(conversationId)) return { conversationId: "", error: "Invalid conversation." };
+  if (!trimmed) return { conversationId: conversationId ?? "", error: tr ? "Mesaj boş olamaz." : "Message can't be empty." };
+  if (conversationId && !isUuidLike(conversationId)) return { conversationId: "", error: tr ? "Geçersiz konuşma." : "Invalid conversation." };
 
   try {
     await assertWithinAIRateLimit(userId, "advisor_chat", { maxCalls: 30, windowMinutes: 10 });
@@ -35,7 +47,9 @@ export async function sendAdvisorMessage(
   if (await isMonthlyQuotaExhausted(userId, "advisor_chat")) {
     return {
       conversationId: conversationId ?? "",
-      error: "You've used this month's counselor messages. Your allowance resets at the start of next month.",
+      error: tr
+        ? "Bu ayki danışman mesajlarını kullandın. Hakkın gelecek ayın başında yenilenir."
+        : "You've used this month's counselor messages. Your allowance resets at the start of next month.",
     };
   }
 
@@ -51,7 +65,7 @@ export async function sendAdvisorMessage(
     // avoiding silently inserting orphaned advisor_messages rows against someone else's
     // conversation_id and returning a friendly error instead of a confusing empty thread.
     const { data: owned } = await supabase.from("advisor_conversations").select("id").eq("id", convId).eq("user_id", userId).maybeSingle();
-    if (!owned) return { conversationId: "", error: "Conversation not found." };
+    if (!owned) return { conversationId: "", error: tr ? "Konuşma bulunamadı." : "Conversation not found." };
   }
 
   if (!convId) {
@@ -61,7 +75,7 @@ export async function sendAdvisorMessage(
       .select()
       .single();
     if (error || !conversation) {
-      return { conversationId: "", error: "Couldn't start a new conversation." };
+      return { conversationId: "", error: tr ? "Yeni bir konuşma başlatılamadı." : "Couldn't start a new conversation." };
     }
     convId = conversation.id;
   }
@@ -80,7 +94,7 @@ export async function sendAdvisorMessage(
     .from("advisor_messages")
     .insert({ conversation_id: convId, user_id: userId, role: "user", content: trimmed });
   if (userMessageError) {
-    return { conversationId: convId, error: "Couldn't save your message." };
+    return { conversationId: convId, error: tr ? "Mesajın kaydedilemedi." : "Couldn't save your message." };
   }
   await logEvent(userId, "advisor_message_sent", { conversationId: convId });
 
@@ -100,7 +114,7 @@ export async function sendAdvisorMessage(
     // docs/handoffs/claude-a-to-claude-b.md). Now a failed turn gets its own row, so a
     // reload shows a retry-able failed bubble instead of a silent gap.
     console.error("[advisor] failed to generate reply", error);
-    const { status, errorMessage } = classifyAdvisorFailure(error);
+    const { status, errorMessage } = classifyAdvisorFailure(error, locale);
     const { data: failedMessage } = await supabase
       .from("advisor_messages")
       .insert({ conversation_id: convId, user_id: userId, role: "assistant", content: null, status, error_message: errorMessage })
@@ -119,7 +133,9 @@ export async function sendAdvisorMessage(
 export async function retryAdvisorMessage(failedMessageId: string): Promise<{ content?: string; error?: string }> {
   const session = await requireUser();
   const userId = session.userId!;
-  if (!isUuidLike(failedMessageId)) return { error: "Invalid message." };
+  const locale = await resolveLocale();
+  const tr = locale === "tr";
+  if (!isUuidLike(failedMessageId)) return { error: tr ? "Geçersiz mesaj." : "Invalid message." };
 
   const supabase = await createClient();
 
@@ -130,7 +146,7 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
     .eq("user_id", userId) // ownership re-check, same discipline as sendAdvisorMessage above
     .maybeSingle();
   if (!failedMessage || failedMessage.role !== "assistant" || failedMessage.status !== "failed") {
-    return { error: "This message can't be retried." };
+    return { error: tr ? "Bu mesaj tekrar denenemez." : "This message can't be retried." };
   }
 
   try {
@@ -143,7 +159,11 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
   // A retry spends real model budget like any other call, so it draws on the same
   // allowance rather than offering a way around it.
   if (await isMonthlyQuotaExhausted(userId, "advisor_chat")) {
-    return { error: "You've used this month's counselor messages. Your allowance resets at the start of next month." };
+    return {
+      error: tr
+        ? "Bu ayki danışman mesajlarını kullandın. Hakkın gelecek ayın başında yenilenir."
+        : "You've used this month's counselor messages. Your allowance resets at the start of next month.",
+    };
   }
 
   const { data: allMessages } = await supabase
@@ -158,7 +178,7 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
   // preceding row is always that user message, regardless of what's been sent since.
   const userMessage = failedIndex > 0 ? messages[failedIndex - 1] : null;
   if (!userMessage || userMessage.role !== "user" || userMessage.content === null) {
-    return { error: "Couldn't find the original message to retry." };
+    return { error: tr ? "Tekrar denenecek orijinal mesaj bulunamadı." : "Couldn't find the original message to retry." };
   }
 
   const history: AIMessage[] = messages
@@ -173,7 +193,7 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
     return { content: reply };
   } catch (error) {
     console.error("[advisor] retry failed", error);
-    const { status, errorMessage } = classifyAdvisorFailure(error);
+    const { status, errorMessage } = classifyAdvisorFailure(error, locale);
     await supabase.from("advisor_messages").update({ status, error_message: errorMessage }).eq("id", failedMessageId);
     revalidatePath("/advisor");
     return { error: errorMessage };

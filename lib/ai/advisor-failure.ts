@@ -1,5 +1,6 @@
 import { AIProviderNotConfiguredError, AIResponseIncompleteError } from "./provider";
 import { aiServiceFailureMessage } from "./service-failure";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 export interface AdvisorFailureClassification {
   status: "failed";
@@ -12,10 +13,18 @@ export interface AdvisorFailureClassification {
  * send (app/(app)/advisor/actions.ts) and the retry action use identical wording, and so
  * the raw error (which may contain connection details, provider internals, etc. — see
  * SECURITY.md on not leaking internals) never reaches the client or the database.
+ *
+ * `locale` is additive, threaded from the two Server Actions above via `resolveLocale()`.
  */
-export function classifyAdvisorFailure(error: unknown): AdvisorFailureClassification {
+export function classifyAdvisorFailure(error: unknown, locale: Locale = DEFAULT_LOCALE): AdvisorFailureClassification {
+  const tr = locale === "tr";
   if (error instanceof AIProviderNotConfiguredError) {
-    return { status: "failed", errorMessage: "The AI Advisor isn't configured yet. See API_SETUP.md to add an Anthropic API key." };
+    return {
+      status: "failed",
+      errorMessage: tr
+        ? "Yapay zeka danışmanı henüz yapılandırılmadı. Bir Anthropic API anahtarı eklemek için API_SETUP.md dosyasına bakın."
+        : "The AI Advisor isn't configured yet. See API_SETUP.md to add an Anthropic API key.",
+    };
   }
   if (error instanceof AIResponseIncompleteError) {
     // The advisor ran out of room to answer rather than actually erroring. Retrying is
@@ -26,7 +35,9 @@ export function classifyAdvisorFailure(error: unknown): AdvisorFailureClassifica
     // advisor_messages row and shown to the student.
     return {
       status: "failed",
-      errorMessage: "The advisor ran out of room before it finished answering. Try again, or ask a more focused question.",
+      errorMessage: tr
+        ? "Danışman yanıtı bitirmeden önce yer sıkıntısı yaşadı. Tekrar dene, ya da daha odaklı bir soru sor."
+        : "The advisor ran out of room before it finished answering. Try again, or ask a more focused question.",
     };
   }
   /**
@@ -35,8 +46,8 @@ export function classifyAdvisorFailure(error: unknown): AdvisorFailureClassifica
    * succeed. Shared with the weekly-plan action via lib/ai/service-failure.ts — see that
    * module for why it classifies on status rather than on the provider's message text.
    */
-  const serviceMessage = aiServiceFailureMessage(error);
+  const serviceMessage = aiServiceFailureMessage(error, undefined, locale);
   if (serviceMessage) return { status: "failed", errorMessage: serviceMessage };
 
-  return { status: "failed", errorMessage: "Something went wrong. Please try again." };
+  return { status: "failed", errorMessage: tr ? "Bir şeyler ters gitti. Lütfen tekrar dene." : "Something went wrong. Please try again." };
 }

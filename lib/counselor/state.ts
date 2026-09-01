@@ -90,7 +90,7 @@ export async function getCounselorState(userId: string, locale: Locale = DEFAULT
   const supabase = await createClient();
 
   // Recompute-on-read, same convention as the Opportunities/Dashboard pages already use.
-  await refreshOpportunityMatches(userId);
+  await refreshOpportunityMatches(userId, locale);
 
   const [advisor, facts, profileRes, scoresRes, skillsRes, featuredRes, contactRes, matchesRes] = await Promise.all([
     buildStudentAdvisorContext(userId),

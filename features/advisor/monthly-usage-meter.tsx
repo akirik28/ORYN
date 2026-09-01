@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatAbsoluteDate } from "@/lib/i18n/date";
+import { formatNumber } from "@/lib/i18n/format";
+import type { Locale } from "@/lib/i18n/config";
 import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
 
 /**
@@ -24,6 +28,8 @@ import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
  * note.
  */
 export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; className?: string }) {
+  const t = useTranslations("advisor.usageMeter");
+  const locale = useLocale() as Locale;
   // Animate up from empty on mount so the bar reads as a measurement being taken rather
   // than a static graphic. Width transitions handle the rest.
   const [shown, setShown] = useState(0);
@@ -58,7 +64,10 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
       ? "0 0 18px -2px rgba(245,158,11,0.6)"
       : "0 0 20px -2px rgba(139,92,246,0.55)";
 
-  const resets = new Date(quota.resetsAt).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  // formatAbsoluteDate, not a bare toLocaleDateString(undefined, ...) — the old call used the
+  // *browser's* locale, entirely independent of the app's own oryn_locale cookie, so this
+  // date could already disagree with a page otherwise rendering in Turkish.
+  const resets = formatAbsoluteDate(quota.resetsAt, locale, { month: "short", day: "numeric" });
 
   return (
     // Toned for the surface this actually sits on. Every value here used to be white-alpha
@@ -76,8 +85,8 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          <Sparkles className="size-3.5" /> This month
+        <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground" lang={locale}>
+          <Sparkles className="size-3.5" /> {t("thisMonth")}
         </p>
         <p className="font-mono text-xs tabular-nums text-muted-foreground">
           <span
@@ -106,8 +115,8 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
         aria-valuenow={unknown ? undefined : quota.remaining}
         aria-label={
           unknown
-            ? `Counselor messages left this month could not be loaded. The monthly allowance is ${quota.limit}.`
-            : `${quota.remaining} of ${quota.limit} counselor messages left this month`
+            ? t("ariaUnknown", { limit: formatNumber(quota.limit) })
+            : t("ariaKnown", { remaining: formatNumber(quota.remaining), limit: formatNumber(quota.limit) })
         }
       >
         <div
@@ -130,12 +139,12 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
 
       <p className="mt-2.5 text-xs text-muted-foreground">
         {unknown
-          ? `We couldn't load how many messages you've used. Your ${quota.limit}-message allowance still applies and resets ${resets}.`
+          ? t("unknown", { limit: formatNumber(quota.limit), date: resets })
           : exhausted
-          ? `All ${quota.limit} messages used. Resets ${resets}.`
-          : low
-            ? `Only ${quota.remaining} left. Resets ${resets}.`
-            : `${quota.remaining} counselor messages left. Resets ${resets}.`}
+            ? t("exhausted", { limit: formatNumber(quota.limit), date: resets })
+            : low
+              ? t("low", { remaining: formatNumber(quota.remaining), date: resets })
+              : t("normal", { remaining: formatNumber(quota.remaining), date: resets })}
       </p>
     </div>
   );
