@@ -939,5 +939,91 @@
       "visitOfficialPage": "Visit official page",
       "any": "any"
     }
+  },
+  "applications": {
+    "hero": {
+      "cycleLabel": "2026–27 cycle",
+      "title": "Applications.",
+      "universityCount": "{count, plural, one {# university} other {# universities}}",
+      "earliestDeadline": " · Earliest deadline {date}"
+    },
+    "due": "Due",
+    "ready": "ready",
+    "statusLabels": {
+      "not_started": "Not started",
+      "in_progress": "In progress",
+      "submitted": "Submitted",
+      "under_review": "Under review",
+      "accepted": "Accepted",
+      "waitlisted": "Waitlisted",
+      "rejected": "Rejected",
+      "withdrawn": "Withdrawn"
+    },
+    "empty": {
+      "noTargetsTitle": "No applications yet",
+      "noTargetsDescription": "Save a university you're targeting to start an application.",
+      "hasTargetsTitle": "No applications started yet",
+      "hasTargetsDescription": "Start one from a target university to begin tracking requirements and deadlines."
+    },
+    "newDialog": {
+      "startApplication": "Start an application",
+      "saveTargetFirst": "Save a target university first — applications start from a target.",
+      "university": "University",
+      "applicationType": "Application type",
+      "deadline": "Deadline",
+      "create": "Create",
+      "typeOptions": {
+        "regular_decision": "Regular Decision",
+        "early_decision": "Early Decision",
+        "early_action": "Early Action",
+        "rolling": "Rolling",
+        "other": "Other"
+      }
+    },
+    "requirementChecklist": {
+      "statusLabels": {
+        "not_started": "Not started",
+        "in_progress": "In progress",
+        "completed": "Completed",
+        "not_applicable": "Not applicable"
+      },
+      "typeLabels": {
+        "application": "Application",
+        "transcript": "Transcript",
+        "test_score": "Test score",
+        "essay": "Essay",
+        "recommendation": "Recommendation",
+        "portfolio": "Portfolio",
+        "interview": "Interview",
+        "financial_aid": "Financial aid"
+      }
+    },
+    "statusControl": {
+      "status": "Status",
+      "acceptedTitle": "You're in.",
+      "acceptedBody": "Accepted to {universityName}. Whatever came before this moment worked — well done."
+    }
+  },
+  "documents": {
+    "title": "Documents",
+    "description": "Evidence you've attached to your achievements. Private to you unless you choose to share it.",
+    "banner": "Uploading a document sets evidence status to <addedTag>Evidence added</addedTag>. It does not automatically become <verifiedTag>Verified</verifiedTag> — verification is a separate process.",
+    "empty": {
+      "title": "No evidence uploaded yet",
+      "description": "Evidence is always optional — self-reported achievements are still fully valid."
+    },
+    "row": {
+      "view": "View",
+      "fallbackName": "Evidence"
+    },
+    "uploadDialog": {
+      "addEvidence": "Add evidence",
+      "noItemsHint": "Add an activity, award, or other achievement first — then you can attach evidence to it here.",
+      "thisSupports": "This supports",
+      "file": "File",
+      "chooseFileError": "Choose a file.",
+      "statusNotice": "Uploading a file marks this item \"Evidence added\" — it's self-reported until independently verified, and only visible to you.",
+      "upload": "Upload"
+    }
   }
 }

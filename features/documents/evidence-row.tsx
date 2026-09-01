@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { File, Trash2, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,8 @@ export function EvidenceRow({
   linkedLabel: string;
   signedUrl: string | null;
 }) {
+  const t = useTranslations("documents.row");
+  const tCommon = useTranslations("common");
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -44,7 +47,7 @@ export function EvidenceRow({
       </div>
       <div className="flex shrink-0 items-center gap-1">
         {signedUrl ? (
-          <Button variant="ghost" size="icon-sm" render={<a href={signedUrl} target="_blank" rel="noopener noreferrer" />} nativeButton={false} aria-label="View">
+          <Button variant="ghost" size="icon-sm" render={<a href={signedUrl} target="_blank" rel="noopener noreferrer" />} nativeButton={false} aria-label={t("view")}>
             <ExternalLink className="size-3.5" />
           </Button>
         ) : null}
@@ -62,7 +65,7 @@ export function EvidenceRow({
               router.refresh();
             })
           }
-          aria-label="Delete"
+          aria-label={tCommon("delete")}
         >
           {isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5 text-muted-foreground hover:text-destructive" />}
         </Button>

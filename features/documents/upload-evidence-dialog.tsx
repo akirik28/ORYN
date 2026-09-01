@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +19,8 @@ import { uploadEvidence } from "@/app/(app)/documents/actions";
 import type { LinkableItem } from "@/lib/profile/list-linkable-items";
 
 export function UploadEvidenceDialog({ items }: { items: LinkableItem[] }) {
+  const t = useTranslations("documents.uploadDialog");
+  const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [selectedKey, setSelectedKey] = useState(items[0] ? `${items[0].table}:${items[0].id}` : "");
   const [error, setError] = useState<string | null>(null);
@@ -26,17 +29,13 @@ export function UploadEvidenceDialog({ items }: { items: LinkableItem[] }) {
   const router = useRouter();
 
   if (items.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Add an activity, award, or other achievement first — then you can attach evidence to it here.
-      </p>
-    );
+    return <p className="text-sm text-muted-foreground">{t("noItemsHint")}</p>;
   }
 
   function submit() {
     const file = fileInputRef.current?.files?.[0];
     if (!file) {
-      setError("Choose a file.");
+      setError(t("chooseFileError"));
       return;
     }
     const [table, id] = selectedKey.split(":");
@@ -59,15 +58,15 @@ export function UploadEvidenceDialog({ items }: { items: LinkableItem[] }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button />}>
-        <Upload className="size-4" /> Add evidence
+        <Upload className="size-4" /> {t("addEvidence")}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add evidence</DialogTitle>
+          <DialogTitle>{t("addEvidence")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>This supports</Label>
+            <Label>{t("thisSupports")}</Label>
             <Select value={selectedKey} onValueChange={(v) => v && setSelectedKey(v)}>
               <SelectTrigger className="w-full">
                 <SelectValue />
@@ -82,7 +81,7 @@ export function UploadEvidenceDialog({ items }: { items: LinkableItem[] }) {
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="evidence-file">File</Label>
+            <Label htmlFor="evidence-file">{t("file")}</Label>
             <input
               ref={fileInputRef}
               id="evidence-file"
@@ -91,19 +90,16 @@ export function UploadEvidenceDialog({ items }: { items: LinkableItem[] }) {
               className="block w-full text-sm file:mr-3 file:rounded-md file:border file:bg-background file:px-3 file:py-1.5 file:text-sm"
             />
           </div>
-          <p className="text-xs text-muted-foreground">
-            Uploading a file marks this item &quot;Evidence added&quot; — it&apos;s self-reported until independently
-            verified, and only visible to you.
-          </p>
+          <p className="text-xs text-muted-foreground">{t("statusNotice")}</p>
           {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            {tCommon("cancel")}
           </Button>
           <Button onClick={submit} disabled={isPending}>
             {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-            Upload
+            {t("upload")}
           </Button>
         </DialogFooter>
       </DialogContent>

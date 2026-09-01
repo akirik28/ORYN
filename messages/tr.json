@@ -939,5 +939,91 @@
       "visitOfficialPage": "Resmi sayfayı ziyaret et",
       "any": "herhangi"
     }
+  },
+  "applications": {
+    "hero": {
+      "cycleLabel": "2026–27 dönemi",
+      "title": "Başvurular.",
+      "universityCount": "{count, plural, one {# üniversite} other {# üniversite}}",
+      "earliestDeadline": " · En yakın son tarih {date}"
+    },
+    "due": "Son tarih",
+    "ready": "hazır",
+    "statusLabels": {
+      "not_started": "Başlanmadı",
+      "in_progress": "Devam ediyor",
+      "submitted": "Gönderildi",
+      "under_review": "İnceleniyor",
+      "accepted": "Kabul edildi",
+      "waitlisted": "Yedek listede",
+      "rejected": "Reddedildi",
+      "withdrawn": "Geri çekildi"
+    },
+    "empty": {
+      "noTargetsTitle": "Henüz başvuru yok",
+      "noTargetsDescription": "Başvuru oluşturmak için hedeflediğin bir üniversiteyi kaydet.",
+      "hasTargetsTitle": "Henüz başlanmış bir başvuru yok",
+      "hasTargetsDescription": "Gereksinimleri ve son tarihleri takip etmeye başlamak için hedef bir üniversiteden başvuru oluştur."
+    },
+    "newDialog": {
+      "startApplication": "Başvuru oluştur",
+      "saveTargetFirst": "Önce hedef bir üniversite kaydet — başvurular bir hedeften başlar.",
+      "university": "Üniversite",
+      "applicationType": "Başvuru türü",
+      "deadline": "Son tarih",
+      "create": "Oluştur",
+      "typeOptions": {
+        "regular_decision": "Regular Decision",
+        "early_decision": "Early Decision",
+        "early_action": "Early Action",
+        "rolling": "Rolling",
+        "other": "Diğer"
+      }
+    },
+    "requirementChecklist": {
+      "statusLabels": {
+        "not_started": "Başlanmadı",
+        "in_progress": "Devam ediyor",
+        "completed": "Tamamlandı",
+        "not_applicable": "Geçerli değil"
+      },
+      "typeLabels": {
+        "application": "Başvuru",
+        "transcript": "Transkript",
+        "test_score": "Sınav puanı",
+        "essay": "Deneme yazısı",
+        "recommendation": "Tavsiye mektubu",
+        "portfolio": "Portfolyo",
+        "interview": "Mülakat",
+        "financial_aid": "Mali yardım"
+      }
+    },
+    "statusControl": {
+      "status": "Durum",
+      "acceptedTitle": "Kabul edildin.",
+      "acceptedBody": "{universityName} sana kabul verdi. Buraya kadar yaptığın her şey işe yaradı — tebrikler."
+    }
+  },
+  "documents": {
+    "title": "Belgeler",
+    "description": "Başarılarına eklediğin kanıtlar. Paylaşmayı seçmediğin sürece yalnızca sana özel.",
+    "banner": "Bir belge yüklemek kanıt durumunu <addedTag>Kanıt eklendi</addedTag> olarak ayarlar. Bu otomatik olarak <verifiedTag>Doğrulandı</verifiedTag> durumuna geçmez — doğrulama ayrı bir süreçtir.",
+    "empty": {
+      "title": "Henüz kanıt yüklenmedi",
+      "description": "Kanıt her zaman isteğe bağlıdır — kendi beyanınla eklediğin başarılar yine de tümüyle geçerlidir."
+    },
+    "row": {
+      "view": "Görüntüle",
+      "fallbackName": "Kanıt"
+    },
+    "uploadDialog": {
+      "addEvidence": "Kanıt ekle",
+      "noItemsHint": "Önce bir etkinlik, ödül veya başka bir başarı ekle — ardından buradan ona kanıt ekleyebilirsin.",
+      "thisSupports": "Bunu destekliyor",
+      "file": "Dosya",
+      "chooseFileError": "Bir dosya seç.",
+      "statusNotice": "Bir dosya yüklemek bu öğeyi \"Kanıt eklendi\" olarak işaretler — bağımsız olarak doğrulanana kadar kendi beyanın sayılır ve yalnızca sana görünür.",
+      "upload": "Yükle"
+    }
   }
 }

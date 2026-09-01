@@ -89,10 +89,17 @@ describe("message catalogs", () => {
     // proper noun, or locale-independent notation, not an untranslated copy-paste — "Plan"
     // and "Mentor" are genuinely the same word in Turkish, "(n={size})" is statistical
     // sample-size notation with no language to translate, "AP"/"IB"/"A-Level" are the
-    // real, internationally-recognized names of those curricula, and "Program" is a
+    // real, internationally-recognized names of those curricula, "Program" is a
     // standard, fully-naturalized Turkish loanword (identically spelled) — not English
-    // words with a Turkish equivalent. A new identical pair failing this test is the guard
-    // working: confirm it's deliberate before adding it here, don't add speculatively.
+    // words with a Turkish equivalent, and "Regular Decision"/"Early Decision"/"Early
+    // Action"/"Rolling" (applications.newDialog.typeOptions) are the literal category
+    // names the Common App and US universities use on the actual application forms — the
+    // same reasoning as the curricula above, decided during the applications/documents
+    // i18n pass (2026-09-01): a Turkish student applying to a US school needs to recognize
+    // these on the real form, and a translated label they'd have to mentally reverse would
+    // work against that, not for it. "Other" in the same option list is a plain word and is
+    // translated. A new identical pair failing this test is the guard working: confirm it's
+    // deliberate before adding it here, don't add speculatively.
     const enFlat = new Map(flatten(en).map((key) => [key, key.split(".").reduce<unknown>((o, part) => (o as Record<string, unknown>)?.[part], en)]));
     const trFlat = new Map(flatten(tr).map((key) => [key, key.split(".").reduce<unknown>((o, part) => (o as Record<string, unknown>)?.[part], tr)]));
     // Sorted, because this is a set comparison and key order is incidental: it follows
@@ -110,6 +117,10 @@ describe("message catalogs", () => {
       "profile.recommendations.relationships.mentor",
       "universities.detail.programFallback",
       "universities.adminForm.program",
+      "applications.newDialog.typeOptions.regular_decision",
+      "applications.newDialog.typeOptions.early_decision",
+      "applications.newDialog.typeOptions.early_action",
+      "applications.newDialog.typeOptions.rolling",
       ].sort(),
     );
   });
@@ -166,6 +177,9 @@ describe("ICU plural counts that bypass formatNumber are deliberate", () => {
     "profile.page.journeyNote.gapBodyWithAwaiting",
     "profile.progress.developing",
     "profile.progress.movedForward",
+    // Universities a single student is tracking applications to — bounded by how many
+    // schools one person can realistically apply to, nowhere near four digits.
+    "applications.hero.universityCount",
   ];
 
   test("no un-reviewed `#` inside a plural block", () => {
