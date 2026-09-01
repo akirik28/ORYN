@@ -35,15 +35,22 @@ site this pass, named as unresolved rather than assumed.
 
 ## The real finding: selectivity varies enormously by fee tier, not just by programme
 
-**Best rank: 188 (Tarih, Burslu). Worst filled rank: 1,012,275 (Uluslararası Girişimcilik,
-Ücretli).** The same programme spans both ends: İktisat is rank 838 on its scholarship seat and
-rank 818,411 on its full-price seat. A single "best rank" number — the one this project's own
-candidate-list analysis used to place TOBB ETÜ #5 nationally on peak selectivity — is accurate
-but describes only the scholarship tier. The institution as a whole is much less uniformly
-selective than that one number suggests; most of its seats are reachable by nearly any YKS
-candidate willing to pay. Worth surfacing to whoever eventually designs how Oryn represents
-vakıf-university selectivity to a student, rather than let one flagship number stand for the
-whole place.
+**Raw best rank: 188 (Tarih, Burslu) — but that seat has `kontenjan=3`, below this project's own
+≥10-seat floor for a trustworthy peak-selectivity figure** (see the same-day correction added to
+`tr-university-candidate-list-2026-09-01.md`, which this finding directly caused). **Properly
+floored, TOBB ETÜ's true peak is rank 3,554** (Elektrik-Elektronik Mühendisliği, Burslu, 13
+seats) — solid, roughly on par with Yıldız Teknik or Marmara, not the near-Bilkent figure 188
+implied.
+
+**Worst filled rank: 1,012,275 (Uluslararası Girişimcilik, Ücretli).** The same programme spans
+both ends regardless of which peak number is used: İktisat is rank 838 on its scholarship seat
+(7 seats — itself below the floor, a real signal but a thin one) and rank 818,411 on its
+full-price seat (23 seats). The institution as a whole is much less uniformly selective than any
+single "best rank" figure suggests; most of its seats are reachable by nearly any YKS candidate
+willing to pay. Worth surfacing to whoever eventually designs how Oryn represents vakıf-university
+selectivity to a student — a single number here needs a stated fee-tier caveat before it's shown
+anywhere, the same way this project's Gate F report flagged the placement table having no reader
+before anyone builds around it.
 
 ## Admission facts — lighter pass than Galatasaray, and said so rather than padded
 
