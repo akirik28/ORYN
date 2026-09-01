@@ -931,13 +931,15 @@ one migration for age/grade, following `0060`'s exact pattern. Audit and design 
 
 **Action, in order:**
 
-1. Apply `supabase/migrations/0074_deadline_freshness.sql` (below) to `oryn-qa-scratch`.
+1. Apply `supabase/migrations/0074_deadline_freshness.sql` (below) to `oryn-qa-scratch`. It's
+   on `main` (`c4eaaea4`) but not yet applied to the live database — different questions,
+   checked separately.
 2. Run the batch (terminal, from the repo root, once 0074 is live):
    ```bash
    npm run ingest:requirements-deadlines -- --only=nordic_requirements_ --apply
    ```
-3. Read "The 8 `VERIFIED_HISTORICAL` records" below before step 2 — one of them is not the
-   same kind of safe as the other seven.
+   All 85 records at once — the "8 `VERIFIED_HISTORICAL` records" section below explains why
+   none of them need holding back.
 
 **Status check, done today (2026-09-01), not assumed from the 2026-08-31 handoff**: re-ran
 the exact ingestion decision logic this batch will use, live against `oryn-qa-scratch` as it
@@ -1005,6 +1007,23 @@ widget and the deadline-reminder job filter `VERIFIED_HISTORICAL` rows out expli
 student cannot see one as an upcoming or approaching deadline. Migration 0056 is what made
 this safe (before it, the table had no way to mark a row non-actionable at all).
 
+**Correction (2026-09-01, hours after the above was written): the 1 requirement record is
+not a special case — no decision needed for it, it's as safe as the other 7.** What's below
+was wrong when I wrote it, on inference rather than a check I actually ran. The gap
+`lib/requirements/shape-audit.ts:206-212` names was real when the 2026-08-31 handoff doc was
+written — and has since been fixed: `lib/requirements/ingest.ts` now exports
+`NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES = {"verified_historical", "conflicting"}`
+(commit `3e1e9cb6`, today), the requirements-side mirror of the deadlines filter above, and its
+own header comment names `REQ-2026-08-22-FI-HEL-001` as the exact record that prompted it.
+Applied at every path that reads requirements for display or reasoning —
+`app/(app)/universities/[id]/page.tsx:165` (confirmed directly), plus `lib/counselor/state.ts`
+and `lib/requirements/persist.ts` — so a `verified_historical` requirement is filtered out the
+same way a `VERIFIED_HISTORICAL` deadline is. Caught by oryn-a7 minutes after this doc merged,
+independently re-derived and confirmed by me before I saw that message. No asymmetry, no
+row to delete, no option to pick: run the full 85-record batch as one step.
+
+<details><summary>Superseded — kept for what went wrong, not as current guidance</summary>
+
 **The 1 requirement record is different, and this is the actual decision left in this item**:
 `university_requirements` has no equivalent filter — a `VERIFIED_HISTORICAL` requirement
 renders on a university page exactly like a current one, a real gap `lib/requirements/shape-audit.ts:206-212`
@@ -1016,6 +1035,8 @@ fix this same item just applied), or (b) run the batch, then
 `delete from public.university_requirements where research_record_id = 'REQ-2026-08-22-FI-HEL-001';`
 to hold it out until the display gap closes. Either is defensible; leaving it in silently
 without picking one is not.
+
+</details>
 
 **Depends on**: your go-ahead to run both steps against live data — same posture as items 26/29.
 
