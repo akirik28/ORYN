@@ -42,11 +42,13 @@ export function MobileNav({
   displayName,
   email,
   notifications,
+  isAdmin = false,
 }: {
   signal: DimensionSignal[];
   displayName: string;
   email: string | null;
   notifications: Notification[];
+  isAdmin?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -64,7 +66,7 @@ export function MobileNav({
         <div className="flex items-center gap-1">
           <CommandPalette />
           <NotificationBell notifications={notifications} />
-          <UserMenu displayName={displayName} email={email} signal={signal} />
+          <UserMenu displayName={displayName} email={email} signal={signal} isAdmin={isAdmin} />
         </div>
       </header>
 
