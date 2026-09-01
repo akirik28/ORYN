@@ -23,6 +23,17 @@
  *    confident-output-from-absent-input shape this measurement exists to expose, so it was
  *    worth fixing in the ruler rather than working around. Partly-done files are now listed
  *    separately, because they are the ones a coverage number most easily hides.
+ *
+ *    Their counts are deliberately NOT added to the totals, and that is the second half of
+ *    the same lesson. In a file mixing the inline `locale === "tr" ? … : …` pattern with the
+ *    catalog, the regex flags the English branch of an already-bilingual conditional as
+ *    untranslated — it does not parse conditionals, it matches capitalised JSX text. So on
+ *    those files the number overstates the work as badly as it previously understated it
+ *    (reported by the same lane, 2026-09-01, after hand-checking a file where all 12 hits
+ *    were already-translated branches). Teaching this to parse JSX is a different tool. What
+ *    it can honestly say is *which files need a human to look*, so that is what it says, and
+ *    the counts it does publish come only from files it can actually measure.
+ *
  *    Still a FLOOR, never a total — see the comment on USER_FACING below.
  *
  * Plain Node/tsx: no `server-only` imports, no Next bundler, so it runs anywhere.
@@ -113,24 +124,27 @@ for (const file of files) {
 untranslated.sort((a, b) => b.count - a.count);
 partlyDone.sort((a, b) => b.count - a.count);
 const strings = untranslated.reduce((sum, f) => sum + f.count, 0);
-const partlyDoneStrings = partlyDone.reduce((sum, f) => sum + f.count, 0);
 
 console.log("\nComponents");
 console.log(`  ${aware} of ${files.length} .tsx files under ${SCAN_DIRS.join("/ and ")}/ are locale-aware`);
 console.log(`  ${untranslated.length} untouched student-facing files carry >= ${strings} untranslated user-facing strings (floor, see header)`);
-console.log(`  ${partlyDone.length} locale-aware files still carry >= ${partlyDoneStrings} raw strings — partly translated, and easy for a coverage number to hide`);
+console.log(`  ${partlyDone.length} locale-aware files still contain raw JSX text — need a human to look; not counted above (see header)`);
 console.log("\n  Largest untouched blocks:");
 for (const { file, count } of untranslated.slice(0, 10)) console.log(`    ${String(count).padStart(3)}  ${file}`);
 if (partlyDone.length > 0) {
-  console.log("\n  Partly translated — verify these by hand, the file already looks done:");
-  for (const { file, count } of partlyDone.slice(0, 10)) console.log(`    ${String(count).padStart(3)}  ${file}`);
+  console.log("\n  Partly translated — open these; the count is a ceiling, not a measure:");
+  console.log("  (raw JSX text in a locale-aware file. Some will be real gaps; some will be the");
+  console.log("   English branch of a `locale === \"tr\" ? … : …` this script cannot parse.)");
+  for (const { file, count } of partlyDone.slice(0, 10)) console.log(`    <=${String(count).padStart(3)}  ${file}`);
 }
 
 // Grouped by area, because that is the unit a translation package is actually scoped in --
-// "features/profile" is a thing someone can take; a list of 86 files is not. Partly-done
-// files count here too: the remaining work in an area includes finishing what was started.
+// "features/profile" is a thing someone can take; a list of 86 files is not. Only measurable
+// files contribute: a partly-done file's count mixes real gaps with the English branches of
+// conditionals that are already bilingual, so folding it in here would put a number nobody
+// can act on into a table meant for scoping work.
 const byArea = new Map<string, { files: number; strings: number }>();
-for (const { file, count } of [...untranslated, ...partlyDone]) {
+for (const { file, count } of untranslated) {
   const area = file.match(/^(app\/\([a-z-]+\)\/[a-z-]+|features\/[a-z-]+)/)?.[1] ?? file;
   const entry = byArea.get(area) ?? { files: 0, strings: 0 };
   byArea.set(area, { files: entry.files + 1, strings: entry.strings + count });

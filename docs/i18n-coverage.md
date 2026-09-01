@@ -61,8 +61,21 @@ those are precisely the ones a coverage number hides. The first run after the fi
 42 such strings in 4 files — 20 of them in `features/dashboard/dashboard-view.tsx`, the
 most-seen surface in the product, which had been reading as done.
 
+**And then the same lane found the mirror-image flaw, which is the more interesting half.**
+Once partly-translated files became visible, their counts turned out to overstate the work as
+badly as the old behaviour understated it. The regex flags capitalised JSX text; it does not
+parse conditionals. So in a file mixing the inline `locale === "tr" ? … : …` pattern with the
+catalog, the *English branch of an already-bilingual conditional* reads as untranslated — one
+file's twelve hits were all of that kind, confirmed by hand.
+
+Teaching the script to parse JSX is a different tool. What it can say honestly is *which files
+need a human to look*, so that is now what it says: partly-done files are listed by name with
+their count marked as a ceiling, and they no longer contribute to the totals or the area
+table. Numbers it publishes come only from files it can actually measure.
+
 The operational lesson for anyone taking a package: use this script to decide *which files*
-to prioritise, never to decide whether a file is *finished*. Inside a file, check by hand.
+to prioritise, never to decide whether a file is *finished*, and never read a partly-done
+file's number as remaining work. Inside a file, check by hand.
 
 ## Read the 332 as a floor, not a total
 
