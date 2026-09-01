@@ -55,6 +55,7 @@
     "acquire:university-images": "tsx scripts/acquire-university-images.ts",
     "report:university-images": "tsx scripts/university-image-coverage-report.ts",
     "report:calendar-bound-requirements": "tsx scripts/report-calendar-bound-requirements.ts",
+    "report:uncurated-domains": "tsx scripts/report-uncurated-domains.ts",
     "import:opportunity-corpus": "tsx scripts/import-opportunity-corpus.ts",
     "audit:recommendation-readiness": "tsx scripts/audit-recommendation-readiness.ts",
     "audit:opportunity-duplicates": "tsx scripts/audit-opportunity-duplicates.ts",

@@ -154,3 +154,53 @@ full write-up. Summary for anyone landing on this doc first:
   through the actual `decideRequirementIngestion()`, plus the full 32 raw payloads (16+16)
   read in full to confirm none carries an unrelated rejection reason that domain-authority
   alone wouldn't resolve.
+
+## Update, same day — `deadline_research_queue` had the identical gap, now fixed too
+
+`lib/requirements/ingest.ts` was the only call site switched to `officialDomainsFor()` above.
+`lib/deadlines/ingest.ts` builds `officialDomains` the exact same website_url-only way and
+was still on the old construction — meaning MIT's 7 real `malformed_source` deadline rows
+(plus 3 LMU, 2 UvA) were *still* rejected even after the requirements-side fix landed,
+sitting on domains already curated and verified, just not consumed here. Wired to
+`officialDomainsFor()` the same way, zero new verification needed. Regression coverage added
+to `__tests__/deadlines/ingest.test.ts` mirroring the requirements-side tests.
+
+## Update, same day — the review-report tool, and what it found on its first real run
+
+Built `scripts/report-uncurated-domains.ts` (`npm run report:uncurated-domains`): reads every
+`malformed_source` row across both queue tables, checks the *actual* `source_url`'s domain
+(not `university_official_domain` — see below) against the real `sourceAuthority()` gate with
+`officialDomainsFor()` already applied, and prints anything still failing as a review
+candidate — university, domain, count, one example URL, and the record's own
+`source_authority_note` for context. Strictly read-only: no queue row, no
+`ADDITIONAL_OFFICIAL_DOMAINS` entry, no live table is touched by the script itself.
+
+**Checks `source_url`'s domain, not `university_official_domain` — an earlier version of
+this script checked the claimed field and it was wrong.** Those two usually agree (MIT, UvA)
+but don't always: Harvard's own real deadline rows cite `questbridge.org` while
+self-reporting `university_official_domain` as the unrelated, already-fine `harvard.edu`.
+Checking the claimed field would have run `sourceAuthority()` against `harvard.edu` — which
+trivially passes on its own `.edu` suffix — and silently reported zero candidates for a real,
+live gap. Checking `source_url` directly is what the actual pipeline does, so it's what the
+report checks; `university_official_domain` is now read only as context, flagged in the
+output when it disagrees with the real domain (which happened for both findings below).
+
+**First real run found exactly two candidates, and got both right:**
+- **Harvard University / `questbridge.org` (1 row, a binding National College Match
+  deadline).** A genuinely new gap, not one of the four already swept. QuestBridge is a
+  match/scholarship platform with its own binding deadlines — the same underlying shape as
+  `APPLICATION_SYSTEM_DOMAINS`'s existing entries (UCAS, Common App, ...) even though it
+  isn't one of the systems migration 0042 originally named. Verified institutional
+  participation from Harvard's own `.edu` domain (`college.harvard.edu` links directly to a
+  QuestBridge application page) before adding it to `APPLICATION_SYSTEM_DOMAINS` — same bar
+  as everything else in that set.
+- **Vrije Universiteit Amsterdam / `assets-eu-01.kc-usercontent.com` (14 rows) — correctly
+  re-surfaced, correctly not auto-resolved.** The exact same shared-CDN case identified in
+  the sweep above. The tool doesn't know that's the reason to leave it alone — it just
+  reports "still failing, here's why" — which is exactly right: the human judgment that this
+  one needs a different fix stays a human judgment, made once, not re-litigated by the
+  report and not silently overridden by it either.
+
+Re-running the report after the QuestBridge fix shows exactly one candidate left (VU), which
+is the correct, complete state as of this writing — every other real gap found by hand
+tonight is now either curated or correctly still excluded.
