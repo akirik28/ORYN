@@ -562,7 +562,16 @@ export default async function UniversityDetailPage({ params }: { params: Promise
             description="Oryn's read of your profile against each stated requirement — not an official admissions decision. See each source before relying on it."
           />
           {universityWideRequirements.length > 0 ? (
-            <RequirementGroup title="University-wide" items={universityWideRequirements} evaluationByRequirement={evaluationByRequirement} />
+            <RequirementGroup
+              title={locale === "tr" ? "Program kaydedilmemiş" : "Program not recorded"}
+              description={
+                locale === "tr"
+                  ? "Üniversitenin kendi sayfalarından alındı — Oryn bunların her birinin hangi programa ait olduğunu kaydetmedi."
+                  : "Sourced from the university's own pages — Oryn hasn't recorded which specific program each of these belongs to."
+              }
+              items={universityWideRequirements}
+              evaluationByRequirement={evaluationByRequirement}
+            />
           ) : null}
           {[...requirementsByProgram.entries()].map(([programId, items]) => (
             <RequirementGroup key={programId} title={programNameById.get(programId) ?? "Program"} items={items} evaluationByRequirement={evaluationByRequirement} />
@@ -690,16 +699,23 @@ type DeadlineRow = Pick<
 
 function RequirementGroup({
   title,
+  description,
   items,
   evaluationByRequirement,
 }: {
   title: string;
+  /** Optional sub-heading text — used only by the unlinked ("program not recorded") group,
+   * to say why these items aren't grouped under a specific program rather than implying
+   * they apply to every program. Genuinely program-linked groups pass no description and
+   * render exactly as before this prop existed. */
+  description?: string;
   items: UniversityRequirement[];
   evaluationByRequirement: Map<string, { status: RequirementEvaluationStatus; reasoning: string }>;
 }) {
   return (
     <div className="space-y-2">
       <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+      {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
       <ul className="divide-y rounded-lg border">
         {items.map((req) => {
           const evaluation = evaluationByRequirement.get(req.id);
