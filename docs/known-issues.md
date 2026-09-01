@@ -52,9 +52,13 @@ locale, but **no absolute-date formatter**, so a page needing "12 January 2027" 
 to call and reached for `toLocaleDateString` with a literal. Fix is an absolute formatter in
 `date.ts` plus the two call sites — not a policy decision.
 
-## A student cannot remove a target university
+## ~~A student cannot remove a target university~~ — FIXED 2026-09-01
 
-**Open, small, and the fix is already written.** `removeTargetUniversity` exists in
+**Closed** (`5dd24e43`): the remove control is wired into `save-university-button.tsx` with a
+confirmation, in both locales, covered by component tests. Kept below because the *way* it
+was found is reusable, and because the sweep's other two results are recorded with it.
+
+Was: `removeTargetUniversity` exists in
 `app/(app)/universities/actions.ts`, is correctly scoped (`.eq("user_id", session.userId)`)
 and revalidates both `/universities` and `/dashboard` — and **nothing calls it.** The
 universities UI imports `addTargetUniversity`, `updateTargetUniversityStatus` and
