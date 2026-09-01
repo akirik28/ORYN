@@ -37,3 +37,39 @@ describe("classifyAdvisorFailure", () => {
     expect(classifyAdvisorFailure(new AIProviderNotConfiguredError()).status).toBe("failed");
   });
 });
+
+/**
+ * A student who is told "please try again" retries. If the cause is a spent balance or a bad
+ * key, every retry fails identically and the product has taught them the failure is theirs to
+ * fix by repeating it. The Anthropic balance on this project is small with auto-reload off, so
+ * this is the likely failure, not the exotic one.
+ */
+describe("service failures are told apart from request failures", () => {
+  const apiError = (status: number) => Object.assign(new Error("upstream said no"), { status });
+
+  test("429 and 5xx invite a later retry", () => {
+    for (const status of [429, 500, 503, 529]) {
+      const { errorMessage } = classifyAdvisorFailure(apiError(status));
+      expect(errorMessage, `status ${status}`).toBe("The counselor is busy right now. Try again in a few minutes.");
+    }
+  });
+
+  test("400/401/403 say it is not the student's fault and do not ask for a retry", () => {
+    for (const status of [400, 401, 403]) {
+      const { errorMessage } = classifyAdvisorFailure(apiError(status));
+      expect(errorMessage, `status ${status}`).toContain("isn't something you did");
+      expect(errorMessage, `status ${status}`).not.toMatch(/try again/i);
+    }
+  });
+
+  test("no provider name, model, or upstream text reaches the student", () => {
+    for (const status of [400, 429, 500]) {
+      const { errorMessage } = classifyAdvisorFailure(apiError(status));
+      expect(errorMessage).not.toMatch(/anthropic|claude|upstream said no|api|token/i);
+    }
+  });
+
+  test("an error with no status still falls through to the generic message", () => {
+    expect(classifyAdvisorFailure(new Error("socket hang up")).errorMessage).toBe("Something went wrong. Please try again.");
+  });
+});
