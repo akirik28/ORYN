@@ -1384,6 +1384,9 @@
     "deadlineDigestTitle": "{count} son tarih yaklaşıyor",
     "deadlineDigestItem": "{name} — {days} gün",
     "deadlineDigestItemTomorrow": "{name} — yarın",
+    "profileUpdateTitle": "Profil puanın değişti",
+    "profileUpdateItem": "{name} {delta}",
+    "completenessMilestoneReached": "Profilin artık %{percent} tamamlandı",
     "newOpportunityMatch": "Yeni eşleşme: {name}"
   },
   "plan": {
