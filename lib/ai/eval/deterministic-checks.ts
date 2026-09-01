@@ -102,25 +102,91 @@ export function findRawIdentifierLeaks(text: string): DeterministicFinding[] {
  * positives, never create a false negative on text the old split already handled. The one
  * genuine risk is a claim hard-wrapped across a line break, which is why plain single
  * newlines are NOT boundaries: only a blank line or the start of a new list item is.
+ *
+ * Scoping to a claim was still not enough. Observed 2026-09-02 in the reply-length run:
+ * "The real gaps are Research (unassessed) and Execution / Project Depth (60/100)" is ONE
+ * ordinary sentence, correctly formed, naming two dimensions with their own parentheticals.
+ * Research is stated as unassessed and carries no number; the 60/100 is Execution's. A
+ * scope-wide search cannot tell whose number it is, so it blamed the wrong one.
+ *
+ * So a score is now attributed to its NEAREST dimension label, and only fires if that
+ * label is an unassessed one. The first attempt at this scanned forward from the label to
+ * the next different dimension, which broke "You scored 0 out of 100 in Research" — the
+ * score can precede its own label. This file's own existing test caught that, which is
+ * worth noting: the direction-of-safety claim written in this very comment ("can only
+ * remove false positives") was wrong, and only the older test disproved it.
  */
 /** Sentence end, blank line, or the start of a markdown list item (`-`/`*`/`+`/`1.`/`1)`).
  * A bare `\n` is deliberately absent — see the note above on hard-wrapped claims. */
 const CLAIM_BOUNDARY = /(?<=[.!?])\s+|\n\s*\n|\n(?=[ \t]*(?:[-*+]|\d+[.)])\s)/;
 
-export function findUnassessedDimensionScored(text: string, unassessedDimensionLabels: readonly string[]): DeterministicFinding[] {
+export function findUnassessedDimensionScored(
+  text: string,
+  unassessedDimensionLabels: readonly string[],
+  /** Every dimension display label for this locale, not only the unassessed ones. Needed
+   * to tell WHOSE score a number is: see the nearest-label note above. Defaults to the
+   * unassessed set so two-argument callers still work — coarser, and erring toward a false
+   * positive, which is the safe direction for a leak check. */
+  allDimensionLabels: readonly string[] = unassessedDimensionLabels,
+): DeterministicFinding[] {
   const findings: DeterministicFinding[] = [];
-  const scorePattern = /\b\d{1,3}\s*(?:\/\s*100|out of 100|points?)\b/i;
-  const sentences = text.split(CLAIM_BOUNDARY);
-  for (const sentence of sentences) {
-    for (const label of unassessedDimensionLabels) {
-      if (!sentence.toLowerCase().includes(label.toLowerCase())) continue;
-      const match = sentence.match(scorePattern);
-      if (match) findings.push({ check: "unassessed_dimension_scored", evidence: sentence.trim() });
+  const unassessed = new Set(unassessedDimensionLabels.map((l) => l.toLowerCase()));
+  for (const scope of text.split(CLAIM_BOUNDARY)) {
+    const labels = occurrences(scope, allDimensionLabels);
+    if (labels.length === 0) continue;
+    for (const score of scoreOccurrences(scope)) {
+      const owner = nearest(labels, score.at);
+      if (owner && unassessed.has(owner.label.toLowerCase())) {
+        findings.push({ check: "unassessed_dimension_scored", evidence: scope.trim() });
+        break;
+      }
     }
   }
   return findings;
 }
 
-export function runDeterministicChecks(text: string, unassessedDimensionLabels: readonly string[]): DeterministicFinding[] {
-  return [...findRawIdentifierLeaks(text), ...findUnassessedDimensionScored(text, unassessedDimensionLabels)];
+type Occurrence = { label: string; at: number; end: number };
+
+function occurrences(scope: string, labels: readonly string[]): Occurrence[] {
+  const haystack = scope.toLowerCase();
+  const found: Occurrence[] = [];
+  for (const label of labels) {
+    const needle = label.toLowerCase();
+    for (let at = haystack.indexOf(needle); at !== -1; at = haystack.indexOf(needle, at + 1)) {
+      found.push({ label, at, end: at + needle.length });
+    }
+  }
+  return found;
+}
+
+function scoreOccurrences(scope: string): { at: number }[] {
+  const pattern = /\b\d{1,3}\s*(?:\/\s*100|out of 100|points?)\b/gi;
+  const found: { at: number }[] = [];
+  for (let m = pattern.exec(scope); m !== null; m = pattern.exec(scope)) found.push({ at: m.index });
+  return found;
+}
+
+/** Distance from the score to the label's nearest edge, so "Research is 0/100" and
+ * "0 out of 100 in Research" both attribute to Research regardless of which side it sits on
+ * — the asymmetry of a forward-only window was a real false negative, caught by this file's
+ * own existing "alternate score phrasings" test. */
+function nearest(labels: Occurrence[], scoreAt: number): Occurrence | null {
+  let best: Occurrence | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const label of labels) {
+    const distance = scoreAt < label.at ? label.at - scoreAt : scoreAt - label.end;
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = label;
+    }
+  }
+  return best;
+}
+
+export function runDeterministicChecks(
+  text: string,
+  unassessedDimensionLabels: readonly string[],
+  allDimensionLabels: readonly string[] = unassessedDimensionLabels,
+): DeterministicFinding[] {
+  return [...findRawIdentifierLeaks(text), ...findUnassessedDimensionScored(text, unassessedDimensionLabels, allDimensionLabels)];
 }
