@@ -77,6 +77,45 @@ The operational lesson for anyone taking a package: use this script to decide *w
 to prioritise, never to decide whether a file is *finished*, and never read a partly-done
 file's number as remaining work. Inside a file, check by hand.
 
+## The Turkish dotted-İ handling, finally measured rather than argued
+
+This has been fixed and re-fixed several times and reasoned about in three separate file
+comments, but the premise underneath it — *does the browser actually apply `lang` to CSS
+`text-transform`?* — had never been tested. Tested 2026-09-01 in the app's own browser, by
+reading `innerText`, which reflects the rendered transform:
+
+| Element | Rendered |
+|---|---|
+| `lang="tr"`, `text-transform: uppercase`, text `iyi` | `İYİ` (U+0130) |
+| `lang="en"`, same | `IYI` (U+0049) |
+| no `lang` (inherits `<html lang="en">`) | `IYI` |
+
+So the mechanism works, and the design built on it is sound. Two consequences worth stating,
+because they invert the intuition:
+
+**The bug is English text on a Turkish page, not Turkish text.** `app/layout.tsx` sets
+`<html lang={locale}>`, so on a Turkish page *everything* inherits Turkish casing. Measured
+inside a `lang="tr"` subtree: `"Signed in as"` → **`SİGNED İN AS`**, while `"Oturum açan"` →
+`OTURUM AÇAN`, correctly. Translating a string therefore *removes* the need for any per-element
+fix; the fix is only ever needed for the strings still awaiting translation.
+
+**Which means passing `locale` to an element whose text is still English would cause the bug
+rather than prevent it.** `components/oryn/eyebrow.tsx` already documents exactly this and
+defaults to English for that reason — "a caller that translates `children` should pass the
+locale it translated to." Audited all five call sites that pass `locale`, plus every
+`ProfileSignal` caller, whose `heading` defaults to the English `"Profile signal"`: every one
+pairs a translated string with its matching locale. No live instance of the inverted failure.
+
+The reusable part is the probe. To check any suspect element:
+
+```js
+// in the browser console, on the page in question
+const el = document.querySelector('<selector>');
+({ lang: el.closest('[lang]')?.lang, rendered: el.innerText });
+```
+
+`innerText` shows what the transform actually produced, which `textContent` does not.
+
 ## A whole class of gap no string count can see
 
 `npm run check:i18n` counts text. It cannot see a gap whose symptom is a *missing function
