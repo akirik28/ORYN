@@ -216,35 +216,61 @@ export function looksOfficial(domain: string): boolean {
 /**
  * Institution-specific secondary official domains, verified by hand one at a time — never a
  * substitute for ROR-sourced provenance (see `officialDomains` in `sourceAuthority`'s own doc
- * comment below), only a narrow patch for what ROR does not cover: an admissions site hosted
- * on a domain that does not share its institution's primary suffix. ROR's own record for MIT
- * (https://ror.org/042nb2s44, checked live 2026-09-01) lists exactly one domain, `mit.edu` —
- * it has no knowledge of `mitadmissions.org`, so full ROR integration alone would not have
- * closed this gap.
+ * comment below), only a narrow patch for what ROR does not cover: content genuinely owned by
+ * the institution but hosted on a domain that doesn't share its primary suffix.
  *
- * `mitadmissions.org` verified live 2026-09-01: resolves (HTTP 200), and is directly
- * cross-linked from MIT's own already-official `web.mit.edu/admissions` page — the same
- * "live-fetched, not guessed" bar as APPLICATION_SYSTEM_DOMAINS above. Missing this domain was
- * the entire reason all 44 `requirement_research_queue` rows for MIT — 5 of 8 students with a
- * saved target_universities row target it, the single most-targeted school in the pilot
- * cohort — were rejected with `malformed_source`: every one of them cited an official
- * mitadmissions.org page, and `lib/requirements/ingest.ts` was building `officialDomains` from
- * `website_url` alone.
+ * ROR listing only the primary domain and nothing else is not an MIT-specific gap — it's a
+ * property of the registry, confirmed twice: MIT's record (https://ror.org/042nb2s44, checked
+ * live 2026-09-01) lists exactly `mit.edu`; LMU's own record, checked the same way, lists
+ * exactly `lmu.de`. Neither knows about the institution's second real domain. Full ROR
+ * integration would not close either gap, and should not be expected to close the next one.
  *
- * Keyed by exact `universities.name`. Production currently has two MIT rows — one a nameless
- * stub with no `website_url`, referenced by zero research records — so this only needs to
- * match whichever row `resolveRequirementUniversity` actually resolves the real research
+ * Every entry below was found the same way — a `requirement_research_queue` outcome of
+ * `malformed_source` citing a source that, checked live, turned out to be genuinely owned by
+ * the institution — and verified the same way: not by trusting the research record's own
+ * `university_official_domain` claim (see this file's own opening comment on why a fact and
+ * its own provenance claim can't authenticate each other), but by an independent live check.
+ *
+ * Keyed by exact `universities.name`. Where an institution has a known duplicate/orphan row
+ * (MIT does — a nameless stub with no `website_url`, referenced by zero research records),
+ * this only needs to match whichever row identity resolution actually resolves real research
  * against, which it does by name; it does not need to be duplicate-safe beyond that.
  *
  * Every sibling call site that builds an `officialDomains` set the same website_url-only way
  * (`lib/programs/ingest.ts`, `lib/deadlines/ingest.ts`, and four `scripts/*.ts` acquisition
  * scripts — grep `officialDomains` for the full list) shares this exact limitation. Only
  * `lib/requirements/ingest.ts` was switched to consume this constant, because that is the one
- * call site with a confirmed, live-demand institution blocked by it today; the others were
- * left alone rather than widening this fix on spec.
+ * call site with confirmed live-demand institutions blocked by it today; the others were left
+ * alone rather than widening this fix on spec.
+ *
+ * **`Vrije Universiteit Amsterdam` is deliberately NOT here, even though it has the same
+ * `malformed_source` symptom (14 rows, all one PDF) — do not add it.** The rejected domain,
+ * `assets-eu-01.kc-usercontent.com`, is a shared, multi-tenant CMS asset CDN (Kentico
+ * Kontent), not VU-exclusive infrastructure; any other tenant on the same SaaS platform can
+ * also serve files from that subdomain. Adding it here would grant blanket trust to
+ * infrastructure VU doesn't own, which is a real hole, not a narrow patch — the underlying
+ * fact is genuine (the PDF is linked from VU's own official page) but the fix for these 14
+ * records is re-sourcing them to that linking `vu.nl` page, which already passes via
+ * `website_url` — a research task, not a code change. See
+ * docs/handoffs/requirement-domain-authority-2026-09-01.md for the full sweep this was found
+ * in (the other two `malformed_source` universities that day, LMU and UvA below, were the
+ * same defect as MIT; VU alone was not).
  */
 const ADDITIONAL_OFFICIAL_DOMAINS: Readonly<Record<string, readonly string[]>> = {
   "Massachusetts Institute of Technology": ["mitadmissions.org"],
+  // Verified live 2026-09-01: uni-muenchen.de is LMU's own legacy domain, not a third party —
+  // en.gsi.uni-muenchen.de (16 malformed_source rows across two program subdomains cited it)
+  // self-identifies in its own page title as "Geschwister Scholl Institute of Political
+  // Science - LMU Munich". LMU's ROR record (see this constant's own doc comment above) lists
+  // only lmu.de, confirming ROR wouldn't have caught this one either.
+  "Ludwig-Maximilians-Universität München": ["uni-muenchen.de"],
+  // Verified live 2026-09-01: auc.nl is Amsterdam University College, a real joint UvA/VU
+  // programme with its own domain — not a misattribution. All 16 malformed_source rows are
+  // genuinely program_name "Liberal Arts and Sciences (Amsterdam University College)", and
+  // auc.nl's own footer reads "Copyright UvA 2026" and links directly to uva.nl's own
+  // privacy/disclaimer pages — institutional ownership confirmed from the page itself, not
+  // assumed from the research record's own note.
+  "University of Amsterdam": ["auc.nl"],
 };
 
 /**

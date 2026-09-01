@@ -118,3 +118,39 @@ still correctly fails). Build clean.
   growing `ADDITIONAL_OFFICIAL_DOMAINS` one hand-curated entry at a time.
 - Whoever picks up LMU/UvA/VU Amsterdam depth: check whether their own queue rows carry
   `university_official_domain` before assuming they need the same one-off treatment MIT got here.
+
+## Update, same day — the sweep this doc left open, done
+
+Reviewed (not re-derived) by a second lane, who independently re-verified both open questions
+above before extending the fix — see [[project_oryn_gate_f_domain_authority_sweep]] for the
+full write-up. Summary for anyone landing on this doc first:
+
+- **The ROR gap is not MIT-specific.** LMU Munich's own ROR record, checked live the same way,
+  lists only `lmu.de` — the same shape as MIT's `mit.edu`-only record. This is a property of
+  the registry (it doesn't track an institution's secondary/legacy domains), not something
+  particular to MIT.
+- **`university_official_domain` should not be trusted generically** — recommended against as
+  a blanket auto-accept, not just left unimplemented. The gate's value is being a check the
+  research pass can't satisfy by asserting something about itself; trusting the field is
+  circular for that reason. Worth knowing concretely: even where the field IS populated, it
+  isn't always right — LMU's own records all say `university_official_domain: "lmu.de"` even
+  though the actual cited `source_url`s are on `uni-muenchen.de` (UvA's records, by contrast,
+  correctly say `auc.nl`). A generic auto-accept keyed on this field would have silently missed
+  LMU's real gap while fixing UvA's — evidence the field needs a human check per institution,
+  not blanket trust, exactly the argument above already made on principle.
+- **LMU (`uni-muenchen.de`, 16 rows) and UvA/AUC (`auc.nl`, 16 rows) are the same defect as
+  MIT** — both independently live-verified (not just read from the corpus notes) and added to
+  `ADDITIONAL_OFFICIAL_DOMAINS` the same way.
+- **VU Amsterdam (`assets-eu-01.kc-usercontent.com`, 14 rows, all one PDF) is NOT the same
+  defect and was deliberately left out — do not add it.** That domain is a shared multi-tenant
+  CMS asset CDN, not VU-exclusive; allowlisting it would trust infrastructure VU doesn't own.
+  The underlying fact is real (the PDF is linked from VU's own official page per the record's
+  own note) but the correct fix is re-sourcing those 14 records to the actual `vu.nl` page that
+  links it — a research task, not a gate change. Full reasoning is in
+  `ADDITIONAL_OFFICIAL_DOMAINS`' own code comment in `lib/acquisition/source-authority.ts`,
+  specifically so a future edit doesn't "complete" this allowlist by adding the CDN.
+- Verified via the same real-data method as MIT: representative real `source_url`/
+  `program_name` values pulled directly from the live `requirement_research_queue` rows, run
+  through the actual `decideRequirementIngestion()`, plus the full 32 raw payloads (16+16)
+  read in full to confirm none carries an unrelated rejection reason that domain-authority
+  alone wouldn't resolve.

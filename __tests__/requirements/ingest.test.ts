@@ -17,12 +17,18 @@ import { RequirementQualifiersSchema } from "@/lib/validation/requirements";
 const EDINBURGH_ID = "11111111-1111-1111-1111-111111111111";
 const METU_ID = "22222222-2222-2222-2222-222222222222";
 const MIT_ID = "33333333-3333-3333-3333-333333333333";
+const LMU_ID = "44444444-4444-4444-4444-444444444444";
+const UVA_ID = "55555555-5555-5555-5555-555555555555";
+const VU_ID = "66666666-6666-6666-6666-666666666666";
 
 const UNIVERSITIES: UniversityLookupRow[] = [
   { id: EDINBURGH_ID, name: "The University of Edinburgh", country: "United Kingdom", websiteUrl: "https://www.ed.ac.uk" },
   { id: METU_ID, name: "Middle East Technical University", country: "Türkiye", websiteUrl: "https://www.metu.edu.tr" },
   // Production's real row (website_url populated, unlike its unreferenced null-fields duplicate).
   { id: MIT_ID, name: "Massachusetts Institute of Technology", country: "United States", websiteUrl: "https://web.mit.edu" },
+  { id: LMU_ID, name: "Ludwig-Maximilians-Universität München", country: "Germany", websiteUrl: "https://www.lmu.de" },
+  { id: UVA_ID, name: "University of Amsterdam", country: "Netherlands", websiteUrl: "https://www.uva.nl" },
+  { id: VU_ID, name: "Vrije Universiteit Amsterdam", country: "Netherlands", websiteUrl: "https://vu.nl/" },
 ];
 
 /** Minimal record that lands cleanly; each test overrides only the field under examination. */
@@ -468,6 +474,52 @@ describe("decideRequirementIngestion — mitadmissions.org (officialDomainsFor r
       university_name: "The University of Edinburgh",
       university_country: "United Kingdom",
       source_url: "https://mitadmissions.org/apply/first-year/",
+    });
+    const decision = decide(record);
+    expect(decision.outcome).toBe("malformed_source");
+  });
+});
+
+describe("decideRequirementIngestion — the wider sweep (LMU, UvA/AUC; VU deliberately excluded)", () => {
+  // Sweep of the other 3 malformed_source universities found alongside MIT (90 rows across 4
+  // universities total, 2026-09-01). LMU (uni-muenchen.de, 16 rows) and UvA (auc.nl, 16 rows,
+  // all genuinely program_name "Liberal Arts and Sciences (Amsterdam University College)")
+  // are the same defect class as MIT. VU Amsterdam (assets-eu-01.kc-usercontent.com, 14 rows,
+  // all one PDF) deliberately is not — that domain is a shared multi-tenant CDN, not
+  // VU-exclusive, so allowlisting it would be a real hole, not a narrow patch. See
+  // ADDITIONAL_OFFICIAL_DOMAINS' own comment in lib/acquisition/source-authority.ts.
+  it("accepts a requirement sourced from LMU's verified legacy domain", () => {
+    const record = req({
+      research_requirement_id: "REQ-LMU-0001",
+      university_name: "Ludwig-Maximilians-Universität München",
+      university_country: "Germany",
+      source_url: "https://en.gsi.uni-muenchen.de/studies/application/",
+    });
+    const decision = decide(record);
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.row?.university_id).toBe(LMU_ID);
+  });
+
+  it("accepts a requirement sourced from UvA's verified joint-programme domain (auc.nl)", () => {
+    const record = req({
+      research_requirement_id: "REQ-UVA-0001",
+      university_name: "University of Amsterdam",
+      university_country: "Netherlands",
+      program_name: "Liberal Arts and Sciences (Amsterdam University College)",
+      source_url: "https://www.auc.nl/admissions-aid/admission-requirements/english-proficiency/english-proficiency.html",
+    });
+    const decision = decide(record);
+    expect(decision.outcome).toBe("accepted");
+    expect(decision.row?.university_id).toBe(UVA_ID);
+  });
+
+  it("still refuses VU Amsterdam's shared-CDN source — not fixed by this sweep, on purpose", () => {
+    const record = req({
+      research_requirement_id: "REQ-VU-0001",
+      university_name: "Vrije Universiteit Amsterdam",
+      university_country: "Netherlands",
+      source_url:
+        "https://assets-eu-01.kc-usercontent.com/ff31ad68-341e-015e-fb52-24df7a00ecea/ea602bf3-9ac2-4a0a-8f83-250878170bd6/English%20Language%20Proficiency%20Overview%2026-27.pdf",
     });
     const decision = decide(record);
     expect(decision.outcome).toBe("malformed_source");

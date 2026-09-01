@@ -221,3 +221,59 @@ describe("officialDomainsFor", () => {
     expect(officialDomainsFor({})).toEqual(new Set());
   });
 });
+
+// Regression: sweep of the other 3 malformed_source universities (90 rows across 4
+// universities total, 2026-09-01). LMU and UvA are the same defect as MIT — a genuinely
+// official secondary domain, verified live, missing from officialDomains. VU Amsterdam
+// deliberately is NOT here: its rejected domain is a shared multi-tenant CDN, not an
+// institution-owned one, so the same fix would be unsafe — see ADDITIONAL_OFFICIAL_DOMAINS'
+// own comment for the full reasoning. That asymmetry is itself the thing worth testing: two
+// same-shaped rejections get the fix, one does not.
+describe("officialDomainsFor — the wider sweep (LMU, UvA/AUC; VU deliberately excluded)", () => {
+  test("adds LMU's verified legacy domain on top of its website domain", () => {
+    // Production's real LMU row: website_url is https://www.lmu.de.
+    const domains = officialDomainsFor({ name: "Ludwig-Maximilians-Universität München", websiteUrl: "https://www.lmu.de" });
+    expect(domains).toEqual(new Set(["lmu.de", "uni-muenchen.de"]));
+  });
+
+  test("sourceAuthority accepts a policy fact sourced from an en.*.uni-muenchen.de subdomain", () => {
+    const domains = officialDomainsFor({ name: "Ludwig-Maximilians-Universität München", websiteUrl: "https://www.lmu.de" });
+    // domainMatches is suffix-aware (see its own doc comment above), so the real cited
+    // subdomains (en.gsi.uni-muenchen.de, en.master.econ.uni-muenchen.de) resolve via the
+    // bare uni-muenchen.de entry without needing every subdomain listed individually.
+    expect(sourceAuthority("policy", "https://en.gsi.uni-muenchen.de/studies/application/", domains)).toEqual({ tier: "HIGH", sourceType: "official_primary" });
+    expect(sourceAuthority("policy", "https://en.gsi.uni-muenchen.de/studies/application/", new Set(["lmu.de"]))).toBeNull();
+  });
+
+  test("adds UvA's verified joint-programme domain (Amsterdam University College) on top of its website domain", () => {
+    // Production's real UvA row: website_url is https://www.uva.nl.
+    const domains = officialDomainsFor({ name: "University of Amsterdam", websiteUrl: "https://www.uva.nl" });
+    expect(domains).toEqual(new Set(["uva.nl", "auc.nl"]));
+  });
+
+  test("sourceAuthority accepts a policy fact sourced from auc.nl", () => {
+    const domains = officialDomainsFor({ name: "University of Amsterdam", websiteUrl: "https://www.uva.nl" });
+    expect(sourceAuthority("policy", "https://www.auc.nl/admissions-aid/admission-requirements/english-proficiency/english-proficiency.html", domains)).toEqual({
+      tier: "HIGH",
+      sourceType: "official_primary",
+    });
+    expect(sourceAuthority("policy", "https://www.auc.nl/admissions-aid/admission-requirements/english-proficiency/english-proficiency.html", new Set(["uva.nl"]))).toBeNull();
+  });
+
+  test("VU Amsterdam gets no curated addition — its rejected domain is a shared CDN, not fixed here", () => {
+    // Production's real VU row: website_url is https://vu.nl/. Confirms the shared-CDN case
+    // stays correctly refused, not silently grandfathered in by a future edit to this map.
+    expect(officialDomainsFor({ name: "Vrije Universiteit Amsterdam", websiteUrl: "https://vu.nl/" })).toEqual(new Set(["vu.nl"]));
+  });
+
+  test("sourceAuthority still refuses the shared kc-usercontent.com CDN even with VU's own website domain granted", () => {
+    const domains = officialDomainsFor({ name: "Vrije Universiteit Amsterdam", websiteUrl: "https://vu.nl/" });
+    expect(
+      sourceAuthority(
+        "policy",
+        "https://assets-eu-01.kc-usercontent.com/ff31ad68-341e-015e-fb52-24df7a00ecea/ea602bf3-9ac2-4a0a-8f83-250878170bd6/English%20Language%20Proficiency%20Overview%2026-27.pdf",
+        domains
+      )
+    ).toBeNull();
+  });
+});
