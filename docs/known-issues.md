@@ -79,6 +79,18 @@ returned three:
 - `removeTargetUniversity` — this one. Not removed, because unlike the other two it is a
   missing feature rather than dead code.
 
+**The same sweep run against routes came back clean**, recorded so it isn't repeated: every
+`app/(app)` page is reachable, and the four `/profile/*` sub-routes reachable only from
+`/features` are that way by design — `features/catalog/features-view.tsx` is an explicit
+discovery surface ("Everything Oryn can do"), not a fallback for missing navigation.
+
+One apparent hit was a false positive worth naming, because it looks exactly like a defect
+from a file listing: the catalog contains `href: "/u/me"` and no `app/(app)/u/me/page.tsx`
+exists, so it would resolve to `u/[id]` and hit that page's `if (!isUuidLike(id)) notFound()`.
+It never does — line 211 substitutes `/u/${userId}` at render time. `/u/me` is a sentinel in
+a data array, not a URL. Confirmed by reading the call site, after confirming the 404 is real
+when the path is visited directly.
+
 
 ## Tracking upstream — every Dialog silently loses focus on the first Shift+Tab
 
