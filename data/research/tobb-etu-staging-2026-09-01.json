@@ -1,0 +1,68 @@
+{
+  "status": "staged, not applied. No DB writes. See docs/handoffs/tobb-etu-research-2026-09-01.md.",
+  "note_on_scope": "Catalogue addition, same as Galatasaray -- TOBB ETU has no existing universities row.",
+  "proposed_university_row": {
+    "name": "TOBB University of Economics and Technology",
+    "aliases": ["TOBB Ekonomi ve Teknoloji Üniversitesi", "TOBB ETÜ", "TOBB ETU"],
+    "country": "Turkey",
+    "city": "Ankara",
+    "institution_type": "VAKIF (foundation university)",
+    "website_url": "https://www.etu.edu.tr",
+    "website_url_note": "Both www and bare etu.edu.tr resolve cleanly (200, valid cert) -- no cert-chain issue like Galatasaray's www subdomain. Cert is domain-validated (Sectigo DV, CN=*.etu.edu.tr) rather than organization-validated, so identity was confirmed by live page content (address, navigation, programme names matching YÖK Atlas exactly) rather than by certificate subject the way Galatasaray's OV cert allowed.",
+    "source_url": "https://www.etu.edu.tr",
+    "source_confidence": "high",
+    "retrieved_at": "2026-09-01"
+  },
+  "proposed_university_programs": [
+    { "name": "Tarih", "faculty_or_school": "Fen-Edebiyat Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" },
+    { "name": "Türk Dili ve Edebiyatı", "faculty_or_school": "Fen-Edebiyat Fakültesi", "degree_level": "LISANS", "language_of_instruction": "Türkçe" },
+    { "name": "Psikoloji", "faculty_or_school": "Fen-Edebiyat Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" },
+    { "name": "İngiliz Dili ve Edebiyatı", "faculty_or_school": "Fen-Edebiyat Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce" },
+    { "name": "Hukuk", "faculty_or_school": "Hukuk Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" },
+    { "name": "Görsel İletişim Tasarımı", "faculty_or_school": "Mimarlık ve Tasarım Fakültesi", "degree_level": "LISANS", "language_of_instruction": "Türkçe" },
+    { "name": "İç Mimarlık ve Çevre Tasarımı", "faculty_or_school": "Mimarlık ve Tasarım Fakültesi", "degree_level": "LISANS", "language_of_instruction": "Türkçe" },
+    { "name": "Endüstriyel Tasarım", "faculty_or_school": "Mimarlık ve Tasarım Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" },
+    { "name": "Mimarlık", "faculty_or_school": "Mimarlık ve Tasarım Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" },
+    { "name": "İşletme", "faculty_or_school": "İktisadi ve İdari Bilimler Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" },
+    { "name": "İktisat", "faculty_or_school": "İktisadi ve İdari Bilimler Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" },
+    { "name": "Uluslararası Girişimcilik", "faculty_or_school": "İktisadi ve İdari Bilimler Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" },
+    { "name": "Yönetim Bilişim Sistemleri", "faculty_or_school": "İktisadi ve İdari Bilimler Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" },
+    { "name": "Siyaset Bilimi ve Uluslararası İlişkiler", "faculty_or_school": "İktisadi ve İdari Bilimler Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" },
+    { "name": "Tıp", "faculty_or_school": "Tıp Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" },
+    { "name": "Elektrik-Elektronik Mühendisliği", "faculty_or_school": "Mühendislik Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" },
+    { "name": "Bilgisayar Mühendisliği", "faculty_or_school": "Mühendislik Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" },
+    { "name": "Makine Mühendisliği", "faculty_or_school": "Mühendislik Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" },
+    { "name": "Endüstri Mühendisliği", "faculty_or_school": "Mühendislik Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" },
+    { "name": "Yapay Zeka Mühendisliği", "faculty_or_school": "Mühendislik Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce" },
+    { "name": "Malzeme Bilimi ve Nanoteknoloji Mühendisliği", "faculty_or_school": "Mühendislik Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" },
+    { "name": "Biyomedikal Mühendisliği", "faculty_or_school": "Mühendislik Fakültesi", "degree_level": "LISANS", "language_of_instruction": "İngilizce (%30)" }
+  ],
+  "programs_source": {
+    "source_url": "https://yokatlas.yok.gov.tr/api/tercih-kilavuz/search",
+    "source_type": "official_primary",
+    "source_confidence": "high",
+    "retrieved_at": "2026-09-01",
+    "note": "22 distinct programmes, deduplicated from 62 raw YOK Atlas LISANS records -- each programme appears as up to 3 separate placement records (Burslu/full scholarship, %50 İndirimli/half tuition, Ücretli/full tuition), matching how university_program_placement_cycles.burs_orani_adi already models this for the existing 12 universities. Two programmes (Tarih, Türk Dili ve Edebiyatı) show only a single Burslu-tier record each in the live data -- scholarship-only admission routes, not a data gap; not independently confirmed against the university's own site this pass."
+  },
+  "placement_signal_summary": {
+    "note": "Aggregate only this pass, not all 62 individual placement-cycle rows -- see the handoff doc for why.",
+    "best_basari_sirasi": 188,
+    "best_program": "Tarih (Burslu)",
+    "worst_filled_basari_sirasi": 1012275,
+    "worst_filled_program": "Uluslararası Girişimcilik (Ücretli)",
+    "spread_finding": "The same underlying programme spans an enormous selectivity range depending on fee tier -- e.g. İktisat: rank 838 on the Burslu (scholarship) seat vs rank 818,411 on the Ücretli (full-price) seat. This is the real shape of a mid-size vakif university's selectivity: a small number of genuinely elite, free seats per programme, and a much larger number of full-price seats reachable by nearly any YKS candidate. A single 'best rank' number (188, used in this project's own candidate-list ranking) is accurate but describes only the scholarship tier, not the institution as a whole -- worth keeping in mind when this university's overall selectivity is discussed with a student who may or may not be scholarship-eligible."
+  },
+  "domestic_admission_facts": {
+    "mechanism": "Same as every other Turkish university: YKS placement in rank order per programme+tier quota. lib/admissions/system-shape.ts's existing Turkey/domestic entry covers this correctly, no override needed.",
+    "distinguishing_fact": "Fee-tier structure (Burslu/%50 İndirimli/Ücretli) is the operative 'requirement' variation for a domestic applicant here, not anything evaluative -- which tier a placement lands in is entirely a function of YKS rank, already captured in the placement-cycle data above, not a separate requirements fact."
+  },
+  "international_pathway_facts": {
+    "checked": "https://www.etu.edu.tr/tr/uluslararasi",
+    "finding": "A real, structured international-application portal exists (dated application windows, tuition/scholarship info, a required-documents page), but the specific entrance-exam-vs-standardized-test-score question was not resolved this pass -- the answer sits on a linked subpage not fetched. Left unresolved rather than guessed, unlike Galatasaray where the answer (GSÜYÖS) was found directly."
+  },
+  "explicitly_not_established": [
+    "Whether TOBB ETU requires its own entrance exam for foreign-national applicants, or accepts SAT/A-Level/IB/Abitur/diploma scores directly",
+    "Specific international application deadlines for the current cycle",
+    "Whether Tarih and Türk Dili ve Edebiyatı are genuinely scholarship-only programmes or simply had unfilled %50/Ücretli seats this cycle"
+  ]
+}
