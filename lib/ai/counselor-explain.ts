@@ -18,7 +18,10 @@ const CounselorExplanationSchema = z.object({
 
 export type CounselorExplanation = z.infer<typeof CounselorExplanationSchema>;
 
-const COUNSELOR_EXPLANATION_SYSTEM_PROMPT = `You are writing a short narrated summary on top of ORYN's Counselor Core — a
+// Exported (no behavior change) so lib/ai/eval/cost-estimate.ts can measure this prompt's
+// real size instead of guessing at it — same reasoning as WeeklyPlanSchema's own export
+// in lib/ai/weekly-plan.ts.
+export const COUNSELOR_EXPLANATION_SYSTEM_PROMPT = `You are writing a short narrated summary on top of ORYN's Counselor Core — a
 deterministic recommendation engine that has ALREADY done all the analysis, ranking, and
 fact-checking. Your only job is tone and phrasing, not judgment or fact-finding.
 
