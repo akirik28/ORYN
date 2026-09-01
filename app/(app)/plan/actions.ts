@@ -36,22 +36,6 @@ export async function regenerateWeeklyPlan(): Promise<{ error?: string }> {
   return {};
 }
 
-export async function ensureWeeklyPlan(): Promise<{ error?: string }> {
-  const session = await requireUser();
-  try {
-    await getOrCreateWeeklyPlan(session.userId!);
-  } catch (error) {
-    if (error instanceof AIProviderNotConfiguredError) {
-      return { error: "not_configured" };
-    }
-    console.error("[plan] failed to create weekly plan", error);
-    return { error: "generation_failed" };
-  }
-  revalidatePath("/dashboard");
-  revalidatePath("/plan");
-  return {};
-}
-
 export async function updateActionStatus(params: {
   actionId: string;
   status: ActionStatus;
