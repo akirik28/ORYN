@@ -1,5 +1,16 @@
 # Final Product Audit — Chat 3 (Adversarial QA)
 
+> **Superseded 2026-09-01.** Specific claims below (test/migration counts, DB size,
+> credential status) are stale by 92 merges — current numbers are one to two orders of
+> magnitude different. Its central Trust-section conclusion ("no new instances of false
+> admissions precision... found this pass") is now specifically disproven: fifteen confirmed
+> instances of exactly that failure shape have been found since, including in the same
+> function (`refreshAdmissionOutlook`) this audit never revisited. Current, live-verified
+> state: `docs/current-state.md` (DB/migrations/integrations) and
+> `docs/what-a-student-cannot-do-yet-2026-09-01.md` (product capability, what's missing).
+> Kept as historical record, not corrected in place — full analysis in
+> `docs/handoffs/product-status-docs-audit-2026-09-01.md`.
+
 Date: 2026-08-15. Scope: complete and verify the in-progress connection-privacy fix, then
 continue an adversarial audit across the codebase. This document is the honest record of
 what was found, fixed, and verified, and what remains — not a completion celebration.
