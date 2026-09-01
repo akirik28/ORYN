@@ -635,5 +635,198 @@
       "removeItemAriaLabel": "Remove item",
       "startOver": "Start over"
     }
+  },
+  "universities": {
+    "detail": {
+      "studentSize": "Student size",
+      "admissionRate": "Admission rate",
+      "costOfAttendance": "Cost of attendance",
+      "internationalTuition": "International tuition",
+      "domesticTuition": "Domestic tuition",
+      "testScores": "Test scores",
+      "graduationRate": "Graduation rate",
+      "unavailable": "Unavailable",
+      "undergradPostgradCaption": "{undergrad} undergrad · {postgrad} postgrad",
+      "qsSizeBandCaption": "QS size band, not an exact count",
+      "domesticRateCaption": "Domestic rate: {rate}",
+      "seeUniversityForExactFee": "— see university for your exact fee",
+      "internationalFeeNotSeparate": "International fee not separately published",
+      "internationalFeeNotPublished": "International fee not published as a single figure — varies by course",
+      "programsTitle": "Programs",
+      "programsDescription": "Degree programs Oryn has verified against this university's own official pages.",
+      "researchStrengthsTitle": "Research strengths",
+      "researchStrengthsDescription": "Topics this university publishes in most, from OpenAlex's open research index.",
+      "requirementCheckTitle": "Requirement check",
+      "requirementCheckDescription": "Oryn's read of your profile against each stated requirement — not an official admissions decision. See each source before relying on it.",
+      "programFallback": "Program",
+      "programSpecific": "Program-specific",
+      "optional": "Optional",
+      "importantDatesTitle": "Important dates",
+      "importantDatesDescription": "Deadlines Oryn has verified against this university's own official pages.",
+      "upcoming": "Upcoming",
+      "recurringTitle": "Recurring — exact year not published",
+      "recurringBadge": "Recurring",
+      "recurringAnnually": "{date}, annually",
+      "recentAdmissionsData": "Recent admissions data",
+      "visitWebsite": "Visit official website",
+      "admissions": "Admissions",
+      "sourceLink": "Source ↗",
+      "sourcesHeading": "Sources",
+      "unknownSource": "Unknown source",
+      "officialPageAriaLabel": "Official page for {name}",
+      "mainCampusAlt": "Main campus of {name}"
+    },
+    "qsSize": {
+      "extraSmall": "Extra small",
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large",
+      "extraLarge": "Extra large"
+    },
+    "bindingPolicy": {
+      "binding": "Binding",
+      "restrictive": "Restrictive / single-choice",
+      "nonBinding": "Non-binding"
+    },
+    "card": {
+      "students": "students",
+      "researchFocus": "Research focus",
+      "details": "Details",
+      "saved": "Saved",
+      "compareLimitTooltip": "Compare up to 4 at a time",
+      "comparing": "Comparing",
+      "compare": "Compare",
+      "costOfAttendanceSuffix": "/ year, cost of attendance"
+    },
+    "browseGrid": {
+      "loadingMoreSr": "Loading more universities",
+      "shownCountSr": "{count} universities shown",
+      "loading": "Loading…",
+      "tryAgain": "Try again",
+      "loadMore": "Load more",
+      "allShown": "That's every university matching these filters."
+    },
+    "searchBox": {
+      "ariaLabel": "Search universities",
+      "placeholder": "Search by university name…"
+    },
+    "explorer": {
+      "regionNavAriaLabel": "Browse universities by region",
+      "countryNavAriaLabel": "Browse universities by country",
+      "world": "World",
+      "noRegionUniversitiesYet": "No {region} universities yet",
+      "dataBeingAdded": "University data is still being added",
+      "checkBackSoon": "Check back soon.",
+      "allCountries": "All countries",
+      "moreCount": "({count} more)",
+      "hoveredCount": "{count, plural, one {{formatted} university} other {{formatted} universities}}",
+      "noUniversitiesYet": "No universities yet",
+      "openToSeeDetails": "Open to see details",
+      "exploringRegion": "Exploring {region} — tap a country to see its universities.",
+      "tapToExplore": "Tap a country to explore its universities.",
+      "dataBeingAddedRegions": "University data is still being added for these regions."
+    },
+    "filterSheet": {
+      "filters": "Filters",
+      "clearAll": "Clear all filters"
+    },
+    "compareBar": {
+      "selected": "{count} selected",
+      "clear": "Clear",
+      "compare": "Compare"
+    },
+    "sortSelect": {
+      "ariaLabel": "Sort universities",
+      "prefix": "Sort: {label}"
+    },
+    "saveButton": {
+      "saveToMyUniversities": "Save to my universities"
+    },
+    "targetStatus": {
+      "exploring": "Exploring",
+      "target": "Target",
+      "applying": "Applying",
+      "applied": "Applied",
+      "accepted": "Accepted",
+      "waitlisted": "Waitlisted",
+      "rejected": "Rejected",
+      "withdrawn": "Withdrawn"
+    },
+    "adminForm": {
+      "heading": "Admin: add a requirement",
+      "program": "Program",
+      "universityWide": "University-wide (all programs)",
+      "category": "Category",
+      "title": "Title",
+      "titlePlaceholder": "e.g. Mathematics through Calculus",
+      "sourcedText": "Sourced requirement text",
+      "sourcedTextPlaceholder": "Paste the exact wording from the official source.",
+      "requiredCheckbox": "Required (not just recommended)",
+      "sourceUrl": "Source URL",
+      "structuredRule": "Structured rule (JSON, optional)",
+      "suggestWithAi": "Suggest with AI",
+      "ruleJsonHint": "AI only structures text you already pasted above — review before saving, it never invents the requirement itself.",
+      "requirementAdded": "Requirement added.",
+      "addRequirement": "Add requirement",
+      "rulePlaceholderPrefix": "Leave blank for categories like essay/interview. Otherwise e.g."
+    },
+    "calendarBoundFacts": {
+      "competitivenessNote": "Evidence about competitiveness from a past cycle — not a requirement, and not something to aim for exactly.",
+      "pastCycle": "Past cycle",
+      "checkedAgo": "Checked {time}",
+      "source": "Source"
+    },
+    "browsePage": {
+      "eyebrow": "Universities",
+      "title": "Where you could go.",
+      "description": "Start from the map, or search directly.",
+      "map": "Map",
+      "list": "List",
+      "searchHeading": "Search universities",
+      "filteredTo": "Filtered to {scope}",
+      "acrossAllRegions": "Across all supported regions",
+      "totalCount": "{count, plural, one {{formatted} university total} other {{formatted} university total}}",
+      "search": "Search",
+      "costOfAttendance": "Cost of attendance",
+      "costSpanHint": "Select as many as you need to span a wider range.",
+      "institutionType": "Institution type",
+      "studentPopulation": "Student population",
+      "qsRanking": "QS ranking",
+      "resultsForQuery": "{count, plural, one {{formatted} result} other {{formatted} results}} for “{query}”",
+      "totalInScope": "{count, plural, one {{formatted} university} other {{formatted} universities}}",
+      "inScopeSuffix": " in {scope}",
+      "costUnknownExcluded": "{count, plural, one {{formatted} additional university is} other {{formatted} additional universities are}} excluded because cost data is unavailable. ",
+      "sizeUnknownExcluded": "{count, plural, one {{formatted} additional university is} other {{formatted} additional universities are}} excluded because student population data is unavailable.",
+      "noUniversitiesFound": "No universities found",
+      "matchingQuerySuffix": " matching “{query}”",
+      "noMatchFilters": "No universities match the current filters — try widening the cost, size, or ranking range.",
+      "dataAddedOverTime": "University data is added over time — check back soon, or try another region.",
+      "uncoveredNote": "Note: {count, plural, one {{formatted} check-in-progress country isn't} other {{formatted} check-in-progress countries aren't}} yet mapped to a region ({names}) — included in the total above, not yet in any region tab.",
+      "sortByName": "Name"
+    },
+    "comparePage": {
+      "title": "Compare universities",
+      "description": "Select 2–4 universities from the explorer to compare them here.",
+      "nothingYetTitle": "Nothing to compare yet",
+      "nothingYetDescription": "Go back to the explorer, select at least two universities with the Compare button on each card, then open the compare tray.",
+      "backToExplorer": "Back to explorer",
+      "notEnoughTitle": "Couldn't find enough of these universities",
+      "notEnoughDescription": "One or more selected universities may no longer be available.",
+      "sideBySide": "{count} universities side by side — unknown fields are shown as “—”, never guessed.",
+      "location": "Location",
+      "qsRanking": "QS ranking",
+      "institutionType": "Institution type",
+      "students": "Students",
+      "costOfAttendance": "Cost of attendance",
+      "costPerYear": "{value} / year",
+      "admissionRate": "Admission rate",
+      "applicationSystem": "Application system",
+      "researchStrengths": "Research strengths"
+    }
+  },
+  "sourceBadge": {
+    "source": "Source:",
+    "checked": "Checked {time}",
+    "viewSource": "View source"
   }
 }

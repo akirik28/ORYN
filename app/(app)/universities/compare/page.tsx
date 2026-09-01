@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
@@ -24,20 +25,17 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
   await requireUser();
   const supabase = await createClient();
   const supersessionMap = await loadSupersessionMap(supabase);
+  const t = await getTranslations("universities.comparePage");
 
   const requestedIds = [...new Set((idsParam ?? "").split(",").map((id) => canonicalUniversityId(supersessionMap, id.trim())).filter(Boolean))].slice(0, COMPARE_MAX);
 
   if (requestedIds.length < 2) {
     return (
       <div className="space-y-8">
-        <PageHeader title="Compare universities" description="Select 2–4 universities from the explorer to compare them here." />
-        <EmptyState
-          icon={Scale}
-          title="Nothing to compare yet"
-          description="Go back to the explorer, select at least two universities with the Compare button on each card, then open the compare tray."
-        />
+        <PageHeader title={t("title")} description={t("description")} />
+        <EmptyState icon={Scale} title={t("nothingYetTitle")} description={t("nothingYetDescription")} />
         <Link href="/universities" className="inline-flex items-center gap-1.5 text-sm text-brand-primary hover:underline">
-          <ArrowLeft className="size-3.5" /> Back to explorer
+          <ArrowLeft className="size-3.5" /> {t("backToExplorer")}
         </Link>
       </div>
     );
@@ -61,10 +59,10 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
         className="dark space-y-8 rounded-[28px] p-4 text-foreground md:p-8"
         style={{ background: "linear-gradient(145deg, #111030 0%, #1A1650 50%, #0E1540 100%)" }}
       >
-        <PageHeader title="Compare universities" description="Select 2–4 universities from the explorer to compare them here." />
-        <EmptyState icon={Scale} title="Couldn't find enough of these universities" description="One or more selected universities may no longer be available." />
+        <PageHeader title={t("title")} description={t("description")} />
+        <EmptyState icon={Scale} title={t("notEnoughTitle")} description={t("notEnoughDescription")} />
         <Link href="/universities" className="inline-flex items-center gap-1.5 text-sm text-brand-primary hover:underline">
-          <ArrowLeft className="size-3.5" /> Back to explorer
+          <ArrowLeft className="size-3.5" /> {t("backToExplorer")}
         </Link>
       </div>
     );
@@ -75,32 +73,32 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
   const topicsByUniId = new Map((metrics ?? []).map((m) => [m.university_id, m.value_text?.split(" | ").filter(Boolean).slice(0, 3) ?? []]));
 
   const rows: { label: string; render: (u: University) => React.ReactNode }[] = [
-    { label: "Location", render: (u) => [u.city, u.country].filter(Boolean).join(", ") || NA },
-    { label: "QS ranking", render: (u) => (rankByUniId.get(u.id) ? `#${rankByUniId.get(u.id)}` : NA) },
-    { label: "Institution type", render: (u) => u.institution_type ?? NA },
-    { label: "Students", render: (u) => (u.student_size != null ? u.student_size.toLocaleString("en-US") : NA) },
+    { label: t("location"), render: (u) => [u.city, u.country].filter(Boolean).join(", ") || NA },
+    { label: t("qsRanking"), render: (u) => (rankByUniId.get(u.id) ? `#${rankByUniId.get(u.id)}` : NA) },
+    { label: t("institutionType"), render: (u) => u.institution_type ?? NA },
+    { label: t("students"), render: (u) => (u.student_size != null ? u.student_size.toLocaleString("en-US") : NA) },
     {
-      label: "Cost of attendance",
+      label: t("costOfAttendance"),
       render: (u) => {
         const s = statsByUniId.get(u.id);
         if (s?.cost_of_attendance == null) return NA;
         const currency = s.cost_currency === "USD" || !s.cost_currency ? "$" : `${s.cost_currency} `;
-        return `${currency}${s.cost_of_attendance.toLocaleString("en-US")} / year`;
+        return t("costPerYear", { value: `${currency}${s.cost_of_attendance.toLocaleString("en-US")}` });
       },
     },
     {
-      label: "Admission rate",
+      label: t("admissionRate"),
       render: (u) => {
         const s = statsByUniId.get(u.id);
         return s?.admission_rate != null ? `${Math.round(s.admission_rate * 100)}%` : NA;
       },
     },
     {
-      label: "Application system",
+      label: t("applicationSystem"),
       render: (u) => u.application_system ?? NA,
     },
     {
-      label: "Research strengths",
+      label: t("researchStrengths"),
       render: (u) => {
         const topics = topicsByUniId.get(u.id) ?? [];
         if (topics.length === 0) return NA;
@@ -125,9 +123,9 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
       className="dark space-y-6 rounded-[28px] p-4 text-foreground md:p-8"
       style={{ background: "linear-gradient(145deg, #111030 0%, #1A1650 50%, #0E1540 100%)" }}
     >
-      <PageHeader title="Compare universities" description={`${ordered.length} universities side by side — unknown fields are shown as "—", never guessed.`} />
+      <PageHeader title={t("title")} description={t("sideBySide", { count: ordered.length })} />
       <Link href="/universities" className="inline-flex items-center gap-1.5 text-sm text-brand-primary hover:underline">
-        <ArrowLeft className="size-3.5" /> Back to explorer
+        <ArrowLeft className="size-3.5" /> {t("backToExplorer")}
       </Link>
 
       <div className="glass-card overflow-x-auto rounded-2xl border border-white/65 bg-white/45 backdrop-blur-2xl">

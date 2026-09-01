@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { X, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCompare } from "./compare-context";
@@ -9,6 +10,7 @@ import { useCompare } from "./compare-context";
  * selected, anywhere on the page (not per-region), since the tray is a single cross-page
  * selection. Needs at least 2 to actually compare; below that it's just a visible tray. */
 export function CompareBar() {
+  const t = useTranslations("universities.compareBar");
   const compare = useCompare();
   if (compare.selected.length === 0) return null;
 
@@ -29,7 +31,7 @@ export function CompareBar() {
       <div className="flex max-w-full items-center gap-3 rounded-2xl border bg-card px-4 py-2.5 shadow-lg">
         <span className="flex items-center gap-1.5 text-sm font-medium">
           <Scale className="size-4 text-brand-primary" />
-          {compare.selected.length} selected
+          {t("selected", { count: compare.selected.length })}
         </span>
         <div className="hidden max-w-xs flex-wrap gap-1.5 sm:flex">
           {compare.selected.map((e) => (
@@ -40,10 +42,10 @@ export function CompareBar() {
         </div>
         <Button variant="ghost" size="sm" onClick={compare.clear}>
           <X className="size-3.5" />
-          Clear
+          {t("clear")}
         </Button>
         <Button size="sm" disabled={compare.selected.length < 2} render={<Link href={`/universities/compare?ids=${ids}`} />} nativeButton={false}>
-          Compare
+          {t("compare")}
         </Button>
       </div>
     </div>

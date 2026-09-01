@@ -1,7 +1,23 @@
 import "server-only";
 
 import { nextAnnualWindowStart, type AnnualCalendarWindow } from "@/lib/acquisition/verification";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { UniversityRequirement } from "@/types/database";
+
+const MONTH_NAMES_TR = [
+  "Ocak",
+  "Şubat",
+  "Mart",
+  "Nisan",
+  "Mayıs",
+  "Haziran",
+  "Temmuz",
+  "Ağustos",
+  "Eylül",
+  "Ekim",
+  "Kasım",
+  "Aralık",
+];
 
 /**
  * The shape the calendar-bound fact display path is built around, and the actual
@@ -38,17 +54,26 @@ export interface CalendarBoundFactDisplay {
  * window's own start date — get the comparison direction wrong and every calendar-bound
  * fact reads as "coming soon" forever, including the ones already a year overdue.
  */
-export function buildNextCheckLabel(window: AnnualCalendarWindow, retrievedAt: string | null, now: Date = new Date()): string {
-  const monthName = new Date(Date.UTC(2000, window.month - 1, 1)).toLocaleDateString("en-US", { month: "long", timeZone: "UTC" });
+export function buildNextCheckLabel(window: AnnualCalendarWindow, retrievedAt: string | null, now: Date = new Date(), locale: Locale = DEFAULT_LOCALE): string {
+  const monthName =
+    locale === "tr"
+      ? MONTH_NAMES_TR[window.month - 1]
+      : new Date(Date.UTC(2000, window.month - 1, 1)).toLocaleDateString("en-US", { month: "long", timeZone: "UTC" });
   if (!retrievedAt) {
-    return `A fresher figure may already be available around ${monthName} each year — not yet re-checked.`;
+    return locale === "tr"
+      ? `Her yıl ${monthName} civarında daha güncel bir rakam yayınlanmış olabilir — henüz yeniden kontrol edilmedi.`
+      : `A fresher figure may already be available around ${monthName} each year — not yet re-checked.`;
   }
   const retrieved = new Date(Date.parse(retrievedAt));
   const nextWindow = nextAnnualWindowStart(window, retrieved);
   if (now.getTime() < nextWindow.getTime()) {
-    return `The next figure is expected around ${monthName} ${nextWindow.getUTCFullYear()}.`;
+    return locale === "tr"
+      ? `Bir sonraki rakamın ${monthName} ${nextWindow.getUTCFullYear()} civarında açıklanması bekleniyor.`
+      : `The next figure is expected around ${monthName} ${nextWindow.getUTCFullYear()}.`;
   }
-  return `A fresher figure was expected around ${monthName} ${nextWindow.getUTCFullYear()} — not yet re-checked, so it may already be published.`;
+  return locale === "tr"
+    ? `Yeni rakamın ${monthName} ${nextWindow.getUTCFullYear()} civarında açıklanması bekleniyordu — henüz yeniden kontrol edilmedi, o yüzden yayınlanmış olabilir.`
+    : `A fresher figure was expected around ${monthName} ${nextWindow.getUTCFullYear()} — not yet re-checked, so it may already be published.`;
 }
 
 /** Builds the display shape from a raw row. `window` is a parameter, not hardcoded to
@@ -57,7 +82,8 @@ export function buildNextCheckLabel(window: AnnualCalendarWindow, retrievedAt: s
 export function toCalendarBoundFactDisplay(
   row: Pick<UniversityRequirement, "id" | "title" | "requirement_detail" | "source_url" | "retrieved_at">,
   window: AnnualCalendarWindow,
-  now: Date = new Date()
+  now: Date = new Date(),
+  locale: Locale = DEFAULT_LOCALE
 ): CalendarBoundFactDisplay {
   return {
     id: row.id,
@@ -67,6 +93,6 @@ export function toCalendarBoundFactDisplay(
     factText: row.requirement_detail?.trim() || row.title?.trim() || "",
     sourceUrl: row.source_url,
     retrievedAt: row.retrieved_at,
-    nextCheckLabel: buildNextCheckLabel(window, row.retrieved_at, now),
+    nextCheckLabel: buildNextCheckLabel(window, row.retrieved_at, now, locale),
   };
 }

@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,16 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { addTargetUniversity, updateTargetUniversityStatus } from "@/app/(app)/universities/actions";
 import type { TargetStatus } from "@/types/database";
 
-const STATUS_OPTIONS: { value: TargetStatus; label: string }[] = [
-  { value: "exploring", label: "Exploring" },
-  { value: "target", label: "Target" },
-  { value: "applying", label: "Applying" },
-  { value: "applied", label: "Applied" },
-  { value: "accepted", label: "Accepted" },
-  { value: "waitlisted", label: "Waitlisted" },
-  { value: "rejected", label: "Rejected" },
-  { value: "withdrawn", label: "Withdrawn" },
-];
+const STATUS_OPTION_VALUES: TargetStatus[] = ["exploring", "target", "applying", "applied", "accepted", "waitlisted", "rejected", "withdrawn"];
 
 export function SaveUniversityButton({
   universityId,
@@ -29,6 +21,8 @@ export function SaveUniversityButton({
   targetId: string | null;
   status: TargetStatus | null;
 }) {
+  const t = useTranslations("universities.saveButton");
+  const tStatus = useTranslations("universities.targetStatus");
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -47,7 +41,7 @@ export function SaveUniversityButton({
           })
         }
       >
-        <Bookmark className="size-4" /> Save to my universities
+        <Bookmark className="size-4" /> {t("saveToMyUniversities")}
       </Button>
     );
   }
@@ -71,9 +65,9 @@ export function SaveUniversityButton({
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {STATUS_OPTIONS.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
+        {STATUS_OPTION_VALUES.map((value) => (
+          <SelectItem key={value} value={value}>
+            {tStatus(value)}
           </SelectItem>
         ))}
       </SelectContent>

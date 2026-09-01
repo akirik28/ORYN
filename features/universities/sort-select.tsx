@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 /**
  * A plain `<select>` needs a little client JS to navigate on change (no server-rendered
@@ -10,10 +11,11 @@ import { useRouter } from "next/navigation";
  * combines with the current region/country/search state), this just swaps the URL on change.
  */
 export function SortSelect({ value, options }: { value: string; options: { value: string; label: string; href: string }[] }) {
+  const t = useTranslations("universities.sortSelect");
   const router = useRouter();
   return (
     <select
-      aria-label="Sort universities"
+      aria-label={t("ariaLabel")}
       value={value}
       onChange={(e) => {
         const target = options.find((o) => o.value === e.target.value);
@@ -23,7 +25,7 @@ export function SortSelect({ value, options }: { value: string; options: { value
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>
-          Sort: {o.label}
+          {t("prefix", { label: o.label })}
         </option>
       ))}
     </select>

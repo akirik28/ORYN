@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { clusterUniversityPins, fanOutOffsets } from "@/lib/universities/cluster-pins";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { ArrowLeft } from "lucide-react";
 import { ComposableMap, Geographies, Geography, Marker, createCoordinates } from "@vnedyalk0v/react19-simple-maps";
 import type { PreparedFeature, GeographyEventData } from "@vnedyalk0v/react19-simple-maps";
@@ -10,8 +11,10 @@ import { feature } from "topojson-client";
 import type { Topology, GeometryCollection } from "topojson-specification";
 import worldTopology from "world-atlas/countries-110m.json";
 import { SUPPORTED_COUNTRIES, countryByName } from "@/lib/data/country-geo";
-import { WORLD_REGION, type MapRegion } from "@/lib/data/regions";
+import { WORLD_REGION, MAP_REGIONS, regionLabel, type MapRegion } from "@/lib/data/regions";
 import { pickLabelPriorityCountries, resolveCountryFillStyle } from "@/lib/data/map-visuals";
+import { formatNumber } from "@/lib/i18n/format";
+import type { Locale } from "@/lib/i18n/config";
 import type { UniversityMapPin } from "@/lib/universities/map-pins";
 
 const worldGeo = feature(
@@ -72,6 +75,8 @@ export function WorldMapExplorer({
    *  server-side (lib/universities/map-pins.ts). Empty unless a country is selected. */
   pins?: UniversityMapPin[];
 }) {
+  const t = useTranslations("universities.explorer");
+  const locale = useLocale() as Locale;
   const router = useRouter();
   const searchParams = useSearchParams();
   const selected = searchParams.get("country");
@@ -398,8 +403,8 @@ export function WorldMapExplorer({
         >
           <p className="font-medium text-popover-foreground">{hover.name}</p>
           <p className="text-muted-foreground">
-            {hoveredCount > 0 ? `${hoveredCount.toLocaleString("en-US")} ${hoveredCount === 1 ? "university" : "universities"}` : "No universities yet"}
-            {hoveredRegion ? ` · ${hoveredRegion}` : ""}
+            {hoveredCount > 0 ? t("hoveredCount", { count: hoveredCount, formatted: formatNumber(hoveredCount) }) : t("noUniversitiesYet")}
+            {hoveredRegion ? ` · ${regionLabel(MAP_REGIONS.find((r) => r.name === hoveredRegion) ?? { id: hoveredRegion, name: hoveredRegion }, locale)}` : ""}
           </p>
         </div>
       ) : null}
@@ -428,17 +433,17 @@ export function WorldMapExplorer({
             <p className="text-xs text-muted-foreground">
               {[pinHover.pin.city, pinHover.pin.qsRank ? `QS #${pinHover.pin.qsRank}` : null]
                 .filter(Boolean)
-                .join(" · ") || "Open to see details"}
+                .join(" · ") || t("openToSeeDetails")}
             </p>
           </div>
         </div>
       ) : null}
       <p className="relative border-t px-4 py-2.5 text-center text-xs text-muted-foreground">
         {!isWorld
-          ? `Exploring ${region.name} — tap a country to see its universities.`
+          ? t("exploringRegion", { region: regionLabel(region, locale) })
           : countryCounts.length > 0
-            ? "Tap a country to explore its universities."
-            : "University data is still being added for these regions."}
+            ? t("tapToExplore")
+            : t("dataBeingAddedRegions")}
       </p>
     </div>
   );

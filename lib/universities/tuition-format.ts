@@ -1,9 +1,19 @@
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+
 /**
  * Pure tuition-display formatting, extracted from the detail page so it's unit-testable —
  * this exact logic caused two real, live bugs before being pulled out (a hardcoded "£" that
  * mislabeled Canada's CAD figures, and a "From " prefix that leaked from an international
  * range onto a domestic exact figure whenever both were shown together). See callers for
  * context.
+ *
+ * `locale` defaults to English and is additive — lib/universities/counseling-adapter.ts's
+ * `deriveTuitionContext` calls both functions with no locale argument and keeps getting
+ * exactly today's English output; only app/(app)/universities/[id]/page.tsx's direct calls
+ * pass the request's actual locale. The digits themselves stay English-formatted either way
+ * (`.toLocaleString("en-US", ...)` below, unchanged) — lib/i18n/format.ts documents why
+ * number/currency formatting is deliberately not locale-switched yet; this only translates
+ * the words around the number.
  */
 
 /** `university_profile_metrics.unit` for a tuition figure is a currency/basis string like
@@ -23,8 +33,10 @@ export function currencyPrefix(unit: string): string {
 /** `0` is real, verified data for Germany's public universities outside Baden-Württemberg (no
  * tuition charged by law — see acquire-university-statistics-de.ts), not a missing value; shown
  * as "Free" rather than "€0/yr" since that's what a reader actually wants to know. */
-export function formatTuition(amount: number, unit: string): string {
-  return amount === 0 ? "Free" : `${currencyPrefix(unit)}${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}/yr`;
+export function formatTuition(amount: number, unit: string, locale: Locale = DEFAULT_LOCALE): string {
+  if (amount === 0) return locale === "tr" ? "Ücretsiz" : "Free";
+  const suffix = locale === "tr" ? "/yıl" : "/yr";
+  return `${currencyPrefix(unit)}${amount.toLocaleString("en-US", { maximumFractionDigits: 0 })}${suffix}`;
 }
 
 /** Four tuition shapes this product actually has, each needing different honesty framing:
@@ -53,7 +65,13 @@ export function formatTuition(amount: number, unit: string): string {
  * Edinburgh right after adding Italy's "upper_bound" case: it silently relabelled Edinburgh's
  * flat "£9,790/yr" domestic rate as "From £9,790/yr" because international happened to be a
  * range that pass. */
-export function tuitionQualifier(precisionState: string): { valuePrefix: string; note: string } {
+export function tuitionQualifier(precisionState: string, locale: Locale = DEFAULT_LOCALE): { valuePrefix: string; note: string } {
+  if (locale === "tr") {
+    if (precisionState === "range") return { valuePrefix: "Başlangıç ", note: "Programa göre değişir. " };
+    if (precisionState === "upper_bound") return { valuePrefix: "En fazla ", note: "Üst sınır — birçok öğrenci burs veya uygunluk avantajıyla daha az öder. " };
+    if (precisionState === "approximate") return { valuePrefix: "~", note: "Bölgenin resmi kredi başı ücretinden hesaplanmıştır. " };
+    return { valuePrefix: "", note: "" };
+  }
   if (precisionState === "range") return { valuePrefix: "From ", note: "Varies by course. " };
   if (precisionState === "upper_bound") return { valuePrefix: "Up to ", note: "Maximum — many students pay less based on aid or eligibility. " };
   if (precisionState === "approximate") return { valuePrefix: "~", note: "Estimated from the region's official per-credit price. " };

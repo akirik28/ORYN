@@ -635,5 +635,198 @@
       "removeItemAriaLabel": "Öğeyi kaldır",
       "startOver": "Baştan başla"
     }
+  },
+  "universities": {
+    "detail": {
+      "studentSize": "Öğrenci sayısı",
+      "admissionRate": "Kabul oranı",
+      "costOfAttendance": "Öğrenim maliyeti",
+      "internationalTuition": "Uluslararası öğrenim ücreti",
+      "domesticTuition": "Yerel öğrenim ücreti",
+      "testScores": "Standart sınav puanları",
+      "graduationRate": "Mezuniyet oranı",
+      "unavailable": "Mevcut değil",
+      "undergradPostgradCaption": "{undergrad} lisans · {postgrad} lisansüstü",
+      "qsSizeBandCaption": "QS büyüklük bandı, tam sayı değil",
+      "domesticRateCaption": "Yerel ücret: {rate}",
+      "seeUniversityForExactFee": "— kesin ücret için üniversiteye bakın",
+      "internationalFeeNotSeparate": "Uluslararası ücret ayrıca yayınlanmamış",
+      "internationalFeeNotPublished": "Uluslararası ücret tek bir rakam olarak yayınlanmamış — bölüme göre değişir",
+      "programsTitle": "Programlar",
+      "programsDescription": "Oryn'ın bu üniversitenin resmi sayfalarına karşı doğruladığı lisans programları.",
+      "researchStrengthsTitle": "Araştırma güçlü yönleri",
+      "researchStrengthsDescription": "OpenAlex'in açık araştırma dizininden, bu üniversitenin en çok yayın yaptığı konular.",
+      "requirementCheckTitle": "Gereklilik kontrolü",
+      "requirementCheckDescription": "Oryn'ın profilini her belirtilen gerekliliğe karşı okuması — resmi bir kabul kararı değildir. Güvenmeden önce her kaynağı kontrol edin.",
+      "programFallback": "Program",
+      "programSpecific": "Programa özel",
+      "optional": "İsteğe bağlı",
+      "importantDatesTitle": "Önemli tarihler",
+      "importantDatesDescription": "Oryn'ın bu üniversitenin resmi sayfalarına karşı doğruladığı son başvuru tarihleri.",
+      "upcoming": "Yaklaşan",
+      "recurringTitle": "Tekrarlayan — kesin yıl yayınlanmamış",
+      "recurringBadge": "Tekrarlayan",
+      "recurringAnnually": "Her yıl {date}",
+      "recentAdmissionsData": "Yakın zamanlı kabul verileri",
+      "visitWebsite": "Resmi web sitesini ziyaret et",
+      "admissions": "Başvuru",
+      "sourceLink": "Kaynak ↗",
+      "sourcesHeading": "Kaynaklar",
+      "unknownSource": "Bilinmeyen kaynak",
+      "officialPageAriaLabel": "{name} için resmi sayfa",
+      "mainCampusAlt": "{name} ana kampüsü"
+    },
+    "qsSize": {
+      "extraSmall": "Çok küçük",
+      "small": "Küçük",
+      "medium": "Orta",
+      "large": "Büyük",
+      "extraLarge": "Çok büyük"
+    },
+    "bindingPolicy": {
+      "binding": "Bağlayıcı",
+      "restrictive": "Kısıtlayıcı / tek seçim",
+      "nonBinding": "Bağlayıcı değil"
+    },
+    "card": {
+      "students": "öğrenci",
+      "researchFocus": "Araştırma odağı",
+      "details": "Detaylar",
+      "saved": "Kaydedildi",
+      "compareLimitTooltip": "Aynı anda en fazla 4 tane karşılaştır",
+      "comparing": "Karşılaştırılıyor",
+      "compare": "Karşılaştır",
+      "costOfAttendanceSuffix": "/ yıl, öğrenim maliyeti"
+    },
+    "browseGrid": {
+      "loadingMoreSr": "Daha fazla üniversite yükleniyor",
+      "shownCountSr": "{count} üniversite gösteriliyor",
+      "loading": "Yükleniyor…",
+      "tryAgain": "Tekrar dene",
+      "loadMore": "Daha fazla yükle",
+      "allShown": "Bu filtrelere uyan tüm üniversiteler bunlar."
+    },
+    "searchBox": {
+      "ariaLabel": "Üniversite ara",
+      "placeholder": "Üniversite adıyla ara…"
+    },
+    "explorer": {
+      "regionNavAriaLabel": "Bölgeye göre üniversitelere göz at",
+      "countryNavAriaLabel": "Ülkeye göre üniversitelere göz at",
+      "world": "Dünya",
+      "noRegionUniversitiesYet": "Henüz {region} üniversitesi yok",
+      "dataBeingAdded": "Üniversite verileri hala ekleniyor",
+      "checkBackSoon": "Yakında tekrar kontrol edin.",
+      "allCountries": "Tüm ülkeler",
+      "moreCount": "({count} daha)",
+      "hoveredCount": "{count, plural, one {{formatted} üniversite} other {{formatted} üniversite}}",
+      "noUniversitiesYet": "Henüz üniversite yok",
+      "openToSeeDetails": "Detayları görmek için açın",
+      "exploringRegion": "{region} inceleniyor — üniversitelerini görmek için bir ülkeye dokunun.",
+      "tapToExplore": "Üniversitelerini incelemek için bir ülkeye dokunun.",
+      "dataBeingAddedRegions": "Bu bölgeler için üniversite verileri hala ekleniyor."
+    },
+    "filterSheet": {
+      "filters": "Filtreler",
+      "clearAll": "Tüm filtreleri temizle"
+    },
+    "compareBar": {
+      "selected": "{count} seçildi",
+      "clear": "Temizle",
+      "compare": "Karşılaştır"
+    },
+    "sortSelect": {
+      "ariaLabel": "Üniversiteleri sırala",
+      "prefix": "Sırala: {label}"
+    },
+    "saveButton": {
+      "saveToMyUniversities": "Üniversitelerime kaydet"
+    },
+    "targetStatus": {
+      "exploring": "Keşfediliyor",
+      "target": "Hedef",
+      "applying": "Başvuruluyor",
+      "applied": "Başvuruldu",
+      "accepted": "Kabul edildi",
+      "waitlisted": "Yedek listede",
+      "rejected": "Reddedildi",
+      "withdrawn": "Geri çekildi"
+    },
+    "adminForm": {
+      "heading": "Yönetici: gereklilik ekle",
+      "program": "Program",
+      "universityWide": "Üniversite geneli (tüm programlar)",
+      "category": "Kategori",
+      "title": "Başlık",
+      "titlePlaceholder": "örn. Kalkülüse kadar Matematik",
+      "sourcedText": "Kaynaklı gereklilik metni",
+      "sourcedTextPlaceholder": "Resmi kaynaktaki tam ifadeyi yapıştırın.",
+      "requiredCheckbox": "Zorunlu (sadece önerilen değil)",
+      "sourceUrl": "Kaynak URL",
+      "structuredRule": "Yapılandırılmış kural (JSON, isteğe bağlı)",
+      "suggestWithAi": "Yapay zeka ile öner",
+      "ruleJsonHint": "Yapay zeka yalnızca yukarıda yapıştırdığınız metni yapılandırır — kaydetmeden önce inceleyin, gerekliği asla kendisi uydurmaz.",
+      "requirementAdded": "Gereklilik eklendi.",
+      "addRequirement": "Gereklilik ekle",
+      "rulePlaceholderPrefix": "Essay/mülakat gibi kategoriler için boş bırakın. Aksi halde örn."
+    },
+    "calendarBoundFacts": {
+      "competitivenessNote": "Geçmiş bir dönemden rekabet gücü hakkında kanıt — bir gereklilik değildir ve tam olarak hedeflenecek bir şey değildir.",
+      "pastCycle": "Geçmiş dönem",
+      "checkedAgo": "{time} kontrol edildi",
+      "source": "Kaynak"
+    },
+    "browsePage": {
+      "eyebrow": "Üniversiteler",
+      "title": "Nereye gidebilirsin.",
+      "description": "Haritadan başla, ya da doğrudan ara.",
+      "map": "Harita",
+      "list": "Liste",
+      "searchHeading": "Üniversite ara",
+      "filteredTo": "{scope} ile filtrelendi",
+      "acrossAllRegions": "Desteklenen tüm bölgelerde",
+      "totalCount": "{count, plural, one {{formatted} üniversite toplam} other {{formatted} üniversite toplam}}",
+      "search": "Ara",
+      "costOfAttendance": "Öğrenim maliyeti",
+      "costSpanHint": "Daha geniş bir aralığa yaymak için ihtiyacınız kadarını seçin.",
+      "institutionType": "Kurum türü",
+      "studentPopulation": "Öğrenci sayısı",
+      "qsRanking": "QS sıralaması",
+      "resultsForQuery": "“{query}” için {count, plural, one {{formatted} sonuç} other {{formatted} sonuç}}",
+      "totalInScope": "{count, plural, one {{formatted} üniversite} other {{formatted} üniversite}}",
+      "inScopeSuffix": " — {scope}",
+      "costUnknownExcluded": "{count, plural, one {{formatted} ek üniversite} other {{formatted} ek üniversite}} maliyet verisi mevcut olmadığı için hariç tutuldu. ",
+      "sizeUnknownExcluded": "{count, plural, one {{formatted} ek üniversite} other {{formatted} ek üniversite}} öğrenci sayısı verisi mevcut olmadığı için hariç tutuldu.",
+      "noUniversitiesFound": "Üniversite bulunamadı",
+      "matchingQuerySuffix": " — “{query}” ile eşleşen",
+      "noMatchFilters": "Mevcut filtrelere uyan üniversite yok — maliyet, büyüklük veya sıralama aralığını genişletmeyi deneyin.",
+      "dataAddedOverTime": "Üniversite verileri zamanla ekleniyor — yakında tekrar kontrol edin, ya da başka bir bölge deneyin.",
+      "uncoveredNote": "Not: {count, plural, one {{formatted} incelenmekte olan ülke} other {{formatted} incelenmekte olan ülke}} henüz bir bölgeye eşleştirilmedi ({names}) — yukarıdaki toplama dahil, henüz hiçbir bölge sekmesinde değil.",
+      "sortByName": "Ad"
+    },
+    "comparePage": {
+      "title": "Üniversiteleri karşılaştır",
+      "description": "Burada karşılaştırmak için keşfet sayfasından 2–4 üniversite seçin.",
+      "nothingYetTitle": "Henüz karşılaştırılacak bir şey yok",
+      "nothingYetDescription": "Keşfet sayfasına dönün, her kartta Karşılaştır düğmesiyle en az iki üniversite seçin, sonra karşılaştırma çekmecesini açın.",
+      "backToExplorer": "Keşfet sayfasına dön",
+      "notEnoughTitle": "Bu üniversitelerden yeterince bulunamadı",
+      "notEnoughDescription": "Seçilen üniversitelerden biri veya birkaçı artık mevcut olmayabilir.",
+      "sideBySide": "{count} üniversite yan yana — bilinmeyen alanlar “—” olarak gösterilir, asla tahmin edilmez.",
+      "location": "Konum",
+      "qsRanking": "QS sıralaması",
+      "institutionType": "Kurum türü",
+      "students": "Öğrenci sayısı",
+      "costOfAttendance": "Öğrenim maliyeti",
+      "costPerYear": "{value} / yıl",
+      "admissionRate": "Kabul oranı",
+      "applicationSystem": "Başvuru sistemi",
+      "researchStrengths": "Araştırma güçlü yönleri"
+    }
+  },
+  "sourceBadge": {
+    "source": "Kaynak:",
+    "checked": "{time} kontrol edildi",
+    "viewSource": "Kaynağı görüntüle"
   }
 }

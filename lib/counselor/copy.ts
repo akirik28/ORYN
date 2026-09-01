@@ -1,5 +1,6 @@
 import type { Locale } from "@/lib/i18n/config";
 import { dimensionLabel } from "@/lib/scoring/labels";
+import { REQUIREMENT_CATEGORY_LABELS } from "@/lib/requirements/types";
 import type { ProfileDimension, RequirementCategory } from "@/types/database";
 import type { GapSeverity } from "./types";
 
@@ -12,9 +13,17 @@ import type { GapSeverity } from "./types";
  * (b), which needed the same 9 Turkish names for a second surface) — this file used to carry
  * its own private duplicate rather than widen that module's shape, back when only this file
  * needed Turkish dimension names at all; now that a second caller genuinely exists, the
- * shared version is the single source of truth and this file just calls it. Requirement
- * category names (`requirementCategoryLabel` below) are still this file's own — nothing
- * outside the counselor needs those translated yet, so there's nothing to share.
+ * shared version is the single source of truth and this file just calls it.
+ *
+ * `requirementCategoryLabel` below went through the same widening: its English branch used
+ * to return the bare `RequirementCategory` enum value (e.g. "standardized_test") rather than
+ * a real label, because nothing outside this file read the English side and the counselor's
+ * own sentences never render a category alone. Now that app/(app)/universities/[id]/page.tsx
+ * and features/universities/admin-requirement-form.tsx need the identical English/Turkish
+ * pair this file already builds, the English branch reads from
+ * `lib/requirements/types.ts`'s `REQUIREMENT_CATEGORY_LABELS` (the pre-existing, correct
+ * English map) instead of the raw enum — fixing a live bug (a counselor card titled "Address:
+ * standardized_test (MIT)") as a side effect of the widening, not a separate change.
  *
  * **Not translated word-for-word — restructured per sentence.** English "Addresses X,
  * moderate gap (43/100)" is itself telegraphic label-style copy, not a full sentence; the
@@ -92,7 +101,7 @@ const REQUIREMENT_CATEGORY_LABEL_TR: Record<RequirementCategory, string> = {
 };
 
 export function requirementCategoryLabel(category: RequirementCategory, locale: Locale): string {
-  return locale === "tr" ? REQUIREMENT_CATEGORY_LABEL_TR[category] : category;
+  return locale === "tr" ? REQUIREMENT_CATEGORY_LABEL_TR[category] : REQUIREMENT_CATEGORY_LABELS[category];
 }
 
 /** candidates.ts's two requirement-action title templates. `label` is already resolved

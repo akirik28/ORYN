@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UniversityCard } from "./university-card";
 import { loadMoreUniversities } from "@/app/(app)/universities/actions";
+import { formatNumber } from "@/lib/i18n/format";
 import type { UniversityBrowseParams, UniversityCardMeta } from "@/lib/universities/browse-page";
 import type { University } from "@/types/database";
 
@@ -41,6 +43,7 @@ export function UniversityBrowseGrid({
    *  this component deliberately doesn't carry. */
   buildCountryHref?: Record<string, string>;
 }) {
+  const t = useTranslations("universities.browseGrid");
   const [universities, setUniversities] = useState(initialUniversities);
   const [meta, setMeta] = useState(initialMeta);
   const [savedIds, setSavedIds] = useState(() => new Set(initialSavedIds));
@@ -116,7 +119,7 @@ export function UniversityBrowseGrid({
 
       {/* A silently growing list is infinite scroll's usual accessibility failure. */}
       <div aria-live="polite" className="sr-only">
-        {isPending ? "Loading more universities" : `${universities.length} universities shown`}
+        {isPending ? t("loadingMoreSr") : t("shownCountSr", { count: formatNumber(universities.length) })}
       </div>
 
       {hasMore ? (
@@ -125,17 +128,17 @@ export function UniversityBrowseGrid({
           <Button variant="outline" size="sm" onClick={loadMore} disabled={isPending}>
             {isPending ? (
               <>
-                <Loader2 className="size-3.5 animate-spin" /> Loading…
+                <Loader2 className="size-3.5 animate-spin" /> {t("loading")}
               </>
             ) : error ? (
-              "Try again"
+              t("tryAgain")
             ) : (
-              "Load more"
+              t("loadMore")
             )}
           </Button>
         </div>
       ) : universities.length > 0 ? (
-        <p className="py-6 text-center text-xs text-ink-3">That&apos;s every university matching these filters.</p>
+        <p className="py-6 text-center text-xs text-ink-3">{t("allShown")}</p>
       ) : null}
     </>
   );

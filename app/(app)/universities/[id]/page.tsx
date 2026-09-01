@@ -1,14 +1,15 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { MapPin, Users, DollarSign, GraduationCap, ExternalLink, Trophy, Target, TrendingUp } from "lucide-react";
-import { SUBJECT_LABELS } from "@/lib/programs/subject-labels";
+import { subjectLabel } from "@/lib/programs/subject-labels";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
 import { explainOutlook, type DimensionScoreInput } from "@/lib/admissions/explain";
 import { refreshRequirementEvaluations } from "@/lib/requirements/persist";
-import { REQUIREMENT_CATEGORY_LABELS } from "@/lib/requirements/types";
+import { requirementCategoryLabel } from "@/lib/counselor/copy";
 import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
 import { NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES } from "@/lib/requirements/ingest";
 import { CAO_POINTS_IE } from "@/lib/acquisition/verification";
@@ -28,25 +29,40 @@ import { StatusBadge } from "@/components/oryn/status-badge";
 import { canonicalUniversityId, isSupersededUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
 import { formatTuition, tuitionQualifier } from "@/lib/universities/tuition-format";
 import { formatNumber, formatCurrency } from "@/lib/i18n/format";
+import { formatAbsoluteDate } from "@/lib/i18n/date";
+import type { Locale } from "@/lib/i18n/config";
 import type { RequirementEvaluationStatus, UniversityRequirement, UniversityProgram, UniversityDeadline } from "@/types/database";
+
+/** `Awaited<ReturnType<typeof getTranslations>>` blows up with TS2589 ("type instantiation
+ * excessively deep") the moment the resulting value is actually called with interpolation
+ * values, on this file's own scale of catalog namespace — next-intl's translator type is
+ * generic over the full message shape, and passing it as a plain prop forces TypeScript to
+ * re-resolve that generic at every call site. This is the narrow shape every `t`/`tQsSize`/
+ * `tBindingPolicy` call in this file actually uses (a key, optionally interpolation values),
+ * used only for passing translators between this page's own local helper functions. */
+type Translator = (key: string, values?: Record<string, string | number>) => string;
 
 /** QS's own official Size classification (S/M/L/XL) — a coarse FTE-based band, not an exact
  * headcount; QS doesn't publish the numeric thresholds between them. Used only as a fallback
- * when no exact `student_size` exists yet — see scripts/acquire-qs-institution-profile.ts. */
-const QS_SIZE_LABELS: Record<string, string> = {
-  XS: "Extra small",
-  S: "Small",
-  M: "Medium",
-  L: "Large",
-  XL: "Extra large",
+ * when no exact `student_size` exists yet — see scripts/acquire-qs-institution-profile.ts.
+ * Maps the DB code to a `universities.qsSize` catalog key rather than holding the label text
+ * itself — page-local (only this page's StatCard reads it) but the actual English/Turkish
+ * strings live in the catalog like everything else on this page now. */
+const QS_SIZE_LABEL_KEYS: Record<string, string> = {
+  XS: "extraSmall",
+  S: "small",
+  M: "medium",
+  L: "large",
+  XL: "extraLarge",
 };
 
 /** Null means unknown, not non_binding — see the column comment on
- * university_deadlines.binding_policy. Only rendered when a value is actually present. */
-const BINDING_POLICY_LABELS: Record<string, string> = {
-  binding: "Binding",
-  restrictive_single_choice: "Restrictive / single-choice",
-  non_binding: "Non-binding",
+ * university_deadlines.binding_policy. Only rendered when a value is actually present.
+ * Same catalog-key-indirection as QS_SIZE_LABEL_KEYS above. */
+const BINDING_POLICY_LABEL_KEYS: Record<string, string> = {
+  binding: "binding",
+  restrictive_single_choice: "restrictive",
+  non_binding: "nonBinding",
 };
 
 /** Turkish for the outlook estimate's confidence word — the only enum interpolated
@@ -57,21 +73,6 @@ const CONFIDENCE_LABEL_TR: Record<"high" | "medium" | "low", string> = {
   medium: "orta",
   low: "düşük",
 };
-
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 
 // Without this, every university detail page shared the layout's generic default title —
@@ -96,6 +97,13 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   const session = await requireUser();
   const supabase = await createClient();
   const locale = await resolveLocale();
+  const t = (await getTranslations("universities.detail")) as Translator;
+  // qsSize/bindingPolicy are separate catalog namespaces (siblings of `detail`, not nested
+  // inside it) — same reason as onboarding-wizard.tsx's tCommon: `t("qsSize.small")` would
+  // silently look for `universities.detail.qsSize.small`, which doesn't exist.
+  const tQsSize = (await getTranslations("universities.qsSize")) as Translator;
+  const tBindingPolicy = (await getTranslations("universities.bindingPolicy")) as Translator;
+  const tSourceBadge = (await getTranslations("sourceBadge")) as Translator;
 
   // A loser row still has a real, working detail page (it must — programs/requirements/FKs on
   // one side of a pair are exactly why the row can't just be deleted), but no surface should
@@ -162,7 +170,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   // historical facts" toggle.
   const calendarBoundFacts = (requirementsRes.data ?? [])
     .filter((r) => r.calendar_bound_fact_class === "cao_points_ie")
-    .map((r) => toCalendarBoundFactDisplay(r, CAO_POINTS_IE));
+    .map((r) => toCalendarBoundFactDisplay(r, CAO_POINTS_IE, new Date(), locale));
   if (requirements.length > 0) {
     await refreshRequirementEvaluations(university.id, session.userId!, targetRes.data?.program_id ?? null, locale);
   }
@@ -258,7 +266,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   const domesticTuitionMetric = metricByCode.get("tuition_domestic_annual");
   const internationalTuition = internationalTuitionMetric?.value_numeric ?? null;
   const domesticTuition = domesticTuitionMetric?.value_numeric ?? null;
-  const qsSizeLabel = qsSizeCode ? (QS_SIZE_LABELS[qsSizeCode] ?? qsSizeCode) : null;
+  const qsSizeLabel = qsSizeCode ? (qsSizeCode in QS_SIZE_LABEL_KEYS ? tQsSize(QS_SIZE_LABEL_KEYS[qsSizeCode] as never) : qsSizeCode) : null;
 
   const imageMetric = metricByCode.get("primary_image_url");
   const imageLicenseMetric = metricByCode.get("primary_image_license");
@@ -277,14 +285,14 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       {imageMetric?.value_text ? (
         <DetailHeroImage
           src={imageMetric.value_text}
-          alt={`Main campus of ${university.name}`}
+          alt={t("mainCampusAlt", { name: university.name })}
           caption={
             imageCaptionParts.length > 0 || imageMetric.source_url ? (
               <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
                 {imageCaptionParts.length > 0 ? <span>{imageCaptionParts.join(" · ")}</span> : null}
                 {imageMetric.source_url ? (
                   <a href={imageMetric.source_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                    {imageCaptionParts.length > 0 ? "· Source ↗" : "Source ↗"}
+                    {imageCaptionParts.length > 0 ? `· ${t("sourceLink")}` : t("sourceLink")}
                   </a>
                 ) : null}
               </p>
@@ -438,17 +446,17 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard
           icon={Users}
-          label="Student size"
-          value={university.student_size ? formatNumber(university.student_size) : (qsSizeLabel ?? "Unavailable")}
+          label={t("studentSize")}
+          value={university.student_size ? formatNumber(university.student_size) : (qsSizeLabel ?? t("unavailable"))}
           caption={
             university.student_size && undergradCount != null && postgradCount != null
-              ? `${formatNumber(undergradCount)} undergrad · ${formatNumber(postgradCount)} postgrad`
+              ? t("undergradPostgradCaption", { undergrad: formatNumber(undergradCount), postgrad: formatNumber(postgradCount) })
               : !university.student_size && qsSizeLabel
-                ? "QS size band, not an exact count"
+                ? t("qsSizeBandCaption")
                 : undefined
           }
         />
-        <StatCard icon={GraduationCap} label="Admission rate" value={stats?.admission_rate != null ? `${Math.round(stats.admission_rate * 100)}%` : "Unavailable"} />
+        <StatCard icon={GraduationCap} label={t("admissionRate")} value={stats?.admission_rate != null ? `${Math.round(stats.admission_rate * 100)}%` : t("unavailable")} />
         {/* These read two genuinely different concepts — US `cost_of_attendance` (an IPEDS
             all-in sticker-price estimate) vs a UK-and-onward `tuition_international_annual`
             (tuition only, official-university-page-sourced, often a range) — and are never
@@ -457,7 +465,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
             today (US vs non-US acquisition pipelines don't overlap), so at most one StatCard
             renders real data; if that ever changes, this still can't silently blend them. */}
         {stats?.cost_of_attendance ? (
-          <StatCard icon={DollarSign} label="Cost of attendance" value={formatCurrency(stats.cost_of_attendance)} />
+          <StatCard icon={DollarSign} label={t("costOfAttendance")} value={formatCurrency(stats.cost_of_attendance)} />
         ) : internationalTuition != null ? (
           (() => {
             // Each figure's own precision_state governs its own prefix — international being
@@ -466,18 +474,18 @@ export default async function UniversityDetailPage({ params }: { params: Promise
             // silently mislabelled a UK domestic exact figure ("£9,790/yr") as "From £9,790/yr"
             // whenever the international side happened to be a range — caught live 2026-08-18
             // re-verifying Edinburgh right after adding the Italy upper_bound case.
-            const q = tuitionQualifier(internationalTuitionMetric!.precision_state);
-            const domesticQ = domesticTuitionMetric ? tuitionQualifier(domesticTuitionMetric.precision_state) : null;
+            const q = tuitionQualifier(internationalTuitionMetric!.precision_state, locale);
+            const domesticQ = domesticTuitionMetric ? tuitionQualifier(domesticTuitionMetric.precision_state, locale) : null;
             return (
               <StatCard
                 icon={DollarSign}
-                label="International tuition"
-                value={`${q.valuePrefix}${formatTuition(internationalTuition, internationalTuitionMetric!.unit)}`}
+                label={t("internationalTuition")}
+                value={`${q.valuePrefix}${formatTuition(internationalTuition, internationalTuitionMetric!.unit, locale)}`}
                 caption={
                   domesticTuition != null
-                    ? `${q.note}Domestic rate: ${domesticQ!.valuePrefix}${formatTuition(domesticTuition, domesticTuitionMetric!.unit)}`
+                    ? `${q.note}${t("domesticRateCaption", { rate: `${domesticQ!.valuePrefix}${formatTuition(domesticTuition, domesticTuitionMetric!.unit, locale)}` })}`
                     : q.note
-                      ? `${q.note}— see university for your exact fee`
+                      ? `${q.note}${t("seeUniversityForExactFee")}`
                       : undefined
                 }
               />
@@ -489,30 +497,30 @@ export default async function UniversityDetailPage({ params }: { params: Promise
           // rate is real, verified data too, just clearly labeled as NOT what most of this
           // product's international-applicant audience would actually pay.
           (() => {
-            const q = tuitionQualifier(domesticTuitionMetric!.precision_state);
+            const q = tuitionQualifier(domesticTuitionMetric!.precision_state, locale);
             return (
               <StatCard
                 icon={DollarSign}
-                label="Domestic tuition"
-                value={`${q.valuePrefix}${formatTuition(domesticTuition, domesticTuitionMetric!.unit)}`}
-                caption={q.note ? `${q.note}International fee not separately published` : "International fee not published as a single figure — varies by course"}
+                label={t("domesticTuition")}
+                value={`${q.valuePrefix}${formatTuition(domesticTuition, domesticTuitionMetric!.unit, locale)}`}
+                caption={q.note ? `${q.note}${t("internationalFeeNotSeparate")}` : t("internationalFeeNotPublished")}
               />
             );
           })()
         ) : (
-          <StatCard icon={DollarSign} label="Cost of attendance" value="Unavailable" />
+          <StatCard icon={DollarSign} label={t("costOfAttendance")} value={t("unavailable")} />
         )}
-        <StatCard icon={Target} label="Test scores" value={testScoreRangeLabel(stats)} />
-        <StatCard icon={TrendingUp} label="Graduation rate" value={stats?.graduation_rate != null ? `${Math.round(stats.graduation_rate * 100)}%` : "Unavailable"} />
+        <StatCard icon={Target} label={t("testScores")} value={testScoreRangeLabel(stats, t)} />
+        <StatCard icon={TrendingUp} label={t("graduationRate")} value={stats?.graduation_rate != null ? `${Math.round(stats.graduation_rate * 100)}%` : t("unavailable")} />
       </div>
 
 
       {programsRes.data && programsRes.data.length > 0 ? (
         <section className="space-y-5">
-          <SectionHeader title="Programs" description="Degree programs Oryn has verified against this university's own official pages." />
-          {groupProgramsBySubject(programsRes.data).map(([subjectLabel, programs]) => (
-            <div key={subjectLabel} className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground">{subjectLabel}</h3>
+          <SectionHeader title={t("programsTitle")} description={t("programsDescription")} />
+          {groupProgramsBySubject(programsRes.data, locale).map(([subject, programs]) => (
+            <div key={subject} className="space-y-2">
+              <h3 className="text-sm font-medium text-muted-foreground">{subject}</h3>
               <ul className="grid gap-2 sm:grid-cols-2">
                 {programs.map((program) => (
                   <li key={program.id} className="space-y-1 rounded-lg border p-3 text-sm">
@@ -524,7 +532,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
                           target="_blank"
                           rel="noopener noreferrer"
                           className="shrink-0 text-muted-foreground hover:text-brand-primary"
-                          aria-label={`Official page for ${program.name}`}
+                          aria-label={t("officialPageAriaLabel", { name: program.name })}
                         >
                           <ExternalLink className="size-3.5" />
                         </a>
@@ -541,7 +549,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
 
       {researchTopics.length > 0 ? (
         <section className="space-y-3">
-          <SectionHeader title="Research strengths" description="Topics this university publishes in most, from OpenAlex's open research index." />
+          <SectionHeader title={t("researchStrengthsTitle")} description={t("researchStrengthsDescription")} />
           <div className="flex flex-wrap gap-2">
             {researchTopics.map((topic) => (
               <span key={topic} className="rounded-full border bg-muted/50 px-3 py-1 text-xs text-muted-foreground">
@@ -550,17 +558,22 @@ export default async function UniversityDetailPage({ params }: { params: Promise
             ))}
           </div>
           {researchTopicsMetric?.source_url ? (
-            <SourceBadge sourceName="OpenAlex" checkedAt={researchTopicsMetric.verified_at} url={researchTopicsMetric.source_url} />
+            <SourceBadge
+              sourceName="OpenAlex"
+              checkedAt={researchTopicsMetric.verified_at}
+              url={researchTopicsMetric.source_url}
+              locale={locale}
+              sourceLabel={tSourceBadge("source")}
+              checkedLabel={(time) => tSourceBadge("checked", { time })}
+              viewSourceLabel={tSourceBadge("viewSource")}
+            />
           ) : null}
         </section>
       ) : null}
 
       {requirements.length > 0 ? (
         <section className="space-y-4">
-          <SectionHeader
-            title="Requirement check"
-            description="Oryn's read of your profile against each stated requirement — not an official admissions decision. See each source before relying on it."
-          />
+          <SectionHeader title={t("requirementCheckTitle")} description={t("requirementCheckDescription")} />
           {universityWideRequirements.length > 0 ? (
             <RequirementGroup
               title={locale === "tr" ? "Program kaydedilmemiş" : "Program not recorded"}
@@ -571,28 +584,37 @@ export default async function UniversityDetailPage({ params }: { params: Promise
               }
               items={universityWideRequirements}
               evaluationByRequirement={evaluationByRequirement}
+              locale={locale}
+              t={t}
             />
           ) : null}
           {[...requirementsByProgram.entries()].map(([programId, items]) => (
-            <RequirementGroup key={programId} title={programNameById.get(programId) ?? "Program"} items={items} evaluationByRequirement={evaluationByRequirement} />
+            <RequirementGroup
+              key={programId}
+              title={programNameById.get(programId) ?? t("programFallback")}
+              items={items}
+              evaluationByRequirement={evaluationByRequirement}
+              locale={locale}
+              t={t}
+            />
           ))}
         </section>
       ) : null}
 
       {calendarBoundFacts.length > 0 ? (
         <section className="space-y-4">
-          <CalendarBoundFactList title="Recent admissions data" items={calendarBoundFacts} />
+          <CalendarBoundFactList title={t("recentAdmissionsData")} items={calendarBoundFacts} />
         </section>
       ) : null}
 
       {datedDeadlines.length > 0 || recurringDeadlines.length > 0 ? (
         <section className="space-y-4">
-          <SectionHeader title="Important dates" description="Deadlines Oryn has verified against this university's own official pages." />
+          <SectionHeader title={t("importantDatesTitle")} description={t("importantDatesDescription")} />
           {datedDeadlines.length > 0 ? (
-            <DeadlineGroup title="Upcoming" kind="dated" items={datedDeadlines} programNameById={programNameById} />
+            <DeadlineGroup title={t("upcoming")} kind="dated" items={datedDeadlines} programNameById={programNameById} locale={locale} t={t} tBindingPolicy={tBindingPolicy} />
           ) : null}
           {recurringDeadlines.length > 0 ? (
-            <DeadlineGroup title="Recurring — exact year not published" kind="recurring" items={recurringDeadlines} programNameById={programNameById} />
+            <DeadlineGroup title={t("recurringTitle")} kind="recurring" items={recurringDeadlines} programNameById={programNameById} locale={locale} t={t} tBindingPolicy={tBindingPolicy} />
           ) : null}
         </section>
       ) : null}
@@ -603,12 +625,12 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
           {university.website_url ? (
             <a href={university.website_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
-              Visit official website <ExternalLink className="size-3.5" />
+              {t("visitWebsite")} <ExternalLink className="size-3.5" />
             </a>
           ) : null}
           {university.admissions_url ? (
             <a href={university.admissions_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
-              Admissions{university.application_system ? ` (${university.application_system})` : ""} <ExternalLink className="size-3.5" />
+              {t("admissions")}{university.application_system ? ` (${university.application_system})` : ""} <ExternalLink className="size-3.5" />
             </a>
           ) : null}
         </div>
@@ -616,14 +638,18 @@ export default async function UniversityDetailPage({ params }: { params: Promise
 
       {sourcesRes.data && sourcesRes.data.length > 0 ? (
         <section className="space-y-2">
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Sources</p>
+          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase" lang={locale}>{t("sourcesHeading")}</p>
           <div className="flex flex-wrap gap-x-4 gap-y-2">
             {sourcesRes.data.map((source) => (
               <SourceBadge
                 key={source.id}
-                sourceName={source.source_domain ?? source.source_url ?? "Unknown source"}
+                sourceName={source.source_domain ?? source.source_url ?? t("unknownSource")}
                 checkedAt={source.retrieved_at}
                 url={source.source_url}
+                locale={locale}
+                sourceLabel={tSourceBadge("source")}
+                checkedLabel={(time) => tSourceBadge("checked", { time })}
+                viewSourceLabel={tSourceBadge("viewSource")}
               />
             ))}
           </div>
@@ -636,13 +662,13 @@ export default async function UniversityDetailPage({ params }: { params: Promise
 /** Groups verified programs by subject for the detail page, ordered by group size
  * (largest first) so a student sees the university's clearest strengths first.
  * "Other programs" (unclassified names) always sorts last regardless of size. */
-function groupProgramsBySubject(programs: UniversityProgram[]): [string, UniversityProgram[]][] {
+function groupProgramsBySubject(programs: UniversityProgram[], locale: Locale): [string, UniversityProgram[]][] {
   const bySubject = new Map<string, UniversityProgram[]>();
   for (const program of programs) {
-    const label = SUBJECT_LABELS[program.subject_taxonomy ?? "other"];
+    const label = subjectLabel(program.subject_taxonomy ?? "other", locale);
     bySubject.set(label, [...(bySubject.get(label) ?? []), program]);
   }
-  const otherLabel = SUBJECT_LABELS.other;
+  const otherLabel = subjectLabel("other", locale);
   return [...bySubject.entries()]
     .map(([label, items]): [string, UniversityProgram[]] => [label, [...items].sort((a, b) => a.name.localeCompare(b.name))])
     .sort(([labelA, itemsA], [labelB, itemsB]) => {
@@ -653,11 +679,15 @@ function groupProgramsBySubject(programs: UniversityProgram[]): [string, Univers
 }
 
 /** SAT preferred over ACT when both are on file — no ranking claim, just a stable pick so
- * the card doesn't flip between the two across universities that report both. */
-function testScoreRangeLabel(stats: { sat_range_low: number | null; sat_range_high: number | null; act_range_low: number | null; act_range_high: number | null } | null | undefined): string {
+ * the card doesn't flip between the two across universities that report both. SAT/ACT are
+ * the tests' own real names, not translated; only the "Unavailable" fallback needs `t`. */
+function testScoreRangeLabel(
+  stats: { sat_range_low: number | null; sat_range_high: number | null; act_range_low: number | null; act_range_high: number | null } | null | undefined,
+  t: Translator
+): string {
   if (stats?.sat_range_low != null && stats?.sat_range_high != null) return `SAT ${stats.sat_range_low}–${stats.sat_range_high}`;
   if (stats?.act_range_low != null && stats?.act_range_high != null) return `ACT ${stats.act_range_low}–${stats.act_range_high}`;
-  return "Unavailable";
+  return t("unavailable");
 }
 
 function StatCard({ icon: Icon, label, value, caption }: { icon: typeof Users; label: string; value: string; caption?: string }) {
@@ -675,16 +705,20 @@ function StatCard({ icon: Icon, label, value, caption }: { icon: typeof Users; l
   );
 }
 
-/** "15 January" — never a year. Pure array lookup and string concatenation, so there is no
- * Date object for a missing year to be silently coerced into (1970, the current year, etc). */
-function formatRecurringDate(month: number, day: number): string {
-  return `${MONTH_NAMES[month - 1]} ${day}, annually`;
+/** "15 January, annually" / "Her yıl 15 Ocak" — never a year. `formatAbsoluteDate` is given a
+ * synthetic, fixed-year UTC date (year 2000 is arbitrary — only its month/day are read) so
+ * there is no real Date object for a missing year to be silently coerced into (1970, the
+ * current year, etc); Intl's own month/day ordering per locale replaces the old hand-rolled
+ * MONTH_NAMES array. */
+function formatRecurringDate(month: number, day: number, locale: Locale, t: Translator): string {
+  const date = formatAbsoluteDate(new Date(Date.UTC(2000, month - 1, day)), locale, { month: "long", day: "numeric", timeZone: "UTC" });
+  return t("recurringAnnually", { date });
 }
 
 /** deadline_date is a real, cycle-specific date here — appending a local midnight time avoids
  * new Date("YYYY-MM-DD") parsing as UTC and displaying a day early in negative-UTC timezones. */
-function formatDeadlineDate(dateString: string): string {
-  return new Date(`${dateString}T00:00:00`).toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
+function formatDeadlineDate(dateString: string, locale: Locale): string {
+  return formatAbsoluteDate(new Date(`${dateString}T00:00:00`), locale);
 }
 
 function humanizeDeadlineType(type: string): string {
@@ -702,6 +736,8 @@ function RequirementGroup({
   description,
   items,
   evaluationByRequirement,
+  locale,
+  t,
 }: {
   title: string;
   /** Optional sub-heading text — used only by the unlinked ("program not recorded") group,
@@ -711,6 +747,8 @@ function RequirementGroup({
   description?: string;
   items: UniversityRequirement[];
   evaluationByRequirement: Map<string, { status: RequirementEvaluationStatus; reasoning: string }>;
+  locale: Locale;
+  t: Translator;
 }) {
   return (
     <div className="space-y-2">
@@ -720,23 +758,24 @@ function RequirementGroup({
         {items.map((req) => {
           const evaluation = evaluationByRequirement.get(req.id);
           const isInformational = req.requirement_type === "application_deadline";
+          const categoryLabel = requirementCategoryLabel(req.requirement_type, locale);
           return (
             <li key={req.id} className="space-y-1 px-4 py-2.5 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <span className="font-medium">{req.title ?? REQUIREMENT_CATEGORY_LABELS[req.requirement_type]}</span>
+                  <span className="font-medium">{req.title ?? categoryLabel}</span>
                   <span className="ml-2 text-xs text-muted-foreground">
-                    {REQUIREMENT_CATEGORY_LABELS[req.requirement_type]}
-                    {!req.is_required ? " · Optional" : ""}
+                    {categoryLabel}
+                    {!req.is_required ? ` · ${t("optional")}` : ""}
                   </span>
                 </div>
-                {evaluation && !isInformational ? <RequirementEvaluationBadge status={evaluation.status} /> : null}
+                {evaluation && !isInformational ? <RequirementEvaluationBadge status={evaluation.status} locale={locale} /> : null}
               </div>
               {req.requirement_detail ? <p className="text-muted-foreground">{req.requirement_detail}</p> : null}
               {evaluation?.reasoning && !isInformational ? <p className="text-xs text-muted-foreground">{evaluation.reasoning}</p> : null}
               {req.source_url ? (
                 <a href={req.source_url} target="_blank" rel="noopener noreferrer" className="inline-block text-xs text-primary hover:underline">
-                  Source ↗
+                  {t("sourceLink")}
                 </a>
               ) : null}
             </li>
@@ -752,11 +791,17 @@ function DeadlineGroup({
   kind,
   items,
   programNameById,
+  locale,
+  t,
+  tBindingPolicy,
 }: {
   title: string;
   kind: "dated" | "recurring";
   items: DeadlineRow[];
   programNameById: Map<string, string>;
+  locale: Locale;
+  t: Translator;
+  tBindingPolicy: Translator;
 }) {
   return (
     <div className="space-y-2">
@@ -767,21 +812,26 @@ function DeadlineGroup({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <span className="font-medium">{humanizeDeadlineType(d.deadline_type)}</span>
-                {d.program_id ? <span className="ml-2 text-xs text-muted-foreground">{programNameById.get(d.program_id) ?? "Program-specific"}</span> : null}
+                {d.program_id ? <span className="ml-2 text-xs text-muted-foreground">{programNameById.get(d.program_id) ?? t("programSpecific")}</span> : null}
                 {d.cycle_label ? <span className="ml-2 text-xs text-muted-foreground">· {d.cycle_label}</span> : null}
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                {d.binding_policy ? <StatusBadge label={BINDING_POLICY_LABELS[d.binding_policy] ?? d.binding_policy} tone="neutral" /> : null}
-                {kind === "dated" ? <DeadlineBadge date={d.deadline_date!} /> : <StatusBadge label="Recurring" tone="neutral" />}
+                {d.binding_policy ? (
+                  <StatusBadge
+                    label={d.binding_policy in BINDING_POLICY_LABEL_KEYS ? tBindingPolicy(BINDING_POLICY_LABEL_KEYS[d.binding_policy] as never) : d.binding_policy}
+                    tone="neutral"
+                  />
+                ) : null}
+                {kind === "dated" ? <DeadlineBadge date={d.deadline_date!} /> : <StatusBadge label={t("recurringBadge")} tone="neutral" />}
               </div>
             </div>
             <p className="text-muted-foreground">
-              {kind === "dated" ? formatDeadlineDate(d.deadline_date!) : formatRecurringDate(d.recurrence_month!, d.recurrence_day!)}
+              {kind === "dated" ? formatDeadlineDate(d.deadline_date!, locale) : formatRecurringDate(d.recurrence_month!, d.recurrence_day!, locale, t)}
             </p>
             {d.deadline_text_verbatim ? <p className="text-xs text-muted-foreground italic">&ldquo;{d.deadline_text_verbatim}&rdquo;</p> : null}
             {d.source_url ? (
               <a href={d.source_url} target="_blank" rel="noopener noreferrer" className="inline-block text-xs text-primary hover:underline">
-                Source ↗
+                {t("sourceLink")}
               </a>
             ) : null}
           </li>

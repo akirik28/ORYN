@@ -1,8 +1,18 @@
+import type { Locale } from "@/lib/i18n/config";
+
 /**
  * Explorer filter definitions (P0E) and the pure narrowing logic behind them — deliberately
  * factored out of app/(app)/universities/page.tsx so this part is unit-testable the way the
  * rest of this codebase tests DB-adjacent logic (see alias-search.ts's rankUniversities):
  * pure functions with every dependency passed in, no Supabase client, no closure state.
+ *
+ * Each bucket/option array below keeps its English `label` field as-is — `applyRangeFilters`
+ * and __tests__/universities/filters.test.ts's contiguity checks only ever read `.value`/
+ * `.min`/`.max`, and the label is display-only. The `*Label` functions past the arrays are
+ * what app/(app)/universities/page.tsx actually calls to build a FilterOption's visible text;
+ * the dollar/student-count figures inside each label stay English-formatted either way, same
+ * as lib/i18n/format.ts's number formatting and lib/universities/tuition-format.ts's amounts —
+ * only the surrounding words translate.
  */
 
 export interface RangeBucket<V extends string> {
@@ -40,6 +50,46 @@ export const TYPE_OPTIONS: { value: InstitutionTypeFilter; label: string }[] = [
 export const RANK_TIERS = ["10", "25", "50", "100", "250", "500"] as const;
 export type RankTierValue = (typeof RANK_TIERS)[number];
 export const RANK_OPTIONS = RANK_TIERS.map((t) => ({ value: t, label: `Top ${t}` }));
+
+// English-style comma grouping even in the Turkish label — matching every other number on
+// this page (lib/i18n/format.ts's formatNumber, lib/universities/tuition-format.ts), not
+// Turkish's own period-grouped convention. These four are hand-authored preset boundaries,
+// not live data through formatNumber(), so nothing enforced this automatically; caught live
+// rendering "10.000 $ altı" next to a "$82,730" cost-of-attendance figure on the same card.
+const COST_BUCKET_LABEL_TR: Record<CostBucketValue, string> = {
+  under10k: "10,000 $ altı",
+  "10-25k": "10,000 $ – 25,000 $",
+  "25-50k": "25,000 $ – 50,000 $",
+  "50k-plus": "50,000 $ ve üzeri",
+};
+
+export function costBucketLabel(value: CostBucketValue, locale: Locale): string {
+  return locale === "tr" ? COST_BUCKET_LABEL_TR[value] : COST_BUCKETS.find((b) => b.value === value)!.label;
+}
+
+const SIZE_BUCKET_LABEL_TR: Record<SizeBucketValue, string> = {
+  under5k: "5,000 öğrenci altı",
+  "5-15k": "5,000 – 15,000 öğrenci",
+  "15-30k": "15,000 – 30,000 öğrenci",
+  "30k-plus": "30,000+ öğrenci",
+};
+
+export function sizeBucketLabel(value: SizeBucketValue, locale: Locale): string {
+  return locale === "tr" ? SIZE_BUCKET_LABEL_TR[value] : SIZE_BUCKETS.find((b) => b.value === value)!.label;
+}
+
+const TYPE_OPTION_LABEL_TR: Record<InstitutionTypeFilter, string> = {
+  public: "Devlet",
+  private: "Özel",
+};
+
+export function typeOptionLabel(value: InstitutionTypeFilter, locale: Locale): string {
+  return locale === "tr" ? TYPE_OPTION_LABEL_TR[value] : TYPE_OPTIONS.find((t) => t.value === value)!.label;
+}
+
+export function rankOptionLabel(value: RankTierValue, locale: Locale): string {
+  return locale === "tr" ? `İlk ${value}` : `Top ${value}`;
+}
 
 // Deliberately not offered as filters this pass, and not silently missing — documented here so
 // the gap is a decision, not an oversight: admission_rate (128/1019, ~13%) and application_system
