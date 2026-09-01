@@ -16,8 +16,14 @@
  * 2. **Locale-aware file count.** Rough, and gets less meaningful as the catalog grows:
  *    once most copy is in messages/*.json, "does this file branch on locale" stops being
  *    the interesting question.
- * 3. **Untranslated user-facing strings.** A FLOOR, never a total — see the comment on
- *    USER_FACING below for exactly what it misses.
+ * 3. **Untranslated user-facing strings**, counted in EVERY file — including locale-aware
+ *    ones. The first version skipped a file entirely once it contained a single
+ *    `useTranslations` call, so a half-translated file dropped out of the count and read as
+ *    finished (found by the lane doing the translating, 2026-09-01). That is the same
+ *    confident-output-from-absent-input shape this measurement exists to expose, so it was
+ *    worth fixing in the ruler rather than working around. Partly-done files are now listed
+ *    separately, because they are the ones a coverage number most easily hides.
+ *    Still a FLOOR, never a total — see the comment on USER_FACING below.
  *
  * Plain Node/tsx: no `server-only` imports, no Next bundler, so it runs anywhere.
  */
@@ -87,31 +93,44 @@ const files = SCAN_DIRS.flatMap((d) => walk(join(ROOT, d)));
 let aware = 0;
 const untranslated: Array<{ file: string; count: number }> = [];
 
+const partlyDone: Array<{ file: string; count: number }> = [];
+
 for (const file of files) {
   const source = readFileSync(file, "utf8");
-  if (LOCALE_AWARE.test(source)) {
-    aware += 1;
-    continue;
-  }
+  const isAware = LOCALE_AWARE.test(source);
+  if (isAware) aware += 1;
+
   const rel = relative(ROOT, file);
   if (NOT_STUDENT_FACING.some((re) => re.test(`/${rel}`))) continue;
+
   const count = source.match(USER_FACING)?.length ?? 0;
-  if (count > 0) untranslated.push({ file: rel, count });
+  if (count === 0) continue;
+  // A locale-aware file with leftover raw JSX text is a partial translation, not an
+  // untouched one. Both are unfinished; only the second is obvious.
+  (isAware ? partlyDone : untranslated).push({ file: rel, count });
 }
 
 untranslated.sort((a, b) => b.count - a.count);
+partlyDone.sort((a, b) => b.count - a.count);
 const strings = untranslated.reduce((sum, f) => sum + f.count, 0);
+const partlyDoneStrings = partlyDone.reduce((sum, f) => sum + f.count, 0);
 
 console.log("\nComponents");
 console.log(`  ${aware} of ${files.length} .tsx files under ${SCAN_DIRS.join("/ and ")}/ are locale-aware`);
-console.log(`  ${untranslated.length} student-facing files carry >= ${strings} untranslated user-facing strings (floor, see header)`);
-console.log("\n  Largest blocks:");
+console.log(`  ${untranslated.length} untouched student-facing files carry >= ${strings} untranslated user-facing strings (floor, see header)`);
+console.log(`  ${partlyDone.length} locale-aware files still carry >= ${partlyDoneStrings} raw strings — partly translated, and easy for a coverage number to hide`);
+console.log("\n  Largest untouched blocks:");
 for (const { file, count } of untranslated.slice(0, 10)) console.log(`    ${String(count).padStart(3)}  ${file}`);
+if (partlyDone.length > 0) {
+  console.log("\n  Partly translated — verify these by hand, the file already looks done:");
+  for (const { file, count } of partlyDone.slice(0, 10)) console.log(`    ${String(count).padStart(3)}  ${file}`);
+}
 
 // Grouped by area, because that is the unit a translation package is actually scoped in --
-// "features/profile" is a thing someone can take; a list of 86 files is not.
+// "features/profile" is a thing someone can take; a list of 86 files is not. Partly-done
+// files count here too: the remaining work in an area includes finishing what was started.
 const byArea = new Map<string, { files: number; strings: number }>();
-for (const { file, count } of untranslated) {
+for (const { file, count } of [...untranslated, ...partlyDone]) {
   const area = file.match(/^(app\/\([a-z-]+\)\/[a-z-]+|features\/[a-z-]+)/)?.[1] ?? file;
   const entry = byArea.get(area) ?? { files: 0, strings: 0 };
   byArea.set(area, { files: entry.files + 1, strings: entry.strings + count });

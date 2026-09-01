@@ -47,6 +47,23 @@ Sampled to confirm these are real: `features/messaging/conversation-thread.tsx` 
 "Conversation options", "No messages", "Write a message…", "Report this", "What's wrong
 with this message?", "Submit report".
 
+## The number hid partly-translated files, until it didn't
+
+The first version of `check:i18n` skipped a file entirely once it contained a single
+`useTranslations` call. So a file where half the strings had been converted counted as
+locale-aware, dropped out of the untranslated total, and read as finished. Found by the lane
+doing the translating, 2026-09-01 — and it is the same shape this whole document is about:
+a confident number produced where the input was never looked at.
+
+Fixed in the ruler rather than worked around. Raw strings are now counted in every file, and
+locale-aware files with leftovers are listed separately as **partly translated**, because
+those are precisely the ones a coverage number hides. The first run after the fix surfaced
+42 such strings in 4 files — 20 of them in `features/dashboard/dashboard-view.tsx`, the
+most-seen surface in the product, which had been reading as done.
+
+The operational lesson for anyone taking a package: use this script to decide *which files*
+to prioritise, never to decide whether a file is *finished*. Inside a file, check by hand.
+
 ## Read the 332 as a floor, not a total
 
 The count matches JSX text nodes of two or more words plus
