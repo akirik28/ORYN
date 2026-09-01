@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, type ReactNode } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { Plus, ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,10 @@ export interface QuickAddType {
  * other save on this page.
  */
 export function QuickAddEntry({ types }: { types: QuickAddType[] }) {
+  const t = useTranslations("common");
+  const tQuick = useTranslations("profile.quickAddEntry");
+  const tAchievement = useTranslations("profile.achievementSection");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"pick" | "form">("pick");
   const [selected, setSelected] = useState<QuickAddType | null>(null);
@@ -86,20 +91,24 @@ export function QuickAddEntry({ types }: { types: QuickAddType[] }) {
         return;
       }
       setOpen(false);
-      toast.success(`Added ${label.toLowerCase()} to your journey.`);
+      toast.success(tQuick("addedToast", { label: locale === "tr" ? label : label.toLocaleLowerCase(locale) }));
     });
   }
 
   return (
     <>
       <Button size="sm" onClick={openModal}>
-        <Plus className="size-4" /> Add to your journey
+        <Plus className="size-4" /> {tQuick("addToJourney")}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{step === "pick" ? "What would you like to add?" : `Add ${selected?.label.toLowerCase()}`}</DialogTitle>
+            <DialogTitle>
+              {step === "pick"
+                ? tQuick("whatToAdd")
+                : tAchievement("addDialogTitle", { title: selected ? (locale === "tr" ? selected.label : selected.label.toLocaleLowerCase(locale)) : "" })}
+            </DialogTitle>
           </DialogHeader>
 
           {step === "pick" ? (
@@ -126,16 +135,16 @@ export function QuickAddEntry({ types }: { types: QuickAddType[] }) {
           <DialogFooter>
             {step === "form" ? (
               <Button variant="ghost" onClick={() => setStep("pick")} disabled={isPending}>
-                <ArrowLeft className="size-4" /> Back
+                <ArrowLeft className="size-4" /> {tQuick("back")}
               </Button>
             ) : null}
             <Button variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
-              Cancel
+              {t("cancel")}
             </Button>
             {step === "form" ? (
               <Button onClick={submit} disabled={isPending}>
                 {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-                Save
+                {t("save")}
               </Button>
             ) : null}
           </DialogFooter>

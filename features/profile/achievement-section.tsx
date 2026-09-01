@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { Plus, Pencil, Trash2, Loader2, Sparkles, Check, Inbox, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,9 @@ export function AchievementSection<T extends { id: string }>({
   emptyStateIcon = Inbox,
   glowVariant,
 }: AchievementSectionProps<T>) {
+  const t = useTranslations("common");
+  const tSection = useTranslations("profile.achievementSection");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [values, setValues] = useState<FormValues>(defaultValues);
@@ -161,7 +165,7 @@ export function AchievementSection<T extends { id: string }>({
         description={description}
         action={
           <Button variant="outline" size="sm" onClick={openCreate}>
-            <Plus className="size-4" /> Add
+            <Plus className="size-4" /> {t("add")}
           </Button>
         }
       />
@@ -171,7 +175,7 @@ export function AchievementSection<T extends { id: string }>({
       ) : (
         <ul className="divide-y divide-white/45 overflow-hidden rounded-xl border border-white/50 bg-white/35">
           {items.map((item) => {
-            const summary = summaries[item.id] ?? { title: "Untitled" };
+            const summary = summaries[item.id] ?? { title: tSection("untitled") };
             return (
               <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-3">
                 <div className="min-w-0">
@@ -179,7 +183,7 @@ export function AchievementSection<T extends { id: string }>({
                   {summary.subtitle ? <p className="truncate text-sm text-muted-foreground">{summary.subtitle}</p> : null}
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
-                  <Button variant="ghost" size="icon-sm" onClick={() => openEdit(item)} aria-label="Edit">
+                  <Button variant="ghost" size="icon-sm" onClick={() => openEdit(item)} aria-label={t("edit")}>
                     <Pencil className="size-3.5" />
                   </Button>
                   <Button
@@ -187,7 +191,7 @@ export function AchievementSection<T extends { id: string }>({
                     size="icon-sm"
                     onClick={() => handleDelete(item.id)}
                     disabled={isPending && deletingId === item.id}
-                    aria-label="Delete"
+                    aria-label={t("delete")}
                   >
                     {isPending && deletingId === item.id ? (
                       <Loader2 className="size-3.5 animate-spin" />
@@ -206,7 +210,9 @@ export function AchievementSection<T extends { id: string }>({
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {editingId ? "Edit" : "Add"} {title.toLowerCase()}
+              {editingId
+                ? tSection("editDialogTitle", { title: locale === "tr" ? title : title.toLocaleLowerCase(locale) })
+                : tSection("addDialogTitle", { title: locale === "tr" ? title : title.toLocaleLowerCase(locale) })}
             </DialogTitle>
           </DialogHeader>
           <DynamicFormFields fields={fields} values={values} onChange={handleChange} />
@@ -215,14 +221,14 @@ export function AchievementSection<T extends { id: string }>({
             <div className="space-y-2 rounded-lg border border-dashed p-3">
               <Button variant="ghost" size="sm" onClick={requestRefinement} disabled={isRefining || !String(values.title ?? "").trim()}>
                 {isRefining ? <Loader2 className="size-3.5 animate-spin" /> : <Sparkles className="size-3.5 text-brand-primary" />}
-                Improve this entry with AI
+                {tSection("improveWithAi")}
               </Button>
               {refineError ? <p className="text-xs text-destructive">{refineError}</p> : null}
               {refinement?.improvedDescription ? (
                 <div className="space-y-1.5 rounded-md bg-accent/50 p-2.5 text-sm">
                   <p>{refinement.improvedDescription}</p>
                   <Button variant="outline" size="xs" onClick={acceptImprovedDescription}>
-                    <Check className="size-3" /> Use this description
+                    <Check className="size-3" /> {tSection("useThisDescription")}
                   </Button>
                 </div>
               ) : null}
@@ -239,11 +245,11 @@ export function AchievementSection<T extends { id: string }>({
           {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button onClick={submit} disabled={isPending}>
               {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-              Save
+              {t("save")}
             </Button>
           </DialogFooter>
         </DialogContent>

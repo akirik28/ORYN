@@ -1,4 +1,5 @@
-import { DIMENSION_LABELS_SHORT, DIMENSION_ORDER } from "@/lib/scoring/labels";
+import { getLocale } from "next-intl/server";
+import { dimensionLabelShort, DIMENSION_ORDER } from "@/lib/scoring/labels";
 import type { ProfileDimension } from "@/types/database";
 
 const SIZE = 360;
@@ -18,7 +19,8 @@ function pointFor(index: number, total: number, radius: number) {
   return { x: CENTER + radius * Math.cos(angle), y: CENTER + radius * Math.sin(angle) };
 }
 
-export function ScoreRadar({ scores }: { scores: Partial<Record<ProfileDimension, number>> }) {
+export async function ScoreRadar({ scores }: { scores: Partial<Record<ProfileDimension, number>> }) {
+  const locale = await getLocale();
   const total = DIMENSION_ORDER.length;
 
   const dataPoints = DIMENSION_ORDER.map((dimension, i) => pointFor(i, total, (MAX_RADIUS * (scores[dimension] ?? 0)) / 100));
@@ -64,7 +66,7 @@ export function ScoreRadar({ scores }: { scores: Partial<Record<ProfileDimension
             dominantBaseline="middle"
             className="fill-muted-foreground text-[10px] font-medium"
           >
-            {DIMENSION_LABELS_SHORT[dimension]}
+            {dimensionLabelShort(dimension, locale)}
           </text>
         );
       })}

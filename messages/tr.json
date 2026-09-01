@@ -50,7 +50,11 @@
     "submit": "Gönder",
     "delete": "Sil",
     "show": "Göster",
-    "hide": "Gizle"
+    "hide": "Gizle",
+    "add": "Ekle",
+    "edit": "Düzenle",
+    "save": "Kaydet",
+    "selectPlaceholder": "Seç…"
   },
   "profile": {
     "backToProfile": "Profile geri dön",
@@ -164,6 +168,98 @@
     "portfolio": {
       "title": "Portföy",
       "description": "Yaptığın her şey, tek bir yerde."
+    },
+    "researchIdeaGenerator": {
+      "trigger": "Araştırma fikri üret",
+      "dialogTitle": "Araştırma proje fikirleri",
+      "fieldLabel": "Alan",
+      "generate": "Üret",
+      "duration": "Süre:",
+      "output": "Çıktı:",
+      "firstSteps": "İlk adımlar:",
+      "added": "Eklendi"
+    },
+    "recentActivity": {
+      "heading": "Son eklenenler"
+    },
+    "quickAddEntry": {
+      "addToJourney": "Yolculuğuna ekle",
+      "whatToAdd": "Ne eklemek istersin?",
+      "back": "Geri",
+      "addedToast": "{label} yolculuğuna eklendi."
+    },
+    "journeyTimeline": {
+      "emptyTitle": "Bir şey eklediğin an yolculuğun başlar",
+      "emptyDescription": "Dersler, faaliyetler, projeler, ödüller, iş — yaptığın her şey. Oryn bu zaman çizelgesini aşağıdaki bölümlerden oluşturur ve sırada ne önereceğini bulmak için okur.",
+      "undated": "Tarihsiz",
+      "noDateRecorded": "Kayıtlı tarih yok",
+      "entryCount": "{count, plural, one {# kayıt} other {# kayıt}}",
+      "kindLabels": {
+        "leadership": "Liderlik",
+        "activity": "Faaliyet",
+        "research": "Araştırma",
+        "project": "Proje",
+        "work": "İş",
+        "volunteering": "Gönüllülük",
+        "sport": "Spor",
+        "award": "Ödül",
+        "certification": "Sertifika",
+        "course": "Ders",
+        "test_score": "Sınav puanı",
+        "education": "Eğitim"
+      }
+    },
+    "professionalIdentity": {
+      "headlineLabel": "Başlık",
+      "headlinePlaceholder": "ör. Geleceğin Ekonomisti · 11. Sınıf",
+      "aboutLabel": "Hakkımda",
+      "aboutPlaceholder": "Kim olduğun ve neye doğru çalıştığın hakkında kısa bir özet.",
+      "saved": "Kaydedildi"
+    },
+    "openTo": {
+      "whoCanSeeThis": "Bunu kim görebilir"
+    },
+    "contactInfo": {
+      "fieldPhone": "Telefon",
+      "fieldEmail": "E-posta",
+      "fieldWebsite": "Web sitesi / portfolyo",
+      "visibilityLabel": "Görünürlük",
+      "visibilityOnlyMe": "Yalnızca ben",
+      "visibilityConnections": "Bağlantılar",
+      "visibilityAnyone": "Herkes",
+      "minorPhoneNotice": "18 yaşından küçük olduğun için telefon numaran yalnızca gizli olarak veya bağlantılarınla paylaşılabilir — asla herkese açık olarak değil.",
+      "saved": "Kaydedildi"
+    },
+    "portfolioView": {
+      "emptyTitle": "Henüz burada bir şey yok",
+      "emptyDescription": "Profiline eklediğin başarılar burada otomatik olarak görünecek.",
+      "timeline": "Zaman çizelgesi",
+      "byCategory": "Kategoriye göre"
+    },
+    "cvBuilder": {
+      "emptyTitle": "Önce profiline başarı ekle",
+      "emptyDescription": "CV'in tamamen yapılandırılmış profilinden oluşturulur, sıfırdan yazılmaz.",
+      "cvTitleLabel": "CV başlığı",
+      "cvTitlePlaceholder": "ör. Ekonomi CV'si",
+      "cvTitleHelper": "Yalnızca kendi referansın için — CV'nin üzerinde yazdırılmaz.",
+      "includeCount": "Dahil et ({selected}/{total})",
+      "printButton": "Yazdır / PDF olarak kaydet"
+    },
+    "peerBenchmark": {
+      "notEnoughStudents": "Henüz karşılaştırılabilir yeterli Oryn öğrencisi yok",
+      "notEnoughDescription": "Akran karşılaştırması gösterebilmek için ({cohort}, en az {min}).",
+      "comparedTo": "Karşılaştırma grubu: {cohort}",
+      "overallProfile": "Genel profil",
+      "percentile": "%{percentile}. dilim",
+      "cohortSize": "(n={size})",
+      "someDimensionsHidden": "Bazı alanlar için henüz gösterecek kadar karşılaştırılabilir öğrenci yok."
+    },
+    "achievementSection": {
+      "untitled": "Başlıksız",
+      "addDialogTitle": "{title} ekle",
+      "editDialogTitle": "{title} düzenle",
+      "improveWithAi": "Bu kaydı yapay zekâ ile geliştir",
+      "useThisDescription": "Bu açıklamayı kullan"
     },
     "researchIdeas": {
       "eyebrow": "Araştırma",

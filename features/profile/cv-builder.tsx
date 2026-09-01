@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Printer, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -38,6 +39,7 @@ export function CVBuilder({
   graduationYear: number | null;
   items: PortfolioItem[];
 }) {
+  const t = useTranslations("profile.cvBuilder");
   const [cvTitle, setCvTitle] = useState("My CV");
   const [selected, setSelected] = useState<Set<string>>(() => new Set(items.map((i) => i.id)));
 
@@ -71,13 +73,7 @@ export function CVBuilder({
   }
 
   if (items.length === 0) {
-    return (
-      <EmptyState
-        icon={FileText}
-        title="Add achievements to your profile first"
-        description="Your CV is built entirely from your structured profile, never written from scratch."
-      />
-    );
+    return <EmptyState icon={FileText} title={t("emptyTitle")} description={t("emptyDescription")} />;
   }
 
   return (
@@ -97,19 +93,15 @@ export function CVBuilder({
       <div className="glass-card h-fit min-w-0 space-y-6 rounded-2xl border border-white/65 bg-white/45 p-5 backdrop-blur-2xl print:hidden">
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="cv-title">
-            CV title
+            {t("cvTitleLabel")}
           </label>
-          <Input id="cv-title" value={cvTitle} onChange={(e) => setCvTitle(e.target.value)} placeholder="e.g. Economics CV" />
-          <p className="text-xs text-muted-foreground">
-            Only for your own reference — it doesn&apos;t print on the CV itself.
-          </p>
+          <Input id="cv-title" value={cvTitle} onChange={(e) => setCvTitle(e.target.value)} placeholder={t("cvTitlePlaceholder")} />
+          <p className="text-xs text-muted-foreground">{t("cvTitleHelper")}</p>
         </div>
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium">
-              Include ({selectedCount}/{items.length})
-            </p>
+            <p className="text-sm font-medium">{t("includeCount", { selected: selectedCount, total: items.length })}</p>
           </div>
           {byCategory.map((group) => {
             const allChecked = group.items.every((i) => selected.has(i.id));
@@ -133,10 +125,18 @@ export function CVBuilder({
         </div>
 
         <Button onClick={() => window.print()} className="w-full">
-          <Printer className="size-4" /> Print / Save as PDF
+          <Printer className="size-4" /> {t("printButton")}
         </Button>
       </div>
 
+      {/* Deliberately untranslated: PORTFOLIO_CATEGORY_LABELS backs both this printed area's
+          section headers AND the controls panel's checkbox-group labels above, so partially
+          localizing it would either mismatch the two (checkbox says "Eğitim", the printed
+          section under it still says "Education") or require deciding whether a printed CV
+          — a document a student may hand to an English-speaking reader regardless of their
+          own UI locale — should follow their locale at all, a real product question this
+          pass doesn't have an answer to. Left both sides consistent instead of half-fixing
+          one and creating a new, more visible mismatch. */}
       {/* p-5 below `sm`: 32px of padding either side of a 343px column left the CV body
           under 280px, which wrapped every entry into a ragged column. */}
       <div className="cv-print-area min-w-0 rounded-2xl border bg-card p-5 sm:p-8 print:rounded-none print:border-0 print:p-0 print:shadow-none">
