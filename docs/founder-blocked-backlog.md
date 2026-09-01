@@ -480,6 +480,51 @@ document. And the group label "categorically wrong, not a judgment call" was doi
 no row-level check supported — acting on it as written would have disabled a real programme.
 A group verdict is not evidence about any particular row in the group.
 
+**Re-measured 2026-09-01 — this decision is now much smaller than the text above describes.**
+Running the defect signatures against the live catalogue today, on all 275 `active` rows:
+
+| Signature | 2026-08-22 (as recorded above) | 2026-09-01 |
+|---|---|---|
+| Raw URL dumped in the description body | 77 | **1** |
+| Description opens by restating its own title | 77 | **7** |
+| Truncated mid-word, ending in `…` | 45 | **31** |
+| Title is an institution name | 5 | 3 (2 safe to retire, 1 needs a retitle — see above) |
+| **Distinct rows with any hard defect** | **85 of 271 (31.4%)** | **~34 of 275 (12.4%)** |
+
+Treat the two columns as indicative rather than an exact delta: the August figures came from
+a different detector, and mine is stated in SQL below so it can be re-run rather than trusted.
+The direction is not in doubt — the description-cleanup work in late August did most of this.
+
+**And what remains is milder than "a garbled card vs. an empty shelf."**
+
+- The **31 truncated** rows have *good titles* and real content — Wharton Global Youth
+  Program, Global Issues at Princeton, 67th London International Youth Science Forum. The
+  defect is a description that stops mid-sentence at ~700–800 characters. A student sees a
+  real programme whose blurb trails off, not a garbled card.
+- Of the **7 that restate their title**, five are purely cosmetic (the title is already
+  correct; the description just repeats it before the real text). Only two have a genuinely
+  wrong title, and both are recoverable from the row's own description without any
+  re-research: `American University, Washington DC` → the Community of Scholars programme,
+  and the USC row covered above.
+- The **1 raw URL** is that same American University row (`www.american.edu/sis/communityofscholars.`).
+- Five further rows mention a domain in prose — `oberlin.edu` (Pioneer's academic credit),
+  `frcturkiye.org` (FIRST's Turkish partner), `tcr.org`, `ie.edu`, `env-olympiad.com`. These
+  are editorially useful, not scrape residue, and are excluded from the count above.
+
+```sql
+-- Re-run the measurement:
+select count(*) filter (where description ~ 'https?://'
+                          or description ~ '(^|\s)www\.[a-z0-9-]+\.[a-z]{2,}') as url_in_body,
+       count(*) filter (where description like title || ' | %')                   as restates_title,
+       count(*) filter (where description like '%…')                             as truncated
+from public.opportunities where status = 'active';
+```
+
+**So the choice you were asked to make — re-research ~80 rows, retire them, or accept them —
+is now about 31 rows whose only problem is a clipped description, plus two titles that can be
+fixed from data already in the row.** Re-researching 80 rows to this project's evidence bar
+was a real budget question. Re-fetching 31 descriptions is not the same question.
+
 **Why it matters**: these are on the surface students browse. Per your own non-negotiables,
 nothing that misleads should ship. But re-researching ~80 rows to this project's evidence bar is
 real work (measured yield elsewhere: ~5% of rows per hour of research), so the honest options are
