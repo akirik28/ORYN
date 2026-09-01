@@ -7,6 +7,7 @@ import { getOrCreateWeeklyPlan } from "@/lib/plan/persist";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
 import { logEvent } from "@/lib/analytics/log";
+import { aiServiceFailureMessage } from "@/lib/ai/service-failure";
 import { buildActionStatusPatch } from "@/lib/plan/status-patch";
 import type { ActionStatus, ReflectionOutcome } from "@/types/database";
 
@@ -23,6 +24,11 @@ export async function regenerateWeeklyPlan(): Promise<{ error?: string }> {
       return { error: "The AI Advisor isn't configured yet, so weekly plans can't be generated. See API_SETUP.md." };
     }
     console.error("[plan] failed to regenerate weekly plan", error);
+    // A spent balance or a provider outage is not something a student fixes by pressing the
+    // button again — see lib/ai/service-failure.ts. Falls through to the generic wording only
+    // when the error carries no status to classify on.
+    const serviceMessage = aiServiceFailureMessage(error, "Your plan generator");
+    if (serviceMessage) return { error: serviceMessage };
     return { error: "Something went wrong generating your plan. Please try again." };
   }
   revalidatePath("/dashboard");
