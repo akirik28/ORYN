@@ -17,6 +17,16 @@
     "skipToContent": "Skip to content",
     "homeLink": "Oryn — home"
   },
+  "appShell": {
+    "userMenu": {
+      "accountMenu": "Account menu",
+      "careerProfile": "Career profile",
+      "signOut": "Sign out",
+      "addWhatYouveDone": "Add what you've done",
+      "areasStrong": "{count, plural, one {# area strong} other {# areas strong}}",
+      "areasAssessed": "{count, plural, one {# area assessed} other {# areas assessed}}"
+    }
+  },
   "language": {
     "label": "Language",
     "change": "Change language",
@@ -716,6 +726,7 @@
       "regionNavAriaLabel": "Browse universities by region",
       "countryNavAriaLabel": "Browse universities by country",
       "world": "World",
+      "backToWorld": "Back to world",
       "noRegionUniversitiesYet": "No {region} universities yet",
       "dataBeingAdded": "University data is still being added",
       "checkBackSoon": "Check back soon.",

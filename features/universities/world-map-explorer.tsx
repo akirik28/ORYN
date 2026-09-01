@@ -182,7 +182,7 @@ export function WorldMapExplorer({
           onClick={backToWorld}
           className="absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-full border border-brand-primary-border bg-card/90 px-3 py-1.5 text-xs font-medium text-foreground shadow-sm backdrop-blur-sm transition-colors hover:bg-brand-primary-subtle"
         >
-          <ArrowLeft className="size-3.5" /> Back to world
+          <ArrowLeft className="size-3.5" /> {t("backToWorld")}
         </button>
       ) : null}
       <ComposableMap
