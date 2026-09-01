@@ -200,6 +200,43 @@ copy. That is a `lib/opportunities/matching.ts` refactor plus a re-run of that f
 test suite, not a copy change — left for whoever owns that module next.
 
 
+## ~~Anthropic never reported to provider_health~~ — FIXED 2026-09-01
+
+**Closed.** `lib/providers/health.ts`'s own doc comment claimed "every external provider
+call reports success/failure here." Untrue: Tavily, College Scorecard, and OpenAlex do
+(via the shared `lib/providers/fetch-json.ts` wrapper every one of their HTTP calls goes
+through); Anthropic — the one provider the whole product depends on — never called either
+`recordProviderSuccess`/`recordProviderFailure` at all. Confirmed live against
+oryn-qa-scratch, 2026-09-01: `provider_health` held exactly one row (`openalex`) despite
+Anthropic being called constantly. An expired key, a 429, or an outage would have left no
+trace in any queryable table, and the admin panel's "provider health" section would have
+kept rendering as if nothing was wrong. Fixed by wiring the same two functions directly
+into `lib/ai/anthropic-provider.ts`'s `generateText`/`generateStructured` (it can't reuse
+`fetch-json.ts` — the Anthropic SDK doesn't make its calls through that wrapper, and its
+own failure shapes, an SDK-thrown error or a response with no usable text/tool-use block,
+don't map onto `fetch-json`'s HTTP-status classification). `getClient()`'s
+`AIProviderNotConfiguredError` (a missing API key) is deliberately NOT recorded as a
+health failure — that's a deployment fact, not a live signal, and recording it would make
+the dashboard read "degraded" for "nobody has set the key yet." `health.ts`'s comment
+itself corrected to say what actually happens rather than what it originally claimed.
+
+**Investigated and closed, not a defect**: whether College Scorecard and Tavily are absent
+from the same table because nobody called them or because something swallows the record
+before it lands. Real evidence, not a guess: `external_sync_jobs` (queried live) shows
+only the `deadline_reminders` job has ever run in this environment — `discover_opportunities`,
+`discover_requirements`, and `sync_university_data` (the three jobs whose code paths are
+the only product-code callers of these two providers — `lib/opportunities/discover.ts`,
+`lib/requirements/discover.ts`, `lib/universities/sync-us-universities.ts`) have never run
+at all, not once. Both API keys ARE present locally, ruling out the simplest
+"not-configured" explanation, and the provider-name strings both use (`tavily`,
+`college_scorecard`) match what's expected — no naming-mismatch bug either. The honest
+answer is narrower than either of the two hypotheses: these two providers are genuinely
+unexercised in this environment, not silently failing. One loose end, stated rather than
+guessed past: `scripts/enrich-student-counts-us.ts` also calls College Scorecard directly
+and its own execution history against this specific database is not something this pass
+could determine one way or the other.
+
+
 ## Tracking upstream — every Dialog silently loses focus on the first Shift+Tab
 
 **2026-09-01, accessibility audit follow-up.** Every dialog in the app (they all render

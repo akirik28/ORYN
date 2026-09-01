@@ -3,10 +3,26 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
- * Lightweight provider health tracking (Phase 33). Every external provider call reports
- * success/failure here so the admin panel can see what's degraded without digging through
- * logs. Best-effort: a health-tracking failure must never break the actual feature, so
- * errors here are swallowed after a console warning.
+ * Lightweight provider health tracking (Phase 33) — the storage half. These two functions
+ * write status; nothing here calls them automatically, so a provider is only tracked if
+ * its own code path calls one of them.
+ *
+ * NOT every external provider call actually reports here, despite an earlier version of
+ * this comment claiming so. Tavily, College Scorecard, and OpenAlex do, via the shared
+ * lib/providers/fetch-json.ts wrapper every one of their HTTP calls goes through. Anthropic
+ * — the one provider the whole product depends on — did not, until this pass wired
+ * recordProviderSuccess/recordProviderFailure directly into lib/ai/anthropic-provider.ts's
+ * two methods (it can't use fetch-json.ts: the Anthropic SDK doesn't make its own HTTP
+ * calls through that wrapper, and its own failure shapes — an SDK-thrown error, or a
+ * response with no usable text/tool-use block — don't map onto fetch-json's HTTP-status
+ * classification). Confirmed live, 2026-09-01: before this pass, `provider_health` held
+ * exactly one row (openalex) despite Anthropic being called constantly. Whoever adds a
+ * fifth external provider should verify it actually calls one of these two functions
+ * on every real code path, not just trust this comment's word for it — that's the
+ * mistake this correction exists to not repeat.
+ *
+ * Best-effort: a health-tracking failure must never break the actual feature, so errors
+ * here are swallowed after a console warning.
  */
 export async function recordProviderSuccess(provider: string): Promise<void> {
   try {

@@ -3,6 +3,7 @@ import "server-only";
 import { Anthropic } from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { env } from "@/lib/env";
+import { recordProviderSuccess, recordProviderFailure } from "@/lib/providers/health";
 import {
   AIProviderNotConfiguredError,
   AIResponseIncompleteError,
@@ -12,6 +13,10 @@ import {
   type AIStructuredResult,
   type AITextResult,
 } from "./provider";
+
+/** Row name in `provider_health` — snake_case like the other three providers'
+ * (college_scorecard), not the SDK/package name. */
+const PROVIDER_NAME = "anthropic";
 
 /**
  * `max_tokens` is a ceiling, not a reservation — an unused budget costs nothing, while too
@@ -74,12 +79,23 @@ function buildMessages(request: AIRequest): Anthropic.MessageParam[] {
 export class AnthropicProvider implements AIProvider {
   async generateText(request: AIRequest): Promise<AITextResult> {
     const client = getClient();
-    const message = await client.messages.create({
-      model: env.anthropic.model,
-      max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
-      system: request.system,
-      messages: buildMessages(request),
-    });
+
+    // Wraps only the actual network call, not getClient() above — a missing API key is a
+    // deployment/configuration fact (AIProviderNotConfiguredError), not a live health
+    // signal, and recording it as a provider_health failure would make a dashboard read
+    // "Anthropic is degraded" when the honest statement is "nobody has set the key yet".
+    let message: Anthropic.Message;
+    try {
+      message = await client.messages.create({
+        model: env.anthropic.model,
+        max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
+        system: request.system,
+        messages: buildMessages(request),
+      });
+    } catch (error) {
+      await recordProviderFailure(PROVIDER_NAME, error instanceof Error ? error.message : "Unknown error calling Anthropic.");
+      throw error;
+    }
 
     const usage = { inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens };
 
@@ -89,8 +105,15 @@ export class AnthropicProvider implements AIProvider {
     if (!textBlock || textBlock.type !== "text") {
       // Carries stop_reason and usage so the caller can distinguish an exhausted budget
       // from a real API failure, and can still record tokens this turn actually burned.
-      throw new AIResponseIncompleteError({ stopReason: message.stop_reason, usage });
+      // Recorded as a provider_health failure too — the call reached Anthropic and came
+      // back with nothing usable, which is exactly the kind of degradation this table
+      // exists to surface, distinct from a clean network/auth failure above.
+      const incomplete = new AIResponseIncompleteError({ stopReason: message.stop_reason, usage });
+      await recordProviderFailure(PROVIDER_NAME, incomplete.message);
+      throw incomplete;
     }
+
+    await recordProviderSuccess(PROVIDER_NAME);
 
     return { text: textBlock.text, usage };
   }
@@ -113,14 +136,24 @@ export class AnthropicProvider implements AIProvider {
         ? `${request.prompt}\n\nYour previous response did not match the required schema: ${lastError}\nPlease call ${request.schemaName} again with corrected input.`
         : request.prompt;
 
-      const message = await client.messages.create({
-        model: env.anthropic.model,
-        max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
-        system: request.system,
-        messages: [{ role: "user", content: buildUserContent({ ...request, prompt }) }],
-        tools: [tool],
-        tool_choice: { type: "tool", name: request.schemaName },
-      });
+      // Same reasoning as generateText: wraps only the network call. A throw here exits
+      // the retry loop immediately (it's a transport/auth failure, not the schema-
+      // validation case the loop exists for), so there's no risk of double-recording
+      // across the two attempts.
+      let message: Anthropic.Message;
+      try {
+        message = await client.messages.create({
+          model: env.anthropic.model,
+          max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
+          system: request.system,
+          messages: [{ role: "user", content: buildUserContent({ ...request, prompt }) }],
+          tools: [tool],
+          tool_choice: { type: "tool", name: request.schemaName },
+        });
+      } catch (error) {
+        await recordProviderFailure(PROVIDER_NAME, error instanceof Error ? error.message : "Unknown error calling Anthropic.");
+        throw error;
+      }
 
       const usage = { inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens };
       const toolUse = message.content.find((block) => block.type === "tool_use");
@@ -132,12 +165,19 @@ export class AnthropicProvider implements AIProvider {
 
       const parsed = request.schema.safeParse(toolUse.input);
       if (parsed.success) {
+        await recordProviderSuccess(PROVIDER_NAME);
         return { data: parsed.data, usage };
       }
 
       lastError = parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");
     }
 
-    throw new Error(`AI response failed schema validation after retry: ${lastError}`);
+    // Recorded as a health failure: the call reached Anthropic on both attempts, but the
+    // response never matched the required schema — the same "landed but not usable"
+    // signal AIResponseIncompleteError records in generateText above, just for the
+    // structured-output path's own failure shape.
+    const error = new Error(`AI response failed schema validation after retry: ${lastError}`);
+    await recordProviderFailure(PROVIDER_NAME, error.message);
+    throw error;
   }
 }
