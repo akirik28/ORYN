@@ -822,7 +822,7 @@ function DeadlineGroup({
                     tone="neutral"
                   />
                 ) : null}
-                {kind === "dated" ? <DeadlineBadge date={d.deadline_date!} /> : <StatusBadge label={t("recurringBadge")} tone="neutral" />}
+                {kind === "dated" ? <DeadlineBadge date={d.deadline_date!} locale={locale} /> : <StatusBadge label={t("recurringBadge")} tone="neutral" />}
               </div>
             </div>
             <p className="text-muted-foreground">

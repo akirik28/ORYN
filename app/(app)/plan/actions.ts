@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { getOrCreateWeeklyPlan } from "@/lib/plan/persist";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
@@ -14,7 +15,7 @@ import type { ActionStatus, ReflectionOutcome } from "@/types/database";
 export async function regenerateWeeklyPlan(): Promise<{ error?: string }> {
   const session = await requireUser();
   try {
-    await assertWithinAIRateLimit(session.userId!, "weekly_plan", { maxCalls: 5, windowMinutes: 60 });
+    await assertWithinAIRateLimit(session.userId!, "weekly_plan", { maxCalls: 5, windowMinutes: 60 }, await resolveLocale());
     await getOrCreateWeeklyPlan(session.userId!, { force: true });
   } catch (error) {
     if (error instanceof RateLimitExceededError) {

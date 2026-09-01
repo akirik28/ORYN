@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { RateLimitExceededError } from "@/lib/errors/rate-limit-exceeded";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 export { RateLimitExceededError };
 
@@ -14,7 +15,12 @@ export { RateLimitExceededError };
  * codepath to keep in sync with actual usage. See SECURITY.md's "Known gaps" for the
  * bigger rate-limiting gap this doesn't cover (Route Handlers / non-AI actions).
  */
-export async function assertWithinAIRateLimit(userId: string, feature: string, opts: { maxCalls: number; windowMinutes: number }): Promise<void> {
+export async function assertWithinAIRateLimit(
+  userId: string,
+  feature: string,
+  opts: { maxCalls: number; windowMinutes: number },
+  locale: Locale = DEFAULT_LOCALE
+): Promise<void> {
   const supabase = await createClient();
   const since = new Date(Date.now() - opts.windowMinutes * 60 * 1000).toISOString();
 
@@ -26,6 +32,6 @@ export async function assertWithinAIRateLimit(userId: string, feature: string, o
     .gte("created_at", since);
 
   if ((count ?? 0) >= opts.maxCalls) {
-    throw new RateLimitExceededError();
+    throw new RateLimitExceededError(locale);
   }
 }

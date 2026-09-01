@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { getConnectionWith } from "@/lib/social/connections";
 import { checkRecommendationEligibility } from "@/lib/social/recommendations";
 import { isUuidLike } from "@/lib/validation/uuid";
@@ -37,7 +38,7 @@ export async function writeRecommendation(recipientId: string, relationship: Rec
   if (trimmed.length > MAX_BODY_LENGTH) return { error: "Keep it under 3000 characters." };
 
   try {
-    await assertWithinRateLimit(session.userId!, "write_recommendation", RATE_LIMITS.write_recommendation);
+    await assertWithinRateLimit(session.userId!, "write_recommendation", RATE_LIMITS.write_recommendation, await resolveLocale());
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { error: error.message };
     throw error;
@@ -106,7 +107,7 @@ export async function reportRecommendation(recommendationId: string, reportedUse
   if (!trimmedReason) return { error: "Please describe the issue." };
 
   try {
-    await assertWithinRateLimit(session.userId!, "report_message", RATE_LIMITS.report_message);
+    await assertWithinRateLimit(session.userId!, "report_message", RATE_LIMITS.report_message, await resolveLocale());
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { error: error.message };
     throw error;

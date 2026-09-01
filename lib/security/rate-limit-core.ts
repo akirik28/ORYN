@@ -1,4 +1,5 @@
 import { RateLimitExceededError } from "@/lib/errors/rate-limit-exceeded";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /**
  * Storage abstraction behind assertWithinRateLimit (lib/security/rate-limit.ts), pulled
@@ -31,12 +32,18 @@ export interface RateLimitOptions {
  * this is a single-user abuse guard, not a billing-critical limiter, and a failed record
  * of *this* call must never block the action it's guarding.
  */
-export async function checkRateLimit(store: RateLimitStore, userId: string, action: string, opts: RateLimitOptions): Promise<void> {
+export async function checkRateLimit(
+  store: RateLimitStore,
+  userId: string,
+  action: string,
+  opts: RateLimitOptions,
+  locale: Locale = DEFAULT_LOCALE
+): Promise<void> {
   const since = new Date(Date.now() - opts.windowMinutes * 60 * 1000).toISOString();
   const count = await store.countSince(userId, action, since);
 
   if ((count ?? 0) >= opts.maxCalls) {
-    throw new RateLimitExceededError();
+    throw new RateLimitExceededError(locale);
   }
 
   try {

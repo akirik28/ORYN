@@ -96,6 +96,63 @@ a data array, not a URL. Confirmed by reading the call site, after confirming th
 when the path is visited directly.
 
 
+## Needs founder decision — two independent eligibility pipelines write different English for the same restriction
+
+**2026-09-01, i18n advisor package.** While threading `locale` through
+`lib/opportunities/matching.ts`'s `computeEligibility()` and live-verifying the result, I
+found it is one of **two separate, independently-written implementations of the same
+eligibility questions** — age, country, citizenship, grade level — each producing its own
+English sentence for the same underlying condition. Both are real, both are live, and they
+disagree with each other:
+
+| Condition | `lib/opportunities/matching.ts` (Opportunities pages) | `lib/counselor/copy.ts`'s `eligibilityCopy` + `lib/counselor/eligibility.ts` (Advisor page) |
+|---|---|---|
+| Age requirement, birth year unknown | "Has an age requirement — add your birth year to check." | "This opportunity has an age requirement Oryn can't check without your birth year on file." |
+| Country restricted, country unknown | "Restricted by country — add your country to check." | "This opportunity is restricted by country and your country isn't on file yet." |
+| Country known, not eligible | "Not currently open to students from {country}." | "Not currently open to students in {country}." |
+| Citizenship required, unknown | "Requires a specific citizenship — add yours in Settings to check." | "This opportunity requires a specific citizenship and yours isn't on file yet." |
+| Citizenship known, not eligible | "Requires citizenship in {list}." | "Requires citizenship in {eligible}; citizenship on file is {onFile}." |
+| Citizenship restriction on file (unstructured) | "Citizenship restriction on file (not automatically verified): {text}" | "Citizenship restriction on file (not automatically verified): {text}" *(byte-identical)* |
+| Residency restriction on file (unstructured) | "Residency restriction on file (not automatically verified): {text}" | "Residency restriction on file (not automatically verified): {text}" *(byte-identical)* |
+| Country eligibility never researched | "Country eligibility not verified yet — check the official page for restrictions." | "Country eligibility hasn't been verified for this opportunity yet — check the official page for restrictions." |
+| Grade level restricted, graduation year unknown | "Restricted by grade level — add your graduation year to check." | "This opportunity restricts eligibility by grade level and Oryn can't compute your current grade without a graduation year on file." |
+| Grade level known, not eligible | "Restricted to grades {list}." | "Restricted to grades {list}; you're currently grade {N}." |
+
+**Where each one surfaces, confirmed live**: `matching.ts`'s version feeds
+`computeOpportunityMatch()` → `refreshOpportunityMatches()` → the eligibility paragraph on
+`app/(app)/opportunities/[id]/page.tsx` and the Opportunities browse cards. `copy.ts`'s
+version feeds `lib/counselor/eligibility.ts`'s `evaluateCandidateEligibility()` (called from
+`lib/counselor/scoring.ts`) → `recommendation.warnings[0]` on the Advisor page's priority
+cards (`features/advisor/counselor-priorities.tsx`). A student who opens an opportunity from
+the Advisor page and then clicks through to its detail page reads two different English
+sentences — and, as of this pass, two different Turkish ones — about the exact same
+restriction on the exact same opportunity.
+
+Two of the ten conditions (the free-text citizenship/residency notes) are already
+byte-identical between the two files, deliberately kept in sync by a comment in each
+pointing at the other — proof the drift is not for lack of anyone noticing the duplication,
+only for lack of anyone merging it.
+
+**Not fixed this pass, on purpose.** Both files are independently tested
+(`__tests__/opportunities/matching.test.ts` and the counselor pipeline's own eligibility
+tests) and have accumulated real, separate judgment calls since — `matching.ts`'s citizenship/
+residency free-text surfacing (Package 8, this file's own comment) has no analogue documented
+in `copy.ts`, for instance. Reconciling them means choosing which set of judgment calls wins,
+which is a product decision about wording and precedence, not a translation task. What this
+pass *did* do was translate both sides faithfully into Turkish exactly as they stand in
+English today (18 branches total across the two files), so the drift is preserved
+symmetrically rather than made worse in one language and not the other — consolidating later
+will not have to redo the localization.
+
+**Recommendation, not a decision**: pick one file as the single source of these sentences
+(most likely `lib/counselor/copy.ts`'s `eligibilityCopy`, since its call sites already pass a
+resolved `Locale` and its wording is marginally more complete — it includes the "on file"
+qualifier `matching.ts`'s citizenship-known-ineligible branch and grade-known-ineligible
+branch both lack) and have `computeEligibility()` call into it instead of maintaining its own
+copy. That is a `lib/opportunities/matching.ts` refactor plus a re-run of that file's own
+test suite, not a copy change — left for whoever owns that module next.
+
+
 ## Tracking upstream — every Dialog silently loses focus on the first Shift+Tab
 
 **2026-09-01, accessibility audit follow-up.** Every dialog in the app (they all render

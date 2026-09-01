@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { createNotification } from "@/lib/notifications/create";
 import { assertWithinRateLimit, RateLimitExceededError } from "@/lib/security/rate-limit";
 import { RATE_LIMITS } from "@/lib/security/rate-limit-config";
@@ -17,7 +18,7 @@ export async function sendConnectionRequest(recipientId: string): Promise<{ erro
 
   // Abuse guard — see lib/security/rate-limit-config.ts.
   try {
-    await assertWithinRateLimit(userId, "send_connection_request", RATE_LIMITS.send_connection_request);
+    await assertWithinRateLimit(userId, "send_connection_request", RATE_LIMITS.send_connection_request, await resolveLocale());
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { error: error.message };
     throw error;

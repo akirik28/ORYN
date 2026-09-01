@@ -15,11 +15,11 @@ import type { AIMessage } from "@/lib/ai/provider";
 // Student-facing strings in this file are additive-locale-branched inline (`tr ?  : `),
 // matching lib/counselor/copy.ts's own established shape, rather than routed through the
 // message catalog — these are Server Action return values, not React-tree copy.
-// RateLimitExceededError's own default message (thrown from lib/ai/rate-limit.ts, caught
-// and passed through verbatim at both `error.message` sites below) is deliberately NOT
-// translated here: that class is shared by 15+ unrelated Server Actions across the app
-// (messages, plan, connections, profile, entities, onboarding, export-data, social...) —
-// translating its default would be an app-wide decision, not one this file's own scope covers.
+// RateLimitExceededError's own default message is now locale-aware too (lib/errors/rate-
+// limit-exceeded.ts) — both `error.message` sites below already pass `locale` into
+// assertWithinAIRateLimit, so the message they read back is already in the right language.
+// That was an app-wide decision the first version of this file correctly deferred; it's
+// now made, for all 15+ Server Actions that throw this error, not only this one.
 
 /**
  * Caps that exist so a 400 from the provider means one thing rather than two.
@@ -59,7 +59,7 @@ export async function sendAdvisorMessage(
   if (conversationId && !isUuidLike(conversationId)) return { conversationId: "", error: tr ? "Geçersiz konuşma." : "Invalid conversation." };
 
   try {
-    await assertWithinAIRateLimit(userId, "advisor_chat", { maxCalls: 30, windowMinutes: 10 });
+    await assertWithinAIRateLimit(userId, "advisor_chat", { maxCalls: 30, windowMinutes: 10 }, locale);
   } catch (error) {
     if (error instanceof RateLimitExceededError) {
       return { conversationId: conversationId ?? "", error: error.message };
@@ -181,7 +181,7 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
   }
 
   try {
-    await assertWithinAIRateLimit(userId, "advisor_chat", { maxCalls: 30, windowMinutes: 10 });
+    await assertWithinAIRateLimit(userId, "advisor_chat", { maxCalls: 30, windowMinutes: 10 }, locale);
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { error: error.message };
     throw error;

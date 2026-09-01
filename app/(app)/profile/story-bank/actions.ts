@@ -21,7 +21,8 @@ export async function generateStoryOutlines(
   if (trimmed.length > MAX_PROMPT_LENGTH) return { error: "That prompt is too long — paste just the question itself." };
 
   try {
-    await assertWithinAIRateLimit(session.userId!, "essay_story_bank", { maxCalls: 10, windowMinutes: 60 });
+    const locale = await resolveLocale();
+    await assertWithinAIRateLimit(session.userId!, "essay_story_bank", { maxCalls: 10, windowMinutes: 60 }, locale);
 
     const supabase = await createClient();
     // Re-read every experience server-side from the student's own RLS-scoped rows rather
@@ -39,7 +40,7 @@ export async function generateStoryOutlines(
 
     const data = await generateEssayOutlines({
       userId: session.userId!,
-      locale: await resolveLocale(),
+      locale,
       essayPrompt: trimmed,
       experiences: selected,
       goals: (goalsRes.data ?? []).map((g) => g.title),

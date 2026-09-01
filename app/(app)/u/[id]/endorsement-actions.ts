@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { getConnectionWith } from "@/lib/social/connections";
 import { checkEndorsementEligibility } from "@/lib/social/skill-endorsements";
 import { isUuidLike } from "@/lib/validation/uuid";
@@ -29,7 +30,7 @@ export async function endorseSkill(skillId: string, skillOwnerId: string): Promi
   if (!isUuidLike(skillId) || !isUuidLike(skillOwnerId)) return { error: "Invalid skill." };
 
   try {
-    await assertWithinRateLimit(session.userId!, "endorse_skill", RATE_LIMITS.endorse_skill);
+    await assertWithinRateLimit(session.userId!, "endorse_skill", RATE_LIMITS.endorse_skill, await resolveLocale());
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { error: error.message };
     throw error;

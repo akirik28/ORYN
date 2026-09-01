@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useLocale } from "next-intl";
 import { Check } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
@@ -11,6 +12,7 @@ import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { staggerFadeUp } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { updateActionStatus } from "@/app/(app)/plan/actions";
+import type { Locale } from "@/lib/i18n/config";
 import type { ReflectionOutcome, WeeklyAction } from "@/types/database";
 
 const REFLECTION_OPTIONS: { value: ReflectionOutcome; label: string }[] = [
@@ -41,6 +43,7 @@ function NumeralToggle({ index, done, pending, onToggle }: { index: number; done
 }
 
 function ActionRow({ action, index }: { action: WeeklyAction; index: number }) {
+  const locale = useLocale() as Locale;
   const [isPending, startTransition] = useTransition();
   const [showReflection, setShowReflection] = useState(false);
   const [localStatus, setLocalStatus] = useState(action.status);
@@ -96,7 +99,7 @@ function ActionRow({ action, index }: { action: WeeklyAction; index: number }) {
         estimatedMinutes={action.estimated_minutes}
         done={isDone}
         emphasis={index === 0}
-        meta={action.deadline ? <DeadlineBadge date={action.deadline} /> : null}
+        meta={action.deadline ? <DeadlineBadge date={action.deadline} locale={locale} /> : null}
       >
         {showReflection ? (
           <div className="mt-3 space-y-2 border-t pt-3">

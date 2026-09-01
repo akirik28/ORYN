@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ActionCard } from "@/components/oryn/action-card";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { Button } from "@/components/ui/button";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { CounselorRecommendation } from "@/lib/counselor";
 
 /**
@@ -16,7 +17,7 @@ import type { CounselorRecommendation } from "@/lib/counselor";
  * CounselorPriorities already offers on the Advisor page (same visual language, no new
  * component pattern introduced).
  */
-export function CounselorWeekFallback({ actions }: { actions: CounselorRecommendation[] }) {
+export function CounselorWeekFallback({ actions, locale = DEFAULT_LOCALE }: { actions: CounselorRecommendation[]; locale?: Locale }) {
   if (actions.length === 0) return null;
 
   return (
@@ -34,7 +35,7 @@ export function CounselorWeekFallback({ actions }: { actions: CounselorRecommend
           impact={action.impact}
           meta={
             <>
-              {action.deadline ? <DeadlineBadge date={action.deadline.date} /> : null}
+              {action.deadline ? <DeadlineBadge date={action.deadline.date} locale={locale} /> : null}
               <Button variant="outline" size="xs" render={<Link href={action.nextAction.href} />} nativeButton={false}>
                 {action.nextAction.label}
               </Button>
