@@ -138,3 +138,49 @@ describe("formatRelativeTime", () => {
     expect(formatRelativeTime(threeDaysAgo().toISOString(), "tr")).toBe("3 gün önce");
   });
 });
+
+/**
+ * ICU's `#` renders the count with the *active* locale's number format, while everything
+ * else in the product goes through `formatNumber`, pinned to en-US by
+ * `NUMBER_FORMAT_LOCALE` until that decision is reviewed separately. So the two disagree
+ * above 999: the universities browse page rendered "1.010 üniversite" in Turkish while every
+ * other figure on the page said "1,010" (found live, 2026-09-01, by reading DOM text — a
+ * screenshot could not distinguish "." from "," at that size).
+ *
+ * This is not a ban. `#` is idiomatic ICU, and once the en-US pin is lifted the two paths
+ * agree again. What it stops is a *new* `#` slipping in on a count that can exceed 999
+ * without anyone weighing it — every entry below was checked to be bounded far under that
+ * (areas of a nine-dimension profile, items in one CV, entries in one student's timeline).
+ *
+ * If you are adding one: if the count can plausibly reach four digits, pass a pre-formatted
+ * string into the plural branches instead, the way universities.browse now does. If it
+ * cannot, add the key here with the reason.
+ */
+describe("ICU plural counts that bypass formatNumber are deliberate", () => {
+  const BOUNDED_BELOW_1000 = [
+    "onboarding.import.foundItems",
+    "profile.cvImport.addItemsToProfile",
+    "profile.cvImport.addedNotice",
+    "profile.cvImport.foundItems",
+    "profile.journeyTimeline.entryCount",
+    "profile.page.journeyNote.gapBodyWithAwaiting",
+    "profile.progress.developing",
+    "profile.progress.movedForward",
+  ];
+
+  test("no un-reviewed `#` inside a plural block", () => {
+    const offenders = new Set<string>();
+    const scan = (node: unknown, path = ""): void => {
+      if (typeof node === "string") {
+        if (node.includes("plural,") && node.includes("#")) offenders.add(path);
+        return;
+      }
+      if (node && typeof node === "object") {
+        for (const [key, child] of Object.entries(node)) scan(child, path ? `${path}.${key}` : key);
+      }
+    };
+    scan(en);
+    scan(tr);
+    expect([...offenders].sort()).toEqual(BOUNDED_BELOW_1000.slice().sort());
+  });
+});
