@@ -155,6 +155,21 @@ So the honest status is: a Turkish student now gets Turkish counsel, and nobody 
 That is better than certainly-English, and it is not the same as verified. A Turkish eval pass
 is the missing piece, and it is a founder decision because it costs credit.
 
+## Measuring clipping: force layout first, or every element reads as clipped
+
+The `scrollWidth` vs `clientWidth` check that found the mobile-nav truncation has a failure
+mode worth knowing before trusting a run of it. **A backgrounded or hidden Browser pane tab
+zeroes `document.body.clientWidth`** while the DOM and JS context stay alive, so every
+element reports as clipped and the sweep returns a page full of false positives.
+
+Call `resize_window` with explicit dimensions first to force real layout, then measure. Found
+by the lane doing the cross-cutting UI audit, 2026-09-01, after a sweep came back implausibly
+red.
+
+The direction of the error is worth noting too: it produces false *positives*, not false
+negatives. So a clean result from a hidden pane is still clean — it is a red result that
+needs re-running.
+
 ## The product says "sen", and eight strings say "siz"
 
 Found by a lane consolidating the eligibility copy, who noticed the two implementations of
