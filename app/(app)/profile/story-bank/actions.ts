@@ -29,7 +29,7 @@ export async function generateStoryOutlines(
     // than trusting anything the client sent — the client only ever supplies ids to filter
     // by, never the content that reaches the model.
     const [all, goalsRes] = await Promise.all([
-      collectStoryBankExperiences(supabase, session.userId!),
+      collectStoryBankExperiences(supabase, session.userId!, locale),
       supabase.from("career_goals").select("title").eq("user_id", session.userId!),
     ]);
 
