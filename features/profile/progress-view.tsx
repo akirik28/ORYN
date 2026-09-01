@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ArrowLeft, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { DIMENSION_LABELS } from "@/lib/scoring/labels";
-import { EVIDENCE_STATE_SHORT_LABELS, isAssessed, signalCoverage } from "@/lib/scoring/signal";
+import { getTranslations, getLocale } from "next-intl/server";
+import { dimensionLabel } from "@/lib/scoring/labels";
+import { evidenceStateShortLabel, isAssessed, signalCoverage } from "@/lib/scoring/signal";
 import type { MonthlyReview } from "@/lib/scoring/monthly-review";
 import { EmptyState } from "@/components/oryn/empty-state";
 
@@ -37,7 +38,10 @@ function DeltaBadge({ delta }: { delta: number }) {
  * Per-dimension numbers stay. They are evidence about a specific, nameable thing, and
  * hiding them would remove the detail that makes the qualitative read checkable.
  */
-export function ProgressView({ review }: { review: MonthlyReview }) {
+export async function ProgressView({ review }: { review: MonthlyReview }) {
+  const locale = await getLocale();
+  const t = await getTranslations("profile");
+  const tProgress = await getTranslations("profile.progress");
   const coverage = signalCoverage(review.signal);
   const strongest = review.signal.filter((row) => row.state === "strong");
   const developing = review.signal.filter((row) => row.state === "developing");
@@ -53,47 +57,38 @@ export function ProgressView({ review }: { review: MonthlyReview }) {
     <div className="max-w-2xl space-y-6">
       <div>
         <Link href="/profile" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-3.5" /> Back to profile
+          <ArrowLeft className="size-3.5" /> {t("backToProfile")}
         </Link>
-        <h1 className="mt-2 font-display text-2xl tracking-tight md:text-3xl">Progress</h1>
-        <p className="mt-1 text-muted-foreground">How your profile has changed over the last {review.windowDays} days.</p>
+        <h1 className="mt-2 font-display text-2xl tracking-tight md:text-3xl">{tProgress("title")}</h1>
+        <p className="mt-1 text-muted-foreground">{tProgress("subtitle", { days: review.windowDays })}</p>
       </div>
 
       {coverage.assessed > 0 ? (
         <section className="space-y-4 rounded-2xl border border-brand-primary-border bg-brand-primary-subtle p-6">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Where you stand</p>
+            <p lang={locale} className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {tProgress("whereYouStand")}
+            </p>
             <p className="mt-1.5 leading-relaxed">
-              {strongest.length > 0 ? (
-                <>
-                  Your strongest evidence is in{" "}
-                  <span className="font-medium">
-                    {strongest.slice(0, 3).map((row) => DIMENSION_LABELS[row.dimension].toLowerCase()).join(", ")}
-                  </span>
-                  .{" "}
-                </>
-              ) : null}
-              {developing.length > 0 ? (
-                <>
-                  {developing.length} area{developing.length === 1 ? " is" : "s are"} developing.{" "}
-                </>
-              ) : null}
-              {coverage.awaitingEvidence > 0 ? (
-                <>
-                  Oryn still has too little to say about {coverage.awaitingEvidence} of them.
-                </>
-              ) : null}
+              {strongest.length > 0
+                ? tProgress.rich("strongestEvidence", {
+                    dimensions: strongest.slice(0, 3).map((row) => dimensionLabel(row.dimension, locale).toLocaleLowerCase(locale)).join(", "),
+                    bold: (chunks) => <span className="font-medium">{chunks}</span>,
+                  })
+                : null}
+              {developing.length > 0 ? tProgress("developing", { count: developing.length }) : null}
+              {coverage.awaitingEvidence > 0 ? tProgress("awaitingEvidence", { count: coverage.awaitingEvidence }) : null}
             </p>
           </div>
           {nextToStrengthen ? (
             <div className="border-t border-brand-primary-border pt-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Next area to strengthen</p>
+              <p lang={locale} className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {tProgress("nextToStrengthen")}
+              </p>
               <p className="mt-1.5">
-                <span className="font-medium">{DIMENSION_LABELS[nextToStrengthen.dimension]}</span>
+                <span className="font-medium">{dimensionLabel(nextToStrengthen.dimension, locale)}</span>
                 <span className="text-muted-foreground">
-                  {" "}
-                  — {EVIDENCE_STATE_SHORT_LABELS[nextToStrengthen.state].toLowerCase()}. Of everything Oryn has
-                  a read on, this is where the same hours of work change your profile most.
+                  {tProgress("nextToStrengthenBody", { state: evidenceStateShortLabel(nextToStrengthen.state, locale).toLocaleLowerCase(locale) })}
                 </span>
               </p>
             </div>
@@ -102,26 +97,20 @@ export function ProgressView({ review }: { review: MonthlyReview }) {
       ) : null}
 
       {!review.hasHistory ? (
-        <EmptyState
-          icon={TrendingUp}
-          title="Not enough history yet"
-          description="Check back after your profile has had a chance to change over a few weeks. Oryn compares your dimensions against a snapshot taken at least a month ago."
-        />
+        <EmptyState icon={TrendingUp} title={tProgress("notEnoughHistoryTitle")} description={tProgress("notEnoughHistoryDescription")} />
       ) : (
         <>
           <section className="space-y-3">
-            <h2 className="font-semibold">What changed</h2>
+            <h2 className="font-semibold">{tProgress("whatChanged")}</h2>
             <p className="text-sm text-muted-foreground">
-              {improved.length > 0
-                ? `${improved.length} area${improved.length === 1 ? "" : "s"} moved forward`
-                : "No area moved forward"}
-              {declined.length > 0 ? `, ${declined.length} moved back` : ""}
-              {steady > 0 ? `, ${steady} held steady` : ""}.
+              {improved.length > 0 ? tProgress("movedForward", { count: improved.length }) : tProgress("noneMovedForward")}
+              {declined.length > 0 ? tProgress("movedBackSuffix", { count: declined.length }) : ""}
+              {steady > 0 ? tProgress("heldSteadySuffix", { count: steady }) : ""}.
             </p>
             <ul className="glass-card-offset divide-y divide-white/45 overflow-hidden rounded-2xl border border-white/65 bg-white/45 backdrop-blur-2xl">
               {review.dimensionDeltas.map((d) => (
                 <li key={d.dimension} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                  <span>{DIMENSION_LABELS[d.dimension]}</span>
+                  <span>{dimensionLabel(d.dimension, locale)}</span>
                   <span className="flex items-center gap-3 text-muted-foreground">
                     {d.before} → {d.after}
                     <DeltaBadge delta={d.delta} />
@@ -134,11 +123,11 @@ export function ProgressView({ review }: { review: MonthlyReview }) {
           <section className="grid gap-4 sm:grid-cols-2">
             <div className="glass-card rounded-2xl border border-white/65 bg-white/45 p-5 backdrop-blur-2xl">
               <p className="text-2xl font-semibold tracking-tight">{review.projectsCompletedRecently}</p>
-              <p className="text-sm text-muted-foreground">Projects marked complete in the last {review.windowDays} days</p>
+              <p className="text-sm text-muted-foreground">{tProgress("projectsCompleted", { days: review.windowDays })}</p>
             </div>
             <div className="glass-card-fast rounded-2xl border border-white/65 bg-white/45 p-5 backdrop-blur-2xl">
               <p className="text-2xl font-semibold tracking-tight">{review.applicationsSubmittedRecently}</p>
-              <p className="text-sm text-muted-foreground">Applications submitted or updated in the last {review.windowDays} days</p>
+              <p className="text-sm text-muted-foreground">{tProgress("applicationsSubmitted", { days: review.windowDays })}</p>
             </div>
           </section>
         </>

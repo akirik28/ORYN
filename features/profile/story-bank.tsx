@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { Sparkles, NotebookPen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,19 +13,14 @@ import { generateStoryOutlines } from "@/app/(app)/profile/story-bank/actions";
 import type { EssayOutlineResponse } from "@/lib/ai/essay-outlines";
 import type { StoryBankItem } from "@/lib/story-bank/collect";
 
-const OUTLINE_STEPS = [
-  { key: "hook", label: "Hook" },
-  { key: "context", label: "Context" },
-  { key: "conflict", label: "Conflict" },
-  { key: "action", label: "Action" },
-  { key: "turningPoint", label: "Turning point" },
-  { key: "reflection", label: "Reflection" },
-  { key: "connectionToFuture", label: "Connection to future" },
-] as const;
+const OUTLINE_STEP_KEYS = ["hook", "context", "conflict", "action", "turningPoint", "reflection", "connectionToFuture"] as const;
 
 const GLOWS = ["glass-card", "glass-card-offset", "glass-card-fast", "glass-card-offset2"];
 
 export function StoryBank({ experiences }: { experiences: StoryBankItem[] }) {
+  const t = useTranslations("profile.storyBank");
+  const locale = useLocale();
+  const OUTLINE_STEPS = OUTLINE_STEP_KEYS.map((key) => ({ key, label: t(`outlineSteps.${key}`) }));
   const [prompt, setPrompt] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<EssayOutlineResponse | null>(null);
@@ -56,26 +52,20 @@ export function StoryBank({ experiences }: { experiences: StoryBankItem[] }) {
   }
 
   if (experiences.length === 0) {
-    return (
-      <EmptyState
-        icon={NotebookPen}
-        title="Add experiences to your profile first"
-        description="Add activities, projects, research, sports, volunteering, or work to your profile first — your essay stories come from things you've actually done, never from something invented for you."
-      />
-    );
+    return <EmptyState icon={NotebookPen} title={t("emptyTitle")} description={t("emptyDescription")} />;
   }
 
   return (
     <div className="space-y-8">
       <div className="glass-card rounded-2xl border border-white/65 bg-white/45 p-5 backdrop-blur-2xl">
         <label htmlFor="essay-prompt" className="text-sm font-medium">
-          The essay prompt you&apos;re answering
+          {t("promptLabel")}
         </label>
         <Textarea
           id="essay-prompt"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Paste the exact prompt, e.g. &quot;Discuss an accomplishment, event, or realization that sparked a period of personal growth.&quot;"
+          placeholder={t("promptPlaceholder")}
           rows={3}
           className="mt-2"
           maxLength={1000}
@@ -83,10 +73,10 @@ export function StoryBank({ experiences }: { experiences: StoryBankItem[] }) {
 
         <div className="mt-5 space-y-2">
           <p className="text-sm font-medium">
-            Experiences to consider{" "}
+            {t("experiencesToConsider")}{" "}
             <span className="font-normal text-muted-foreground">
-              ({selected.size > 0 ? `${selected.size} selected` : "all"} — {withNotes} of {experiences.length} have
-              story notes)
+              ({selected.size > 0 ? t("selectedCount", { count: selected.size }) : t("allLabel")}{" "}
+              {t("storyNotesCount", { withNotes, total: experiences.length })})
             </span>
           </p>
           <div className="max-h-56 space-y-1.5 overflow-y-auto rounded-xl border border-white/55 bg-white/35 p-3">
@@ -97,22 +87,19 @@ export function StoryBank({ experiences }: { experiences: StoryBankItem[] }) {
                   <span className="font-medium">{e.title}</span>{" "}
                   <span className="text-muted-foreground">· {e.category}</span>
                   {e.storyNotes ? (
-                    <NotebookPen className="ml-1 inline size-3 text-brand-primary" aria-label="has story notes" />
+                    <NotebookPen className="ml-1 inline size-3 text-brand-primary" aria-label={t("hasStoryNotes")} />
                   ) : null}
                 </span>
               </label>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground">
-            Leave everything unchecked to consider all of them. Entries with story notes give far better
-            results — add yours from the Profile page.
-          </p>
+          <p className="text-xs text-muted-foreground">{t("helperText")}</p>
         </div>
 
         {error ? <p role="alert" className="mt-3 text-sm text-destructive">{error}</p> : null}
 
         <Button onClick={submit} disabled={isPending || !prompt.trim()} className="mt-4">
-          <Sparkles className="size-4" /> {isPending ? "Finding your stories…" : "Find my stories"}
+          <Sparkles className="size-4" /> {isPending ? t("finding") : t("findMyStories")}
         </Button>
       </div>
 
@@ -128,7 +115,7 @@ export function StoryBank({ experiences }: { experiences: StoryBankItem[] }) {
                 <h2 className="text-lg font-medium">{candidate.experienceTitle}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{candidate.whyThisStory}</p>
                 {candidate.missingDetail ? (
-                  <p className="mt-2 text-sm text-brand-primary">Worth adding to your story notes: {candidate.missingDetail}</p>
+                  <p className="mt-2 text-sm text-brand-primary">{t("missingDetailPrefix", { detail: candidate.missingDetail })}</p>
                 ) : null}
               </div>
 
@@ -136,12 +123,14 @@ export function StoryBank({ experiences }: { experiences: StoryBankItem[] }) {
                 {candidate.outlines.map((outline, oi) => (
                   <div key={oi} className="rounded-xl border p-4">
                     <Badge variant="outline" className="mb-3">
-                      Angle {oi + 1}: {outline.angle}
+                      {t("angleLabel", { number: oi + 1 })} {outline.angle}
                     </Badge>
                     <dl className="space-y-2">
                       {OUTLINE_STEPS.map(({ key, label }) => (
                         <div key={key} className="grid gap-0.5 sm:grid-cols-[140px_1fr] sm:gap-3">
-                          <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</dt>
+                          <dt lang={locale} className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            {label}
+                          </dt>
                           <dd className="text-sm">{outline[key]}</dd>
                         </div>
                       ))}
@@ -152,10 +141,7 @@ export function StoryBank({ experiences }: { experiences: StoryBankItem[] }) {
             </section>
           ))}
 
-          <p className="text-center text-xs text-muted-foreground">
-            These are structures for your own writing, not a draft. Oryn never writes the essay for you — and
-            never adds a detail you didn&apos;t record yourself.
-          </p>
+          <p className="text-center text-xs text-muted-foreground">{t("footerDisclaimer")}</p>
         </div>
       ) : null}
     </div>

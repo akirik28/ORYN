@@ -2,6 +2,9 @@
 import { describe, test, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
+import { NextIntlClientProvider } from "next-intl";
+import type { ComponentProps } from "react";
+import en from "@/messages/en.json";
 
 /**
  * Regression coverage for the 2026-08-29 audit finding: submitAdd() used to append an
@@ -44,6 +47,21 @@ afterEach(() => {
   vi.mocked(toast.error).mockReset();
 });
 
+/**
+ * FeaturedManager calls useTranslations, unlike NotificationBell's useLocale-only case
+ * (see that test's own renderBell) — an empty messages object here would make every t()
+ * call throw, not just render blank. Real en.json, pinned to "en" so these assertions stay
+ * about the optimistic-id regression rather than becoming a translation test — catalog
+ * content is covered in __tests__/i18n/locale.test.ts.
+ */
+function renderManager(props: ComponentProps<typeof FeaturedManager>) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={en}>
+      <FeaturedManager {...props} />
+    </NextIntlClientProvider>,
+  );
+}
+
 // Two Selects render at once as soon as the dialog opens: "mode" (defaults to "project",
 // already matching CANDIDATES) and, since a project candidate exists, "choose an item" right
 // below it — both share role="combobox" with no distinguishing accessible name, so a plain
@@ -83,7 +101,7 @@ describe("FeaturedManager — real id, not a phantom one", () => {
     vi.mocked(addFeaturedItem).mockResolvedValue({ id: "real-server-id-123" });
     vi.mocked(removeFeaturedItem).mockResolvedValue({});
 
-    render(<FeaturedManager initialItems={[]} candidates={CANDIDATES} />);
+    renderManager({ initialItems: [], candidates: CANDIDATES });
     await addFeaturedCandidate();
 
     expect(screen.getByText("My Research Tool")).toBeInTheDocument();
@@ -95,7 +113,7 @@ describe("FeaturedManager — real id, not a phantom one", () => {
   test("a failed add surfaces an error and never appends a real item (dialog stays open, so 'Remove' never appears)", async () => {
     vi.mocked(addFeaturedItem).mockResolvedValue({ error: "You can feature up to 5 items. Remove one before adding another." });
 
-    render(<FeaturedManager initialItems={[]} candidates={CANDIDATES} />);
+    renderManager({ initialItems: [], candidates: CANDIDATES });
     fireEvent.click(screen.getByRole("button", { name: /Feature something/ }));
     const combobox = (await screen.findAllByRole("combobox"))[1];
     fireEvent.click(combobox);
@@ -113,7 +131,7 @@ describe("FeaturedManager — real id, not a phantom one", () => {
     vi.mocked(addFeaturedItem).mockResolvedValue({ id: "real-id" });
     vi.mocked(removeFeaturedItem).mockResolvedValue({ error: "Couldn't remove that." });
 
-    render(<FeaturedManager initialItems={[]} candidates={CANDIDATES} />);
+    renderManager({ initialItems: [], candidates: CANDIDATES });
     await addFeaturedCandidate();
     expect(screen.getByText("My Research Tool")).toBeInTheDocument();
 

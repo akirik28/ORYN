@@ -21,5 +21,241 @@
     "label": "Dil",
     "change": "Dili değiştir",
     "saveFailed": "Dil tercihiniz kaydedilemedi. Lütfen tekrar deneyin."
+  },
+  "common": {
+    "cancel": "İptal",
+    "submit": "Gönder",
+    "delete": "Sil",
+    "show": "Göster",
+    "hide": "Gizle"
+  },
+  "profile": {
+    "backToProfile": "Profile geri dön",
+    "page": {
+      "eyebrow": "Yolculuk",
+      "title": "Şimdiye dek oluşturduğun her şey.",
+      "description": "Akademik, liderlik, araştırma ve uygulama kayıtların. Bu, Oryn'ın gelişim değerlendirmesi — bir kabul puanı değil ve üniversiteler tarafından görülemez.",
+      "scanCv": "CV Tara",
+      "tabs": {
+        "overview": "Genel Bakış",
+        "academics": "Akademik",
+        "experience": "Deneyim",
+        "recognition": "Başarılar",
+        "skills": "Beceriler ve Hedefler"
+      },
+      "professionalProfile": {
+        "title": "Profesyonel profil",
+        "description": "Diğer Oryn öğrencilerinin herkese açık profilinde gördüğü."
+      },
+      "openTo": "Açık olduğun fırsatlar",
+      "contactInformation": "İletişim bilgileri",
+      "featured": {
+        "title": "Öne çıkanlar",
+        "description": "Herkese açık profilinin en üstüne en iyi 3-5 öğeni sabitle."
+      },
+      "strength": {
+        "title": "Profil Gücü",
+        "description": "Oryn'ın seni ne kadar tanıdığı — profilinin ne kadar güçlü olduğundan ayrı bir şey. Bunu yalnızca sen görebilirsin.",
+        "percentComplete": "%{percent} tamamlandı",
+        "fullyFilled": "Profilin tamamen dolduruldu."
+      },
+      "views": {
+        "label": "Profil görüntülenmeleri",
+        "last7Days": "son 7 günde {count}",
+        "last30Days": "son 30 günde {count}"
+      },
+      "journeyNote": {
+        "emptyEyebrow": "Henüz okunacak bir şey yok",
+        "emptyTitle": "Birkaç şey ekle, bu sayfa çalışmaya başlasın.",
+        "emptyBody": "Oryn'a henüz hiçbir alanı değerlendirmesi için yeterli bilgi verilmedi. Bu, kayıtlardaki bir eksiklik — senin hakkında bir yargı değil. Aşağıya derslerini, faaliyetlerini ve projelerini ekle; Oryn sana gerçekten nerede durduğunu söylemeye başlayacak.",
+        "gapEyebrow": "Kaldıraç nerede",
+        "gapTitle": "{dimension} — bir sonraki çabanın en çok işe yarayacağı alan bu.",
+        "gapBodyWithAwaiting": "Oryn'ın şu anda değerlendirebildiği {assessed, plural, one {# alandan} other {# alandan}} bu, arkasında en az veri olanı — yani aynı saatler burada profilini en çok ileri taşır. Diğer {awaitingEvidence, plural, one {# alanda} other {# alanda}} henüz hiçbir şey kayıtlı değil, bu yüzden daha fazla ekledikçe bu değerlendirme değişebilir.",
+        "gapBodySimple": "Oryn'ın değerlendirebildiği her şey arasında, arkasında en az veri olan alan bu — yani aynı saatler burada profilini en çok ileri taşır.",
+        "strengthEyebrow": "Oryn bir örüntü fark etti",
+        "strengthTitle": "{dimension} — istikrarlı bir güçlü yön haline geliyor.",
+        "strengthBody": "Kayıtlarının en iyi kanıtlanmış kısmı bu. Aynısından daha fazla eklemek profilinin nasıl okunduğunu değiştirmez — kaldıraç başka yerde."
+      },
+      "journey": {
+        "title": "Yolculuğun",
+        "description": "Her şey tek bir zaman çizelgesinde, en yeniden en eskiye. Yukarıdaki Akademik / Deneyim / Başarılar / Beceriler sekmeleri ekleyip düzenlediğin yer — burası nasıl okunduğu."
+      },
+      "peerComparison": "Akran karşılaştırması",
+      "whereYouStand": "Nerede durduğun",
+      "sections": {
+        "education": { "title": "Eğitim", "description": "Okullar ve akademik aşamalar.", "empty": "Henüz eğitim kaydı yok." },
+        "coursework": { "title": "Dersler", "description": "AP, IB HL/SL, A-Level, onur (honors) ve normal dersler. Oryn bunları akademik zorluk düzeyini ve konu çeşitliliğini anlamak için kullanır.", "empty": "Henüz ders kaydı yok. Aldığın dersleri ekle — ileri düzey dersler en güçlü akademik sinyallerden biridir." },
+        "testScores": { "title": "Sınav puanları", "description": "SAT, ACT, AP, IB, dil yeterliliği ve daha fazlası.", "empty": "Henüz sınav puanı yok." },
+        "activities": { "title": "Faaliyetler", "description": "Kulüpler, liderlik rolleri, spor, yaz programları.", "empty": "Henüz faaliyet yok. Kulüp, liderlik veya diğer deneyimlerini ekle." },
+        "sports": { "title": "Spor", "description": "Sportif geçmişin — profilinin Faaliyetler'e dahil edilmeyen, kendi başına bir bölümü.", "empty": "Henüz spor yok. Ciddiye aldığın bir takım, kulüp veya bireysel spor ekle." },
+        "projects": { "title": "Projeler", "description": "Tek başına ya da bir ekiple yaptığın veya hayata geçirdiğin şeyler.", "empty": "Henüz proje yok." },
+        "research": { "title": "Araştırma", "description": "Bağımsız veya danışmanlık eşliğinde yürütülen araştırma deneyimi.", "empty": "Henüz araştırma deneyimi yok — güçlü bir puan için yayın şart değil." },
+        "workExperience": { "title": "İş deneyimi", "description": "Stajlar, işler ve çıraklıklar.", "empty": "Henüz iş deneyimi yok." },
+        "volunteering": { "title": "Gönüllülük", "description": "Toplum hizmeti ve gönüllülük.", "empty": "Henüz gönüllülük kaydı yok." },
+        "awards": { "title": "Ödüller", "description": "Yarışmalar, onurlar ve üstün başarılar.", "empty": "Henüz ödül yok." },
+        "certifications": { "title": "Sertifikalar", "description": "Kurs veya programlardan alınan sertifikalar.", "empty": "Henüz sertifika yok." },
+        "goals": { "title": "Hedefler", "description": "Neye doğru çalıştığın — öneriler bunlara dayanır.", "empty": "Henüz hedef yok. Neye doğru çalışıyorsun?" },
+        "skills": { "title": "Beceriler", "description": "En fazla 15. Kendi beyanınla — bağlantıların eklendikten sonra bir beceriyi onaylayabilir.", "empty": "Henüz beceri yok. En fazla 15 tane ekle — teknik, yaratıcı, analitik veya başka türden." },
+        "languages": { "title": "Diller", "description": "Seviyeler için çoğu üniversitenin şartlarını belirttiği ölçek olan CEFR kullanılır. Dil sertifikalarını Sertifikalar altına ekle.", "empty": "Henüz dil yok. Ana dilin dahil, konuştuğun dilleri ekle." }
+      },
+      "quickAdd": {
+        "activity": "Faaliyet",
+        "competition": "Yarışma",
+        "award": "Ödül",
+        "research": "Araştırma",
+        "internship": "Staj",
+        "volunteering": "Gönüllülük",
+        "course": "Ders",
+        "testScore": "Sınav puanı",
+        "project": "Proje",
+        "certification": "Sertifika",
+        "sport": "Spor",
+        "education": "Eğitim"
+      },
+      "gradePrefix": "Not: {value}",
+      "captain": "Kaptan"
+    },
+    "cv": {
+      "title": "CV Oluşturucu",
+      "description": "Tamamen yapılandırılmış profilinden oluşturulur — nelerin dahil edileceğini seç, sonra yazdır ya da PDF olarak kaydet. Hiçbir şey uydurulmaz; herhangi bir kaydın ifadesini önce Profil sayfasındaki \"Yapay Zekâ ile Geliştir\" ile iyileştir."
+    },
+    "cvImport": {
+      "backToJourney": "Yolculuğa geri dön",
+      "eyebrow": "Yolculuk",
+      "title": "CV Tara.",
+      "description": "Kaydın zaten bir yerde yazılı mı? Oryn onu okuyup eğitim, faaliyet, ödül, proje, araştırma ve iş bilgilerini çıkarabilir — hiçbiri kaydedilmeden önce her şeyi sen gözden geçirirsin.",
+      "notConfiguredTitle": "CV taraması henüz yapılandırılmadı",
+      "notConfiguredDescription": "Bunun için ANTHROPIC_API_KEY ayarlanmalı — bkz. API_SETUP.md. Yine de her şeyi profiline elle ekleyebilirsin."
+    },
+    "portfolio": {
+      "title": "Portföy",
+      "description": "Yaptığın her şey, tek bir yerde."
+    },
+    "researchIdeas": {
+      "eyebrow": "Araştırma",
+      "title": "Gerçekten bitirebileceğin bir proje bul.",
+      "description": "Oryn, seviyene ve ayırabildiğin zamana göre ölçeklenmiş araştırmalar önerir — gerçek akademik literatüre ve kamuya açık verilere dayanır, asla cevaplanma yolu olmayan, sadece kulağa etkileyici gelen bir soru değil.",
+      "fieldLabel": "Hangi alanda çalışmak istiyorsun?",
+      "fieldPlaceholder": "ör. Ekonomi, Bilgisayar Bilimi, Psikoloji",
+      "generating": "Düşünüyor",
+      "generate": "Fikir üret",
+      "tryLabel": "Dene:",
+      "suggestedFields": {
+        "economics": "Ekonomi",
+        "computerScience": "Bilgisayar Bilimi",
+        "psychology": "Psikoloji",
+        "biology": "Biyoloji",
+        "politicalScience": "Siyaset Bilimi",
+        "environmentalScience": "Çevre Bilimi"
+      },
+      "noIdeasTitle": "Henüz fikir üretilmedi",
+      "noIdeasDescription": "Bir alan belirt, Oryn seviyene göre ölçeklenmiş üç proje önersin — her biri gerçekten bitirebileceğin, kulağa etkileyici gelen bir başlık yerine gerçek veri kaynaklarına dayanan projeler.",
+      "timeNeeded": "Gereken süre",
+      "finishedLooksLike": "Bitmiş proje nasıl görünür",
+      "method": "Yöntem",
+      "skillsNeeded": "İhtiyacın olacak beceriler",
+      "dataSources": "Veri nereden geliyor",
+      "firstSteps": "İlk adımların",
+      "addedToResearch": "Araştırmana eklendi",
+      "addToResearch": "Araştırmama ekle",
+      "couldntGenerate": "Oryn bu alan için bir proje oluşturamadı. Farklı bir şekilde adlandırmayı dene.",
+      "difficulty": {
+        "accessible": "erişilebilir",
+        "moderate": "orta",
+        "ambitious": "iddialı"
+      }
+    },
+    "storyBank": {
+      "title": "Deneme Hikaye Bankası",
+      "description": "Gerçek deneyimlerinden hangilerinin deneme yazmaya değer bir hikaye taşıdığını ve bunu nasıl kurgulayabileceğini bul. Oryn kaydettiklerini düzenler — asla bir olay uydurmaz ve senin yerine denemeyi yazmaz.",
+      "emptyTitle": "Önce profiline deneyim ekle",
+      "emptyDescription": "Önce profiline faaliyet, proje, araştırma, spor, gönüllülük veya iş ekle — deneme hikayelerin gerçekten yaptığın şeylerden gelir, asla senin için uydurulan bir şeyden değil.",
+      "promptLabel": "Cevapladığın deneme sorusu",
+      "promptPlaceholder": "Tam soruyu yapıştır, ör. \"Kişisel gelişim dönemini tetikleyen bir başarıyı, olayı veya farkındalığı anlat.\"",
+      "experiencesToConsider": "Değerlendirilecek deneyimler",
+      "selectedCount": "{count} seçili",
+      "allLabel": "hepsi",
+      "storyNotesCount": "— {total} deneyimden {withNotes} tanesinde hikaye notu var",
+      "hasStoryNotes": "hikaye notu var",
+      "helperText": "Hepsini değerlendirmek için hiçbirini işaretlemeden bırak. Hikaye notu olan kayıtlar çok daha iyi sonuç verir — kendi notlarını Profil sayfasından ekle.",
+      "finding": "Hikayelerin bulunuyor…",
+      "findMyStories": "Hikayelerimi bul",
+      "angleLabel": "{number}. Açı:",
+      "missingDetailPrefix": "Hikaye notlarına eklemeye değer: {detail}",
+      "footerDisclaimer": "Bunlar kendi yazın için birer yapı, taslak değil. Oryn senin yerine denemeyi asla yazmaz — ve kendinin kaydetmediği bir detayı asla eklemez.",
+      "outlineSteps": {
+        "hook": "Kanca",
+        "context": "Bağlam",
+        "conflict": "Çatışma",
+        "action": "Eylem",
+        "turningPoint": "Dönüm Noktası",
+        "reflection": "Öz Değerlendirme",
+        "connectionToFuture": "Geleceğe Bağlantı"
+      }
+    },
+    "featuredManager": {
+      "sourceTypes": {
+        "project": "Proje",
+        "research": "Araştırma",
+        "award": "Ödül",
+        "activity": "Faaliyet",
+        "workExperience": "İş deneyimi",
+        "volunteering": "Gönüllülük",
+        "sports": "Spor"
+      },
+      "externalLink": "Harici bağlantı",
+      "emptyState": "Henüz öne çıkan bir şey yok. En iyi projeni, ödülünü veya araştırmanı profilinin en üstüne sabitle.",
+      "featureSomething": "Bir şey öne çıkar",
+      "maxFeatured": "En fazla {max} öğe öne çıkarabilirsin, bu sınıra ulaştın.",
+      "titleOptional": "Başlık (isteğe bağlı)",
+      "chooseAnItem": "Bir öğe seç",
+      "noneYet": "Bunlardan henüz hiçbiri yok — önce profiline bir tane ekle.",
+      "featureIt": "Öne çıkar",
+      "genericError": "Bu öne çıkarılamadı. Lütfen tekrar dene.",
+      "moveUp": "Yukarı taşı",
+      "moveDown": "Aşağı taşı",
+      "remove": "Kaldır"
+    },
+    "progress": {
+      "title": "İlerleme",
+      "subtitle": "Profilin son {days} günde nasıl değişti.",
+      "whereYouStand": "Nerede durduğun",
+      "strongestEvidence": "En güçlü kanıtın <bold>{dimensions}</bold> alanında. ",
+      "developing": "{count, plural, one {# alan} other {# alan}} gelişiyor. ",
+      "awaitingEvidence": "Oryn bunlardan {count} tanesi hakkında henüz yeterince bilgiye sahip değil.",
+      "nextToStrengthen": "Güçlendirilecek sıradaki alan",
+      "nextToStrengthenBody": " — {state}. Oryn'ın hakkında bilgi sahibi olduğu her şey arasında, aynı çalışma saatleri profilini en çok burada değiştirir.",
+      "notEnoughHistoryTitle": "Henüz yeterli geçmiş yok",
+      "notEnoughHistoryDescription": "Profilinin birkaç hafta içinde değişme fırsatı bulduktan sonra tekrar kontrol et. Oryn, alanlarını en az bir ay önce alınmış bir anlık görüntüyle karşılaştırır.",
+      "whatChanged": "Neler değişti",
+      "movedForward": "{count, plural, one {# alan ilerledi} other {# alan ilerledi}}",
+      "noneMovedForward": "Hiçbir alan ilerlemedi",
+      "movedBackSuffix": ", {count} geriledi",
+      "heldSteadySuffix": ", {count} sabit kaldı",
+      "projectsCompleted": "Son {days} günde tamamlanmış olarak işaretlenen projeler",
+      "applicationsSubmitted": "Son {days} günde gönderilen veya güncellenen başvurular"
+    },
+    "recommendations": {
+      "title": "Referanslar",
+      "write": "Referans yaz",
+      "anonymousAuthor": "Bir Oryn öğrencisi",
+      "hidden": "Gizli",
+      "noneYet": "Henüz referans yok",
+      "writePlaceholder": "Onunla çalışmak hakkında birine ne söylerdin?",
+      "report": "Bildir",
+      "reportDialogTitle": "Bu referansı bildir",
+      "reportPlaceholder": "Bununla ilgili sorun ne?",
+      "reportSubmit": "Bildirimi gönder",
+      "deleteDialogTitle": "Bu referans silinsin mi?",
+      "deleteDialogDescription": "Bu, yazdığın referansı kaldırır — geri alınamaz.",
+      "relationships": {
+        "teacher": "Öğretmen",
+        "mentor": "Mentor",
+        "teammate": "Takım arkadaşı",
+        "projectCollaborator": "Proje ortağı",
+        "colleague": "Meslektaş",
+        "other": "Diğer"
+      }
+    }
   }
 }

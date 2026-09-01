@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations, getLocale } from "next-intl/server";
 import {
   ArrowRight,
   Sparkles,
@@ -25,7 +26,7 @@ import { toProfileSignal, hasConfidentSignal, signalCoverage } from "@/lib/scori
 import { InsightCard } from "@/components/oryn/insight-card";
 import { JourneyTimeline } from "@/features/profile/journey-timeline";
 import { buildJourney } from "@/lib/profile/build-journey";
-import { DIMENSION_LABELS } from "@/lib/scoring/labels";
+import { dimensionLabel } from "@/lib/scoring/labels";
 import { PeerBenchmark } from "@/features/profile/peer-benchmark";
 import { getPeerBenchmarks } from "@/lib/benchmarking";
 import { AchievementSection } from "@/features/profile/achievement-section";
@@ -111,6 +112,8 @@ export default async function ProfilePage() {
   const userId = session.userId!;
   const profile = await getCurrentProfile();
   const supabase = await createClient();
+  const locale = await getLocale();
+  const t = await getTranslations("profile");
 
   const [
     scoresRes,
@@ -229,28 +232,26 @@ export default async function ProfilePage() {
     !hasConfidentSignal(profileSignal)
       ? {
           variant: "gap",
-          eyebrow: "Nothing to read yet",
-          title: "Add a few things and this page starts working.",
-          body:
-            "Oryn hasn't been given enough to assess any area yet. That's a gap in the record, not a judgement about you — add your courses, activities and projects below and it will start telling you where you actually stand.",
+          eyebrow: t("page.journeyNote.emptyEyebrow"),
+          title: t("page.journeyNote.emptyTitle"),
+          body: t("page.journeyNote.emptyBody"),
         }
       : weakest
         ? {
             variant: "gap",
-            eyebrow: "Where the leverage is",
-            title: `${DIMENSION_LABELS[weakest.dimension]} is where your next effort counts most.`,
+            eyebrow: t("page.journeyNote.gapEyebrow"),
+            title: t("page.journeyNote.gapTitle", { dimension: dimensionLabel(weakest.dimension, locale) }),
             body:
               coverage.awaitingEvidence > 0
-                ? `Of the ${coverage.assessed} area${coverage.assessed === 1 ? "" : "s"} Oryn can currently assess, this one has the least behind it — so the same hours move your profile furthest here. ${coverage.awaitingEvidence} other area${coverage.awaitingEvidence === 1 ? " has" : "s have"} nothing recorded yet, so this reading may change as you add more.`
-                : "Of everything Oryn can assess, this area has the least behind it — which makes it where the same hours move your profile furthest.",
+                ? t("page.journeyNote.gapBodyWithAwaiting", { assessed: coverage.assessed, awaitingEvidence: coverage.awaitingEvidence })
+                : t("page.journeyNote.gapBodySimple"),
           }
         : strongest
           ? {
               variant: "strength",
-              eyebrow: "Oryn noticed a pattern",
-              title: `${DIMENSION_LABELS[strongest.dimension]} is becoming a consistent strength.`,
-              body:
-                "It's the best-evidenced part of your record. Adding more of the same is unlikely to change how your profile reads — the leverage is elsewhere.",
+              eyebrow: t("page.journeyNote.strengthEyebrow"),
+              title: t("page.journeyNote.strengthTitle", { dimension: dimensionLabel(strongest.dimension, locale) }),
+              body: t("page.journeyNote.strengthBody"),
             }
           : null;
 
@@ -296,37 +297,37 @@ export default async function ProfilePage() {
   // render it directly with no RSC boundary to cross.
   const iconProps = { className: "size-4 text-ink-3", "aria-hidden": true as const };
   const quickAddTypes: QuickAddType[] = [
-    { key: "activity", label: "Activity", icon: <Sparkles {...iconProps} />, fields: ACTIVITY_FIELDS.filter((f) => f.quickAdd), defaultValues: activityDefaults, onCreate: createActivity as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "activity", label: t("page.quickAdd.activity"), icon: <Sparkles {...iconProps} />, fields: ACTIVITY_FIELDS.filter((f) => f.quickAdd), defaultValues: activityDefaults, onCreate: createActivity as (v: FormValues) => Promise<{ error?: string }> },
     // Not its own table — a competition is an Activity with category preset to
     // "competition_team" (see ACTIVITY_CATEGORY_OPTIONS). Distinct picker tile because
     // "Activity" and "Competition" read as different things to a student even though Oryn
     // stores them identically; the category select still shows in the short form so the
     // preset is visible and changeable, not a silent guess.
-    { key: "competition", label: "Competition", icon: <Trophy {...iconProps} />, fields: ACTIVITY_FIELDS.filter((f) => f.quickAdd), defaultValues: { ...activityDefaults, category: "competition_team" }, onCreate: createActivity as (v: FormValues) => Promise<{ error?: string }> },
-    { key: "award", label: "Award", icon: <Medal {...iconProps} />, fields: AWARD_FIELDS.filter((f) => f.quickAdd), defaultValues: awardDefaults, onCreate: createAward as (v: FormValues) => Promise<{ error?: string }> },
-    { key: "research", label: "Research", icon: <FlaskConical {...iconProps} />, fields: RESEARCH_FIELDS.filter((f) => f.quickAdd), defaultValues: researchDefaults, onCreate: createResearchExperience as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "competition", label: t("page.quickAdd.competition"), icon: <Trophy {...iconProps} />, fields: ACTIVITY_FIELDS.filter((f) => f.quickAdd), defaultValues: { ...activityDefaults, category: "competition_team" }, onCreate: createActivity as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "award", label: t("page.quickAdd.award"), icon: <Medal {...iconProps} />, fields: AWARD_FIELDS.filter((f) => f.quickAdd), defaultValues: awardDefaults, onCreate: createAward as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "research", label: t("page.quickAdd.research"), icon: <FlaskConical {...iconProps} />, fields: RESEARCH_FIELDS.filter((f) => f.quickAdd), defaultValues: researchDefaults, onCreate: createResearchExperience as (v: FormValues) => Promise<{ error?: string }> },
     // Also not its own table — work_experiences with employment_type preset to
     // "internship"; same visible-not-silent treatment as Competition above.
-    { key: "internship", label: "Internship", icon: <Briefcase {...iconProps} />, fields: WORK_EXPERIENCE_FIELDS.filter((f) => f.quickAdd), defaultValues: workDefaults, onCreate: createWorkExperience as (v: FormValues) => Promise<{ error?: string }> },
-    { key: "volunteering", label: "Volunteering", icon: <HandHeart {...iconProps} />, fields: VOLUNTEERING_FIELDS.filter((f) => f.quickAdd), defaultValues: volunteeringDefaults, onCreate: createVolunteering as (v: FormValues) => Promise<{ error?: string }> },
-    { key: "course", label: "Course", icon: <BookOpen {...iconProps} />, fields: COURSE_FIELDS.filter((f) => f.quickAdd), defaultValues: courseDefaults, onCreate: createCourse as (v: FormValues) => Promise<{ error?: string }> },
-    { key: "test_score", label: "Test score", icon: <ClipboardCheck {...iconProps} />, fields: TEST_SCORE_FIELDS.filter((f) => f.quickAdd), defaultValues: testScoreDefaults, onCreate: createTestScore as (v: FormValues) => Promise<{ error?: string }> },
-    { key: "project", label: "Project", icon: <Hammer {...iconProps} />, fields: PROJECT_FIELDS.filter((f) => f.quickAdd), defaultValues: projectDefaults, onCreate: createProject as (v: FormValues) => Promise<{ error?: string }> },
-    { key: "certification", label: "Certification", icon: <BadgeCheck {...iconProps} />, fields: CERTIFICATION_FIELDS.filter((f) => f.quickAdd), defaultValues: certificationDefaults, onCreate: createCertification as (v: FormValues) => Promise<{ error?: string }> },
-    { key: "sport", label: "Sport", icon: <Dumbbell {...iconProps} />, fields: SPORTS_FIELDS.filter((f) => f.quickAdd), defaultValues: sportsDefaults, onCreate: createSportsExperience as (v: FormValues) => Promise<{ error?: string }> },
-    { key: "education", label: "Education", icon: <GraduationCap {...iconProps} />, fields: EDUCATION_FIELDS.filter((f) => f.quickAdd), defaultValues: educationDefaults, onCreate: createEducationRecord as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "internship", label: t("page.quickAdd.internship"), icon: <Briefcase {...iconProps} />, fields: WORK_EXPERIENCE_FIELDS.filter((f) => f.quickAdd), defaultValues: workDefaults, onCreate: createWorkExperience as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "volunteering", label: t("page.quickAdd.volunteering"), icon: <HandHeart {...iconProps} />, fields: VOLUNTEERING_FIELDS.filter((f) => f.quickAdd), defaultValues: volunteeringDefaults, onCreate: createVolunteering as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "course", label: t("page.quickAdd.course"), icon: <BookOpen {...iconProps} />, fields: COURSE_FIELDS.filter((f) => f.quickAdd), defaultValues: courseDefaults, onCreate: createCourse as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "test_score", label: t("page.quickAdd.testScore"), icon: <ClipboardCheck {...iconProps} />, fields: TEST_SCORE_FIELDS.filter((f) => f.quickAdd), defaultValues: testScoreDefaults, onCreate: createTestScore as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "project", label: t("page.quickAdd.project"), icon: <Hammer {...iconProps} />, fields: PROJECT_FIELDS.filter((f) => f.quickAdd), defaultValues: projectDefaults, onCreate: createProject as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "certification", label: t("page.quickAdd.certification"), icon: <BadgeCheck {...iconProps} />, fields: CERTIFICATION_FIELDS.filter((f) => f.quickAdd), defaultValues: certificationDefaults, onCreate: createCertification as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "sport", label: t("page.quickAdd.sport"), icon: <Dumbbell {...iconProps} />, fields: SPORTS_FIELDS.filter((f) => f.quickAdd), defaultValues: sportsDefaults, onCreate: createSportsExperience as (v: FormValues) => Promise<{ error?: string }> },
+    { key: "education", label: t("page.quickAdd.education"), icon: <GraduationCap {...iconProps} />, fields: EDUCATION_FIELDS.filter((f) => f.quickAdd), defaultValues: educationDefaults, onCreate: createEducationRecord as (v: FormValues) => Promise<{ error?: string }> },
   ];
 
   return (
     <div className="space-y-10">
       <PageHeader
-        eyebrow="Journey"
-        title="Everything you've built so far."
-        description="Your record of academics, leadership, research and execution. This is Oryn's development assessment — not an admissions score, and not visible to universities."
+        eyebrow={t("page.eyebrow")}
+        title={t("page.title")}
+        description={t("page.description")}
         action={
           <div className="flex flex-col items-end gap-1 text-sm">
             <Link href="/profile/import" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
-              Scan a CV <ArrowRight className="size-3.5" />
+              {t("page.scanCv")} <ArrowRight className="size-3.5" />
             </Link>
           </div>
         }
@@ -343,43 +344,40 @@ export default async function ProfilePage() {
           student would actually think to look for, not by database table. */}
       <Tabs defaultValue="overview" className="gap-6">
         <TabsList className="w-full justify-start overflow-x-auto sm:w-fit">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="academics">Academics</TabsTrigger>
-          <TabsTrigger value="experience">Experience</TabsTrigger>
-          <TabsTrigger value="recognition">Recognition</TabsTrigger>
-          <TabsTrigger value="skills">Skills & goals</TabsTrigger>
+          <TabsTrigger value="overview">{t("page.tabs.overview")}</TabsTrigger>
+          <TabsTrigger value="academics">{t("page.tabs.academics")}</TabsTrigger>
+          <TabsTrigger value="experience">{t("page.tabs.experience")}</TabsTrigger>
+          <TabsTrigger value="recognition">{t("page.tabs.recognition")}</TabsTrigger>
+          <TabsTrigger value="skills">{t("page.tabs.skills")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-10 pt-2">
           <section className="glass-card space-y-6 rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-8">
-            <SectionHeader title="Professional profile" description="What other Oryn students see on your public profile." />
+            <SectionHeader title={t("page.professionalProfile.title")} description={t("page.professionalProfile.description")} />
             <ProfessionalIdentityForm
               initialHeadline={profile?.headline ?? null}
               initialAbout={profile?.about ?? null}
             />
             <div className="border-t pt-6">
-              <h3 className="mb-3 text-sm font-semibold">Open to</h3>
+              <h3 className="mb-3 text-sm font-semibold">{t("page.openTo")}</h3>
               <OpenToForm initialSelected={profile?.open_to ?? []} initialVisibility={contactInfo.open_to_visibility} />
             </div>
             <div className="border-t pt-6">
-              <h3 className="mb-3 text-sm font-semibold">Contact information</h3>
+              <h3 className="mb-3 text-sm font-semibold">{t("page.contactInformation")}</h3>
               <ContactInfoForm initialContact={contactInfo} isAdult={isAdult} />
             </div>
           </section>
 
           <section className="space-y-3">
-            <SectionHeader title="Featured" description="Pin your best 3-5 items to the top of your public profile." />
+            <SectionHeader title={t("page.featured.title")} description={t("page.featured.description")} />
             <FeaturedManager initialItems={featuredManagerItems} candidates={featuredCandidates} />
           </section>
 
           <section className="grid gap-6 md:grid-cols-[1fr_auto] md:items-start">
             <div className="space-y-3">
-              <SectionHeader
-                title="Profile Strength"
-                description="How much Oryn knows about you — separate from how strong your profile is. Only you can see this."
-              />
+              <SectionHeader title={t("page.strength.title")} description={t("page.strength.description")} />
               <Progress value={completenessPercent} />
-              <p className="text-sm text-muted-foreground">{completenessPercent}% complete</p>
+              <p className="text-sm text-muted-foreground">{t("page.strength.percentComplete", { percent: completenessPercent })}</p>
               {remainingSuggestions.length > 0 ? (
                 <ul className="grid gap-1.5 text-sm text-muted-foreground sm:grid-cols-2">
                   {remainingSuggestions.map((item) => (
@@ -387,13 +385,13 @@ export default async function ProfilePage() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground">Your profile is fully filled out.</p>
+                <p className="text-sm text-muted-foreground">{t("page.strength.fullyFilled")}</p>
               )}
             </div>
             <div className="shrink-0 space-y-1 text-sm text-muted-foreground md:text-right">
-              <p className="font-medium text-foreground">Profile views</p>
-              <p>{profileViewCounts.last7Days} in the last 7 days</p>
-              <p>{profileViewCounts.last30Days} in the last 30 days</p>
+              <p className="font-medium text-foreground">{t("page.views.label")}</p>
+              <p>{t("page.views.last7Days", { count: profileViewCounts.last7Days })}</p>
+              <p>{t("page.views.last30Days", { count: profileViewCounts.last30Days })}</p>
             </div>
           </section>
 
@@ -407,7 +405,7 @@ export default async function ProfilePage() {
           <section className="grid gap-8 rounded-3xl border border-brand-primary-border bg-brand-primary-subtle p-6 md:grid-cols-2 md:p-8">
             <ScoreRadar scores={radarScores} />
             <div className="flex flex-col justify-center">
-              <ProfileSignal signal={profileSignal} showScores heading="Where you stand" />
+              <ProfileSignal signal={profileSignal} showScores heading={t("page.whereYouStand")} locale={locale} />
             </div>
           </section>
 
@@ -425,15 +423,15 @@ export default async function ProfilePage() {
 
           <section className="space-y-6">
             <SectionHeader
-              title="Your journey"
-              description="Everything on one timeline, newest first. The Academics / Experience / Recognition / Skills tabs above are where you add and edit — this is how it reads."
+              title={t("page.journey.title")}
+              description={t("page.journey.description")}
               action={<QuickAddEntry types={quickAddTypes} />}
             />
             <JourneyTimeline entries={journeyEntries} />
           </section>
 
           <section className="space-y-3">
-            <SectionHeader title="Peer comparison" />
+            <SectionHeader title={t("page.peerComparison")} />
             <PeerBenchmark summary={benchmarkSummary} />
           </section>
         </TabsContent>
@@ -441,8 +439,8 @@ export default async function ProfilePage() {
         <TabsContent value="academics" className="space-y-8 pt-2">
           <AchievementSection
             glowVariant="glass-card"
-            title="Education"
-            description="Schools and academic stages."
+            title={t("page.sections.education.title")}
+            description={t("page.sections.education.description")}
             items={educationRes.data ?? []}
             summaries={summaryMap(educationRes.data ?? [], (item) => ({ title: item.school_name, subtitle: item.country ?? undefined }))}
             fields={EDUCATION_FIELDS}
@@ -450,17 +448,17 @@ export default async function ProfilePage() {
             onCreate={createEducationRecord as (v: FormValues) => Promise<{ error?: string }>}
             onUpdate={updateEducationRecord as (id: string, v: FormValues) => Promise<{ error?: string }>}
             onDelete={deleteEducationRecord}
-            emptyStateText="No education records yet."
+            emptyStateText={t("page.sections.education.empty")}
           />
 
           <AchievementSection
             glowVariant="glass-card-offset"
-            title="Coursework"
-            description="AP, IB HL/SL, A-Level, honors, and regular courses. Oryn uses these to understand your academic rigor and subject range."
+            title={t("page.sections.coursework.title")}
+            description={t("page.sections.coursework.description")}
             items={coursesRes.data ?? []}
             summaries={summaryMap(coursesRes.data ?? [], (item) => ({
               title: item.course_name,
-              subtitle: [COURSE_LEVEL_LABELS[item.level] ?? item.level, item.academic_year, item.grade_value ? `Grade ${item.grade_value}` : null]
+              subtitle: [COURSE_LEVEL_LABELS[item.level] ?? item.level, item.academic_year, item.grade_value ? t("page.gradePrefix", { value: item.grade_value }) : null]
                 .filter(Boolean)
                 .join(" · ") || undefined,
             }))}
@@ -469,13 +467,13 @@ export default async function ProfilePage() {
             onCreate={createCourse as (v: FormValues) => Promise<{ error?: string }>}
             onUpdate={updateCourse as (id: string, v: FormValues) => Promise<{ error?: string }>}
             onDelete={deleteCourse}
-            emptyStateText="No coursework yet. Add the courses you're taking — advanced coursework is one of the strongest academic signals."
+            emptyStateText={t("page.sections.coursework.empty")}
           />
 
           <AchievementSection
             glowVariant="glass-card-fast"
-            title="Test scores"
-            description="SAT, ACT, AP, IB, language proficiency, and more."
+            title={t("page.sections.testScores.title")}
+            description={t("page.sections.testScores.description")}
             items={testScoresRes.data ?? []}
             summaries={summaryMap(testScoresRes.data ?? [], (item) => ({ title: item.test_name, subtitle: item.score }))}
             fields={TEST_SCORE_FIELDS}
@@ -483,15 +481,15 @@ export default async function ProfilePage() {
             onCreate={createTestScore as (v: FormValues) => Promise<{ error?: string }>}
             onUpdate={updateTestScore as (id: string, v: FormValues) => Promise<{ error?: string }>}
             onDelete={deleteTestScore}
-            emptyStateText="No test scores yet."
+            emptyStateText={t("page.sections.testScores.empty")}
           />
         </TabsContent>
 
         <TabsContent value="experience" className="space-y-8 pt-2">
           <AchievementSection
             glowVariant="glass-card-offset2"
-            title="Activities"
-            description="Clubs, leadership roles, sports, summer programs."
+            title={t("page.sections.activities.title")}
+            description={t("page.sections.activities.description")}
             items={activities}
             summaries={summaryMap(activities, (item) => ({ title: item.title, subtitle: item.organization ?? undefined }))}
             fields={ACTIVITY_FIELDS}
@@ -499,30 +497,30 @@ export default async function ProfilePage() {
             onCreate={createActivity as (v: FormValues) => Promise<{ error?: string }>}
             onUpdate={updateActivity as (id: string, v: FormValues) => Promise<{ error?: string }>}
             onDelete={deleteActivity}
-            emptyStateText="No activities yet. Add clubs, leadership, or other experiences."
+            emptyStateText={t("page.sections.activities.empty")}
           />
 
           <AchievementSection
             glowVariant="glass-card"
-            title="Sports"
-            description="Athletic history — a first-class part of your profile, not folded into Activities."
+            title={t("page.sections.sports.title")}
+            description={t("page.sections.sports.description")}
             items={sportsRes.data ?? []}
             summaries={summaryMap(sportsRes.data ?? [], (item) => ({
               title: item.sport,
-              subtitle: [item.team_name, item.is_captain ? "Captain" : null].filter(Boolean).join(" · ") || undefined,
+              subtitle: [item.team_name, item.is_captain ? t("page.captain") : null].filter(Boolean).join(" · ") || undefined,
             }))}
             fields={SPORTS_FIELDS}
             defaultValues={sportsDefaults}
             onCreate={createSportsExperience as (v: FormValues) => Promise<{ error?: string }>}
             onUpdate={updateSportsExperience as (id: string, v: FormValues) => Promise<{ error?: string }>}
             onDelete={deleteSportsExperience}
-            emptyStateText="No sports yet. Add a team, club, or individual sport you take seriously."
+            emptyStateText={t("page.sections.sports.empty")}
           />
 
           <AchievementSection
             glowVariant="glass-card-offset"
-            title="Projects"
-            description="Things you've built or shipped, on your own or with a team."
+            title={t("page.sections.projects.title")}
+            description={t("page.sections.projects.description")}
             items={projectsRes.data ?? []}
             summaries={summaryMap(projectsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.outcome_summary ?? item.organization ?? undefined }))}
             fields={PROJECT_FIELDS}
@@ -530,7 +528,7 @@ export default async function ProfilePage() {
             onCreate={createProject as (v: FormValues) => Promise<{ error?: string }>}
             onUpdate={updateProject as (id: string, v: FormValues) => Promise<{ error?: string }>}
             onDelete={deleteProject}
-            emptyStateText="No projects yet."
+            emptyStateText={t("page.sections.projects.empty")}
           />
 
           <div className="flex justify-end">
@@ -538,8 +536,8 @@ export default async function ProfilePage() {
           </div>
           <AchievementSection
             glowVariant="glass-card-fast"
-            title="Research"
-            description="Independent or mentored research experience."
+            title={t("page.sections.research.title")}
+            description={t("page.sections.research.description")}
             items={researchRes.data ?? []}
             summaries={summaryMap(researchRes.data ?? [], (item) => ({ title: item.title, subtitle: item.field ?? undefined }))}
             fields={RESEARCH_FIELDS}
@@ -547,13 +545,13 @@ export default async function ProfilePage() {
             onCreate={createResearchExperience as (v: FormValues) => Promise<{ error?: string }>}
             onUpdate={updateResearchExperience as (id: string, v: FormValues) => Promise<{ error?: string }>}
             onDelete={deleteResearchExperience}
-            emptyStateText="No research experience yet — publication isn't required for a strong score."
+            emptyStateText={t("page.sections.research.empty")}
           />
 
           <AchievementSection
             glowVariant="glass-card-offset2"
-            title="Work experience"
-            description="Internships, jobs, and apprenticeships."
+            title={t("page.sections.workExperience.title")}
+            description={t("page.sections.workExperience.description")}
             items={workRes.data ?? []}
             summaries={summaryMap(workRes.data ?? [], (item) => ({ title: item.title, subtitle: item.organization }))}
             fields={WORK_EXPERIENCE_FIELDS}
@@ -561,13 +559,13 @@ export default async function ProfilePage() {
             onCreate={createWorkExperience as (v: FormValues) => Promise<{ error?: string }>}
             onUpdate={updateWorkExperience as (id: string, v: FormValues) => Promise<{ error?: string }>}
             onDelete={deleteWorkExperience}
-            emptyStateText="No work experience yet."
+            emptyStateText={t("page.sections.workExperience.empty")}
           />
 
           <AchievementSection
             glowVariant="glass-card"
-            title="Volunteering"
-            description="Community service and volunteering."
+            title={t("page.sections.volunteering.title")}
+            description={t("page.sections.volunteering.description")}
             items={volunteeringRes.data ?? []}
             summaries={summaryMap(volunteeringRes.data ?? [], (item) => ({ title: item.title, subtitle: item.cause_area ?? undefined }))}
             fields={VOLUNTEERING_FIELDS}
@@ -575,15 +573,15 @@ export default async function ProfilePage() {
             onCreate={createVolunteering as (v: FormValues) => Promise<{ error?: string }>}
             onUpdate={updateVolunteering as (id: string, v: FormValues) => Promise<{ error?: string }>}
             onDelete={deleteVolunteering}
-            emptyStateText="No volunteering yet."
+            emptyStateText={t("page.sections.volunteering.empty")}
           />
         </TabsContent>
 
         <TabsContent value="recognition" className="space-y-8 pt-2">
           <AchievementSection
             glowVariant="glass-card-offset"
-            title="Awards"
-            description="Competitions, honors, and distinctions."
+            title={t("page.sections.awards.title")}
+            description={t("page.sections.awards.description")}
             items={awardsRes.data ?? []}
             summaries={summaryMap(awardsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.level ?? undefined }))}
             fields={AWARD_FIELDS}
@@ -591,13 +589,13 @@ export default async function ProfilePage() {
             onCreate={createAward as (v: FormValues) => Promise<{ error?: string }>}
             onUpdate={updateAward as (id: string, v: FormValues) => Promise<{ error?: string }>}
             onDelete={deleteAward}
-            emptyStateText="No awards yet."
+            emptyStateText={t("page.sections.awards.empty")}
           />
 
           <AchievementSection
             glowVariant="glass-card-fast"
-            title="Certifications"
-            description="Certificates from courses or programs."
+            title={t("page.sections.certifications.title")}
+            description={t("page.sections.certifications.description")}
             items={certificationsRes.data ?? []}
             summaries={summaryMap(certificationsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.organization ?? undefined }))}
             fields={CERTIFICATION_FIELDS}
@@ -605,15 +603,15 @@ export default async function ProfilePage() {
             onCreate={createCertification as (v: FormValues) => Promise<{ error?: string }>}
             onUpdate={updateCertification as (id: string, v: FormValues) => Promise<{ error?: string }>}
             onDelete={deleteCertification}
-            emptyStateText="No certifications yet."
+            emptyStateText={t("page.sections.certifications.empty")}
           />
         </TabsContent>
 
         <TabsContent value="skills" className="space-y-8 pt-2">
           <AchievementSection
             glowVariant="glass-card-offset2"
-            title="Goals"
-            description="What you're working toward — recommendations trace back to these."
+            title={t("page.sections.goals.title")}
+            description={t("page.sections.goals.description")}
             items={goalsRes.data ?? []}
             summaries={summaryMap(goalsRes.data ?? [], (item) => ({ title: item.title, subtitle: [item.category, item.status !== "active" ? item.status : null].filter(Boolean).join(" · ") || undefined }))}
             fields={GOAL_FIELDS}
@@ -621,13 +619,13 @@ export default async function ProfilePage() {
             onCreate={createGoal as (v: FormValues) => Promise<{ error?: string }>}
             onUpdate={updateGoal as (id: string, v: FormValues) => Promise<{ error?: string }>}
             onDelete={deleteGoal}
-            emptyStateText="No goals yet. What are you working toward?"
+            emptyStateText={t("page.sections.goals.empty")}
           />
 
           <AchievementSection
             glowVariant="glass-card"
-            title="Skills"
-            description="Up to 15. Self-declared — connections can endorse a skill once they're added below."
+            title={t("page.sections.skills.title")}
+            description={t("page.sections.skills.description")}
             items={skillsRes.data ?? []}
             summaries={summaryMap(skillsRes.data ?? [], (item) => ({ title: item.name, subtitle: item.proficiency ?? undefined }))}
             fields={SKILL_FIELDS}
@@ -635,7 +633,7 @@ export default async function ProfilePage() {
             onCreate={createSkill as (v: FormValues) => Promise<{ error?: string }>}
             onUpdate={updateSkill as (id: string, v: FormValues) => Promise<{ error?: string }>}
             onDelete={deleteSkill}
-            emptyStateText="No skills yet. Add up to 15 — technical, creative, analytical, or otherwise."
+            emptyStateText={t("page.sections.skills.empty")}
           />
 
           {/* The `languages` table has existed since the initial schema but was never surfaced,
@@ -645,8 +643,8 @@ export default async function ProfilePage() {
               carries an issuer and a date; duplicating that here would be a worse model. */}
           <AchievementSection
             glowVariant="glass-card-offset"
-            title="Languages"
-            description="Levels use CEFR, the scale most universities state their requirements in. Add language certificates under Certifications."
+            title={t("page.sections.languages.title")}
+            description={t("page.sections.languages.description")}
             items={languagesRes.data ?? []}
             summaries={summaryMap(languagesRes.data ?? [], (item) => ({
               title: item.name,
@@ -657,7 +655,7 @@ export default async function ProfilePage() {
             onCreate={createLanguage as (v: FormValues) => Promise<{ error?: string }>}
             onUpdate={updateLanguage as (id: string, v: FormValues) => Promise<{ error?: string }>}
             onDelete={deleteLanguage}
-            emptyStateText="No languages yet. Add the ones you speak, including your first language."
+            emptyStateText={t("page.sections.languages.empty")}
           />
         </TabsContent>
       </Tabs>
