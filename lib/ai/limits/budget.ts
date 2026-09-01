@@ -70,11 +70,6 @@ function currentUtcMonthStartIso(): string {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
 }
 
-function startOfNextUtcMonthIso(): string {
-  const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
-}
-
 /**
  * Decides which model a call for `userId` should use, checked fresh against `ai_usage`
  * before every call rather than cached — per-user monthly volume is small (even the $3.04
@@ -124,64 +119,4 @@ export async function selectModelForUser(userId: string | null): Promise<ModelSe
     return { model: DEGRADE_MODEL, degraded: true, reason: "at_or_over_target", monthToDateSpendUsd: knownSpendUsd };
   }
   return { model: env.anthropic.model, degraded: false, reason: "under_target", monthToDateSpendUsd: knownSpendUsd };
-}
-
-/**
- * The UI-facing view of this budget — 2026-09-02, closing the gap oryn-b9 found:
- * MonthlyUsageMeter (features/advisor/monthly-usage-meter.tsx) shows a 300-message/month
- * abuse backstop (lib/ai/monthly-quota.ts) that has nothing to do with this file. A student
- * can be several degraded replies deep (roughly 14 Sonnet messages at $0.035 each hits the
- * $0.50 target) while that meter still shows a nearly-full bar and "270 messages left" —
- * accurate for the number it's showing, just not the number that actually changed their
- * experience. That's not this file lying about itself: selectModelForUser's own
- * monthToDateSpendUsd has always been correct. It's that nothing exposed it to any UI at
- * all, because it didn't exist yet when the meter was built. This closes that gap without
- * touching the meter's own rendering, which stays oryn-b9's territory — see the boundary
- * note in the package this shipped with.
- *
- * Deliberately calls selectModelForUser rather than re-reading ai_usage independently: the
- * whole point is that this can never say something different from what the real enforcement
- * decision would be for the same user at the same moment. Two independently-written queries
- * against the same table is exactly the failure shape lib/ai/monthly-quota.ts's own header
- * warns about (it and lib/ai/rate-limit.ts drifting out of sync) — reusing the one real
- * decision function instead of adding a second one is how this avoids repeating that.
- */
-export interface SpendQuota {
-  /** Null only when the underlying check was usage_unavailable (admin client missing, or
-   *  the query itself failed) — never a fabricated 0. Matches ModelSelection's own
-   *  "absent is not zero" rule. */
-  spentUsd: number | null;
-  targetUsd: number;
-  ceilingUsd: number;
-  /** 0–1, clamped against targetUsd (not ceilingUsd — the target is what actually triggers
-   *  degrade, so it's what "how full is the bar" should mean). 0 when spentUsd is null. */
-  fraction: number;
-  /** Exactly what selectModelForUser would decide for this user right now — true for
-   *  at_or_over_target and unknown_cost_this_month, false otherwise (including
-   *  usage_unavailable, which fails open rather than degrading). */
-  degraded: boolean;
-  /** False only when usage_unavailable — an unpriced row (unknown_cost_this_month) still
-   *  counts as "known" here, since spentUsd itself is a real, if partial, sum; what's
-   *  unknown in that case is completeness, not the number, and `degraded` already reflects
-   *  the defensive response to that separately. */
-  spentIsKnown: boolean;
-  /** ISO date the allowance resets — the first instant of next calendar month, UTC. Same
-   *  meaning and shape as MonthlyQuota.resetsAt (lib/ai/monthly-quota.ts), so a caller
-   *  rendering both can treat them the same way. */
-  resetsAt: string;
-}
-
-export async function getSpendQuota(userId: string): Promise<SpendQuota> {
-  const selection = await selectModelForUser(userId);
-  const spentIsKnown = selection.reason !== "usage_unavailable";
-  const spentUsd = selection.monthToDateSpendUsd;
-  return {
-    spentUsd,
-    targetUsd: MONTHLY_BUDGET_TARGET_USD,
-    ceilingUsd: MONTHLY_BUDGET_CEILING_USD,
-    fraction: spentUsd === null ? 0 : Math.min(1, Math.max(0, spentUsd / MONTHLY_BUDGET_TARGET_USD)),
-    degraded: selection.degraded,
-    spentIsKnown,
-    resetsAt: startOfNextUtcMonthIso(),
-  };
 }
