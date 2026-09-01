@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -9,33 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { updateContactInfo, type ContactInfoFormInput } from "@/app/(app)/profile/professional-actions";
 import type { ContactInfo, ContactVisibility } from "@/types/database";
 
-const VISIBILITY_OPTIONS: { value: ContactVisibility; label: string }[] = [
-  { value: "private", label: "Only me" },
-  { value: "connections", label: "Connections" },
-  { value: "public", label: "Anyone" },
-];
-
-function adultVisibilityOptions(isAdult: boolean) {
-  return isAdult ? VISIBILITY_OPTIONS : VISIBILITY_OPTIONS.filter((o) => o.value !== "public");
-}
-
 interface FieldState {
   value: string;
   visibility: ContactVisibility;
 }
 
 type FieldKey = "phone" | "email" | "linkedin" | "instagram" | "github" | "website" | "twitter" | "discord";
-
-const FIELD_META: Record<FieldKey, { label: string; placeholder: string; type?: string; minorSafe?: boolean }> = {
-  phone: { label: "Phone", placeholder: "+1 555 000 0000", type: "tel", minorSafe: true },
-  email: { label: "Email", placeholder: "you@example.com", type: "email" },
-  linkedin: { label: "LinkedIn", placeholder: "https://linkedin.com/in/..." },
-  instagram: { label: "Instagram", placeholder: "@yourhandle" },
-  github: { label: "GitHub", placeholder: "https://github.com/..." },
-  website: { label: "Website / portfolio", placeholder: "https://..." },
-  twitter: { label: "X / Twitter", placeholder: "@yourhandle" },
-  discord: { label: "Discord", placeholder: "username" },
-};
 
 function initialState(contact: ContactInfo): Record<FieldKey, FieldState> {
   return {
@@ -56,6 +36,24 @@ function initialState(contact: ContactInfo): Record<FieldKey, FieldState> {
  * server-side and rejects a public phone regardless of what this form ever offered
  * (lib/social/contact-visibility.ts's `isPhoneVisibilityAllowed`). */
 export function ContactInfoForm({ initialContact, isAdult }: { initialContact: ContactInfo; isAdult: boolean }) {
+  const t = useTranslations("common");
+  const tContact = useTranslations("profile.contactInfo");
+  const VISIBILITY_OPTIONS: { value: ContactVisibility; label: string }[] = [
+    { value: "private", label: tContact("visibilityOnlyMe") },
+    { value: "connections", label: tContact("visibilityConnections") },
+    { value: "public", label: tContact("visibilityAnyone") },
+  ];
+  const adultVisibilityOptions = (adult: boolean) => (adult ? VISIBILITY_OPTIONS : VISIBILITY_OPTIONS.filter((o) => o.value !== "public"));
+  const FIELD_META: Record<FieldKey, { label: string; placeholder: string; type?: string; minorSafe?: boolean }> = {
+    phone: { label: tContact("fieldPhone"), placeholder: "+1 555 000 0000", type: "tel", minorSafe: true },
+    email: { label: tContact("fieldEmail"), placeholder: "you@example.com", type: "email" },
+    linkedin: { label: "LinkedIn", placeholder: "https://linkedin.com/in/..." },
+    instagram: { label: "Instagram", placeholder: "@yourhandle" },
+    github: { label: "GitHub", placeholder: "https://github.com/..." },
+    website: { label: tContact("fieldWebsite"), placeholder: "https://..." },
+    twitter: { label: "X / Twitter", placeholder: "@yourhandle" },
+    discord: { label: "Discord", placeholder: "username" },
+  };
   const [fields, setFields] = useState<Record<FieldKey, FieldState>>(initialState(initialContact));
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -116,7 +114,7 @@ export function ContactInfoForm({ initialContact, isAdult }: { initialContact: C
             </div>
             <div className="w-full space-y-1.5 sm:w-36">
               <Label htmlFor={`contact-${key}-visibility`} className="sm:sr-only">
-                Visibility
+                {tContact("visibilityLabel")}
               </Label>
               <Select value={fields[key].visibility} onValueChange={(v) => v && update(key, { visibility: v as ContactVisibility })}>
                 <SelectTrigger id={`contact-${key}-visibility`} className="w-full">
@@ -136,13 +134,11 @@ export function ContactInfoForm({ initialContact, isAdult }: { initialContact: C
       })}
 
       {!isAdult ? (
-        <p className="text-xs text-muted-foreground">
-          Because you&apos;re under 18, your phone number can only be shared privately or with connections — never publicly.
-        </p>
+        <p className="text-xs text-muted-foreground">{tContact("minorPhoneNotice")}</p>
       ) : null}
 
       <Button variant="outline" size="sm" disabled={isPending || !dirty} onClick={save}>
-        {isPending ? <Loader2 className="size-4 animate-spin" /> : saved ? "Saved" : "Save"}
+        {isPending ? <Loader2 className="size-4 animate-spin" /> : saved ? tContact("saved") : t("save")}
       </Button>
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     </div>

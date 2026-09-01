@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,7 @@ export function DynamicFormFields({
   values: FormValues;
   onChange: (name: string, value: string | number | boolean | null) => void;
 }) {
+  const t = useTranslations("common");
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {fields.map((field) => {
@@ -67,7 +69,7 @@ export function DynamicFormFields({
                   as a real, US-centric choice the student never made. */}
               <Select value={(value as string) ?? undefined} onValueChange={(v) => onChange(field.name, v)}>
                 <SelectTrigger id={field.name} className="w-full">
-                  <SelectValue placeholder={field.placeholder ?? "Select…"} />
+                  <SelectValue placeholder={field.placeholder ?? t("selectPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {field.options.map((option) => (

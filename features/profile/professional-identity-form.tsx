@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,8 @@ export function ProfessionalIdentityForm({
   initialHeadline: string | null;
   initialAbout: string | null;
 }) {
+  const t = useTranslations("common");
+  const tIdentity = useTranslations("profile.professionalIdentity");
   const [headline, setHeadline] = useState(initialHeadline ?? "");
   const [about, setAbout] = useState(initialAbout ?? "");
   const [saved, setSaved] = useState(false);
@@ -41,12 +44,12 @@ export function ProfessionalIdentityForm({
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="headline">Headline</Label>
+        <Label htmlFor="headline">{tIdentity("headlineLabel")}</Label>
         <Input
           id="headline"
           value={headline}
           maxLength={HEADLINE_MAX}
-          placeholder="e.g. Aspiring Economist · Grade 11"
+          placeholder={tIdentity("headlinePlaceholder")}
           onChange={(e) => {
             setHeadline(e.target.value);
             setSaved(false);
@@ -56,13 +59,13 @@ export function ProfessionalIdentityForm({
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="about">About</Label>
+        <Label htmlFor="about">{tIdentity("aboutLabel")}</Label>
         <Textarea
           id="about"
           value={about}
           maxLength={ABOUT_MAX}
           rows={5}
-          placeholder="A short summary of who you are and what you're working toward."
+          placeholder={tIdentity("aboutPlaceholder")}
           onChange={(e) => {
             setAbout(e.target.value);
             setSaved(false);
@@ -83,7 +86,7 @@ export function ProfessionalIdentityForm({
           })
         }
       >
-        {isPending ? <Loader2 className="size-4 animate-spin" /> : saved ? "Saved" : "Save"}
+        {isPending ? <Loader2 className="size-4 animate-spin" /> : saved ? tIdentity("saved") : t("save")}
       </Button>
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
     </div>

@@ -1,19 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updateOpenTo } from "@/app/(app)/profile/professional-actions";
-import { OPEN_TO_OPTIONS, OPEN_TO_LABELS } from "@/lib/social/open-to";
+import { OPEN_TO_OPTIONS, openToLabel } from "@/lib/social/open-to";
 import type { ContactVisibility } from "@/types/database";
-
-const VISIBILITY_OPTIONS: { value: ContactVisibility; label: string }[] = [
-  { value: "private", label: "Only me" },
-  { value: "connections", label: "Connections" },
-  { value: "public", label: "Anyone" },
-];
 
 /** Multi-select from a fixed vocabulary (lib/social/open-to.ts) — a real Digital Twin
  * signal for opportunity matching per the product spec, but never proof of eligibility
@@ -26,6 +21,15 @@ export function OpenToForm({
   initialSelected: string[];
   initialVisibility: ContactVisibility;
 }) {
+  const t = useTranslations("common");
+  const tContact = useTranslations("profile.contactInfo");
+  const tOpenTo = useTranslations("profile.openTo");
+  const locale = useLocale();
+  const VISIBILITY_OPTIONS: { value: ContactVisibility; label: string }[] = [
+    { value: "private", label: tContact("visibilityOnlyMe") },
+    { value: "connections", label: tContact("visibilityConnections") },
+    { value: "public", label: tContact("visibilityAnyone") },
+  ];
   const [selected, setSelected] = useState<string[]>(initialSelected);
   const [visibility, setVisibility] = useState<ContactVisibility>(initialVisibility);
   const [saved, setSaved] = useState(false);
@@ -58,7 +62,7 @@ export function OpenToForm({
                   : "rounded-full border border-input px-3 py-1 text-sm text-muted-foreground hover:border-brand-primary/50"
               }
             >
-              {OPEN_TO_LABELS[option]}
+              {openToLabel(option, locale)}
             </button>
           );
         })}
@@ -66,7 +70,7 @@ export function OpenToForm({
 
       <div className="flex items-end gap-2">
         <div className="space-y-1.5">
-          <Label htmlFor="open-to-visibility">Who can see this</Label>
+          <Label htmlFor="open-to-visibility">{tOpenTo("whoCanSeeThis")}</Label>
           <Select
             value={visibility}
             onValueChange={(v) => {
@@ -99,7 +103,7 @@ export function OpenToForm({
             })
           }
         >
-          {isPending ? <Loader2 className="size-4 animate-spin" /> : saved ? "Saved" : "Save"}
+          {isPending ? <Loader2 className="size-4 animate-spin" /> : saved ? tContact("saved") : t("save")}
         </Button>
       </div>
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}

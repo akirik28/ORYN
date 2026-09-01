@@ -12,10 +12,12 @@ import {
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { getTranslations, getLocale } from "next-intl/server";
 import { cn } from "@/lib/utils";
 import { Eyebrow } from "@/components/oryn/eyebrow";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { groupJourneyByYear, type JourneyEntry, type JourneyKind } from "@/lib/profile/journey";
+import type { Locale } from "@/lib/i18n/config";
 
 const KIND_ICON: Record<JourneyKind, LucideIcon> = {
   leadership: Users,
@@ -30,21 +32,6 @@ const KIND_ICON: Record<JourneyKind, LucideIcon> = {
   course: BookOpen,
   test_score: GraduationCap,
   education: GraduationCap,
-};
-
-const KIND_LABEL: Record<JourneyKind, string> = {
-  leadership: "Leadership",
-  activity: "Activity",
-  research: "Research",
-  project: "Project",
-  work: "Work",
-  volunteering: "Volunteering",
-  sport: "Sport",
-  award: "Award",
-  certification: "Certification",
-  course: "Coursework",
-  test_score: "Test score",
-  education: "Education",
 };
 
 /**
@@ -62,37 +49,31 @@ const KIND_LABEL: Record<JourneyKind, string> = {
  * course look the same tells a student nothing about what carries weight. The shared rail
  * and the year anchors are what keep it one system rather than four stacked lists.
  */
-export function JourneyTimeline({ entries }: { entries: JourneyEntry[] }) {
+export async function JourneyTimeline({ entries }: { entries: JourneyEntry[] }) {
+  const t = await getTranslations("profile.journeyTimeline");
+  const locale = await getLocale();
   const groups = groupJourneyByYear(entries);
 
   if (groups.length === 0) {
-    return (
-      <EmptyState
-        icon={Sparkles}
-        title="Your journey starts as soon as you add something"
-        description="Courses, activities, projects, awards, work — anything you've done. Oryn builds this timeline from the sections below, and reads it to work out what to recommend next."
-      />
-    );
+    return <EmptyState icon={Sparkles} title={t("emptyTitle")} description={t("emptyDescription")} />;
   }
 
   return (
     <div className="space-y-12">
       {groups.map((group) => (
-        <section key={group.year ?? "undated"} aria-label={group.year ? String(group.year) : "No date recorded"}>
+        <section key={group.year ?? "undated"} aria-label={group.year ? String(group.year) : t("noDateRecorded")}>
           <div className="flex items-baseline gap-4">
             <h3 className="font-display text-2xl leading-none tabular-nums md:text-3xl">
-              {group.year ?? "Undated"}
+              {group.year ?? t("undated")}
             </h3>
             <span aria-hidden="true" className="h-px flex-1 bg-border" />
-            <span className="text-xs text-ink-3 tabular-nums">
-              {group.entries.length} {group.entries.length === 1 ? "entry" : "entries"}
-            </span>
+            <span className="text-xs text-ink-3 tabular-nums">{t("entryCount", { count: group.entries.length })}</span>
           </div>
 
           {/* One rail per year, so differently-weighted records still read as one spine. */}
           <ul className="mt-6 space-y-0 border-l border-border">
             {group.entries.map((entry) => (
-              <JourneyRow key={entry.id} entry={entry} />
+              <JourneyRow key={entry.id} entry={entry} kindLabel={t(`kindLabels.${entry.kind}`)} locale={locale} />
             ))}
           </ul>
         </section>
@@ -101,7 +82,7 @@ export function JourneyTimeline({ entries }: { entries: JourneyEntry[] }) {
   );
 }
 
-function JourneyRow({ entry }: { entry: JourneyEntry }) {
+function JourneyRow({ entry, kindLabel, locale }: { entry: JourneyEntry; kindLabel: string; locale: Locale }) {
   const Icon = KIND_ICON[entry.kind];
   const isStory = entry.weight === "story";
   const isCompact = entry.weight === "compact";
@@ -127,7 +108,7 @@ function JourneyRow({ entry }: { entry: JourneyEntry }) {
           className={cn("shrink-0 translate-y-0.5", isStory ? "size-4 text-brand-primary" : "size-3.5 text-ink-4")}
         />
         <div className="min-w-0 flex-1">
-          {isStory ? <Eyebrow rule={false} tone="brand">{KIND_LABEL[entry.kind]}</Eyebrow> : null}
+          {isStory ? <Eyebrow rule={false} tone="brand" locale={locale}>{kindLabel}</Eyebrow> : null}
           <p
             className={cn(
               "text-balance",
@@ -157,7 +138,7 @@ function JourneyRow({ entry }: { entry: JourneyEntry }) {
             ) : null}
             {entry.dateLabel ? <span className="tabular-nums">{entry.dateLabel}</span> : null}
             {!isStory && !isCompact ? (
-              <span className="text-ink-3">· {KIND_LABEL[entry.kind]}</span>
+              <span className="text-ink-3">· {kindLabel}</span>
             ) : null}
           </p>
 

@@ -2,6 +2,8 @@
 import { describe, test, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup, within } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
+import { NextIntlClientProvider } from "next-intl";
+import en from "@/messages/en.json";
 
 /**
  * Component-level coverage for QuickAddEntry (features/profile/quick-add-entry.tsx), the
@@ -45,7 +47,14 @@ function renderPicker(overrides: { onCreateTestScore?: (v: Record<string, unknow
     },
   ];
 
-  render(<QuickAddEntry types={types} />);
+  // QuickAddEntry calls useTranslations (common, profile.quickAddEntry,
+  // profile.achievementSection) — same real-catalog provider wrap as
+  // featured-manager.test.tsx and achievement-section.test.tsx, for the same reason.
+  render(
+    <NextIntlClientProvider locale="en" messages={en}>
+      <QuickAddEntry types={types} />
+    </NextIntlClientProvider>
+  );
   return { onCreateActivity, onCreateTestScore };
 }
 
