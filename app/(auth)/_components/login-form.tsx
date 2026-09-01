@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { signIn } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { AUTH_INPUT_CLASS, AUTH_SUBMIT_STYLE } from "./auth-field-styles";
 
 export function LoginForm({ next }: { next?: string }) {
+  const t = useTranslations("auth.login");
   const [state, action, pending] = useActionState(signIn, undefined);
 
   return (
@@ -16,7 +18,7 @@ export function LoginForm({ next }: { next?: string }) {
       {next ? <input type="hidden" name="next" value={next} /> : null}
       <div className="space-y-2">
         <Label htmlFor="email" style={{ color: "#3A3A4A", fontWeight: 500 }}>
-          Email
+          {t("emailLabel")}
         </Label>
         <Input id="email" name="email" type="email" autoComplete="email" required className={AUTH_INPUT_CLASS} />
         {state?.errors?.email ? <p className="text-sm text-destructive">{state.errors.email[0]}</p> : null}
@@ -24,10 +26,10 @@ export function LoginForm({ next }: { next?: string }) {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="password" style={{ color: "#3A3A4A", fontWeight: 500 }}>
-            Password
+            {t("passwordLabel")}
           </Label>
           <Link href="/forgot-password" className="text-xs" style={{ color: "#3D35E8" }}>
-            Forgot password?
+            {t("forgotPassword")}
           </Link>
         </div>
         <Input
@@ -46,7 +48,7 @@ export function LoginForm({ next }: { next?: string }) {
         <p className="text-sm text-destructive">{state.message}</p>
       ) : null}
       <Button type="submit" className="w-full text-white hover:opacity-90" style={AUTH_SUBMIT_STYLE} disabled={pending}>
-        {pending ? "Signing in…" : "Sign in"}
+        {pending ? t("signingIn") : t("signIn")}
       </Button>
     </form>
   );

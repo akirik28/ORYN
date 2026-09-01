@@ -939,5 +939,43 @@
       "visitOfficialPage": "Visit official page",
       "any": "any"
     }
+  },
+  "auth": {
+    "login": {
+      "welcomeBack": "Welcome back",
+      "signInToContinue": "Sign in to continue.",
+      "invalidConfirmationLink": "That link is invalid or has expired. Please try again.",
+      "newToOryn": "New to ORYN?",
+      "createAccount": "Create an account",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "forgotPassword": "Forgot password?",
+      "signIn": "Sign in",
+      "signingIn": "Signing in…",
+      "incorrectCredentials": "Incorrect email or password.",
+      "emailInvalid": "Enter a valid email address.",
+      "passwordRequired": "Enter your password."
+    },
+    "resetPassword": {
+      "linkExpiredTitle": "Link expired",
+      "linkExpiredBody": "This password reset link is invalid or has expired.",
+      "requestNewLink": "Request a new link",
+      "setNewPassword": "Set a new password",
+      "newPasswordLabel": "New password",
+      "requirements": "At least 8 characters, with a letter and a number.",
+      "updateButton": "Update password",
+      "updating": "Updating…",
+      "passwordMinLength": "Use at least 8 characters.",
+      "passwordNeedsLetter": "Include at least one letter.",
+      "passwordNeedsNumber": "Include at least one number."
+    }
+  },
+  "landing": {
+    "signIn": "Sign in",
+    "getStarted": "Get started — it's free",
+    "badge": "Personalized for ages 14–18",
+    "headlineLine1": "Your profile.",
+    "headlineLine2": "Your strategy.",
+    "subhead": "ORYN is a personal career and profile operating system for students preparing for competitive universities and opportunities."
   }
 }
