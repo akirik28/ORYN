@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { collectStoryBankExperiences } from "@/lib/story-bank/collect";
 import { StoryBank } from "@/features/profile/story-bank";
+import { resolveLocale } from "@/lib/i18n/locale";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tMeta = await getTranslations("profile.storyBank");
@@ -15,7 +16,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function StoryBankPage() {
   const session = await requireUser();
   const supabase = await createClient();
-  const experiences = await collectStoryBankExperiences(supabase, session.userId!);
+  const locale = await resolveLocale();
+  const experiences = await collectStoryBankExperiences(supabase, session.userId!, locale);
   const t = await getTranslations("profile");
   const tStoryBank = await getTranslations("profile.storyBank");
 
