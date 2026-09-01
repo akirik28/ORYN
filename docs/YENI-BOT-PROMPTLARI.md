@@ -211,7 +211,22 @@ ilk üç soru ne.
 
 ## Üçüne de geçerli teknik kurallar
 
-Bu botlar kod yazmadığı için çoğu kural onlara değmiyor, ama şunlar geçerli:
+**ÖNCE BUNU YAP — kendi çalışma dizinini aç.** Ana dizin
+(`/Users/adasarpkirik/Desktop/Founder/ORYN`) koordinatör oturumun; orada branch açma,
+orada commit'leme. Kendine ayrı bir worktree aç:
+
+```bash
+git -C /Users/adasarpkirik/Desktop/Founder/ORYN worktree add ../ORYN-wt-<kisa-ad> -b <dal-adi> main
+```
+
+Sonra `../ORYN-wt-<kisa-ad>` içinde çalış.
+
+Bu kural 2026-09-02 gecesi eklendi, çünkü tam olarak bu yaşandı: bir araştırma oturumu
+ana dizinde dal açtı, koordinatörün orada duran kaydedilmemiş değişiklikleri o dalın
+üstüne commit'lendi. Kurtarıldı — ama sadece üçüncü bir oturum izlediği için dört
+dakikada fark edildi. **Bir dizinde tek yazar.**
+
+Diğer kurallar:
 
 - **main'e merge yok.** Branch aç, push'la, orada bırak.
 - **Canlı veritabanına yazma yok.** Bu botların veritabanına hiç dokunmaması gerekiyor.
