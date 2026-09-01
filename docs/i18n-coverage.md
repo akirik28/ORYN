@@ -155,6 +155,31 @@ So the honest status is: a Turkish student now gets Turkish counsel, and nobody 
 That is better than certainly-English, and it is not the same as verified. A Turkish eval pass
 is the missing piece, and it is a founder decision because it costs credit.
 
+## The product says "sen", and eight strings say "siz"
+
+Found by a lane consolidating the eligibility copy, who noticed the two implementations of
+the same message address the student differently — `lib/counselor/copy.ts` formally
+("doğum yılınız", "sizinki"), `lib/opportunities/matching.ts` informally ("doğum yılını
+ekle"). Measured across all 1,028 catalog strings: **85 informal markers against 8 formal
+ones.** Informal is the house style by a wide margin and in every package translated on
+2026-09-01.
+
+So register is not an open decision here — it is settled, and the eight are slips. Five of
+them sit in `universities.browsePage` / `comparePage`, which is one package drifting rather
+than eight independent mistakes.
+
+**Two things this exposes about method.** The `docs/known-issues.md` table that documented
+the two implementations compared their *English* and concluded the drift was "symmetric, not
+worse in one language". Reading the Turkish showed otherwise: one speaks to the student as a
+stranger and the other doesn't, which no English comparison could surface. A translated
+product needs both languages read, not one checked and the other assumed faithful.
+
+And the measurement itself needed two passes. The first regex reported 11 formal strings and
+two were false positives — `"(n={size})"` matched on the English word "size", and "kendi
+yazın" is a noun rather than an imperative. A third, `messaging.thread.blockConfirmDescription`'s
+"ikiniz de … gönderemezsiniz", may be genuine plural ("both of you") rather than polite
+address, and is flagged as needing a reader rather than a pattern.
+
 ## A whole class of gap no string count can see
 
 `npm run check:i18n` counts text. It cannot see a gap whose symptom is a *missing function
