@@ -120,6 +120,22 @@ Worth one real pass before launch, by someone who can write to a live account: c
 action, answer the reflection, and check whether the next plan changes. Nothing an agent
 should do on the founder's account.
 
+**And it is not the only feedback loop with no data.** Phase 12.1's other one — asking why a
+student is not interested in an opportunity, and using that in future recommendations — is
+collected and discarded. `not_interested_reason` is written by
+`app/(app)/opportunities/actions.ts` and read by nothing in `lib/`. The *status* is honoured
+(`lib/opportunities/matching.ts:115` excludes `not_interested` outright, so a rejected
+opportunity does stop being recommended); it is the seven-category reason that goes nowhere.
+
+Live today: 3 saved opportunities, zero `not_interested`, zero reasons. So it is latent
+rather than a live defect — nobody has used that flow. But it means the product currently
+asks a question it does not use, and *how* a reason should shape ranking ("too expensive"
+→ deprioritise costly ones?) is a product decision rather than a wiring task.
+
+Taken together: **both of the mechanisms that make Oryn learn from a student have never
+run.** That is a usage fact, not a broken one — but it means the differentiating half of the
+product is the least exercised.
+
 
 - `universities`: **1,019** rows — **1,010 canonical, 9 superseded** — **unchanged from 08-22.**
   No university-catalogue growth since; the intervening work went into requirements, deadlines,

@@ -15,7 +15,7 @@ Phase 50 names seven integration tests and one end-to-end path. Against the suit
 | profile creation | covered |
 | weekly plan generation | covered — `ai/weekly-plan.test.ts`, including the counselor-grounding contract |
 | university save | covered at the action (`addTargetUniversity`), and now removal too |
-| opportunity save | **gap** — no test references `saveOpportunity` or `toggleSavedOpportunity` |
+| opportunity save | **gap** — the action is `setOpportunityStatus`; nothing in `__tests__` references it |
 | evidence permissions | **gap** — `counselor/evidence.test.ts` is about evidence *gating in counsel*, not about whether one student can read another's file |
 | **critical end-to-end happy path** | **absent** — there is no Playwright or equivalent suite; every test is unit, component or contract level |
 
@@ -37,7 +37,7 @@ from the two that are not.
 
 ## The two that are just missing
 
-`saveOpportunity` / `toggleSavedOpportunity` have no test at all, and the CV import workflow
+`setOpportunityStatus` has no test at all, and the CV import workflow
 is tested only at its last step. Neither needs infrastructure — both are mockable the way
 `__tests__/universities/save-university-button.test.tsx` mocks its action. These are the
 cheapest coverage to add and nothing is stopping them.
