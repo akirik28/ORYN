@@ -11,19 +11,33 @@ dedicated living docs rather than being tracked here — start at
 file's remaining entries (the Drive-doc product-decision conflict, data-readiness gaps,
 scoped-out items) are still current as of the dates on each entry.
 
-**Staleness pass, 2026-09-01**: every "Needs founder decision"/"Open" entry below was
-re-checked against current source and git history (read-only — no live database access,
-per this pass's own scope). Where something had closed, changed, or half-changed since it
-was written, that's noted inline as an **Update, 2026-09-01** paragraph directly under the
-original claim, with the commit or file that changed it — nothing was deleted, and nothing
-was marked resolved without a specific, checkable reason. Two categories couldn't be
-settled this way and are flagged as such rather than guessed: (a) the four
+**Staleness pass, 2026-09-01 (first pass)**: every "Needs founder decision"/"Open" entry
+below was re-checked against current source and git history (read-only — no live database
+access, per that pass's own scope). Where something had closed, changed, or half-changed
+since it was written, that's noted inline as an **Update, 2026-09-01** paragraph directly
+under the original claim, with the commit or file that changed it — nothing was deleted,
+and nothing was marked resolved without a specific, checkable reason. Two categories
+couldn't be settled that way and were flagged rather than guessed: (a) the four
 `founder-blocked-backlog.md`-mirrored RLS/security entries (message_reports, the
-computed-column guards, admin self-grant, `public_profiles`) — confirmed still open via
-that canonical doc, unchanged; (b) claims that turn on live database or environment-variable
-state (a specific row's status, whether `.env.local` still holds a placeholder) — git
-history has no visibility into either, so those are marked "not verifiable this pass"
-rather than asserted either way.
+computed-column guards, admin self-grant, `public_profiles`) — that pass took
+"confirmed still open via that canonical doc" as settling it, without independently
+querying live state; (b) claims that turn on live database or environment-variable state.
+
+**Second staleness pass, 2026-09-01 (this one, ~229 commits and 389 files later)**: had
+live Supabase MCP access this time, and used it — every claim in category (a) above was
+wrong. All five founder-gated security migrations (0061–0065) are applied and live,
+verified directly against `oryn-qa-scratch` (trigger definitions, view definitions, policy
+`with_check` clauses — not inferred from a migration file or a doc that cites one). The
+first pass's own category (a) reasoning was the mechanism of the staleness, not an
+exception to it: **trusting a canonical doc's "still open" claim instead of querying the
+thing it claims about is exactly how a fixed-and-forgotten migration stays marked
+founder-blocked for a week.** `founder-blocked-backlog.md` — the doc both passes deferred
+to — has the same four entries wrong today; flagged to CEO, not edited here, since it's a
+founder-facing decision doc and out of scope for this pass to change directly. See each of
+the four entries below for the specific live evidence. Also re-verified several live-data
+claims category (b) had marked unverifiable, live-data-quality findings in the
+opportunities entry, and one confirmed-merged branch — see the inline **Update, 2026-09-01
+(staleness pass)** / **(second pass)** notes throughout.
 
 
 ## English month names on university deadlines, and why it is one file
@@ -98,7 +112,9 @@ when the path is visited directly.
 
 ## ~~Two independent eligibility pipelines write different English for the same restriction~~ — FIXED 2026-09-01
 
-**Closed** on `oryn/eligibility-copy-consolidation-2026-09-01` (pushed, not yet merged):
+**Update, 2026-09-01 (staleness pass): merged.** `oryn/eligibility-copy-consolidation-2026-09-01` → `main` at `1f6f5da4`. The line below said "pushed, not yet merged"; kept for history, no longer current.
+
+**Closed** on `oryn/eligibility-copy-consolidation-2026-09-01`:
 `lib/opportunities/matching.ts` now exports `eligibilityMessages`, the single source for
 all ten sentences in the table below. `lib/counselor/eligibility.ts` calls into it instead
 of `lib/counselor/copy.ts`'s old `eligibilityCopy`, which now keeps only the two messages
@@ -270,7 +286,21 @@ close button inside `Dialog.Popup`, so tab order always ends on Close regardless
 sits visually. Not the focus-guard bug, not urgent, but a real, fixable, ORYN-side paper cut
 worth a line here so it isn't lost.
 
-## Needs founder decision — message_reports let a student name an innocent user as the accused
+## ~~Needs founder decision~~ — message_reports let a student name an innocent user as the accused — APPLIED
+
+**Update, 2026-09-01 (staleness pass): this migration is live. The heading and the
+"founder-gated, do not apply without review" line below are stale — checked directly
+against `oryn-qa-scratch`, not inferred.** `message_reports`' `"create own report"` policy's
+`with_check` today is `reporter_id = auth.uid() AND ((message_id IS NOT NULL AND
+reported_user_id = <that message's real sender_id>) OR (recommendation_id IS NOT NULL AND
+reported_user_id = <that recommendation's real author_id>))` — the exact two-branch shape
+`0064_message_reports_verify_reported_user.sql` describes below, live-queried via
+`pg_policies`, not assumed from the migration file. `docs/migration-state.md` (2026-09-01)
+already records this correctly ("0064 ... yes — `create own report` policy"); this entry
+and `docs/founder-blocked-backlog.md`'s matching item had not been updated to match it.
+**`founder-blocked-backlog.md` needs the same correction and is out of scope for this
+pass to edit** — flagged to CEO rather than changed directly, per this repo's own
+flag-don't-edit convention for founder-facing decision docs.
 
 **2026-08-22, BUG-1, live RLS verification package, surfaces 3+4 (sendMessage / block /
 report), then the INSERT-forgery inventory that followed it.** Full evidence:
@@ -343,12 +373,36 @@ opportunity; a fabricated low-baseline snapshot), then reverted and re-verified 
 Full per-table detail, severity, and the design decision (Option A — an RLS policy
 split, not a layered service-role-only policy, since permissive policies OR together):
 `docs/research/verification/insert-forgery-inventory-2026-08-22.md`,
-`docs/handoffs/insert-forgery-design-proposal-2026-08-22.md`. **Fix, written not
-applied**: `supabase/migrations/0065_close_insert_forgery_six_tables.sql`, paired with
-a code change (`app/(app)/documents/actions.ts`, `lib/plan/persist.ts`) already merged
-and live — `#113`. Founder-gated per standing rule, same as `0062`–`0064`.
+`docs/handoffs/insert-forgery-design-proposal-2026-08-22.md`. ~~**Fix, written not
+applied**~~ — **Update, 2026-09-01: applied.** All six tables re-checked live: none of
+them has an INSERT policy for `authenticated` any more (RLS default-deny now blocks a
+direct student insert on every one), and `evidence_files`' insert
+(`app/(app)/documents/actions.ts:69`) and `ai_recommendations`' insert
+(`lib/plan/persist.ts:105`) both go through the admin client, matching the Option A
+design this paragraph describes. `supabase/migrations/0065_close_insert_forgery_six_tables.sql`,
+paired with the code change (`app/(app)/documents/actions.ts`, `lib/plan/persist.ts`) —
+`#113`.
 
-## Needs founder decision — same self-write gap on 5 more computed columns (migration 0063)
+## ~~Needs founder decision~~ — same self-write gap on 5 more computed columns (migration 0063) — APPLIED
+
+**Update, 2026-09-01 (staleness pass): live, both halves.** Checked directly against
+`oryn-qa-scratch`, not inferred from the migration file below. All five guard triggers
+exist with the exact column lists this entry names — `profile_scores_00_guard_computed_columns`,
+`profile_score_snapshots_00_guard_computed_columns`, `opportunity_matches_00_guard_computed_columns`,
+`student_requirement_evaluations_00_guard_status`, and `evidence_files_00_guard_verification_status`
+— and `profiles`' own guard (`profiles_00_guard_protected_columns`) covers `is_admin`,
+`profile_strength_score`, and `completeness_percent` together in one trigger (see the
+0062 entry below), not two separate ones as the migration split implied — the function
+body confirms the `current_user <> 'service_role'` shape this entry's design section
+describes, correctly. **The paired code change is also live and correct** — read all
+three writer files directly rather than trusting a grep for `createAdminClient`
+(case-sensitive greps kept missing `tryCreateAdminClient`'s capital C, a false negative
+worth naming so the next pass doesn't repeat it): `lib/scoring/persist.ts` line 46,
+`lib/opportunities/persist-matches.ts` line 146, and `lib/requirements/persist.ts` line 80
+all write their guarded columns through the admin client, reads unchanged on the
+RLS-scoped one. `docs/migration-state.md` already has this right; this entry and
+`docs/founder-blocked-backlog.md` didn't. Same flag-not-edit note as the 0064 entry above
+applies to `founder-blocked-backlog.md`.
 
 **2026-08-22, BUG-1, live RLS verification package, continuing the sweep after the
 `is_admin` finding below.** Full evidence:
@@ -439,7 +493,28 @@ check admin availability before touching any client at all) in
 behavioral test wasn't feasible in this environment — stated as a real gap, not silently
 assumed equivalent).
 
-## Needs founder decision — CRITICAL: any authenticated user can self-grant admin
+## ~~Needs founder decision — CRITICAL~~: any authenticated user can self-grant admin — APPLIED
+
+**Update, 2026-09-01 (staleness pass): this was the top-priority item on
+`founder-blocked-backlog.md` and it is applied. Checked directly, not inferred.**
+`profiles` carries `profiles_00_guard_protected_columns`, `BEFORE UPDATE OF is_admin,
+profile_strength_score, completeness_percent`, function body:
+```sql
+if pg_catalog.pg_trigger_depth() <= 1 and current_user <> 'service_role' then
+  new.is_admin := old.is_admin;
+  new.profile_strength_score := old.profile_strength_score;
+  new.completeness_percent := old.completeness_percent;
+end if;
+```
+— exactly the reset-not-raise, service-role-exempt shape this entry's "Fix written, not
+applied" section describes, and exactly matching the self-correction two paragraphs
+below it (narrowed to a role check because `profile_strength_score`/`completeness_percent`'s
+legitimate writer had to move to the admin client first — confirmed that move is also
+live, see the 0063 entry above). Admin count re-checked live: still exactly 1 (QA account
+A), so the fix landing hasn't been accompanied by any new grant. `docs/migration-state.md`
+already has this right. **This entry and `founder-blocked-backlog.md`'s item 36 — its own
+"highest-priority item on this list" — do not.** Flagged to CEO; `founder-blocked-backlog.md`
+is out of scope for this pass to edit directly, same as the other three security entries.
 
 **2026-08-22, BUG-1, live RLS verification package, surface 2 (admin gate)**. Full
 evidence: `docs/research/verification/rls-live-verification-2026-08-22.md`. Escalated by
@@ -491,7 +566,22 @@ merge — see the migration's own header for the full account. Those two columns
 migration 0063, paired with moving that specific write to the service-role client so the
 same guard mechanism becomes correct for them too.
 
-## Needs founder decision — live RLS gap: `public_profiles` readable by anonymous callers
+## ~~Needs founder decision~~ — live RLS gap: `public_profiles` readable by anonymous callers — APPLIED
+
+**Update, 2026-09-01 (staleness pass): applied. Read the live view definition directly
+rather than trusting the migration file or the ledger.** `pg_get_viewdef` on
+`public.public_profiles` today starts `SELECT id, display_name, ... FROM profiles WHERE
+auth.uid() IS NOT NULL AND (...)` — the `auth.uid() IS NOT NULL` guard
+`0061_public_profiles_require_authenticated.sql` adds is there, in front of the existing
+`is_public`/connection-carve-out logic this entry describes below, unchanged. An
+unauthenticated caller can no longer read this view at all. **The exposure count this
+entry quotes is also stale in a way worth separating from the fix itself**: it said "7
+profiles in the scratch project, 1 currently public" — today it's **11 profiles, still 1
+public** (re-queried, not carried forward) — more signups since 2026-08-22, not a change
+in exposure risk, and moot now that the view requires authentication either way.
+`docs/migration-state.md` already has the applied status right; this entry and
+`founder-blocked-backlog.md` item 30 don't. Same flag-not-edit note as the other three
+security entries — `founder-blocked-backlog.md` stays out of scope for this pass.
 
 **2026-08-22, BUG-1, live RLS verification package** (assigned by ORYN-CEO after
 `docs/production-route-audit.md` named real RLS verification as its one remaining
@@ -635,6 +725,68 @@ stop-and-protect event.
   `__tests__/opportunities/ingest.test.ts`), each signature covered with its negative
   case. This closes the gate for future ingestion; it does not and cannot retroactively
   fix the 85 rows already live.
+
+**Update, 2026-09-01 (staleness pass, live re-verification — most of this section held,
+some of it moved)**:
+
+- **Tier 1 table above: reverified, stable, no drift.** Re-queried all six rows fresh
+  rather than assuming the 2026-09-01 update above was still current. Every status and
+  `updated_at` matches exactly — CMU, NYU, and USC are still `active`, unchanged since
+  that update; USC still has no properly-titled replacement and still needs the retitle
+  this entry recommends, not disabling. Worth stating plainly rather than silently:
+  checked, and nothing here has changed.
+- **The 271/85 denominators are themselves stale — real catalogue growth, not new
+  defects.** `active` opportunities are now 275 (not 271); total rows are 421 (not 391).
+  Missing `eligible_countries` moved from 352/391 (90.0%, this doc's last figure) to
+  380/421 (90.3%) — `docs/current-state.md` already had this number; this entry didn't.
+  The underlying shape is unchanged: new intake keeps outpacing the eligibility backfill.
+- **51 more defective rows found and precisely characterized, not just re-counted**
+  (CEO, 2026-09-01): all truncated at exactly 899–900 characters, all from the same
+  2026-08-18 batch, all missing `deadline`/`cost`/`minimum_age`/`maximum_age` — the
+  import filled title/description/URL and nothing the eligibility or deadline features
+  read. Status split, derived from `lib/opportunities/lifecycle.ts` rather than assumed:
+  **1 live** (`isOpportunityActionable`/`browse.ts` both gate on `status='active'`, so
+  today's actual student-facing exposure from this batch is one row, "American
+  University, Washington DC"), **41 queued** in `under_review` (loaded, not live —
+  becomes student-facing only if promoted), **9 disabled**. The disabled 9 were checked
+  row-by-row rather than trusted as a bucket, which reversed an initial read: 8 of 9 have
+  a live, correctly-titled replacement already active under a different row (including
+  the King's College London and St Andrews rows this entry's own Tier-1 table already
+  covers — same underlying finding, independently reached). **One genuine casualty**:
+  `c581e99a`, "The Pioneer Academics Research Program" — disabled 2026-08-23, no
+  replacement anywhere in the table, real well-known programme, `official_url` pointing
+  at a marketing review post rather than the programme page. Whether it was rejected on
+  merit isn't recoverable — no field-level audit trail exists (see that entry elsewhere
+  in this doc) — so "no replacement exists" is the whole of the evidence. Re-adding it is
+  a live-DB write and therefore founder-gated, same as Tier 2 below; recorded as a known
+  gap either way.
+- **A genuinely positive finding about the `under_review` queue, worth stating as one**
+  (CEO, 2026-09-01): field coverage on the 122 `under_review` rows is materially thinner
+  than on the 275 `active` ones across every dimension checked — deadline 11% vs 24%,
+  cost 9% vs 36%, age bounds 1% vs 34%, country eligibility 0% vs 15%. The moderation gate
+  is doing real work; rows that clear it are better-populated than rows that don't. (Where
+  those 122 `under_review` rows came from is not fully accounted for — `lib/opportunities/
+  ingest.ts` still only ever writes `status: "active"`, confirmed by reading the current
+  file, so this status is reaching rows through some other path. The 51-row batch above
+  explains 41 of the 122; the remaining ~81 are unexplained by anything checked this pass
+  and worth a look, not a guess.)
+- **A cheap, real check that existing reasoning talked past, not a bug in that reasoning**
+  (CEO, 2026-09-01): of 275 active rows, 208 have no deadline — but `lib/opportunities/
+  lifecycle.ts`'s own comment already correctly explains most of that (50
+  `date_not_announced`, honest; 34 `closed` + 3 `historical`, correctly excluded from
+  recommendations by `isOpportunityActionable`). What that comment doesn't mention: 25
+  rows have `cycle_status='open'` **and** a null deadline — the row asserts applications
+  are open and gives a student nothing to plan around. That combination is trivially
+  listable from stored data the same way the 208-count itself is, and the file's careful
+  reasoning about *undetectable* staleness doesn't cover this *detectable* case. 20 more
+  `upcoming` rows carry the same gap, milder. 76 rows are `unverified` — nobody has
+  checked them, and `unverified` is not in `NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES`, so
+  they're live in recommendations today. An entry, not a fix: whether this becomes a
+  guard, an ingestion constraint, or a research queue is a design call.
+- **Tier 2 (~79 rows) and the ingest-time guard below: unchanged, not re-verified beyond
+  confirming Tier 2's row count moved with the rest of the catalogue** (roughly 79 → 85,
+  same proportion, not independently re-counted row by row this pass). Still escalated,
+  still not a lane decision, still correctly un-acted-on.
 
 **Investigated and closed, not a defect**: the "Diamond Challenge"/"The Diamond
 Challenge" duplicate pair (`30a605ab`/`cb1ae3e2`, flagged by the
@@ -836,6 +988,12 @@ this pass.
   `under_review` today. The building block was added; the wiring described here wasn't.
   Needs product input on what a
   review queue should look like; out of scope for this pass's "focused additions" mandate.
+  **Update, 2026-09-01 (staleness pass) — still true at the code level, re-confirmed by
+  reading `ingest.ts` fresh, but the live database now has 122 `under_review` rows
+  despite that.** Something outside this code path is setting the status — not identified
+  this pass. See the "85/271 live opportunities" entry's 2026-09-01 update above for what
+  is known about those rows (41 explained by one specific import batch, coverage-quality
+  comparison against `active`, ~81 still unaccounted for).
 - ~~No admin surface reads `message_reports`.~~ **Fixed** (autonomous pass, 2026-08-16):
   `/admin` now has a Reports section (status/reviewed_by/reviewed_at/resolution_note —
   migration `0030_moderation.sql`, `CODE_READY_ENV_BLOCKED` until applied). See
