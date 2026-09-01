@@ -1506,7 +1506,51 @@
     "unverifiedNotice": "Oryn bunu, resmi bir kaynakla karşılaştırılana kadar doğrulanmamış olarak ekleyecek."
   },
   "admin": {
-    "pageTitle": "Yönetici Paneli"
+    "pageTitle": "Yönetici Paneli",
+    "spend": {
+      "sectionTitle": "Yapay zekâ harcaması",
+      "last24h": "Son 24 saat",
+      "last7d": "Son 7 gün",
+      "last30d": "Son 30 gün",
+      "byFeature": "Özelliğe göre",
+      "byModel": "Modele göre",
+      "callsCount": "{count} çağrı",
+      "unattributed": "Kullanıcısı belirlenemeyen",
+      "unattributedNote": "{count} çağrı, {amount}. Öğrenci bazlı görünüm bunları göremez — yukarıdaki toplamlara hiçbir zaman dahil edilmez.",
+      "noUsage": "Henüz kaydedilmiş yapay zekâ kullanımı yok."
+    },
+    "perUser": {
+      "sectionTitle": "Öğrenci başına harcama",
+      "subtitle": "Hedef {target}/ay · Tavan {ceiling}/ay",
+      "last30d": "Son 30 gün",
+      "lifetime": "Toplam",
+      "calls": "{count} çağrı",
+      "overCeiling": "Tavanı aştı",
+      "nearCeiling": "Tavana yakın",
+      "unnamed": "İsimsiz öğrenci",
+      "none": "Henüz kaydedilmiş öğrenci harcaması yok."
+    },
+    "credit": {
+      "sectionTitle": "Kalan kredi",
+      "remaining": "Kalan",
+      "spentSinceEntry": "Girişten bu yana harcanan",
+      "estimateNotice": "Bu bir tahmindir, gerçek zamanlı hesap bakiyesi değildir — {enteredDate} tarihinde girilen {startingAmount} tutarından, o tarihten bu yana ölçülen harcama düşülmüştür.",
+      "notConfigured": "Henüz ayarlanmadı. Bu kartı etkinleştirmek için ADMIN_STARTING_CREDIT_USD ve ADMIN_STARTING_CREDIT_ENTERED_AT değerlerini ekleyin."
+    },
+    "users": {
+      "sectionTitle": "Öğrenciler",
+      "tier": "Katman",
+      "signedUp": "Kayıt tarihi",
+      "lastSeen": "Son görülme",
+      "lifetimeSpend": "Toplam harcama",
+      "never": "Hiç",
+      "unnamed": "İsimsiz öğrenci"
+    },
+    "warnings": {
+      "sectionTitle": "Bütçe uyarıları",
+      "message": "{name}: son 30 günde {amount} (aylık {ceiling} tavanının %{percent}'i)",
+      "none": "Hiçbir öğrenci aylık tavanın %80'ini aşmadı."
+    }
   },
   "saved": {
     "eyebrow": "Kaydettiklerin",
