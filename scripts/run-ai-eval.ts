@@ -31,7 +31,15 @@
  * scripts/check-integrations.ts's own header for why THAT script goes the other way and
  * avoids server-only imports entirely — a different tradeoff for a simpler job (checking
  * connectivity) than this one (faithfully reusing real prompt-assembly code).
+ *
+ * "./load-dotenv" MUST stay the first import below, not merely an early one — see that
+ * file's own header for why source position among imports matters here even though imports
+ * are hoisted as a group. Confirmed live (2026-09-01): without it, --live --confirm-spend
+ * refused with "ANTHROPIC_API_KEY is not set" on a machine with a real key sitting in
+ * .env.local the whole time, because @/lib/ai/eval/cases below had already pulled in
+ * @/lib/env and frozen its module-scope integrationStatus before main() ever ran.
  */
+import "./load-dotenv";
 import { ALL_CASES } from "@/lib/ai/eval/cases";
 import { estimateCost } from "@/lib/ai/eval/cost-estimate";
 import { runEval } from "@/lib/ai/eval/harness";
@@ -78,7 +86,9 @@ async function main() {
   }
 
   if (!isAIConfigured()) {
-    console.log("\nANTHROPIC_API_KEY is not set — cannot run live. See API_SETUP.md.");
+    console.log(
+      "\nANTHROPIC_API_KEY is not set — cannot run live. Looked for it in .env.local (repo root, loaded automatically by this script) and the process environment; neither had it. If .env.local has a key and this still fails, confirm you're running via `npm run eval:ai`, not a bare `tsx scripts/run-ai-eval.ts` from a different working directory — .env.local is read relative to the process cwd. See API_SETUP.md."
+    );
     process.exitCode = 1;
     return;
   }
