@@ -29,6 +29,13 @@ export interface MonthlyQuota {
   fraction: number;
   /** ISO date the allowance resets — the first instant of next calendar month, UTC. */
   resetsAt: string;
+  /**
+   * False when the usage count could not be read at all. `used` is then 0 and `remaining`
+   * is the full limit — not because nothing has been spent, but because we do not know.
+   * Callers that display the allowance must say so rather than showing a confident full
+   * bar; callers that enforce it must decide deliberately what an unknown means.
+   */
+  usedIsKnown: boolean;
 }
 
 /** First instant of the current UTC calendar month. */
@@ -41,15 +48,29 @@ function startOfNextMonthUTC(now = new Date()): Date {
 }
 
 /**
- * Reads this calendar month's usage for one feature. Never throws: a counting failure
- * must not take down the surface that displays it, so an unreadable count reports zero
- * used — the separate sliding-window limiter still guards the actual call.
+ * Reads this calendar month's usage for one feature. Never throws: a counting failure must
+ * not take down the surface that displays it.
+ *
+ * An earlier version of this comment justified the fail-open by saying "the separate
+ * sliding-window limiter still guards the actual call." That is not true for the failure
+ * mode that matters. `assertWithinAIRateLimit` (lib/ai/rate-limit.ts) reads the *same*
+ * `ai_usage` table through the *same* Supabase client and also treats an unreadable count
+ * as zero, so anything that makes this read fail — an RLS change, a connection problem, the
+ * table itself — opens both guards at once. They are two layers over one dependency, not
+ * defence in depth.
+ *
+ * So the unknown is now representable (`usedIsKnown`) instead of being silently identical
+ * to "nothing spent." Behaviour is unchanged: an unreadable count still permits the call.
+ * That is a deliberate availability choice — failing closed would block every AI feature on
+ * a transient database error — and it is one the founder should be able to revisit, which
+ * requires it being visible rather than accidental.
  */
 export async function getMonthlyQuota(userId: string, feature: MonthlyQuotaFeature): Promise<MonthlyQuota> {
   const limit = MONTHLY_AI_QUOTAS[feature];
   const resetsAt = startOfNextMonthUTC().toISOString();
 
   let used = 0;
+  let usedIsKnown = true;
   try {
     const supabase = await createClient();
     const { count } = await supabase
@@ -60,6 +81,7 @@ export async function getMonthlyQuota(userId: string, feature: MonthlyQuotaFeatu
       .gte("created_at", startOfMonthUTC().toISOString());
     used = count ?? 0;
   } catch (error) {
+    usedIsKnown = false;
     console.error("[monthly-quota] failed to read usage", error instanceof Error ? error.stack : error);
   }
 
@@ -70,11 +92,20 @@ export async function getMonthlyQuota(userId: string, feature: MonthlyQuotaFeatu
     remaining,
     fraction: Math.min(1, Math.max(0, used / limit)),
     resetsAt,
+    usedIsKnown,
   };
 }
 
-/** True when the caller has already spent this month's allowance. */
+/**
+ * True when the caller has already spent this month's allowance.
+ *
+ * An unreadable count returns false — the call is permitted. Written as an explicit branch
+ * rather than falling out of `used = 0` so that the choice is visible at the point it is
+ * made: this permits spend we cannot account for, and the reason is availability, not
+ * confidence. See getMonthlyQuota's note on why the burst limiter is not a second guard here.
+ */
 export async function isMonthlyQuotaExhausted(userId: string, feature: MonthlyQuotaFeature): Promise<boolean> {
   const quota = await getMonthlyQuota(userId, feature);
+  if (!quota.usedIsKnown) return false;
   return quota.remaining <= 0;
 }

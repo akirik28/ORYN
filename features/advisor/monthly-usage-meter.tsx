@@ -32,9 +32,14 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
     return () => cancelAnimationFrame(id);
   }, [quota.fraction]);
 
+  // An unreadable count arrives here as used=0 / remaining=limit, which would render a
+  // full bar and "300 messages left" — a confident balance for a number we do not have.
+  // Say so instead. The allowance still applies; only our reading of it is missing.
+  const unknown = !quota.usedIsKnown;
+
   const spent = quota.fraction;
-  const exhausted = quota.remaining <= 0;
-  const low = !exhausted && quota.remaining <= quota.limit * 0.1;
+  const exhausted = !unknown && quota.remaining <= 0;
+  const low = !unknown && !exhausted && quota.remaining <= quota.limit * 0.1;
 
   const fill = exhausted
     ? "from-rose-500 via-rose-400 to-rose-500"
@@ -78,14 +83,16 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
           <span
             className={cn(
               "font-semibold",
-              exhausted
+              unknown
+                ? "text-muted-foreground"
+                : exhausted
                 ? "text-rose-600 dark:text-rose-300"
                 : low
                   ? "text-amber-600 dark:text-amber-300"
                   : "text-foreground",
             )}
           >
-            {quota.remaining}
+            {unknown ? "—" : quota.remaining}
           </span>
           <span className="text-ink-3"> / {quota.limit}</span>
         </p>
@@ -96,8 +103,12 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={quota.limit}
-        aria-valuenow={quota.remaining}
-        aria-label={`${quota.remaining} of ${quota.limit} counselor messages left this month`}
+        aria-valuenow={unknown ? undefined : quota.remaining}
+        aria-label={
+          unknown
+            ? `Counselor messages left this month could not be loaded. The monthly allowance is ${quota.limit}.`
+            : `${quota.remaining} of ${quota.limit} counselor messages left this month`
+        }
       >
         <div
           className={cn(
@@ -106,10 +117,10 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
           )}
           // Floor of 3% while anything remains, so a last message or two is still a visible
           // sliver rather than rounding away to an empty bar. Exhausted is a true zero.
-          style={{ width: `${exhausted ? 0 : Math.max(shown * 100, 3)}%`, boxShadow: glow }}
+          style={{ width: unknown ? "0%" : `${exhausted ? 0 : Math.max(shown * 100, 3)}%`, boxShadow: unknown ? undefined : glow }}
         >
           {/* Sheen travels across the filled portion only. Suppressed once exhausted. */}
-          {!exhausted ? (
+          {!exhausted && !unknown ? (
             <div className="absolute inset-0 overflow-hidden rounded-full">
               <div className="usage-sheen absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent" />
             </div>
@@ -118,7 +129,9 @@ export function MonthlyUsageMeter({ quota, className }: { quota: MonthlyQuota; c
       </div>
 
       <p className="mt-2.5 text-xs text-muted-foreground">
-        {exhausted
+        {unknown
+          ? `We couldn't load how many messages you've used. Your ${quota.limit}-message allowance still applies and resets ${resets}.`
+          : exhausted
           ? `All ${quota.limit} messages used. Resets ${resets}.`
           : low
             ? `Only ${quota.remaining} left. Resets ${resets}.`
