@@ -15,10 +15,12 @@ export interface NavItem {
    *  The English value in messages/en.json is the label these used to hold literally. */
   labelKey: NavMessageKey;
   icon: LucideIcon;
-  /** Earns a slot in the mobile bottom bar. At most five — a sixth stops being a tap target. */
+  /** Earns a slot in the mobile bottom bar. Six as of 2026-09-02 (five original + Applications,
+   *  promoted on a direct founder report — see the note on that entry below); narrower still
+   *  than that, and a column stops being a real tap target. */
   mobilePrimary?: boolean;
-  /** Used in the bottom bar only, where a 62px column ellipsises anything longer. Falls
-   *  back to `labelKey`. Never used anywhere the full label has room. */
+  /** Used in the bottom bar only, where a narrower-still column ellipsises anything longer.
+   *  Falls back to `labelKey`. Never used anywhere the full label has room. */
   shortLabelKey?: NavMessageKey;
 }
 
@@ -40,7 +42,7 @@ export interface NavItem {
  * AGENTS.md Phase 42 lists the older labels; that list predates this rename and the
  * hrefs it maps to are unchanged.
  *
- * `mobilePrimary` marks the five that earn a slot in the mobile bottom bar. The rest stay
+ * `mobilePrimary` marks the ones that earn a slot in the mobile bottom bar. The rest stay
  * one tap away under "More" rather than being hidden — see `mobile-nav.tsx`.
  */
 export const PRIMARY_NAV: NavItem[] = [
@@ -48,9 +50,19 @@ export const PRIMARY_NAV: NavItem[] = [
   { href: "/advisor", labelKey: "counselor", icon: Sparkles, mobilePrimary: true },
   { href: "/profile", labelKey: "journey", icon: UserRound, mobilePrimary: true },
   { href: "/opportunities", labelKey: "opportunities", icon: Compass, mobilePrimary: true, shortLabelKey: "opportunitiesShort" },
-  { href: "/universities", labelKey: "universities", icon: Landmark, mobilePrimary: true },
+  // shortLabelKey added 2026-09-02, alongside the applications promotion below: narrowing
+  // 6 bottom-bar columns to fit a 7th pushed "Üniversiteler" into truncation at 375px
+  // (measured live: scrollWidth 55 vs. a 50px column) even though it fit before. Caught by
+  // the same scrollWidth-vs-clientWidth check this file's own history already used once.
+  { href: "/universities", labelKey: "universities", icon: Landmark, mobilePrimary: true, shortLabelKey: "universitiesShort" },
   { href: "/plan", labelKey: "plan", icon: ListChecks },
-  { href: "/applications", labelKey: "applications", icon: ClipboardCheck },
+  // Promoted to the mobile bar 2026-09-02, founder-reported: deadlines are time-sensitive
+  // in a way most of this list isn't, and it was landing in the "More" sheet alongside
+  // Settings/Documents on a phone even though the desktop sidebar already showed it as a
+  // full top-level item. Six primary destinations + More (mobile-nav.tsx's grid-cols-7)
+  // rather than swapping out one of the original five, which was a separate, considered
+  // decision this pass didn't have grounds to override.
+  { href: "/applications", labelKey: "applications", icon: ClipboardCheck, mobilePrimary: true, shortLabelKey: "applicationsShort" },
 ];
 
 /**
@@ -80,7 +92,7 @@ export const SECONDARY_NAV: NavItem[] = [
   { href: "/features", labelKey: "features", icon: LayoutGrid },
   // Founder request, 2026-09-01 — everything saved (opportunities + universities) in one
   // place, with compare and filter. Secondary, not primary: real and useful, but not one
-  // of the five destinations that earn a mobile bottom-bar slot, same tier as Features/
+  // of the destinations that earn a mobile bottom-bar slot, same tier as Features/
   // Documents/Settings below.
   { href: "/saved", labelKey: "saved", icon: Bookmark },
   { href: "/documents", labelKey: "documents", icon: FolderClosed },

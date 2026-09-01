@@ -5,6 +5,7 @@ import { formatOpportunityContext } from "@/lib/ai/opportunity-context";
 import { formatCounselorGrounding, WeeklyPlanSchema, type WeeklyPlanGeneration } from "@/lib/ai/weekly-plan";
 import { withOutputLanguage } from "@/lib/ai/output-language";
 import { explainCounselorRecommendations, buildCounselorExplanationPrompt, COUNSELOR_EXPLANATION_SYSTEM_PROMPT } from "@/lib/ai/counselor-explain";
+import { dimensionLabel, DIMENSION_ORDER } from "@/lib/scoring/labels";
 import { runDeterministicChecks } from "./deterministic-checks";
 import { buildJudgePrompt, JudgeVerdictSchema, JUDGE_SYSTEM_PROMPT, JUDGE_MAX_TOKENS } from "./judge";
 import {
@@ -60,6 +61,13 @@ function contextFor(fixtureId: string) {
 }
 function counselorResultFor(fixtureId: string) {
   return fixtureId === "regression" ? REGRESSION_COUNSELOR_RESULT : BASELINE_COUNSELOR_RESULT;
+}
+/** Every dimension's display label, so the leak check can tell whose score a number is
+ * when one sentence names two dimensions. Derived from the product's own `dimensionLabel`
+ * rather than a second hand-written list -- a tenth dimension must not silently go
+ * unlisted here. */
+function allDimensionLabels(locale: "en" | "tr"): readonly string[] {
+  return DIMENSION_ORDER.map((dimension) => dimensionLabel(dimension, locale));
 }
 function unassessedLabelsFor(fixtureId: string, locale: "en" | "tr") {
   if (fixtureId !== "regression") return [];
@@ -135,7 +143,7 @@ export async function runEvalCase(provider: AIProvider, evalCase: EvalCase, opti
       ? runWeeklyPlan(provider, evalCase)
       : runCounselorExplain(provider, evalCase));
 
-  const deterministicFindings = runDeterministicChecks(text, unassessedLabelsFor(evalCase.fixture.id, evalCase.locale));
+  const deterministicFindings = runDeterministicChecks(text, unassessedLabelsFor(evalCase.fixture.id, evalCase.locale), allDimensionLabels(evalCase.locale));
 
   let judge = null;
   let judgeUsage = { inputTokens: 0, outputTokens: 0 };

@@ -11,6 +11,8 @@
     "documents": "Documents",
     "settings": "Settings",
     "opportunitiesShort": "Explore",
+    "applicationsShort": "Apps",
+    "universitiesShort": "Unis",
     "more": "More",
     "moreDestinations": "More destinations",
     "primaryLandmark": "Primary",
@@ -22,6 +24,7 @@
     "userMenu": {
       "accountMenu": "Account menu",
       "careerProfile": "Career profile",
+      "adminPanel": "Admin panel",
       "signOut": "Sign out",
       "addWhatYouveDone": "Add what you've done",
       "areasStrong": "{count, plural, one {# area strong} other {# areas strong}}",
@@ -1100,11 +1103,16 @@
       "noTargetsTitle": "No applications yet",
       "noTargetsDescription": "Save a university you're targeting to start an application.",
       "hasTargetsTitle": "No applications started yet",
-      "hasTargetsDescription": "Start one from a target university to begin tracking requirements and deadlines."
+      "hasTargetsDescription": "Start one from a target university to begin tracking requirements and deadlines.",
+      "cta": "Explore universities"
+    },
+    "addAnother": {
+      "title": "Add another university",
+      "description": "Save a university as a target first"
     },
     "newDialog": {
       "startApplication": "Start an application",
-      "saveTargetFirst": "Save a target university first — applications start from a target.",
+      "saveTargetFirst": "Save a target university first",
       "university": "University",
       "applicationType": "Application type",
       "deadline": "Deadline",
@@ -1384,6 +1392,9 @@
     "deadlineDigestTitle": "{count} deadlines coming up",
     "deadlineDigestItem": "{name} — {days} days",
     "deadlineDigestItemTomorrow": "{name} — tomorrow",
+    "profileUpdateTitle": "Your profile score changed",
+    "profileUpdateItem": "{name} {delta}",
+    "completenessMilestoneReached": "Your profile is now {percent}% complete",
     "newOpportunityMatch": "New match: {name}"
   },
   "plan": {
@@ -1510,7 +1521,58 @@
     "unverifiedNotice": "Oryn will add this as unverified until someone checks it against an official source."
   },
   "admin": {
-    "pageTitle": "Admin"
+    "pageTitle": "Admin",
+    "pageDescription": "Everything the founder needs to see and manage — spend first, then system health, then people.",
+    "tabs": {
+      "spend": "Spend",
+      "system": "System",
+      "people": "People"
+    },
+    "spend": {
+      "sectionTitle": "AI spend",
+      "today": "Today",
+      "last7d": "Last 7 days",
+      "last30d": "Last 30 days",
+      "allTime": "All time",
+      "byFeature": "By feature",
+      "byModel": "By model",
+      "callsCount": "{count} calls",
+      "unattributed": "Background jobs (no student)",
+      "unattributedNote": "{count} calls, {amount}. Spend from catalog jobs like opportunity and requirement extraction — real cost that belongs to no student, not a per-student view's blind spot.",
+      "noUsage": "No AI usage recorded yet."
+    },
+    "perUser": {
+      "sectionTitle": "Spend per student",
+      "subtitle": "Target {target}/month · Ceiling {ceiling}/month",
+      "last30d": "Last 30 days",
+      "lifetime": "Lifetime",
+      "calls": "{count} calls",
+      "overCeiling": "Over ceiling",
+      "nearCeiling": "Near ceiling",
+      "unnamed": "Unnamed student",
+      "none": "No student spend recorded yet."
+    },
+    "credit": {
+      "sectionTitle": "Remaining credit",
+      "remaining": "Remaining",
+      "spentSinceEntry": "Spent since entry",
+      "estimateNotice": "Estimate, not a live account balance — {startingAmount} entered on {enteredDate}, minus spend measured since.",
+      "notConfigured": "Not set up. Add ADMIN_STARTING_CREDIT_USD and ADMIN_STARTING_CREDIT_ENTERED_AT to enable this card."
+    },
+    "users": {
+      "sectionTitle": "Students",
+      "tier": "Tier",
+      "signedUp": "Signed up",
+      "lastSeen": "Last seen",
+      "lifetimeSpend": "Lifetime spend",
+      "never": "Never",
+      "unnamed": "Unnamed student"
+    },
+    "warnings": {
+      "sectionTitle": "Budget warnings",
+      "message": "{name}: {amount} in the last 30 days ({percent}% of the {ceiling} monthly ceiling)",
+      "none": "No student is over 80% of the monthly ceiling."
+    }
   },
   "saved": {
     "eyebrow": "Everything you've saved",

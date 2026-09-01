@@ -43,7 +43,12 @@ const SOCIAL_MODULES = [...STUDENT_FACING_MODULES, "lib/social/posts-moderation.
  * report written into a table nobody ever acts on. The allowlist is exact rather than a
  * directory prefix so it cannot quietly grow.
  */
-const MODERATION_IMPORT_ALLOWLIST = ["app/(app)/admin/actions.ts", "app/(app)/admin/page.tsx"];
+// app/(app)/admin/page.tsx -> features/admin/sections/reports-section.tsx, 2026-09-02
+// (docs/admin-panel-architecture-2026-09-02.md, D1: page.tsx is composition-only now, and
+// REPORTED_POST_MISSING_LABEL is applied where the report's post preview is actually
+// rendered, not in the query layer — see lib/admin/queries.ts's AdminReportRow.postBody
+// doc comment for why the label resolution was deliberately kept out of that module).
+const MODERATION_IMPORT_ALLOWLIST = ["app/(app)/admin/actions.ts", "features/admin/sections/reports-section.tsx"];
 
 /** Every source file under the given directories, recursively. */
 function sourceFiles(dirs: string[]): string[] {

@@ -141,6 +141,12 @@ describe("message catalogs", () => {
       // does have real words and correctly differs.
       "opportunities.comparePage.ageRangeBoth",
       "opportunities.comparePage.ageRangeMin",
+      // Same reasoning again: "{name} {delta}" has nothing to translate — `name` is
+      // already a translated dimension label (lib/scoring/labels.ts's dimensionLabel) and
+      // `delta` is a plain signed number ("+8"/"-3") built in code, not a translated
+      // string. The two real-word keys right above it in messages/*.json
+      // (profileUpdateTitle, completenessMilestoneReached) correctly differ.
+      "notifications.profileUpdateItem",
       ].sort(),
     );
   });

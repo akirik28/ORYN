@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { LogOut } from "lucide-react";
+import { LogOut, ShieldCheck } from "lucide-react";
 import { signOut } from "@/app/(auth)/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -36,6 +36,7 @@ export function UserMenu({
   email,
   signal,
   variant = "compact",
+  isAdmin = false,
 }: {
   displayName: string;
   email: string | null;
@@ -44,6 +45,12 @@ export function UserMenu({
    *  (features/app-shell/sidebar.tsx), styled after the Figma source's equivalent block.
    *  Same dropdown, same real data either way — only the trigger's size/layout changes. */
   variant?: "compact" | "sidebar";
+  /** D6, docs/admin-panel-architecture-2026-09-02.md: the only place an admin surface is
+   *  discoverable in the product at all — /admin has never been linked from anywhere, so an
+   *  admin with the flag set had no way to find it short of typing the URL. Never in the
+   *  main sidebar nav itself (spec Phase 42 caps that list deliberately); this dropdown,
+   *  gated on the flag, is additive to that cap rather than a hole in it. */
+  isAdmin?: boolean;
 }) {
   const tNav = useTranslations("nav");
   const tMenu = useTranslations("appShell.userMenu");
@@ -106,6 +113,14 @@ export function UserMenu({
             </DropdownMenuItem>
           );
         })}
+        {isAdmin ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem render={<Link href="/admin" />}>
+              <ShieldCheck className="size-4" /> {tMenu("adminPanel")}
+            </DropdownMenuItem>
+          </>
+        ) : null}
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={() => void signOut()}>
           <LogOut className="size-4" /> {tMenu("signOut")}

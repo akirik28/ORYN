@@ -26,10 +26,12 @@ export function Sidebar({
   displayName,
   email,
   signal,
+  isAdmin = false,
 }: {
   displayName: string;
   email: string | null;
   signal: DimensionSignal[];
+  isAdmin?: boolean;
 }) {
   const pathname = usePathname();
   const t = useTranslations("nav");
@@ -118,7 +120,7 @@ export function Sidebar({
             locale. */}
         <LanguageSwitcher variant="sidebar" />
         <div className="px-4 pt-2.5 pb-[18px]">
-          <UserMenu displayName={displayName} email={email} signal={signal} variant="sidebar" />
+          <UserMenu displayName={displayName} email={email} signal={signal} variant="sidebar" isAdmin={isAdmin} />
         </div>
       </div>
     </aside>

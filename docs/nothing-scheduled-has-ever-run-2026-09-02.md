@@ -65,3 +65,49 @@ behaves differently: Vercel attaches it as a bearer token to every cron invocati
 `verifyCronRequest` is **fail-closed** — unset means every cron request is rejected,
 including Vercel's own. Deploying without it produces exactly the symptom above, and would
 be indistinguishable from it.
+
+---
+
+## Deploy readiness, checked rather than assumed — same night
+
+Since "deploy it" is now the top item, I checked whether it would actually work.
+
+**The production build passes.** `npm run build`, exit 0, every route compiled. Nothing in
+the app blocks a deploy.
+
+**Integrations, from `npm run check:integrations` — real calls, no secrets printed:**
+
+| | |
+|---|---|
+| Supabase (publishable + secret) | **OK** |
+| Anthropic | **OK** |
+| OpenAlex | **OK** |
+| **Tavily** | **missing credential** |
+| **College Scorecard** | **missing credential** |
+
+Both are present in `.env.local` as **empty values** — declared, never filled.
+
+**This matters more than it looks, because of which jobs they feed.** Deploy today and all
+four crons start firing, but two of them can do nothing:
+
+- `discover_opportunities` needs **Tavily**. Without it, opportunity discovery runs and
+  finds nothing — the single job most responsible for the catalogue growing on its own.
+- `sync_us_universities` needs **College Scorecard**. Without it, US institution data never
+  refreshes.
+
+The repo already anticipates exactly this failure and it is worth reading in the admin
+panel's own words: several jobs "degrade to a no-op `success` when a provider credential is
+missing", which is why the empty-streak detector exists to tell *"found nothing new
+tonight"* apart from *"hasn't accomplished anything in a week"*. Without these two keys, the
+job-health section would show two jobs succeeding nightly and processing zero items — green
+badges, no work — and the empty-streak warning is the only thing that would say so.
+
+**So the deploy checklist has three parts, not one:**
+1. Create the Vercel project and deploy to production.
+2. Set `CRON_SECRET` — fail-closed, so without it every cron request is rejected including
+   Vercel's own, producing a symptom indistinguishable from not having deployed at all.
+3. Fill `TAVILY_API_KEY` and `COLLEGE_SCORECARD_API_KEY`, or accept that two of the four
+   jobs will run green and do nothing, and know which two.
+
+`SENTRY_DSN` is in `.env.example` and absent locally. Not a blocker; noted so the absence is
+a decision rather than an oversight.

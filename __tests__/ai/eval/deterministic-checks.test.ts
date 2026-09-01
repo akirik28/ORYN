@@ -60,6 +60,34 @@ describe("findUnassessedDimensionScored", () => {
     expect(findUnassessedDimensionScored(correct, unassessed)).toHaveLength(0);
   });
 
+  const allLabels = ["Research", "Awards & Distinction", "Career Exploration", "Community Impact", "Academics", "Leadership", "Execution / Project Depth", "Intellectual Curiosity", "Entrepreneurship"];
+
+  test("does not flag one sentence naming two dimensions where the score is the other one's — the second live false positive", () => {
+    // Observed 2026-09-02 in the reply-length comparison run. An ordinary, correctly-formed
+    // sentence: Research is stated as unassessed and carries no number, the 60/100 is
+    // Execution's. Scope-splitting alone can't help — this is one sentence.
+    const text = "The real gaps are Research (unassessed) and Execution / Project Depth (60/100) — this week should push on those.";
+    expect(findUnassessedDimensionScored(text, unassessed, allLabels)).toHaveLength(0);
+  });
+
+  test("still fires when the score really is attached to the unassessed dimension", () => {
+    const text = "The real gaps are Research (0/100) and Execution / Project Depth (60/100).";
+    expect(findUnassessedDimensionScored(text, unassessed, allLabels)).toHaveLength(1);
+  });
+
+  test("fires when the unassessed label comes second and owns the trailing score", () => {
+    const text = "Leadership is 88/100, while Research sits at 12/100.";
+    expect(findUnassessedDimensionScored(text, unassessed, allLabels)).toHaveLength(1);
+  });
+
+  test("without the all-labels argument it degrades to the coarser scope, not to silence", () => {
+    // Two-argument callers keep the old behaviour: the window can't close early because
+    // nothing tells it where another dimension starts. A false positive is the safe
+    // direction for a leak check; silently missing leaks would not be.
+    const text = "The real gaps are Research (unassessed) and Execution / Project Depth (60/100).";
+    expect(findUnassessedDimensionScored(text, unassessed)).toHaveLength(1);
+  });
+
   test("does not flag a markdown list where the score belongs to a different bullet — the live false positive", () => {
     // Observed 2026-09-02 against haiku-4-5. The reply was correct: it said Research was
     // unassessed and quoted no number for it. The old sentence split saw no `.!?` anywhere

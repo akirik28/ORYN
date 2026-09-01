@@ -1,13 +1,15 @@
 import Link from "next/link";
-import { ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, Compass, Plus } from "lucide-react";
 import { getTranslations, getLocale } from "next-intl/server";
 import { NewApplicationDialog } from "@/features/applications/new-application-dialog";
+import { RequirementChipGrid } from "@/features/applications/requirement-chip-grid";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import type { ApplicationReadiness } from "@/lib/applications/readiness";
-import type { ApplicationStatus, ApplicationType } from "@/types/database";
+import type { ApplicationStatus, ApplicationType, RequirementStatus } from "@/types/database";
 
 const APPLICATION_STATUS_TONE: Record<ApplicationStatus, StatusTone> = {
   not_started: "neutral",
@@ -27,6 +29,7 @@ export interface ApplicationsViewRow {
   deadline: string | null;
   status: ApplicationStatus;
   readiness: ApplicationReadiness;
+  requirements: { id: string; requirement_type: string; status: RequirementStatus }[];
 }
 
 export async function ApplicationsView({
@@ -48,11 +51,7 @@ export async function ApplicationsView({
   return (
     <div>
       {/* Dark hero — literal source values (App.tsx `ApplicationsScreen`), same gradient
-          and card language the dashboard uses. Real applications list only (no inline
-          per-application checklist grid): the source shows the full requirement grid
-          inline because its demo has two applications; the real app already pushes that
-          to /applications/[id], which is the better architecture at any real scale and
-          isn't something this visual pass should undo. */}
+          and card language the dashboard uses. */}
       <div
         className="relative overflow-hidden rounded-[28px] px-6 py-11 md:px-10 md:py-14"
         style={{ background: "linear-gradient(145deg, #111030 0%, #1A1650 100%)" }}
@@ -83,54 +82,83 @@ export async function ApplicationsView({
 
       <div className="mt-10 space-y-5">
         {applications.length > 0 ? (
-          applications.map((application) => (
-            <Link
-              key={application.id}
-              href={`/applications/${application.id}`}
-              className="block overflow-hidden rounded-[20px] p-6 transition-colors hover:bg-white/60 md:p-7"
-              style={{ background: "rgba(255,255,255,0.42)", backdropFilter: "blur(22px)", border: "1px solid rgba(255,255,255,0.62)" }}
-            >
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <span className="text-lg font-bold text-ink-1">{application.universityName}</span>
-                    <StatusBadge
-                      label={t(`statusLabels.${application.status}`)}
-                      tone={APPLICATION_STATUS_TONE[application.status]}
-                    />
-                  </div>
-                  <p className="mt-1 text-sm text-ink-3">
-                    {t(`newDialog.typeOptions.${application.applicationType}`)}
-                    {application.deadline ? (
-                      <>
-                        {" "}
-                        · {t("due")} <DeadlineBadge date={application.deadline} locale={locale} />
-                      </>
-                    ) : null}
-                  </p>
-                </div>
-                {application.readiness.kind === "measured" ? (
-                  <div className="shrink-0 text-right">
-                    <div className={application.readiness.percent === 100 ? "text-2xl font-bold text-success" : "text-2xl font-bold text-ink-1"}>
-                      {application.readiness.percent}%
+          <>
+            {applications.map((application) => (
+              <Link
+                key={application.id}
+                href={`/applications/${application.id}`}
+                className="block overflow-hidden rounded-[20px] transition-colors hover:bg-white/60"
+                style={{ background: "rgba(255,255,255,0.42)", backdropFilter: "blur(22px)", border: "1px solid rgba(255,255,255,0.62)" }}
+              >
+                <div className="p-6 pb-0 md:p-7 md:pb-0">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <span className="text-lg font-bold text-ink-1">{application.universityName}</span>
+                        <StatusBadge
+                          label={t(`statusLabels.${application.status}`)}
+                          tone={APPLICATION_STATUS_TONE[application.status]}
+                        />
+                      </div>
+                      <p className="mt-1 text-sm text-ink-3">
+                        {t(`newDialog.typeOptions.${application.applicationType}`)}
+                        {application.deadline ? (
+                          <>
+                            {" "}
+                            · {t("due")} <DeadlineBadge date={application.deadline} locale={locale} />
+                          </>
+                        ) : null}
+                      </p>
                     </div>
-                    <div className="text-[11px] font-medium text-ink-3">{t("ready")}</div>
+                    {application.readiness.kind === "measured" ? (
+                      <div className="shrink-0 text-right">
+                        <div className={application.readiness.percent === 100 ? "text-2xl font-bold text-success" : "text-2xl font-bold text-ink-1"}>
+                          {application.readiness.percent}%
+                        </div>
+                        <div className="text-[11px] font-medium text-ink-3">{t("ready")}</div>
+                      </div>
+                    ) : null}
                   </div>
-                ) : null}
-              </div>
-              {/* Readiness is only shown while an application is still being assembled
-                  (not_started/in_progress) — see lib/applications/readiness.ts. Once
-                  submitted or decided, the status badge above already says what matters;
-                  a stale completion percentage next to it would read as something being
-                  wrong with an application that's already sent. */}
-              {application.readiness.kind === "measured" ? <Progress value={application.readiness.percent} className="mt-5" /> : null}
-            </Link>
-          ))
+                  {/* Readiness is only shown while an application is still being assembled
+                      (not_started/in_progress) — see lib/applications/readiness.ts. Once
+                      submitted or decided, the status badge above already says what matters;
+                      a stale completion percentage next to it would read as something being
+                      wrong with an application that's already sent. */}
+                  {application.readiness.kind === "measured" ? <Progress value={application.readiness.percent} className="mt-5 mb-5" /> : <div className="mb-6" />}
+                </div>
+                <RequirementChipGrid requirements={application.requirements} />
+              </Link>
+            ))}
+
+            {/* Founder's Figma (ApplicationsScreen): a dashed, always-present card at the
+                end of the list, distinct from the header's "+ Add university" dialog — that
+                one starts an application from an already-saved target; this one is
+                specifically the path to go save a new one, matching its own subtitle. */}
+            <Button
+              variant="ghost"
+              nativeButton={false}
+              render={<Link href="/universities" />}
+              className="h-auto w-full justify-start gap-3.5 rounded-2xl border border-dashed border-brand-primary/20 bg-white/30 px-6 py-5 hover:bg-white/45"
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-brand-primary/[0.08] text-brand-primary">
+                <Plus className="size-4" />
+              </span>
+              <span className="text-left">
+                <span className="block text-sm font-semibold text-brand-primary">{t("addAnother.title")}</span>
+                <span className="block text-xs text-ink-4">{t("addAnother.description")}</span>
+              </span>
+            </Button>
+          </>
         ) : (
           <EmptyState
             icon={ClipboardCheck}
             title={hasTargets ? t("empty.hasTargetsTitle") : t("empty.noTargetsTitle")}
             description={hasTargets ? t("empty.hasTargetsDescription") : t("empty.noTargetsDescription")}
+            action={
+              <Button size="sm" render={<Link href="/universities" />} nativeButton={false}>
+                <Compass className="size-4" /> {t("empty.cta")}
+              </Button>
+            }
           />
         )}
       </div>
