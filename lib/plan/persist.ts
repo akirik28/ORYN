@@ -1,10 +1,12 @@
 import "server-only";
 
 import { startOfWeek, formatISO } from "date-fns";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { generateWeeklyPlan } from "@/lib/ai/weekly-plan";
 import { createNotification } from "@/lib/notifications/create";
+import { toLocale } from "@/lib/i18n/config";
 import type { WeeklyAction, WeeklyPlan } from "@/types/database";
 
 function currentWeekStart(): string {
@@ -53,6 +55,14 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
   const supabase = await createClient();
   const weekStartDate = currentWeekStart();
   const generation = await generateWeeklyPlan(userId);
+
+  // No request here (the manual Regenerate action has one, but the dashboard's lazy
+  // first-generate and any future scheduled Job D don't), so the locale comes from the
+  // student's own stored preference, same source student-context.ts already reads for the
+  // AI output language -- not lib/i18n/locale.ts's resolveLocale(), which needs a cookie.
+  const { data: profileForLocale } = await supabase.from("profiles").select("preferred_language").eq("id", userId).maybeSingle();
+  const locale = toLocale(profileForLocale?.preferred_language);
+  const t = await getTranslations({ locale, namespace: "notifications" });
 
   const { data: plan, error: planError } = await supabase
     .from("weekly_plans")
@@ -146,7 +156,7 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
   // Same dedup shape and reasoning as the ai_recommendations check above: two non-scheduled
   // callers, no reason a student who just clicked "Regenerate" and is looking at the result
   // needs a second notification telling them so. Live before this: one student had 100
-  // identical "Your weekly plan is ready" notifications, 100 of them unread. Scoped to the
+  // identical "weekly plan is ready" notifications, 100 of them unread. Scoped to the
   // ISO week for the same reason -- once per week's plan, not once per generation.
   // .limit(1) for the same reason as the ai_recommendations check above -- without it, two
   // rows matching turns maybeSingle() into a silent, self-perpetuating false negative.
@@ -162,7 +172,10 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
     await createNotification({
       userId,
       category: "weekly_plan",
-      title: "Your weekly plan is ready",
+      // generation.summary (the body) is already in the student's language -- weekly-plan.ts's
+      // withOutputLanguage makes the AI write it that way. Only the title was ever hardcoded
+      // English; translated here from the same preferred_language this function just read.
+      title: t("weeklyPlanReady"),
       body: generation.summary,
       link: "/plan",
     });

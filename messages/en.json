@@ -1358,7 +1358,14 @@
     "markAllRead": "Mark all read",
     "allCaughtUp": "All caught up",
     "unreadCount": "{count} unread",
-    "noUnread": "No unread"
+    "noUnread": "No unread",
+    "weeklyPlanReady": "Your weekly plan is ready",
+    "deadlineTomorrow": "Deadline tomorrow",
+    "daysUntilDeadline": "{days} days until deadline",
+    "applicationDeadlineApproaching": "{name} — application deadline approaching.",
+    "applicationDeadlineApproachingGeneric": "An application deadline is approaching.",
+    "universityDeadlineApproaching": "{name} — {detail} deadline approaching.",
+    "unnamedTargetUniversity": "A target university"
   },
   "plan": {
     "title": "This week's plan",
