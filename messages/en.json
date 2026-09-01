@@ -1395,7 +1395,29 @@
     "profileUpdateTitle": "Your profile score changed",
     "profileUpdateItem": "{name} {delta}",
     "completenessMilestoneReached": "Your profile is now {percent}% complete",
-    "newOpportunityMatch": "New match: {name}"
+    "newOpportunityMatch": "New match: {name}",
+    "viewAll": "View all",
+    "markAsRead": "Mark read",
+    "categories": {
+      "all": "All",
+      "deadline": "Deadlines",
+      "new_opportunity": "Opportunities",
+      "weekly_plan": "Weekly plan",
+      "profile_update": "Profile",
+      "connection": "Connections",
+      "message": "Messages"
+    },
+    "page": {
+      "description": "Deadlines, matches, and updates on your profile, in one place.",
+      "emptyAllTitle": "Nothing here yet",
+      "emptyAllDescription": "Deadlines, new opportunities, and profile changes will show up here as they happen.",
+      "emptyFilteredTitle": "Nothing in this category",
+      "emptyFilteredDescription": "Try a different filter, or view everything.",
+      "pagination": "Pagination",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    }
   },
   "plan": {
     "title": "This week's plan",

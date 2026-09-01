@@ -1395,7 +1395,29 @@
     "profileUpdateTitle": "Profil puanın değişti",
     "profileUpdateItem": "{name} {delta}",
     "completenessMilestoneReached": "Profilin artık %{percent} tamamlandı",
-    "newOpportunityMatch": "Yeni eşleşme: {name}"
+    "newOpportunityMatch": "Yeni eşleşme: {name}",
+    "viewAll": "Tümünü gör",
+    "markAsRead": "Okundu işaretle",
+    "categories": {
+      "all": "Tümü",
+      "deadline": "Son tarihler",
+      "new_opportunity": "Fırsatlar",
+      "weekly_plan": "Haftalık plan",
+      "profile_update": "Profil",
+      "connection": "Bağlantılar",
+      "message": "Mesajlar"
+    },
+    "page": {
+      "description": "Son tarihler, eşleşmeler ve profilindeki güncellemeler, tek bir yerde.",
+      "emptyAllTitle": "Henüz bir şey yok",
+      "emptyAllDescription": "Son tarihler, yeni fırsatlar ve profil değişiklikleri gerçekleştikçe burada görünecek.",
+      "emptyFilteredTitle": "Bu kategoride bir şey yok",
+      "emptyFilteredDescription": "Farklı bir filtre dene ya da her şeyi görüntüle.",
+      "pagination": "Sayfalama",
+      "previous": "Önceki",
+      "next": "Sonraki",
+      "pageOf": "Sayfa {page} / {total}"
+    }
   },
   "plan": {
     "title": "Bu haftanın planı",
