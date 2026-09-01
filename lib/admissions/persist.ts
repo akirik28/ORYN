@@ -117,7 +117,7 @@ export async function refreshAdmissionOutlook(targetUniversityId: string, userId
   // return value, which is why it returns the result rather than void: `not_applicable` is
   // one enum member covering several unrelated reasons, and a badge that renders the label
   // without the kind can only describe one of them correctly (see OutlookBadge).
-  await supabase
+  const { error: updateError } = await supabase
     .from("target_universities")
     .update({
       academic_fit_score: outlook.compositeScore,
@@ -130,6 +130,15 @@ export async function refreshAdmissionOutlook(targetUniversityId: string, userId
       outlook_calculated_at: new Date().toISOString(),
     })
     .eq("id", targetUniversityId);
+
+  // Computed successfully but not persisted is worse than either step failing cleanly: both
+  // call sites discard this function's return value, so nothing surfaces the failure, and the
+  // row is left exactly as it was — indistinguishable from "never refreshed" to anyone reading
+  // the table later. Logged, not thrown: a page render or a save should not fail because the
+  // cached outlook column didn't update.
+  if (updateError) {
+    console.error(`[admission-outlook] update failed for target_universities.id=${targetUniversityId}: ${updateError.message}`);
+  }
 
   return outlook;
 }
