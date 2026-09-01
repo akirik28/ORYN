@@ -70,10 +70,20 @@ requirement-research vocabulary; not applying it breaks nothing.
 `lib/programs/yok-atlas-matching.ts`, `lib/programs/tr-bilingual-name-bridge.ts` and a
 measurement script. No route touches it. It blocks the YÖK matching work from persisting.
 
-**0058 — must stay unapplied.** It is layer 5 of a deliberate five-layer kill switch on the
-social feature; see the header of `lib/social/posts-feature-flag.ts` and
-`__tests__/social/posts-hidden.test.ts`, which asserts layers 1–4 mechanically. Applying it
-removes a guarantee rather than closing a gap.
+**0058 — genuinely contested; the founder's call.** It is named as layer 5 of a deliberate
+five-layer kill switch on the social feature (`lib/social/posts-feature-flag.ts`, with
+`__tests__/social/posts-hidden.test.ts` asserting layers 1–4 mechanically). I first wrote
+here that it must therefore stay unapplied. That was too quick: `docs/migration-gap-audit-2026-08-31.md`
+§2 argues the opposite, and argues it better than I had. Its case — 0058 is purely additive
+DDL touching no existing row; the flag file's own text says the five layers are independent,
+so removing one leaves route, nav, Server-Action and flag intact; the legal gate is about
+turning the feature *on for students*, which applying tables does not do; and the
+alternative is permanent defensive code for a precondition that audit proved cannot occur.
+
+Both readings agree on the constraint that actually matters — nothing reachable by a
+logged-in student — and disagree only on whether the schema gap is a safeguard or a liability.
+Removing a layer from a deliberate defence-in-depth is a decision to take deliberately, so
+it belongs to the founder rather than to either document.
 
 ## Operational consequence
 
