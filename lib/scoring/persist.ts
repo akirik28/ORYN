@@ -52,10 +52,23 @@ import { detectNotifiableProfileUpdate, buildProfileUpdateNotification, NOTIFIAB
  * If the admin client isn't configured, the score/completeness are still computed and
  * returned (harmless -- computing them needs no admin client at all), but none of the
  * three writes happen; logged once, not silently.
+ *
+ * `opts.supabaseClient`/`opts.adminClient` (2026-09-02, scheduled review job) default to
+ * the request-scoped client and tryCreateAdminClient() -- correct for every existing,
+ * real-user-session caller, unchanged. A scheduled job has no session to scope reads to
+ * (it isn't acting as any one student), so it passes its own already-created admin client
+ * for both -- the identical fix lib/plan/persist.ts's getOrCreateWeeklyPlan already needed
+ * for the same reason (its own comment: "every read/write RLS-filtered to nothing" when a
+ * job called it without threading a client through). Overriding `supabaseClient` alone
+ * (without `adminClient`) would leave the three writes still going through this function's
+ * own tryCreateAdminClient() call -- fine, just redundant, since a job already has one.
  */
-export async function recomputeCareerProfile(userId: string, opts?: { snapshotReason?: string }) {
-  const supabase = await createClient();
-  const admin = tryCreateAdminClient();
+export async function recomputeCareerProfile(
+  userId: string,
+  opts?: { snapshotReason?: string; supabaseClient?: Awaited<ReturnType<typeof createClient>>; adminClient?: ReturnType<typeof tryCreateAdminClient> }
+) {
+  const supabase = opts?.supabaseClient ?? (await createClient());
+  const admin = opts?.adminClient ?? tryCreateAdminClient();
   const facts = await assembleScoringFacts(supabase, userId);
 
   const [profileResult, skillsResult, featuredResult, contactResult, previousSnapshotResult] = await Promise.all([
@@ -113,7 +126,7 @@ export async function recomputeCareerProfile(userId: string, opts?: { snapshotRe
 
   if (!admin) {
     console.error("[scoring] SUPABASE_SECRET_KEY not configured — computed career profile but skipped persisting it");
-    return { careerProfile, completeness };
+    return { careerProfile, completeness, snapshotWritten: false };
   }
 
   const calculatedAt = new Date().toISOString();
@@ -175,6 +188,11 @@ export async function recomputeCareerProfile(userId: string, opts?: { snapshotRe
     });
     if (snapshotError) throw new Error(`Failed to write score snapshot: ${snapshotError.message}`);
   }
+  // 2026-09-02, scheduled review job: lets a caller iterating many students (which has no
+  // other cheap way to tell "moved" from "didn't") report real work done, matching every
+  // other Phase 30 job's own itemsProcessed convention (lib/plan/generate-for-active-
+  // students.ts's own comment: "real work done, not rows merely looked at").
+  const snapshotWritten = changedMeaningfully;
 
   // profile_update notification (Phase 24's "değişen şeyler" — the founder's own words for
   // this category): skipped only for onboarding_completed specifically, not for every
@@ -193,5 +211,5 @@ export async function recomputeCareerProfile(userId: string, opts?: { snapshotRe
     }
   }
 
-  return { careerProfile, completeness };
+  return { careerProfile, completeness, snapshotWritten };
 }

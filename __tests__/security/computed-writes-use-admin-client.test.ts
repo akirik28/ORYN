@@ -26,7 +26,9 @@ describe("lib/scoring/persist.ts", () => {
 
   test("imports and constructs the admin client (tryCreateAdminClient, not the throwing createAdminClient -- see __tests__/opportunities/refresh-matches-admin-degradation.test.ts and __tests__/scoring/recompute-admin-degradation.test.ts for why)", () => {
     expect(src).toContain('import { tryCreateAdminClient } from "@/lib/supabase/admin";');
-    expect(src).toContain("const admin = tryCreateAdminClient();");
+    // 2026-09-02: opts?.adminClient (a scheduled job's own admin client) falls through to
+    // tryCreateAdminClient() for every caller that doesn't pass one -- unchanged.
+    expect(src).toContain("const admin = opts?.adminClient ?? tryCreateAdminClient();");
   });
 
   test("all three guarded writes use admin, not supabase", () => {
