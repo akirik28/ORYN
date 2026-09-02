@@ -1965,6 +1965,19 @@ export interface QuotaGrant {
 }
 export type QuotaGrantInsert = Insertable<QuotaGrant, "id" | "reason" | "granted_by" | "created_at">;
 
+/** Migration 0100. One row per model, checked before PRICE_PER_MILLION_TOKENS_USD's own
+ *  hardcoded table falls back (lib/ai/pricing.ts's resolveModelCostUsd) -- an admin only
+ *  ever needs to enter a model that's new or wrong, never every model already correct in
+ *  code. `model` is plain text, not a DB enum, same convention as AiUsage.feature above. */
+export interface AiModelPricing {
+  model: string;
+  input_rate_per_million: number;
+  output_rate_per_million: number;
+  updated_by: string | null;
+  updated_at: string;
+}
+export type AiModelPricingInsert = Insertable<AiModelPricing, "updated_by" | "updated_at">;
+
 export interface RateLimitEvent {
   id: string;
   user_id: string;
@@ -2170,6 +2183,7 @@ export interface Database {
       external_sync_jobs: Table<ExternalSyncJob, Partial<ExternalSyncJob>, Partial<ExternalSyncJob>>;
       job_controls: Table<JobControl, JobControlInsert, Partial<JobControlInsert>>;
       ai_usage: Table<AiUsage, AiUsageInsert, Partial<AiUsageInsert>>;
+      ai_model_pricing: Table<AiModelPricing, AiModelPricingInsert, Partial<AiModelPricingInsert>>;
       admin_finance_settings: Table<AdminFinanceSettings, Partial<AdminFinanceSettings>, Partial<AdminFinanceSettings>>;
       job_budget_overrides: Table<JobBudgetOverride, JobBudgetOverrideInsert, Partial<JobBudgetOverrideInsert>>;
       quota_grants: Table<QuotaGrant, QuotaGrantInsert, Partial<QuotaGrantInsert>>;

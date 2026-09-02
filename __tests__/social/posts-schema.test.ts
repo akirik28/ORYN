@@ -325,7 +325,21 @@ describe("migration numbering", () => {
     // unbudgeted" discipline every fail-open path in this session already follows -- this
     // one gates a real spend control, so failing toward "unbudgeted" would undo the entire
     // point of the table it replaces a hardcoded constant with.
-    expect(Math.max(...numbers.map(Number))).toBe(99);
+    //
+    // 0100 (ai_model_pricing) is this same deep-dive's third and final lever (build order:
+    // job-budget adjust, student grant, pricing table) -- one row per model, checked before
+    // PRICE_PER_MILLION_TOKENS_USD's own hardcoded table falls back
+    // (lib/ai/pricing.ts's resolveModelCostUsd). Not part of the original 0094-0099 block
+    // (that block was five lanes' known needs reserved up front; this one wasn't known to
+    // be needed until the first two levers were built) -- claimed only after checking every
+    // remote branch's own migrations/ tree, not just this worktree's listing, the same
+    // discipline 0076/0079 above first established and every entry since has repeated.
+    // resolveModelCostUsd caches admin-entered rates in memory for up to 60 seconds (this is
+    // the single hottest path in the AI system, logAIUsage, called on every AI response) and
+    // fails toward the last successfully-fetched rates on any read failure, never toward an
+    // empty table -- the same "unknown or unavailable must never look like healthy/default"
+    // discipline this whole narrative has repeated for every fail-open path added tonight.
+    expect(Math.max(...numbers.map(Number))).toBe(100);
   });
 });
 

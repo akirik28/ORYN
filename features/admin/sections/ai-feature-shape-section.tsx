@@ -3,6 +3,8 @@ import { formatCurrency, formatNumber } from "@/lib/i18n/format";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSpendSummary, type AiFeatureCategory } from "@/lib/admin/queries";
 import { BarChart } from "@/components/oryn/charts/bar-chart";
+import { ModelPricingEditor } from "@/features/admin/model-pricing-editor";
+import { setModelPricing } from "@/app/(app)/admin/actions";
 
 const money = (value: number) => formatCurrency(value, "USD", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 
@@ -59,10 +61,17 @@ export async function AiFeatureShapeSection() {
         {summary.unpricedCalls > 0 ? (
           <>
             <p className="text-xs text-amber-700 dark:text-amber-400">{t("unpricedAlert", { count: formatNumber(summary.unpricedCalls) })}</p>
-            <ul className="mt-1 space-y-0.5">
+            <ul className="mt-1 space-y-1.5">
               {summary.unpricedByModel.map((row) => (
-                <li key={row.model} className="text-xs text-muted-foreground">
-                  {t("unpricedByModel", { model: row.model, count: formatNumber(row.calls) })}
+                <li key={row.model} className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground">{t("unpricedByModel", { model: row.model, count: formatNumber(row.calls) })}</span>
+                  <ModelPricingEditor
+                    model={row.model}
+                    saveAction={setModelPricing}
+                    saveLabel={t("savePricing")}
+                    inputPlaceholder={t("inputRatePlaceholder")}
+                    outputPlaceholder={t("outputRatePlaceholder")}
+                  />
                 </li>
               ))}
             </ul>
