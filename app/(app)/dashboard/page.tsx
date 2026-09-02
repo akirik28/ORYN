@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { getCurrentProfile, getProfileScores, requireUser } from "@/lib/security/dal";
 import { resolveLocale } from "@/lib/i18n/locale";
-import type { Locale } from "@/lib/i18n/config";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWeeklyPlan, getOrCreateWeeklyPlan } from "@/lib/plan/persist";
 import { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
@@ -16,23 +15,12 @@ import { toProfileSignal } from "@/lib/scoring/signal";
 import { buildProfileChange } from "@/lib/scoring/change";
 import { getCounselorState } from "@/lib/counselor/state";
 import { buildCounselorDashboardContract, resolveAvoidRecommendation, type CounselorDashboardContract } from "@/lib/counselor/dashboard-contract";
+import { greeting } from "@/lib/dashboard/greeting";
 import { DashboardView } from "@/features/dashboard/dashboard-view";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("nav");
   return { title: t("home") };
-}
-
-function greeting(locale: Locale) {
-  const hour = new Date().getHours();
-  if (locale === "tr") {
-    if (hour < 12) return "Günaydın";
-    if (hour < 18) return "İyi günler";
-    return "İyi akşamlar";
-  }
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
 }
 
 /** Opportunities shown in the homepage preview (spec Phase 7, Block 4 — a short preview, not
@@ -220,7 +208,7 @@ export default async function DashboardPage() {
   return (
     <DashboardView
       displayName={displayName}
-      greeting={greeting(locale)}
+      greeting={greeting(locale, profile?.timezone ?? "UTC")}
       locale={locale}
       biggestGap={biggestGap ? { dimension: biggestGap.dimension, score: biggestGap.score } : null}
       profileChange={profileChange}

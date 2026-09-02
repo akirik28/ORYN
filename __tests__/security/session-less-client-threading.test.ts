@@ -92,7 +92,9 @@ describe("lib/counselor/index.ts — getCounselorRecommendations threads its cli
   const source = src("lib/counselor/index.ts");
 
   test("getCounselorState receives supabaseClient, not a bare call", () => {
-    expect(source).toContain("getCounselorState(userId, locale, supabaseClient)");
+    // `options` (skipMatchRefresh, 2026-09-02) appended as a 4th, trailing argument —
+    // supabaseClient is still the 3rd positional argument, still threaded, unchanged.
+    expect(source).toContain("getCounselorState(userId, locale, supabaseClient, options)");
   });
 });
 

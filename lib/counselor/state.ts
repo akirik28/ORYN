@@ -91,7 +91,32 @@ async function getRequirementCandidateInputs(
 // Same reasoning and same caller as buildStudentAdvisorContext's identical parameter
 // (lib/ai/student-context.ts) — defaults to the session-scoped client, overridden only by
 // the scheduled weekly-plan job, which has no session of its own to default to.
-export async function getCounselorState(userId: string, locale: Locale = DEFAULT_LOCALE, supabaseClient?: Awaited<ReturnType<typeof createClient>>): Promise<CounselorState> {
+/**
+ * `skipMatchRefresh` (2026-09-02, live dashboard audit): every existing caller keeps
+ * calling `refreshOpportunityMatches` first, unchanged — this is additive, not a behavior
+ * change for the dashboard, advisor, weekly-plan, or opportunity-context paths. It exists
+ * because this function had no read-only mode at all: an audit that only wanted to inspect
+ * a real student's current `avoidForNow` state had to either establish a live authenticated
+ * session (this session's own standing rule against writing to shared state to get one) or
+ * accept that the one available entry point would upsert `opportunity_matches` and fire
+ * `notifyNewlyEligibleMatches` as a side effect of a question that was never about matches
+ * at all. `refreshOpportunityMatches` itself is unconditional on every call — no staleness
+ * check, confirmed by reading it start to finish — which is also the exact mechanism behind
+ * the live 12-duplicate-notification race this same night traced to it. Not fixing that
+ * mechanism here (out of scope, and a partial unique index already backstops the worst
+ * symptom) — only making it possible to skip entirely when a caller genuinely only wants to
+ * read.
+ */
+export interface GetCounselorStateOptions {
+  skipMatchRefresh?: boolean;
+}
+
+export async function getCounselorState(
+  userId: string,
+  locale: Locale = DEFAULT_LOCALE,
+  supabaseClient?: Awaited<ReturnType<typeof createClient>>,
+  options?: GetCounselorStateOptions
+): Promise<CounselorState> {
   const supabase = supabaseClient ?? (await createClient());
 
   // Recompute-on-read, same convention as the Opportunities/Dashboard pages already use --
@@ -105,7 +130,9 @@ export async function getCounselorState(userId: string, locale: Locale = DEFAULT
   // full trace of the failure kept in refreshOpportunityMatches's own doc comment
   // (lib/opportunities/persist-matches.ts), not repeated here now that it's fixed rather
   // than merely flagged.
-  await refreshOpportunityMatches(userId, locale, supabase);
+  if (!options?.skipMatchRefresh) {
+    await refreshOpportunityMatches(userId, locale, supabase);
+  }
 
   // Shared, cache()'d getProfileScores(userId) (docs/performance.md §2) only when this call
   // is request-scoped (no explicit supabaseClient) — the scheduled weekly-plan job

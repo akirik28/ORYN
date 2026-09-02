@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getCounselorState } from "./state";
+import { getCounselorState, type GetCounselorStateOptions } from "./state";
 import { runCounselorPipeline } from "./pipeline";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { CounselorResult } from "./types";
@@ -20,6 +20,7 @@ export type {
 export type { CounselorDashboardContract } from "./dashboard-contract";
 export { buildCounselorDashboardContract } from "./dashboard-contract";
 export { rankDimensionStrengths } from "./strengths";
+export type { GetCounselorStateOptions } from "./state";
 
 /**
  * Counselor Core's single public entry point (docs/counselor-core-plan.md). Assembles the
@@ -34,12 +35,17 @@ export { rankDimensionStrengths } from "./strengths";
  * separate pass (the counselor's own AI system prompt) needs to solve properly, not this
  * one accidentally. Only app/(app)/advisor/page.tsx and app/(app)/dashboard/page.tsx pass
  * the resolved student locale.
+ *
+ * `options` (2026-09-02) passes straight through to `getCounselorState` — see that
+ * function's own doc comment for `skipMatchRefresh`. Every existing caller omits it and
+ * keeps today's behavior unchanged.
  */
 export async function getCounselorRecommendations(
   userId: string,
   locale: Locale = DEFAULT_LOCALE,
   supabaseClient?: Parameters<typeof getCounselorState>[2],
+  options?: GetCounselorStateOptions,
 ): Promise<CounselorResult> {
-  const state = await getCounselorState(userId, locale, supabaseClient);
+  const state = await getCounselorState(userId, locale, supabaseClient, options);
   return runCounselorPipeline(state, new Date(), locale);
 }
