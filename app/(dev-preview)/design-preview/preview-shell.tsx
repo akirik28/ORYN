@@ -87,12 +87,20 @@ const PREVIEW_QUOTA: MonthlyQuota = { used: 20, limit: 50, remaining: 30, fracti
 //
 // `tier` added 2026-09-02, optional and defaulted rather than required: this shell has many
 // callers and only a page that actually wants to preview Ultra needs to pass a real value.
-// Forwarded straight to Sidebar (whose flame texture and background both key off it) and
-// used for this file's own page-background gradient below — this component renders the real
-// Sidebar/Topbar, not a copy, but does NOT mount UltraAmbient (a different route group does
-// its own data-tier stamping instead, see app/(dev-preview)/layout.tsx), so anything Ultra
-// needs visible in this harness has to come from a token or a component this shell actually
-// renders — never from that page-level effect.
+// Used for this file's own page-background gradient below and for showUpgradeCta just
+// below that — NOT forwarded to Sidebar itself, which needs no tier prop at all (its
+// [data-tier="ultra"] rules read the attribute an ancestor already stamps onto <html>, see
+// that component's own comment). This component renders the real Sidebar/Topbar, not a
+// copy, but does NOT mount UltraAmbient (a different route group does its own data-tier
+// stamping instead, see app/(dev-preview)/layout.tsx), so anything Ultra needs visible in
+// this harness has to come from a token or a component this shell actually renders — never
+// from that page-level effect.
+//
+// showUpgradeCta is derived from this same single `tier` value, unlike the real app (which
+// gates it on the real database tier, independent of any dev-preview override — see
+// Sidebar's own comment for why those are two different questions there). This harness has
+// no separate "real vs previewed" concept, only ?tier=, so there's nothing else for it to
+// key off; passing ?tier=standard is how to see the CTA here.
 export function PreviewShell({ children, signal, tier = "standard" }: { children: ReactNode; signal: DimensionSignal[]; tier?: PlanTier }) {
   return (
     <div
@@ -108,7 +116,7 @@ export function PreviewShell({ children, signal, tier = "standard" }: { children
         quota={PREVIEW_QUOTA}
         budgetDegraded={false}
       />
-      <Sidebar displayName="Ada" email="ada@example.com" signal={signal} tier={tier} />
+      <Sidebar displayName="Ada" email="ada@example.com" signal={signal} showUpgradeCta={tier === "standard"} />
       <div className="relative flex min-w-0 flex-1 flex-col">
         <RouteAmbientBlobs />
         <Topbar notifications={PREVIEW_NOTIFICATIONS} unreadCount={PREVIEW_UNREAD_COUNT} quota={PREVIEW_QUOTA} budgetDegraded={false} />

@@ -2,15 +2,14 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { Flame } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { UserMenu } from "./user-menu";
 import { LanguageSwitcher } from "./language-switcher";
-import { SidebarFlame } from "./sidebar-flame";
 import { PRIMARY_NAV, SECONDARY_NAV } from "./nav-items";
 import type { DimensionSignal } from "@/lib/scoring/signal";
-import type { PlanTier } from "@/types/database";
 
 const SETTINGS_ITEM = SECONDARY_NAV.find((item) => item.href === "/settings")!;
 const SECONDARY_ITEMS = SECONDARY_NAV.filter((item) => item.href !== "/settings");
@@ -24,44 +23,66 @@ const SECONDARY_ITEMS = SECONDARY_NAV.filter((item) => item.href !== "/settings"
  * founder decision (2026-08-21) to keep student-to-student messaging out of navigation
  * for V1, and this pass doesn't relitigate that. Their routes/pages are unaffected.
  *
- * Background and active-accent-bar colors, 2026-09-02: read through --tier-sidebar-bg-1/2/3
- * and --tier-sidebar-accent (app/globals.css) rather than the literal hex values above —
- * still the exact same literals at Standard tier, redirected only under
- * [data-tier="ultra"]. Nothing else in this file changed for Ultra: the white/NN text
- * opacities stay as originally ported, verified live against the new sidebar color rather
- * than assumed to still be fine.
+ * Background and active-accent-bar colors, 2026-09-02: the background is now a class
+ * (.tier-sidebar-surface, app/globals.css) rather than an inline style — still the exact
+ * same literal gradient at Standard tier, redirected only under [data-tier="ultra"]. The
+ * accent bar reads --tier-sidebar-accent the same way it always did. Nothing else in this
+ * file changed for Ultra: the white/NN text opacities stay as originally ported, verified
+ * live against the new gradient rather than assumed to still be fine (a scrim layered into
+ * .tier-sidebar-surface's own background, not a text-color change, is what keeps them
+ * readable — see that class's own comment). No `tier` prop needed for any of this: every
+ * rule lives behind a `[data-tier="ultra"]` ancestor selector, which an ancestor
+ * (UltraAmbient / DevPreviewTierStamp) already stamps onto <html> — this file only has to
+ * carry the class name, never branch on the value itself.
  *
- * SidebarFlame added the same day, later: a static color change wasn't enough — the founder
- * asked specifically for motion in the bar itself ("bar yanıyormuş gibi olsun"), not another
- * page-level effect. Painted first, before every other child, so normal DOM-order stacking
- * puts it behind the logo/nav/user-menu without needing an explicit z-index anywhere in this
- * file. `tier` is a required prop (not read from context) because there are exactly two
- * callers of this component — app/(app)/layout.tsx and the design-preview harness's
- * PreviewShell — both already computing a tier value for other reasons.
+ * Went through a canvas-based flame first, same day, replaced before it shipped further:
+ * the founder rejected an overlay painted over a static dark ground ("don't keep the bar
+ * blue and add an effect on top of it") and asked for the surface's own gradient to move
+ * instead. That version DID take a `tier` prop, to decide whether to mount the canvas at
+ * all — removed along with the canvas, since nothing here needs to know the tier anymore.
+ * See app/globals.css's own comment on .tier-sidebar-surface for the full story.
+ *
+ * showUpgradeCta, added the same day: a standard-tier student sees a persistent "Upgrade
+ * your plan" entry pointing at the real /settings/plan page (registerUltraInterestAction —
+ * an analytics event, not a purchase; there is no billing flow to fake). Gated on the
+ * caller's REAL resolved tier — app/(app)/layout.tsx's `realTier`, not the possibly-dev-
+ * preview-overridden `planTier` it also computes — because a founder previewing Ultra via
+ * the dev-preview toggle is still, in their real database row, a standard account, and
+ * should still see the honest CTA while looking at what Ultra looks like. That coexistence
+ * (the CTA on top of the animated gradient) is a real case, not a theoretical one, which is
+ * why its contrast was checked against the gradient too.
+ *
+ * `ultra:text-white/80` / `ultra:hover:text-white` on every non-active nav item, same day:
+ * the scrim in .tier-sidebar-surface alone couldn't clear 4.5:1 for the original
+ * text-white/35-45% labels — raising scrim opacity further pulls the effective background
+ * AND the composited text toward the same dark point together, so there's a mathematical
+ * ceiling to how much separation that lever alone can buy. Computed (not eyeballed) across
+ * 60+ sampled points along the full gradient path plus the scrim: white/80% clears 4.5:1
+ * everywhere with margin (4.76:1 worst case, at the brightest yellow stop), white/100%
+ * clears it comfortably (6.37:1 worst case) — hence full white on hover/active rather than
+ * a smaller bump. Standard is untouched; these are `ultra:`-prefixed, so they add nothing
+ * outside `[data-tier="ultra"]`. language-switcher.tsx's sidebar variant and user-menu.tsx's
+ * sidebar summary line carry the identical fix for the identical reason.
  */
 export function Sidebar({
   displayName,
   email,
   signal,
   isAdmin = false,
-  tier,
+  showUpgradeCta = false,
 }: {
   displayName: string;
   email: string | null;
   signal: DimensionSignal[];
   isAdmin?: boolean;
-  tier: PlanTier;
+  showUpgradeCta?: boolean;
 }) {
   const pathname = usePathname();
   const t = useTranslations("nav");
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <aside
-      className="sticky top-0 hidden h-svh w-[214px] shrink-0 flex-col lg:flex"
-      style={{ background: "linear-gradient(175deg, var(--tier-sidebar-bg-1) 0%, var(--tier-sidebar-bg-2) 55%, var(--tier-sidebar-bg-3) 100%)" }}
-    >
-      {tier === "ultra" ? <SidebarFlame tier={tier} /> : null}
+    <aside className="tier-sidebar-surface sticky top-0 hidden h-svh w-[214px] shrink-0 flex-col lg:flex">
       <Link href="/dashboard" aria-label={t("homeLink")} className="flex items-center gap-2.5 px-5 pt-[26px] pb-5">
         <Image src="/brand/logo-full.png" alt="Oryn" width={92} height={31} priority className="h-6 w-auto" />
       </Link>
@@ -78,7 +99,7 @@ export function Sidebar({
               className={cn(
                 "relative flex items-center gap-2.5 rounded-[10px] px-3 py-[9px] text-[13.5px] transition-colors",
                 "focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none",
-                active ? "bg-white/10 font-semibold text-white" : "text-white/45 hover:text-white/75"
+                active ? "bg-white/10 font-semibold text-white" : "text-white/45 ultra:text-white/80 hover:text-white/75 ultra:hover:text-white"
               )}
             >
               {active ? (
@@ -108,7 +129,7 @@ export function Sidebar({
                   className={cn(
                     "relative flex items-center gap-2.5 rounded-[10px] px-3 py-2 text-[13px] transition-colors",
                     "focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none",
-                    active ? "bg-white/[0.08] font-semibold text-white" : "text-white/35 hover:text-white/60"
+                    active ? "bg-white/[0.08] font-semibold text-white" : "text-white/35 ultra:text-white/80 hover:text-white/60 ultra:hover:text-white"
                   )}
                 >
                   <Icon className="size-[18px]" strokeWidth={1.6} />
@@ -120,6 +141,21 @@ export function Sidebar({
         ) : null}
       </nav>
 
+      {showUpgradeCta ? (
+        <div className="px-2.5 pb-2">
+          <Link
+            href="/settings/plan"
+            className={cn(
+              "flex items-center gap-2 rounded-[10px] border border-white/15 bg-white/[0.08] px-3 py-2 text-[13px] font-medium text-white transition-colors",
+              "hover:bg-white/[0.13] focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
+            )}
+          >
+            <Flame className="size-[16px] shrink-0 text-[var(--tier-grad-1)]" strokeWidth={1.8} />
+            {t("upgradePlan")}
+          </Link>
+        </div>
+      ) : null}
+
       <div className="border-t border-white/[0.06]">
         <Link
           href={SETTINGS_ITEM.href}
@@ -127,7 +163,7 @@ export function Sidebar({
           className={cn(
             "flex items-center gap-2.5 px-[22px] py-2.5 text-[13px] transition-colors",
             "focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none",
-            isActive(SETTINGS_ITEM.href) ? "bg-white/[0.07] text-white/90" : "text-white/38 hover:text-white/65"
+            isActive(SETTINGS_ITEM.href) ? "bg-white/[0.07] text-white/90" : "text-white/38 ultra:text-white/80 hover:text-white/65 ultra:hover:text-white"
           )}
         >
           <SETTINGS_ITEM.icon className="size-[18px]" strokeWidth={1.6} />

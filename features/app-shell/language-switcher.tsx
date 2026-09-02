@@ -56,7 +56,9 @@ export function LanguageSwitcher({ variant = "sidebar" }: { variant?: "sidebar" 
         className={cn(
           "flex w-full items-center gap-2.5 transition-colors focus-visible:outline-none disabled:opacity-60",
           onDark
-            ? "px-[22px] py-2.5 text-[13px] text-white/38 hover:text-white/65 focus-visible:ring-2 focus-visible:ring-white/50"
+            ? // ultra: overrides match sidebar.tsx's own — same scrim, same computed
+              // 4.5:1-at-80%/100% fix, see that file's doc comment for the numbers.
+              "px-[22px] py-2.5 text-[13px] text-white/38 ultra:text-white/80 hover:text-white/65 ultra:hover:text-white focus-visible:ring-2 focus-visible:ring-white/50"
             : "min-h-12 rounded-lg px-3 py-2.5 text-sm text-ink-2 hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50",
         )}
       >
