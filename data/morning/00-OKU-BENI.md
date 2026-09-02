@@ -64,6 +64,14 @@ Katalogun %67'sinde yaş sınırı kayıtlı değil ve motor hepsine "uygun" diy
 eklendi, ama alanın kendisini düzeltmek panonu, danışmanı ve öneri sıralamasını birden
 etkiler. Gece yarısı tek başıma karar vermedim.
 
+**Maliyet alanı beş kademeli fiyatı tutamıyor.** Boston University Tanglewood'un gerçek
+fiyatı araştırılmış ve biliniyor — 2 hafta $4.055'ten 8 hafta $10.205'e kadar. Ama `cost`
+alanı tek bir sayı; beş kademe sığmıyor. Araştırmacı bilgiyi `current_cycle_label`'a
+yazmış, yani hiçbir fiyat kontrolünün bakmadığı yere. Ayrıca aynı kavram için **iki ayrı
+sütun** var: elle araştırma `financial_aid_available`'ı, otomatik çıkarım
+`funding_available`'ı yazıyor — ikisi asla birlikte dolmuyor. İkisi de migration gerektiren
+şema kararları, o yüzden sana bırakıldı.
+
 **Fırsat görselleri ve lisans.** 282 kaydın 218'inde görsel yok, ve **128'inin kaynak
 sayfasında zaten görsel yok** — daha çok taramak bunu çözmüyor. Üçüncü taraf görseli
 sunmanın hukuki temeli açık değil; `LEGAL_REVIEW.md`'ye eklendi. Bu arada lisans gerektirmeyen,
@@ -82,6 +90,11 @@ doğrulanmış bir program aynı görünüyordu.
 İkincisi: 611+ üniversite, arkasında hiç veri olmadan kendinden emin bir seçicilik etiketi
 gösteriyordu. Açıklama notu eklendi.
 
-Üçüncüsü: bir tablo var mı diye bakan kontrol, tablo yokken de "var" diyordu
+Üçüncüsü, aynı şeklin en kötü hali: fırsatların %65'inde fiyat kayıtlı değil, ve fiyatı
+bilinmeyen bir program danışmana **ücretsiz olanla tamamen aynı** şekilde anlatılıyordu —
+"bilinmiyor" diye bir durum yoktu. Yani yapay zekâ, parası olmayan bir öğrenciye on bin
+dolarlık bir programı, bedava olduğunu ima ederek önerebilirdi. Düzeltiliyor.
+
+Dördüncüsü: bir tablo var mı diye bakan kontrol, tablo yokken de "var" diyordu
 (PostgREST'in HEAD isteğinde 204 dönmesi). Yani "kurulu değil" uyarısı hiç çıkmıyordu ve
 gerçek veriye yazan bir buton açık kalıyordu.
