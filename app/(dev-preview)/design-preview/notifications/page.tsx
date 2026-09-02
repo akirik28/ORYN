@@ -12,8 +12,11 @@ import type { Notification } from "@/types/database";
 // Static, labeled snapshots of every state the real page (app/(app)/notifications/page.tsx)
 // can render — not a working filter/pagination UI (there's no real searchParams handler
 // here), just every visual state stacked so it can all be checked in one screenshot pass.
-// No live category ever produces deadline/profile_update rows yet (2026-09-02), so this is
-// still the only way to see mixed-category content rendered together.
+// Only 2 of the 7 live categories (weekly_plan, new_opportunity) have ever produced a real
+// row on oryn-qa-scratch as of 2026-09-02 (docs/notification-settings-gap-2026-09-02.md's
+// live count) — deadline, profile_update, university_data_changed, connection, and message
+// are all real code paths with real writers but zero rows yet, so this fixture set is still
+// the only way to see mixed-category content rendered together.
 const FIXTURES: Notification[] = [
   {
     id: "p1",
@@ -76,12 +79,19 @@ const FIXTURES: Notification[] = [
     created_at: new Date(Date.now() - 27 * 60 * 60 * 1000).toISOString(),
   },
   {
+    // Was a second `deadline` row (duplicating p1's category) rather than
+    // `university_data_changed` — the section below claims "every category," and until this
+    // fix it wasn't: university_data_changed had no fixture at all, six distinct categories
+    // shown for a claimed seven. Title/body shape matches
+    // lib/universities/data-change-scan.ts's buildUniversityChangeNotification single-hit
+    // case exactly (messages/en.json's universityDataChangedTitle: "{name} — information
+    // updated", body always null for a single hit — only the digest case has a body).
     id: "p7",
     user_id: "u1",
-    category: "deadline",
-    title: "Deadline tomorrow",
-    body: "Yale University — application deadline approaching.",
-    link: "/applications/p7",
+    category: "university_data_changed",
+    title: "Bocconi University — information updated",
+    body: null,
+    link: "/universities/uni1",
     read_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     created_at: new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString(),
   },
