@@ -5,13 +5,21 @@ import type { PlanTier } from "@/types/database";
 /**
  * A development-only way to LOOK at the Ultra skin before any real signal can produce it.
  *
- * What this is: migration 0089 (profiles.plan_tier) is written, not applied — confirmed
- * live against the real database, the column genuinely does not exist. `resolvePlanTier`
- * therefore returns "standard" for every account, including the founder's, with no code
- * path able to produce anything else. Everything built on this foundation tonight — the
- * ambient layer, the ember canvas, every Ultra-aware component — is real and correct but
- * currently unreachable and unverifiable by looking at the running app. This file exists
- * to make it reachable in development only, so it can actually be seen.
+ * What this is: migration 0089 (profiles.plan_tier) was written, not applied, when this
+ * file was written — the column genuinely didn't exist yet, so `resolvePlanTier` returned
+ * "standard" for every account with no code path able to produce anything else.
+ *
+ * STATUS, corrected 2026-09-02 (docs/present-case-verify-2026-09-02.md): the founder has
+ * since applied 0089/0090/0091 by hand. `plan_tier` is real and live now — every account
+ * still reads "standard" today only because nothing has set any of them to "ultra" yet, not
+ * because the column is absent. The paragraph above is accurate history for why this
+ * override tool was built, but is no longer an accurate description of why "ultra" is
+ * unreachable today. This file's actual mechanism (a cookie applied at the edge, after
+ * resolvePlanTier decides, never touching `profiles`) is unaffected either way — only this
+ * comment's account of *why* was stale. Everything built on this foundation tonight — the
+ * ambient layer, the ember canvas, every Ultra-aware component — is real and correct. This
+ * file exists to make it reachable in development only, so it can actually be seen without
+ * a real "ultra" row.
  *
  * What this is NOT: a second way to set a student's real tier, a way to fake profile data,
  * or a route that exists in production. `resolvePlanTier` (lib/tier/plan-tier.ts) remains
