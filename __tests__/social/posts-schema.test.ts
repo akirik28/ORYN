@@ -96,8 +96,17 @@ describe("migration numbering", () => {
     // assumed from the migration files. Checked every remote branch (git ls-tree across
     // refs/remotes/origin/*) and every local worktree's filesystem before claiming this
     // number, not just this worktree's own listing — the check this comment has been
-    // telling people to run. All still unapplied.
-    expect(Math.max(...numbers.map(Number))).toBe(79);
+    // telling people to run. 0080 (statistics_last_changed_and_notification_sources)
+    // landed on main via a different lane while this branch was still open — present
+    // once merged, not physically in this worktree's own migrations/ directory, which
+    // is fine: this assertion only pins the highest number, not a contiguous run, and
+    // 81 > 79 holds regardless of which worktree currently has 80 on disk. 0081
+    // (canonical_entity_merges_merged_by_set_null) is the account-deletion audit's
+    // second finding: an untracked-by-any-migration ON DELETE NO ACTION foreign key,
+    // found live via pg_constraint, now aligned to SET NULL (matching
+    // message_reports.reviewed_by's precedent) and tracked in migration history for the
+    // first time. All still unapplied.
+    expect(Math.max(...numbers.map(Number))).toBe(81);
   });
 });
 
