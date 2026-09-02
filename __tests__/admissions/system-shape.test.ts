@@ -47,7 +47,7 @@ describe("resolveAdmissionSystem — the three shapes the research actually foun
   });
 
   test("every resolved entry carries at least one traceable source document", () => {
-    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden"]) {
+    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway"]) {
       const result = resolveAdmissionSystem({ targetCountry: country, studentCountry: "Turkey" });
       expect(result.sources.length, country).toBeGreaterThan(0);
       expect(result.mechanism, country).not.toBeNull();
@@ -66,6 +66,7 @@ describe("resolveAdmissionSystem — country name forms actually present in the 
     ["Hong Kong SAR", "Hong Kong"],
     ["UK", "United Kingdom"],
     ["Sverige", "Sweden"],
+    ["Norge", "Norway"],
   ])("%s resolves identically to %s", (alias, canonical) => {
     const aliased = resolveAdmissionSystem({ targetCountry: alias, studentCountry: "Turkey" });
     const canonicalResult = resolveAdmissionSystem({ targetCountry: canonical, studentCountry: "Turkey" });
@@ -241,6 +242,47 @@ describe("resolveAdmissionSystem — Sweden (2026-09-03 single-country expansion
   test("Sweden traces to its own research document, not an invented source", () => {
     const result = resolveAdmissionSystem({ targetCountry: "Sweden", studentCountry: "Sweden" });
     expect(result.sources).toContain("docs/research/admissions-systems/sweden.md");
+  });
+});
+
+describe("resolveAdmissionSystem — Norway (2026-09-03, a genuine pathway split found, not forced flat)", () => {
+  // Norway is deliberately NOT modeled like Sweden: research this pass found the domestic
+  // (Samordna Opptak) and international (mostly English-taught, direct-to-institution) tracks
+  // do not share a confirmed mechanism — see docs/research/admissions-systems/norway.md §D.
+  // Asserting the honest "unknown" here is the point of this test, not a gap to paper over.
+  test("Norway's domestic track is rank-competitive via Samordna Opptak's points system", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Norway", studentCountry: "Norway" });
+    expect(domestic.shape).toBe("academic_rank_competitive");
+    expect(reviewsNonAcademicEvidence(domestic.shape)).toBe(false);
+    expect(domestic.mechanism).toContain("Samordna Opptak");
+  });
+
+  test("Norway's general international track is honestly unknown, not defaulted to the domestic shape", () => {
+    const international = resolveAdmissionSystem({ targetCountry: "Norway", studentCountry: "Turkey" });
+    expect(international.shape).toBe("unknown");
+    expect(reviewsNonAcademicEvidence(international.shape)).toBeNull();
+    // Even "unknown" here is a real, sourced finding, not a null result — the caller still gets
+    // a mechanism sentence explaining why and a source to check.
+    expect(international.mechanism).not.toBeNull();
+    expect(international.sources.length).toBeGreaterThan(0);
+  });
+
+  test("NTNU is a confirmed, named exception where the English-taught track IS Samordna Opptak", () => {
+    const ntnu = resolveAdmissionSystem({ targetCountry: "Norway", studentCountry: "Turkey", targetUniversityName: "NTNU" });
+    expect(ntnu.shape).toBe("academic_rank_competitive");
+    expect(ntnu.basis).toBe("institution");
+    expect(ntnu.mechanism).toContain("Samordna Opptak");
+  });
+
+  test("an unlisted Norwegian institution does not borrow NTNU's confirmed exception", () => {
+    const other = resolveAdmissionSystem({ targetCountry: "Norway", studentCountry: "Turkey", targetUniversityName: "University of Oslo" });
+    expect(other.basis).not.toBe("institution");
+    expect(other.shape).toBe("unknown");
+  });
+
+  test("Norway traces to its own research document, not an invented source", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Norway", studentCountry: "Norway" });
+    expect(result.sources).toContain("docs/research/admissions-systems/norway.md");
   });
 });
 

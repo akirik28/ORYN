@@ -54,16 +54,25 @@ preparation gaps without fabricating probability → determine next actions.*
 
 Turkey's doc has one deliberate structural difference from the other 14: it is the *source* country this whole package's "applicant educated in Türkiye" sections are about, not a destination being evaluated for a Turkish applicant — so its own "Applicant educated in Türkiye" section is retitled "Domestic MEB applicant baseline," and its `matrix_row`'s `turkiye_meb_direct_entry_complexity` field is repurposed to describe how *foreign*-curriculum students enter Turkish universities, keeping the schema consistent across all 15 countries rather than leaving that field meaningless for the one country where the literal label would be a category error.
 
-### 16th country, added outside the core matrix pass: Sweden
+### Countries added outside the core matrix pass
 
-[`sweden.md`](./sweden.md) (added 2026-09-03) covers Sweden's UHR/antagning.se meritvärde
-system and is wired into `lib/admissions/system-shape.ts`'s registry exactly like the 15 above.
-It is deliberately **not** folded into the "15 countries" language elsewhere in this README or
-into the cross-country matrix below: that matrix reflects a specific multi-source, primary-fetch
-research depth across all 15 original countries, and retrofitting a Sweden column to match it
-would mean asserting depth this single-session pass does not actually have (see sweden.md's own
-"Unresolved questions"). Treat Sweden as a real, sourced, code-wired 16th entry with a thinner
-research doc — not as a 16th row in the deep-comparison matrix.
+A second research line, started 2026-09-03, adds further countries one at a time using the same
+honesty discipline as the 15 above but a deliberately lighter research budget (one session per
+country, official sources plus corroborating institutional pages, unresolved questions listed
+rather than guessed) — each one closes a real gap where ORYN's database already holds
+institutions with no admissions depth behind them. Each is wired into
+`lib/admissions/system-shape.ts`'s registry exactly like the 15 above, and each is deliberately
+**not** folded into the "15 countries" language elsewhere in this README or into the
+cross-country matrix below: that matrix reflects a specific multi-source, primary-fetch research
+depth, and retrofitting a column for one of these countries to match it would mean asserting
+depth these single-session passes do not actually have (see each doc's own "Unresolved
+questions"). Treat these as real, sourced, code-wired registry entries with thinner research
+docs — not as additional rows in the deep-comparison matrix.
+
+| Country | Doc | Added | Note |
+|---|---|---|---|
+| Sweden | [`sweden.md`](./sweden.md) | 2026-09-03 | Same merit mechanism (meritvärde) for both pathways — only the portal differs. |
+| Norway | [`norway.md`](./norway.md) | 2026-09-03 | A genuine pathway split, not a wording difference: the international/English-taught track's mechanism is honestly `unknown` at the general level (one named institutional exception, NTNU) — see norway.md §D. |
 
 Each doc follows the same structure: admissions architecture, qualification eligibility
 (with a **dedicated Türkiye-applicant section** in every country), academic evidence use,
