@@ -76,13 +76,17 @@ export type ImpactLevel = "low" | "medium" | "high" | "very_high";
 export type ReflectionOutcome = "completed_successfully" | "partially_completed" | "did_not_work" | "opportunity_no_longer_available";
 export type RecommendationClass = "do" | "consider" | "deprioritize" | "avoid_for_now";
 export type MessageRole = "user" | "assistant";
+// 'system' existed here from migration 0012 to 0085 with no writer, ever, and no basis in
+// Phase 24's spec list -- removed rather than kept "just in case" (migration 0085's own
+// comment has the full reasoning: two concrete uses considered and ruled out, not just an
+// abstract catch-all left unexamined). If a real need for a system-authored notification
+// shows up later, add it back deliberately, for that need, not as a name already sitting here.
 export type NotificationCategory =
   | "deadline"
   | "new_opportunity"
   | "weekly_plan"
   | "profile_update"
   | "university_data_changed"
-  | "system"
   | "connection"
   | "message";
 export type ProviderStatus = "healthy" | "degraded" | "down" | "unknown";
