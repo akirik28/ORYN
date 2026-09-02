@@ -1240,7 +1240,8 @@
       "searchFailed": "Search isn't available right now. Please try again.",
       "keepTyping": "Keep typing — at least 2 characters.",
       "emptyPrompt": "Search universities, opportunities, applications, and everything in your profile.",
-      "noResultsFor": "No results for \"{query}\"."
+      "noResultsFor": "No results for \"{query}\".",
+      "viewAllResults": "View all results for \"{query}\""
     }
   },
   "auth": {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
@@ -233,6 +234,25 @@ export function CommandPalette({ variant = "icon" }: { variant?: "icon" | "bar" 
               ))
             )}
           </div>
+
+          {/* app/(app)/search/page.tsx (features/search/search-view.tsx) is a complete,
+              real page — full-width result list, a shareable/bookmarkable URL, works without
+              JS — but before this, nothing in the app linked to it: not the nav, not this
+              dialog. A student could only ever reach it by typing the URL directly. This is
+              the one persistent way in, shown for any real query regardless of the palette's
+              own state (results, none, or failed) — the full page runs its own independent
+              server-side fetch, so a transient client-side failure here doesn't mean that
+              page would fail too. */}
+          {query.trim().length >= 2 ? (
+            <Link
+              href={`/search?q=${encodeURIComponent(query.trim())}`}
+              onClick={() => setOpen(false)}
+              className="flex items-center justify-between gap-2 border-t px-4 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              {t("viewAllResults", { query: query.trim() })}
+              <CornerDownLeft className="size-3.5 shrink-0" />
+            </Link>
+          ) : null}
         </DialogPrimitive.Popup>
       </DialogPortal>
     </Dialog>
