@@ -1991,6 +1991,25 @@ export interface BirthYearChange {
 /** No Insert type on purpose: profiles_log_birth_year_change is the only writer (migration
  * 0072) and the table has no INSERT policy for any role, same posture as PostRevision. */
 
+/** Migration 0097 — append-only record of operational admin actions. See that migration's
+ * own comment for why admin_id/target_user_id are nullable with a denormalized label
+ * alongside each (deletion of either account must never be blocked by this table). */
+export interface AdminActionLog {
+  id: string;
+  admin_id: string | null;
+  admin_label: string;
+  action: string;
+  target_user_id: string | null;
+  target_label: string | null;
+  detail: Record<string, unknown>;
+  created_at: string;
+}
+/** admin_id/admin_label/action are always provided by the writer (requireAdmin() guarantees
+ * a real acting profile) — only the DB-defaulted and genuinely-optional-per-action fields
+ * are Insertable-optional. No Update type: same insert-only posture as
+ * DeadlineNotificationLog/UniversityNotificationLog above — a log entry is never edited. */
+export type AdminActionLogInsert = Insertable<AdminActionLog, "id" | "target_user_id" | "target_label" | "detail" | "created_at">;
+
 // ---------- Database aggregate (Supabase client generic shape) ----------
 
 // `Relationships` is required by @supabase/postgrest-js's GenericTable constraint for the
@@ -2104,6 +2123,7 @@ export interface Database {
       birth_year_changes: Table<BirthYearChange, never, never>;
       deadline_notification_log: Table<DeadlineNotificationLog, DeadlineNotificationLogInsert, never>;
       university_notification_log: Table<UniversityNotificationLog, UniversityNotificationLogInsert, never>;
+      admin_action_log: Table<AdminActionLog, AdminActionLogInsert, never>;
     };
   };
 }

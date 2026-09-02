@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, ExternalSyncJob, MessageReportStatus } from "@/types/database";
+import type { Database, ExternalSyncJob, MessageReportStatus, PlanTier } from "@/types/database";
 import { getTranslations } from "next-intl/server";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import { JOB_DEFINITIONS } from "@/lib/jobs/schedule";
@@ -12,6 +12,7 @@ import { MONTHLY_BUDGET_TARGET_USD, MONTHLY_BUDGET_CEILING_USD } from "@/lib/ai/
 import { PER_STUDENT_AI_FEATURES } from "@/lib/ai/monthly-quota";
 import { JOB_BUDGET_USD, checkJobBudget, type JobBudgetFeature, type JobBudgetReason } from "@/lib/ai/limits/job-budget";
 import type { SeriesPoint } from "@/components/oryn/charts/types";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
 
 /**
  * Every admin-panel read, one module (docs/admin-panel-architecture-2026-09-02.md, D1). Each
@@ -271,24 +272,26 @@ export function summarizeReportsBacklog(reports: readonly AdminReportRow[], now:
 export interface AdminUserRow {
   userId: string;
   displayName: string | null;
-  /** Tiers don't exist yet — the minor-payment legal research in flight decides what a tier
-   *  even attaches to (student vs. parent-as-payer). Always null until that's settled;
-   *  rendered as "—", never invented from another field. */
-  tier: null;
+  /** Live as of migration 0089/2026-09-02 (the minor-payment question this used to be
+   *  blocked on turned out to be orthogonal — plan_tier is a visual skin, not a billing
+   *  entity, see that migration's own header) — `resolvePlanTier`'s own "absent defaults to
+   *  standard" convention, never a raw column read, so a database where 0089 hasn't applied
+   *  yet still renders a real value instead of null. */
+  tier: PlanTier;
   signedUpAt: string;
   lastSeenAt: string | null;
   lifetimeSpendUsd: number;
 }
 
 /**
- * The user list: signup date, last seen, lifetime spend. "Last seen" is Supabase Auth's own
- * `last_sign_in_at` (`admin.auth.admin.listUsers`) — deliberately NOT `profiles.updated_at`,
- * which measures the last profile *edit*, a different and often much staler signal than the
- * last time someone actually opened the app.
+ * The user list: signup date, last seen, lifetime spend, plan tier. "Last seen" is Supabase
+ * Auth's own `last_sign_in_at` (`admin.auth.admin.listUsers`) — deliberately NOT
+ * `profiles.updated_at`, which measures the last profile *edit*, a different and often much
+ * staler signal than the last time someone actually opened the app.
  */
 export async function getAdminUserList(admin: SupabaseClient<Database>): Promise<AdminUserRow[]> {
   const [{ data: profiles }, spendByUser, { data: authUsers }] = await Promise.all([
-    admin.from("profiles").select("id, display_name, created_at").order("created_at", { ascending: false }),
+    admin.from("profiles").select("id, display_name, created_at, plan_tier").order("created_at", { ascending: false }),
     getLifetimeSpendByUser(admin),
     admin.auth.admin.listUsers(),
   ]);
@@ -298,7 +301,7 @@ export async function getAdminUserList(admin: SupabaseClient<Database>): Promise
   return (profiles ?? []).map((p) => ({
     userId: p.id,
     displayName: p.display_name,
-    tier: null,
+    tier: resolvePlanTier(p),
     signedUpAt: p.created_at,
     lastSeenAt: lastSeenById.get(p.id) ?? null,
     lifetimeSpendUsd: spendByUser.get(p.id) ?? 0,

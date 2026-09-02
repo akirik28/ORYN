@@ -284,7 +284,25 @@ describe("migration numbering", () => {
     // own case in their own header comments rather than share one; the shared principle is
     // only "pick the failure direction that costs less for this feature's actual shape,"
     // not a rule either column's default was allowed to inherit from the other's.
-    expect(Math.max(...numbers.map(Number))).toBe(93);
+    //
+    // 0097 (admin_action_log) is the shared "log it" infrastructure for the founder's
+    // operational admin panel (Phase 51-adjacent, but this is a write path an admin
+    // triggers, not a job) -- the founder's own named pain: they had to ask oryn-a7 to run
+    // raw SQL twice to set their own plan_tier, once silently affecting zero rows with
+    // neither of them knowing why. Reserved out of order by oryn-a7 as part of a five-lane
+    // block (0094 oryn-3f, 0095 oryn-b9, 0096 oryn-f5, 0097 this lane, 0098 oryn-31) handed
+    // out together specifically because two same-day collisions already happened tonight
+    // from lanes reaching for "the next number" against different snapshots of main -- a
+    // gap here (94-96 not yet in this directory) is therefore expected, not a numbering
+    // error, and this guard's own job is uniqueness and matching the real ceiling, not
+    // contiguity. Generic on purpose: one `action` + jsonb `detail` row shape meant to be
+    // reused by every later operational action (trial grant/end, allowance reset,
+    // opportunity disable, job trigger) rather than a table per action type. admin_id and
+    // target_user_id are both `on delete set null` with a denormalized label snapshot
+    // alongside each -- spec Phase 12's account-deletion requirement means an audit log can
+    // never become the reason a deletion can't complete, in either direction. Still
+    // unapplied.
+    expect(Math.max(...numbers.map(Number))).toBe(97);
   });
 });
 

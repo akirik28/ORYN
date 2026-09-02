@@ -1712,7 +1712,15 @@
       "lastSeen": "Last seen",
       "lifetimeSpend": "Lifetime spend",
       "never": "Never",
-      "unnamed": "Unnamed student"
+      "unnamed": "Unnamed student",
+      "tierStandard": "Standard",
+      "tierUltra": "Ultra",
+      "setTier": "Set {tier}",
+      "confirmTitle": "Set {name} to {tier}?",
+      "confirmDescription": "Changes what they see immediately. Reversible — you can switch this back the same way at any time.",
+      "confirmButton": "Confirm",
+      "changeSuccess": "{name} is now {tier}.",
+      "changeNoop": "{name} was already {tier}. Nothing changed."
     },
     "warnings": {
       "sectionTitle": "Budget warnings",

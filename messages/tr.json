@@ -1712,7 +1712,15 @@
       "lastSeen": "Son görülme",
       "lifetimeSpend": "Toplam harcama",
       "never": "Hiç",
-      "unnamed": "İsimsiz öğrenci"
+      "unnamed": "İsimsiz öğrenci",
+      "tierStandard": "Standart",
+      "tierUltra": "Ultra",
+      "setTier": "{tier} yap",
+      "confirmTitle": "{name} kullanıcısı {tier} yapılsın mı?",
+      "confirmDescription": "Ne gördüklerini hemen değiştirir. Geri alınabilir — istediğiniz zaman aynı şekilde eski haline döndürebilirsiniz.",
+      "confirmButton": "Onayla",
+      "changeSuccess": "{name} artık {tier}.",
+      "changeNoop": "{name} zaten {tier} idi. Bir şey değişmedi."
     },
     "warnings": {
       "sectionTitle": "Bütçe uyarıları",
