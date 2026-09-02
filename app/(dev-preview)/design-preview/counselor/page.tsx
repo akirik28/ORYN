@@ -40,6 +40,7 @@ const FIXTURE_COUNSELOR_RESULT: CounselorResult = {
   scoreVersion: "counselor_v1" as CounselorResult["scoreVersion"],
   gaps: [],
   profileReadiness: { completenessPercent: 82, sufficientForJudgment: true },
+  studentIdentity: { displayName: "Ada", country: "United States", graduationYear: 2027, curriculum: "ap" },
   recommendations: [
     recommendation({
       id: "do-1",

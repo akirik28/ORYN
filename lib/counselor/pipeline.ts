@@ -41,5 +41,11 @@ export function runCounselorPipeline(state: CounselorState, referenceDate: Date 
       completenessPercent,
       sufficientForJudgment: completenessPercent >= MIN_COMPLETENESS_FOR_JUDGMENT,
     },
+    studentIdentity: {
+      displayName: state.advisor.student.displayName,
+      country: state.advisor.student.country,
+      graduationYear: state.advisor.student.graduationYear,
+      curriculum: state.advisor.student.curriculum,
+    },
   };
 }

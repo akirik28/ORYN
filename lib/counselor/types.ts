@@ -187,4 +187,11 @@ export interface CounselorResult {
      * the pipeline should lead with profile_task candidates in that case, not opportunities. */
     sufficientForJudgment: boolean;
   };
+  /** Carried forward from CounselorState.advisor.student (already built once per pipeline
+   * run — never a second fetch). Exists so a caller holding only a CounselorResult, such as
+   * lib/ai/counselor-explain.ts's narration layer, still has enough to address the student
+   * as a person instead of narrating a name-less, age-less "the student". Deliberately just
+   * the identity subset, not the full StudentAdvisorContext — gaps/recommendations already
+   * carry every scored fact that's actually safe to narrate. */
+  studentIdentity: Pick<StudentAdvisorContext["student"], "displayName" | "country" | "graduationYear" | "curriculum">;
 }

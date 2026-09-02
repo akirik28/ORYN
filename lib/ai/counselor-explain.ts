@@ -8,6 +8,7 @@ import { AIProviderNotConfiguredError } from "./provider";
 import { withOutputLanguage } from "./output-language";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import { recommendationClassLabel } from "@/lib/counselor/copy";
+import { curriculumLabel } from "@/lib/requirements/copy";
 import type { AIProvider } from "./provider";
 import type { CounselorResult } from "@/lib/counselor/types";
 
@@ -51,13 +52,32 @@ function wrapUntrusted(value: string): string {
  * boundary per the system prompt's instruction (spec §34). Internal-only fields
  * (score/scoreBreakdown) are never included — the model never sees numbers it could
  * misquote back with false precision.
+ *
+ * The student line below is new (2026-09-02 unused-features triage): this prompt used to
+ * carry zero student-identity facts — not even graduation year — so a narrated summary
+ * would address "the student" like a form letter no matter who read it. CounselorResult now
+ * carries `studentIdentity` (set once, in the pipeline, from the same StudentAdvisorContext
+ * every other AI surface already reads) specifically so this could be fixed here without a
+ * second per-caller context fetch. Still just the identity subset, deliberately — everything
+ * else this prompt needs (gaps, scores-as-evidence-state) already arrives through
+ * `result.recommendations`/`why`, not a second parallel copy of the whole context.
  */
 export function buildCounselorExplanationPrompt(result: CounselorResult, locale: Locale): string {
   if (result.recommendations.length === 0) {
     return "The student currently has zero eligible recommendations. Write a short, honest summary saying so and encouraging them to keep building their profile. Leave perRecommendation empty.";
   }
 
-  const lines: string[] = ["Evidence bundle (already ranked and fact-checked — do not reorder or add to this list):", ""];
+  const { displayName, country, graduationYear, curriculum } = result.studentIdentity;
+  const identityLine = [
+    `Student: ${wrapUntrusted(displayName)}`,
+    graduationYear ? `graduating ${graduationYear}` : null,
+    curriculum ? curriculumLabel(curriculum, locale) : null,
+    country ? wrapUntrusted(country) : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  const lines: string[] = [identityLine, "", "Evidence bundle (already ranked and fact-checked — do not reorder or add to this list):", ""];
   for (const rec of result.recommendations) {
     lines.push(`- id: ${rec.id}`);
     lines.push(`  title: ${wrapUntrusted(rec.title)}`);
@@ -87,8 +107,20 @@ export function buildCounselorExplanationPrompt(result: CounselorResult, locale:
  * `locale` follows lib/ai/output-language.ts's own documented plan for this exact function
  * ("the other three... and counselor-explain when it lands... their caller passes
  * resolveLocale()") — wired as part of the advisor i18n package, not the language-mechanism
- * change itself. No caller exists yet (grep confirms only test files reference this
- * function), so this makes the surface ready rather than changing any live behavior.
+ * change itself.
+ *
+ * Status as of the 2026-09-02 unused-features triage: still has no student-facing product
+ * caller (nothing in app/ renders a narrated summary today), but it is not dead code — the
+ * AI eval harness (lib/ai/eval/harness.ts's runCounselorExplain, cost-estimate.ts's size
+ * projection) calls this same function for real, to grade and cost this exact prompt before
+ * anything is built on top of it. The real defect found this pass was upstream of "wire it
+ * up": the prompt had zero student-identity facts (not even graduation year), so even the
+ * eval harness was grading a name-less, age-less narration. Fixed via CounselorResult's new
+ * `studentIdentity` field, above. Deliberately left unwired to a product surface — Phase 7's
+ * dashboard spec has no slot for a separate AI-narrated paragraph today (its worked example
+ * reads like the deterministic `why` text this function's own fallback already produces),
+ * and choosing where narrated prose should appear is a product-surface decision, not a
+ * triage one. Whoever wires this next inherits a prompt that's actually correct to ship.
  */
 export async function explainCounselorRecommendations(
   userId: string,
