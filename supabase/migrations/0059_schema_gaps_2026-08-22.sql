@@ -4,6 +4,17 @@
 -- coordination session's explicit instruction ("write migrations for what's forced, apply
 -- nothing") — same posture as 0056 and 0057 before their own authorization.
 --
+-- STATUS, corrected 2026-09-02 (docs/migration-audit-applied-vs-written-2026-09-02.md):
+-- APPLIED, in full -- all six sub-parts (A2/A3/A5/B3/B6/D2 per this file's own section
+-- labels below) confirmed live against `qtcvcflzxbuagvvwahhu`: `university_deadlines.scope`
+-- and `opportunities.access_channel`/`university_requirements.unmet_consequence`/
+-- `university_programs.ucas_code` all exist (`information_schema.columns`); the
+-- `evaluation_gate`/`verification_state` CHECK constraints both carry their widened values
+-- (`cycle_contingent`/`staleness_suspected`, confirmed via `pg_get_constraintdef`, not just
+-- checked by name); `university_program_placement_cycles_key_idx` carries its widened
+-- 5-column key. The paragraph above was true when written and is not true of the live
+-- database today.
+--
 -- Companion document: docs/handoffs/schema-gaps-design-2026-08-22.md. Read that first — this
 -- file implements the items that document marks FORCED AND CONFIRMED (no product-policy
 -- judgement required to write the column; several still have a judgement call attached about

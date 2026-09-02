@@ -31,6 +31,23 @@
 -- weekly_plan on one real account -- a student muting weekly_plan today still sees those 100
 -- until they're read or the rows are otherwise cleared. That is expected, not a bug in this
 -- migration or in createNotification()'s gate.
+--
+-- THE WRITE SIDE FAILS LOUDLY, ON PURPOSE -- do not "fix" this into a silent degrade.
+-- Verified 2026-09-02 (docs/migration-audit-applied-vs-written-2026-09-02.md):
+-- `app/(app)/settings/actions.ts`'s `updateNotificationPreferences` has no
+-- `isUndefinedColumnError` fallback around its update -- a failed write (including one caused
+-- by this migration not being applied yet) returns a real, visible error to the student
+-- ("Couldn't update your notification settings"), not a swallowed success. That is a
+-- *different* shape from the read-side degrades this file and lib/notifications/create.ts
+-- both use elsewhere, and it is deliberate, not an inconsistency to clean up: this is the one
+-- write in this whole package a student directly and knowingly triggers (a Settings toggle),
+-- and silently reporting success while the preference never actually saved would let a
+-- student believe they had muted a category when they hadn't -- exactly the fake-success
+-- shape AGENTS.md's Rule 4 ("no fake production behavior") forbids. The read paths degrade
+-- because a missed notification-preference check should fail toward "still notify" rather
+-- than break the notification pipeline for everyone; this one write does not get the same
+-- treatment because failing toward "silently didn't save" is the wrong direction for an
+-- action the student is watching happen.
 alter table public.profiles
   add column if not exists notify_deadline boolean not null default true,
   add column if not exists notify_new_opportunity boolean not null default true,

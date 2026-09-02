@@ -55,6 +55,14 @@
 -- live view's actual 9 columns and order exactly (verified against
 -- `information_schema.columns` and `pg_get_viewdef`), with only the `auth.uid() is not
 -- null` guard added -- re-tested the same way (rolled-back transaction), applies cleanly.
+--
+-- STATUS, corrected 2026-09-02 (docs/migration-audit-applied-vs-written-2026-09-02.md):
+-- APPLIED. This security fix is enforced on the live database right now -- confirmed via
+-- `pg_get_viewdef('public.public_profiles')` on `qtcvcflzxbuagvvwahhu`, which contains the
+-- `auth.uid() IS NOT NULL` guard from the definition below, not assumed from either
+-- correction note above. The "WRITTEN BUT NOT APPLIED" line further up was true when
+-- written and is not true today -- this view is not currently readable by an
+-- unauthenticated caller.
 
 create or replace view public.public_profiles as
   select id, display_name, headline, about, country, curriculum, graduation_year, looking_for, created_at

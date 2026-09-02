@@ -68,6 +68,13 @@
 --
 -- WRITTEN BUT NOT APPLIED, per BUG-1's standing package constraint and because this is a
 -- security-critical, founder-gated change.
+--
+-- STATUS, corrected 2026-09-02 (docs/migration-audit-applied-vs-written-2026-09-02.md):
+-- APPLIED. This security fix is enforced on the live database right now -- confirmed via
+-- `pg_get_expr(polwithcheck, polrelid)` on the `"create own report"` policy against
+-- `qtcvcflzxbuagvvwahhu`, which contains the `recommendation_id` branch below, not
+-- assumed. The line above was true when written and is not true today -- both the
+-- message and recommendation forgery paths this migration closes are closed.
 
 drop policy if exists "create own report" on public.message_reports;
 create policy "create own report" on public.message_reports

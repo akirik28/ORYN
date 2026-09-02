@@ -1,5 +1,15 @@
 -- NOT APPLIED. Founder-gated like every migration in this repo's history -- write and leave
--- unapplied. CEO decision, 2026-09-02: external_sync_jobs.items_processed answers "how much
+-- unapplied.
+--
+-- STATUS, corrected 2026-09-02 (docs/migration-audit-applied-vs-written-2026-09-02.md):
+-- APPLIED, schema and code both confirmed working. `external_sync_jobs.errors_encountered`
+-- exists live on `qtcvcflzxbuagvvwahhu`. `lib/jobs/run-with-tracking.ts` already attempts
+-- the real `.update({..., errors_encountered: errorsEncountered })` write (its own
+-- `isUndefinedColumnError` catch is a fallback for the unapplied case, not the normal
+-- path), so no code change was needed once this landed. The line above was true when
+-- written and is not true today.
+--
+-- CEO decision, 2026-09-02: external_sync_jobs.items_processed answers "how much
 -- got done" but not "how much broke along the way" -- discover_opportunities,
 -- discover_requirements, generate_weekly_plans and sync_us_universities all catch per-item
 -- failures internally (a bad search result, a student whose plan generation threw, a school

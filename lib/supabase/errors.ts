@@ -54,6 +54,35 @@ export function isUndefinedColumnError(error: { code?: string; message?: string 
 }
 
 /**
+ * THE RULE FOR READS IS NOT "read vs. write" -- it's wildcard vs. named select. Stated
+ * precisely here, corrected 2026-09-02 (docs/migration-audit-applied-vs-written-2026-09-02.md),
+ * because the imprecise version of this rule had already spread verbally across the fleet
+ * before this correction: "on a read, `select('*')` omits a missing column silently, so use
+ * `?? default`, never this function" is only half right, and the missing half is a real trap.
+ *
+ * `select('*')` (or any select that doesn't name the column) silently omits a missing column --
+ * no error, nothing for `isUndefinedColumnError` to catch, `?? default` is the only correct
+ * shape. `lib/tier/plan-tier.ts`'s `resolvePlanTier` (migration 0089, `profiles.plan_tier`) is
+ * the clean example: `profile.plan_tier ?? "standard"`, no error handling at all, because none
+ * is needed or possible.
+ *
+ * But a select that EXPLICITLY NAMES the column behaves like a write, not like `select('*')`:
+ * PostgREST validates the requested column list against its own schema cache before the query
+ * runs, the identical schema-cache check a write goes through, and returns the identical
+ * `PGRST204` shape for a name it doesn't recognize. `lib/notifications/create.ts`'s
+ * `categoryIsEnabled()` (migration 0090, `profiles.notify_*`) is the working example: it
+ * `.select()`s all seven preference columns by name rather than `*`, so a pre-migration
+ * database DOES error on that read, and catching it with `isUndefinedColumnError` there is
+ * correct -- not a write-path guard misapplied to a read, as the imprecise rule would suggest.
+ *
+ * So: before reaching for `?? default` vs. this function on a read, check which shape the
+ * `.select()` actually is. A named list needs this function. A wildcard needs `?? default`.
+ * Guessing from "is this a read" alone is how a correct-looking guard ends up inert on the
+ * exact path it exists to protect -- the same failure shape this file's other comment already
+ * documents for the write side (42703 vs. PGRST204).
+ */
+
+/**
  * The opposite direction from `isUndefinedColumnError` above, and a genuinely different error
  * class, not a copy-paste of it: a unique-constraint violation only exists once real SQL
  * executes against real row data, so PostgREST has no schema-cache checkpoint to short-circuit

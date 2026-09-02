@@ -1,5 +1,16 @@
 -- NOT APPLIED. Founder-gated like every migration in this repo's history — write and leave
--- unapplied. CEO decision (docs/founder-blocked-backlog.md item 39, 2026-09-02, under the
+-- unapplied.
+--
+-- STATUS, corrected 2026-09-02 (docs/migration-audit-applied-vs-written-2026-09-02.md):
+-- APPLIED, schema AND code both confirmed working, not just the column. `weekly_actions.
+-- carried_forward` exists live on `qtcvcflzxbuagvvwahhu`. Checked further than the earlier
+-- three corrections in this batch: `lib/plan/persist.ts` already attempts the real
+-- `.update({ carried_forward: true })` write (its own `isUndefinedColumnError` catch is a
+-- fallback for the unapplied case, not the normal path), so no code change was needed once
+-- this landed -- real values have been writing automatically since the migration applied.
+-- The line above was true when written and is not true today.
+--
+-- CEO decision (docs/founder-blocked-backlog.md item 39, 2026-09-02, under the
 -- founder's overnight product-authority grant): "Regenerate" used to hard-delete every
 -- weekly_actions row for the plan, including completed ones and the reflections written
 -- about them -- the act -> reflect -> advisor-adjusts loop AGENTS.md names as the product's

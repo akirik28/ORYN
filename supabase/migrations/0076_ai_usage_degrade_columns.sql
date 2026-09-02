@@ -2,6 +2,20 @@
 -- migration belongs to -- write and leave unapplied, same discipline as every other schema
 -- change this project has proposed rather than run tonight.
 --
+-- STATUS, corrected 2026-09-02 (docs/migration-audit-applied-vs-written-2026-09-02.md):
+-- SCHEMA APPLIED, CODE NOT YET UPDATED TO USE IT -- a real, separate follow-up, not a
+-- second stale-header case. Confirmed against `qtcvcflzxbuagvvwahhu` directly:
+-- `ai_usage.degraded`, `ai_usage.degrade_reason`, and `ai_usage_degraded_idx` all exist
+-- live, so the "NOT APPLIED" line above is no longer true of the database. But
+-- `lib/ai/usage.ts`'s `logAIUsage` insert (checked directly, not assumed) still omits
+-- both fields from its payload, exactly as this file's own body describes for the
+-- unapplied case -- nobody removed the comment explaining the omission or added the two
+-- fields once the migration landed. Every `ai_usage` row today still gets `degraded`'s
+-- column default (`false`) regardless of whether the call was actually degraded, and
+-- `degrade_reason` stays permanently null. The schema gap this migration closed is
+-- closed; the code gap it was written to enable is not. Flagged for whoever owns
+-- `lib/ai/usage.ts`, not fixed here.
+--
 -- Adds two nullable columns so `ai_usage` can record whether a call was degraded by
 -- lib/ai/limits/budget.ts's per-user spend cap, and why. Additive, no backfill needed: every
 -- existing row predates the cap entirely, and NULL/false is the honest value for "this call
