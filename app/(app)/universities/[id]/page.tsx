@@ -9,7 +9,6 @@ import { createClient } from "@/lib/supabase/server";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
 import { explainOutlook, type DimensionScoreInput } from "@/lib/admissions/explain";
 import { refreshRequirementEvaluations } from "@/lib/requirements/persist";
-import { requirementCategoryLabel } from "@/lib/counselor/copy";
 import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
 import { NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES } from "@/lib/requirements/ingest";
 import { CAO_POINTS_IE } from "@/lib/acquisition/verification";
@@ -22,7 +21,7 @@ import { PageHeader } from "@/components/oryn/page-header";
 import { SectionHeader } from "@/components/oryn/section-header";
 import { SaveUniversityButton } from "@/features/universities/save-university-button";
 import { DetailHeroImage } from "@/features/universities/detail-hero-image";
-import { RequirementEvaluationBadge } from "@/features/universities/requirement-evaluation-badge";
+import { RequirementGroup } from "@/features/universities/requirement-group";
 import { AdminRequirementForm } from "@/features/universities/admin-requirement-form";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { StatusBadge } from "@/components/oryn/status-badge";
@@ -753,61 +752,6 @@ type DeadlineRow = Pick<
   UniversityDeadline,
   "id" | "program_id" | "deadline_type" | "deadline_date" | "recurrence" | "recurrence_month" | "recurrence_day" | "cycle_label" | "deadline_text_verbatim" | "source_url" | "binding_policy"
 >;
-
-function RequirementGroup({
-  title,
-  description,
-  items,
-  evaluationByRequirement,
-  locale,
-  t,
-}: {
-  title: string;
-  /** Optional sub-heading text — used only by the unlinked ("program not recorded") group,
-   * to say why these items aren't grouped under a specific program rather than implying
-   * they apply to every program. Genuinely program-linked groups pass no description and
-   * render exactly as before this prop existed. */
-  description?: string;
-  items: UniversityRequirement[];
-  evaluationByRequirement: Map<string, { status: RequirementEvaluationStatus; reasoning: string }>;
-  locale: Locale;
-  t: Translator;
-}) {
-  return (
-    <div className="space-y-2">
-      <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
-      {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
-      <ul className="divide-y rounded-lg border">
-        {items.map((req) => {
-          const evaluation = evaluationByRequirement.get(req.id);
-          const isInformational = req.requirement_type === "application_deadline";
-          const categoryLabel = requirementCategoryLabel(req.requirement_type, locale);
-          return (
-            <li key={req.id} className="space-y-1 px-4 py-2.5 text-sm">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <span className="font-medium">{req.title ?? categoryLabel}</span>
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    {categoryLabel}
-                    {!req.is_required ? ` · ${t("optional")}` : ""}
-                  </span>
-                </div>
-                {evaluation && !isInformational ? <RequirementEvaluationBadge status={evaluation.status} locale={locale} /> : null}
-              </div>
-              {req.requirement_detail ? <p className="text-muted-foreground">{req.requirement_detail}</p> : null}
-              {evaluation?.reasoning && !isInformational ? <p className="text-xs text-muted-foreground">{evaluation.reasoning}</p> : null}
-              {req.source_url ? (
-                <a href={req.source_url} target="_blank" rel="noopener noreferrer" className="inline-block text-xs text-primary hover:underline">
-                  {t("sourceLink")}
-                </a>
-              ) : null}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
 
 function DeadlineGroup({
   title,
