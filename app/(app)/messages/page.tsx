@@ -5,6 +5,7 @@ import { MessageCircle } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { getConversations } from "@/lib/messaging/messages";
+import { requireMessagingEnabled } from "@/lib/messaging/messaging-feature-flag";
 import { PageHeader } from "@/components/oryn/page-header";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -24,6 +25,7 @@ function initials(name: string) {
 }
 
 export default async function MessagesPage() {
+  requireMessagingEnabled();
   const session = await requireUser();
   const supabase = await createClient();
   const conversations = await getConversations(supabase, session.userId!);

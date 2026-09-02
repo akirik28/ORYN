@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getConversation, getBlockState } from "@/lib/messaging/messages";
 import { resolveConversationAccess } from "@/lib/messaging/authorization";
 import { getConnectionWith } from "@/lib/social/connections";
+import { requireMessagingEnabled } from "@/lib/messaging/messaging-feature-flag";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { PageHeader } from "@/components/oryn/page-header";
 import { EmptyState } from "@/components/oryn/empty-state";
@@ -14,7 +15,10 @@ import { ShieldOff } from "lucide-react";
 
 // Same public_profiles.display_name lookup the page body already does unconditionally
 // (not gated by `access`, which only governs the message thread itself) — no new exposure.
+// Guarded first regardless: a resolved title is a real leak of the other user's name via
+// the browser tab even if the page body below then 404s.
 export async function generateMetadata({ params }: { params: Promise<{ userId: string }> }): Promise<Metadata> {
+  requireMessagingEnabled();
   const { userId: otherUserId } = await params;
   if (!isUuidLike(otherUserId)) return {};
   const supabase = await createClient();
@@ -23,6 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ userId: s
 }
 
 export default async function ConversationPage({ params }: { params: Promise<{ userId: string }> }) {
+  requireMessagingEnabled();
   const { userId: otherUserId } = await params;
   if (!isUuidLike(otherUserId)) notFound();
 
