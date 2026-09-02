@@ -40,7 +40,15 @@ export async function logAIUsage(params: {
 }): Promise<void> {
   try {
     const admin = createAdminClient();
-    await admin.from("ai_usage").insert({
+    // Destructured, not discarded: a PostgREST-level rejection (bad column, constraint,
+    // type mismatch) resolves this promise normally with an `error` field — it does not
+    // throw — so the try/catch below, on its own, only ever caught a client-construction or
+    // network-level failure. This function's own doc comment already promised "errors are
+    // swallowed after a console warning"; this line is what makes that true for the
+    // failure class most likely to actually occur (found while auditing why
+    // `essay_story_bank` had never appeared here — see docs/story-bank-audit-2026-09-02.md;
+    // no evidence that failure explains it specifically, but the gap was real regardless).
+    const { error } = await admin.from("ai_usage").insert({
       user_id: params.userId,
       feature: params.feature,
       provider: "anthropic",
@@ -58,6 +66,10 @@ export async function logAIUsage(params: {
       // it isn't persisted yet — see the same migration file's own header for what changes once
       // it's applied.
     });
+    if (error) {
+      console.warn("[ai_usage] insert rejected", { feature: params.feature, error: error.message });
+      return;
+    }
     // Visible today, not only after the migration lands: an admin (or oryn-d0's screen,
     // once it can query the real columns) has something to see the moment this ships,
     // rather than the feature silently doing nothing observable until a second, later
