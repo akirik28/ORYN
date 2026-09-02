@@ -242,7 +242,16 @@ export function OpportunityCard({
     <article
       className={cn(
         "glass-card-fast group/opp flex flex-col overflow-hidden rounded-2xl ring-1 transition-colors duration-(--duration-fast)",
-        canClaimMatch && matchScore >= 80 ? "ring-brand-primary-border" : "ring-border/70",
+        // Ultra, 2026-09-02 revision: the ring itself is unchanged (still the plain
+        // Standard-tier ring-brand-primary-border, byte-identical under Standard) --
+        // `filter: drop-shadow()` is what carries the Ultra glow, deliberately not
+        // box-shadow, since box-shadow here would collide with and replace the ring's own
+        // box-shadow rather than layer with it (verified live -- see app/globals.css's
+        // .tier-glow-sm comment). Sized large and un-hedged per the founder's own reversal
+        // of the earlier "contained signal" direction: this should be visible at a glance,
+        // not something a student has to look for. References var(--tier-glow) directly so
+        // it follows oryn-4e's token re-point without a code change here.
+        canClaimMatch && matchScore >= 80 ? "ring-brand-primary-border ultra:drop-shadow-[0_0_40px_var(--tier-glow)]" : "ring-border/70",
       )}
       style={{ background: "rgba(255,255,255,0.42)", backdropFilter: "blur(14px)" }}
     >
