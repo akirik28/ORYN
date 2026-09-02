@@ -83,6 +83,16 @@ export interface EvalCaseResult {
    * separately so a report can distinguish "grading the target" from "the target itself". */
   targetUsage: { inputTokens: number; outputTokens: number };
   judgeUsage: { inputTokens: number; outputTokens: number };
+  /** weekly_plan only (undefined for the other two targets — the concept doesn't apply to
+   * them). True when resolvePlanSelfContradiction or enforceTimeBudget actually altered
+   * the model's raw output before it was scored (2026-09-02: the harness now runs the same
+   * post-processing every real student's plan goes through, not raw model output nobody
+   * ever sees — docs/eval-runs/README.md's own note on why). A free, per-case signal for
+   * the "post-processing masks a prompt regression" question: if this starts turning true
+   * often across a run, the raw model is drifting even though the graded, student-visible
+   * output still looks fine — cheaper than a second, fully judge-scored raw pass, and
+   * answers the same question a rising rate would. */
+  postProcessingChanged?: boolean;
 }
 
 /** A case that threw instead of producing a result. Kept as data rather than allowed to
@@ -100,5 +110,9 @@ export interface EvalReport {
   /** Cases with at least one deterministic finding — the thing this harness exists to
    * catch even when nobody reviews the qualitative scores. */
   deterministicFailureCount: number;
+  /** How many weekly_plan cases needed resolvePlanSelfContradiction or enforceTimeBudget
+   * to actually change the model's output — see EvalCaseResult.postProcessingChanged.
+   * Always 0 for a run with no weekly_plan cases, not a sign of anything. */
+  postProcessingInterventionCount: number;
   totalUsage: { inputTokens: number; outputTokens: number };
 }

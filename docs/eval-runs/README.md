@@ -12,6 +12,41 @@ reach.
 So: raw logs land here. A comparison across runs is only possible if the runs are still
 readable.
 
+**All four runs in the table below measure the model, not the product — read the scores
+with that in mind.** Until 2026-09-02 (CEO's ruling, following the time-budget-guardrail
+package), `lib/ai/eval/harness.ts`'s `runWeeklyPlan` scored the weekly-plan target's *raw*
+structured output straight from the model — `generateWeeklyPlan`'s own two deterministic
+post-processing passes, `resolvePlanSelfContradiction` and `enforceTimeBudget`, were never
+applied. Every real student's plan goes through both; none of the four weekly_plan cases
+in any run below did, as a structural fact about how the harness worked at the time — that
+part is certain regardless of whether either pass would actually have changed anything for
+these specific outputs.
+
+**Whether it actually would have**, checked against what these logs contain rather than
+assumed:
+- `resolvePlanSelfContradiction` — **checkable, and shows no evidence of firing.** Every
+  weekly_plan case across all four runs discourages the same thing ("starting another
+  entrepreneurship club" / "İkinci bir girişimcilik kulübü"), and the judge notes describe
+  the `actions` in every case as fellowship / tutoring-marketplace / personal-statement /
+  reading-plan work — never the entrepreneurship club itself. No collision in any of the
+  16 weekly_plan cases these four runs cover.
+- `enforceTimeBudget` — **not checkable from these logs.** They record token counts, cost,
+  deterministic findings, and the judge's rubric/notes — not the raw structured JSON, so
+  the actual `estimatedMinutes` per action isn't preserved anywhere in the tracked files.
+  Whether any of these 16 cases would have been trimmed is genuinely unknown, not "probably
+  fine" — stated this way rather than guessed, since guessing here is exactly the "confident
+  claim with nothing behind it" this whole night has been about catching.
+
+So: the run-to-run comparisons (325→315→323→317, the `concise` mean holding at 4.08 across
+runs) stay valid — every run shares the same gap, so a comparison between them is apples to
+apples. What changes is trusting the absolute 325/360 baseline as a description of what a
+real student's plan scores today; it describes what the *model* produced unedited, and per
+the point above, whether editing would have mattered for these particular runs isn't known.
+`lib/ai/eval/harness.ts`'s own top comment and `__tests__/ai/eval/harness.test.ts` carry the
+fix and the tests proving it; no run was re-executed to produce a "corrected" version of
+these four — a live run wasn't spent to validate a change verifiable against the harness's
+own tests and what these existing logs actually contain.
+
 **What's in them.** Fixture students only — `lib/ai/eval/fixtures.ts` builds two synthetic
 profiles. No real student data reaches these files, which is why they can live in the repo.
 
