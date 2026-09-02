@@ -112,6 +112,15 @@ async function main() {
     if (result.postProcessingChanged) {
       console.log(`       [post-processed] resolvePlanSelfContradiction/enforceTimeBudget altered the raw plan before this was scored`);
     }
+    // EvalCaseResult.responseText's own doc comment: "kept in the report so a human can
+    // read what the model said" -- true of the in-memory report, false of every log saved
+    // under docs/eval-runs/ so far, because this loop never printed it. Unconditional (not
+    // behind another flag) so the next live run, whatever it's for, captures this as a
+    // byproduct rather than needing a dedicated run just to fix the omission again.
+    // Delimited on its own lines, never inline with the summary, so
+    // `grep -E "concise=|\[ok\]|\[FAIL\]"` (docs/eval-runs/README.md's own documented way
+    // of reading these logs) keeps matching exactly the compact lines it always has.
+    console.log(`       response:\n       ---\n${result.responseText}\n       ---`);
   }
 
   for (const failure of report.failures) {

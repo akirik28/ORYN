@@ -317,6 +317,29 @@ export async function buildStudentAdvisorContext(userId: string, supabaseClient?
 export function formatContextForPrompt(context: StudentAdvisorContext, locale: Locale = "en"): string {
   const lines: string[] = [];
   lines.push(`Student: ${context.student.displayName}, graduating ${context.student.graduationYear ?? "unknown"}, ${context.student.curriculum ?? "unknown curriculum"}, ${context.student.country ?? "unknown country"}.`);
+  /**
+   * CEO finding, 2026-09-02: graduationYear was already in the line above, but nothing told
+   * the model it's the thing to calibrate ambition and pacing against — the spec's own
+   * words for this (Phase 6.5, §8.2) never had anywhere to land. `birthYear` is fetched
+   * into this same context object and deliberately NOT used here: it's null on 4 of 11
+   * onboarded profiles, including the founder's own, so a birth-year-based signal would be
+   * silently absent for the one real account this product has. graduationYear is present
+   * for that account and every other one that's completed onboarding, so it's the signal
+   * that actually reaches a real student.
+   *
+   * Says years remaining, never a computed age — a graduation year implies a range, not a
+   * birthday (school-entry cutoffs and birth month both vary), and stating an invented
+   * specific age would be exactly the false precision this product's own posture on
+   * admission percentages already refuses elsewhere. Omitted entirely when graduationYear
+   * is null, not replaced with "calibration: unknown" — an explicit unknown here would
+   * only invite the model to hedge in the reply, which costs output tokens and helps no
+   * one; the line above already says "graduating unknown" once, that's enough.
+   */
+  if (context.student.graduationYear !== null) {
+    const yearsUntilGraduation = context.student.graduationYear - new Date().getFullYear();
+    const timeframe = yearsUntilGraduation > 0 ? `${yearsUntilGraduation} year${yearsUntilGraduation === 1 ? "" : "s"} until they apply to university` : "at or past their expected graduation year";
+    lines.push(`${timeframe} — calibrate ambition and pacing to this: more runway supports an exploratory or multi-year commitment, less runway means prioritizing what can realistically strengthen an application in the time left.`);
+  }
   const busyNote = context.student.busyMode
     ? ` Currently in a busy period (e.g. exams)${context.student.busyModeUntil ? `, until ${context.student.busyModeUntil}` : ""} — reduce recommendations.`
     : "";

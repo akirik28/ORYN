@@ -215,3 +215,50 @@ describe("formatContextForPrompt — target outlooks use the same words the badg
     expect(text).not.toContain("Extreme Reach");
   });
 });
+
+/**
+ * CEO finding, 2026-09-02: graduationYear was already reaching the model (in the "Student:
+ * ..., graduating {year}, ..." line), but nothing told it that's the thing to calibrate
+ * ambition and pacing against — the spec's own "scale difficulty to age and experience"
+ * (Phase 6.5/8.2) had nowhere to land. Derived from graduationYear specifically, not
+ * birthYear: birth_year is null on 4 of 11 onboarded profiles including the founder's own,
+ * so a birth-year-based signal would be silently absent for the one real account this
+ * product has.
+ */
+describe("formatContextForPrompt — age/experience calibration", () => {
+  const currentYear = new Date().getFullYear();
+
+  test("states years remaining, plural, and explains why it matters", () => {
+    const text = formatContextForPrompt({ ...baseContext(), student: { ...baseContext().student, graduationYear: currentYear + 3 } });
+    expect(text).toContain("3 years until they apply to university");
+    expect(text).toContain("calibrate ambition and pacing to this");
+  });
+
+  test("singular grammar for exactly one year remaining", () => {
+    const text = formatContextForPrompt({ ...baseContext(), student: { ...baseContext().student, graduationYear: currentYear + 1 } });
+    expect(text).toContain("1 year until they apply to university");
+    expect(text).not.toContain("1 years");
+  });
+
+  test("a graduation year at or before the current year reads as at-or-past, not a negative number", () => {
+    const text = formatContextForPrompt({ ...baseContext(), student: { ...baseContext().student, graduationYear: currentYear } });
+    expect(text).toContain("at or past their expected graduation year");
+    expect(text).not.toMatch(/-\d+ years?/);
+  });
+
+  test("never states a computed age or birth year — only the years-remaining implication", () => {
+    const text = formatContextForPrompt({ ...baseContext(), student: { ...baseContext().student, graduationYear: currentYear + 2, birthYear: 2009 } });
+    expect(text).not.toContain("2009");
+    expect(text).not.toMatch(/\d+ years old/);
+    expect(text).not.toMatch(/\bage\b/i);
+  });
+
+  test("a missing graduation year omits the calibration line entirely, rather than announcing it as unknown", () => {
+    const text = formatContextForPrompt(baseContext()); // graduationYear: null by default
+    expect(text).not.toContain("calibrate ambition and pacing");
+    expect(text).not.toContain("until they apply");
+    // The pre-existing bare mention on the Student: line is untouched -- this test is about
+    // the new line specifically, not a claim that "unknown" never appears anywhere at all.
+    expect(text).toContain("graduating unknown");
+  });
+});
