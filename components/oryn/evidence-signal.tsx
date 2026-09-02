@@ -43,9 +43,14 @@ export function EvidenceSignal({
   locale?: Locale;
   className?: string;
 }) {
+  // Ultra's gradient-text treatment (app/globals.css's [data-tier="ultra"] .tier-grad-text)
+  // applies to neutral/positive only — never `missing`. An absent piece of evidence ("0
+  // verified research projects") getting the same celebratory flame treatment as a real
+  // number would misrepresent an absence as an achievement, which is exactly the kind of
+  // fake-precision/false-confidence this product's whole design explicitly refuses.
   const valueTone = {
-    neutral: "text-ink-1",
-    positive: "text-success",
+    neutral: "text-ink-1 tier-grad-text",
+    positive: "text-success tier-grad-text",
     missing: "text-ink-3",
   }[tone];
 

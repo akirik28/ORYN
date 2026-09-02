@@ -199,7 +199,18 @@ describe("migration numbering", () => {
     // false` is still honest for rows written before this column existed: the only consumer
     // renders `false` and "unknown" identically (no note), and nothing anywhere asserts a
     // historical reply was confirmed NOT degraded. Still unapplied.
-    expect(Math.max(...numbers.map(Number))).toBe(88);
+    //
+    // 0089 (profiles_plan_tier) is the Ultra visual-tier foundation's one real schema
+    // addition -- a plain "standard"|"ultra" label on profiles, not a subscription: no
+    // payment/billing logic reads or writes it, per the founder's own explicit scope for
+    // this pass ("skin only"). Defaults every existing and future profile to "standard",
+    // so constraint #1 (the free surface must not change at all) holds at the data layer,
+    // not only in the CSS that reads it. Chosen over a per-message response-mode/answer-
+    // style toggle deliberately -- checked first and confirmed no such control exists
+    // anywhere in the codebase yet -- because a paying student choosing a faster answer
+    // style is still paying, and shouldn't visually downgrade over an unrelated choice.
+    // Still unapplied.
+    expect(Math.max(...numbers.map(Number))).toBe(89);
   });
 });
 

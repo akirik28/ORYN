@@ -26,6 +26,10 @@ type Identity<T> = { [K in keyof T]: T[K] };
 
 export type CurriculumType = "ap" | "ib" | "a_level" | "turkish_curriculum" | "national_curriculum" | "other";
 export type TimeBudget = "under_2h" | "2_5h" | "5_10h" | "10h_plus";
+/** Migration 0089. A visual-skin label, not a subscription — see that migration's own
+ * header for the full reasoning and Profile.plan_tier's comment for how a missing/unreadable
+ * value degrades. */
+export type PlanTier = "standard" | "ultra";
 export type TargetGeography = "usa" | "uk" | "europe" | "canada" | "turkey" | "not_sure";
 export type EducationStage = "middle_school" | "high_school" | "pre_university" | "undergraduate" | "other";
 export type CourseLevel = "regular" | "honors" | "ap" | "ib_hl" | "ib_sl" | "a_level" | "dual_enrollment" | "other";
@@ -130,6 +134,11 @@ export interface Profile {
   curriculum: CurriculumType | null;
   preferred_language: string;
   timezone: string;
+  /** Migration 0089, unapplied — which visual skin this student sees. A label, not a
+   * subscription (no payment/billing logic anywhere reads or writes it). Every read
+   * defaults an absent/unreadable value to "standard", so this is optional everywhere a
+   * Profile gets read, regardless of live schema state. */
+  plan_tier: PlanTier;
   target_geographies: TargetGeography[];
   weekly_time_budget: TimeBudget | null;
   busy_mode: boolean;
