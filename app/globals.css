@@ -896,16 +896,25 @@
     background-position: 220% 0;
   }
 }
+/* Fixed 2026-09-02, before its first real caller: the base rule used to set a visible
+   `background` unconditionally (resolving to the brand-blue family at :root, same as every
+   other --tier-grad-* consumer), which is exactly the zero-footprint guarantee every other
+   Ultra-only element in this file holds and this one quietly didn't -- caught because
+   mobile-nav.tsx became the first thing to actually use it. Now baseline-inert like
+   everything else: background/opacity both live inside [data-tier="ultra"], `background-
+   size` alone at :root is a no-op with no `background-image` to size. */
 .tier-flow-bar {
-  background: linear-gradient(90deg, var(--tier-grad-1), var(--tier-grad-2), var(--tier-grad-3), var(--tier-grad-2), var(--tier-grad-1));
   background-size: 220% 100%;
+  opacity: 0;
 }
 [data-tier="ultra"] .tier-flow-bar {
+  background: linear-gradient(90deg, var(--tier-grad-1), var(--tier-grad-2), var(--tier-grad-3), var(--tier-grad-2), var(--tier-grad-1));
   animation: tier-flow 5s linear infinite;
+  opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tier-flow-bar {
+  [data-tier="ultra"] .tier-flow-bar {
     animation: none;
   }
 }
