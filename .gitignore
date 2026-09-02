@@ -35,3 +35,8 @@ coverage/
 # output are committed.
 scripts/drive-import/raw/
 scripts/drive-import/parsed/
+
+# Scratch previews staged into public/ for live JS verification. They are session
+# artifacts, never deliverables -- one reached origin/main on 2026-09-03 because a
+# broad `git add -A` during a merge resolution swept it up.
+public/_tmp-*
