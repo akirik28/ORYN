@@ -12,6 +12,7 @@ import { UltraAmbient } from "@/features/app-shell/ultra-ambient";
 import { NotConfiguredNotice } from "@/features/system/not-configured-notice";
 import { integrationStatus } from "@/lib/env";
 import { toProfileSignal } from "@/lib/scoring/signal";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
 
 // Every route under this layout is per-user and auth-gated — never a candidate for
 // static prerendering. Also sidesteps a real build failure: without this, `next build`
@@ -92,11 +93,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const unreadCount = unreadRes.count ?? 0;
   const profileSignal = toProfileSignal(scores);
   const budgetDegraded = modelSelection.degraded;
-  // Migration 0089 unapplied-safe: `profile.plan_tier` is absent from the row, not merely
-  // null, until that column exists on a given environment — the type says it's always
-  // there (every real read defaults it), but this is the one place that default actually
-  // gets applied, since requireProfile() returns the raw row.
-  const planTier = profile.plan_tier ?? "standard";
+  const planTier = resolvePlanTier(profile);
 
   return (
     // Literal source ambient background (App.tsx `App()`'s root container) — the ground
