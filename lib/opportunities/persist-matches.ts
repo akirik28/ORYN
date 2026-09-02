@@ -1,6 +1,8 @@
 import "server-only";
 
 import { getTranslations } from "next-intl/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
 import { createClient } from "@/lib/supabase/server";
 import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { getProfileScores } from "@/lib/security/dal";
@@ -22,8 +24,10 @@ const MAX_NEW_MATCH_NOTIFICATIONS_PER_REFRESH = 3;
  * opportunity. Cheap (pure deterministic math, no AI call) — safe to run on every
  * /opportunities page view, unlike weekly-plan generation.
  *
- * Every READ below stays on `supabase`, the caller's own RLS-scoped client. Only the
- * final `opportunity_matches` upsert uses `admin` (added 2026-08-22, migration 0063,
+ * Every READ below stays on `supabase` -- the caller's own RLS-scoped client for every
+ * real page-render caller, or an explicitly passed client (see `client` below) for the
+ * one caller with no session of its own. Only the final `opportunity_matches` upsert
+ * uses `admin` (added 2026-08-22, migration 0063,
  * BUG-1's RLS verification package) — that write is fully computed by
  * `computeOpportunityMatch` above before either client is touched, so this changes which
  * connection carries the result, not what the student can see. Paired with a guard
@@ -56,18 +60,31 @@ const MAX_NEW_MATCH_NOTIFICATIONS_PER_REFRESH = 3;
  * last verified data is still shown below") instead of presenting stale matches as
  * current -- silently skipping the write with no visible signal would itself violate
  * Rule 4 (never let production functionality silently return stale data as if it were
- * fresh). `refreshed: false` means specifically "the admin client was unavailable, any
- * existing rows may predate this render" -- NOT "zero matches exist," which is a
- * legitimate, non-stale outcome (opportunities.length === 0 below) and reports
- * `refreshed: true`, since nothing was skipped, there was just nothing to compute.
+ * fresh). `refreshed: false` means "this refresh could not actually see the student's
+ * own data" -- originally just the admin client being unavailable, and now also a
+ * session-less `supabase` client that comes back with no profile row: found live
+ * 2026-09-02, this function was called unconditionally from `getCounselorState`
+ * (lib/counselor/state.ts) with no client override even when that function had one of
+ * its own for the scheduled weekly-plan job -- an anonymous client, every RLS-scoped
+ * read here silently empty, `opportunities.length === 0` firing immediately, and
+ * `{ refreshed: true }` returned having refreshed nothing. `refreshed: true` still
+ * means "zero matches exist" when that's what a *successful* read actually found --
+ * the fix below only changes what happens when the read couldn't run for real.
+ *
+ * `client` (optional, mirrors `refreshAdmissionOutlook` in lib/admissions/persist.ts
+ * one function over) is how a caller with no session of its own — `getCounselorState`'s
+ * scheduled-job path — passes its own client through instead of this function silently
+ * building an unauthenticated one. Every existing caller (the opportunities pages, the
+ * dashboard, `getCounselorState`'s two real-session callers) omits it and keeps
+ * today's exact behavior.
  */
-export async function refreshOpportunityMatches(userId: string, locale: Locale = DEFAULT_LOCALE): Promise<{ refreshed: boolean }> {
+export async function refreshOpportunityMatches(userId: string, locale: Locale = DEFAULT_LOCALE, client?: SupabaseClient<Database>): Promise<{ refreshed: boolean }> {
   const admin = tryCreateAdminClient();
   if (!admin) {
     console.error("[opportunity-matches] SUPABASE_SECRET_KEY not configured — skipping match refresh, page will render with existing (possibly stale) matches");
     return { refreshed: false };
   }
-  const supabase = await createClient();
+  const supabase = client ?? (await createClient());
 
   const [profileRes, scoresRes, interestsRes, opportunitiesRes, savedRes, previousMatchesRes] = await Promise.all([
     // select("*"), not an explicit column list: an explicit list naming citizenship_countries
@@ -76,11 +93,12 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
     // here to its fallback too -- confirmed live against this environment's DB. Same fix as
     // 08ddf0f applied to lib/ai/student-context.ts for the identical failure mode.
     supabase.from("profiles").select("*").eq("id", userId).single(),
-    // Shared, cache()'d — docs/performance.md §2. Every real caller of this function (the
-    // opportunities pages, the dashboard, getCounselorState) runs inside a real user
-    // request, so unlike refreshAdmissionOutlook/getCounselorState there's no
-    // background-job client to special-case here.
-    getProfileScores(userId).then((data) => ({ data })),
+    // Shared, cache()'d getProfileScores(userId) (docs/performance.md §2) only when this
+    // call is request-scoped (no explicit `client`) -- that helper always builds its own
+    // session-cookie client internally, wrong for the same no-session path this whole
+    // fix exists for. See lib/admissions/persist.ts's refreshAdmissionOutlook for the
+    // identical conditional, one function over.
+    client ? supabase.from("profile_scores").select("*").eq("user_id", userId) : getProfileScores(userId).then((data) => ({ data })),
     supabase.from("student_interests").select("label").eq("user_id", userId),
     // select("*") for the same reason as above -- eligible_citizenships is migration 0047.
     supabase
@@ -98,6 +116,21 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
     // treats that case as "skip notifying" rather than "everything is new").
     supabase.from("opportunity_matches").select("opportunity_id, eligible").eq("user_id", userId),
   ]);
+
+  // The check the 2026-09-02 bug needed: every table above is either owned by this exact
+  // student (`profiles`, `profile_scores`, `student_interests`, `saved_opportunities`,
+  // `opportunity_matches` — all `user_id = auth.uid()`/`id = auth.uid()`) or, for
+  // `opportunities`, gated to the `authenticated` role outright. `profiles` is the cheapest
+  // reliable signal that `supabase` can actually see this student: `.single()` on a row
+  // that genuinely exists but is RLS-invisible comes back with `data: null` the same way a
+  // truly missing row would, and every real caller of this function is for an onboarded
+  // student whose own profile row unquestionably exists. Treated the same as "admin client
+  // unavailable" above -- this refresh could not do its job, not "did its job and found
+  // nothing."
+  if (!profileRes.data) {
+    console.error("[opportunity-matches] profile row not visible to the query client — refusing to compute matches from a partial/empty read", { userId });
+    return { refreshed: false };
+  }
 
   const savedStatusByOpportunityId = new Map((savedRes.data ?? []).map((s) => [s.opportunity_id, s.status]));
 

@@ -94,21 +94,17 @@ export async function getCounselorState(userId: string, locale: Locale = DEFAULT
   const supabase = supabaseClient ?? (await createClient());
 
   // Recompute-on-read, same convention as the Opportunities/Dashboard pages already use --
-  // true for every real caller today (dashboard, advisor, both real user requests).
-  //
-  // NOT true when this function is reached with an explicit supabaseClient and no session
-  // behind it (the weekly-plan job path this function's own header comment names) --
-  // unlike this function's own queries above, refreshOpportunityMatches takes no client
-  // parameter at all and always builds its own session-cookie client internally. In that
-  // path it becomes an anonymous client; every read inside it comes back empty under RLS
-  // (opportunities' own SELECT policy is authenticated-only -- confirmed live, 2026-09-02),
-  // its own `if (opportunities.length === 0) return { refreshed: true }` fires immediately,
-  // and this silently never refreshes anything for that student while reporting success.
-  // Found via docs/performance.md's cache()-in-Route-Handler sweep, not fixed there --
-  // the fix (thread a client parameter into refreshOpportunityMatches, mirroring
-  // refreshAdmissionOutlook's own optional `client` above) is real but out of that pass's
-  // scope. Flagged so this comment can't mislead anyone else in the meantime.
-  await refreshOpportunityMatches(userId, locale);
+  // including the one caller with no session of its own (the weekly-plan job path this
+  // function's own header comment names), now that `supabase` -- this function's own
+  // resolved client, session-scoped or the job's admin one -- is threaded through instead
+  // of refreshOpportunityMatches silently building an anonymous client and finding
+  // everything RLS-empty. FIXED 2026-09-02: found via docs/performance.md's
+  // cache()-in-Route-Handler sweep, where this call was still unconditional and the
+  // no-session path silently reported `{ refreshed: true }` having refreshed nothing --
+  // full trace of the failure kept in refreshOpportunityMatches's own doc comment
+  // (lib/opportunities/persist-matches.ts), not repeated here now that it's fixed rather
+  // than merely flagged.
+  await refreshOpportunityMatches(userId, locale, supabase);
 
   // Shared, cache()'d getProfileScores(userId) (docs/performance.md §2) only when this call
   // is request-scoped (no explicit supabaseClient) — the scheduled weekly-plan job
