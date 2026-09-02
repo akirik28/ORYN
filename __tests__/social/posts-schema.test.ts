@@ -245,8 +245,20 @@ describe("migration numbering", () => {
     // regardless of this column's value -- it records a student's preference, not a live
     // guarantee, and stays selectable/saved even while overridden, this product's own
     // "never a hard wall" posture applied to a new control rather than a special case for
-    // this one. Still unapplied.
-    expect(Math.max(...numbers.map(Number))).toBe(91);
+    // this one. 0089/0090/0091 are now live -- the founder applied all three by hand
+    // 2026-09-02 (docs/present-case-verify-2026-09-02.md) -- kept as "still unapplied" here
+    // deliberately: this test's own point is guarding the numbering sequence, not tracking
+    // live/applied status, and restating that history accurately at time of writing is more
+    // useful to a future reader than silently rewriting it to match today.
+    //
+    // 0092 (ultra_welcome_seen_at) is the one-time "welcome to Ultra" moment (Phase 57,
+    // founder request 2026-09-02: "ultra alındıktan sonra 'ultraya hoş geldiniz' yazısı
+    // çıkması lazım"). A single nullable timestamp on profiles, written once and never
+    // cleared -- lib/tier/ultra-welcome.ts's shouldShowUltraWelcome() is the one place its
+    // absent-vs-null distinction matters (unlike every other column in this file, absence is
+    // NOT treated the same as "never shown" -- see that file's own comment for why). Written,
+    // not applied -- same house pattern as every migration in this narrative above it.
+    expect(Math.max(...numbers.map(Number))).toBe(92);
   });
 });
 

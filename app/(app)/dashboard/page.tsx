@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { getCurrentProfile, getProfileScores, requireUser } from "@/lib/security/dal";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
+import { shouldShowUltraWelcome, markUltraWelcomeSeen } from "@/lib/tier/ultra-welcome";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWeeklyPlan, getOrCreateWeeklyPlan } from "@/lib/plan/persist";
@@ -212,6 +213,15 @@ export default async function DashboardPage() {
 
   const displayName = profile?.display_name || profile?.first_name || "there";
   const planTier = profile ? resolvePlanTier(profile) : "standard";
+  // Decided and (if true) recorded together, in this same request -- see
+  // lib/tier/ultra-welcome.ts's own comment for why the read and the write can never be two
+  // separate paths for this one. `profile?.ultra_welcome_seen_at` stays `undefined` both when
+  // there's no profile at all and when migration 0092 hasn't landed yet -- shouldShowUltraWelcome
+  // treats that the same as "not shown," on purpose.
+  const showUltraWelcome = shouldShowUltraWelcome(planTier, profile?.ultra_welcome_seen_at);
+  if (showUltraWelcome) {
+    await markUltraWelcomeSeen(supabase, userId);
+  }
 
   // See resolveAvoidRecommendation's own doc comment (lib/counselor/dashboard-contract.ts)
   // for why a successful Counselor Core computation is trusted completely and the stored
@@ -235,6 +245,7 @@ export default async function DashboardPage() {
       targetUniversities={targetUniversities}
       opportunityPreview={opportunityPreview}
       opportunityMatchesRefreshed={opportunityMatchesRefreshed}
+      showUltraWelcome={showUltraWelcome}
     />
   );
 }

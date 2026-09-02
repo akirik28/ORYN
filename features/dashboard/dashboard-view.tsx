@@ -16,6 +16,7 @@ import { WeeklyFocus } from "@/features/dashboard/weekly-focus";
 import { CounselorWeekFallback } from "@/features/dashboard/counselor-week-fallback";
 import { GeneratePlanButton } from "@/features/dashboard/generate-plan-button";
 import { ProfileSignal } from "@/features/dashboard/profile-signal";
+import { UltraWelcomeBanner } from "@/features/dashboard/ultra-welcome-banner";
 import { OutlookBadge } from "@/features/universities/outlook-badge";
 import { computeDashboardHeroState } from "@/lib/scoring/dashboard-hero";
 import { signalCoverage, type DimensionSignal } from "@/lib/scoring/signal";
@@ -74,6 +75,10 @@ export interface DashboardViewProps {
    * non-stale outcome. AGENTS.md Phase 45 / Rule 4: never let a page imply this preview
    * is current when it might not be. */
   opportunityMatchesRefreshed: boolean;
+  /** app/(app)/dashboard/page.tsx's own shouldShowUltraWelcome() result — decided (and, if
+   *  true, recorded) server-side before this component ever renders. Optional, defaulting to
+   *  false, for the same dev-preview-harness reason `tier` above is optional. */
+  showUltraWelcome?: boolean;
 }
 
 // glass-card chrome shared by every panel below the hero — literal source values
@@ -104,6 +109,7 @@ export async function DashboardView({
   targetUniversities,
   opportunityPreview,
   opportunityMatchesRefreshed,
+  showUltraWelcome = false,
 }: DashboardViewProps) {
   // Explicit locale, not the bare `getTranslations("dashboard")` shorthand: that form
   // re-resolves locale from the request (cookie/Accept-Language) independently of the
@@ -136,6 +142,7 @@ export async function DashboardView({
 
   return (
     <div>
+      {showUltraWelcome ? <UltraWelcomeBanner locale={locale} /> : null}
       {/* Dark hero (Figma source App.tsx `HomeScreen`) — scoped `.dark` so NextMove's
           ink-token text resolves light-on-dark automatically, same mechanism as the
           landing page. The real three-state hero copy/logic is untouched; only its

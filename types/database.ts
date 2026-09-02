@@ -139,16 +139,22 @@ export interface Profile {
   curriculum: CurriculumType | null;
   preferred_language: string;
   timezone: string;
-  /** Migration 0089, unapplied — which visual skin this student sees. A label, not a
-   * subscription (no payment/billing logic anywhere reads or writes it). Every read
-   * defaults an absent/unreadable value to "standard", so this is optional everywhere a
-   * Profile gets read, regardless of live schema state. */
+  /** Migration 0089 — which visual skin this student sees. A label, not a subscription
+   * (no payment/billing logic anywhere reads or writes it). Live as of 2026-09-02 (the
+   * founder applied it by hand); every read still defaults an absent/unreadable value to
+   * "standard" regardless, so this stays correct on any environment where it isn't. */
   plan_tier: PlanTier;
-  /** Migration 0091, unapplied — student preference for advisor chat's model/prompt style,
-   * overridden by spend-based degrade whenever that's active (lib/ai/limits/budget.ts).
-   * Every read defaults an absent/unreadable value to "balanced" — see
+  /** Migration 0091 — student preference for advisor chat's model/prompt style, overridden
+   * by spend-based degrade whenever that's active (lib/ai/limits/budget.ts). Live as of
+   * 2026-09-02; every read still defaults an absent/unreadable value to "balanced" — see
    * lib/tier/response-mode.ts's resolveResponseMode, the one place this fallback happens. */
   response_mode: ResponseMode;
+  /** Migration 0092, written not applied — when this student was shown the one-time
+   * "welcome to Ultra" moment (Phase 57), or null if never. See lib/tier/ultra-welcome.ts:
+   * an absent/unreadable value is deliberately NOT treated the same as null here (unlike
+   * plan_tier/response_mode above) — see that file's own comment for why the welcome must
+   * not show until this column can durably record having shown it. */
+  ultra_welcome_seen_at: string | null;
   target_geographies: TargetGeography[];
   weekly_time_budget: TimeBudget | null;
   busy_mode: boolean;
