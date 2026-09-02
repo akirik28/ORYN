@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { requireUser } from "@/lib/security/dal";
+import { requireUser, requireProfile } from "@/lib/security/dal";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { FeaturesView } from "@/features/catalog/features-view";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -10,5 +11,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function FeaturesPage() {
   const session = await requireUser();
-  return <FeaturesView userId={session.userId!} />;
+  const planTier = resolvePlanTier(await requireProfile());
+  return <FeaturesView userId={session.userId!} tier={planTier} />;
 }

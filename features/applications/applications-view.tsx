@@ -9,7 +9,8 @@ import { EmptyState } from "@/components/oryn/empty-state";
 import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import type { ApplicationReadiness } from "@/lib/applications/readiness";
-import type { ApplicationStatus, ApplicationType, RequirementStatus } from "@/types/database";
+import type { ApplicationStatus, ApplicationType, RequirementStatus, PlanTier } from "@/types/database";
+import { heroGradientStyleCompact } from "@/components/oryn/hero-gradient";
 
 const APPLICATION_STATUS_TONE: Record<ApplicationStatus, StatusTone> = {
   not_started: "neutral",
@@ -36,10 +37,15 @@ export async function ApplicationsView({
   applications,
   hasTargets,
   availableTargets,
+  tier = "standard",
 }: {
   applications: ApplicationsViewRow[];
   hasTargets: boolean;
   availableTargets: { id: string; name: string }[];
+  /** Optional, defaulting to "standard" — see the same note on DashboardViewProps.tier
+   *  (features/dashboard/dashboard-view.tsx) for why the dev-preview harness caller isn't
+   *  required to pass it. */
+  tier?: PlanTier;
 }) {
   const t = await getTranslations("applications");
   const locale = await getLocale();
@@ -54,7 +60,7 @@ export async function ApplicationsView({
           and card language the dashboard uses. */}
       <div
         className="relative overflow-hidden rounded-[28px] px-6 py-11 md:px-10 md:py-14"
-        style={{ background: "linear-gradient(145deg, #111030 0%, #1A1650 100%)" }}
+        style={heroGradientStyleCompact(tier)}
       >
         <div
           aria-hidden="true"

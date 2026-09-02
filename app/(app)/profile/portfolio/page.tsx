@@ -2,10 +2,12 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { requireUser } from "@/lib/security/dal";
+import { requireUser, requireProfile } from "@/lib/security/dal";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { createClient } from "@/lib/supabase/server";
 import { buildPortfolio, getPortfolioSkills } from "@/lib/portfolio/build";
 import { PortfolioView } from "@/features/profile/portfolio-view";
+import { heroGradientStyle } from "@/components/oryn/hero-gradient";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tMeta = await getTranslations("profile.portfolio");
@@ -21,6 +23,7 @@ export default async function PortfolioPage() {
   ]);
   const t = await getTranslations("profile");
   const tPortfolio = await getTranslations("profile.portfolio");
+  const planTier = resolvePlanTier(await requireProfile());
 
   return (
     <div className="space-y-6">
@@ -30,7 +33,7 @@ export default async function PortfolioPage() {
           doesn't cleanly cancel with a uniform negative margin. */}
       <div
         className="dark relative overflow-hidden rounded-[28px] p-6 text-foreground md:p-8"
-        style={{ background: "linear-gradient(145deg, #111030 0%, #1A1650 50%, #0E1540 100%)" }}
+        style={heroGradientStyle(planTier)}
       >
         <div
           aria-hidden="true"

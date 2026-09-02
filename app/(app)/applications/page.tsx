@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { requireUser } from "@/lib/security/dal";
+import { requireUser, requireProfile } from "@/lib/security/dal";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { createClient } from "@/lib/supabase/server";
 import { computeReadiness } from "@/lib/applications/readiness";
 import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
@@ -63,5 +64,7 @@ export default async function ApplicationsPage() {
     requirements: requirementsByApplication.get(application.id) ?? [],
   }));
 
-  return <ApplicationsView applications={rows} hasTargets={targets.length > 0} availableTargets={availableTargets} />;
+  const planTier = resolvePlanTier(await requireProfile());
+
+  return <ApplicationsView applications={rows} hasTargets={targets.length > 0} availableTargets={availableTargets} tier={planTier} />;
 }
