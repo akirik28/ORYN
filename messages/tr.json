@@ -38,6 +38,11 @@
     "saveFailed": "Dil tercihin kaydedilemedi. Lütfen tekrar dene."
   },
   "dashboard": {
+    "ultraWelcome": {
+      "title": "Ultra'ya hoş geldin",
+      "body": "Arayüz artık Ultra'nın alev vurgusunu taşıyor, danışmanın da bu ay boyunca daha uzun süre tam uzunlukta yanıtlar veriyor. Yanıt modun da artık Ultra'ya kadar çıkabiliyor — danışman sayfasında.",
+      "dismiss": "Kapat"
+    },
     "focusThisWeek": "Bu haftaki odağın",
     "generateMyPlan": "Planımı oluştur",
     "thinking": "Düşünüyor…",

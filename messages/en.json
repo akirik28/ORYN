@@ -38,6 +38,11 @@
     "saveFailed": "Couldn't save your language. Please try again."
   },
   "dashboard": {
+    "ultraWelcome": {
+      "title": "Welcome to Ultra",
+      "body": "The interface now carries Ultra's flame accent throughout, and your advisor gives full-length replies for longer each month. Your response mode can reach Ultra too — right on the advisor page.",
+      "dismiss": "Dismiss"
+    },
     "focusThisWeek": "Your focus this week",
     "generateMyPlan": "Generate my plan",
     "thinking": "Thinking…",

@@ -65,6 +65,7 @@ export default async function DashboardPreviewPage({ searchParams }: { searchPar
             cycleStatus: o.opportunity.cycle_status ?? null,
           }))}
           opportunityMatchesRefreshed={true}
+          showUltraWelcome={tier === "ultra"}
         />
       </PreviewShell>
     </>
