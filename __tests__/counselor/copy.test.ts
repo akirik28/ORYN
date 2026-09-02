@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { recommendationClassLabel } from "@/lib/counselor/copy";
+import { recommendationClassLabel, gapWhyLine } from "@/lib/counselor/copy";
 import type { RecommendationClass } from "@/types/database";
+import type { GapSeverity } from "@/lib/counselor/types";
 
 /**
  * 2026-09-02 raw-enum-leak sweep: recommendationClass reached the weekly-plan and
@@ -49,5 +50,48 @@ describe("recommendationClassLabel", () => {
       expect(recommendationClassLabel(value, "en").split(" ").length).toBeLessThanOrEqual(3);
       expect(recommendationClassLabel(value, "tr").split(" ").length).toBeLessThanOrEqual(3);
     }
+  });
+});
+
+/**
+ * Phase 79's audit, 2026-09-02: live on every Counselor Core card, "Academic —
+ * insufficient data (0/100)" quoted a score for a dimension Oryn hasn't assessed at all —
+ * exactly the false-precision Phase 68 forbids, the same principle
+ * lib/scoring/signal.ts's EvidenceState machinery already holds a few files away. Fixed
+ * by omitting the score for insufficient_data specifically; every other severity keeps
+ * showing it unchanged, since those DO reflect a real, confidently-computed number.
+ */
+describe("gapWhyLine", () => {
+  const ASSESSED_SEVERITIES: GapSeverity[] = ["critical", "moderate", "minor"];
+
+  test("insufficient_data omits the score entirely, in both locales — the actual fix", () => {
+    const en = gapWhyLine("academics", "insufficient_data", 0, "en");
+    const tr = gapWhyLine("academics", "insufficient_data", 0, "tr");
+    expect(en).not.toMatch(/\d+\/100/);
+    expect(tr).not.toMatch(/\d+\/100/);
+    expect(en).not.toContain("0/100");
+    expect(tr).not.toContain("0/100");
+  });
+
+  test("insufficient_data still names the dimension and the reason, just not a number", () => {
+    expect(gapWhyLine("career_exploration", "insufficient_data", 4, "en")).toBe(
+      "Addresses Career Exploration, an area Oryn doesn't have enough data on yet."
+    );
+    expect(gapWhyLine("career_exploration", "insufficient_data", 4, "tr")).toBe("Kariyer Keşfi — yeterli veri yok.");
+  });
+
+  test("every other severity still quotes the real score, unchanged — this is a scoped fix, not a blanket removal", () => {
+    for (const severity of ASSESSED_SEVERITIES) {
+      expect(gapWhyLine("leadership", severity, 42, "en")).toContain("(42/100)");
+      expect(gapWhyLine("leadership", severity, 42, "tr")).toContain("(42/100)");
+    }
+  });
+
+  test("a non-zero insufficient_data score (limited_evidence's own case — some evidence, still not confident) also omits the number", () => {
+    // The bug this guards specifically: insufficient_data covers BOTH not_assessed (score 0
+    // by construction) and limited_evidence (a real but low-confidence score) -- CEO's own
+    // framing. A nonzero score here must be omitted exactly like zero is, not just the
+    // zero case.
+    expect(gapWhyLine("research", "insufficient_data", 4, "en")).not.toMatch(/\d+\/100/);
   });
 });
