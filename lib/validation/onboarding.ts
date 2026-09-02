@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { CurriculumType, TargetGeography } from "@/types/database";
+import { LANGUAGE_PROFICIENCY_VALUES } from "@/lib/vocabularies/languages";
 
 export const GOAL_OPTIONS = [
   "Competitive universities",
@@ -97,6 +98,25 @@ export const CompleteOnboardingSchema = z.object({
       })
     )
     .max(60)
+    .optional(),
+  extractedSkills: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        category: z.enum(["technical", "creative", "analytical", "communication", "leadership", "other"]),
+        proficiency: z.string().nullable(),
+      })
+    )
+    .max(30)
+    .optional(),
+  extractedLanguages: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        proficiency: z.enum(LANGUAGE_PROFICIENCY_VALUES).nullable(),
+      })
+    )
+    .max(10)
     .optional(),
 });
 

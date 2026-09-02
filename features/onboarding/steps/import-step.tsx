@@ -1,16 +1,27 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { FileUp, Loader2, PencilLine, SkipForward, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { uploadAndExtractCV } from "@/app/(onboarding)/onboarding/actions";
 import { EntityCombobox } from "@/features/entities/entity-combobox";
-import { CV_IMPORT_CATEGORY_TO_ORGANIZATION_SCOPE } from "@/lib/profile/cv-import";
+import {
+  CV_IMPORT_CATEGORY_TO_ORGANIZATION_SCOPE,
+  flattenCvSkills,
+  flattenCvLanguages,
+  skillCategoryLabel,
+  type CvImportReviewSkill,
+  type CvImportReviewLanguage,
+} from "@/lib/profile/cv-import";
+import { SKILL_CATEGORY_OPTIONS } from "@/features/profile/field-config";
+import { LANGUAGE_PROFICIENCY_OPTIONS, languageProficiencyLabel } from "@/lib/vocabularies/languages";
+import type { Locale } from "@/lib/i18n/config";
 import type { CVExtractionResult } from "@/lib/ai/cv-extraction";
 
 export type ExtractedCategory = "education" | "activities" | "awards" | "projects" | "research" | "workExperience";
@@ -92,14 +103,23 @@ export function flatten(result: CVExtractionResult): ReviewedExtractedItem[] {
 export function ImportStep({
   reviewedItems,
   setReviewedItems,
+  reviewedSkills,
+  setReviewedSkills,
+  reviewedLanguages,
+  setReviewedLanguages,
   country,
 }: {
   reviewedItems: ReviewedExtractedItem[];
   setReviewedItems: (items: ReviewedExtractedItem[]) => void;
+  reviewedSkills: CvImportReviewSkill[];
+  setReviewedSkills: (skills: CvImportReviewSkill[]) => void;
+  reviewedLanguages: CvImportReviewLanguage[];
+  setReviewedLanguages: (languages: CvImportReviewLanguage[]) => void;
   country?: string | null;
 }) {
   const t = useTranslations("onboarding.import");
   const tProfile = useTranslations("profile");
+  const locale = useLocale() as Locale;
   const [method, setMethod] = useState<"choose" | "cv" | "manual">("choose");
   const [status, setStatus] = useState<"idle" | "uploading" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -118,6 +138,8 @@ export function ImportStep({
       return;
     }
     setReviewedItems(flatten(result.extraction));
+    setReviewedSkills(flattenCvSkills(result.extraction));
+    setReviewedLanguages(flattenCvLanguages(result.extraction));
     setStatus("idle");
   }
 
@@ -127,6 +149,22 @@ export function ImportStep({
 
   function removeItem(id: string) {
     setReviewedItems(reviewedItems.filter((item) => item.id !== id));
+  }
+
+  function updateSkill(id: string, patch: Partial<CvImportReviewSkill>) {
+    setReviewedSkills(reviewedSkills.map((skill) => (skill.id === id ? { ...skill, ...patch } : skill)));
+  }
+
+  function removeSkill(id: string) {
+    setReviewedSkills(reviewedSkills.filter((skill) => skill.id !== id));
+  }
+
+  function updateLanguage(id: string, patch: Partial<CvImportReviewLanguage>) {
+    setReviewedLanguages(reviewedLanguages.map((language) => (language.id === id ? { ...language, ...patch } : language)));
+  }
+
+  function removeLanguage(id: string) {
+    setReviewedLanguages(reviewedLanguages.filter((language) => language.id !== id));
   }
 
   if (method === "choose") {
@@ -177,7 +215,7 @@ export function ImportStep({
   }
 
   // method === "cv"
-  if (reviewedItems.length === 0) {
+  if (reviewedItems.length === 0 && reviewedSkills.length === 0 && reviewedLanguages.length === 0) {
     return (
       <div className="space-y-4">
         <Label
@@ -218,9 +256,12 @@ export function ImportStep({
     );
   }
 
+  const totalFound = reviewedItems.length + reviewedSkills.length + reviewedLanguages.length;
+
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">{t("foundItems", { count: reviewedItems.length })}</p>
+      <p className="text-sm text-muted-foreground">{t("foundItems", { count: totalFound })}</p>
+      {reviewedItems.length > 0 ? (
       <div className="max-h-96 space-y-3 overflow-y-auto pr-1">
         {reviewedItems.map((item) => (
           <Card key={item.id} className="flex gap-3 p-3">
@@ -273,6 +314,106 @@ export function ImportStep({
           </Card>
         ))}
       </div>
+      ) : null}
+
+      {reviewedSkills.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-sm font-medium">{t("skillsSectionTitle")}</p>
+          <div className="max-h-60 space-y-2 overflow-y-auto pr-1">
+            {reviewedSkills.map((skill) => (
+              <Card key={skill.id} className="flex items-center gap-3 p-2.5">
+                <Checkbox
+                  checked={skill.included}
+                  onCheckedChange={(checked) => updateSkill(skill.id, { included: checked === true })}
+                />
+                <Input
+                  value={skill.name}
+                  onChange={(e) => updateSkill(skill.id, { name: e.target.value })}
+                  className="h-8 flex-1"
+                  disabled={!skill.included}
+                />
+                <Select value={skill.category} onValueChange={(v) => updateSkill(skill.id, { category: v as CvImportReviewSkill["category"] })}>
+                  <SelectTrigger className="h-8 w-36 shrink-0" disabled={!skill.included}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SKILL_CATEGORY_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {skillCategoryLabel(option.value as CvImportReviewSkill["category"], locale)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => removeSkill(skill.id)}
+                  className="shrink-0 text-muted-foreground hover:text-destructive"
+                  aria-label={t("removeItemAriaLabel")}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {reviewedLanguages.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-sm font-medium">{t("languagesSectionTitle")}</p>
+          <div className="max-h-60 space-y-2 overflow-y-auto pr-1">
+            {reviewedLanguages.map((language) => (
+              <Card key={language.id} className="flex items-center gap-3 p-2.5">
+                <Checkbox
+                  checked={language.included}
+                  onCheckedChange={(checked) => updateLanguage(language.id, { included: checked === true })}
+                />
+                <div className="flex-1 space-y-0.5">
+                  <Input
+                    value={language.name}
+                    onChange={(e) => updateLanguage(language.id, { name: e.target.value })}
+                    className="h-8"
+                    disabled={!language.included}
+                  />
+                  {/* Never written to the `proficiency` column — a hint from the document only,
+                      shown so the student has context for the select beside it. See
+                      lib/ai/cv-extraction.ts's schema comment for why the model isn't asked to
+                      commit to a CEFR letter itself. */}
+                  {language.statedLevel ? <p className="px-1 text-xs text-muted-foreground">{t("cvSaid", { level: language.statedLevel })}</p> : null}
+                </div>
+                <Select
+                  value={language.proficiency ?? undefined}
+                  onValueChange={(v) => updateLanguage(language.id, { proficiency: v })}
+                >
+                  <SelectTrigger className="h-8 w-44 shrink-0" disabled={!language.included}>
+                    <SelectValue placeholder={t("proficiencyPlaceholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LANGUAGE_PROFICIENCY_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {languageProficiencyLabel(option.value, locale)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => removeLanguage(language.id)}
+                  className="shrink-0 text-muted-foreground hover:text-destructive"
+                  aria-label={t("removeItemAriaLabel")}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <Button variant="ghost" size="sm" onClick={() => setMethod("choose")}>
         {t("startOver")}
       </Button>

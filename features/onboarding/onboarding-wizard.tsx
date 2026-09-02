@@ -25,6 +25,7 @@ import { COUNTRY_SUGGESTIONS } from "@/lib/vocabularies/countries";
 import { meetsMinimumSignupAge } from "@/lib/legal/age-policy";
 import { InterestsStep } from "./steps/interests-step";
 import { ImportStep, type ReviewedExtractedItem } from "./steps/import-step";
+import type { CvImportReviewSkill, CvImportReviewLanguage } from "@/lib/profile/cv-import";
 
 const TOTAL_STEPS = 5;
 const currentYear = new Date().getFullYear();
@@ -124,6 +125,8 @@ export function OnboardingWizard() {
   const [interests, setInterests] = useState<string[]>([]);
   const [targetGeographies, setTargetGeographies] = useState<TargetGeography[]>([]);
   const [reviewedItems, setReviewedItems] = useState<ReviewedExtractedItem[]>([]);
+  const [reviewedSkills, setReviewedSkills] = useState<CvImportReviewSkill[]>([]);
+  const [reviewedLanguages, setReviewedLanguages] = useState<CvImportReviewLanguage[]>([]);
 
   useEffect(() => {
     isAdvancing.current = false;
@@ -208,6 +211,15 @@ export function OnboardingWizard() {
           startDate,
           endDate,
         })),
+      extractedSkills: reviewedSkills
+        .filter((skill) => skill.included)
+        // Skill proficiency isn't collected during review (lib/profile/cv-import.ts's own
+        // comment on CvImportReviewSkill) — null here, editable later on the profile like
+        // any manually-added skill's own optional proficiency field.
+        .map(({ name, category }) => ({ name, category, proficiency: null })),
+      extractedLanguages: reviewedLanguages
+        .filter((language) => language.included)
+        .map(({ name, proficiency }) => ({ name, proficiency })),
     };
 
     startTransition(async () => {
@@ -331,7 +343,15 @@ export function OnboardingWizard() {
 
         {step === 4 && (
           <StepShell key="4" title={t("importTitle")} subtitle={t("importSubtitle")}>
-            <ImportStep reviewedItems={reviewedItems} setReviewedItems={setReviewedItems} country={country} />
+            <ImportStep
+              reviewedItems={reviewedItems}
+              setReviewedItems={setReviewedItems}
+              reviewedSkills={reviewedSkills}
+              setReviewedSkills={setReviewedSkills}
+              reviewedLanguages={reviewedLanguages}
+              setReviewedLanguages={setReviewedLanguages}
+              country={country}
+            />
           </StepShell>
         )}
       </AnimatePresence>

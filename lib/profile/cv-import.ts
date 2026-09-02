@@ -1,5 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { EntityScope } from "@/lib/entities/field-policy";
+import type { SkillCategory } from "@/types/database";
+import type { CVExtractionResult } from "@/lib/ai/cv-extraction";
+import type { Locale } from "@/lib/i18n/config";
+import { MAX_ACTIVE_SKILLS, canAddAnotherSkill, isDuplicateSkillName } from "@/lib/social/skills";
+import { isDuplicateLanguage } from "@/lib/social/languages";
+import { SKILL_CATEGORY_OPTIONS, fieldText } from "@/features/profile/field-config";
+import type { LanguageProficiencyValue } from "@/lib/vocabularies/languages";
 
 /**
  * Persisting AI-extracted CV items into the profile tables.
@@ -135,4 +142,173 @@ export async function insertCvImportItems(
   }
 
   return { inserted, failedCategories };
+}
+
+// ---------------------------------------------------------------------------
+// Skills / languages (2026-09-02)
+//
+// Extracted by the same AI call as everything above (lib/ai/cv-extraction.ts) but never
+// previously reachable from either review surface or the save path — paid for, always
+// discarded. Kept apart from CvImportItem/insertCvImportItems on purpose: `skills` and
+// `languages` are proficiency-shaped (a name plus one small attribute), not
+// title/organization/dates, and each has its own real constraint the achievement tables
+// don't (skills: a 15-item cap and a DB unique index on lower(name); languages: a
+// case-insensitive dedup check with no DB backstop) — a bulk insert() like the one above
+// would throw on the first duplicate name rather than degrading gracefully. Both surfaces
+// (features/onboarding/steps/import-step.tsx and features/profile/cv-import-flow.tsx) call
+// the same flatten/insert pair here, same reasoning as CV_IMPORT_CATEGORY_TO_ORGANIZATION_SCOPE
+// above: one shared implementation the two surfaces can't drift apart from.
+// ---------------------------------------------------------------------------
+
+/** Reuses field-config.ts's own English->Turkish table (the same one every manual skill
+ * form already translates "Technical"/"Creative"/etc. through) rather than a second copy. */
+export function skillCategoryLabel(category: SkillCategory, locale: Locale): string {
+  const englishLabel = SKILL_CATEGORY_OPTIONS.find((o) => o.value === category)?.label ?? category;
+  return fieldText(englishLabel, locale);
+}
+
+export interface CvImportReviewSkill {
+  id: string;
+  name: string;
+  category: SkillCategory;
+  included: boolean;
+}
+
+export interface CvImportReviewLanguage {
+  id: string;
+  name: string;
+  /** Whatever the document actually said, shown to the student as a hint — never written to
+   * the `proficiency` column itself. See lib/ai/cv-extraction.ts's schema comment. */
+  statedLevel: string | null;
+  /** The real, closed-enum value the student sets during review (lib/validation/achievements.ts's
+   * LanguageSchema) — starts null; nothing is guessed into it. */
+  proficiency: LanguageProficiencyValue | null;
+  included: boolean;
+}
+
+export function flattenCvSkills(result: CVExtractionResult): CvImportReviewSkill[] {
+  return result.skills.map((raw, index) => ({
+    id: `skill-${index + 1}`,
+    name: raw.name,
+    category: raw.category,
+    // No confidence signal exists for skills (unlike every achievement category) to
+    // default this off the way a low-confidence achievement starts unchecked — nothing here
+    // is more or less trustworthy than anything else, so everything starts included.
+    included: true,
+  }));
+}
+
+export function flattenCvLanguages(result: CVExtractionResult): CvImportReviewLanguage[] {
+  return result.languages.map((raw, index) => ({
+    id: `language-${index + 1}`,
+    name: raw.name,
+    statedLevel: raw.statedLevel,
+    proficiency: null,
+    included: true,
+  }));
+}
+
+/** True whenever a write hits the specific "this column doesn't exist yet" error a not-yet-
+ * applied migration produces (Postgres error 42703) — the same defensive check
+ * lib/plan/persist.ts (migration 0077) and lib/jobs/run-with-tracking.ts (migration 0083)
+ * already use, extended to whichever column name the caller is currently trying to write. */
+function isMissingColumnError(error: { code?: string; message?: string } | null, column: string): boolean {
+  return error?.code === "42703" && (error.message?.includes(column) ?? false);
+}
+
+export interface CvImportSkillCandidate {
+  name: string;
+  category: SkillCategory;
+  proficiency: string | null;
+}
+
+/**
+ * Dedupes against the student's existing skills (case-insensitive, matching migration
+ * 0034's unique index) and against the cap (lib/social/skills.ts — 15 active skills) before
+ * ever attempting an insert, rather than firing a bulk insert and hoping. Migration 0084
+ * (source column) may not be applied yet — retries once without `source` on the specific
+ * "column doesn't exist" error rather than failing the whole batch.
+ */
+export async function insertCvImportSkills(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic Supabase client, same reason as insertCvImportItems above
+  supabase: SupabaseClient<any, any, any>,
+  userId: string,
+  candidates: CvImportSkillCandidate[],
+): Promise<{ inserted: number; skippedDuplicate: number; skippedCap: number }> {
+  if (candidates.length === 0) return { inserted: 0, skippedDuplicate: 0, skippedCap: 0 };
+
+  const { data: existing } = await supabase.from("skills").select("name").eq("user_id", userId);
+  const existingNames = (existing ?? []).map((s: { name: string }) => s.name);
+
+  const deduped: CvImportSkillCandidate[] = [];
+  let skippedDuplicate = 0;
+  const seenThisBatch: string[] = [];
+  for (const candidate of candidates) {
+    if (isDuplicateSkillName([...existingNames, ...seenThisBatch], candidate.name)) {
+      skippedDuplicate += 1;
+      continue;
+    }
+    seenThisBatch.push(candidate.name);
+    deduped.push(candidate);
+  }
+
+  const roomLeft = Math.max(0, MAX_ACTIVE_SKILLS - existingNames.length);
+  const toInsert = canAddAnotherSkill(existingNames.length) ? deduped.slice(0, roomLeft) : [];
+  const skippedCap = deduped.length - toInsert.length;
+  if (toInsert.length === 0) return { inserted: 0, skippedDuplicate, skippedCap };
+
+  const baseRows = toInsert.map((c) => ({ user_id: userId, name: c.name, category: c.category, proficiency: c.proficiency }));
+  let { error } = await supabase.from("skills").insert(baseRows.map((row) => ({ ...row, source: "cv_import" })));
+  if (error && isMissingColumnError(error, "source")) {
+    ({ error } = await supabase.from("skills").insert(baseRows));
+  }
+  if (error) {
+    console.error("[cv-import] skills insert failed", { code: error.code, message: error.message });
+    return { inserted: 0, skippedDuplicate, skippedCap };
+  }
+
+  return { inserted: toInsert.length, skippedDuplicate, skippedCap };
+}
+
+export interface CvImportLanguageCandidate {
+  name: string;
+  proficiency: LanguageProficiencyValue | null;
+}
+
+/** Same shape as insertCvImportSkills, without the cap — languages have none. */
+export async function insertCvImportLanguages(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic Supabase client, same reason as insertCvImportItems above
+  supabase: SupabaseClient<any, any, any>,
+  userId: string,
+  candidates: CvImportLanguageCandidate[],
+): Promise<{ inserted: number; skippedDuplicate: number }> {
+  if (candidates.length === 0) return { inserted: 0, skippedDuplicate: 0 };
+
+  const { data: existing } = await supabase.from("languages").select("name").eq("user_id", userId);
+  const existingNames = (existing ?? []).map((l: { name: string }) => l.name);
+
+  const toInsert: CvImportLanguageCandidate[] = [];
+  let skippedDuplicate = 0;
+  const seenThisBatch: string[] = [];
+  for (const candidate of candidates) {
+    if (isDuplicateLanguage([...existingNames, ...seenThisBatch], candidate.name)) {
+      skippedDuplicate += 1;
+      continue;
+    }
+    seenThisBatch.push(candidate.name);
+    toInsert.push(candidate);
+  }
+  if (toInsert.length === 0) return { inserted: 0, skippedDuplicate };
+
+  const baseRows = toInsert.map((c) => ({ user_id: userId, name: c.name, proficiency: c.proficiency }));
+  let { error } = await supabase.from("languages").insert(baseRows.map((row) => ({ ...row, source: "cv_import" })));
+  if (error && isMissingColumnError(error, "source")) {
+    ({ error } = await supabase.from("languages").insert(baseRows));
+  }
+  if (error) {
+    console.error("[cv-import] languages insert failed", { code: error.code, message: error.message });
+    return { inserted: 0, skippedDuplicate };
+  }
+
+  return { inserted: toInsert.length, skippedDuplicate };
 }

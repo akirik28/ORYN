@@ -583,7 +583,10 @@ const FIELD_TEXT_TR: Record<string, string> = {
   "e.g. YYGS": "örn. YYGS",
 };
 
-function fieldText(text: string, locale: Locale): string {
+/** Exported so a caller that needs one or two translated strings (e.g. the CV-import skill
+ * category labels — lib/profile/cv-import.ts's skillCategoryLabel) doesn't need to wrap
+ * them in a full FieldConfig just to reach localizeFields below. */
+export function fieldText(text: string, locale: Locale): string {
   return locale === "tr" ? (FIELD_TEXT_TR[text] ?? text) : text;
 }
 

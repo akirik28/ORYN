@@ -684,6 +684,10 @@
       "schoolPlaceholder": "School",
       "organizationPlaceholder": "Organization",
       "removeItemAriaLabel": "Remove item",
+      "skillsSectionTitle": "Skills",
+      "languagesSectionTitle": "Languages",
+      "cvSaid": "Your CV said: {level}",
+      "proficiencyPlaceholder": "Set proficiency",
       "startOver": "Start over"
     }
   },
