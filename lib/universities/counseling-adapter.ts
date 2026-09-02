@@ -453,7 +453,10 @@ function deriveOutlook(
   // Gate 1's own answer feeds the explanation too, not just the label. Without this the
   // panel contradicts its own badge: "not a profile-review system" over a list of profile
   // strengths, gaps, and essay/recommendation "unknowns" that this mechanism never reads.
-  const explanation = explainOutlook(input.profileDimensionScores, outlook.admissionSystemShape, locale);
+  //
+  // admissionRateKnown from input.admissionRate -- the same value just passed into
+  // computeAdmissionOutlook above, not a second, independently-sourced check.
+  const explanation = explainOutlook(input.profileDimensionScores, outlook.admissionSystemShape, input.admissionRate != null, locale);
 
   return {
     outlook: outlook.outlook,

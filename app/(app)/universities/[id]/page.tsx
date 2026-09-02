@@ -240,7 +240,11 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   // contradicts itself: a badge reading "Not a profile-review system" sitting directly above a
   // list of profile strengths, profile gaps, and essay/recommendation "unknowns" for a
   // mechanism (YKS, CAO, a Dutch open programme) that reads none of them.
-  const explanation = explainOutlook(dimensionScores, outlook?.admissionSystemShape, locale);
+  //
+  // admissionRateKnown from `stats` (already fetched above for the StatCards) rather than
+  // from `outlook`/`targetRes` — this is the one true source for "does university_statistics
+  // have a row for this institution," and it's already in scope with no extra query.
+  const explanation = explainOutlook(dimensionScores, outlook?.admissionSystemShape, stats?.admission_rate != null, locale);
 
   // Fresh-computation-wins, consistently: the badge already used `outlook` over the row for
   // staleness reasons, and the range and the reason have to agree with the badge or the panel
