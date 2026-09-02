@@ -158,7 +158,20 @@ describe("migration numbering", () => {
     // `notification_category` (checked via information_schema.columns), so the type-swap
     // recreate-the-enum pattern this migration uses has no data to lose and nothing else
     // to fan out to.
-    expect(Math.max(...numbers.map(Number))).toBe(86);
+    //
+    // 0087 (notifications_new_opportunity_dedupe) backstops
+    // notifyNewlyEligibleMatches()'s check-then-insert dedup with a real database
+    // constraint -- live-verified 2026-09-02 that the check alone lets a race through: 12
+    // notifications.new_opportunity rows for one account, three groups of exactly 4,
+    // created in a 13-second window. A partial unique index on (user_id, link), scoped to
+    // `category = 'new_opportunity'` only -- checked every other category's own dedup
+    // semantics first and found none of them share this one's "same link, forever" shape
+    // (weekly_plan dedupes by week not link; message/connection legitimately re-notify on
+    // a repeated link; deadline already has migration 0075's own index; profile_update has
+    // no such notion at all), so a table-wide constraint would have silently broken at
+    // least two of them. Still unapplied -- the 12 existing duplicate rows would violate it
+    // on creation, and deleting them is a founder decision this migration doesn't make.
+    expect(Math.max(...numbers.map(Number))).toBe(87);
   });
 });
 
