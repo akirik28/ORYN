@@ -172,10 +172,16 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
   // call (see the idempotency-guard comment above).
   if (runSecondaryWrites) {
     try {
+      // Each secondary write below now checks its own `error` explicitly rather than relying
+      // on the surrounding try/catch: supabase-js resolves `{ error }` rather than throwing
+      // on a Postgres-level failure, so the catch below only ever caught a network exception
+      // — a real write failure on either of these two bare calls was previously invisible
+      // even to this function's own "log and continue" comment above.
       if (data.goals.length > 0) {
-        await supabase
+        const { error: goalsError } = await supabase
           .from("career_goals")
           .insert(data.goals.map((title) => ({ user_id: userId, title, category: "onboarding", target_date: null })));
+        if (goalsError) console.error("[onboarding] career_goals insert failed", { userId, error: goalsError.message });
       }
       await writeStudentInterests(supabase, userId, data.interests, KNOWN_INTERESTS);
       // profiles above stores this same school/curriculum/country for quick reads, but
@@ -184,7 +190,7 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
       // the school they'd just entered two steps earlier. schoolName/schoolId are already
       // server-verified above; graduationYear isn't a real date, so it isn't forced into
       // start_date/end_date rather than guessed.
-      await supabase.from("education_records").insert({
+      const { error: educationError } = await supabase.from("education_records").insert({
         user_id: userId,
         school_name: schoolName,
         school_entity_id: schoolId,
@@ -196,6 +202,7 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
         gpa_scale: null,
         notes: null,
       });
+      if (educationError) console.error("[onboarding] education_records insert failed", { userId, error: educationError.message });
       if (data.extractedItems && data.extractedItems.length > 0) {
         // Shared with the post-onboarding importer at /profile/import — see
         // lib/profile/cv-import.ts. The per-table shape differences (education has no
