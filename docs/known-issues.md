@@ -145,6 +145,270 @@ here is exactly why:**
   matters (no data loss, no crash); still blocked on the founder applying `0077` for the
   cosmetic distinction it was meant to add.
 
+## Fourth pass, 2026-09-02: closing the gap between tonight's ~40 merged packages and this file
+
+**Method, stated once here rather than per entry.** Roughly 25 of tonight's ~40 merged
+packages had a handoff doc but no corresponding entry in this file. Read all 30 docs added
+since the third staleness pass and extracted what each lane itself named as unfixed —
+**not re-derived here**; where a doc's own finding is cited below with no independent
+re-verification, that is deliberate, per this pass's own instruction. The one thing checked
+across docs rather than trusted from any single one: whether a *later* package resolved an
+*earlier* package's named-but-open question. Four such cases were found (cited inline where
+relevant) — three where a later lane built or fixed what an earlier lane had named, one
+where a later lane corrected an earlier lane's own factual claim. A fixed-in-the-same-package
+finding is not listed here at all — that stays in git history, not this file, per this
+file's own long-standing convention.
+
+### Fixed just before this pass finished, worth flagging because it touches entries above and below
+
+**Every "degrade gracefully on an unapplied migration" guard in this codebase was silently
+inert on the exact path it existed to protect, until commit `88775c0e` (2026-09-02).** Four
+independent mechanisms — `lib/supabase/errors.ts` (migrations 0086/0080), `lib/plan/persist.ts`
+(0077, the `carried_forward` degrade this file's own 0077 entry above describes), `lib/profile/cv-import.ts`
+(0084, skills/languages `source`), `lib/jobs/run-with-tracking.ts` (0083, `errors_encountered`) —
+were all keyed on Postgres SQLSTATE `42703` (`undefined_column`), which is what the database
+raises when a *SELECT* runs against a missing column. **A write never reaches that code
+path**: PostgREST validates an INSERT/UPDATE/UPSERT payload against its own schema cache
+first and returns `PGRST204` instead — so a guard checking only `42703` never fired on a
+write, ever, on any of the four. Every test for all four mocked `42703` and passed, which is
+why nobody caught it by testing. Found from a real log line (`refreshOpportunityMatches`
+logging the non-degrade failure branch while `match_confidence` was confirmed genuinely
+absent), not from reading. **Fixed**: one shared `isUndefinedColumnError` now accepts both
+codes. This means the 0077 entry above ("Verified fixed... the write path catches the
+specific Postgres 42703 error... and degrades") was accurate about *intent* but describes a
+mechanism that was live-broken until this same night's very last hour — worth knowing if
+that entry's confidence is ever relied on for a date before `88775c0e`. No separate handoff
+doc; full account is the commit message and the code comment in `lib/supabase/errors.ts`
+itself.
+
+### Real, named gaps — AI spend and cost
+
+- **Three code paths (`rate-limit.ts`'s burst limiter, `monthly-quota.ts`'s message quota,
+  `limits/budget.ts`'s dollar-degrade) all ultimately depend on `ai_usage` being readable.**
+  Each fails open individually by design (this codebase's consistent "availability over
+  false confidence" convention) — but a single `ai_usage`-read outage would disable all
+  three guards **simultaneously**, not three independent layers. Named, not restructured:
+  "one dependency wearing three hats, not three independent defenses."
+  `docs/ai-spend-cap-2026-09-02.md` §7.
+- **If Job D (scheduled weekly-plan generation) is ever turned on, its aggregate spend
+  across every onboarded student has no ceiling of its own** — `job-budget.ts`'s
+  `JobBudgetFeature` type covers only the two catalog-extraction jobs, not `weekly_plan`.
+  At 1,000 students this alone would add ~$126/month unbounded, plus ~25% of every
+  individual student's own $0.50 monthly target before they send a single message
+  themselves. Found independently by two docs, worth reading together:
+  `docs/ai-spend-cap-2026-09-02.md` §4/§8, `docs/ai-cost-at-scale-2026-09-02.md` §2/§4.
+- **`research_generator`, `essay_story_bank`, and `requirement_interpretation` have zero
+  cost data anywhere** — not even a proxy estimate, unlike the other unmeasured features
+  (`counselor_explanation` has a real-assembled-prompt estimate; the two catalog jobs have
+  capacity-derived estimates). `docs/ai-cost-at-scale-2026-09-02.md` §1/§5.
+- **`requirement_interpretation` (the admin "suggest a rule" tool) is billed against the
+  founder's own account** under the identical $0.50/$1.00 per-student framing built for
+  students. Real categorization question, explicitly not decided: should admin-tool usage
+  be exempted? `docs/ai-spend-cap-2026-09-02.md` §1/§8.
+- **The `advisor_chat` message quota (300/month) was computed against a feature that has
+  10 real lifetime calls, while `weekly_plan` (112 calls, no quota of its own) is where
+  actual spend and burst risk concentrate.** Flagged for the founder's own reconsideration
+  of the "300 → 130" decision, not overridden. `docs/ai-spend-cap-2026-09-02.md` §4.
+
+### Real, named gaps — security and age enforcement
+
+- **`createApplication` has no app-layer check tying `target_university_id` to the
+  caller** — defense-in-depth gap only, verified across all four layers (FK, RLS on
+  `applications`, RLS on `target_universities`, triggers, grants): RLS on
+  `target_universities` closes the actual risk, so the worst case is a student blanking
+  their *own* application's university info, never reading or writing another student's
+  data. Named, not fixed, pending a product call on whether the one-line fix is worth it.
+  `docs/applications-actions-audit-2026-09-02.md`.
+- **Once an account exists, nothing enforces the 14+ signup floor on later `birth_year`
+  edits.** `completeOnboarding` is the only hard stop system-wide; both `/confirm-age`'s
+  backfill and Settings' self-edit save a sub-14 value unconditionally and only log it
+  afterward — two separate, documented design decisions (no guardian-consent mechanism
+  exists yet to act on a below-14 self-report responsibly), but the net, cumulative fact
+  is real regardless of the intent behind it: a student could pass the gate once validly,
+  then edit down later with zero enforcement. `docs/age-gate-mechanism-verification-2026-09-02.md`.
+- **The founder's own real account has never completed `/confirm-age`** — `birth_year`
+  still null live, confirmed via git-authorship/school-domain match. The mechanism itself
+  is sound (traced both layouts directly); this is a live-data fact about who hasn't gone
+  through it, not a defect. Possibly also belongs in `docs/FOUNDER-START-HERE.md`.
+  `docs/age-gate-mechanism-verification-2026-09-02.md`.
+- **Correction to a claim in this same file's lineage**: an earlier pass called
+  `lib/social/public-profile-authorization.ts` "dead code, zero live callers." That was
+  wrong at the file level — `canViewPortfolio`/`canShowMessageButton` are both live today,
+  wired into the already-shipped `/u/[id]` page. Only one function in the file
+  (`canViewBasicProfile`, a self-documenting mirror of a view's WHERE clause, not an
+  enforcement point) is genuinely unused. The correction is the later lane's own — not
+  independently re-verified here. `docs/handoffs/migration-0058-social-layer-audit-2026-09-02.md`,
+  correcting `docs/age-gate-mechanism-verification-2026-09-02.md`.
+- **"Do not apply migration 0058" is not a technical control** — this repo's own CI
+  (`.github/workflows/migrations.yml`) applies every unexcluded migration by default, with
+  no per-file exclusion mechanism anywhere in the tooling. It is a deferral resting on a
+  human remembering to act by hand at first deploy, not an enforced exclusion. Mitigating:
+  the *feature's* reachability is independently safe regardless — 4 other layers (route,
+  nav, Server Action, env flag) stay off even if the schema gets created by accident,
+  verified per-function. `docs/handoffs/migration-0058-social-layer-audit-2026-09-02.md`.
+- **1:1 messaging/Connections is far more thinly protected than the deliberately-unbuilt
+  social layer.** Nav-hidden since 2026-08-21 for the same minor-safety reasoning as 0058,
+  but missing 4 of 0058's 5 protective layers — its tables are already applied, its routes
+  already live and rendering for any authenticated user who types the URL, real
+  notification writers already wired. Protected today only by "not linked from nav" plus
+  a real but fragile fact (0 live rows in `connections`/`messages`/`message_reports`,
+  reconfirmed live in this pass). "The gap between how thoroughly the unbuilt feature is
+  sealed versus how thinly the already-built one is hidden is itself worth the founder
+  seeing." `docs/handoffs/migration-0058-social-layer-audit-2026-09-02.md`.
+
+### Real, named gaps — opportunities
+
+- **Browse's sort key ranks a closed/past-deadline opportunity in the same top bucket as
+  genuinely open, verified ones**, ordered only by match score — because `needsVerification`
+  requires `eligible === true` by construction, and a `notActionable` row is `eligible:
+  false`. The card itself is honest (shows "deadline has passed"); this is a ranking
+  defect, not a deceptive one. "For you" (the default landing surface) is unaffected — a
+  separate, independent check excludes non-actionable rows outright. One-line fix named,
+  not applied. `docs/opportunity-deadline-coverage-2026-09-02.md`.
+- **7 of 40 past-deadline active opportunity rows have drifted out of correct
+  `cycle_status` labeling** in the days since the one-time backfill script
+  (`derive-opportunity-cycle-status.ts`) last ran — it "decays by construction," was never
+  scheduled. Not a recommendation-safety issue (a separate, independent read-time check
+  still excludes all 7 from "For you" regardless of the stale label); it only undercounts
+  Browse's own "Closed" filter option by 7. `docs/opportunity-deadline-coverage-2026-09-02.md`.
+- **The real fix, `opportunity_reverification` (live Tavily re-fetch, combining Job B +
+  Job E for opportunities specifically), is fully designed
+  (`docs/opportunity-reverification-job-design-2026-08-23.md`) but not built** — deliberately
+  out of Job E's own scope, since Job E is stored-data-only and structurally cannot confirm
+  liveness. The job that *is* built (`discover_opportunities`) cannot substitute: a
+  rediscovered duplicate is discarded outright, never merged back to refresh the existing
+  stale row. Even if built, would not run yet — no deployment, same as every other job.
+  `docs/opportunity-deadline-coverage-2026-09-02.md`.
+
+### Real, named gaps — scoring and progress
+
+- **Phase 41's "or scheduled review" is now built, tested, and manually triggerable — but
+  deliberately left unarmed**, same founder-gated-unarmed pattern as every other Phase 30
+  job. Root cause confirmed directly, not inferred: 5 of 9 scoring dimensions compute a
+  `durationBonus` that advances with elapsed calendar time even with zero edits (proven via
+  a same-row two-`referenceDate` test), so a dormant student's *displayed* score silently
+  understates what the same data would compute today, and Phase 40's 30-day baseline can
+  silently be far older than 30 days. `docs/progress-history-audit-2026-09-02.md` (named
+  the gap) → `docs/scheduled-review-audit-2026-09-02.md` (built the fix, left it unarmed).
+- **`profile_scores.reason_codes` (real per-dimension structured evidence) is fetched by
+  the monthly review but used only as a boolean gate — never rendered as narrative text.**
+  A student sees WHICH dimension moved and by how much, never the specific WHY behind
+  either number. Named as a real UI/product design decision pending, not a one-line bug.
+  `docs/progress-history-audit-2026-09-02.md`.
+- **Research idea achievability (Phase 13.1) has no code-level enforcement** — structurally
+  can't be schema-validated the way field count/required fields are; only real,
+  evidence-grounded prompt engineering (verbatim bad/good examples, real OpenAlex
+  grounding) stands behind it. Named precisely as neither "enforced" nor "hope."
+  `docs/handoffs/research-generator-audit-2026-09-02.md`.
+- **Weekly-plan time-budget compliance (Phase 64) has no deterministic guardrail** — only
+  a prompt instruction, no code that sums `estimatedMinutes` and rejects/retries an
+  over-budget generation. Confirmed working today (0 violations across 6 real historical
+  plans) but not structurally guaranteed per Phase 6.1's own "hybrid architecture"
+  principle. `docs/time-budget-busy-mode-audit-2026-09-02.md`.
+
+### Well-built, never exercised — distinct from broken
+
+These are reachable, correctly wired, student-facing features with genuinely zero real
+usage — not blocked by the missing deployment (see "ORYN has never been deployed" below for
+the background-job side of that same fact), just never chosen by any real student in the
+QA-account population that exists today:
+
+- **`research_generator`** — zero `ai_usage` rows, confirmed two independent ways (even
+  pre-migration, when usage logged unconditionally on success; `research_experiences.source`
+  never carries this feature's value). Correctly built, correctly wired to two real
+  frontend callers. `docs/handoffs/research-generator-audit-2026-09-02.md`.
+- **`counselor_explanation`** — has never logged a single `ai_usage` row, ever, across a
+  full census of every feature that has ever logged anything. Corroborated independently
+  by three separate packages tonight. `docs/handoffs/spend-artefact-sweep-2026-09-02.md`,
+  `docs/handoffs/age-calibration-2026-09-02.md`, `docs/ai-spend-cap-2026-09-02.md`.
+- **`essay_story_bank`** — genuinely unused but well-built, per this session's own
+  earlier audit tonight (not one of the 30 unfamiliar handoff docs — recorded here so it
+  isn't the one exception missing from this section).
+- **Busy mode (Phase 65)** — wired end-to-end (real Settings control, real prompt
+  instruction reaching every AI context consumer) but set to `true` by 0 of 8 live
+  students, ever. The control works; it's simply unused so far.
+  `docs/time-budget-busy-mode-audit-2026-09-02.md`.
+
+### The reflection loop — the product's own stated center — has never once been observed working
+
+**The single most important finding in this pass, and it very nearly went uncited.** Phase
+10's act → reflect → advisor-adjusts loop has **never once been observed working end to end
+in this environment's live data, before or after any fix, across two independent
+measurements taken ~150 commits apart**: `weekly_actions` — 22 rows, 0 with
+`status='completed'`, 0 with `reflection_outcome` set, unchanged between both measurements.
+Pass 1 of this same investigation found `getOrCreateWeeklyPlan` throwing unconditionally
+for 7 of 8 students (an unconditional write gated on unapplied migration 0077). That fix is
+now real, correctly scoped, and covered by dedicated tests with negative cases — but **has
+not been exercised by a single live plan generation since it landed**: every weekly-plan
+number (8 rows, latest `week_start_date` still 2026-08-31, 1 plan at that latest week) is
+identical to Pass 1's, meaning nothing has called this function successfully since the fix
+merged. Strong code and test evidence the fix is correct; zero live evidence it has actually
+run, because nothing has triggered it. `docs/what-a-student-cannot-do-yet-2026-09-02-v2.md`
+("The single most important change since Pass 1").
+
+### Two more precise, currently-true facts worth naming plainly
+
+- **The deadline-reminder cron's dedup table doesn't exist live.** `deadline_reminders` has
+  run exactly twice, both 2026-08-22, both `items_processed: 0` (already recorded in "ORYN
+  has never been deployed" below) — new here: migration `0075`'s `deadline_notification_log`
+  table is unapplied live, so even a real run that found something to send would silently
+  no-op at the dedup step. Founder-gated (apply `0075`).
+  `docs/what-a-student-cannot-do-yet-2026-09-02-v2.md`, item 13.
+- **This session's own `reason_codes` coverage fix (559 of 724 rows now say why) is correct
+  code, but no live `opportunity_matches` row reflects it yet.** Every live row's
+  `calculated_at` predates that merge; recomputation only happens on a student's own page
+  visit, and no backfill job exists. Not a bug — the exact "built, not yet live" distinction
+  this whole pass exists to preserve — but a founder comparing the claimed number against
+  today's live data won't see it until a student revisits their dashboard.
+  `docs/what-a-student-cannot-do-yet-2026-09-02-v2.md`, item 9.
+
+### Correction to this file's own lineage — evidence_status column count
+
+An earlier entry in this session's own work (`docs/portfolio-audit-2026-09-02.md`) claimed 8
+of 9 evidence-linkable tables carry `evidence_status`, only `education_records` missing it.
+A separate same-night audit (`docs/evidence-flow-audit-2026-09-02.md`) said both
+`education_records` **and** `test_scores` are missing it. A direct live
+`information_schema.columns` query settled it: **exactly 7 of 9 have the column** — the
+evidence-flow audit was right, the portfolio audit's specific count was wrong. Fix written
+(migration `0079_education_test_score_evidence_status.sql`) but not applied — founder-gated.
+Live practical effect today: a student attaching evidence to a transcript or test score gets
+a false-success (the file and `evidence_files` row save correctly; the achievement item's
+own status silently fails to mirror) — the silent-failure half of that was itself already
+fixed and confirmed live this session (the mirroring-write error now logs rather than
+discarding), so the gap degrades observably rather than silently, even though the schema gap
+itself is still open pending the founder applying `0079`.
+`docs/what-a-student-cannot-do-yet-2026-09-02-v2.md`, item 5 — not independently
+re-verified here beyond noting the correction is the later doc's own.
+
+### Two items named by CEO tonight with initially no findable source doc
+
+- **"137 unmerged branches"**: this pass's own first check (a raw `git branch -r
+  --no-merged origin/main` count, 136) missed that a real, deep audit already exists —
+  found only via a memory cross-check after this section was first drafted, worth naming
+  as a near-miss. `docs/unmerged-branch-audit-2026-09-02.md` traced all 137: **74 (54%)
+  eliminated by patch-ID equivalence** (already landed via squash/rebase, zero reading
+  needed), **5 more folded as exact duplicates**, leaving **58 distinct real survivors**.
+  Of those, the largest confirmed-real code gap is `gate2-ai-counselor` +
+  `ui-redesign-v3`, which share a base redoing profile scoring with a languages/skills
+  taxonomy still genuinely absent from `lib/scoring` today (confirmed by direct grep) —
+  the same hole this session's own CV-import work found from the other direction. The
+  other major finding, ~1,447 opportunity-research records across the S5/S6/S7 branches,
+  was itself already followed up on and corrected in a later same-night package
+  (`docs/opportunity-research-staging-2026-09-02.md`): the research wasn't actually
+  sitting only in unmerged branches — all 83 files were already on `main` as
+  `data/research/opportunities/*.jsonl` — and staging it against the real ingest contract
+  found 97 accepted (~86 real, a dedup blind spot found and quantified along the way), of
+  which only 14 carry an actionable deadline. Staged, gate-checked, **not applied** — the
+  founder decides whether any of it enters the live catalogue.
+- **"`product_events`' two absent event types"**: could not confirm as stated. Every one
+  of Phase 52's 10 named events has a real `logEvent()` call site today, including
+  `opportunity_saved`/`opportunity_applied` (easy to miss on a first grep — both are
+  written via a ternary on one line, `app/(app)/opportunities/actions.ts:31`). Either this
+  refers to a different pair of events (the `profile_update`/`system` notification-category
+  gap is a separate table, Phase 24 not Phase 52, already covered by the legal-copy
+  package's notification section) or the claim doesn't hold today. Not recording a
+  fabricated match — flagging the mismatch for CEO instead.
+
 ## ORYN has never been deployed — no scheduled job has ever run
 
 **2026-09-02, verified independently against both the Vercel account and `external_sync_jobs`
