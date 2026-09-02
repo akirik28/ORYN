@@ -11,13 +11,13 @@ import "@testing-library/jest-dom/vitest";
  * per-row "Mark read" control, which the popover doesn't have.
  */
 
-vi.mock("@/app/(app)/notifications/actions", () => ({ markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn() }));
+vi.mock("@/app/(app)/notifications/actions", () => ({ markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn(), markNotificationsRead: vi.fn() }));
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 import { NotificationList } from "@/features/notifications/notification-list";
-import { markNotificationRead } from "@/app/(app)/notifications/actions";
+import { markNotificationRead, markNotificationsRead } from "@/app/(app)/notifications/actions";
 import { toast } from "sonner";
 import type { Notification } from "@/types/database";
 
@@ -37,6 +37,7 @@ function notification(overrides: Partial<Notification> = {}): Notification {
 
 beforeEach(() => {
   vi.mocked(markNotificationRead).mockReset();
+  vi.mocked(markNotificationsRead).mockReset();
   vi.mocked(toast.error).mockReset();
 });
 
@@ -101,5 +102,46 @@ describe("NotificationList", () => {
     renderList([notification({ body: longBody })]);
 
     expect(screen.getByText(longBody)).toBeInTheDocument();
+  });
+});
+
+/**
+ * features/notifications/group.ts's grouping on the full-page list — deadline (this file's
+ * default fixture category) never groups, so none of the tests above touch this path.
+ */
+describe("NotificationList — grouping (features/notifications/group.ts)", () => {
+  test("three unread weekly_plan notifications render as one row showing the most recent body, not three rows", () => {
+    renderList([
+      notification({ id: "wp-1", category: "weekly_plan", title: "Your weekly plan is ready", body: "This week: finish the research draft.", link: "/plan", created_at: "2026-09-02T00:00:00.000Z" }),
+      notification({ id: "wp-2", category: "weekly_plan", title: "Your weekly plan is ready", body: "Older plan body.", link: "/plan", created_at: "2026-08-26T00:00:00.000Z" }),
+      notification({ id: "wp-3", category: "weekly_plan", title: "Your weekly plan is ready", body: "Even older plan body.", link: "/plan", created_at: "2026-08-19T00:00:00.000Z" }),
+    ]);
+
+    expect(screen.getByText("Your weekly plan is ready")).toBeInTheDocument();
+    expect(screen.getByText(/This week: finish the research draft\./)).toBeInTheDocument();
+    expect(screen.getByText(/\+2 more/)).toBeInTheDocument();
+    expect(screen.queryByText("Older plan body.")).not.toBeInTheDocument();
+  });
+
+  test("clicking 'Mark read' on a collapsed weekly_plan row marks every member id, not one", async () => {
+    vi.mocked(markNotificationsRead).mockResolvedValue({});
+    renderList([
+      notification({ id: "wp-1", category: "weekly_plan", link: "/plan", created_at: "2026-09-02T00:00:00.000Z" }),
+      notification({ id: "wp-2", category: "weekly_plan", link: "/plan", created_at: "2026-08-26T00:00:00.000Z" }),
+    ]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Mark read" }));
+
+    await waitFor(() => expect(markNotificationsRead).toHaveBeenCalledWith(["wp-1", "wp-2"]));
+    expect(markNotificationRead).not.toHaveBeenCalled();
+  });
+
+  test("the founder's own ~100-row shape stays one row, not a wall of duplicates", () => {
+    const notifications = Array.from({ length: 100 }, (_, i) =>
+      notification({ id: `wp-${i}`, category: "weekly_plan", title: "Your weekly plan is ready", link: "/plan", created_at: `2026-0${(i % 6) + 3}-01T00:00:00.000Z` }),
+    );
+    renderList(notifications);
+
+    expect(screen.getAllByText("Your weekly plan is ready")).toHaveLength(1);
   });
 });

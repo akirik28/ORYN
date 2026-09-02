@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { markNotificationRead, markAllNotificationsRead } from "@/app/(app)/notifications/actions";
+import { markNotificationRead, markAllNotificationsRead, markNotificationsRead } from "@/app/(app)/notifications/actions";
 import type { Notification } from "@/types/database";
 import type { useTransition } from "react";
 
@@ -23,6 +23,18 @@ export function markReadIfUnread(notification: Notification, startTransition: St
 export function markAllRead(startTransition: StartTransition) {
   startTransition(async () => {
     const result = await markAllNotificationsRead();
+    if (result.error) toast.error(result.error);
+  });
+}
+
+/**
+ * A group (features/notifications/group.ts) only ever contains unread members by
+ * construction, so — unlike markReadIfUnread — there's no "already read" case to skip;
+ * activating a group's card or its own "mark read" control always has something to do.
+ */
+export function markGroupRead(notificationIds: readonly string[], startTransition: StartTransition) {
+  startTransition(async () => {
+    const result = await markNotificationsRead([...notificationIds]);
     if (result.error) toast.error(result.error);
   });
 }
