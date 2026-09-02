@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
-import { buildPortfolio } from "@/lib/portfolio/build";
+import { buildPortfolio, getPortfolioSkills } from "@/lib/portfolio/build";
 import { PortfolioView } from "@/features/profile/portfolio-view";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -15,7 +15,10 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function PortfolioPage() {
   const session = await requireUser();
   const supabase = await createClient();
-  const items = await buildPortfolio(supabase, session.userId!);
+  const [items, skills] = await Promise.all([
+    buildPortfolio(supabase, session.userId!),
+    getPortfolioSkills(supabase, session.userId!),
+  ]);
   const t = await getTranslations("profile");
   const tPortfolio = await getTranslations("profile.portfolio");
 
@@ -42,7 +45,7 @@ export default async function PortfolioPage() {
           <p className="mt-1 text-muted-foreground">{tPortfolio("description")}</p>
         </div>
       </div>
-      <PortfolioView items={items} />
+      <PortfolioView items={items} skills={skills} />
     </div>
   );
 }

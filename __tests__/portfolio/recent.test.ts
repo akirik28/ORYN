@@ -16,6 +16,7 @@ function item(overrides: Partial<PortfolioItem> = {}): PortfolioItem {
     ongoing: false,
     meta: null,
     createdAt: NOW.toISOString(),
+    evidenceStatus: null,
     ...overrides,
   };
 }
