@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { MONTHLY_BUDGET_TARGET_USD } from "./limits/budget";
+import { startOfMonthUTC, startOfNextMonthUTC } from "@/lib/date/month-boundary";
 
 /**
  * Calendar-month AI allowance, enforced server-side and surfaced in the UI as a real
@@ -177,15 +178,6 @@ export interface MonthlyQuota {
    * bar; callers that enforce it must decide deliberately what an unknown means.
    */
   usedIsKnown: boolean;
-}
-
-/** First instant of the current UTC calendar month. */
-function startOfMonthUTC(now = new Date()): Date {
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-}
-
-function startOfNextMonthUTC(now = new Date()): Date {
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
 }
 
 /**

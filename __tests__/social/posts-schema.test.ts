@@ -258,7 +258,33 @@ describe("migration numbering", () => {
     // absent-vs-null distinction matters (unlike every other column in this file, absence is
     // NOT treated the same as "never shown" -- see that file's own comment for why). Written,
     // not applied -- same house pattern as every migration in this narrative above it.
-    expect(Math.max(...numbers.map(Number))).toBe(92);
+    //
+    // 0093 (upgrade_prompt_dismissal) is the founder-approved, frequency-capped upgrade
+    // pop-up's dismissal state (relayed: "pop up reklamları yap sıklık sınırıyla"; policy
+    // finalized by oryn-60's research -- docs/upgrade-prompt-design-spec-2026-09-02.md,
+    // docs/research/upgrade-prompt-frequency-precedent-2026-09-02.md). Numbered 0093, not
+    // 0092 -- this branch was cut before 0092 (ultra_welcome_seen, directly above) merged,
+    // the same two-lanes-same-number shape as 0079/0080 and 0075/0076/0077 above it, caught
+    // on rebase rather than left for someone else to hit. Four columns, not a boolean,
+    // because the policy has three distinct tiers of "no" (soft/explicit/permanent) that
+    // each suppress for a different duration -- see the migration's own header. Durable and
+    // cross-device, deliberately not localStorage: a student who explicitly declined on one
+    // device and gets asked again on another reasonably feels ignored, and re-showing after
+    // an explicit no is what turns a prompt into an ad.
+    //
+    // Worth reading against 0092 directly above, not in isolation: both migrations left
+    // "written, not applied," and both had to decide what an absent column should mean for
+    // their own feature -- and reached opposite answers on purpose. 0092's welcome moment
+    // has no cap of its own, so absence there defaults to "can't durably record this yet,"
+    // meaning stay silent -- the alternative is firing on every page load forever. This
+    // feature already has an independent cap regardless of database state (sessionStorage's
+    // once-per-session, plus the real degraded-reply trigger event), so absence here
+    // defaults the other way, to "not yet dismissed" -- the prompt can still show, bounded
+    // to one appearance per session even while unapplied. The two migrations argue their
+    // own case in their own header comments rather than share one; the shared principle is
+    // only "pick the failure direction that costs less for this feature's actual shape,"
+    // not a rule either column's default was allowed to inherit from the other's.
+    expect(Math.max(...numbers.map(Number))).toBe(93);
   });
 });
 

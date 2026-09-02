@@ -190,6 +190,16 @@ export interface Profile {
   notify_university_data_changed: boolean;
   notify_connection: boolean;
   notify_message: boolean;
+  /** Migration 0093 -- upgrade-prompt dismissal state, one student-triggered write path
+   * (lib/advisor/upgrade-prompt.ts), not the notify_* pattern above. See that migration's
+   * own comments for the three-tier semantics (soft/explicit/permanent). Absent on a
+   * database where 0093 hasn't applied yet, which the read path degrades from
+   * (isUndefinedColumnError) to "not yet dismissed" -- never an error, never blocks
+   * rendering the rest of the advisor page. */
+  upgrade_prompt_soft_dismissed_until: string | null;
+  upgrade_prompt_not_now_at: string | null;
+  upgrade_prompt_not_now_count: number;
+  upgrade_prompt_dismissed_forever: boolean;
   created_at: string;
   updated_at: string;
 }

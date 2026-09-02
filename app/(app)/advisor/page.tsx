@@ -20,6 +20,7 @@ import { MonthlyUsageMeter } from "@/features/advisor/monthly-usage-meter";
 import { ResponseModeSlider } from "@/features/advisor/response-mode-slider";
 import { resolveResponseMode } from "@/lib/tier/response-mode";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
+import { extractUpgradePromptDismissalState } from "@/lib/advisor/upgrade-prompt";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tMeta = await getTranslations("nav");
@@ -56,6 +57,17 @@ export default async function AdvisorPage() {
   // column, just handled one layer up here for a genuinely missing profile.
   const responseMode = profile ? resolveResponseMode(profile) : "balanced";
   const planTier = resolvePlanTier(profile ?? { plan_tier: "standard" });
+  // Derived from the same already-loaded `profile` object `planTier` above reads, not a
+  // second query — see lib/advisor/upgrade-prompt.ts's own header for why this used to be
+  // a separate fetch and no longer is (next build's Client Component SSR check, 2026-09-02).
+  const upgradePromptDismissalState = extractUpgradePromptDismissalState(
+    profile ?? {
+      upgrade_prompt_soft_dismissed_until: null,
+      upgrade_prompt_not_now_at: null,
+      upgrade_prompt_not_now_count: 0,
+      upgrade_prompt_dismissed_forever: false,
+    },
+  );
 
   const conversation = conversationRes.data;
   const messages = conversation
@@ -130,6 +142,8 @@ export default async function AdvisorPage() {
               // reported as exhausted, only a genuinely confirmed zero is.
               quotaExhausted={quota.usedIsKnown && quota.remaining <= 0}
               quotaResetsAt={quota.resetsAt}
+              tier={planTier}
+              upgradePromptDismissalState={upgradePromptDismissalState}
             />
           </div>
           <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">

@@ -1108,6 +1108,12 @@
         "label": "Shorter reply",
         "detail": "This reply was kept brief — you're still getting the answer, just not the long explanation."
       },
+      "upgradePrompt": {
+        "detail": "This reply used a lighter model — Ultra keeps every reply at full depth.",
+        "cta": "See Ultra",
+        "notNow": "Not now",
+        "close": "Close"
+      },
       "exhausted": {
         "title": "This month's allowance is used up",
         "detail": "Chat resets on {date}. The rest of Oryn — your plan, opportunities, universities — stays open as always."
