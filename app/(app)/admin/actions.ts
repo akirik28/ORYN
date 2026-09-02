@@ -10,6 +10,9 @@ import { discoverRequirementsForUncoveredUniversities } from "@/lib/requirements
 import { runWithTracking } from "@/lib/jobs/run-with-tracking";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { buildPostRemovalUpdate, buildPostRestoreUpdate, ModerationInputError } from "@/lib/social/posts-moderation";
+import { ADMIN_FINANCE_SETTINGS_ID } from "@/lib/admin/queries";
+import { isValidExchangeRate, isValidPrice } from "@/lib/admin/finance";
+import { isUndefinedTableError } from "@/lib/supabase/errors";
 import type { MessageReportStatus } from "@/types/database";
 
 /**
@@ -182,6 +185,47 @@ export async function restoreReportedPost(postId: string): Promise<{ error?: str
   if (error) {
     console.error("[admin] failed to restore post", { code: error.code, message: error.message });
     return { error: "Couldn't restore that post. Please try again." };
+  }
+
+  revalidatePath("/admin");
+  return {};
+}
+
+/**
+ * The finance dashboard's editable settings (migration 0094, CEO's course correction —
+ * "the founder can set it here", not an env var needing a deploy). Either field is optional
+ * so the settings form can save just the rate, just the price, or both in one submit;
+ * `undefined` means "leave this one alone", genuinely distinct from "clear it to null" (the
+ * rate has no clear-to-null affordance in the UI this pairs with — there's no legitimate
+ * reason to un-set a once-known rate back to "unconfigured").
+ *
+ * `.upsert()`, not `.update()` — the row may not exist yet (first-ever save) or the whole
+ * table may not exist yet (migration unapplied), and this project's standing discipline is
+ * that a write naming an unmigrated target degrades rather than throwing an unhandled
+ * exception up through the Server Action boundary.
+ */
+export async function updateFinanceSettings(input: { usdTryRate?: number; ultraPriceTry?: number }): Promise<{ error?: string }> {
+  const adminProfile = await requireAdmin();
+  if (input.usdTryRate === undefined && input.ultraPriceTry === undefined) return {};
+  if (input.usdTryRate !== undefined && !isValidExchangeRate(input.usdTryRate)) return { error: "Enter a positive exchange rate." };
+  if (input.ultraPriceTry !== undefined && !isValidPrice(input.ultraPriceTry)) return { error: "Enter a positive price." };
+
+  const admin = createAdminClient();
+  const now = new Date().toISOString();
+  const { error } = await admin.from("admin_finance_settings").upsert({
+    id: ADMIN_FINANCE_SETTINGS_ID,
+    ...(input.usdTryRate !== undefined ? { usd_try_rate: input.usdTryRate, usd_try_rate_updated_at: now } : {}),
+    ...(input.ultraPriceTry !== undefined ? { ultra_price_try: input.ultraPriceTry, ultra_price_try_updated_at: now } : {}),
+    updated_by: adminProfile.id,
+    updated_at: now,
+  });
+
+  if (error) {
+    if (isUndefinedTableError(error, "admin_finance_settings")) {
+      return { error: "Finance settings aren't set up in the database yet — migration 0094 needs to be applied first." };
+    }
+    console.error("[admin] failed to update finance settings", { code: error.code, message: error.message });
+    return { error: "Couldn't save that. Please try again." };
   }
 
   revalidatePath("/admin");

@@ -8,6 +8,8 @@ import { JOB_DEFINITIONS } from "@/lib/jobs/schedule";
 import { summarizeJobHealth, EMPTY_STREAK_THRESHOLD, type JobHealthSummary } from "@/lib/jobs/job-health";
 import { resolveReportedContentPreview } from "@/lib/moderation/content-preview";
 import { MONTHLY_BUDGET_TARGET_USD, MONTHLY_BUDGET_CEILING_USD } from "@/lib/ai/limits/budget";
+import { isUndefinedTableError } from "@/lib/supabase/errors";
+import { ULTRA_PRICE_TRY } from "@/lib/admin/finance";
 
 /**
  * Every admin-panel read, one module (docs/admin-panel-architecture-2026-09-02.md, D1). Each
@@ -483,8 +485,15 @@ export async function getRemainingCredit(admin: SupabaseClient<Database>): Promi
 }
 
 // ---------------------------------------------------------------------------------------------
-// Finance tab: exchange rate config, cost trend
+// Finance tab: exchange rate + price config, cost trend
 // ---------------------------------------------------------------------------------------------
+
+/** Fixed, known id for the one row `admin_finance_settings` (migration 0094) ever holds —
+ *  see that migration's own header comment for why a singleton table over a generic
+ *  key-value store, and why a fixed id over a Postgres CHECK-constraint trick. Every read
+ *  and write in this file targets exactly this id; no code path anywhere inserts a second
+ *  row. */
+export const ADMIN_FINANCE_SETTINGS_ID = "00000000-0000-0000-0000-000000000001";
 
 export interface ExchangeRate {
   /** TL per 1 USD — a rate of 40 means $1 costs 40 TL, matching
@@ -493,26 +502,60 @@ export interface ExchangeRate {
   enteredAt: string;
 }
 
+export interface FinanceSettings {
+  /**
+   * The USD/TRY rate is unknown and this codebase will not guess it — CEO's own words,
+   * relaying the founder's refusal to invent one in the cost doc: "bilgi kesme tarihim bu
+   * hesabın yapıldığı günden önce, ve yanlış bir kur bütün tabloyu sessizce bozar" (my
+   * knowledge cutoff predates this calculation, and a wrong rate silently corrupts the
+   * whole table). `null` when unconfigured — every caller in `lib/admin/finance.ts` that
+   * needs this threads the `null` through as `RateDependent`'s `available: false` rather
+   * than falling back to a guessed number.
+   */
+  usdTryRate: ExchangeRate | null;
+  /** Always has a value, unlike the rate above — 399.99 is a known-real fact (the founder's
+   *  own already-set price), not a guess, so a missing settings row (migration unapplied)
+   *  falls back to `ULTRA_PRICE_TRY` rather than to "unconfigured". */
+  ultraPriceTry: number;
+  ultraPriceTryUpdatedAt: string;
+}
+
+const DEFAULT_FINANCE_SETTINGS: FinanceSettings = {
+  usdTryRate: null,
+  ultraPriceTry: ULTRA_PRICE_TRY,
+  ultraPriceTryUpdatedAt: new Date(0).toISOString(), // epoch — "never actually set", not a real edit date
+};
+
 /**
- * The USD/TRY rate is unknown and this codebase will not guess it — CEO's own words,
- * relaying the founder's refusal to invent one in the cost doc: "bilgi kesme tarihim bu
- * hesabın yapıldığı günden önce, ve yanlış bir kur bütün tabloyu sessizce bozar" (my
- * knowledge cutoff predates this calculation, and a wrong rate silently corrupts the whole
- * table). Same shape as `getRemainingCredit` immediately above — a manually-entered pair
- * (value + when it was entered, so staleness is visible), `null` when unconfigured, and
- * every caller in `lib/admin/finance.ts` that needs this threads the `null` through as
- * `RateDependent`'s `available: false` rather than falling back to a guessed number.
+ * Replaces the earlier env-var design (`ADMIN_USD_TRY_RATE`/`_ENTERED_AT`) now that CEO's
+ * course correction asked for these to be editable from the panel itself, not just visible
+ * — an env var needs a redeploy to change, which isn't "the founder can set it here." See
+ * migration 0094 and `updateFinanceSettings` below for the write side.
  *
- * Not `async` and takes no `admin` client, unlike every other function in this file — it
- * reads only `process.env`, no Supabase call. Safe to call with or without `await` from a
- * section component; kept alongside the other Spend/Finance reads for the same reason
- * `getRemainingCredit` is grouped here despite reading `.env` too, not `ai_usage`.
+ * A missing row reads identically to how the env-var version read when unset — `null` rate,
+ * default price — whether that's because the migration hasn't been applied yet or because
+ * nobody has opened the settings panel to set a rate yet; both are the same honest
+ * "unconfigured" state to a caller. `isUndefinedTableError` distinguishes the *expected*
+ * unapplied-migration case (silent) from a genuinely unexpected read failure (logged, but
+ * still degraded rather than thrown — D8/this file's own header: an admin section's read
+ * failing must not crash the panel, matching every other function here's fail-open shape).
  */
-export function getConfiguredExchangeRate(): ExchangeRate | null {
-  const rateTryPerUsd = Number(process.env.ADMIN_USD_TRY_RATE);
-  const enteredAt = process.env.ADMIN_USD_TRY_RATE_ENTERED_AT;
-  if (!Number.isFinite(rateTryPerUsd) || rateTryPerUsd <= 0 || !enteredAt) return null;
-  return { rateTryPerUsd, enteredAt };
+export async function getFinanceSettings(admin: SupabaseClient<Database>): Promise<FinanceSettings> {
+  const { data, error } = await admin.from("admin_finance_settings").select("*").eq("id", ADMIN_FINANCE_SETTINGS_ID).maybeSingle();
+
+  if (error) {
+    if (!isUndefinedTableError(error, "admin_finance_settings")) {
+      console.error("[admin/finance] failed to read admin_finance_settings", error);
+    }
+    return DEFAULT_FINANCE_SETTINGS;
+  }
+  if (!data) return DEFAULT_FINANCE_SETTINGS;
+
+  return {
+    usdTryRate: data.usd_try_rate !== null && data.usd_try_rate_updated_at !== null ? { rateTryPerUsd: data.usd_try_rate, enteredAt: data.usd_try_rate_updated_at } : null,
+    ultraPriceTry: data.ultra_price_try,
+    ultraPriceTryUpdatedAt: data.ultra_price_try_updated_at,
+  };
 }
 
 export interface CostTrendPoint {
