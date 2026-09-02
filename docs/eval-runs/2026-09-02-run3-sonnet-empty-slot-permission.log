@@ -1,0 +1,68 @@
+
+> oryn@0.1.0 eval:ai
+> tsx --tsconfig tsconfig.eval-cli.json scripts/run-ai-eval.ts --live --confirm-spend --judge
+
+
+Cost projection — model: claude-sonnet-5 (assumed input/output pricing from lib/ai/pricing.ts)
+12 cases (2 fixtures x 3 targets x 2 locales).
+
+target          locale  fixture      input~tok  output~tok(assumed)  cost
+advisor_chat    en      regression        1739                 2000  $0.0352
+advisor_chat    tr      regression        1870                 2000  $0.0356
+weekly_plan     en      regression        2168                  600  $0.0155
+weekly_plan     tr      regression        2298                  600  $0.0159
+counselor_explain en      regression         471                  400  $0.0074
+counselor_explain tr      regression         606                  400  $0.0078
+advisor_chat    en      baseline          1817                 2000  $0.0355
+advisor_chat    tr      baseline          1955                 2000  $0.0359
+weekly_plan     en      baseline          2153                  600  $0.0155
+weekly_plan     tr      baseline          2291                  600  $0.0159
+counselor_explain en      baseline           396                  400  $0.0072
+counselor_explain tr      baseline           531                  400  $0.0076
+
+Target calls only:        $0.2349
+Target + judge calls:     $0.3095
+
+Output-token counts are documented assumptions, not measurements — see cost-estimate.ts's own header for what each is sourced from. Input-token counts are real, from the actual assembled prompts.
+
+Running live against the real API (target + judge calls)...
+
+[ok]   advisor_chat/en/regression — no deterministic findings
+       rubric: specific=5 concise=4 analytical=5 calm=5 evidenceAware=5 actionOriented=5 discourage=said_dont_do_this
+       judge notes: Explicitly tells student not to start a second club, grounding it in actual scores (88/82 leadership/entrepreneurship vs 60 execution and unevidenced research). Flags 'self-reported with no outcome data' distinguishing verified from unverified claims. Ends with concrete forced choice and time constraint ('don't split 5-10 hours'). Minor point off conciseness for the closing rhetorical question, but overall tight and non-generic."
+[ok]   advisor_chat/tr/regression — no deterministic findings
+       rubric: specific=5 concise=4 analytical=5 calm=5 evidenceAware=5 actionOriented=5 discourage=said_dont_do_this
+       judge notes: Opens with a clear "Hayır" and explains why (leadership already strong at 82/100, research has zero evidence) — direct discourage with reasoning. Grounds the case in specific scores, named positions (Öğrenci Konseyi Başkanlığı, Yatırım Kulübü), a concrete fellowship with deadline, and an existing project to deepen instead. Distinguishes the unassessed Research dimension ("hiç kanıt yok, hiç değerlendirilmemiş") from the scored Girişimcilik dimension. Ends with a crisp priority list, no hedging or praise inflation.
+[ok]   weekly_plan/en/regression — no deterministic findings
+       rubric: specific=5 concise=4 analytical=5 calm=5 evidenceAware=5 actionOriented=5 discourage=said_dont_do_this
+       judge notes: Names exact dimensions with scores (88/100, 82/100, 60/100), flags self-reported/unverified status of the tutoring project, and explicitly tells the student to avoid a second entrepreneurship club with a stated reason (doesn't move a weak dimension). Concrete, prioritized actions tied to named opportunities (fellowship, LSE deadline). Slightly dense phrasing keeps concise from a 5, but no filler or praise inflation."
+[ok]   weekly_plan/tr/regression — no deterministic findings
+       rubric: specific=5 concise=4 analytical=4 calm=5 evidenceAware=5 actionOriented=5 discourage=said_dont_do_this
+       judge notes: Explicitly flags 'Avoid for now — İkinci bir girişimcilik kulübü kurmak' with reasoning tied to actual scores (Liderlik 88, Girişimcilik 82) vs the real gap (Araştırma, Entelektüel Merak), matching the intended occasion. Distinguishes unassessed dimension ('hiç değerlendirilmemiş') from self-reported claims ('kendi beyanına dayanıyor') and notes a verified/flagged fellowship match, showing strong evidence-awareness. Concise and action-oriented throughout, though some sentences run long and slightly repeat the research-gap point across three bullets.
+[ok]   counselor_explain/en/regression — no deterministic findings
+       rubric: specific=4 concise=4 analytical=4 calm=4 evidenceAware=4 actionOriented=4 discourage=said_dont_do_this
+       judge notes: Names the actual gap (Research, unassessed), the concrete opportunity with deadline, and explicitly tells the student to set aside the second club with a clear reason (duplicates existing strength). Slightly wordy sentences (long compound clauses) keep conciseness from being a 5, but no filler or empty praise; reasoning is grounded in the profile's specific dimensions."
+[ok]   counselor_explain/tr/regression — no deterministic findings
+       rubric: specific=4 concise=4 analytical=4 calm=4 evidenceAware=3 actionOriented=4 discourage=said_dont_do_this
+       judge notes: Clearly flags the Research dimension as unassessed/weak and gives a deadline-bound action; explicitly tells student to postpone founding a second entrepreneurship club since leadership/entrepreneurship are already strong and it doesn't address the real gap. Reasoning ties to completion rate (%74) and dimension gap rather than assertion alone, though it doesn't distinguish self-reported vs verified data explicitly, hence evidenceAware is middling. Sentences are somewhat long/run-on (three dense sentences) reducing conciseness slightly, but no filler or empty praise.
+[ok]   advisor_chat/en/baseline — no deterministic findings
+       rubric: specific=5 concise=4 analytical=5 calm=5 evidenceAware=5 actionOriented=5 discourage=missed_the_opening
+       judge notes: Grounded in real numbers (6 hrs swimming vs 2-5 hr budget, 20/100 Awards score, Sept 7/15/Oct 1 dates) and flags self-reported vs verified research status explicitly. Clear single decision framed with a conditional (don't force entry if no real gap exists) rather than empty praise or hedging. Slightly less concise than max due to multiple bullet points, but no filler. Since fixture says nothing to discourage here, the 'don't force it' aside is soft guidance rather than a genuine discourage moment, so scored as missed_the_opening even though it's minor and appropriate."
+[ok]   advisor_chat/tr/baseline — no deterministic findings
+       rubric: specific=5 concise=4 analytical=4 calm=5 evidenceAware=4 actionOriented=5 discourage=said_dont_do_this
+       judge notes: Reply is grounded in specific numbers (2-5 hours, 6 hours swim, 20/100 score, Sept 7 deadline) and gives one clear priority with time estimate. It does tell the student not to add Science Fair or a new club this week — but the fixture says there's nothing genuine to discourage here, so this 'discourage' framing (re-litigating an already-invalidated club idea, deferring a fair with plenty of runway) reads as manufactured caution rather than a real occasion; it's not wrong, just not load-bearing. Tone stays calm and non-inflated throughout, no empty praise.
+[ok]   weekly_plan/en/baseline — no deterministic findings
+       rubric: specific=5 concise=4 analytical=4 calm=5 evidenceAware=5 actionOriented=5 discourage=n/a
+       judge notes: Grounded in specific numbers (2-5 hrs, 6 hrs swimming, 20/100 Awards, 9-day deadline) and flags 'self-reported only' status for Research explicitly. Two concrete actions given with rationale tied to leverage/deadlines, no filler or praise. Slightly dense phrasing keeps concise from a 5, but overall tight and calm throughout."
+[ok]   weekly_plan/tr/baseline — no deterministic findings
+       rubric: specific=5 concise=4 analytical=5 calm=5 evidenceAware=5 actionOriented=5 discourage=n/a
+       judge notes: Grounded in actual scores (20/100 Awards, 62/100 Research, 55/100 Project Depth) and explicitly flags OECD project as self-reported/unproven vs. verified. Two concrete next actions with rationale tied to deadlines and capacity constraints; no praise language. Slightly dense sentences keep it from a perfect concise score, but no filler or hedging."
+[ok]   counselor_explain/en/baseline — no deterministic findings
+       rubric: specific=4 concise=5 analytical=3 calm=5 evidenceAware=4 actionOriented=4 discourage=n/a
+       judge notes: Grounds the recommendation in a concrete gap ("Research... no evidence behind it yet") and a specific opportunity with a deadline, staying calm and free of filler. Slightly thin on analysis — it asserts the gap and the fit rather than showing the reasoning (why this fair specifically, what 'high-effort' entails), but no false certainty or empty praise. Nothing to discourage here, consistent with the fixture."
+[ok]   counselor_explain/tr/baseline — no deterministic findings
+       rubric: specific=4 concise=4 analytical=3 calm=5 evidenceAware=4 actionOriented=3 discourage=n/a
+       judge notes: Grounded in concrete data (68% complete, Research dimension unassessed, deadline 2026-10-01) and calm, non-inflated tone. But sentences are long and run-on, bundling multiple clauses ('ve', 'ancak') instead of short, punchy statements, hurting concision. Action orientation is somewhat vague—'plan early, consider effort level' isn't a crisp next step (e.g., register by X, submit proposal by Y).
+
+0 of 12 completed cases had a deterministic finding.
+Actual usage this run: 50318 input tokens, 12403 output tokens.
