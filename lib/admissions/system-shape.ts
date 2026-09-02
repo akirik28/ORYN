@@ -572,6 +572,20 @@ const REGISTRY: AdmissionSystemEntry[] = [
     ],
     sources: [DOC("norway.md")],
   },
+  {
+    countryNames: ["Portugal"],
+    domestic: {
+      shape: "academic_rank_competitive",
+      mechanism:
+        "The Concurso Nacional de Acesso ranks candidates by nota de candidatura (secondary-school results combined with national exam scores) and places them in strict order until each institution/course pair's fixed places run out. No essay, interview, or reference letter anywhere in the mechanism.",
+    },
+    international: {
+      shape: "unknown",
+      mechanism:
+        "The separate Concurso Especial para Estudantes Internacionais is nationally defined (who counts as an International Student) but not nationally decided — DGES's own page states admission requirements and procedures vary by institution, and the University of Porto's own page narrows this further to varying by faculty within one university. This pass could not confirm one common selection mechanism. Check the specific faculty's own published criteria.",
+    },
+    sources: [DOC("portugal.md")],
+  },
 ];
 
 // ---------------------------------------------------------------------------
