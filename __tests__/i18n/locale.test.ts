@@ -160,6 +160,11 @@ describe("message catalogs", () => {
       // directly — "hızlı standart ultra kayacının"). "Fast"/"Hızlı" and "Standard"/
       // "Standart", its two siblings, correctly differ.
       "advisor.responseMode.modes.thorough",
+      // A fourth "Ultra" surface, same precedent as the two directly above: the admin
+      // panel's own plan-tier control (2026-09-02, features/admin/plan-tier-control.tsx) —
+      // the button an admin uses to set a student's tier. "tierStandard" ("Standart"),
+      // right next to this key in messages/*.json, correctly differs.
+      "admin.users.tierUltra",
       ].sort(),
     );
   });
