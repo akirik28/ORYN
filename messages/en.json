@@ -1673,6 +1673,22 @@
       "stillRunning": "still running",
       "never": "never",
       "emptyStreakWarning": "0 items processed on the last {count} consecutive runs — succeeding, but not doing anything. Worth checking whether a required credential is missing."
+    },
+    "activity": {
+      "sectionTitle": "Activity",
+      "totalCount": "{count} events recorded",
+      "eventCountsTitle": "By event",
+      "recentTitle": "Recent",
+      "unnamed": "A student",
+      "noEvents": "No activity recorded yet."
+    },
+    "ageGateFlags": {
+      "sectionTitle": "Below-minimum-age signups",
+      "subtitle": "Birth years below the minimum signup age are saved, not blocked — these are the confirmations that need a human follow-up.",
+      "atSignup": "{name} confirmed a birth year of {birthYear}",
+      "inSettings": "{name} updated their birth year to {birthYear}",
+      "unnamedStudent": "A student",
+      "none": "No below-minimum-age signups logged."
     }
   },
   "saved": {

@@ -13,6 +13,8 @@ import { ProviderHealthSection } from "@/features/admin/sections/provider-health
 import { ScheduledJobsSection } from "@/features/admin/sections/scheduled-jobs-section";
 import { ReportsSection } from "@/features/admin/sections/reports-section";
 import { UserListSection } from "@/features/admin/sections/user-list-section";
+import { ActivitySection } from "@/features/admin/sections/activity-section";
+import { AgeGateFlagsSection } from "@/features/admin/sections/age-gate-flags-section";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("admin");
@@ -72,6 +74,12 @@ export default async function AdminPage() {
           </Suspense>
           <Suspense fallback={<SectionSkeleton />}>
             <ReportsSection />
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton />}>
+            <ActivitySection />
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton rows={2} />}>
+            <AgeGateFlagsSection />
           </Suspense>
         </TabsContent>
       </Tabs>

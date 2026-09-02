@@ -1673,6 +1673,22 @@
       "stillRunning": "hâlâ çalışıyor",
       "never": "hiç",
       "emptyStreakWarning": "Son {count} ardışık çalıştırmada 0 öğe işlendi — başarılı sayılıyor ama hiçbir şey yapmıyor. Gerekli bir kimlik bilgisinin eksik olup olmadığını kontrol etmekte fayda var."
+    },
+    "activity": {
+      "sectionTitle": "Etkinlik",
+      "totalCount": "{count} etkinlik kaydedildi",
+      "eventCountsTitle": "Etkinlik türüne göre",
+      "recentTitle": "Son etkinlikler",
+      "unnamed": "Bir öğrenci",
+      "noEvents": "Henüz kaydedilmiş etkinlik yok."
+    },
+    "ageGateFlags": {
+      "sectionTitle": "Asgari yaşın altındaki kayıtlar",
+      "subtitle": "Asgari kayıt yaşının altındaki doğum yılları engellenmez, kaydedilir — bunlar insan takibi gereken onaylardır.",
+      "atSignup": "{name}, doğum yılını {birthYear} olarak onayladı",
+      "inSettings": "{name}, doğum yılını {birthYear} olarak güncelledi",
+      "unnamedStudent": "Bir öğrenci",
+      "none": "Asgari yaşın altında kayıt bulunmuyor."
     }
   },
   "saved": {
