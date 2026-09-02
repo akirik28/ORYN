@@ -965,6 +965,92 @@
   }
 }
 
+/* ── Admin theme, 2026-09-02 ──────────────────────────────────────────────────────────
+   Founder, verbatim: "admin hesabı için çok özellik yazmamız gerekiyor ve ui lazım, yeşil
+   olsun... bol graph ve görselleştirme kullanalım... baya detaylı olsun" (we need to write
+   a lot of features for the admin account and need UI, let it be green... let's use lots
+   of graphs and visualization... let it be pretty detailed). This is a scoped theme for
+   the admin surface, not a tier — [data-surface="admin"] instead of [data-tier="ultra"],
+   applied to a wrapper inside app/(app)/admin/layout.tsx around the admin route's own
+   content, not to <html>. The surrounding Sidebar/Topbar chrome (how an admin navigates
+   back to the rest of the product) is deliberately untouched; only the content area they
+   asked to be green gets it. Zero footprint outside that one route tree, same discipline
+   as Ultra, for the same reason: nothing here should be reachable or visible to a student.
+
+   THE RULE THAT MATTERS MOST HERE, stated once because it is the single thing most likely
+   to go wrong: --admin-accent is a THEME color — chrome, structure, chart default series,
+   decoration. It is never a STATUS color. features/admin/sections/status-badge.tsx's
+   healthy/degraded/down palette (emerald/amber/red, hardcoded there already) stays exactly
+   as it is and must never be repointed to these tokens. The two are kept apart two ways at
+   once, deliberately redundant: (1) architecturally — nothing in status-badge.tsx reads
+   any --admin-* token, so there is no shared variable for a future edit to accidentally
+   collapse; (2) perceptually — --admin-accent is a true grass/forest green (hue ~142° in
+   OKLCH, Tailwind's green-600 family), status "healthy" stays the existing emerald-500
+   family (hue ~162°) — a ~20° gap, deliberately wider than the 3-6° oryn-31 measured
+   between flame red and --destructive and flagged as too close to trust. A dashboard that
+   is mostly green chrome, showing a green "healthy" pill and a red "down" pill among
+   green-on-green cards, needs both guarantees at once: even a reader who can't consciously
+   place "which green is which" should still see the status pill as a distinctly different
+   color, not a variant of the background it sits on.
+
+   Dark ground, not light — founder's "detaylı" (detailed) framing plus CEO's own read:
+   dense tabular/chart data reads better on dark, and a dark surface makes "you have left
+   the student product" legible at a glance before a single word is read, which a
+   green-tinted light theme would not do nearly as forcefully. */
+[data-surface="admin"] {
+  --admin-bg: #0a120e;
+  --admin-bg-elevated: #101c15;
+  --admin-bg-elevated-2: #16261d;
+  --admin-border: rgba(74, 222, 128, 0.14);
+  --admin-border-strong: rgba(74, 222, 128, 0.28);
+  /* Chrome/decoration only — see the rule above. Never a status color. */
+  --admin-accent: #16a34a;
+  --admin-accent-strong: #15803d;
+  --admin-accent-bright: #4ade80;
+  --admin-accent-glow: rgba(74, 222, 128, 0.35);
+  --admin-ink-1: #e8f5ec;
+  --admin-ink-2: #a8c4b0;
+  --admin-ink-3: #6b8574;
+  /* Chart gridlines/axes are neutral, not green — a green gridline would compete with a
+     green data series for the same attention, and gridlines are structure, not data. */
+  --admin-grid: rgba(232, 245, 236, 0.08);
+  --admin-grid-strong: rgba(232, 245, 236, 0.16);
+
+  background: var(--admin-bg);
+  color: var(--admin-ink-1);
+  color-scheme: dark;
+}
+
+/* Small reusable pieces for the admin surface — a card/panel background one step lighter
+   than the ground (same "panel lifts off the page" principle app/globals.css's own
+   --card/--background pair already uses for the student product, re-derived here since
+   admin is a separate token family, not a --card override) and a chart entry-animation
+   respecting prefers-reduced-motion the same way .tier-flow-bar does: a plain CSS
+   animation, gated by a media query, no JS hook needed. */
+[data-surface="admin"] .admin-panel {
+  background: var(--admin-bg-elevated);
+  border: 1px solid var(--admin-border);
+}
+
+@keyframes admin-chart-reveal {
+  from {
+    stroke-dashoffset: var(--admin-chart-path-length, 1000);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+[data-surface="admin"] .admin-chart-line {
+  stroke-dasharray: var(--admin-chart-path-length, 1000);
+  animation: admin-chart-reveal 0.9s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-surface="admin"] .admin-chart-line {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
 /* CV Generator (features/profile/cv-builder.tsx): isolates .cv-print-area as the only
    visible content when printing / saving as PDF, regardless of the app shell around it. */
 @media print {
