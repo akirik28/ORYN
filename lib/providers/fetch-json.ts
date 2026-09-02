@@ -2,6 +2,19 @@ import "server-only";
 
 import type { ProviderResult } from "./types";
 import { recordProviderSuccess, recordProviderFailure } from "./health";
+import { reportError } from "@/lib/monitoring";
+
+/**
+ * Reports alongside recordProviderFailure, never in place of it. Every call site below
+ * passes only a message this function builds itself from the response status or a caught
+ * network error — never `url` (a search provider's query string lives there), never
+ * `init.body` (the outgoing request), and never the response body. `provider`/`error_type`
+ * are fixed, code-owned identifiers, not caller input, so they're safe as tags with no
+ * redaction needed.
+ */
+async function reportProviderFailure(provider: string, errorType: string, message: string): Promise<void> {
+  await reportError(new Error(message), { source: "provider", tags: { provider, error_type: errorType } });
+}
 
 /**
  * Shared HTTP layer for every external provider (Tavily, College Scorecard, OpenAlex):
@@ -24,16 +37,19 @@ export async function fetchProviderJson(
     if (response.status === 401 || response.status === 403) {
       const error = { type: "auth_failed" as const, message: `${opts.provider} rejected the API credential (HTTP ${response.status}).` };
       await recordProviderFailure(opts.provider, error.message);
+      await reportProviderFailure(opts.provider, error.type, error.message);
       return { success: false, error };
     }
     if (response.status === 429) {
       const error = { type: "rate_limited" as const, message: `${opts.provider} rate limit exceeded.` };
       await recordProviderFailure(opts.provider, error.message);
+      await reportProviderFailure(opts.provider, error.type, error.message);
       return { success: false, error };
     }
     if (!response.ok) {
       const error = { type: "unavailable" as const, message: `${opts.provider} returned HTTP ${response.status}.` };
       await recordProviderFailure(opts.provider, error.message);
+      await reportProviderFailure(opts.provider, error.type, error.message);
       return { success: false, error };
     }
 
@@ -41,6 +57,7 @@ export async function fetchProviderJson(
     if (json === null) {
       const error = { type: "malformed_response" as const, message: `${opts.provider} returned a response that wasn't valid JSON.` };
       await recordProviderFailure(opts.provider, error.message);
+      await reportProviderFailure(opts.provider, error.type, error.message);
       return { success: false, error };
     }
 
@@ -54,6 +71,7 @@ export async function fetchProviderJson(
       message: isAbort ? `${opts.provider} request timed out.` : rawError instanceof Error ? rawError.message : "Unknown network error.",
     };
     await recordProviderFailure(opts.provider, error.message);
+    await reportProviderFailure(opts.provider, error.type, error.message);
     return { success: false, error };
   }
 }

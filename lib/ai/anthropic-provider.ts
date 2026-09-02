@@ -4,6 +4,7 @@ import { Anthropic } from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { env } from "@/lib/env";
 import { recordProviderSuccess, recordProviderFailure } from "@/lib/providers/health";
+import { reportError } from "@/lib/monitoring";
 import {
   AIProviderNotConfiguredError,
   AIResponseIncompleteError,
@@ -50,6 +51,25 @@ function toToolInputSchema(schema: z.ZodType<unknown>) {
   return jsonSchema as Anthropic.Tool.InputSchema;
 }
 
+/**
+ * The one place this file reports to Sentry — deliberately never passed `request`. Every
+ * caller below hands over only what already goes to `recordProviderFailure` (an error's own
+ * `.message`, or a schema-validation summary built from Zod issue paths/messages, never a
+ * request field): a CV's text or a student's own prompt content must never be reachable from
+ * this call, and not passing `request` here is what makes that true by construction rather
+ * than by remembering to strip it. `model` is an identifier, not content, so it's fine as a
+ * tag. Same failure-worth-reporting line `recordProviderFailure` already draws: a missing
+ * API key (`getClient()`, above the try/catch every caller wraps) never reaches here, because
+ * "nobody configured this yet" is a deployment fact, not an error — see that function's own
+ * comment.
+ */
+async function reportProviderFailure(message: string, model: string, tags?: Record<string, string>): Promise<void> {
+  // Awaited, like recordProviderFailure alongside it: a serverless invocation can be frozen
+  // the instant the response is sent, so a fire-and-forget call here could just never finish
+  // — reportError() itself is what keeps this bounded (4s timeout, never throws/rejects).
+  await reportError(new Error(message), { source: "ai_provider", tags: { provider: PROVIDER_NAME, model, ...tags } });
+}
+
 function buildUserContent(request: AIRequest): string | Anthropic.ContentBlockParam[] {
   if (!request.documents || request.documents.length === 0) {
     return request.prompt;
@@ -94,7 +114,9 @@ export class AnthropicProvider implements AIProvider {
         messages: buildMessages(request),
       });
     } catch (error) {
-      await recordProviderFailure(PROVIDER_NAME, error instanceof Error ? error.message : "Unknown error calling Anthropic.");
+      const errorMessage = error instanceof Error ? error.message : "Unknown error calling Anthropic.";
+      await recordProviderFailure(PROVIDER_NAME, errorMessage);
+      await reportProviderFailure(errorMessage, model, { failure_mode: "transport" });
       throw error;
     }
 
@@ -111,6 +133,7 @@ export class AnthropicProvider implements AIProvider {
       // exists to surface, distinct from a clean network/auth failure above.
       const incomplete = new AIResponseIncompleteError({ stopReason: message.stop_reason, usage, model });
       await recordProviderFailure(PROVIDER_NAME, incomplete.message);
+      await reportProviderFailure(incomplete.message, model, { failure_mode: "incomplete_response", stop_reason: String(message.stop_reason) });
       throw incomplete;
     }
 
@@ -153,7 +176,9 @@ export class AnthropicProvider implements AIProvider {
           tool_choice: { type: "tool", name: request.schemaName },
         });
       } catch (error) {
-        await recordProviderFailure(PROVIDER_NAME, error instanceof Error ? error.message : "Unknown error calling Anthropic.");
+        const errorMessage = error instanceof Error ? error.message : "Unknown error calling Anthropic.";
+        await recordProviderFailure(PROVIDER_NAME, errorMessage);
+        await reportProviderFailure(errorMessage, model, { failure_mode: "transport", schema: request.schemaName });
         throw error;
       }
 
@@ -180,6 +205,10 @@ export class AnthropicProvider implements AIProvider {
     // structured-output path's own failure shape.
     const error = new Error(`AI response failed schema validation after retry: ${lastError}`);
     await recordProviderFailure(PROVIDER_NAME, error.message);
+    // lastError is a Zod issue summary (field path + expected-shape message, e.g.
+    // "category: Invalid enum value") — never the model's actual output values, so this
+    // stays within the same no-content rule as the other two call sites above.
+    await reportProviderFailure(error.message, model, { failure_mode: "schema_validation", schema: request.schemaName });
     throw error;
   }
 }

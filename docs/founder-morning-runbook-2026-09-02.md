@@ -191,6 +191,22 @@ curl -X POST https://<your-deploy-url>/api/jobs/discover-opportunities \
 
 and check the `runs[].errors` array in the response, not just the HTTP status.
 
+**Set `SENTRY_DSN` (or a self-hosted Sentry/GlitchTip DSN) before this first deploy, not
+after — this is the one thing that makes your *first* production errors visible instead of
+silent.** As of tonight, real error reporting is fully wired (`lib/monitoring/`,
+`instrumentation.ts`, `lib/ai/anthropic-provider.ts`, `lib/providers/fetch-json.ts`) and
+covers every uncaught server error, plus every real (not "not configured") failure from
+Anthropic, Tavily, College Scorecard, and OpenAlex. **What you get with `SENTRY_DSN`
+unset**: exactly what you have today — everything still lands in `console.error`/your
+platform's function logs, nothing crashes, nothing hangs waiting on a Sentry endpoint that
+doesn't exist (proven directly, not assumed: `__tests__/monitoring/sentry-reporter.test.ts`
+asserts zero network calls and a clean resolve with no DSN). **What you get once it's
+set**: the same errors become searchable, alertable events instead of lines you'd only see
+by going looking — the difference that matters most in the first hours after a first-ever
+deploy, when a cold cache, a never-exercised credential, or a job route firing for the
+first time is exactly when something is most likely to break. Nothing else changes when
+you set it; no code path branches differently, no feature turns on.
+
 **`npm run check:integrations` exists and is the right first move** (Supabase ×2,
 Anthropic, Tavily, College Scorecard, OpenAlex) — but it only checks whatever's in the
 environment it runs in. Running it on your laptop confirms your *local* `.env.local`,
@@ -216,4 +232,4 @@ running on their own.
 | 1. Self-grant admin | No — needs `SET ROLE service_role` first | High — `UPDATE 1` with no actual change |
 | 2. Apply migrations | Yes, all 5 are idempotent | Low — errors are visible; verify with the query above anyway |
 | 3. See `/admin` | Yes, confirmed live with real data | None once Step 1 is done; use `/design-preview/admin` to check without it |
-| 4. Deploy | Yes, if `CRON_SECRET` + both provider keys are set **in Vercel** | High — missing keys read as "succeeded, 0 items," not as errors |
+| 4. Deploy | Yes, if `CRON_SECRET` + both provider keys are set **in Vercel** | High — missing keys read as "succeeded, 0 items," not as errors. Set `SENTRY_DSN` too, or every other silent failure above stays silent in production as well |
