@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { competesInCoreRecommendations, isPayToEnroll } from "@/lib/opportunities/commercial";
+import { competesInCoreRecommendations, isPayToEnroll, judgePayToEnroll } from "@/lib/opportunities/commercial";
 import type { Opportunity } from "@/types/database";
 
 function o(cost: number | null, selectivity_tier: Opportunity["selectivity_tier"]) {
@@ -54,5 +54,36 @@ describe("isPayToEnroll", () => {
         expect(competesInCoreRecommendations(o(c, t))).toBe(!isPayToEnroll(o(c, t)));
       }
     }
+  });
+});
+
+describe("judgePayToEnroll — the disclosure isPayToEnroll's boolean couldn't carry (2026-09-03)", () => {
+  test("a null cost is cost_unverified, distinguishable from a genuinely free/nominal programme", () => {
+    expect(judgePayToEnroll(o(null, "unknown"))).toBe("cost_unverified");
+    expect(judgePayToEnroll(o(null, "open_enrollment"))).toBe("cost_unverified");
+    expect(judgePayToEnroll(o(0, "unknown"))).toBe("not_pay_to_enroll"); // confirmed free -- a real, checked answer, not unverified
+  });
+
+  test("every case isPayToEnroll already returns true for is pay_to_enroll here, not merely truthy", () => {
+    expect(judgePayToEnroll(o(350, "open_enrollment"))).toBe("pay_to_enroll");
+    expect(judgePayToEnroll(o(1400, "unknown"))).toBe("pay_to_enroll");
+  });
+
+  test("every case isPayToEnroll already returns false for (and isn't null) is not_pay_to_enroll, not cost_unverified", () => {
+    expect(judgePayToEnroll(o(7208, "highly_selective"))).toBe("not_pay_to_enroll");
+    expect(judgePayToEnroll(o(5, "unknown"))).toBe("not_pay_to_enroll");
+  });
+
+  test("isPayToEnroll is exactly the pay_to_enroll case of judgePayToEnroll, for every input — the boolean's behavior is provably unchanged", () => {
+    for (const c of [null, 0, 5, 100, 101, 350, 1400, 7208, 15192]) {
+      for (const t of ["unknown", "open_enrollment", "selective", "highly_selective", "extremely_selective", "competitive_award"] as const) {
+        expect(isPayToEnroll(o(c, t))).toBe(judgePayToEnroll(o(c, t)) === "pay_to_enroll");
+      }
+    }
+  });
+
+  test("cost_unverified maps to false through isPayToEnroll -- a caller that only wants the boolean sees identical behavior to before this fix existed", () => {
+    expect(isPayToEnroll(o(null, "unknown"))).toBe(false);
+    expect(competesInCoreRecommendations(o(null, "unknown"))).toBe(true); // still competes -- unchanged
   });
 });

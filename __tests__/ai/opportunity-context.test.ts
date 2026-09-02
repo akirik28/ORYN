@@ -53,9 +53,22 @@ describe("formatOpportunityContext", () => {
     expect(text).toContain("7465");
   });
 
-  test("a free or unpriced opportunity adds no fee line", () => {
-    expect(formatOpportunityContext([opportunityRec({ costOnFile: 0 })])).not.toContain("HAS A FEE");
-    expect(formatOpportunityContext([opportunityRec({ costOnFile: null })])).not.toContain("HAS A FEE");
+  test("a confirmed-free opportunity adds no fee/cost line at all — a real, checked zero has nothing to warn about", () => {
+    const text = formatOpportunityContext([opportunityRec({ costOnFile: 0 })]);
+    expect(text).not.toContain("HAS A FEE");
+    expect(text).not.toContain("COST NOT ON FILE");
+  });
+
+  test("an unknown cost reaches the prompt too (2026-09-03) — the advisor must not treat unresearched the same as free", () => {
+    // The bug this closes: costOnFile: null used to produce the exact same silent output as
+    // costOnFile: 0, so the model was told "nothing to warn about" for a programme nobody
+    // has ever priced with the identical confidence as one confirmed free — see
+    // docs/opportunity-cost-coverage-2026-09-03.md for how much of the catalogue (65%) this
+    // affected. Never "HAS A FEE" (nothing to point at), always "COST NOT ON FILE" now.
+    const text = formatOpportunityContext([opportunityRec({ costOnFile: null })]);
+    expect(text).not.toContain("HAS A FEE");
+    expect(text).toContain("COST NOT ON FILE");
+    expect(text).toMatch(/do not assume.*free/i);
   });
 
   test("an application requirement reaches the prompt — the advisor must know a team competition needs teammates before it recommends one", () => {

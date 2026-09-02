@@ -47,8 +47,23 @@ const MATERIALLY_SELECTIVE_TIERS = new Set<Opportunity["selectivity_tier"]>([
 const NOMINAL_FEE_CEILING = 100;
 
 /**
- * True when this opportunity charges a real pre-outcome fee and nothing on file says anything
- * other than money gates entry.
+ * The three-way judgment {@link isPayToEnroll} used to collapse to a bare boolean, losing the
+ * distinction between "checked, and it isn't pay-to-enroll" and "couldn't check at all"
+ * (fixed 2026-09-03, oryn-a7's opportunity-cost-coverage dispatch — same shape as
+ * eligibilityMessages.countryEligibilityUnverified in lib/opportunities/matching.ts: a gate
+ * that stays permissive on missing data, but says so, rather than looking identical to a
+ * genuine pass). `cost === null` is 65% of active opportunities
+ * (docs/opportunity-cost-coverage-2026-09-03.md) — treating that as silently "not
+ * pay-to-enroll" the same way this file already (correctly) treats a real free programme
+ * meant a caller had no way to tell the two apart.
+ */
+export type PayToEnrollJudgment = "pay_to_enroll" | "not_pay_to_enroll" | "cost_unverified";
+
+/**
+ * `cost_unverified` whenever `cost` is null — checked first, before the fee-ceiling/
+ * selectivity logic even runs, since there is nothing to compare a null against. Everything
+ * below this line is unchanged from before the three-state split: same ceiling, same
+ * selectivity exemption, same "unknown selectivity gets no benefit of the doubt" asymmetry.
  *
  * Known limitation, deliberately not papered over: the exemption trusts `selectivity_tier`
  * alone, because the evidence behind it is **not stored**. lib/opportunities/ingest.ts:187
@@ -60,10 +75,26 @@ const NOMINAL_FEE_CEILING = 100;
  * Storing the evidence is the fix; until then this gate is sound in the direction that matters
  * (it never demotes something for lacking a fee) and permissive in the other.
  */
-export function isPayToEnroll(opportunity: Pick<Opportunity, "cost" | "selectivity_tier">): boolean {
+export function judgePayToEnroll(opportunity: Pick<Opportunity, "cost" | "selectivity_tier">): PayToEnrollJudgment {
   const cost = opportunity.cost;
-  if (cost === null || cost <= NOMINAL_FEE_CEILING) return false;
-  return !MATERIALLY_SELECTIVE_TIERS.has(opportunity.selectivity_tier);
+  if (cost === null) return "cost_unverified";
+  if (cost <= NOMINAL_FEE_CEILING) return "not_pay_to_enroll";
+  return MATERIALLY_SELECTIVE_TIERS.has(opportunity.selectivity_tier) ? "not_pay_to_enroll" : "pay_to_enroll";
+}
+
+/**
+ * True when this opportunity charges a real pre-outcome fee and nothing on file says anything
+ * other than money gates entry. Unchanged behavior from before judgePayToEnroll existed —
+ * `cost_unverified` maps to `false` here exactly as a bare null already did, so this and
+ * {@link competesInCoreRecommendations} keep deciding exactly what they decided before this
+ * fix: excluding null-cost records from core recommendations would drop half the catalogue
+ * (docs/opportunity-cost-coverage-2026-09-03.md) and trade a disclosure bug for a discovery
+ * one, the same call already made for missing age. Use {@link judgePayToEnroll} directly
+ * where the distinction matters; this stays the simple predicate for the one caller that
+ * only ever needed a boolean.
+ */
+export function isPayToEnroll(opportunity: Pick<Opportunity, "cost" | "selectivity_tier">): boolean {
+  return judgePayToEnroll(opportunity) === "pay_to_enroll";
 }
 
 /** Inverse of {@link isPayToEnroll}, named for the question the counselor actually asks. */
