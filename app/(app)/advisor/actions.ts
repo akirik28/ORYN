@@ -91,6 +91,18 @@ export async function sendAdvisorMessage(
     // conversation_id and returning a friendly error instead of a confusing empty thread.
     const { data: owned } = await supabase.from("advisor_conversations").select("id").eq("id", convId).eq("user_id", userId).maybeSingle();
     if (!owned) return { conversationId: "", error: tr ? "Konuşma bulunamadı." : "Conversation not found." };
+    // Bumps `updated_at` via the table's existing set_updated_at trigger (migration 0011) —
+    // this is the only write path an existing conversation ever goes through, and until now
+    // nothing ever touched the row after its INSERT. AdvisorPage's own query orders by
+    // updated_at to find "the" conversation to show (this product surfaces exactly one),
+    // and with updated_at frozen at creation time that ordering was silently equivalent to
+    // created_at — indistinguishable today (a session always keeps its convId in state, so
+    // the same conversation is reused for every turn regardless), but a live incident on
+    // 2026-08-23 (three conversations created in one minute after repeated failures) shows
+    // a student's own history can end up spread across multiple rows, and without this, the
+    // one left visible would be whichever was *created* last, not whichever they were
+    // actually last talking in — silently stranding the real, active one.
+    await supabase.from("advisor_conversations").update({ updated_at: new Date().toISOString() }).eq("id", convId);
   }
 
   if (!convId) {
@@ -179,6 +191,9 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
   if (!failedMessage || failedMessage.role !== "assistant" || failedMessage.status !== "failed") {
     return { error: tr ? "Bu mesaj tekrar denenemez." : "This message can't be retried." };
   }
+  // Same updated_at bump as sendAdvisorMessage, and for the same reason: a retry is real
+  // activity on this conversation too.
+  await supabase.from("advisor_conversations").update({ updated_at: new Date().toISOString() }).eq("id", failedMessage.conversation_id);
 
   try {
     await assertWithinAIRateLimit(userId, "advisor_chat", { maxCalls: 30, windowMinutes: 10 }, locale);
