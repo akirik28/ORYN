@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { requireUser, getCurrentProfile } from "@/lib/security/dal";
+import { requireUser, getCurrentProfile, getProfileScores } from "@/lib/security/dal";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
@@ -30,10 +30,11 @@ export default async function AdvisorPage() {
   const locale = await resolveLocale();
   const t = await getTranslations("advisor.page");
 
-  const [conversationRes, profile, scoresRes, upcomingDeadlines] = await Promise.all([
+  const [conversationRes, profile, scores, upcomingDeadlines] = await Promise.all([
     supabase.from("advisor_conversations").select("*").eq("user_id", userId).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
     getCurrentProfile(),
-    supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId),
+    // Shared, cache()'d — docs/performance.md §2; see app/(app)/layout.tsx's identical use.
+    getProfileScores(userId),
     getUpcomingDeadlines(supabase, userId, 10),
   ]);
 
@@ -57,7 +58,6 @@ export default async function AdvisorPage() {
       ).data ?? []
     : [];
 
-  const scores = scoresRes.data ?? [];
   // Counselor Core Phase D — see app/(app)/dashboard/page.tsx's identical usage.
   const biggestGap = rankDimensionGaps(toDimensionScoreRows(scores))[0] ?? null;
 

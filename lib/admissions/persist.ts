@@ -1,8 +1,9 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/database";
+import type { Database, ProfileScore } from "@/types/database";
 import { createClient } from "@/lib/supabase/server";
+import { getProfileScores } from "@/lib/security/dal";
 import { checkUndergraduateFieldAvailability } from "./field-availability";
 import { computeAdmissionOutlook, dataConfidenceForCompleteness, type AdmissionOutlookResult } from "./outlook";
 import { resolveAdmissionSystem } from "./system-shape";
@@ -60,6 +61,15 @@ export async function refreshAdmissionOutlook(
     .single();
   if (!target) return null;
 
+  // Shared, cache()'d getProfileScores(userId) (docs/performance.md §2/§5) only on the
+  // normal, request-scoped path — it constructs its own createClient() internally, which
+  // reads cookies via next/headers, so it isn't meaningful for the background-sweep path
+  // (an explicit `client` was passed, meaning there's no request/session to read cookies
+  // from). That path keeps its own direct query via the passed admin client, unchanged.
+  const scoresPromise: PromiseLike<{ data: ProfileScore[] | null }> = client
+    ? supabase.from("profile_scores").select("*").eq("user_id", userId)
+    : getProfileScores(userId).then((data) => ({ data }));
+
   const [profileRes, scoresRes, statsRes, universityRes, programRes] = await Promise.all([
     // `country` is residence/school location, which is the correct signal for every pathway
     // split in the researched set — never citizenship. See lib/admissions/system-shape.ts's
@@ -67,7 +77,7 @@ export async function refreshAdmissionOutlook(
     supabase.from("profiles").select("profile_strength_score, completeness_percent, country").eq("id", userId).single(),
     // Same source and same shape the dashboard hero reads (app/(app)/dashboard/page.tsx) —
     // needed for hasConfidentSignal below, not for profileStrength itself.
-    supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId),
+    scoresPromise,
     supabase
       .from("university_statistics")
       .select("admission_rate, data_confidence")

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { getCurrentProfile, requireUser } from "@/lib/security/dal";
+import { getCurrentProfile, getProfileScores, requireUser } from "@/lib/security/dal";
 import { resolveLocale } from "@/lib/i18n/locale";
 import type { Locale } from "@/lib/i18n/config";
 import { createClient } from "@/lib/supabase/server";
@@ -70,8 +70,11 @@ export default async function DashboardPage() {
     return null;
   });
 
-  const [scoresRes, snapshotsRes, recommendationRes, targetUniversities, upcomingDeadlines, matchesRes] = await Promise.all([
-    supabase.from("profile_scores").select("*").eq("user_id", userId),
+  const [scores, snapshotsRes, recommendationRes, targetUniversities, upcomingDeadlines, matchesRes] = await Promise.all([
+    // Shared, cache()'d — docs/performance.md §2. By the time this page runs, the layout
+    // (app/(app)/layout.tsx) has almost certainly already populated the cache for this
+    // request, so this call is typically free, not just deduped.
+    getProfileScores(userId),
     supabase
       .from("profile_score_snapshots")
       .select("*")
@@ -104,7 +107,6 @@ export default async function DashboardPage() {
       .limit(OPPORTUNITY_PREVIEW_CANDIDATE_POOL),
   ]);
 
-  const scores = scoresRes.data ?? [];
   const previousSnapshot = snapshotsRes.data?.[1] ?? null;
 
   // Counselor Core Phase D — single source of truth for "weakest dimension" (was three
