@@ -1791,7 +1791,11 @@
       "neverSucceeded": "Never succeeded",
       "lastFailure": "Last failure {time}",
       "neverFailed": "Never failed",
-      "noProviders": "No provider calls recorded yet."
+      "noProviders": "No provider calls recorded yet.",
+      "recheckButton": "Re-check now",
+      "recheckSuccess": "{provider} responded OK just now.",
+      "recheckFailed": "{provider} check failed: {message}",
+      "recheckNotConfigured": "{provider} has no API key configured — nothing to check yet."
     },
     "jobs": {
       "sectionTitle": "Scheduled jobs",
@@ -1805,7 +1809,16 @@
       "ranDuration": "ran {duration}",
       "stillRunning": "still running",
       "never": "never",
-      "emptyStreakWarning": "0 items processed on the last {count} consecutive runs — succeeding, but not doing anything. Worth checking whether a required credential is missing."
+      "emptyStreakWarning": "0 items processed on the last {count} consecutive runs — succeeding, but not doing anything. Worth checking whether a required credential is missing.",
+      "runResult": "{items} processed, {errors} errors, {duration}. $0.00 spend — this job doesn't call the AI provider.",
+      "runResultNoDuration": "{items} processed, {errors} errors. $0.00 spend — this job doesn't call the AI provider.",
+      "disabledLabel": "Disabled",
+      "disabledNote": "Future scheduled and manual runs are disabled for this job. This does not stop a run already in progress.",
+      "disableToggle": "Disable future runs",
+      "disableConfirmTitle": "Disable future runs of this job?",
+      "disableConfirmBody": "Scheduled and manually-triggered runs will be blocked until re-enabled. A run currently in progress is not affected — this can't stop it.",
+      "disableConfirmAction": "Disable",
+      "enableToggle": "Re-enable"
     },
     "activity": {
       "sectionTitle": "Activity",

@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyCronRequest } from "@/lib/jobs/verify-cron-request";
 import { runWithTracking } from "@/lib/jobs/run-with-tracking";
+import { isJobDisabled } from "@/lib/jobs/job-controls";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { scanDeadlines } from "@/lib/deadlines/scan";
 
 /**
@@ -15,6 +17,9 @@ import { scanDeadlines } from "@/lib/deadlines/scan";
 export async function POST(request: NextRequest) {
   if (!verifyCronRequest(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (await isJobDisabled(createAdminClient(), "deadline_reminders")) {
+    return NextResponse.json({ skipped: true, reason: "disabled" });
   }
 
   const result = await runWithTracking("deadline_reminders", async () => {

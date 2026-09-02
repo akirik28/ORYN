@@ -1902,6 +1902,19 @@ export interface ExternalSyncJob {
   created_at: string;
 }
 
+/** Migration 0095. Per-job "disable future runs" flag — see that migration's own comment
+ *  for why this is a separate config table rather than a column on `external_sync_jobs`
+ *  (a run-history log, not job configuration), and for the fail-open convention when this
+ *  table itself is unapplied. */
+export interface JobControl {
+  job_name: string;
+  disabled: boolean;
+  disabled_at: string | null;
+  disabled_by: string | null;
+  updated_at: string;
+}
+export type JobControlInsert = Insertable<JobControl, "disabled_at" | "disabled_by" | "updated_at">;
+
 export interface AiUsage {
   id: string;
   user_id: string | null;
@@ -2129,6 +2142,7 @@ export interface Database {
       notifications: Table<Notification, NotificationInsert, Partial<Pick<Notification, "read_at">>>;
       provider_health: Table<ProviderHealth, Partial<ProviderHealth>, Partial<ProviderHealth>>;
       external_sync_jobs: Table<ExternalSyncJob, Partial<ExternalSyncJob>, Partial<ExternalSyncJob>>;
+      job_controls: Table<JobControl, JobControlInsert, Partial<JobControlInsert>>;
       ai_usage: Table<AiUsage, AiUsageInsert, Partial<AiUsageInsert>>;
       admin_finance_settings: Table<AdminFinanceSettings, Partial<AdminFinanceSettings>, Partial<AdminFinanceSettings>>;
       rate_limit_events: Table<RateLimitEvent, RateLimitEventInsert, Partial<RateLimitEventInsert>>;

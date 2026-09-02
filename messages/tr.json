@@ -1791,7 +1791,11 @@
       "neverSucceeded": "Hiç başarılı olmadı",
       "lastFailure": "Son hata: {time}",
       "neverFailed": "Hiç hata vermedi",
-      "noProviders": "Henüz kaydedilmiş sağlayıcı çağrısı yok."
+      "noProviders": "Henüz kaydedilmiş sağlayıcı çağrısı yok.",
+      "recheckButton": "Şimdi kontrol et",
+      "recheckSuccess": "{provider} az önce sorunsuz yanıt verdi.",
+      "recheckFailed": "{provider} kontrolü başarısız: {message}",
+      "recheckNotConfigured": "{provider} için API anahtarı tanımlı değil — kontrol edilecek bir şey yok."
     },
     "jobs": {
       "sectionTitle": "Zamanlanmış görevler",
@@ -1805,7 +1809,16 @@
       "ranDuration": "{duration} sürdü",
       "stillRunning": "hâlâ çalışıyor",
       "never": "hiç",
-      "emptyStreakWarning": "Son {count} ardışık çalıştırmada 0 öğe işlendi — başarılı sayılıyor ama hiçbir şey yapmıyor. Gerekli bir kimlik bilgisinin eksik olup olmadığını kontrol etmekte fayda var."
+      "emptyStreakWarning": "Son {count} ardışık çalıştırmada 0 öğe işlendi — başarılı sayılıyor ama hiçbir şey yapmıyor. Gerekli bir kimlik bilgisinin eksik olup olmadığını kontrol etmekte fayda var.",
+      "runResult": "{items} işlendi, {errors} hata, {duration}. 0,00 $ harcama — bu görev yapay zeka sağlayıcısını çağırmıyor.",
+      "runResultNoDuration": "{items} işlendi, {errors} hata. 0,00 $ harcama — bu görev yapay zeka sağlayıcısını çağırmıyor.",
+      "disabledLabel": "Devre dışı",
+      "disabledNote": "Bu görevin gelecekteki zamanlanmış ve manuel çalıştırmaları devre dışı. Şu anda devam eden bir çalıştırmayı durdurmaz.",
+      "disableToggle": "Gelecek çalıştırmaları devre dışı bırak",
+      "disableConfirmTitle": "Bu görevin gelecek çalıştırmaları devre dışı bırakılsın mı?",
+      "disableConfirmBody": "Yeniden etkinleştirilene kadar zamanlanmış ve manuel tetiklenen çalıştırmalar engellenir. Şu anda devam eden bir çalıştırma bundan etkilenmez — bu, onu durduramaz.",
+      "disableConfirmAction": "Devre dışı bırak",
+      "enableToggle": "Yeniden etkinleştir"
     },
     "activity": {
       "sectionTitle": "Etkinlik",

@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyCronRequest } from "@/lib/jobs/verify-cron-request";
 import { runWithTracking } from "@/lib/jobs/run-with-tracking";
+import { isJobDisabled } from "@/lib/jobs/job-controls";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { syncUsUniversities, DEFAULT_US_UNIVERSITIES } from "@/lib/universities/sync-us-universities";
 
 /**
@@ -11,6 +13,9 @@ import { syncUsUniversities, DEFAULT_US_UNIVERSITIES } from "@/lib/universities/
 export async function POST(request: NextRequest) {
   if (!verifyCronRequest(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (await isJobDisabled(createAdminClient(), "sync_us_universities")) {
+    return NextResponse.json({ skipped: true, reason: "disabled" });
   }
 
   const customSchool = request.nextUrl.searchParams.get("school");
