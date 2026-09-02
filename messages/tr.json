@@ -554,7 +554,7 @@
       "findMyStories": "Hikayelerimi bul",
       "angleLabel": "{number}. Açı:",
       "missingDetailPrefix": "Hikaye notlarına eklemeye değer: {detail}",
-      "footerDisclaimer": "Bunlar kendi yazın için birer yapı, taslak değil. Oryn senin yerine denemeyi asla yazmaz — ve kendinin kaydetmediği bir detayı asla eklemez.",
+      "footerDisclaimer": "Bunlar kendi yazın için birer yapı, taslak değil. Deneme senin sesini taşımalı, yoksa değerlendirenler bunu anlar — bu yüzden Oryn senin yerine denemeyi asla yazmaz ve kendinin kaydetmediği bir detayı asla eklemez.",
       "outlineSteps": {
         "hook": "Kanca",
         "context": "Bağlam",
