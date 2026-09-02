@@ -1719,6 +1719,47 @@
       "message": "{name}: {amount} in the last 30 days ({percent}% of the {ceiling} monthly ceiling)",
       "none": "No student is over 80% of the monthly ceiling."
     },
+    "aiBudget": {
+      "featureShape": {
+        "sectionTitle": "Where AI spend goes",
+        "byCategory": "By cost shape",
+        "category": {
+          "student_pool": "Student pool (shared monthly allowance)",
+          "job_budgeted": "Catalog jobs (background, no student)",
+          "admin_only": "Admin tools",
+          "uncategorized": "Uncategorized"
+        },
+        "allFeatures": "All known features",
+        "neverCalled": "Never called yet",
+        "callsCount": "{count} calls",
+        "unpricedTitle": "Unpriced calls",
+        "unpricedNone": "Every priced call is in the pricing table — no unpriced calls on record.",
+        "unpricedAlert": "{count} calls used a model that isn't in the pricing table yet, so their real cost is unknown — every total above is a floor, not an exact figure, until pricing is added for that model.",
+        "unpricedByModel": "{model}: {count} calls"
+      },
+      "jobBudget": {
+        "sectionTitle": "Catalog job budgets",
+        "description": "This calendar month's real spend against each job's own budget — the chart that shows a job about to stop.",
+        "opportunity_extraction": "Opportunity extraction",
+        "requirement_extraction": "Requirement extraction",
+        "status": "{spent} of {budget} this month",
+        "unknown": "Spend unknown this month — see below.",
+        "neverRun": "No calls recorded this month.",
+        "reason": {
+          "under_budget": "Under budget",
+          "over_budget": "Over budget — stopped until next month",
+          "unknown_cost_this_month": "An unpriced call this month — stopped rather than guessing",
+          "usage_unavailable": "Usage couldn't be read — failing open, allowed to run"
+        }
+      },
+      "degradeStanding": {
+        "sectionTitle": "Who's running degraded",
+        "description": "Students who reached this month's degrade point and are now on the cheaper model, and how much of each one's usage this month ran that way.",
+        "summary": "{degraded} of {total} students with AI usage this month have degraded at least once.",
+        "bucketAxisLabel": "Students by share of this month's calls that ran degraded",
+        "none": "No degraded calls recorded this month."
+      }
+    },
     "reports": {
       "sectionTitle": "Reports",
       "openCount": "{count} open",
