@@ -8,6 +8,7 @@ import { formatAbsoluteDate } from "@/lib/i18n/date";
 import { formatNumber } from "@/lib/i18n/format";
 import type { Locale } from "@/lib/i18n/config";
 import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
+import { usageState } from "@/lib/ai/usage-state";
 
 /**
  * This month's counselor allowance, as a real balance rather than decoration — the number
@@ -60,18 +61,15 @@ export function MonthlyUsageMeter({
     return () => cancelAnimationFrame(id);
   }, [quota.fraction]);
 
-  // An unreadable count arrives here as used=0 / remaining=limit, which would render a
-  // full bar and "300 messages left" — a confident balance for a number we do not have.
-  // Say so instead. The allowance still applies; only our reading of it is missing.
-  const unknown = !quota.usedIsKnown;
-
+  // Shared with features/app-shell/usage-indicator.tsx (lib/ai/usage-state.ts's own
+  // comment has the full reasoning for the state ordering) — one classification, not one
+  // per surface that shows it.
+  const state = usageState(quota, budgetDegraded);
+  const unknown = state === "unknown";
+  const exhausted = state === "exhausted";
+  const degraded = state === "degraded";
+  const low = state === "low";
   const spent = quota.fraction;
-  const exhausted = !unknown && quota.remaining <= 0;
-  // Takes priority over `low` — a student can be several degraded replies deep while the
-  // 300-message backstop still shows plenty of headroom (the founder's own benchmark: the
-  // $0.50 target is ~14 messages, nowhere near 300 — see the component doc comment above).
-  const degraded = !unknown && !exhausted && budgetDegraded;
-  const low = !unknown && !exhausted && !degraded && quota.remaining <= quota.limit * 0.1;
 
   const fill = exhausted
     ? "from-rose-500 via-rose-400 to-rose-500"
