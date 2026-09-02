@@ -495,6 +495,62 @@ stated as that specific limit, not overclaimed as "retries have never happened a
 surface, not `generateStructured` — Phase 26's structured-output framing doesn't apply to
 it, and it has its own, separately-audited `AIResponseIncompleteError` mechanism already).
 
+## Loading and error-state honesty (Phases 44/45) — checked live, genuinely well-built
+
+**2026-09-02, live-verified against the running dev server, `oryn.qa.b`.** Follow-on to
+[[project_oryn_structured_output_failure_audit]] one layer up, where the student is:
+does a real wait show real progress, and does a real failure show honest, non-fabricated
+text. Full account: `docs/loading-error-honesty-audit-2026-09-02.md`. Builds on, doesn't
+repeat, `docs/empty-loading-error-state-audit.md` (Phase 43's own pass) — that pass
+explicitly scoped out the dashboard/weekly-plan surface as reserved for a concurrent
+package; this pass covers exactly that gap.
+
+**No fake-progress or frozen-button anti-pattern found anywhere** — checked the advisor
+(live, sent a real message and traced the pending state), weekly-plan generation, CV
+import, and grepped the whole codebase for any `setInterval`/counter-driven progress UI.
+Every AI wait renders a real, accessible, honest indicator: the advisor's
+`AdvisorMessageThinking` (`aria-busy`, `aria-live="polite"`, three pulse-animated bars,
+`role="status" aria-label="Composing a response"`) is genuinely well-built, not a generic
+spinner. CV import shows "Reading your CV… This usually takes a few seconds." — an honest
+time expectation, not a fake percentage. Every disabled-during-pending button is
+accompanied by a real visual/textual change explaining why (a spinner + label swap, or the
+thinking bubble itself) — never a silent freeze.
+
+**Every controlled-error path already checked in the structured-output audit holds up
+live**: the advisor's failed-message bubble shows the real error text (or an honest
+fallback) with a "Try again" retry button; CV import preserves the uploaded file and shows
+Phase 61's exact sentence. The one already-named gap — Regenerate's generic fallback for a
+schema-validation-exhausted failure — is still the only "honest but generic" instance among
+the AI surfaces; every other classified branch (rate limit, not-configured, unsupported
+file type) shows specific, accurate text. Not re-litigated or fixed here — already
+recorded above, this pass just confirms it's the only one of its kind.
+
+**University detail page: no live "refresh failed" scenario exists to test, and that's a
+real, checked answer, not a skip.** Traced `refreshAdmissionOutlook` directly: it's pure
+deterministic computation (no AI/network call, per its own header comment, re-confirmed
+here) writing through the student's own RLS-scoped client, not an admin client — so it
+isn't exposed to the `SUPABASE_SECRET_KEY`-missing crash class the opportunity/requirement
+refresh functions were fixed for. Its own persist-back failure is logged, never thrown, and
+deliberately invisible to the student by design: the freshly *computed* outlook is what's
+returned and rendered regardless of whether the cache column write succeeds, so there's no
+version where a page-load shows fabricated or stale-and-unlabeled data. Live-checked MIT's
+own page: real stat grid with a populated `SourceBadge` ("Checked 15 days ago, High
+confidence"), and a real, honest Strengths/Gaps/Unknowns outlook — Phase 16.2's structure,
+confirmed live, not just from source. The actual live instance of Phase 45's own worked
+example ("we couldn't refresh... last verified data is still shown") is on `/opportunities`
+and the dashboard's opportunity preview (`refreshOpportunityMatches`'s `{ refreshed:
+boolean }` banner, already built and confirmed in an earlier pass tonight) — not the
+university page, which has no analogous failure mode to degrade from.
+
+**Not touched**: onboarding's own loading/wait states (no AI call in the reachable steps
+this pass drove), and a full skeleton-vs-content shape audit of all 16 `loading.tsx`
+files — spot-checked `/advisor`'s `variant="detail"` choice against the real two-column
+chat+sidebar layout it precedes and found it a rough, not exact, match (plausible but not
+verified as intentional); the dashboard's own purpose-built `DashboardSkeleton` (mirrors
+`DashboardView`'s actual block structure, documented as deliberate) is the one skeleton in
+the codebase held to that higher bar, and it holds up. Named as a minor, low-severity
+polish item, not fixed.
+
 ## ORYN has never been deployed — no scheduled job has ever run
 
 **2026-09-02, verified independently against both the Vercel account and `external_sync_jobs`
