@@ -2,8 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 import { getAIProvider } from "./index";
-import { logAIUsage } from "./usage";
-import { selectModelForUser } from "./limits/budget";
+import { withUsageLogging } from "./usage";
 import { assertWithinJobBudget } from "./limits/job-budget";
 
 export const OpportunityCandidateSchema = z.object({
@@ -71,25 +70,29 @@ export async function extractOpportunityFromContent(params: {
   // Throws JobBudgetExceededError once this feature is over its monthly figure — see
   // lib/ai/limits/job-budget.ts for why a job stops rather than degrades, and
   // lib/opportunities/discover.ts for where this is caught and turned into a clean early
-  // stop rather than a run failure.
+  // stop rather than a run failure. Deliberately outside withUsageLogging below, not inside
+  // it: this throws before any AI call happens, so there is no usage to log and it must
+  // reach discover.ts as JobBudgetExceededError specifically, unwrapped.
   await assertWithinJobBudget("opportunity_extraction");
 
   const provider = getAIProvider();
-  // userId is always null here (a catalog-maintenance background job, not a student's own
-  // usage) -- still goes through selectModelForUser rather than assuming env.anthropic.model
-  // directly, so this site can't quietly drift out of sync with lib/ai/limits/budget.ts's
-  // own no-user handling (selection.reason === "no_user") if that ever changes.
-  const selection = await selectModelForUser(null);
-  const result = await provider.generateStructured({
-    system: SYSTEM_PROMPT,
-    prompt: `Source URL: ${params.sourceUrl}\n\n<page_content>\n${params.content.slice(0, 12000)}\n</page_content>`,
-    schema: OpportunityCandidateSchema,
-    schemaName: "record_opportunity",
-    schemaDescription: "Records the structured details of the opportunity described on this page.",
-    maxTokens: 1536,
-    model: selection.model,
-  });
+  // withUsageLogging (2026-09-02) resolves selectModelForUser(null) itself and, critically,
+  // recovers usage from a retry-exhausted generateStructured failure before it reaches
+  // discover.ts's own catch -- checkJobBudget above sums ai_usage.estimated_cost for this
+  // exact feature, so a failure that logged nothing made the next call believe there was
+  // more budget left than there actually was. userId is always null here (a
+  // catalog-maintenance background job, not a student's own usage).
+  const result = await withUsageLogging({ userId: null, feature: "opportunity_extraction" }, (model) =>
+    provider.generateStructured({
+      system: SYSTEM_PROMPT,
+      prompt: `Source URL: ${params.sourceUrl}\n\n<page_content>\n${params.content.slice(0, 12000)}\n</page_content>`,
+      schema: OpportunityCandidateSchema,
+      schemaName: "record_opportunity",
+      schemaDescription: "Records the structured details of the opportunity described on this page.",
+      maxTokens: 1536,
+      model,
+    }),
+  );
 
-  await logAIUsage({ userId: null, feature: "opportunity_extraction", usage: result.usage, model: result.model });
   return { candidate: result.data, usage: result.usage };
 }
