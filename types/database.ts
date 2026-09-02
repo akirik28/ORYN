@@ -112,6 +112,16 @@ export interface Profile {
   /** Canonical Entity Autocomplete System — preferred over school_name once set; kept in
    * sync with the linked institution's canonical name at selection time. */
   school_entity_id: string | null;
+  /** Migration 0038 (canonical_entity_registry) — live (confirmed by direct
+   * information_schema query, not the migration ledger, which has no record of 0038/0039
+   * despite the columns genuinely existing; same "applied outside the ledger" shape as
+   * migrations 0061-0065) but never added to this interface until the 2026-09-02
+   * types/database.ts audit found it missing. Same canonical-identity pattern as
+   * school_entity_id above, for country instead of institution. */
+  country_entity_id: string | null;
+  /** Migration 0038, same provenance note as country_entity_id above — city's canonical
+   * geography identity. */
+  city_entity_id: string | null;
   graduation_year: number | null;
   curriculum: CurriculumType | null;
   preferred_language: string;
@@ -436,6 +446,13 @@ export interface EducationRecord {
   user_id: string;
   school_name: string;
   school_entity_id: string | null;
+  /** Migration 0038 (canonical_entity_registry) — same provenance note as
+   * Profile.country_entity_id: live (confirmed by direct information_schema query), never
+   * added to this interface until the 2026-09-02 audit found it missing. Unlike `profiles`,
+   * this table's own migration only added school_entity_id and country_entity_id, not a
+   * city variant — confirmed against the migration's own `alter table` statements, not
+   * assumed symmetric with `profiles`. */
+  country_entity_id: string | null;
   country: string | null;
   stage: EducationStage;
   curriculum: CurriculumType | null;
@@ -448,7 +465,10 @@ export interface EducationRecord {
   created_at: string;
   updated_at: string;
 }
-export type EducationRecordInsert = Insertable<EducationRecord, "id" | "created_at" | "updated_at" | "stage" | "is_current" | "school_entity_id">;
+export type EducationRecordInsert = Insertable<
+  EducationRecord,
+  "id" | "created_at" | "updated_at" | "stage" | "is_current" | "school_entity_id" | "country_entity_id"
+>;
 export type EducationRecordUpdate = Updatable<EducationRecord, "id" | "user_id" | "created_at" | "updated_at">;
 
 export interface Course {
