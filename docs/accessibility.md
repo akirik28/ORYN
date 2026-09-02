@@ -295,6 +295,15 @@ didn't have the scope to make 11 times over. Flagged, not fixed, same as before.
 - A real Tab-keypress walkthrough of the full journey — blocked by this session's tooling
   (see above), not by anything in the product. Worth an hour with a visible/foregrounded
   pane, or a human, rather than more time spent working around a hidden-pane limitation.
+  **Update, 2026-09-02: the specific thing this gap was blocking — a real-keypress
+  confirmation of the dialog focus-guard bug — is now closed.** A visible, authenticated
+  pane became available; a genuine `Shift+Tab` (not `.focus()`) on `upload-evidence-dialog.tsx`
+  reproduced the exact documented signature. Full account in `docs/known-issues.md`'s
+  focus-guard entry. This doesn't close the item above in general — the full six-step
+  journey still hasn't been Tab-walked end to end, and this same pass's own pane went
+  hidden again partway through, blocking a live re-check of `AlertDialog` specifically —
+  but the one piece of this gap with real product-safety weight (is the reported trap
+  real, on a real keypress) now has a real answer.
 - The `--accent` non-text-contrast fix — values ready, needs a design call (see above).
 - `aria-live` on the compare bars — real judgment call, not decided (see above).
 - Field-specific validation-error focus movement on the real (non-stub) achievement form —

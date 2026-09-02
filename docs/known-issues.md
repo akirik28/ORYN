@@ -850,6 +850,53 @@ close button inside `Dialog.Popup`, so tab order always ends on Close regardless
 sits visually. Not the focus-guard bug, not urgent, but a real, fixable, ORYN-side paper cut
 worth a line here so it isn't lost.
 
+**Update, 2026-09-02: reproduced live with a real Shift+Tab keypress, closing the one gap
+both prior passes explicitly left open** (accessibility.md's own "What's still open": *"a
+real Tab-keypress walkthrough — blocked by this session's tooling... worth an hour with a
+visible/foregrounded pane"*). Both the original finding and the follow-up's AlertDialog
+confirmation used programmatic `.focus()` on a stub harness; this pass had a real,
+authenticated dev server to drive instead.
+
+Signed in as `oryn.qa.b`, opened `upload-evidence-dialog.tsx` (a plain `Dialog`, `/documents`
+→ "Kanıt ekle") on a visible, correctly-rendering pane. Focus auto-landed on the first
+control (the "Bunu destekliyor" select trigger), confirmed via `document.activeElement`. A
+single real `Shift+Tab` keypress — not `.focus()` — moved focus to
+`<span data-base-ui-focus-guard aria-hidden="true">`, `clip-path: inset(50%)`, exactly the
+signature already documented. Held there through a 2-second poll, unchanged. `Escape`
+closed the dialog cleanly and returned focus to the `Kanıt ekle` trigger button, confirmed —
+matches "not a hard trap" exactly as previously characterized, now with a real keypress
+behind the claim rather than a stub-harness inference.
+
+**Could not independently re-confirm `AlertDialog` with a real keypress this pass** — the
+Browser pane went hidden mid-session (`document.visibilityState: "hidden"`, confirmed via
+direct query, not assumed) while navigating to test `delete-account-dialog.tsx`, and stayed
+hidden through repeated waits; `computer` key events are unreliable in that state, per this
+same investigation's own prior finding, so a further attempt would not have produced a
+result trustworthy enough to report. Not re-litigating: `AlertDialogPrimitive.Popup` being a
+verbatim re-export of the identical `DialogPopup` module (established by source in the
+accessibility.md update above) is stronger evidence than one more click-through would add on
+its own — this pass's contribution is the real-keypress confirmation on `Dialog`, not a
+second proof that the two share code.
+
+**No new dialogs since either pass.** Every file rendering `Dialog`/`AlertDialog` (13 total,
+grepped fresh) predates both accessibility passes — newest is `quick-add-entry.tsx`
+(2026-08-29). `components/ui/dialog.tsx`/`alert-dialog.tsx` themselves are also unchanged
+since 2026-08-29. `@base-ui/react` is still `1.7.0`, still the latest published version —
+no upstream release to pick up.
+
+**Decision, per this pass's own assignment: not a contained fix, still a genuine
+component-library issue.** Reconsidered a hand-rolled redirect (an `onFocus` handler on the
+guard span itself, narrower than a dialog-wide keydown listener) rather than accepting the
+prior pass's reasoning by default — the trigger mechanism isn't what makes this risky. The
+hard part, unchanged: correctly computing "the last tabbable element" for an arbitrary
+dialog body across all ~13 call sites, several of which nest their own complex interactive
+primitives (a Base UI `Select` inside `upload-evidence-dialog.tsx`, for one, confirmed live
+this pass) that may manage focus/portals in ways a generic userland computation can't
+safely assume. Verifying a patch wouldn't subtly break one of the other dialogs needs live
+coverage of all of them in one pass, which this session's pane-visibility trouble made
+impossible to deliver today. Tracking maintained, not fixed — the founder/CEO's call on
+filing upstream vs. waiting stands.
+
 ## ~~Needs founder decision~~ — message_reports let a student name an innocent user as the accused — APPLIED
 
 **Update, 2026-09-01 (staleness pass): this migration is live. The heading and the
