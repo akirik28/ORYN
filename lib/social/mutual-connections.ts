@@ -6,8 +6,10 @@ import { intersectAcceptedConnections, excludeBlockedIds } from "./mutual-connec
 export * from "./mutual-connections-rules";
 
 /** Everyone `userId` has an *accepted* connection with — deliberately narrower than
- * `hasAnyConnection` elsewhere in this pack (pending/declined don't count as a real
- * mutual friend). Two-query, no N+1: one `.or()` covering both participant columns. */
+ * `canViewBasicProfile`'s `hasAcceptedConnection`/`hasPendingRequestFromTarget` pair
+ * elsewhere in this pack (pending doesn't count as a real mutual friend here, though it
+ * does unlock basic profile visibility there — two different questions). Two-query, no
+ * N+1: one `.or()` covering both participant columns. */
 async function getAcceptedConnectionIds(userId: string): Promise<Set<string>> {
   // A missing admin credential degrades to "no accepted connections found" — see
   // tryCreateAdminClient's own comment for why (crashed a page render, found
