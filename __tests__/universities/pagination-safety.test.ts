@@ -60,6 +60,12 @@ describe("universities explorer never repeats the 1000-row / large-.in() bug cla
     expect(extractFunction(queries, "getAllQsListPositions")).toContain(".range(");
   });
 
+  test("getAllResearchDepthUniversityIds paginates with .range() and refuses a partial result", () => {
+    const fn = extractFunction(queries, "getAllResearchDepthUniversityIds");
+    expect(fn).toContain(".range(");
+    expect(fn).toContain("Refusing to return a partial result");
+  });
+
   test("the id-intersection path only calls .in(\"id\", ...) against a page-sized slice, never a full scope array", () => {
     const fn = extractFunction(browsePage, "loadUniversityBrowsePage");
     // The one `.in("id", ...)` left in this path must read from `pageIds` (already sliced to

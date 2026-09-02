@@ -139,6 +139,69 @@ export async function getAllQsListPositions(supabase: SupabaseClient<Database>):
   return result;
 }
 
+/**
+ * University ids with real research depth — at least one row in programs, requirements,
+ * sources, or statistics. See lib/universities/data-depth.ts's lacksResearchDepth, which
+ * this is the bulk-list counterpart of: that function answers the question for one
+ * university on its own detail page, this answers it for every university at once so the
+ * browse page can filter/badge by it without an N-query loop.
+ *
+ * Deliberately the minority (this returns the ~285 well-researched ids, not the ~734
+ * without) — CEO's own framing: a marker true for 72% of rows is noise, not information.
+ * Every caller of this function is checking "is this one of the researched ones", never
+ * the inverse.
+ *
+ * Four separate paginated reads, unioned, rather than one join: each table is one row (or
+ * a few) per university and independently sparse, so a LEFT JOIN across all four would
+ * fan out a university with, say, 3 programs AND 2 requirements into 6 rows needing its
+ * own dedup step anyway — four flat id lists deduped into one Set by construction is
+ * simpler, and the four reads run in parallel. Same paginate + exact-count-verify
+ * discipline as getAllCostOfAttendance/getAllQsListPositions for the same reason: none of
+ * these four tables are near PostgREST's 1000-row cap today (the largest, sources, is
+ * under 200), but built paginated from the start rather than waiting to silently truncate
+ * once one of them crosses it.
+ */
+export async function getAllResearchDepthUniversityIds(supabase: SupabaseClient<Database>): Promise<Set<string>> {
+  async function allUniversityIds(
+    table: "university_programs" | "university_requirements" | "university_sources" | "university_statistics"
+  ): Promise<Set<string>> {
+    const result = new Set<string>();
+    let offset = 0;
+    let expectedTotal: number | null = null;
+    let seen = 0;
+    for (;;) {
+      const { data, count, error } = await supabase
+        .from(table)
+        .select("university_id", { count: "exact" })
+        .order("university_id", { ascending: true })
+        .range(offset, offset + PAGE_SIZE - 1);
+      if (error) throw new Error(`getAllResearchDepthUniversityIds/${table}: ${error.message}`);
+      if (expectedTotal === null) expectedTotal = count ?? 0;
+      for (const row of data ?? []) result.add(row.university_id);
+      seen += (data ?? []).length;
+      if (!data || data.length < PAGE_SIZE) break;
+      offset += PAGE_SIZE;
+    }
+    if (seen !== expectedTotal) {
+      throw new Error(`getAllResearchDepthUniversityIds/${table}: assembled ${seen} rows but the server counts ${expectedTotal}. Refusing to return a partial result.`);
+    }
+    return result;
+  }
+
+  const [programs, requirements, sources, statistics] = await Promise.all([
+    allUniversityIds("university_programs"),
+    allUniversityIds("university_requirements"),
+    allUniversityIds("university_sources"),
+    allUniversityIds("university_statistics"),
+  ]);
+
+  const union = new Set<string>();
+  for (const perTable of [programs, requirements, sources, statistics]) {
+    for (const id of perTable) union.add(id);
+  }
+  return union;
+}
+
 export interface TargetUniversityWithDetails extends TargetUniversity {
   university: University | null;
 }

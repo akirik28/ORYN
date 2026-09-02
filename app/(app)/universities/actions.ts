@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
 import { logEvent } from "@/lib/analytics/log";
 import { canonicalUniversityId, loadSupersessionMap, getSupersededUniversityIds } from "@/lib/universities/canonical";
-import { getAllCostOfAttendance, getAllQsListPositions } from "@/lib/universities/queries";
+import { getAllCostOfAttendance, getAllQsListPositions, getAllResearchDepthUniversityIds } from "@/lib/universities/queries";
 import { categorizeAndDedupeResearchTopics } from "@/lib/universities/research-taxonomy";
 import {
   loadUniversityBrowsePage,
@@ -128,20 +128,24 @@ export async function loadMoreUniversities(
     const supersessionMap = await loadSupersessionMap(supabase);
     const supersededIds = getSupersededUniversityIds(supersessionMap);
     const needsQsRankMap = !params.q && (params.sort === "ranking" || params.rank !== null);
-    const [costMap, qsRankMap] = await Promise.all([
+    // depthIds fetched unconditionally, matching page.tsx's first-page load: it feeds the
+    // "Detailed profile" card badge on every scrolled-in batch too, not just a
+    // detailedOnly-filtered one.
+    const [costMap, qsRankMap, depthIds] = await Promise.all([
       params.cost.length > 0 ? getAllCostOfAttendance(supabase) : Promise.resolve(null),
       needsQsRankMap ? getAllQsListPositions(supabase) : Promise.resolve(null),
+      getAllResearchDepthUniversityIds(supabase),
     ]);
 
     const result = await loadUniversityBrowsePage(
       supabase,
       { ...params, page },
       supersededIds,
-      { costMap: costMap ?? undefined, qsRankMap: qsRankMap ?? undefined }
+      { costMap: costMap ?? undefined, qsRankMap: qsRankMap ?? undefined, depthIds }
     );
 
     const [meta, targetsRes] = await Promise.all([
-      getUniversityCardMeta(supabase, result.universities, categorizeAndDedupeResearchTopics),
+      getUniversityCardMeta(supabase, result.universities, categorizeAndDedupeResearchTopics, depthIds),
       supabase.from("target_universities").select("university_id").eq("user_id", session.userId!),
     ]);
 

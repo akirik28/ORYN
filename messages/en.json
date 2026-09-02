@@ -754,7 +754,8 @@
       "compareLimitTooltip": "Compare up to 4 at a time",
       "comparing": "Comparing",
       "compare": "Compare",
-      "costOfAttendanceSuffix": "/ year, cost of attendance"
+      "costOfAttendanceSuffix": "/ year, cost of attendance",
+      "detailedProfile": "Detailed profile"
     },
     "browseGrid": {
       "loadingMoreSr": "Loading more universities",
@@ -863,10 +864,13 @@
       "sizeUnknownExcluded": "{count, plural, one {{formatted} additional university is} other {{formatted} additional universities are}} excluded because student population data is unavailable.",
       "noUniversitiesFound": "No universities found",
       "matchingQuerySuffix": " matching “{query}”",
-      "noMatchFilters": "No universities match the current filters — try widening the cost, size, or ranking range.",
+      "noMatchFilters": "No universities match the current filters — try widening the cost, size, or ranking range, or turning off “Detailed profiles only”.",
       "dataAddedOverTime": "University data is added over time — check back soon, or try another region.",
       "uncoveredNote": "Note: {count, plural, one {{formatted} check-in-progress country isn't} other {{formatted} check-in-progress countries aren't}} yet mapped to a region ({names}) — included in the total above, not yet in any region tab.",
-      "sortByName": "Name"
+      "sortByName": "Name",
+      "researchDepth": "Research depth",
+      "researchDepthHint": "Most universities in Oryn's catalog don't have detailed program and requirement data yet — this narrows to the ones that do.",
+      "detailedProfilesOnly": "Detailed profiles only"
     },
     "comparePage": {
       "title": "Compare universities",

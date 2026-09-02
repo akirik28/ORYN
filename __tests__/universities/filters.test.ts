@@ -126,6 +126,43 @@ describe("applyRangeFilters — rank", () => {
   });
 });
 
+/**
+ * CEO, 2026-09-02: 734 of 1,019 universities lack research depth (lib/universities/
+ * data-depth.ts) and "extend it to browse" required a filter that's student-controlled
+ * and off by default. detailedOnly is the narrowing half of that; the badge half lives in
+ * browse-page.ts's getUniversityCardMeta.
+ */
+describe("applyRangeFilters — detailedOnly", () => {
+  const depthIds = new Set(["a", "c"]);
+
+  test("off by default: no detailedOnly filter passes every row through untouched", () => {
+    const { matched } = applyRangeFilters(ROWS, {}, { depthIds });
+    expect(matched).toHaveLength(4);
+  });
+
+  test("keeps only rows present in depthIds", () => {
+    const { matched } = applyRangeFilters(ROWS, { detailedOnly: true }, { depthIds });
+    expect(matched.map((r) => r.id).sort()).toEqual(["a", "c"]);
+  });
+
+  test("detailedOnly: false behaves like the filter being off, even with depthIds present", () => {
+    const { matched } = applyRangeFilters(ROWS, { detailedOnly: false }, { depthIds });
+    expect(matched).toHaveLength(4);
+  });
+
+  test("missing depthIds (filter active, no set fetched) excludes every row rather than including everything", () => {
+    const { matched } = applyRangeFilters(ROWS, { detailedOnly: true });
+    expect(matched).toEqual([]);
+  });
+
+  test("composes with size — a row must satisfy both to survive", () => {
+    // "a" (3000, under5k) is in depthIds; "c" (40000, 30k-plus) is also in depthIds but
+    // doesn't fit under5k, so only "a" should survive both filters together.
+    const { matched } = applyRangeFilters(ROWS, { size: ["under5k"], detailedOnly: true }, { depthIds });
+    expect(matched.map((r) => r.id)).toEqual(["a"]);
+  });
+});
+
 describe("applyRangeFilters — combined filters narrow together (AND, not OR)", () => {
   test("size + cost both active only keep rows satisfying both", () => {
     const costMap = new Map([
