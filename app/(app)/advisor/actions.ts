@@ -173,11 +173,17 @@ export async function sendAdvisorMessage(
       // row so a reload shows a retry-able bubble instead of nothing.
       console.error("[advisor] reply generated but failed to save", { conversationId: convId, error: assistantMessageError?.message });
       const errorMessage = tr ? "Yanıt kaydedilemedi." : "Couldn't save the reply.";
-      const { data: failedMessage } = await supabase
+      const { data: failedMessage, error: failedMessageError } = await supabase
         .from("advisor_messages")
         .insert({ conversation_id: convId, user_id: userId, role: "assistant", content: null, status: "failed", error_message: errorMessage })
         .select("id")
         .single();
+      if (failedMessageError) {
+        // Same reasoning as the catch block's own identical write below: already returns
+        // `error: errorMessage` regardless, so the student never sees a false success here
+        // — logged only so a repeat of this specific write failing is visible.
+        console.error("[advisor] failed to persist the failure record itself", { conversationId: convId, error: failedMessageError.message });
+      }
       revalidatePath("/advisor");
       return { conversationId: convId, assistantMessageId: failedMessage?.id, error: errorMessage };
     }

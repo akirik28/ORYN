@@ -86,5 +86,6 @@ export async function refreshRequirementEvaluations(
     };
   });
 
-  await admin.from("student_requirement_evaluations").upsert(rows, { onConflict: "user_id,requirement_id" });
+  const { error } = await admin.from("student_requirement_evaluations").upsert(rows, { onConflict: "user_id,requirement_id" });
+  if (error) console.error("[requirement-evaluations] failed to persist requirement evaluations", { userId, universityId, programId, error: error.message });
 }
