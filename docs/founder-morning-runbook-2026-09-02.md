@@ -63,9 +63,14 @@ because `SET ROLE` persists for the rest of that editor session/connection other
 
 ## Step 2 — Apply migrations
 
-> **Updated 2026-09-02 ~10:45 — four more landed after this runbook was written.** All
-> nine below re-verified unapplied against `information_schema` just now, and all nine
-> re-verified re-run safe by reading each file.
+> **Updated 2026-09-02 ~13:15 — two more landed after the last revision (`0084`, `0085`).**
+> The list is now **`0075` through `0085`, eleven migrations.** All eleven re-verified
+> unapplied against `information_schema`, and all eleven re-verified re-run safe by reading
+> each file. **`0058` is still excluded and still needs a decision first — see below.**
+>
+> Expect this number to keep moving: work is still landing. **The range is what matters, not
+> the count** — apply everything from `0075` to the highest number in `supabase/migrations/`,
+> skipping only `0058`.
 
 > ### ⚠️ Apply them in numeric order, all in one go
 >
@@ -90,6 +95,8 @@ because `SET ROLE` persists for the rest of that editor session/connection other
 | `0081_canonical_entity_merges...sql` | An admin who merged an entity can still delete their account | First migration to *create* this FK — it was never in any migration |
 | `0082_global_university_discovery_indexes.sql` | A fresh deploy gets indexes live already has | No effect here; matters only for a new database |
 | `0083_external_sync_jobs_errors_encountered.sql` | A job that swallowed errors reports how many | Additive |
+| `0084_skills_languages_source.sql` | A skill imported from a CV is distinguishable from one typed by hand | Additive — CV extraction pulled skills and languages and **silently discarded both**, always |
+| `0085_drop_system_notification_category.sql` | Removes an enum value that never had a writer | Recreates the enum without `system`; zero of 113 live rows use it, so nothing to migrate |
 | `0058_social_posts.sql` | — | **Never**, without deciding first. See below. |
 
 **Why 0077 is urgent, not routine**: `getOrCreateWeeklyPlan` — the function behind a
