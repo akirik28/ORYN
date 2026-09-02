@@ -1122,7 +1122,9 @@
         "balanced": "Standard",
         "thorough": "Ultra"
       },
-      "overridden": "Ultra is saved for after this resets — this month's usage means shorter replies for now. Resets {date}."
+      "overridden": "Ultra is saved for after this resets — this month's usage means shorter replies for now. Resets {date}.",
+      "ultraLocked": "Ultra gives longer, more thorough answers — part of Oryn Ultra.",
+      "ultraLockedLink": "Learn more"
     },
     "strategyPanel": {
       "ariaLabel": "What Oryn is working from",

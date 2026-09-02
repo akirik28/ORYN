@@ -13,6 +13,7 @@ import { isUuidLike } from "@/lib/validation/uuid";
 import { isUndefinedColumnError } from "@/lib/supabase/errors";
 import { formatAbsoluteDate } from "@/lib/i18n/date";
 import { resolveResponseMode } from "@/lib/tier/response-mode";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import type { AIMessage } from "@/lib/ai/provider";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -180,7 +181,8 @@ export async function sendAdvisorMessage(
   try {
     const profile = await getCurrentProfile();
     const responseMode = profile ? resolveResponseMode(profile) : "balanced";
-    const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: trimmed, responseMode });
+    const planTier = resolvePlanTier(profile ?? { plan_tier: "standard" });
+    const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: trimmed, responseMode, planTier });
     let { data: assistantMessage, error: assistantMessageError } = await supabase
       .from("advisor_messages")
       .insert({ conversation_id: convId, user_id: userId, role: "assistant", content: reply, status: "complete", degraded })
@@ -317,7 +319,8 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
   try {
     const profile = await getCurrentProfile();
     const responseMode = profile ? resolveResponseMode(profile) : "balanced";
-    const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: userMessage.content, responseMode });
+    const planTier = resolvePlanTier(profile ?? { plan_tier: "standard" });
+    const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: userMessage.content, responseMode, planTier });
     let { error: updateError } = await supabase
       .from("advisor_messages")
       .update({ content: reply, status: "complete", error_message: null, degraded })

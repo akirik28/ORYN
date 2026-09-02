@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/lib/security/dal";
+import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isUndefinedColumnError } from "@/lib/supabase/errors";
@@ -10,6 +10,7 @@ import { removeAllUserStorage, StorageCleanupError } from "@/lib/account/delete-
 import { UpdatePasswordSchema } from "@/lib/validation/auth";
 import { meetsMinimumSignupAge } from "@/lib/legal/age-policy";
 import { logEvent } from "@/lib/analytics/log";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import type { NotificationCategory, TimeBudget, ResponseMode } from "@/types/database";
 
 /**
@@ -243,9 +244,24 @@ export async function updateNotificationPreferences(preferences: Record<Notifica
  * degrade (lib/ai/limits/budget.ts) can still override which model actually answers the
  * next message, same as it already does silently today. This action only ever records what
  * the student asked for.
+ *
+ * Plan-gated for "thorough" only (founder, 2026-09-02: "sadece normal kullanıcı ultraya
+ * geçemesin, o kadar" — only a standard user shouldn't be able to switch to Ultra, that's
+ * it). Fast and Standard stay free for every plan_tier, unconditionally. The slider's own
+ * interactive clamp is what a real student actually meets; this check is the backstop for
+ * the same reason every other authorization check in this codebase re-verifies server-side
+ * — a Server Action is directly callable with any argument regardless of what UI called it.
  */
 export async function updateResponseMode(mode: ResponseMode): Promise<{ error?: string }> {
   const session = await requireUser();
+
+  if (mode === "thorough") {
+    const profile = await getCurrentProfile();
+    if (resolvePlanTier(profile ?? { plan_tier: "standard" }) !== "ultra") {
+      return { error: "Ultra isn't available on your plan, so nothing was saved." };
+    }
+  }
+
   const supabase = await createClient();
 
   const { error } = await supabase.from("profiles").update({ response_mode: mode }).eq("id", session.userId!);

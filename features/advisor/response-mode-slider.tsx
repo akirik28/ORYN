@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 import { updateResponseMode } from "@/app/(app)/settings/actions";
@@ -10,7 +11,7 @@ import { usePrefersReducedMotion } from "@/lib/ui/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
 import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
-import type { ResponseMode } from "@/types/database";
+import type { ResponseMode, PlanTier } from "@/types/database";
 
 const MODES: readonly ResponseMode[] = ["fast", "balanced", "thorough"];
 
@@ -59,15 +60,38 @@ function idxForMode(mode: ResponseMode): number {
  * copy already uses. Silence here would be the fake-button failure this project forbids —
  * a control showing "Ultra" while quietly answering with the cheaper model and never
  * saying so.
+ *
+ * **Ultra is plan-gated (founder, same night, after seeing the slider live): "kullanıcı
+ * [modlar] arasında geçiş yapabilsin, sadece normal kullanıcı ultraya geçemesin, o kadar —
+ * diğer her şey tercihi olsun ve tokena yansısın"** (the student should be able to switch
+ * between modes — only a standard user shouldn't be able to reach Ultra, that's it —
+ * everything else stays their choice and shows up in tokens). Narrower than migration
+ * 0091's own "don't couple to plan_tier" warning, not a reversal of it: that warning is
+ * about a *paying* Ultra student's Sonnet-tier response style never visually downgrading
+ * over an unrelated per-message choice, which this leaves untouched — Fast and Standard
+ * stay free for every plan_tier. What's new is that the *single most expensive* mode
+ * becomes a plan_tier capability rather than an unconditional free choice.
+ *
+ * A student whose stored preference genuinely is "thorough" but whose plan can't use it
+ * (a downgrade, or a value set before this gate existed) gets the exact same static-flame-
+ * plus-note treatment the degrade case already uses, just a different reason — same
+ * instinct, applied a second time: the ball never lies about what's actually saved. New
+ * SELECTIONS toward Ultra are what `commit` below actually blocks — the track's own
+ * interactive range simply doesn't extend past Standard for a non-Ultra plan, so there's
+ * no failed-click moment to explain; the note is a standing, always-visible fact
+ * ("say why," not "explain after they try"), matching this product's own "never silently"
+ * posture rather than a locked-until-clicked affordance.
  */
 export function ResponseModeSlider({
   responseMode,
   budgetDegraded,
   quota,
+  planTier,
 }: {
   responseMode: ResponseMode;
   budgetDegraded: boolean;
   quota: MonthlyQuota;
+  planTier: PlanTier;
 }) {
   const t = useTranslations("advisor.responseMode");
   const locale = useLocale() as Locale;
@@ -82,11 +106,19 @@ export function ResponseModeSlider({
   const springRef = useRef({ cur: idxForMode(responseMode) / 2, target: idxForMode(responseMode) / 2, vel: 0 });
 
   const idx = idxForMode(mode);
-  const ultraActive = mode === "thorough" && !budgetDegraded;
+  const canSelectUltra = planTier === "ultra";
+  const ultraActive = mode === "thorough" && !budgetDegraded && canSelectUltra;
   const resets = formatAbsoluteDate(quota.resetsAt, locale, { month: "short", day: "numeric" });
 
   function commit(nextIdx: number) {
-    const clamped = Math.max(0, Math.min(2, nextIdx));
+    // The interactive ceiling, not just the displayed one — a non-Ultra plan's track
+    // literally cannot be dragged, clicked, or arrow-keyed past Standard. This is what
+    // actually enforces "only a standard user shouldn't be able to switch to Ultra"; the
+    // server-side check in updateResponseMode (and generateAdvisorReply's own model
+    // selection) is the real backstop, this is what keeps a normal interaction from ever
+    // reaching it in the first place.
+    const ceiling = canSelectUltra ? 2 : 1;
+    const clamped = Math.max(0, Math.min(ceiling, nextIdx));
     const next = MODES[clamped]!;
     if (next === mode) return;
     const previous = mode;
@@ -206,10 +238,23 @@ export function ResponseModeSlider({
 
       <div className="mt-1.5 flex justify-between text-xs text-muted-foreground">
         <span className={cn(idx === 0 && "font-medium text-foreground")}>{t("modes.fast")}</span>
-        <span className={cn(idx === 2 && "font-medium text-foreground")}>{t("modes.thorough")}</span>
+        {/* Dimmed, not hidden or relabelled — Ultra stays visible and named for a
+            standard-tier student, per the founder's own instruction to show it rather
+            than remove it; the reduced opacity is the only signal that this end of the
+            track isn't reachable right now. */}
+        <span className={cn(idx === 2 && canSelectUltra && "font-medium text-foreground", !canSelectUltra && "opacity-50")}>
+          {t("modes.thorough")}
+        </span>
       </div>
 
-      {mode === "thorough" && budgetDegraded ? (
+      {!canSelectUltra ? (
+        <p className="mt-2.5 text-xs text-muted-foreground">
+          {t("ultraLocked")}{" "}
+          <Link href="/settings/plan" className="underline underline-offset-2 hover:text-foreground">
+            {t("ultraLockedLink")}
+          </Link>
+        </p>
+      ) : mode === "thorough" && budgetDegraded ? (
         <p className="mt-2.5 text-xs text-muted-foreground">{t("overridden", { date: resets })}</p>
       ) : null}
     </div>

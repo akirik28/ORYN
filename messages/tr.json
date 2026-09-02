@@ -1122,7 +1122,9 @@
         "balanced": "Standart",
         "thorough": "Ultra"
       },
-      "overridden": "Ultra tercihin saklı kalıyor — bu ayki kullanım nedeniyle yanıtlar şimdilik daha kısa. {date} tarihinde yenilenir."
+      "overridden": "Ultra tercihin saklı kalıyor — bu ayki kullanım nedeniyle yanıtlar şimdilik daha kısa. {date} tarihinde yenilenir.",
+      "ultraLocked": "Ultra, daha uzun ve detaylı yanıtlar verir — Oryn Ultra'nın bir parçası.",
+      "ultraLockedLink": "Daha fazla bilgi"
     },
     "strategyPanel": {
       "ariaLabel": "Oryn'ın üzerinden çalıştığı bilgiler",

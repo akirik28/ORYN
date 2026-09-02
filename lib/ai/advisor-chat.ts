@@ -9,7 +9,7 @@ import { DEGRADE_MODEL } from "./limits/budget";
 import type { AIMessage } from "./provider";
 import { withOutputLanguage } from "./output-language";
 import { env } from "@/lib/env";
-import type { ResponseMode } from "@/types/database";
+import type { ResponseMode, PlanTier } from "@/types/database";
 
 export interface AdvisorReply {
   text: string;
@@ -43,6 +43,13 @@ export async function generateAdvisorReply(params: {
   history: AIMessage[];
   newMessage: string;
   responseMode: ResponseMode;
+  /** 2026-09-02, founder: "sadece normal kullanıcı ultraya geçemesin" — Ultra's prompt
+   * instruction only ever applies for an Ultra-plan student. This is the real backstop, not
+   * features/advisor/response-mode-slider.tsx's own interactive clamp or
+   * app/(app)/settings/actions.ts's write-side check — a Server Action is directly callable
+   * with any argument, same discipline as every authorization check in this codebase, so
+   * the generation call itself must not trust that responseMode ever got here honestly. */
+  planTier: PlanTier;
 }): Promise<AdvisorReply> {
   const context = await buildStudentAdvisorContext(params.userId);
   const opportunityContext = await buildOpportunityContextText(params.userId);
@@ -60,12 +67,14 @@ export async function generateAdvisorReply(params: {
     // selectModelForUser's decision (env.anthropic.model normally, DEGRADE_MODEL once
     // spend-degraded); "fast" only ever asks for the SAME cheap model degrade would also
     // choose, so honoring it can never weaken the cap. "thorough" only ever adds an
-    // instruction when the effective model is still the ceiling model — asking an
-    // already-degraded, already-cheaper model to write MORE would undermine the entire
-    // reason it degraded in the first place, not just misrepresent the student's
-    // preference.
+    // instruction when the effective model is still the ceiling model AND the student is
+    // actually on the Ultra plan — asking an already-degraded, already-cheaper model to
+    // write MORE would undermine the entire reason it degraded, and a stored "thorough"
+    // preference surviving a downgrade (features/advisor/response-mode-slider.tsx's own
+    // comment on that exact case) must never silently keep producing Ultra-quality output
+    // for a standard-plan student just because the column still says so.
     const effectiveModel = params.responseMode === "fast" && model === env.anthropic.model ? DEGRADE_MODEL : model;
-    const thorough = params.responseMode === "thorough" && effectiveModel === env.anthropic.model;
+    const thorough = params.responseMode === "thorough" && effectiveModel === env.anthropic.model && params.planTier === "ultra";
     return provider.generateText({
       system: thorough ? `${system}\n\n${THOROUGH_INSTRUCTION}` : system,
       prompt: params.newMessage,

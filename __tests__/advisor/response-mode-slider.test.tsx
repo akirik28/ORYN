@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, test, expect, afterEach, beforeEach, vi } from "vitest";
-import { render, cleanup } from "@testing-library/react";
+import { render, cleanup, fireEvent } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { ResponseModeSlider } from "@/features/advisor/response-mode-slider";
 import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
@@ -23,7 +23,8 @@ import messages from "@/messages/en.json";
  * the ball snaps straight to its target and the matrix never flows, one paint, no RAF.
  */
 
-vi.mock("@/app/(app)/settings/actions", () => ({ updateResponseMode: vi.fn().mockResolvedValue({}) }));
+const { updateResponseModeMock } = vi.hoisted(() => ({ updateResponseModeMock: vi.fn().mockResolvedValue({}) }));
+vi.mock("@/app/(app)/settings/actions", () => ({ updateResponseMode: updateResponseModeMock }));
 
 function quota(): MonthlyQuota {
   return {
@@ -56,13 +57,14 @@ let matchMediaMatches = false;
 function renderSlider(props: Partial<Parameters<typeof ResponseModeSlider>[0]> = {}) {
   return render(
     <NextIntlClientProvider locale="en" messages={messages}>
-      <ResponseModeSlider responseMode="balanced" budgetDegraded={false} quota={quota()} {...props} />
+      <ResponseModeSlider responseMode="balanced" budgetDegraded={false} quota={quota()} planTier="ultra" {...props} />
     </NextIntlClientProvider>,
   );
 }
 
 beforeEach(() => {
   matchMediaMatches = false;
+  updateResponseModeMock.mockReset().mockResolvedValue({});
   vi.stubGlobal(
     "matchMedia",
     vi.fn().mockImplementation((query: string) => ({
@@ -146,5 +148,58 @@ describe("ResponseModeSlider — prefers-reduced-motion: one frame, not a loop",
 
     expect(window.requestAnimationFrame).not.toHaveBeenCalled();
     expect(ctx.clearRect).toHaveBeenCalled();
+  });
+});
+
+describe("ResponseModeSlider — Ultra is plan-gated, everything else stays free", () => {
+  test("standard plan + balanced: the locked note shows, naming what Ultra is", () => {
+    const { getByText } = renderSlider({ planTier: "standard", responseMode: "balanced" });
+    expect(getByText(/Ultra gives longer, more thorough answers/)).toBeTruthy();
+  });
+
+  test("ultra plan + balanced: no locked note — nothing to explain, Ultra is genuinely reachable", () => {
+    const { queryByText } = renderSlider({ planTier: "ultra", responseMode: "balanced" });
+    expect(queryByText(/Ultra gives longer, more thorough answers/)).toBeNull();
+  });
+
+  test("standard plan + a stale stored \"thorough\" (e.g. after a downgrade): locked note shows, not the degrade note", () => {
+    // Both conditions could technically be true at once (stale thorough AND spend-degraded)
+    // — the plan reason must win, since it's the more fundamental one: a standard student
+    // can't reach Ultra regardless of this month's spend, so telling them "it resets" would
+    // be false. This is the precedence the component itself encodes, pinned here so it
+    // can't silently flip.
+    const { getByText, queryByText } = renderSlider({ planTier: "standard", responseMode: "thorough", budgetDegraded: true });
+    expect(getByText(/Ultra gives longer, more thorough answers/)).toBeTruthy();
+    expect(queryByText(/Ultra is saved for after this resets/)).toBeNull();
+  });
+
+  test("standard plan: pressing the right arrow from Standard never reaches Ultra — the interactive ceiling itself, not just a locked display", () => {
+    const { getByRole } = renderSlider({ planTier: "standard", responseMode: "balanced" });
+    const slider = getByRole("slider");
+
+    fireEvent.keyDown(slider, { key: "ArrowRight" });
+
+    expect(updateResponseModeMock).not.toHaveBeenCalled();
+    expect(slider.getAttribute("aria-valuenow")).toBe("1");
+  });
+
+  test("ultra plan: the identical keypress genuinely reaches Ultra — proving the block above is plan-specific, not a general bug", () => {
+    const { getByRole } = renderSlider({ planTier: "ultra", responseMode: "balanced" });
+    const slider = getByRole("slider");
+
+    fireEvent.keyDown(slider, { key: "ArrowRight" });
+
+    expect(updateResponseModeMock).toHaveBeenCalledWith("thorough");
+  });
+
+  test("standard plan: clicking directly on the Ultra end of the track still resolves to Standard, not Ultra", () => {
+    const { getByRole } = renderSlider({ planTier: "standard", responseMode: "balanced" });
+    const slider = getByRole("slider");
+
+    // pointerDown reads clientX against the track's own getBoundingClientRect (mocked to
+    // width: 260 in beforeEach) — 250 sits well inside the rightmost (Ultra) third.
+    fireEvent.pointerDown(slider, { clientX: 250 });
+
+    expect(updateResponseModeMock).not.toHaveBeenCalled();
   });
 });
