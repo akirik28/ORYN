@@ -23,6 +23,18 @@ export interface JobHealthSummary {
   readonly lastFinishedAt: string | null;
   readonly durationMs: number | null;
   readonly itemsProcessed: number | null;
+  /**
+   * Per-item failures the latest run counted internally without the whole job throwing —
+   * present alongside `itemsProcessed` (both come from the same row) but, until this field
+   * existed, never actually reached the admin panel: `runWithTracking` only ever marks a
+   * job `failed` on a *thrown* exception, so a run that caught and counted real per-item
+   * failures (a provider returning a structured error, one student's plan generation
+   * failing) still shows `status: "succeeded"` — correctly, that's what the whole-run
+   * outcome was — but with no way for a human to see the failures sitting right there in
+   * the row unless this field surfaces them. Null only when the job has never run at all
+   * (mirrors `itemsProcessed`'s own null case), never omitted otherwise.
+   */
+  readonly errorsEncountered: number | null;
   readonly error: string | null;
   /**
    * How many of the most recent runs, counting back from the latest, were ALL
@@ -93,7 +105,19 @@ function toRecentJobRun(run: ExternalSyncJob): RecentJobRun {
 export function summarizeJobHealth(def: JobDefinition, recentRuns: readonly ExternalSyncJob[], now: Date = new Date()): JobHealthSummary {
   const latestRun = recentRuns[0] ?? null;
   if (latestRun === null) {
-    return { jobName: def.jobName, label: def.label, status: "never_run", lastStartedAt: null, lastFinishedAt: null, durationMs: null, itemsProcessed: null, error: null, emptyStreak: 0, recentRuns: [] };
+    return {
+      jobName: def.jobName,
+      label: def.label,
+      status: "never_run",
+      lastStartedAt: null,
+      lastFinishedAt: null,
+      durationMs: null,
+      itemsProcessed: null,
+      errorsEncountered: null,
+      error: null,
+      emptyStreak: 0,
+      recentRuns: [],
+    };
   }
 
   const startedAt = new Date(latestRun.started_at);
@@ -121,6 +145,7 @@ export function summarizeJobHealth(def: JobDefinition, recentRuns: readonly Exte
     lastFinishedAt: latestRun.finished_at,
     durationMs,
     itemsProcessed: latestRun.items_processed,
+    errorsEncountered: latestRun.errors_encountered,
     error: latestRun.error,
     emptyStreak: computeEmptyStreak(recentRuns),
     recentRuns: recentRuns.map(toRecentJobRun),

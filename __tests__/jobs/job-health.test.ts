@@ -33,7 +33,7 @@ function makeStreak(count: number, itemsProcessed: number, status: ExternalSyncJ
 describe("summarizeJobHealth — status derivation", () => {
   it("a job that has never run reads as never_run, not as absent", () => {
     const summary = summarizeJobHealth(DEF, [], NOW);
-    expect(summary).toMatchObject({ jobName: "deadline_reminders", label: "Deadline reminders", status: "never_run", lastStartedAt: null, durationMs: null, emptyStreak: 0 });
+    expect(summary).toMatchObject({ jobName: "deadline_reminders", label: "Deadline reminders", status: "never_run", lastStartedAt: null, durationMs: null, errorsEncountered: null, emptyStreak: 0 });
   });
 
   it("a recent successful run passes through as succeeded, with computed duration", () => {
@@ -44,6 +44,18 @@ describe("summarizeJobHealth — status derivation", () => {
     expect(summary.status).toBe("succeeded");
     expect(summary.durationMs).toBe(3 * 60_000);
     expect(summary.itemsProcessed).toBe(12);
+  });
+
+  it("a run that caught real per-item failures without throwing still reads succeeded, but carries the count — 2026-09-03, the admin-panel-visibility gap", () => {
+    // This is the exact case runWithTracking's own "only marks failed on a thrown
+    // exception" behavior can hide: the whole run resolved normally (status succeeded is
+    // correct), but errorsEncountered must still surface at the top level for a human to
+    // ever see it — before this field existed, it was tracked in the DB and computed here
+    // but never reached the summary at all.
+    const run = makeRun({ status: "succeeded", items_processed: 3, errors_encountered: 5 });
+    const summary = summarizeJobHealth(DEF, [run], NOW);
+    expect(summary.status).toBe("succeeded");
+    expect(summary.errorsEncountered).toBe(5);
   });
 
   it("a recent failed run passes through as failed, carrying its error", () => {

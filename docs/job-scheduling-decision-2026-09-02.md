@@ -10,6 +10,38 @@ untouched on this branch, per explicit instruction. The proposed content is a co
 below, for the founder to apply by hand alongside the deploy decision it depends on (see
 the blocking precondition in §4 before anything else here).
 
+**Update, 2026-09-03: applied.** oryn-a7 assigned the vercel.json change itself (this doc's
+own next step) to a new session, sole owner of cron config. Re-verified live before
+applying, not re-derived from scratch: student count unchanged (8 onboarded), the
+`external_sync_jobs` table unchanged (still exactly the two 2026-08-22 `deadline_reminders`
+rows), all four "genuinely free" candidates re-confirmed by directly reading each one's
+current implementation (not re-running the static-trace tool, but tracing every DB
+read/write by hand and confirming each either throws on failure — correctly caught by
+`runWithTracking` — or counts a per-item failure into `errorsEncountered`, never silently
+dropping one). §5's proposed schedule is now live in `vercel.json` exactly as written here.
+`lib/jobs/schedule.ts`'s `JOB_DEFINITIONS` — not touched by this doc, since it was staged-
+only — now also carries all four new jobs, so the admin panel's job-health section actually
+tracks them (`ONE_WEEK_MS`/`ONE_MONTH_MS` added for the two non-daily cadences).
+
+**One real gap found and closed that this doc's own diligence couldn't have caught, because
+it doesn't live in any of the five jobs' own code**: `errorsEncountered` was correctly
+written to every job's row (already true when this doc was written) but was never rendered
+anywhere in the admin panel — `scheduled-jobs-section.tsx` showed `itemsProcessed`, status,
+and the whole-run `error`, never the per-item failure count sitting in the same row. A job
+could report `status: succeeded` while quietly failing most of its own work, and nothing in
+the UI would show it. Fixed: `JobHealthSummary` now carries `errorsEncountered` at the top
+level (mirroring `itemsProcessed`), and the panel surfaces it as a warning line whenever
+it's non-zero, for all eight jobs, not just the four newly armed here.
+
+`generate_weekly_plans` (Job D) confirmed, independently, still not armed — coordinated
+directly with oryn-f5 (owns the budget surfaces) rather than re-deriving the numbers solo.
+Their addition: the aggregate-degrade mechanism §4/`weekly-plan-aggregate-budget-2026-09-02.md`
+proposes is a genuinely new, third mechanism — not an extension of `job-budget.ts` (built for
+`selectModelForUser(null)` features specifically, which `weekly_plan` isn't) or of
+`budget.ts`'s existing per-student degrade (this would need to sum across every student, not
+scope to one). Whether/when to build it, and who builds it, is an open oryn-a7 scoping
+question — not resolved here, and not picked up as scope creep into this pass.
+
 ## 1. The nine jobs, as they stand today
 
 `vercel.json`, unedited, currently declares exactly these four:

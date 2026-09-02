@@ -195,19 +195,37 @@ every query crosses the Atlantic twice. **Settings → Functions → Function Re
 
 ## 6. Scheduled jobs
 
-`vercel.json` (committed) defines all four:
+`vercel.json` (committed) defines eight (**Update, 2026-09-03**: four more armed since this
+section was first written — see `docs/job-scheduling-decision-2026-09-02.md` for the full
+per-job cost/safety reasoning behind each addition):
 
 | Job | Path | Schedule (UTC) | What it does |
 |---|---|---|---|
 | Opportunity discovery | `/api/jobs/discover-opportunities` | `0 2 * * *` | Tavily search → extract → dedupe → store |
 | Requirement discovery | `/api/jobs/discover-requirements` | `0 4 * * *` | Finds official requirement pages, 5 universities/run |
 | University sync | `/api/jobs/sync-university-data` | `0 6 * * *` | College Scorecard refresh |
+| University change notifications | `/api/jobs/notify-university-changes` | `0 7 * * *` | Notifies students tracking a university whose data changed |
 | Deadline reminders | `/api/jobs/deadline-reminders` | `0 8 * * *` | Scans deadlines, writes notifications |
+| Stale data detection | `/api/jobs/detect-stale-data` | `0 10 * * *` | Recomputes `data_status` from age on universities/requirements/deadlines |
+| Admission outlook refresh | `/api/jobs/refresh-admission-outlooks` | `0 12 * * 0` (Sundays) | Weekly backstop for the read-time outlook refresh |
+| Scheduled profile review | `/api/jobs/scheduled-review` | `0 14 1 * *` (1st of month) | Recomputes career-profile scores for dormant students |
 
-They are spaced **two hours apart on purpose.** On the Hobby plan Vercel only guarantees
-the hour, not the minute: a job set for `0 2 * * *` fires somewhere in `02:00–02:59`.
-Two-hour gaps mean that even at worst-case drift, two jobs can never overlap and contend
-for the same Anthropic and Tavily rate limits.
+The four original jobs are spaced **two hours apart on purpose** (02/04/06/08); the four
+newer ones fill in around them (07, 10, weekly, monthly) rather than stacking at existing
+hours — `notify-university-changes` at 07 specifically runs an hour after
+`sync-university-data` (06), whose output it depends on. On the Hobby plan Vercel only
+guarantees the hour, not the minute: a job set for `0 2 * * *` fires somewhere in
+`02:00–02:59`. Six distinct hour-slots across the six *daily* jobs mean that even at
+worst-case drift, no two can overlap and contend for the same Anthropic/Tavily rate limits.
+
+**Weekly and monthly expressions (`0 12 * * 0`, `0 14 1 * *`) satisfy Hobby's documented
+ceiling** — "at most once per day" — trivially, since both fire less often than daily. What
+this repo has NOT independently confirmed is whether Vercel's own `vercel.json` schema
+validator accepts non-daily cron syntax the same way it accepts daily (§6.0's "fails the
+deployment outright" case is specifically about MORE frequent than daily; standard cron
+syntax supports both weekly and monthly, and nothing about the ceiling itself should reject
+either) — there is no local way to test this without a real deploy, so treat it as expected
+to work, not confirmed to.
 
 ### 6.0 Daily-only cadence is a product decision, not just a config detail
 

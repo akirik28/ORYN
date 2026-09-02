@@ -1831,6 +1831,7 @@
       "ranDuration": "{duration} sürdü",
       "stillRunning": "hâlâ çalışıyor",
       "never": "hiç",
+      "errorsEncounteredWarning": "Bu çalıştırmada {count} hata oluştu — görev yine de başarılı görünüyor, çünkü hata fırlatmak yerine bunları yakaladı.",
       "emptyStreakWarning": "Son {count} ardışık çalıştırmada 0 öğe işlendi — başarılı sayılıyor ama hiçbir şey yapmıyor. Gerekli bir kimlik bilgisinin eksik olup olmadığını kontrol etmekte fayda var.",
       "runResult": "{items} işlendi, {errors} hata, {duration}. 0,00 $ harcama — bu görev yapay zeka sağlayıcısını çağırmıyor.",
       "runResultNoDuration": "{items} işlendi, {errors} hata. 0,00 $ harcama — bu görev yapay zeka sağlayıcısını çağırmıyor.",

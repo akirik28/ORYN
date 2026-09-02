@@ -19,7 +19,11 @@ const JOB_LABELS_TR: Record<string, string> = {
   discover_opportunities: "Fırsat taraması",
   discover_requirements: "Gereksinim taraması",
   sync_us_universities: "Üniversite senkronizasyonu",
+  notify_university_changes: "Üniversite değişiklik bildirimleri",
   deadline_reminders: "Son tarih hatırlatmaları",
+  detect_stale_data: "Güncelliğini yitirmiş veri tespiti",
+  refresh_admission_outlooks: "Kabul görünümü yenileme",
+  scheduled_review: "Zamanlanmış profil incelemesi",
 };
 
 function jobLabel(jobName: string, fallback: string, locale: Locale): string {
@@ -68,6 +72,15 @@ export async function ScheduledJobsSection() {
                 </div>
               </div>
               {job.error ? <p className="text-xs text-muted-foreground">{job.error}</p> : null}
+              {/* `status: "succeeded"` is correct here — the whole run didn't throw — but a
+                  run can catch and count real per-item failures without ever throwing
+                  (runWithTracking only marks a job `failed` on a thrown exception). Without
+                  this line, errorsEncountered sat in the database, correctly recorded, with
+                  no way for a human looking at this panel to ever see it — the row would
+                  read as a plain, unqualified success. */}
+              {job.errorsEncountered !== null && job.errorsEncountered > 0 ? (
+                <p className="text-xs font-medium text-amber-700 dark:text-amber-400">{t("errorsEncounteredWarning", { count: formatNumber(job.errorsEncountered) })}</p>
+              ) : null}
               {/* A row existing isn't evidence the job did anything — several jobs degrade to a
                   no-op "success" when a provider credential is missing (see
                   docs/environment-variables.md). This is what turns "found nothing new
