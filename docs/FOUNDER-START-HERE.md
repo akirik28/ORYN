@@ -16,6 +16,10 @@ One ordered path from "just got back" to "what needs me tonight."
   — re-ranked today against live objects, not against its own prior text.
 - **The mechanics of the top item** (granting yourself admin, seeing the screens first,
   avoiding a silent trigger no-op): `docs/founder-morning-runbook-2026-09-02.md`.
+- **Every problem already found and tracked, so nothing gets rediscovered**: `docs/known-issues.md`
+  — each entry cites the merged handoff doc that found it; a fixed problem is removed, not
+  struck through and left. Not an action list (that's `founder-blocked-backlog.md` above) —
+  read it when you want the honest, current picture of what's actually wrong.
 
 ---
 
@@ -82,6 +86,31 @@ item 3, not blocking it.
 
 - **`TAVILY_API_KEY`** — plan usage exceeded; blocks opportunity/requirement discovery only.
 - **`COLLEGE_SCORECARD_API_KEY`** — free and instant; US university sync only.
+
+---
+
+## Decisions waiting on you — not blocking deploy, but yours to make
+
+`docs/` has grown by roughly 30 files since the checkpoint above, almost all of them working
+notes for a merged change (their home is git history, not here). Three are different: they
+exist specifically for you to decide from, and nothing in the code acts on them until you do.
+
+- **Premium/monetization — 7 decisions, written but none applied.** What's free forever, how
+  advisor-chat usage is actually metered, what the paid tier changes, whether the $1.00 spend
+  ceiling should ever become a hard wall, price points in USD and TRY. Two of the seven are
+  explicitly marked locked, waiting on you specifically (who pays — the student or a
+  guardian; whether a lapsed subscriber can pay their way back mid-cycle).
+  `docs/oryn-premium-karar-seti-2026-09-02.md` (written in Turkish, matching your own
+  instruction that drove it).
+- **What AI actually costs at 100 and 1,000 students** — real per-feature unit costs measured
+  from `ai_usage`, not projected, plus what turning on proactive weekly-plan generation (Job
+  D, currently off) would add at each scale before a single student sends a message. Worth
+  reading before that job is ever scheduled, not before.
+  `docs/ai-cost-at-scale-2026-09-02.md`.
+- **~86 real opportunity records, staged and gate-checked, not applied.** Research recovered
+  from an unmerged-branch sweep, run through the actual ingest pipeline to see what it would
+  do — nothing written to the live catalogue. You decide whether any of it goes live.
+  `docs/opportunity-research-staging-2026-09-02.md`.
 
 ---
 

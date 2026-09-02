@@ -386,3 +386,12 @@ plus what this checkpoint's own findings imply needs doing:
 4. `docs/accessibility.md` and `docs/performance.md` are new standing status docs (Phases 46
    and 48) worth a read by whoever picks up either area next — both explicitly state they
    describe current state, not a completed initiative.
+5. `docs/` gained roughly 30 files overnight; almost all are working papers whose home is git
+   history once merged, not an index. Three are founder decisions waiting to be made, not
+   findings to read once: the premium/monetization decision set
+   (`docs/oryn-premium-karar-seti-2026-09-02.md`, 7 decisions, 2 locked pending the founder),
+   what AI costs at 100/1,000 students (`docs/ai-cost-at-scale-2026-09-02.md`), and ~86 real
+   opportunity records staged against the live ingest pipeline but not applied
+   (`docs/opportunity-research-staging-2026-09-02.md`). All three are now linked from
+   `docs/FOUNDER-START-HERE.md`'s own "Decisions waiting on you" section — read them there,
+   not as a fourth copy of this list.

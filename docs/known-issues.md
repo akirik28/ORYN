@@ -329,22 +329,42 @@ QA-account population that exists today:
   students, ever. The control works; it's simply unused so far.
   `docs/time-budget-busy-mode-audit-2026-09-02.md`.
 
-### The reflection loop — the product's own stated center — has never once been observed working
+### The reflection loop — worked historically, evidence was erased by a since-fixed bug, re-verified live
 
-**The single most important finding in this pass, and it very nearly went uncited.** Phase
-10's act → reflect → advisor-adjusts loop has **never once been observed working end to end
-in this environment's live data, before or after any fix, across two independent
-measurements taken ~150 commits apart**: `weekly_actions` — 22 rows, 0 with
-`status='completed'`, 0 with `reflection_outcome` set, unchanged between both measurements.
-Pass 1 of this same investigation found `getOrCreateWeeklyPlan` throwing unconditionally
-for 7 of 8 students (an unconditional write gated on unapplied migration 0077). That fix is
-now real, correctly scoped, and covered by dedicated tests with negative cases — but **has
-not been exercised by a single live plan generation since it landed**: every weekly-plan
-number (8 rows, latest `week_start_date` still 2026-08-31, 1 plan at that latest week) is
-identical to Pass 1's, meaning nothing has called this function successfully since the fix
-merged. Strong code and test evidence the fix is correct; zero live evidence it has actually
-run, because nothing has triggered it. `docs/what-a-student-cannot-do-yet-2026-09-02-v2.md`
-("The single most important change since Pass 1").
+**Update, 2026-09-02: corrected — the entry this replaced said the loop had "never once been
+observed working." That was wrong, caught within hours by a follow-up audit
+(`docs/reflection-loop-audit-2026-09-02.md`) triggered by this exact entry.** The original
+claim (`docs/what-a-student-cannot-do-yet-2026-09-02-v2.md`) was accurate for the one table
+it measured — `weekly_actions`: 22 rows, 0 completed, 0 reflections, unchanged across two
+measurements ~150 commits apart — but `weekly_actions` is precisely the table
+[[project_regenerate_destroys_reflection_loop]]'s bug already emptied once: `getOrCreateWeeklyPlan`
+used to delete every row for the current plan unconditionally on regenerate, completed rows
+and reflections included. A "0 today" reading there is consistent with both "never happened"
+and "happened, then deleted" — the table structurally cannot distinguish the two.
+
+**`product_events` — append-only, nothing deletes it — still holds the answer**:
+`weekly_action_completed` fired 8 times, 4 distinct actions, real DB writes on
+2026-08-22/08-23. Direct proof the completion mechanic worked historically, not an inference.
+
+**The delete bug is fixed and merged** (`72c0a563`, scoped to only
+`not_started`/`in_progress` rows now) — but nobody had exercised the fixed path since it
+landed, so this audit did: drove the real UI on a QA account, completed a fresh
+AI-generated action, picked a reflection outcome, and confirmed in the database (not just
+the UI's optimistic state) that the write landed and that the advisor's own read-back query
+(`lib/ai/student-context.ts`) returns it correctly formatted. **Every link in the chain is
+now individually confirmed against real data.**
+
+**One thing this cannot prove, stated plainly**: whether any of the 4 *historical*
+completions also carried a real reflection — the completion event fires regardless of
+whether a reflection follows, and the deleted rows are the only thing that could have shown
+it. The live re-verification is the first direct proof the reflection half specifically
+works; historical evidence only ever covered completion.
+
+Separately, real and still accurate: Pass 1 of the MVP re-measurement found
+`getOrCreateWeeklyPlan` throwing unconditionally for 7 of 8 students (gated on unapplied
+migration 0077); that fix is real, scoped, and — per the audit above — now confirmed
+exercised successfully at least once live, not just covered by tests.
+`docs/what-a-student-cannot-do-yet-2026-09-02-v2.md`, `docs/reflection-loop-audit-2026-09-02.md`.
 
 ### Two more precise, currently-true facts worth naming plainly
 
