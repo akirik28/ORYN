@@ -41,6 +41,12 @@ still exactly those two rows and nothing else.
 **The one sentence the founder's deploy decision needs:** five jobs are specified, four exist
 as built routes, two are armed to actually run on a schedule, and zero have ever executed.
 
+**Update, 2026-09-02, later the same day: that sentence's three counts (built/armed/executed)
+are unchanged, but a fourth question — would a run actually succeed — has a new answer for Job
+C.** The founder applied migrations `0075`-`0088` while the fleet was paused; the schema Job C
+writes to is live for the first time. See §3's own update and
+`docs/sync-us-universities-writepath-2026-09-02.md` for the full, statically-verified answer.
+
 This is not a new problem to build around later — it's the honest state of the plumbing the
 day a production environment comes up, which per the founder's own build spec doesn't exist
 yet. Nothing below implies urgency; it implies the map should be accurate before anyone
@@ -136,6 +142,17 @@ step got skipped. It covers `universities`, `university_requirements`, and
 still needs exactly what this section describes.
 
 ## 3. Job C — built, wired, never run, and "freshness" is currently a research artifact
+
+**Update, 2026-09-02 (later the same day): the founder applied migrations `0075`-`0088`
+while the fleet was paused, and `university_statistics.last_changed_at` (migration `0080`)
+is now live — see `docs/sync-us-universities-writepath-2026-09-02.md` for the full
+verification. That column was one real blocker on this job's write path; it isn't any more.
+Every column, enum value, and unique index the write path depends on is now confirmed live
+and schema-compatible, checked directly against `information_schema`/`pg_catalog`, not
+assumed. It has still never run (0 rows in `external_sync_jobs`, re-confirmed same day) —
+that fact, and everything below about `last_checked_at` being a one-time research-ingestion
+timestamp rather than a working freshness signal, is otherwise unchanged. The gap that's
+closed is "would the write succeed," not "has it been exercised."**
 
 `sync-university-data` calls `syncUsUniversities(schools)`, defaulting to a hardcoded list of
 15 US universities (`DEFAULT_US_UNIVERSITIES`) unless called with `?school=`. On a write, it
