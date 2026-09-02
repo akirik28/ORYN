@@ -209,6 +209,23 @@ export async function updateNotificationPreferences(preferences: Record<Notifica
 }
 
 /**
+ * The plan page's only call to action, and it does not upgrade anything — there is no
+ * payments integration (migration 0089's own header: "no payment, no upgrade flow, no
+ * billing table"), so a control that looked like it did would be exactly the "fake buttons
+ * that do nothing" AGENTS.md forbids outright. This registers a genuine, honest signal
+ * (an analytics event, same mechanism as every other product event in this codebase) and
+ * nothing else — no row is created that implies an entitlement, no email is sent, no plan
+ * changes. `logEvent` is fire-and-forget by design (its own doc comment), so this always
+ * resolves successfully from the caller's point of view; a real logging failure is visible
+ * in server logs, not surfaced to the student as an error, matching how every other
+ * best-effort product event in this codebase already behaves.
+ */
+export async function registerUltraInterestAction(): Promise<void> {
+  const session = await requireUser();
+  await logEvent(session.userId!, "ultra_interest_registered");
+}
+
+/**
  * Permanently deletes the student's account (AGENTS.md section 12, minor-safe requirement).
  *
  * Order matters and is the whole design. Storage objects are removed FIRST, while the

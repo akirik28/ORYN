@@ -147,6 +147,13 @@ describe("message catalogs", () => {
       // string. The two real-word keys right above it in messages/*.json
       // (profileUpdateTitle, completenessMilestoneReached) correctly differ.
       "notifications.profileUpdateItem",
+      // "Ultra" is the tier's own brand name (migration 0089, features/app-shell/
+      // ultra-ambient.tsx, docs/ultra-tier-value-2026-09-02.md) — never translated
+      // anywhere else in this feature, same reasoning as Discord/GitHub above: a product
+      // name, not an English word with a Turkish equivalent. "Standard", the sibling tier
+      // name, correctly differs (Standart) precisely because it *is* an ordinary word.
+      "settings.plan.ultraName",
+      "settings.plan.ultraBadge",
       ].sort(),
     );
   });
