@@ -618,9 +618,6 @@
   --tier-page-bg-2: #D8DFF5;
   --tier-page-bg-3: #DDD8F2;
   --tier-page-bg-4: #D4DBF0;
-  --tier-sidebar-bg-1: #17153A;
-  --tier-sidebar-bg-2: #0E0D26;
-  --tier-sidebar-bg-3: #0A0920;
   /* The active-nav-item accent bar. #7B75F5 is a cool periwinkle, chosen against a cool
      dark-navy sidebar; it stays the Standard default here for that reason, and gets
      replaced below rather than kept, because a cool purple accent bar on a hot red sidebar
@@ -672,21 +669,23 @@
   /* Vivid on purpose, per the founder's own "canlı renkler" — these are meaningfully more
      saturated than the pastel/near-black ranges they replace, not a hue-rotation at the same
      intensity. Kept in the same lightness envelope as the Standard values they override
-     (page: high-L pastel-adjacent; sidebar: near-black), so every foreground token built
-     against those envelopes — the white/NN sidebar text opacities in particular — keeps
-     working without also needing to change; verified live via computed contrast, not
-     assumed from the hex values alone (see the redesign report for the actual numbers). */
+     (page: high-L pastel-adjacent), so every foreground token built against that envelope
+     keeps working without also needing to change; verified live via computed contrast, not
+     assumed from the hex values alone (see the redesign report for the actual numbers). The
+     sidebar is a separate story — see the flame-surface block and comment further down,
+     since a static near-black envelope is specifically what the founder rejected there. */
   --tier-page-bg-1: #FCE3A6;
   --tier-page-bg-2: #F8CE7E;
   --tier-page-bg-3: #F5C596;
   --tier-page-bg-4: #F0B98A;
-  --tier-sidebar-bg-1: #4A1220;
-  --tier-sidebar-bg-2: #330D18;
-  --tier-sidebar-bg-3: #210810;
   /* Reuses the flame amber rather than inventing a fifth color: the accent bar and the
      gradient-text/fill treatment elsewhere in Ultra now read as one family instead of two
      unrelated palettes sharing a page. */
   --tier-sidebar-accent: var(--tier-grad-1);
+  /* The sidebar's own light-blue base, see the flame-surface gradient below — no Standard
+     equivalent, unlike every other --tier-* token, because Standard's sidebar is a plain
+     two-line gradient with no fourth stop to feed. */
+  --tier-sidebar-flame-base: #5FAEE0;
   --tier-topbar-border: rgba(232, 142, 32, 0.16);
   --tier-topbar-bg: rgba(250, 222, 168, 0.75);
 }
@@ -707,6 +706,118 @@
    inside every .dark-wrapped section exactly the way this one did. The tier-page-bg,
    tier-sidebar and tier-topbar token groups below don't have this problem — .dark never
    declares any of them, so there's nothing competing to redeclare. */
+
+/* ── Sidebar flame surface, 2026-09-02, replacing the dot-matrix canvas from earlier the
+   same night ────────────────────────────────────────────────────────────────────────
+   The canvas was correct and verified (99.11% pixel coverage, a real 244,406-pixel
+   frame-to-frame diff) and was rejected anyway — founder, verbatim: "sen barı mavi tutup
+   üstüne efekt ekleme" (don't keep the bar blue and add an effect on top of it). Read
+   plainly: dots painted OVER a dark garnet ground still compose to something the founder's
+   eye calls blue/cool, because the ground itself never stopped being blue/cool. The fix
+   isn't a better overlay, it's no overlay — the surface's OWN color has to move.
+   Their exact spec: bottom to top, light blue -> red -> yellow, and the stop distribution
+   itself has to keep shifting ("bu renklerin dağılımı değişsin sürekli") — that drift IS
+   the burning, not a particle field on top of a static gradient.
+   Mechanism: `@property` below registers four custom properties as animatable
+   `<percentage>` values. Without this registration, a browser treats a custom property as
+   an opaque token and can only snap between values in a `@keyframes` step, never
+   interpolate — WITH it, `--tier-flame-pos-1..4` tween smoothly frame to frame, and every
+   `var()` reference to them (inside the gradient below) repaints as they do. This is the
+   standard, current technique for animating gradient stop positions in pure CSS; no RAF
+   loop, no JS component. The reduced-motion gate is therefore a plain
+   `@media (prefers-reduced-motion: reduce)` rule, not the lib/ui/use-prefers-reduced-motion.ts
+   hook — that hook exists for RAF/canvas loops specifically (see its own doc comment),
+   and there is no longer a component here for it to gate. */
+@property --tier-flame-pos-1 {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 0%;
+}
+@property --tier-flame-pos-2 {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 30%;
+}
+@property --tier-flame-pos-3 {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 62%;
+}
+@property --tier-flame-pos-4 {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 100%;
+}
+
+@keyframes tier-sidebar-flame-drift {
+  0%,
+  100% {
+    --tier-flame-pos-1: 0%;
+    --tier-flame-pos-2: 28%;
+    --tier-flame-pos-3: 60%;
+    --tier-flame-pos-4: 100%;
+  }
+  25% {
+    --tier-flame-pos-1: 5%;
+    --tier-flame-pos-2: 35%;
+    --tier-flame-pos-3: 68%;
+    --tier-flame-pos-4: 95%;
+  }
+  50% {
+    --tier-flame-pos-1: 0%;
+    --tier-flame-pos-2: 30%;
+    --tier-flame-pos-3: 58%;
+    --tier-flame-pos-4: 100%;
+  }
+  75% {
+    --tier-flame-pos-1: 7%;
+    --tier-flame-pos-2: 25%;
+    --tier-flame-pos-3: 65%;
+    --tier-flame-pos-4: 92%;
+  }
+}
+
+/* Standard's exact literal gradient, unchanged — the same 175deg/17153A/0E0D26/0A0920
+   values that lived as an inline style on <aside> until this pass, moved into a class
+   purely so the [data-tier="ultra"] override below can win on specificity without fighting
+   an inline style (inline `style` beats any class selector regardless of nesting). */
+.tier-sidebar-surface {
+  background: linear-gradient(175deg, #17153a 0%, #0e0d26 55%, #0a0920 100%);
+}
+/* The contrast fix bd measured as failing: 45%-white nav labels against the OLD static
+   garnet computed 4.04/4.34/4.45:1, all under the 4.5:1 floor 13.5px text needs — and the
+   new gradient spans much further, from a light blue brighter than any old stop to a
+   saturated yellow, so text color/opacity alone can't clear both ends of that range at once
+   (light text fails on the light stops, dark text fails on the dark ones). The first
+   background layer below — a flat, semi-transparent dark color, both gradient stops
+   identical on purpose so it paints as one uniform tint rather than its own gradient — is a
+   scrim: CSS background layers composite front-to-back in list order, so this sits visually
+   ON TOP of the flame gradient in the second layer while both remain one `background`
+   value, with no extra DOM element or z-index needed. An absolutely-positioned scrim div
+   was the first attempt and was wrong: a positioned descendant paints AFTER normal-flow
+   siblings in the default stacking order regardless of DOM position, so it would have
+   covered the nav text instead of sitting behind it. This decouples text contrast from the
+   gradient's own swings — the fire stays fully saturated underneath, every label sits on a
+   consistently dark effective backdrop regardless of which stop is under it at any moment.
+   Verified live across the keyframe's own range (0/25/50/75%), not just one frame — see the
+   redesign report for the actual ratios. */
+[data-tier="ultra"] .tier-sidebar-surface {
+  background:
+    linear-gradient(rgba(8, 6, 4, 0.55), rgba(8, 6, 4, 0.55)),
+    linear-gradient(
+      to top,
+      var(--tier-sidebar-flame-base) var(--tier-flame-pos-1),
+      var(--tier-grad-3) var(--tier-flame-pos-2),
+      var(--tier-grad-2) var(--tier-flame-pos-3),
+      var(--tier-grad-1) var(--tier-flame-pos-4)
+    );
+  animation: tier-sidebar-flame-drift 8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-tier="ultra"] .tier-sidebar-surface {
+    animation: none;
+  }
+}
 
 /* Small reusable pieces built on the tokens above — gradient text/fill and a bounded
    small-element glow, matching what the prototype's own score/badge/chip use. Deliberately

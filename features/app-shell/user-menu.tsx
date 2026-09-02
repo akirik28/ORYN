@@ -75,8 +75,12 @@ export function UserMenu({
             {initialsFor(displayName)}
           </span>
           <span className="min-w-0 flex-1">
+            {/* text-white/90 (displayName) already clears 4.5:1 against the Ultra sidebar
+                gradient unmodified (5.53:1 computed worst case) — only the /35% summary
+                line needed the ultra: bump; see sidebar.tsx's own doc comment for the
+                numbers this and every other sidebar text-opacity fix share. */}
             <span className="block truncate text-[13px] font-semibold text-white/90">{displayName}</span>
-            <span className="block truncate text-[11px] text-white/35">{summary}</span>
+            <span className="block truncate text-[11px] text-white/35 ultra:text-white/80">{summary}</span>
           </span>
         </DropdownMenuTrigger>
       ) : (
