@@ -1719,6 +1719,47 @@
       "message": "{name}: son 30 günde {amount} (aylık {ceiling} tavanının %{percent}'i)",
       "none": "Hiçbir öğrenci aylık tavanın %80'ini aşmadı."
     },
+    "aiBudget": {
+      "featureShape": {
+        "sectionTitle": "AI harcaması nereye gidiyor",
+        "byCategory": "Maliyet şekline göre",
+        "category": {
+          "student_pool": "Öğrenci havuzu (paylaşılan aylık kota)",
+          "job_budgeted": "Katalog işleri (arka plan, öğrenciye bağlı değil)",
+          "admin_only": "Yönetici araçları",
+          "uncategorized": "Sınıflandırılmamış"
+        },
+        "allFeatures": "Bilinen tüm özellikler",
+        "neverCalled": "Henüz hiç kullanılmadı",
+        "callsCount": "{count} çağrı",
+        "unpricedTitle": "Fiyatlandırılmamış çağrılar",
+        "unpricedNone": "Fiyatlandırılan her çağrı fiyat tablosunda — kayıtlı fiyatlandırılmamış çağrı yok.",
+        "unpricedAlert": "{count} çağrı henüz fiyat tablosunda olmayan bir model kullandı, bu yüzden gerçek maliyetleri bilinmiyor — o modele fiyat eklenene kadar yukarıdaki tüm toplamlar kesin değil, alt sınırdır.",
+        "unpricedByModel": "{model}: {count} çağrı"
+      },
+      "jobBudget": {
+        "sectionTitle": "Katalog işi bütçeleri",
+        "description": "Bu takvim ayındaki gerçek harcamanın her işin kendi bütçesine karşı durumu — bir işin durmak üzere olduğunu gösteren grafik.",
+        "opportunity_extraction": "Fırsat çıkarımı",
+        "requirement_extraction": "Gereklilik çıkarımı",
+        "status": "Bu ay {budget} bütçesinin {spent} kadarı kullanıldı",
+        "unknown": "Bu ayki harcama bilinmiyor — aşağıya bakın.",
+        "neverRun": "Bu ay kayıtlı çağrı yok.",
+        "reason": {
+          "under_budget": "Bütçe dahilinde",
+          "over_budget": "Bütçe aşıldı — gelecek aya kadar durduruldu",
+          "unknown_cost_this_month": "Bu ay fiyatlandırılmamış bir çağrı oldu — tahmin etmek yerine durduruldu",
+          "usage_unavailable": "Kullanım verisi okunamadı — güvenli tarafta kalınarak çalışmaya izin veriliyor"
+        }
+      },
+      "degradeStanding": {
+        "sectionTitle": "Kim düşürülmüş modelle çalışıyor",
+        "description": "Bu ayki düşürme noktasına ulaşıp artık daha ucuz modele geçen öğrenciler ve her birinin bu ayki kullanımının ne kadarının bu şekilde geçtiği.",
+        "summary": "Bu ay AI kullanan {total} öğrenciden {degraded} tanesi en az bir kez düşürülmüş modele geçti.",
+        "bucketAxisLabel": "Bu ayki çağrılarının düşürülmüş modelle geçen payına göre öğrenciler",
+        "none": "Bu ay kayıtlı düşürülmüş çağrı yok."
+      }
+    },
     "reports": {
       "sectionTitle": "Bildirimler",
       "openCount": "{count} açık",

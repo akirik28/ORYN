@@ -9,6 +9,9 @@ import { SpendSummarySection } from "@/features/admin/sections/spend-summary-sec
 import { SpendPerUserSection } from "@/features/admin/sections/spend-per-user-section";
 import { RemainingCreditSection } from "@/features/admin/sections/remaining-credit-section";
 import { BudgetWarningsSection } from "@/features/admin/sections/budget-warnings-section";
+import { AiFeatureShapeSection } from "@/features/admin/sections/ai-feature-shape-section";
+import { JobBudgetSection } from "@/features/admin/sections/job-budget-section";
+import { DegradeStandingSection } from "@/features/admin/sections/degrade-standing-section";
 import { ProviderHealthSection } from "@/features/admin/sections/provider-health-section";
 import { ScheduledJobsSection } from "@/features/admin/sections/scheduled-jobs-section";
 import { ReportsSection } from "@/features/admin/sections/reports-section";
@@ -56,6 +59,15 @@ export default async function AdminPage() {
           </Suspense>
           <Suspense fallback={<SectionSkeleton rows={2} />}>
             <BudgetWarningsSection />
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton rows={3} />}>
+            <AiFeatureShapeSection />
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton rows={2} />}>
+            <JobBudgetSection />
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton rows={2} />}>
+            <DegradeStandingSection />
           </Suspense>
         </TabsContent>
 

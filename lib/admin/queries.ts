@@ -9,6 +9,9 @@ import { summarizeJobHealth, EMPTY_STREAK_THRESHOLD, type JobHealthSummary } fro
 import { PROVIDER_DEFINITIONS, summarizeProviderHealth, type ProviderHealthSummary } from "@/lib/admin/provider-health";
 import { resolveReportedContentPreview } from "@/lib/moderation/content-preview";
 import { MONTHLY_BUDGET_TARGET_USD, MONTHLY_BUDGET_CEILING_USD } from "@/lib/ai/limits/budget";
+import { PER_STUDENT_AI_FEATURES } from "@/lib/ai/monthly-quota";
+import { JOB_BUDGET_USD, checkJobBudget, type JobBudgetFeature, type JobBudgetReason } from "@/lib/ai/limits/job-budget";
+import type { SeriesPoint } from "@/components/oryn/charts/types";
 
 /**
  * Every admin-panel read, one module (docs/admin-panel-architecture-2026-09-02.md, D1). Each
@@ -454,6 +457,49 @@ export interface SpendByKey {
   costUsd: number;
 }
 
+/**
+ * Which of the three cost shapes docs/ai-cost-at-scale-2026-09-02.md §2 names a feature
+ * belongs to: "student_pool" (PER_STUDENT_AI_FEATURES, the shared monthly allowance),
+ * "job_budgeted" (the two catalog jobs, lib/ai/limits/job-budget.ts's own per-feature
+ * budgets), or "admin_only" (requirement_interpretation — an admin action, not student
+ * spend; excluded from the shared pool for exactly this reason, see monthly-quota.ts's own
+ * comment). Derived from the enforcement layer's own constants wherever one exists rather
+ * than retyped here, so a feature added to either list is picked up automatically — the one
+ * exception is ADMIN_ONLY_AI_FEATURES below, which has no shared constant to derive from.
+ */
+export type AiFeatureCategory = "student_pool" | "job_budgeted" | "admin_only" | "uncategorized";
+
+/** lib/ai/interpret-requirement.ts's own feature string — the one entry with no shared
+ *  constant to derive from (see AiFeatureCategory's own comment). */
+const ADMIN_ONLY_AI_FEATURES = ["requirement_interpretation"] as const;
+
+/**
+ * Every AI feature this admin surface knows about, whether or not it has ever been called.
+ * Ten total, verified against every real withUsageLogging/logAIUsage call site (2026-09-02):
+ * seven student_pool + two job_budgeted + one admin_only. This exists to fix a real gap, not
+ * to add a list for its own sake — byFeature below used to be built purely from `ai_usage`
+ * rows, so a feature with zero calls had no row and was indistinguishable from a feature
+ * that doesn't exist. Six of the ten currently have zero real calls
+ * (docs/ai-cost-at-scale-2026-09-02.md §1) — that fact is itself the story a founder needs
+ * to see ("that shape is the story", oryn-a7, 2026-09-02), and a purely data-driven list was
+ * hiding it.
+ */
+const KNOWN_AI_FEATURES: readonly string[] = [...PER_STUDENT_AI_FEATURES, ...Object.keys(JOB_BUDGET_USD), ...ADMIN_ONLY_AI_FEATURES];
+
+// Exported (unlike this file's other internal helpers) so it can be unit-tested directly —
+// see __tests__/admin/ai-spend-shape.test.ts's own header for why this file's established
+// convention is "pure logic gets a test, thin DB wrapping doesn't."
+export function categorizeAiFeature(feature: string): AiFeatureCategory {
+  if ((PER_STUDENT_AI_FEATURES as readonly string[]).includes(feature)) return "student_pool";
+  if (feature in JOB_BUDGET_USD) return "job_budgeted";
+  if ((ADMIN_ONLY_AI_FEATURES as readonly string[]).includes(feature)) return "admin_only";
+  return "uncategorized";
+}
+
+export interface SpendByFeature extends SpendByKey {
+  category: AiFeatureCategory;
+}
+
 export interface SpendSummary {
   /** UTC calendar day — see startOfTodayUtcIso's own comment. */
   todayUsd: number;
@@ -465,7 +511,13 @@ export interface SpendSummary {
   last30dUsd: number;
   allTimeUsd: number;
   allTimeCalls: number;
-  byFeature: SpendByKey[];
+  /** Zero-filled from KNOWN_AI_FEATURES (see that constant's own comment) — every known
+   *  feature appears here, even at $0/0 calls, tagged with its cost-shape category. Sorted
+   *  by cost desc, so the zero rows settle to the bottom without needing a second sort key.
+   *  This changes what the existing spend-summary-section.tsx renders today (four rows with
+   *  real calls become ten, six of them at $0.00) — a correct and intended change, flagged
+   *  here since it's a visible behavior change to already-shipped UI, not only new surface. */
+  byFeature: SpendByFeature[];
   byModel: SpendByKey[];
   /**
    * Calls with no user_id. NOT a leak or a coverage gap — oryn-60's audit of every
@@ -485,6 +537,18 @@ export interface SpendSummary {
    */
   unattributedCalls: number;
   unattributedUsd: number;
+  /**
+   * Rows where estimateCostUsd (lib/ai/pricing.ts) returned null — a model absent from its
+   * pricing table. Every dollar figure on this interface already silently treats a null
+   * estimated_cost as $0 (`?? 0`), the same gap selectModelForUser's own hasUnknownCostRows
+   * guards against on the enforcement side — so a rising unpricedCalls count means every
+   * total above is a floor, not an exact figure, and this is the line that says so instead
+   * of leaving that caveat implicit. Excludes the three `model="test-model"` fixture rows
+   * (see unattributedCalls' own comment) — those are expected to be unpriced, not a sign the
+   * pricing table itself is stale.
+   */
+  unpricedCalls: number;
+  unpricedByModel: { model: string; calls: number }[];
 }
 
 export async function getSpendSummary(admin: SupabaseClient<Database>): Promise<SpendSummary> {
@@ -501,10 +565,17 @@ export async function getSpendSummary(admin: SupabaseClient<Database>): Promise<
   // summary's own totals (allTimeCalls, byFeature/byModel) had no such filter and were
   // counting them as if they were real background-job spend.
   const rows = (allRes.data ?? []).filter((row) => row.model !== "test-model");
-  const byFeature = new Map<string, SpendByKey>();
+  const byFeature = new Map<string, SpendByFeature>();
   const byModel = new Map<string, SpendByKey>();
+  const unpricedByModel = new Map<string, number>();
   let unattributedCalls = 0;
   let unattributedUsd = 0;
+  let unpricedCalls = 0;
+
+  // Seeded from every known feature, not only ones with rows -- see KNOWN_AI_FEATURES.
+  for (const feature of KNOWN_AI_FEATURES) {
+    byFeature.set(feature, { key: feature, calls: 0, costUsd: 0, category: categorizeAiFeature(feature) });
+  }
 
   for (const row of rows) {
     const cost = row.estimated_cost ?? 0;
@@ -512,7 +583,12 @@ export async function getSpendSummary(admin: SupabaseClient<Database>): Promise<
       unattributedCalls += 1;
       unattributedUsd += cost;
     }
-    const feature = byFeature.get(row.feature) ?? { key: row.feature, calls: 0, costUsd: 0 };
+    if (row.estimated_cost === null) {
+      unpricedCalls += 1;
+      unpricedByModel.set(row.model, (unpricedByModel.get(row.model) ?? 0) + 1);
+    }
+
+    const feature = byFeature.get(row.feature) ?? { key: row.feature, calls: 0, costUsd: 0, category: categorizeAiFeature(row.feature) };
     feature.calls += 1;
     feature.costUsd += cost;
     byFeature.set(row.feature, feature);
@@ -535,6 +611,8 @@ export async function getSpendSummary(admin: SupabaseClient<Database>): Promise<
     byModel: [...byModel.values()].sort(byCostDesc),
     unattributedCalls,
     unattributedUsd,
+    unpricedCalls,
+    unpricedByModel: [...unpricedByModel.entries()].map(([model, calls]) => ({ model, calls })).sort((a, b) => b.calls - a.calls),
   };
 }
 
@@ -625,6 +703,211 @@ export async function getRemainingCredit(admin: SupabaseClient<Database>): Promi
 
   const totalSpendUsd = await sumCostSince(admin, startingCreditEnteredAt);
   return { startingCreditUsd, startingCreditEnteredAt, totalSpendUsd, remainingUsd: startingCreditUsd - totalSpendUsd };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Spend tab: AI budget deep-dive (2026-09-02, oryn-a7's dispatch) — job burn-down and the
+// per-student degrade distribution, the two views nothing above answered yet. Both read-only
+// (D8): neither gates a call or changes a budget, they render the same decision
+// checkJobBudget/selectModelForUser already make on the enforcement side.
+// ---------------------------------------------------------------------------------------------
+
+function currentUtcMonthStartIso(): string {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+}
+
+/** YYYY-MM-DD in UTC — the bucket key for a daily cumulative series. */
+function utcDateKey(iso: string): string {
+  return iso.slice(0, 10);
+}
+
+/**
+ * One point per UTC calendar day from `sinceIso` through today (inclusive), running total —
+ * the shape components/oryn/charts/burn-chart.tsx's `actual` prop wants directly. Forward-
+ * filled on purpose, not gap-honest the way that chart kit's own `y: null` convention
+ * usually requires (types.ts: "a missing AI spend day and a zero-spend day are different
+ * facts"): a day with zero *new* rows still has a fully known cumulative total, because
+ * `ai_usage` coverage for that day is complete, not absent — it's a real reading of "no
+ * change," not a missing one. `null` would be the right call if the underlying monthly read
+ * itself failed; that case is surfaced separately via JobBudgetStatus.reason
+ * ("usage_unavailable"/"unknown_cost_this_month"), not encoded per-day here, since
+ * checkJobBudget's month-level signal doesn't resolve to a single day regardless.
+ */
+// Exported for the same reason categorizeAiFeature is — see that export's own comment.
+export function cumulativeByUtcDay(rows: { estimated_cost: number | null; created_at: string }[], sinceIso: string): SeriesPoint[] {
+  const byDay = new Map<string, number>();
+  for (const row of rows) {
+    if (row.estimated_cost === null) continue; // excluded, not treated as $0 -- see this function's own doc comment
+    const day = utcDateKey(row.created_at);
+    byDay.set(day, (byDay.get(day) ?? 0) + row.estimated_cost);
+  }
+
+  const start = new Date(sinceIso);
+  const startOfDay = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate()));
+  const today = new Date();
+  const days: string[] = [];
+  for (const d = new Date(startOfDay); d <= today; d.setUTCDate(d.getUTCDate() + 1)) {
+    days.push(d.toISOString().slice(0, 10));
+  }
+
+  let running = 0;
+  return days.map((day) => {
+    running += byDay.get(day) ?? 0;
+    return { x: day, y: running };
+  });
+}
+
+export interface JobBudgetStatus {
+  feature: JobBudgetFeature;
+  budgetUsd: number;
+  /** Null only when usage_unavailable — mirrors JobBudgetCheck's own "absent is not zero"
+   *  rule (lib/ai/limits/job-budget.ts). */
+  monthToDateSpendUsd: number | null;
+  /** The real, live decision checkJobBudget would make right now, not a separately-computed
+   *  approximation — if this ever disagrees with whether the job actually ran tonight, that
+   *  is itself the bug to chase, which is only possible because this reads the same function
+   *  the job calls instead of a second, independently-reasoned copy of its logic. */
+  allowed: boolean;
+  reason: JobBudgetReason;
+  /** This calendar month only — the window checkJobBudget itself checks. Empty when the job
+   *  has never run (true for both features today — ORYN has never been deployed, see
+   *  docs/ai-cost-at-scale-2026-09-02.md) — an honest empty series, not a synthesized flat
+   *  line at zero. */
+  dailyCumulativeUsd: SeriesPoint[];
+}
+
+/**
+ * Per job-budgeted feature: this month's real cumulative spend against JOB_BUDGET_USD, plus
+ * the live allowed/reason decision — "the chart that tells you a job is about to stop"
+ * (oryn-a7, 2026-09-02). Both features read zero real usage as of this write: ORYN has never
+ * been deployed, so neither job has ever run (lib/ai/limits/job-budget.ts's own header
+ * comment) — this must render as a real, honest zero/empty rather than being omitted, same
+ * D5 discipline as SpendSummary.unattributedCalls above.
+ */
+export async function getJobBudgetStatus(admin: SupabaseClient<Database>): Promise<JobBudgetStatus[]> {
+  const features = Object.keys(JOB_BUDGET_USD) as JobBudgetFeature[];
+  const sinceIso = currentUtcMonthStartIso();
+
+  return Promise.all(
+    features.map(async (feature) => {
+      const [check, { data }] = await Promise.all([
+        checkJobBudget(feature),
+        admin.from("ai_usage").select("estimated_cost, created_at").eq("feature", feature).gte("created_at", sinceIso).order("created_at", { ascending: true }),
+      ]);
+      return {
+        feature,
+        budgetUsd: check.budgetUsd,
+        monthToDateSpendUsd: check.monthToDateSpendUsd,
+        allowed: check.allowed,
+        reason: check.reason,
+        dailyCumulativeUsd: cumulativeByUtcDay(data ?? [], sinceIso),
+      };
+    }),
+  );
+}
+
+export interface DegradeStandingRow {
+  userId: string;
+  displayName: string | null;
+  /** Calendar month to date — the same window selectModelForUser itself checks, deliberately
+   *  NOT the 30-day rolling window getPerUserSpend/BudgetWarningsSection use elsewhere on
+   *  this page. Worth stating plainly rather than silently reconciling: the two can disagree
+   *  (spend concentrated at the end of last month vs. the start of this one) because they
+   *  answer different questions — this field answers "would selectModelForUser degrade this
+   *  student right now," the 30-day figure answers "is this student's recent spend trending
+   *  high." Changing BudgetWarningsSection's own window is a separate, deliberate call, not
+   *  a side effect of this addition. */
+  monthToDateSpendUsd: number;
+  /** Restricted to PER_STUDENT_AI_FEATURES — job/admin features never pass through
+   *  selectModelForUser (its own "no_user" branch bypasses the check entirely), so a call
+   *  against one of those was never eligible to degrade in the first place, and counting it
+   *  here would understate fractionDegraded for reasons unrelated to budget. */
+  totalCallsThisMonth: number;
+  degradedCallsThisMonth: number;
+  /** degradedCallsThisMonth / totalCallsThisMonth. Never render this alone — always beside
+   *  totalCallsThisMonth, so a 0% rate at n=1 and a 0% rate at n=40 don't read identically. */
+  fractionDegraded: number;
+  firstDegradedAt: string | null;
+  /** 1-31, UTC. Null when never degraded this month. */
+  dayOfMonthFirstDegraded: number | null;
+}
+
+export interface DegradeStanding {
+  /** Distinct students with at least one PER_STUDENT_AI_FEATURES call this month — the
+   *  denominator studentsEverDegraded is a fraction of, and the honesty check oryn-a7's
+   *  dispatch asked for: if this is a small number, "0 degraded" means "not enough traffic
+   *  to tell," not "healthy." Never render studentsEverDegraded without it alongside. */
+  totalStudentsWithUsage: number;
+  studentsEverDegraded: number;
+  byUser: DegradeStandingRow[];
+}
+
+/**
+ * Who has actually been degraded this month, and how much of their usage ran that way —
+ * "nobody has ever seen that as a distribution" (oryn-a7, 2026-09-02). Also the first real
+ * read of the degraded/degrade_reason columns lib/ai/usage.ts fixed writing correctly
+ * tonight (migration 0076 is live; the write-side bug that defaulted every row to `false`
+ * regardless of the real decision was separate and is now fixed — see that file's own
+ * comment). If every row below reads degradedCallsThisMonth: 0, that is either genuinely
+ * true (no student has reached the $0.50 target yet this month) or simply that too little
+ * traffic has landed since the write fix to say — totalStudentsWithUsage is what
+ * distinguishes the two, returned alongside rather than left for the caller to compute.
+ */
+export async function getDegradeStanding(admin: SupabaseClient<Database>): Promise<DegradeStanding> {
+  const sinceIso = currentUtcMonthStartIso();
+  const { data } = await admin
+    .from("ai_usage")
+    .select("user_id, degraded, estimated_cost, created_at")
+    .in("feature", PER_STUDENT_AI_FEATURES)
+    .not("user_id", "is", null)
+    .gte("created_at", sinceIso)
+    .order("created_at", { ascending: true });
+
+  const rows = data ?? [];
+  interface Accum {
+    spendUsd: number;
+    total: number;
+    degradedCount: number;
+    firstDegradedAt: string | null;
+  }
+  const byUser = new Map<string, Accum>();
+
+  for (const row of rows) {
+    if (!row.user_id) continue; // narrows past .not() the same way getLifetimeSpendByUser does above
+    const entry = byUser.get(row.user_id) ?? { spendUsd: 0, total: 0, degradedCount: 0, firstDegradedAt: null };
+    entry.spendUsd += row.estimated_cost ?? 0;
+    entry.total += 1;
+    if (row.degraded) {
+      entry.degradedCount += 1;
+      if (!entry.firstDegradedAt) entry.firstDegradedAt = row.created_at; // rows are ascending, so the first hit is the earliest
+    }
+    byUser.set(row.user_id, entry);
+  }
+
+  const userIds = [...byUser.keys()];
+  const { data: profiles } = userIds.length > 0 ? await admin.from("profiles").select("id, display_name").in("id", userIds) : { data: [] };
+  const nameById = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+
+  const byUserRows: DegradeStandingRow[] = userIds.map((userId) => {
+    const entry = byUser.get(userId)!;
+    return {
+      userId,
+      displayName: nameById.get(userId) ?? null,
+      monthToDateSpendUsd: entry.spendUsd,
+      totalCallsThisMonth: entry.total,
+      degradedCallsThisMonth: entry.degradedCount,
+      fractionDegraded: entry.total > 0 ? entry.degradedCount / entry.total : 0,
+      firstDegradedAt: entry.firstDegradedAt,
+      dayOfMonthFirstDegraded: entry.firstDegradedAt ? new Date(entry.firstDegradedAt).getUTCDate() : null,
+    };
+  });
+
+  return {
+    totalStudentsWithUsage: byUserRows.length,
+    studentsEverDegraded: byUserRows.filter((u) => u.degradedCallsThisMonth > 0).length,
+    byUser: byUserRows.sort((a, b) => b.fractionDegraded - a.fractionDegraded),
+  };
 }
 
 // ---------------------------------------------------------------------------------------------
