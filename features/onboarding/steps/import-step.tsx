@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card } from "@/components/ui/card";
 import { uploadAndExtractCV } from "@/app/(onboarding)/onboarding/actions";
 import { EntityCombobox } from "@/features/entities/entity-combobox";
-import type { EntityScope } from "@/lib/entities/field-policy";
+import { CV_IMPORT_CATEGORY_TO_ORGANIZATION_SCOPE } from "@/lib/profile/cv-import";
 import type { CVExtractionResult } from "@/lib/ai/cv-extraction";
 
 export type ExtractedCategory = "education" | "activities" | "awards" | "projects" | "research" | "workExperience";
@@ -53,18 +53,6 @@ const CATEGORY_LABEL_KEYS = {
   research: "page.sections.research.title",
   workExperience: "page.sections.workExperience.title",
 } as const satisfies Record<ExtractedCategory, string>;
-
-/** Mirrors features/profile/field-config.ts's per-table entity scopes exactly — CV-import
- * items land in the same tables the manual profile forms do, so a school extracted here
- * and a school typed by hand on /profile must resolve against the same registry slice. */
-const CATEGORY_TO_ORGANIZATION_SCOPE: Record<ExtractedCategory, EntityScope> = {
-  education: "school",
-  activities: "activity_organization",
-  awards: "award_organization",
-  projects: "project_organization",
-  research: "research_organization",
-  workExperience: "work_organization",
-};
 
 // Exported (only) so the school-name fix below has a direct unit test — every other caller
 // in this file still just uses it locally.
@@ -257,7 +245,7 @@ export function ImportStep({
                   to match the title input's own disabled look above. */}
               <div className={item.included ? "" : "pointer-events-none opacity-50"}>
                 <EntityCombobox
-                  scope={CATEGORY_TO_ORGANIZATION_SCOPE[item.category]}
+                  scope={CV_IMPORT_CATEGORY_TO_ORGANIZATION_SCOPE[item.category]}
                   value={item.organization ?? ""}
                   entityId={item.organizationEntityId}
                   context={{ country: country?.trim() || null }}

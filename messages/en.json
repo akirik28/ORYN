@@ -353,7 +353,7 @@
       "notConfiguredTitle": "CV scanning isn't configured yet",
       "notConfiguredDescription": "This needs ANTHROPIC_API_KEY to be set — see API_SETUP.md. You can still add everything to your profile manually.",
       "reviewBeforeAdding": "Review before adding",
-      "foundItems": "Oryn found {count, plural, one {# item} other {# items}} in {fileName}. Nothing is added to your profile until you confirm it — uncheck anything that isn't right.",
+      "foundItems": "Oryn found {count, plural, one {# item} other {# items}} in {fileName}. Nothing is added to your profile until you confirm it — uncheck anything that isn't right, or edit the details.",
       "unsureAboutThis": "Oryn is unsure about this one",
       "addItemsToProfile": "{count, plural, one {Add # item} other {Add # items}} to my profile",
       "scanTitle": "Scan a CV or résumé",
