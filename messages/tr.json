@@ -908,7 +908,8 @@
       "saved": "Kaydedildi",
       "applied": "Başvuruldu",
       "notInterestedAriaLabel": "İlgilenmiyorum",
-      "taughtInPrefix": "{languages} dilinde"
+      "taughtInPrefix": "{languages} dilinde",
+      "currentCycleLabelPrefix": "Güncel dönem: {label}"
     },
     "matchTier": {
       "exceptional": "Olağanüstü eşleşme",
