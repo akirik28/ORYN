@@ -341,3 +341,42 @@ describe("isNearStudent", () => {
     expect(isNearStudent(student({ country: "Türkiye" }), opportunity({ country: "Turkey" }))).toBe(true);
   });
 });
+
+describe("computeOpportunityMatch — relevanceBasis and matched detail", () => {
+  test("opportunity_fields_missing when the opportunity has no fields recorded", () => {
+    const match = computeOpportunityMatch(student({ interests: ["Economics"] }), opportunity({ fields: [] }));
+    expect(match.relevanceBasis).toBe("opportunity_fields_missing");
+    expect(match.matchedInterests).toEqual([]);
+  });
+
+  test("student_interests_missing when the student has no interests recorded, even if the opportunity has fields", () => {
+    const match = computeOpportunityMatch(student({ interests: [] }), opportunity({ fields: ["Economics"] }));
+    expect(match.relevanceBasis).toBe("student_interests_missing");
+    expect(match.matchedInterests).toEqual([]);
+  });
+
+  test("no_overlap when both sides have real data and none of it overlaps", () => {
+    const match = computeOpportunityMatch(student({ interests: ["Chemistry"] }), opportunity({ fields: ["Economics"] }));
+    expect(match.relevanceBasis).toBe("no_overlap");
+    expect(match.matchedInterests).toEqual([]);
+  });
+
+  test("some_overlap names the specific interest that matched, in the student's own casing", () => {
+    const match = computeOpportunityMatch(student({ interests: ["Economics", "Chemistry"] }), opportunity({ fields: ["Economics", "Public Policy"] }));
+    expect(match.relevanceBasis).toBe("some_overlap");
+    expect(match.matchedInterests).toEqual(["Economics"]);
+  });
+
+  test("matchedGapDimensions lists only the weak dimensions this opportunity's category actually targets", () => {
+    const match = computeOpportunityMatch(
+      student({ weakestDimensions: ["research", "leadership"] }),
+      opportunity({ category: "research" })
+    );
+    expect(match.matchedGapDimensions).toEqual(["research"]);
+  });
+
+  test("matchedGapDimensions is empty when the category targets none of the student's weak dimensions", () => {
+    const match = computeOpportunityMatch(student({ weakestDimensions: ["leadership"] }), opportunity({ category: "research" }));
+    expect(match.matchedGapDimensions).toEqual([]);
+  });
+});
