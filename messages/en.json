@@ -1161,7 +1161,12 @@
         "portfolio": "Portfolio",
         "interview": "Interview",
         "financial_aid": "Financial aid"
-      }
+      },
+      "notesPlaceholder": "Add a note about this requirement...",
+      "saveNote": "Save note",
+      "noteSaved": "Note saved",
+      "noteSaveError": "Couldn't save your note.",
+      "noteToggle": "Note"
     },
     "statusControl": {
       "status": "Status",
@@ -1174,7 +1179,16 @@
       "notTracked": "Readiness stops being tracked once you submit. It has no bearing on your decision — the checklist below stays here for your own reference.",
       "unmeasured": "No requirements are currently tracked for this application."
     },
-    "singularLabel": "Application"
+    "singularLabel": "Application",
+    "notes": {
+      "label": "Notes",
+      "placeholder": "Add a note about this application — a date you called, who to follow up with..."
+    },
+    "notesField": {
+      "save": "Save note",
+      "saved": "Note saved",
+      "error": "Couldn't save your note."
+    }
   },
   "documents": {
     "title": "Documents",

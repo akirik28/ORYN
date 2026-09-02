@@ -1161,7 +1161,12 @@
         "portfolio": "Portfolyo",
         "interview": "Mülakat",
         "financial_aid": "Mali yardım"
-      }
+      },
+      "notesPlaceholder": "Bu gereksinimle ilgili bir not ekleyin...",
+      "saveNote": "Notu kaydet",
+      "noteSaved": "Not kaydedildi",
+      "noteSaveError": "Notunuz kaydedilemedi.",
+      "noteToggle": "Not"
     },
     "statusControl": {
       "status": "Durum",
@@ -1174,7 +1179,16 @@
       "notTracked": "Başvurunuzu gönderdikten sonra hazırlık takibi durur. Bunun kararınızla bir ilgisi yoktur — aşağıdaki kontrol listesi yalnızca kendi referansınız için kalır.",
       "unmeasured": "Bu başvuru için şu anda takip edilen bir gereksinim yok."
     },
-    "singularLabel": "Başvuru"
+    "singularLabel": "Başvuru",
+    "notes": {
+      "label": "Notlar",
+      "placeholder": "Bu başvuruyla ilgili bir not ekleyin — aradığınız bir tarih, takip edilecek biri..."
+    },
+    "notesField": {
+      "save": "Notu kaydet",
+      "saved": "Not kaydedildi",
+      "error": "Notunuz kaydedilemedi."
+    }
   },
   "documents": {
     "title": "Belgeler",
