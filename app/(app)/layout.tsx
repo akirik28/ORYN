@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { requireProfile, verifySession, getProfileScores } from "@/lib/security/dal";
@@ -9,10 +10,12 @@ import { Topbar } from "@/features/app-shell/topbar";
 import { MobileNav } from "@/features/app-shell/mobile-nav";
 import { RouteAmbientBlobs } from "@/features/app-shell/route-ambient-blobs";
 import { UltraAmbient } from "@/features/app-shell/ultra-ambient";
+import { DevTierPreviewToggle } from "@/features/app-shell/dev-tier-preview-toggle";
 import { NotConfiguredNotice } from "@/features/system/not-configured-notice";
 import { integrationStatus } from "@/lib/env";
 import { toProfileSignal } from "@/lib/scoring/signal";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
+import { DEV_TIER_PREVIEW_COOKIE, isDevTierPreviewAllowed, resolveDevTierPreviewOverride } from "@/lib/tier/dev-preview";
 
 // Every route under this layout is per-user and auth-gated — never a candidate for
 // static prerendering. Also sidesteps a real build failure: without this, `next build`
@@ -93,7 +96,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const unreadCount = unreadRes.count ?? 0;
   const profileSignal = toProfileSignal(scores);
   const budgetDegraded = modelSelection.degraded;
-  const planTier = resolvePlanTier(profile);
+  const realTier = resolvePlanTier(profile);
+  // lib/tier/dev-preview.ts's own header has the full reasoning: migration 0089 is
+  // unapplied, so `realTier` is "standard" for every account tonight, including the
+  // founder's, with no way to reach "ultra" otherwise. `devPreviewAllowed` gates BOTH the
+  // override and whether the toggle control even renders — resolveDevTierPreviewOverride
+  // also re-checks this itself, so there is no single flag whose removal alone would
+  // re-enable this in production.
+  const devPreviewAllowed = isDevTierPreviewAllowed();
+  const devPreviewOverride = devPreviewAllowed ? resolveDevTierPreviewOverride((await cookies()).get(DEV_TIER_PREVIEW_COOKIE)?.value) : null;
+  const planTier = devPreviewOverride ?? realTier;
 
   return (
     // Literal source ambient background (App.tsx `App()`'s root container) — the ground
@@ -147,6 +159,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             component's own doc comment for why that happens client-side, scoped to this
             authenticated shell, rather than server-side on the public root layout. */}
         <UltraAmbient tier={planTier} />
+        {/* lib/tier/dev-preview.ts — devPreviewAllowed is false in any production build, so
+            this branch (and the Server Action it calls) is structurally absent there, not
+            merely hidden. Rendered here rather than deeper in the tree so it's visible on
+            every authenticated page, matching where a real subscription indicator would
+            eventually live. */}
+        {devPreviewAllowed ? <DevTierPreviewToggle realTier={realTier} effectiveTier={planTier} /> : null}
         <Topbar notifications={notifications ?? []} unreadCount={unreadCount} quota={quota} budgetDegraded={budgetDegraded} />
         <main id="main-content" className="relative z-[1] min-w-0 flex-1 overflow-x-hidden">
           {/* max-w-[1200px] is the reading/composition measure (UI-V3 § 6). Pages that want
