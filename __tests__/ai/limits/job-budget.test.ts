@@ -36,18 +36,38 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 import { checkJobBudget, assertWithinJobBudget, JobBudgetExceededError, JOB_BUDGET_USD } from "@/lib/ai/limits/job-budget";
 
-function adminReturning(result: { data: MockRow[] | null; error: unknown }) {
+interface MockOverrideRow {
+  budget_usd: number;
+}
+
+/**
+ * checkJobBudget now makes two independent admin-client reads (2026-09-02/03, live
+ * job-budget-override support): the ai_usage spend sum (as before, via .eq().gte()) and a
+ * job_budget_overrides lookup (.eq().maybeSingle()) — dispatched by table name, same
+ * "unexpected table throws" convention lib/admin/queries.ts's own test mocks use.
+ * `override` defaults to "no row" (data: null), which is the correct default for every
+ * pre-existing test below: none of them were written to think about an override at all, and
+ * "no override, fall back to JOB_BUDGET_USD" is the behavior that preserves their original
+ * intent unchanged.
+ */
+function adminReturning(usage: { data: MockRow[] | null; error: unknown }, override: { data: MockOverrideRow | null; error: unknown } = { data: null, error: null }) {
   return {
-    from: () => ({
-      select: () => ({
-        eq: (_column: string, feature: string) => ({
-          gte: async (gteColumn: string, gteValue: string) => {
-            capturedQueryRef.current = { feature, gteColumn, gteValue };
-            return result;
-          },
+    from: (table: string) => {
+      if (table === "job_budget_overrides") {
+        return { select: () => ({ eq: () => ({ maybeSingle: async () => override }) }) };
+      }
+      if (table !== "ai_usage") throw new Error(`job-budget.test.ts: unexpected table "${table}"`);
+      return {
+        select: () => ({
+          eq: (_column: string, feature: string) => ({
+            gte: async (gteColumn: string, gteValue: string) => {
+              capturedQueryRef.current = { feature, gteColumn, gteValue };
+              return usage;
+            },
+          }),
         }),
-      }),
-    }),
+      };
+    },
   };
 }
 
@@ -134,6 +154,56 @@ describe("checkJobBudget", () => {
     const requirementCheck = await checkJobBudget("requirement_extraction");
 
     expect(opportunityCheck.budgetUsd).toBe(JOB_BUDGET_USD.opportunity_extraction);
+    expect(requirementCheck.budgetUsd).toBe(JOB_BUDGET_USD.requirement_extraction);
+  });
+});
+
+describe("checkJobBudget — live override (job_budget_overrides, 2026-09-02/03)", () => {
+  test("a real override row replaces JOB_BUDGET_USD's own default", async () => {
+    tryCreateAdminClientMock.mockReturnValue(adminReturning({ data: [{ estimated_cost: 40 }], error: null }, { data: { budget_usd: 100 }, error: null }));
+
+    const check = await checkJobBudget("opportunity_extraction");
+
+    expect(check.budgetUsd).toBe(100);
+    expect(check.allowed).toBe(true); // $40 of $100 -- would have been over budget against the $25 default
+  });
+
+  test("no override row -- falls back to JOB_BUDGET_USD, not zero or unbudgeted", async () => {
+    tryCreateAdminClientMock.mockReturnValue(adminReturning({ data: [], error: null }, { data: null, error: null }));
+
+    const check = await checkJobBudget("opportunity_extraction");
+
+    expect(check.budgetUsd).toBe(JOB_BUDGET_USD.opportunity_extraction);
+  });
+
+  test("override lookup itself fails -- still falls back to JOB_BUDGET_USD, never to $0", async () => {
+    tryCreateAdminClientMock.mockReturnValue(adminReturning({ data: [], error: null }, { data: null, error: { message: "connection reset" } }));
+
+    const check = await checkJobBudget("requirement_extraction");
+
+    expect(check.budgetUsd).toBe(JOB_BUDGET_USD.requirement_extraction);
+  });
+
+  test("a $0 override is honored as a real value, not treated as \"no override\" -- an admin can deliberately pause a job this way", async () => {
+    tryCreateAdminClientMock.mockReturnValue(adminReturning({ data: [], error: null }, { data: { budget_usd: 0 }, error: null }));
+
+    const check = await checkJobBudget("opportunity_extraction");
+
+    expect(check.budgetUsd).toBe(0);
+    expect(check.allowed).toBe(false);
+    expect(check.reason).toBe("over_budget"); // $0 spent >= $0 budget
+  });
+
+  test("the override is scoped to the feature it was looked up for, not shared across both", async () => {
+    tryCreateAdminClientMock.mockReturnValue(adminReturning({ data: [], error: null }, { data: { budget_usd: 999 }, error: null }));
+
+    const opportunityCheck = await checkJobBudget("opportunity_extraction");
+    // A fresh mock with no override for the second call -- confirms the override applies per
+    // lookup, not as global mutable state left over from the previous call.
+    tryCreateAdminClientMock.mockReturnValue(adminReturning({ data: [], error: null }, { data: null, error: null }));
+    const requirementCheck = await checkJobBudget("requirement_extraction");
+
+    expect(opportunityCheck.budgetUsd).toBe(999);
     expect(requirementCheck.budgetUsd).toBe(JOB_BUDGET_USD.requirement_extraction);
   });
 });

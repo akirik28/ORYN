@@ -2,6 +2,7 @@ import "server-only";
 
 import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { env } from "@/lib/env";
+import { getMonthlyGrantsUsd } from "./grants";
 
 /**
  * Per-user monthly AI spend budget (founder, 2026-09-02): $0.50/month target, $1.00/month
@@ -109,7 +110,11 @@ export async function selectModelForUser(userId: string | null): Promise<ModelSe
     return { model: env.anthropic.model, degraded: false, reason: "usage_unavailable", monthToDateSpendUsd: null };
   }
 
-  const { data, error } = await admin.from("ai_usage").select("estimated_cost").eq("user_id", userId).gte("created_at", currentUtcMonthStartIso());
+  const monthStartIso = currentUtcMonthStartIso();
+  const [{ data, error }, grantsUsd] = await Promise.all([
+    admin.from("ai_usage").select("estimated_cost").eq("user_id", userId).gte("created_at", monthStartIso),
+    getMonthlyGrantsUsd(admin, userId, monthStartIso),
+  ]);
 
   if (error || !data) {
     console.error("[ai-limits] failed to read ai_usage for budget check — using the ceiling model", { userId, error });
@@ -124,14 +129,23 @@ export async function selectModelForUser(userId: string | null): Promise<ModelSe
   // this package's precondition investigated (see the audit doc — that one turned out to
   // be test data, not a live hole; this one is a real, narrower gap worth guarding
   // directly since it's this module's own arithmetic, not a different write path's).
+  //
+  // This check is deliberately UNAFFECTED by grants (2026-09-02/03, quota_grants): an
+  // unpriced row means true spend is unknown, and a dollar grant doesn't resolve an unknown
+  // — it only offsets a known amount. A student could have a $100 grant and still have real
+  // spend of genuinely uncertain size sitting underneath it.
   const hasUnknownCostRows = data.some((row) => row.estimated_cost === null);
   const knownSpendUsd = data.reduce((sum, row) => sum + (row.estimated_cost ?? 0), 0);
+  // Never negative — a grant larger than this month's real spend doesn't carry a "credit"
+  // into next month or below $0 this one; see getMonthlyGrantsUsd's own comment on why both
+  // gates that read this table share this same effective-spend shape.
+  const effectiveSpendUsd = Math.max(0, knownSpendUsd - grantsUsd);
 
   if (hasUnknownCostRows) {
     return { model: DEGRADE_MODEL, degraded: true, reason: "unknown_cost_this_month", monthToDateSpendUsd: knownSpendUsd };
   }
-  if (knownSpendUsd >= MONTHLY_BUDGET_TARGET_USD) {
-    return { model: DEGRADE_MODEL, degraded: true, reason: "at_or_over_target", monthToDateSpendUsd: knownSpendUsd };
+  if (effectiveSpendUsd >= MONTHLY_BUDGET_TARGET_USD) {
+    return { model: DEGRADE_MODEL, degraded: true, reason: "at_or_over_target", monthToDateSpendUsd: effectiveSpendUsd };
   }
-  return { model: env.anthropic.model, degraded: false, reason: "under_target", monthToDateSpendUsd: knownSpendUsd };
+  return { model: env.anthropic.model, degraded: false, reason: "under_target", monthToDateSpendUsd: effectiveSpendUsd };
 }

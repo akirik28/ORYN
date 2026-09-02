@@ -27,17 +27,32 @@ const createClient = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/supabase/server", () => ({ createClient }));
 vi.mock("server-only", () => ({}));
 
-function storeReturning(result: { rows: Array<{ estimated_cost: number | null }> } | Error) {
+/**
+ * getMonthlyQuota now makes a second, independent request-scoped read (2026-09-02/03, live
+ * grant support): quota_grants, summed via lib/ai/limits/grants.ts's getMonthlyGrantsUsd.
+ * That query has a different shape (.eq().gte(), no .in()) than the ai_usage read below, so
+ * dispatching by table name rather than trying to share one chain. `grantRows` defaults to
+ * empty, which is the correct default for every pre-existing test in this file: none of them
+ * were written to think about a grant, and "no grant, used is exactly what ai_usage says" is
+ * the behavior that preserves their original intent unchanged.
+ */
+function storeReturning(result: { rows: Array<{ estimated_cost: number | null }> } | Error, grantRows: Array<{ amount_usd: number }> = []) {
   createClient.mockResolvedValue({
-    from: () => ({
-      select: () => ({
-        eq: () => ({
-          in: () => ({
-            gte: () => (result instanceof Error ? Promise.reject(result) : Promise.resolve({ data: result.rows, error: null })),
+    from: (table: string) => {
+      if (table === "quota_grants") {
+        return { select: () => ({ eq: () => ({ gte: () => Promise.resolve({ data: grantRows, error: null }) }) }) };
+      }
+      if (table !== "ai_usage") throw new Error(`monthly-quota.test.ts: unexpected table "${table}"`);
+      return {
+        select: () => ({
+          eq: () => ({
+            in: () => ({
+              gte: () => (result instanceof Error ? Promise.reject(result) : Promise.resolve({ data: result.rows, error: null })),
+            }),
           }),
         }),
-      }),
-    }),
+      };
+    },
   });
 }
 
@@ -119,6 +134,59 @@ describe("getMonthlyQuota", () => {
     expect(TOKENS_PER_USE_REFERENCE).toBe(4723);
     expect(MONTHLY_AI_TOKEN_LIMIT).toBe(50 * 4723);
     expect(quota.limit).toBe(MONTHLY_AI_TOKEN_LIMIT);
+  });
+});
+
+describe("getMonthlyQuota — grants (2026-09-02/03): \"a student who exhausted their month has recourse now\"", () => {
+  test("a grant equal to real spend resets used back to 0 — the 'reset' primitive", async () => {
+    storeReturning({ rows: [{ estimated_cost: 1.0 }] }, [{ amount_usd: 1.0 }]);
+    const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
+    const quota = await getMonthlyQuota("user-1");
+
+    expect(quota.used).toBe(0);
+    expect(quota.remaining).toBe(quota.limit);
+  });
+
+  test("a grant larger than real spend still floors used at 0, not a negative/rolled-over credit", async () => {
+    storeReturning({ rows: [{ estimated_cost: 0.1 }] }, [{ amount_usd: 5 }]);
+    const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
+    const quota = await getMonthlyQuota("user-1");
+
+    expect(quota.used).toBe(0);
+  });
+
+  test("a partial grant reduces used proportionally rather than clearing it", async () => {
+    storeReturning({ rows: [{ estimated_cost: 0.06 }] }, [{ amount_usd: 0.03 }]);
+    const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
+    const quota = await getMonthlyQuota("user-1");
+
+    // Same reference math as the un-granted $0.06 test above (9,446 tokens), but only half
+    // the effective spend now that $0.03 of the $0.06 is granted.
+    expect(quota.used).toBe(4723);
+  });
+
+  test("a grant never masks a genuinely unreadable ai_usage count — usedIsKnown still flips false", async () => {
+    storeReturning(new Error("connection reset"), [{ amount_usd: 1.0 }]);
+    const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
+    const quota = await getMonthlyQuota("user-1");
+
+    expect(quota.usedIsKnown).toBe(false);
+  });
+
+  test("a failed grants read is treated as $0 granted, not a thrown error or a free pass", async () => {
+    createClient.mockResolvedValue({
+      from: (table: string) => {
+        if (table === "quota_grants") return { select: () => ({ eq: () => ({ gte: () => Promise.resolve({ data: null, error: { message: "connection reset" } }) }) }) };
+        return {
+          select: () => ({ eq: () => ({ in: () => ({ gte: () => Promise.resolve({ data: [{ estimated_cost: 0.06 }], error: null }) }) }) }),
+        };
+      },
+    });
+    const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
+    const quota = await getMonthlyQuota("user-1");
+
+    expect(quota.usedIsKnown).toBe(true);
+    expect(quota.used).toBe(9446); // identical to the no-grant $0.06 case — the failed grants read changed nothing
   });
 });
 

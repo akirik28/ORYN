@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { MONTHLY_BUDGET_TARGET_USD } from "./limits/budget";
+import { getMonthlyGrantsUsd } from "./limits/grants";
 import { startOfMonthUTC, startOfNextMonthUTC } from "@/lib/date/month-boundary";
 
 /**
@@ -214,12 +215,16 @@ export async function getMonthlyQuota(userId: string): Promise<MonthlyQuota> {
   let usedIsKnown = true;
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("ai_usage")
-      .select("estimated_cost")
-      .eq("user_id", userId)
-      .in("feature", PER_STUDENT_AI_FEATURES)
-      .gte("created_at", startOfMonthUTC().toISOString());
+    const monthStartIso = startOfMonthUTC().toISOString();
+    const [{ data, error }, grantsUsd] = await Promise.all([
+      supabase.from("ai_usage").select("estimated_cost").eq("user_id", userId).in("feature", PER_STUDENT_AI_FEATURES).gte("created_at", monthStartIso),
+      // Same request-scoped `supabase` client, not an admin client — quota_grants' "select
+      // own quota grants" RLS policy (migration 0096) is what makes this readable at all
+      // here, mirroring ai_usage's own "select own ai usage" policy just above. See
+      // getMonthlyGrantsUsd's own comment for why this figure must be visible to both this
+      // function and selectModelForUser, not just one of them.
+      getMonthlyGrantsUsd(supabase, userId, monthStartIso),
+    ]);
     if (error) throw error;
 
     const rows = data ?? [];
@@ -227,6 +232,9 @@ export async function getMonthlyQuota(userId: string): Promise<MonthlyQuota> {
       usedIsKnown = false;
     } else {
       const spendUsd = rows.reduce((sum, row) => sum + (row.estimated_cost ?? 0), 0);
+      // Never negative — a grant larger than this month's real spend doesn't roll a credit
+      // into remaining beyond the full limit; effectiveSpendUsd of $0 already gives that.
+      const effectiveSpendUsd = Math.max(0, spendUsd - grantsUsd);
       // Floored, not rounded: this is the same value the exhausted check below reads, so
       // rounding up could block a student whose real usage hasn't actually reached the
       // limit yet — a rounding technicality producing the exact hard-wall-by-accident the
@@ -234,7 +242,7 @@ export async function getMonthlyQuota(userId: string): Promise<MonthlyQuota> {
       // limit" only fires once spend has genuinely earned it. Scaled to tokens before the
       // floor, not after — flooring the small "uses" value first and multiplying up would
       // throw away real fractional spend the token scale has room to represent.
-      used = Math.floor(usesConsumed(spendUsd) * TOKENS_PER_USE_REFERENCE);
+      used = Math.floor(usesConsumed(effectiveSpendUsd) * TOKENS_PER_USE_REFERENCE);
     }
   } catch (error) {
     usedIsKnown = false;

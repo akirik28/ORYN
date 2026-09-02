@@ -687,6 +687,15 @@ export interface UserSpend {
   callCount: number;
   overWarningThreshold: boolean;
   overCeiling: boolean;
+  /** Calendar month to date — the window selectModelForUser/getMonthlyQuota actually check
+   *  (deliberately not last30dUsd's rolling window above; see DegradeStandingRow's own
+   *  comment on why the two can disagree). Shown so a "reset this month"/grant control has a
+   *  real number to act on, not last30dUsd's different window standing in for it. */
+  monthToDateSpendUsd: number;
+  /** This calendar month's total already granted via quota_grants (migration 0096) — 0 when
+   *  nothing has been granted, always present so "already reset" is visible rather than
+   *  reading identically to "never touched." */
+  monthToDateGrantsUsd: number;
 }
 
 async function getLifetimeSpendByUser(admin: SupabaseClient<Database>): Promise<Map<string, number>> {
@@ -699,6 +708,31 @@ async function getLifetimeSpendByUser(admin: SupabaseClient<Database>): Promise<
   return byUser;
 }
 
+/** Every user's calendar-month-to-date real spend — the same window selectModelForUser and
+ *  getMonthlyQuota check, aggregated for all students at once rather than looping
+ *  lib/ai/limits/grants.ts's single-user getMonthlyGrantsUsd per row (which would be N+1
+ *  queries here). Mirrors getLifetimeSpendByUser's own shape immediately above. */
+async function getMonthToDateSpendByUser(admin: SupabaseClient<Database>): Promise<Map<string, number>> {
+  const { data } = await admin.from("ai_usage").select("user_id, estimated_cost").not("user_id", "is", null).gte("created_at", currentUtcMonthStartIso());
+  const byUser = new Map<string, number>();
+  for (const row of data ?? []) {
+    if (!row.user_id) continue;
+    byUser.set(row.user_id, (byUser.get(row.user_id) ?? 0) + (row.estimated_cost ?? 0));
+  }
+  return byUser;
+}
+
+/** Every user's calendar-month-to-date grants (quota_grants, migration 0096) — same
+ *  all-users-at-once reasoning as getMonthToDateSpendByUser immediately above. */
+async function getMonthToDateGrantsByUser(admin: SupabaseClient<Database>): Promise<Map<string, number>> {
+  const { data } = await admin.from("quota_grants").select("user_id, amount_usd").gte("created_at", currentUtcMonthStartIso());
+  const byUser = new Map<string, number>();
+  for (const row of data ?? []) {
+    byUser.set(row.user_id, (byUser.get(row.user_id) ?? 0) + row.amount_usd);
+  }
+  return byUser;
+}
+
 /**
  * Per-user spend, highest first — the screen version of the query that found a real student
  * at $3.04 in one week against a $1.00/month ceiling. Names attached via a batch profile
@@ -707,9 +741,11 @@ async function getLifetimeSpendByUser(admin: SupabaseClient<Database>): Promise<
  */
 export async function getPerUserSpend(admin: SupabaseClient<Database>): Promise<UserSpend[]> {
   const since30d = daysAgoIso(30);
-  const [{ data: rows }, lifetimeByUser] = await Promise.all([
+  const [{ data: rows }, lifetimeByUser, monthToDateByUser, monthToDateGrantsByUser] = await Promise.all([
     admin.from("ai_usage").select("user_id, estimated_cost, created_at").gte("created_at", since30d).not("user_id", "is", null),
     getLifetimeSpendByUser(admin),
+    getMonthToDateSpendByUser(admin),
+    getMonthToDateGrantsByUser(admin),
   ]);
 
   const last30dByUser = new Map<string, { costUsd: number; calls: number }>();
@@ -740,6 +776,8 @@ export async function getPerUserSpend(admin: SupabaseClient<Database>): Promise<
         callCount: recent.calls,
         overWarningThreshold: recent.costUsd >= BUDGET_WARNING_THRESHOLD_USD,
         overCeiling: recent.costUsd >= PER_STUDENT_MONTHLY_CEILING_USD,
+        monthToDateSpendUsd: monthToDateByUser.get(userId) ?? 0,
+        monthToDateGrantsUsd: monthToDateGrantsByUser.get(userId) ?? 0,
       };
     })
     .sort((a, b) => b.lifetimeUsd - a.lifetimeUsd);
@@ -824,6 +862,13 @@ export function cumulativeByUtcDay(rows: { estimated_cost: number | null; create
 export interface JobBudgetStatus {
   feature: JobBudgetFeature;
   budgetUsd: number;
+  /** True when budgetUsd comes from a live job_budget_overrides row (migration 0099) rather
+   *  than JOB_BUDGET_USD's own env/hardcoded default — lets the admin control show whether
+   *  there's an active override to clear, and pre-fill the edit form with today's real
+   *  effective value either way. A second, separate read from checkJobBudget's own internal
+   *  resolution (small, deliberate duplication — see this function's own comment): keeping
+   *  JobBudgetCheck itself free of an admin-display-only field. */
+  isOverridden: boolean;
   /** Null only when usage_unavailable — mirrors JobBudgetCheck's own "absent is not zero"
    *  rule (lib/ai/limits/job-budget.ts). */
   monthToDateSpendUsd: number | null;
@@ -854,13 +899,15 @@ export async function getJobBudgetStatus(admin: SupabaseClient<Database>): Promi
 
   return Promise.all(
     features.map(async (feature) => {
-      const [check, { data }] = await Promise.all([
+      const [check, { data }, { data: overrideRow }] = await Promise.all([
         checkJobBudget(feature),
         admin.from("ai_usage").select("estimated_cost, created_at").eq("feature", feature).gte("created_at", sinceIso).order("created_at", { ascending: true }),
+        admin.from("job_budget_overrides").select("budget_usd").eq("feature", feature).maybeSingle(),
       ]);
       return {
         feature,
         budgetUsd: check.budgetUsd,
+        isOverridden: overrideRow !== null,
         monthToDateSpendUsd: check.monthToDateSpendUsd,
         allowed: check.allowed,
         reason: check.reason,

@@ -35,6 +35,10 @@ vi.mock("@/lib/supabase/admin", () => {
       select: () => ({
         eq: () => ({
           gte: async () => ({ data: monthToDateRowsRef.current, error: null }),
+          // job_budget_overrides lookup (lib/ai/limits/job-budget.ts's resolveJobBudgetUsd,
+          // 2026-09-02/03) — no override configured in these tests, so checkJobBudget always
+          // falls back to JOB_BUDGET_USD's own default, same as before this table existed.
+          maybeSingle: async () => ({ data: null, error: null }),
         }),
       }),
     }),

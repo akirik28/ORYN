@@ -1939,6 +1939,32 @@ export type AiUsageInsert = Insertable<
   "id" | "created_at" | "input_tokens" | "output_tokens" | "estimated_cost" | "degraded" | "degrade_reason"
 >;
 
+/** Migration 0099. One row per JobBudgetFeature (lib/ai/limits/job-budget.ts) -- a missing
+ *  row is not represented here, it's the absence of a row for that feature entirely (see
+ *  resolveJobBudgetUsd's own comment for what that means). `feature` is plain text, not a
+ *  DB enum, same convention as AiUsage.feature/degrade_reason above. */
+export interface JobBudgetOverride {
+  feature: string;
+  budget_usd: number;
+  updated_by: string | null;
+  updated_at: string;
+}
+export type JobBudgetOverrideInsert = Insertable<JobBudgetOverride, "updated_by" | "updated_at">;
+
+/** Migration 0096. Append-only -- a "reset" is a grant equal to current month-to-date
+ *  spend, not an edit or a delete (see the migration's own header). Read by both
+ *  selectModelForUser and getMonthlyQuota via lib/ai/limits/grants.ts's shared
+ *  getMonthlyGrantsUsd, never summed independently in two places. */
+export interface QuotaGrant {
+  id: string;
+  user_id: string;
+  amount_usd: number;
+  reason: string | null;
+  granted_by: string | null;
+  created_at: string;
+}
+export type QuotaGrantInsert = Insertable<QuotaGrant, "id" | "reason" | "granted_by" | "created_at">;
+
 export interface RateLimitEvent {
   id: string;
   user_id: string;
@@ -2145,6 +2171,8 @@ export interface Database {
       job_controls: Table<JobControl, JobControlInsert, Partial<JobControlInsert>>;
       ai_usage: Table<AiUsage, AiUsageInsert, Partial<AiUsageInsert>>;
       admin_finance_settings: Table<AdminFinanceSettings, Partial<AdminFinanceSettings>, Partial<AdminFinanceSettings>>;
+      job_budget_overrides: Table<JobBudgetOverride, JobBudgetOverrideInsert, Partial<JobBudgetOverrideInsert>>;
+      quota_grants: Table<QuotaGrant, QuotaGrantInsert, Partial<QuotaGrantInsert>>;
       rate_limit_events: Table<RateLimitEvent, RateLimitEventInsert, Partial<RateLimitEventInsert>>;
       product_events: Table<ProductEvent, ProductEventInsert, Partial<ProductEventInsert>>;
       birth_year_changes: Table<BirthYearChange, never, never>;
