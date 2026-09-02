@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { DashboardView } from "@/features/dashboard/dashboard-view";
 import { UniversityExplorerHero } from "@/features/universities/university-explorer-hero";
 import { AcceptanceMoment } from "@/features/applications/status-control";
@@ -29,11 +30,88 @@ import {
 // never ship. See /docs/design-system.md.
 const FIXTURE_COUNTRY_COUNTS = SUPPORTED_COUNTRIES.map((c, i) => ({ country: c.name, count: [12, 8, 5, 4, 3][i % 5] ?? 1 }));
 
-export default function DesignPreviewPage() {
+/**
+ * Every other design-preview route, for the entry-point nav section below. Founder asked
+ * ("bana bir premium hesaba önizleme aç") to open and walk around a premium-account
+ * preview; this page had real preview routes for all twelve app surfaces already, but zero
+ * links to any of them (confirmed: the rendered DOM had no anchors to a single one) — the
+ * mechanism (`DevPreviewTierStamp` stamping `data-tier` from `?tier=`) already worked, the
+ * gap was purely navigational. `href` is a function of the current tier, not a fixed
+ * string, so every link below carries whichever tier is currently selected forward rather
+ * than silently dropping back to Standard the moment the founder clicks anywhere.
+ *
+ * `map` alone also needs `?country=United+Kingdom` — its own page has no country selected
+ * by default (see that file's own harness note), and an empty map proves nothing about the
+ * Ultra pin treatment it exists to preview.
+ */
+interface PreviewRoute {
+  href: string;
+  label: string;
+  extraParams?: string;
+}
+
+export const OTHER_PREVIEW_ROUTES: readonly PreviewRoute[] = [
+  { href: "/design-preview/dashboard", label: "Dashboard" },
+  { href: "/design-preview/opportunities", label: "Opportunities" },
+  { href: "/design-preview/map", label: "University map", extraParams: "country=United+Kingdom" },
+  { href: "/design-preview/counselor", label: "Advisor" },
+  { href: "/design-preview/journey", label: "Profile" },
+  { href: "/design-preview/notifications", label: "Notifications" },
+  { href: "/design-preview/onboarding", label: "Onboarding" },
+  { href: "/design-preview/features", label: "Features" },
+  { href: "/design-preview/admin", label: "Admin" },
+  { href: "/design-preview/auth", label: "Sign in / sign up" },
+  { href: "/design-preview/quick-add", label: "Quick add" },
+];
+
+/** Pure, exported for direct testing rather than only through a full page render — the one
+ * piece of real logic on this page: carry the route's own extra params (map's `?country=`)
+ * plus the current tier, never dropping either. */
+export function buildPreviewHref(route: PreviewRoute, tier: "standard" | "ultra"): string {
+  const params = new URLSearchParams(route.extraParams ?? "");
+  if (tier === "ultra") params.set("tier", "ultra");
+  const query = params.toString();
+  return query ? `${route.href}?${query}` : route.href;
+}
+
+export default async function DesignPreviewPage({ searchParams }: { searchParams: Promise<{ tier?: string }> }) {
   if (process.env.NODE_ENV === "production") notFound();
+
+  const { tier: tierParam } = await searchParams;
+  const tier = tierParam === "ultra" ? "ultra" : "standard";
 
   return (
     <PreviewShell signal={FIXTURE_PROFILE_SIGNAL}>
+      <div className="mb-16 space-y-4 rounded-2xl border bg-card p-6">
+        <div className="space-y-1.5">
+          <h1 className="text-lg font-semibold">Preview every surface</h1>
+          <p className="text-sm text-muted-foreground">
+            This is a preview, not a real account — nobody has an Ultra plan yet (<code>plan_tier</code> isn&apos;t even
+            in the database). The toggle at the bottom of the screen switches Standard/Ultra and follows you between
+            pages, so you can walk through the same screen both ways.
+          </p>
+          {/* 2026-09-02: the Ultra visual work is mid-flight, not finished — most of the app
+              (sidebar, page background, the hero gradients) is still hardcoded inline styles
+              no [data-tier="ultra"] rule can reach yet (docs/hardcoded-color-sweep-2026-09-02.md),
+              so toggling Ultra there does nothing visible today. Said here directly rather than
+              letting that read as this page being broken. */}
+          <p className="text-sm text-muted-foreground">
+            Only some surfaces show a difference yet: the university map, the opportunity card&apos;s Ultra halo, and
+            the notification bell dot. The sidebar, page background and card gradients are still being converted and
+            will look the same on both for now — that&apos;s expected, not a bug in this page.
+          </p>
+        </div>
+        <ul className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
+          {OTHER_PREVIEW_ROUTES.map((route) => (
+            <li key={route.href}>
+              <Link href={buildPreviewHref(route, tier)} className="text-sm text-brand-primary underline-offset-2 hover:underline">
+                {route.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       <div className="mb-16 space-y-3">
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">University exploration</p>
         <UniversityExplorerHero countryCounts={FIXTURE_COUNTRY_COUNTS} selected={null} selectedRegion={null} />

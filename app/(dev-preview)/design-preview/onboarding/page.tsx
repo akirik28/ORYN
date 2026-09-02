@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { OnboardingWizard } from "@/features/onboarding/onboarding-wizard";
+import { PreviewToolbar } from "../preview-toolbar";
 
 // See app/(dev-preview)/design-preview/page.tsx — same dev-only rationale.
 // OnboardingWizard is a pure client component with no server data dependency of its own,
@@ -22,6 +23,7 @@ export default function OnboardingPreviewPage() {
           <OnboardingWizard />
         </div>
       </div>
+      <PreviewToolbar />
     </div>
   );
 }

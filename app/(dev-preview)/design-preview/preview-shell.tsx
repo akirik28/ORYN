@@ -5,6 +5,7 @@ import { Sidebar } from "@/features/app-shell/sidebar";
 import { Topbar } from "@/features/app-shell/topbar";
 import { MobileNav } from "@/features/app-shell/mobile-nav";
 import { RouteAmbientBlobs } from "@/features/app-shell/route-ambient-blobs";
+import { PreviewToolbar } from "./preview-toolbar";
 import type { DimensionSignal } from "@/lib/scoring/signal";
 import type { Notification } from "@/types/database";
 import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
@@ -106,6 +107,7 @@ export function PreviewShell({ children, signal }: { children: ReactNode; signal
           <div className="mx-auto w-full max-w-[1200px] px-4 pt-8 pb-24 md:px-8 md:pt-12 lg:pb-12">{children}</div>
         </main>
       </div>
+      <PreviewToolbar />
     </div>
   );
 }

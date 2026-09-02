@@ -4,6 +4,7 @@ import { LoginForm } from "@/app/(auth)/_components/login-form";
 import { SignUpForm } from "@/app/(auth)/_components/signup-form";
 import { ForgotPasswordForm } from "@/app/(auth)/_components/forgot-password-form";
 import { inter, instrumentSerif } from "@/lib/fonts";
+import { PreviewToolbar } from "../preview-toolbar";
 
 // Dev-only visual harness for the Figma-source auth screens (login/signup/forgot-password),
 // same pattern as ../quick-add/page.tsx. Reproduces app/(auth)/layout.tsx's gradient+card
@@ -73,6 +74,7 @@ export default function AuthPreviewPage() {
           <ForgotPasswordForm />
         </div>
       </Card>
+      <PreviewToolbar />
     </div>
   );
 }

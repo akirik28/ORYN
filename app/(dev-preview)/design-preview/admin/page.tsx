@@ -12,6 +12,7 @@ import { ProviderHealthSection } from "@/features/admin/sections/provider-health
 import { ScheduledJobsSection } from "@/features/admin/sections/scheduled-jobs-section";
 import { ReportsSection } from "@/features/admin/sections/reports-section";
 import { UserListSection } from "@/features/admin/sections/user-list-section";
+import { PreviewToolbar } from "../preview-toolbar";
 
 /**
  * Verification aid, not a product surface: the real /admin (app/(app)/admin/page.tsx) is
@@ -78,6 +79,7 @@ export default async function AdminDesignPreviewPage() {
           </Suspense>
         </TabsContent>
       </Tabs>
+      <PreviewToolbar />
     </div>
   );
 }
