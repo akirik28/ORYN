@@ -481,3 +481,76 @@ export async function getRemainingCredit(admin: SupabaseClient<Database>): Promi
   const totalSpendUsd = await sumCostSince(admin, startingCreditEnteredAt);
   return { startingCreditUsd, startingCreditEnteredAt, totalSpendUsd, remainingUsd: startingCreditUsd - totalSpendUsd };
 }
+
+// ---------------------------------------------------------------------------------------------
+// Finance tab: exchange rate config, cost trend
+// ---------------------------------------------------------------------------------------------
+
+export interface ExchangeRate {
+  /** TL per 1 USD — a rate of 40 means $1 costs 40 TL, matching
+   *  docs/maliyet-ve-fiyatlandirma-2026-09-02.md's own "KUR = ___ TL/USD" framing. */
+  rateTryPerUsd: number;
+  enteredAt: string;
+}
+
+/**
+ * The USD/TRY rate is unknown and this codebase will not guess it — CEO's own words,
+ * relaying the founder's refusal to invent one in the cost doc: "bilgi kesme tarihim bu
+ * hesabın yapıldığı günden önce, ve yanlış bir kur bütün tabloyu sessizce bozar" (my
+ * knowledge cutoff predates this calculation, and a wrong rate silently corrupts the whole
+ * table). Same shape as `getRemainingCredit` immediately above — a manually-entered pair
+ * (value + when it was entered, so staleness is visible), `null` when unconfigured, and
+ * every caller in `lib/admin/finance.ts` that needs this threads the `null` through as
+ * `RateDependent`'s `available: false` rather than falling back to a guessed number.
+ *
+ * Not `async` and takes no `admin` client, unlike every other function in this file — it
+ * reads only `process.env`, no Supabase call. Safe to call with or without `await` from a
+ * section component; kept alongside the other Spend/Finance reads for the same reason
+ * `getRemainingCredit` is grouped here despite reading `.env` too, not `ai_usage`.
+ */
+export function getConfiguredExchangeRate(): ExchangeRate | null {
+  const rateTryPerUsd = Number(process.env.ADMIN_USD_TRY_RATE);
+  const enteredAt = process.env.ADMIN_USD_TRY_RATE_ENTERED_AT;
+  if (!Number.isFinite(rateTryPerUsd) || rateTryPerUsd <= 0 || !enteredAt) return null;
+  return { rateTryPerUsd, enteredAt };
+}
+
+export interface CostTrendPoint {
+  /** UTC calendar day, `YYYY-MM-DD` — matches startOfTodayUtcIso's own boundary choice
+   *  elsewhere in this file, for the same reason (a trend needs a consistent day boundary;
+   *  this file's other windows are rolling and don't need one, a day-by-day series does). */
+  date: string;
+  costUsd: number;
+  calls: number;
+}
+
+/**
+ * Real, measured AI spend per UTC calendar day over the trailing `days` — the "so a change
+ * in behaviour is visible before it's a surprise" figure from the assignment. Deliberately
+ * AI spend only, not AI-plus-amortized-fixed-infra: `RECURRING_INFRA_USD`/
+ * `SYSTEM_JOB_COSTS_USD` (lib/admin/finance.ts) are flat monthly totals with no real daily
+ * shape of their own — charting a constant divided by 30 as if it were a trend would imply a
+ * pattern that doesn't exist. Fixed cost belongs in the unit-economics breakdown, not here.
+ *
+ * Fetches once (bounded by `days`, an honest, stated window — same D3 discipline as
+ * `sumCostSince`'s own comment on why an unbounded row-count fetch would be wrong) and buckets
+ * in memory, for the same `pgrst.db_aggregates_enabled`-is-unset reason `sumCostSince`
+ * already documents: a real `.sum() ... group by` would be one query instead of one fetch
+ * plus a reduce, and is the thing to switch to if aggregates are ever enabled.
+ */
+export async function getCostTrend(admin: SupabaseClient<Database>, days = 30): Promise<CostTrendPoint[]> {
+  const sinceIso = daysAgoIso(days);
+  const { data } = await admin.from("ai_usage").select("created_at, estimated_cost, model").gte("created_at", sinceIso);
+  const rows = (data ?? []).filter((row) => row.model !== "test-model"); // same fixture-row exclusion as getSpendSummary
+
+  const byDay = new Map<string, { costUsd: number; calls: number }>();
+  for (const row of rows) {
+    const date = row.created_at.slice(0, 10); // YYYY-MM-DD, UTC — created_at is already UTC ISO
+    const entry = byDay.get(date) ?? { costUsd: 0, calls: 0 };
+    entry.costUsd += row.estimated_cost ?? 0;
+    entry.calls += 1;
+    byDay.set(date, entry);
+  }
+
+  return [...byDay.entries()].map(([date, { costUsd, calls }]) => ({ date, costUsd, calls })).sort((a, b) => a.date.localeCompare(b.date));
+}
