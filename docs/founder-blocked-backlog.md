@@ -237,32 +237,61 @@ scope per the founder's own earlier instruction.
 (decide `0058`) specifically needs to be decided *before* this — a fresh deploy replays every
 migration, so it would switch on the social layer as a side effect if undecided.
 
-## 15. Error-monitoring provider (Sentry or equivalent)
+## 15. ~~Error-monitoring provider (Sentry or equivalent)~~ — WIRED 2026-09-02; only `SENTRY_DSN` itself is still yours to set
 
-> ### Re-verified 2026-09-02 — this changed since the text below was written, but not into
-> ### "done." Infrastructure exists now; nothing calls it yet.
+> ### Correcting my own 2026-09-02 finding from earlier the same night: "nothing calls it" was
+> ### wrong. My grep scope was, not the codebase.
 >
-> `lib/monitoring/` (`sentry-envelope.ts`, `sentry-reporter.ts`, `redact.ts`, `index.ts`) is a
-> real, complete implementation — DSN parsing, envelope construction, redaction of headers/
-> paths/tags/values, speaking Sentry's own ingest protocol over plain `fetch` rather than the
-> `@sentry/nextjs` package (deliberately, so it works against self-hosted Sentry or GlitchTip
-> too and needs no `next.config.ts` changes). `SENTRY_DSN` is documented in `.env.example`. The
-> real entry point is `reportError()` (`lib/monitoring/index.ts`).
+> Searched `app/`, `features/`, `lib/` for callers and found none, and reported this item as
+> "infrastructure exists, not connected." **That search never covered the repo root — and
+> Next.js's `instrumentation.ts` can only ever live there.** `instrumentation.ts` has wired
+> `onRequestError` — the framework's own hook for every uncaught Server Component, Route
+> Handler, Server Action, and proxy error — straight into `reportError()` since `551fd865`
+> (2026-08-31, the night before I checked), with proper redaction already applied. The main
+> "unhandled server error" boundary, and everything under it including every API job route,
+> was already covered before this item was ever re-opened. Caught on a second pass, not by
+> anyone else — worth remembering next time a "zero results" grep feels conclusive.
 >
-> **But grepping for its only real call sites — `reportError`, `captureError`,
-> `from "@/lib/monitoring"` — outside the module's own files and tests finds nothing, anywhere
-> in `app/`, `features/`, or `lib/`.** No error boundary, no global handler, no API route catch
-> block invokes it. So the blocking fact this item names is still true in practice — an error
-> still just hits `console.error` and vanishes — even though the "pick a provider, wire it in"
-> framing below is now half wrong: the provider-agnostic wiring exists, it just isn't connected
-> to anything that would call it.
+> **What was genuinely still open, and is now closed**: known, *handled* failures — a real
+> Anthropic/Tavily/College Scorecard/OpenAlex call that fails but is caught and turned into a
+> friendly result rather than an uncaught throw — never reached `onRequestError` at all, since
+> nothing was ever left uncaught. `lib/ai/anthropic-provider.ts` and
+> `lib/providers/fetch-json.ts` (the shared HTTP layer behind the other three providers) now
+> call `reportError()` at exactly the same points they already call `recordProviderFailure()`
+> for `provider_health` — same "not-configured is a deployment fact, not an error" rule
+> already established there, inherited for free rather than re-decided, since the call sites
+> that report to Sentry are the same ones that already skip a missing-credential case for
+> `provider_health`.
+>
+> **The content-safety design, since this is exactly the path that touches CVs and student
+> prompts**: neither new call site ever passes the request itself — only an error's own
+> `.message`, or (for a schema-validation failure) a Zod issue summary of field paths and
+> expected shapes, never a field's actual value. Not a scrubbing pass after the fact; the
+> request object is simply never in scope where these calls are made. New tests assert this
+> directly, including the one case where a leak could plausibly come from the model's own
+> output rather than the request (`__tests__/ai/anthropic-provider-health.test.ts`,
+> `__tests__/providers/fetch-json.test.ts`).
+>
+> **"Stays silent with no `SENTRY_DSN`, never crashes, never hangs" was already proven** by
+> `__tests__/monitoring/sentry-reporter.test.ts` before this pass touched anything — including
+> a fake-timers assertion that the 4-second abort actually fires rather than hanging forever.
+> Nothing needed to be built for that; it needed to be found and pointed at, which is what
+> "prove that path" asked for.
+>
+> **No product decisions were needed to do this wiring** — checked for them explicitly rather
+> than skipping the check. Severity is "error" everywhere (matching `onRequestError`'s own
+> existing reasoning: a failure a student's request actually hit is a hard failure, not a
+> warning); no sampling, since expected volume at this scale doesn't need it yet and adding a
+> knob for a problem that doesn't exist would be the wrong kind of complexity; no new PII
+> policy, since the existing redactor plus never passing `request` in the first place already
+> covers it. If any of these needs revisiting, it's a fresh, small decision — not this item.
 
-**Action**: set `SENTRY_DSN` (or a self-hosted/GlitchTip equivalent) — the client is
-already built — **and wire `reportError()` into at least one real call site** (a global
-error boundary and/or the API routes' catch blocks), which is the actual remaining gap.
-**Blocks**: nothing today, but every error currently goes to `console.error` and
-vanishes in a serverless environment — messaging/social failures post-deploy would be
-invisible without this.
+**Action**: the only thing left is setting `SENTRY_DSN` (or a self-hosted/GlitchTip DSN) —
+see `docs/founder-morning-runbook-2026-09-02.md` for exactly what you get and don't get
+without it.
+**Blocks**: nothing today — with `SENTRY_DSN` unset, every one of these call sites still logs
+to `console.error`/platform logs (Vercel's function logs, if deployed), same as before. What's
+actually gated on the DSN is *searchable, alerting* visibility, not visibility at all.
 **Depends on**: item 14 (needs a real deploy target to be worth setting up) for the DSN
 itself; the wiring gap above depends on nothing and could close before deploy.
 

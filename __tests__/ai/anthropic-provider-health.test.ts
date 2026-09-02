@@ -8,10 +8,11 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
  * as __tests__/ai/anthropic-provider-thinking.test.ts (no live model call, ever).
  */
 
-const { createMock, recordSuccessMock, recordFailureMock } = vi.hoisted(() => ({
+const { createMock, recordSuccessMock, recordFailureMock, reportErrorMock } = vi.hoisted(() => ({
   createMock: vi.fn(),
   recordSuccessMock: vi.fn().mockResolvedValue(undefined),
   recordFailureMock: vi.fn().mockResolvedValue(undefined),
+  reportErrorMock: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@anthropic-ai/sdk", () => ({
@@ -29,6 +30,10 @@ vi.mock("@/lib/providers/health", () => ({
   recordProviderFailure: recordFailureMock,
 }));
 
+vi.mock("@/lib/monitoring", () => ({
+  reportError: reportErrorMock,
+}));
+
 import { AnthropicProvider } from "@/lib/ai/anthropic-provider";
 import { z } from "zod";
 
@@ -38,10 +43,26 @@ function textMessageFixture(text: string) {
 
 const TestSchema = z.object({ value: z.string() });
 
+/** A prompt and an uploaded document that must never reach `reportError`'s arguments. */
+const SENSITIVE_REQUEST = {
+  prompt: "Extract achievements from this CV: SECRET_STUDENT_NAME, attends SECRET_SCHOOL",
+  documents: [{ mediaType: "text/plain" as const, data: "SECRET_CV_BODY_TEXT" }],
+};
+
+function assertNoSensitiveContentReported() {
+  for (const call of reportErrorMock.mock.calls) {
+    const serialized = JSON.stringify(call);
+    expect(serialized).not.toContain("SECRET_STUDENT_NAME");
+    expect(serialized).not.toContain("SECRET_SCHOOL");
+    expect(serialized).not.toContain("SECRET_CV_BODY_TEXT");
+  }
+}
+
 beforeEach(() => {
   createMock.mockReset();
   recordSuccessMock.mockClear();
   recordFailureMock.mockClear();
+  reportErrorMock.mockClear();
 });
 
 describe("generateText — provider_health recording", () => {
@@ -120,5 +141,74 @@ describe("generateStructured — provider_health recording", () => {
     expect(result.data).toEqual({ value: "corrected" });
     expect(recordSuccessMock).toHaveBeenCalledWith("anthropic");
     expect(recordFailureMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("reportError — monitoring alongside provider_health, never with request content", () => {
+  test("generateText: a transport failure reports once, tagged, with no prompt/document content", async () => {
+    createMock.mockRejectedValue(new Error("connect ECONNREFUSED"));
+
+    await expect(new AnthropicProvider().generateText(SENSITIVE_REQUEST)).rejects.toThrow();
+
+    expect(reportErrorMock).toHaveBeenCalledTimes(1);
+    const [errorArg, context] = reportErrorMock.mock.calls[0];
+    expect(errorArg).toBeInstanceOf(Error);
+    expect(errorArg.message).toBe("connect ECONNREFUSED");
+    expect(context.tags).toEqual({ provider: "anthropic", model: "claude-sonnet-5", failure_mode: "transport" });
+    assertNoSensitiveContentReported();
+  });
+
+  test("generateText: an incomplete response (no text block) reports once, tagged", async () => {
+    createMock.mockResolvedValue({ content: [{ type: "thinking", thinking: "..." }], stop_reason: "max_tokens", usage: { input_tokens: 100, output_tokens: 1024 } });
+
+    await expect(new AnthropicProvider().generateText(SENSITIVE_REQUEST)).rejects.toThrow();
+
+    expect(reportErrorMock).toHaveBeenCalledTimes(1);
+    expect(reportErrorMock.mock.calls[0][1].tags).toMatchObject({ failure_mode: "incomplete_response", stop_reason: "max_tokens" });
+    assertNoSensitiveContentReported();
+  });
+
+  test("generateText: a clean success never calls reportError", async () => {
+    createMock.mockResolvedValue(textMessageFixture("A clean reply."));
+    await new AnthropicProvider().generateText({ prompt: "hi" });
+    expect(reportErrorMock).not.toHaveBeenCalled();
+  });
+
+  test("generateStructured: a transport failure reports once, tagged with the schema name, no request content", async () => {
+    createMock.mockRejectedValue(new Error("rate limited"));
+
+    await expect(
+      new AnthropicProvider().generateStructured({ ...SENSITIVE_REQUEST, schema: TestSchema, schemaName: "extract_cv", schemaDescription: "test" }),
+    ).rejects.toThrow();
+
+    expect(reportErrorMock).toHaveBeenCalledTimes(1);
+    expect(reportErrorMock.mock.calls[0][1].tags).toEqual({ provider: "anthropic", model: "claude-sonnet-5", failure_mode: "transport", schema: "extract_cv" });
+    assertNoSensitiveContentReported();
+  });
+
+  function toolMessageFixture(input: unknown) {
+    return { content: [{ type: "tool_use", input }], stop_reason: "tool_use", usage: { input_tokens: 100, output_tokens: 30 } };
+  }
+
+  test("generateStructured: a schema-validation failure after retry reports once (not twice), with a Zod issue summary — never the model's actual field values", async () => {
+    createMock.mockResolvedValue(toolMessageFixture({ wrong_field: "SECRET_STUDENT_NAME leaked into a field value" }));
+
+    await expect(
+      new AnthropicProvider().generateStructured({ ...SENSITIVE_REQUEST, schema: TestSchema, schemaName: "extract_cv", schemaDescription: "test" }),
+    ).rejects.toThrow();
+
+    expect(reportErrorMock).toHaveBeenCalledTimes(1);
+    const [errorArg] = reportErrorMock.mock.calls[0];
+    // The Zod issue path/message ("value: Required") is fine to report; a value the model
+    // actually produced is not — this is the one case where a leak could plausibly come
+    // from the model's own output rather than the request, so it gets its own assertion.
+    expect(errorArg.message).not.toContain("SECRET_STUDENT_NAME leaked into a field value");
+    assertNoSensitiveContentReported();
+  });
+
+  test("generateStructured: a clean success never calls reportError", async () => {
+    createMock.mockResolvedValue(toolMessageFixture({ value: "ok" }));
+    await new AnthropicProvider().generateStructured({ prompt: "hi", schema: TestSchema, schemaName: "record_test", schemaDescription: "test" });
+    expect(reportErrorMock).not.toHaveBeenCalled();
   });
 });
