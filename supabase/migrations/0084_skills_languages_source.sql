@@ -1,5 +1,15 @@
 -- NOT APPLIED. Founder-gated like every migration in this repo's history -- write and leave
--- unapplied. CEO decision, 2026-09-02: CV extraction pulls skills and languages from an
+-- unapplied.
+--
+-- STATUS, corrected 2026-09-02 (docs/migration-audit-applied-vs-written-2026-09-02.md):
+-- APPLIED. `skills.source` and `languages.source` both exist live on
+-- `qtcvcflzxbuagvvwahhu`. `lib/profile/cv-import.ts` already writes `source: "cv_import"`
+-- unconditionally on every CV-imported row (no `isUndefinedColumnError` fallback here,
+-- unlike 0077/0083's paired code -- this insert would have failed outright rather than
+-- degraded had it run before this migration applied). Confirmed working now that the
+-- column exists; the line above was true when written and is not true today.
+--
+-- CEO decision, 2026-09-02: CV extraction pulls skills and languages from an
 -- uploaded resume (the same paid AI call that extracts every other category), but neither
 -- review surface nor the save path has ever done anything with them -- both were extracted
 -- and silently discarded, always. Wiring them into the same review-and-import flow every

@@ -91,6 +91,17 @@
 -- alongside 0060-0064, presented as one coherent decision per ORYN-CEO's explicit
 -- preference rather than a further trickle of individually-gated migrations. Do not
 -- run against a live project without explicit review.
+--
+-- STATUS, corrected 2026-09-02 (docs/migration-audit-applied-vs-written-2026-09-02.md):
+-- APPLIED, in full, across all six tables. Confirmed against `qtcvcflzxbuagvvwahhu` per
+-- table, not just checked by name: the original bundled `"owner full access"` policy is
+-- absent on all six, the replacement `select own`/`update own`/`delete own` policies are
+-- present on all six, and zero INSERT policy of any kind remains on any of the six --
+-- student-side INSERT is fully closed. The paired code change this file's own header
+-- requires (evidence_files/ai_recommendations inserts routed through the admin client)
+-- was independently confirmed present and correctly ordered in
+-- `app/(app)/documents/actions.ts` and `lib/plan/persist.ts`. The line above was true
+-- when written and is not true today.
 
 -- ---------------------------------------------------------------------------
 -- profile_scores

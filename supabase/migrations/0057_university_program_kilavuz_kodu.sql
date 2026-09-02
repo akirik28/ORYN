@@ -4,6 +4,12 @@
 -- without asking the founder again. Written now so the proposal is concrete and reviewable,
 -- not because it is cleared to run.
 --
+-- STATUS, corrected 2026-09-02 (docs/migration-audit-applied-vs-written-2026-09-02.md):
+-- APPLIED. The paragraph above was true when written; it is no longer true of the live
+-- database. Confirmed against `information_schema.columns` and `pg_indexes` on
+-- `qtcvcflzxbuagvvwahhu`, not assumed: `university_programs.kilavuz_kodu` and
+-- `university_programs_kilavuz_kodu_idx` both exist live.
+--
 -- Why this now: every one of Oryn's 779 Turkish university_programs rows currently has
 -- official_program_url = 'https://yokatlas.yok.gov.tr/' -- the bare portal root, not a
 -- per-programme page, because YOK Atlas has no per-programme URL. That makes Turkey the

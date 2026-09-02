@@ -7,6 +7,13 @@
 -- The application code reads the column defensively (`?? false`), so every environment
 -- behaves identically — and honestly — whether or not this has been applied yet.
 --
+-- STATUS, corrected 2026-09-02 (docs/migration-audit-applied-vs-written-2026-09-02.md):
+-- APPLIED. Confirmed against `qtcvcflzxbuagvvwahhu` directly, not assumed:
+-- `opportunities.country_eligibility_confirmed_open` and the
+-- `opportunities_confirmed_open_no_structured_restriction` CHECK constraint both exist
+-- live. The paragraph above was true when written and is not true of the live database
+-- today.
+--
 -- Why: `eligible_countries` (0008) is empty on ~352/391 live rows, and BOTH meanings of
 -- empty are live today with no way to tell them apart:
 --   (a) a research pass confirmed the program is genuinely open worldwide (wave 1's
