@@ -1865,6 +1865,22 @@ export type NotificationInsert = Insertable<Notification, "id" | "created_at" | 
 
 // ---------- Ops ----------
 
+/** Migration 0098, written not applied. Field-level audit trail for admin-panel write actions
+ * (docs/catalog-health-actions-design-2026-09-02.md) -- written by the same request that
+ * performs the mutation it records, never a separate best-effort call after. */
+export interface AdminAction {
+  id: string;
+  admin_user_id: string;
+  action: string;
+  target_table: string;
+  target_id: string;
+  reason: string | null;
+  before_value: unknown;
+  after_value: unknown;
+  created_at: string;
+}
+export type AdminActionInsert = Insertable<AdminAction, "id" | "created_at" | "reason" | "before_value" | "after_value">;
+
 export interface ProviderHealth {
   id: string;
   provider: string;
@@ -2140,6 +2156,7 @@ export interface Database {
       advisor_conversations: Table<AdvisorConversation, AdvisorConversationInsert, Partial<AdvisorConversationInsert>>;
       advisor_messages: Table<AdvisorMessage, AdvisorMessageInsert, Partial<AdvisorMessageInsert>>;
       notifications: Table<Notification, NotificationInsert, Partial<Pick<Notification, "read_at">>>;
+      admin_actions: Table<AdminAction, AdminActionInsert, never>;
       provider_health: Table<ProviderHealth, Partial<ProviderHealth>, Partial<ProviderHealth>>;
       external_sync_jobs: Table<ExternalSyncJob, Partial<ExternalSyncJob>, Partial<ExternalSyncJob>>;
       job_controls: Table<JobControl, JobControlInsert, Partial<JobControlInsert>>;

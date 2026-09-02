@@ -20,6 +20,7 @@ import { tavilyProvider } from "@/lib/providers/tavily";
 import { collegeScorecardProvider } from "@/lib/providers/college-scorecard";
 import { openAlexProvider } from "@/lib/providers/openalex";
 import { getAIProvider, isAIConfigured } from "@/lib/ai";
+import { CONTAMINATION_CLEANUP_2026_09_02 } from "@/lib/opportunities/contamination-cleanup-2026-09-02";
 import type { MessageReportStatus, PlanTier } from "@/types/database";
 
 /**
@@ -517,4 +518,86 @@ export async function searchAdminOpportunities(q?: string): Promise<{ rows: Admi
     console.error("[admin] opportunity search failed", { q, error });
     return { rows: [], error: "Couldn't search opportunities. Please try again." };
   }
+}
+
+export interface ContaminationCleanupOutcome {
+  id: string;
+  title: string;
+  applied: boolean;
+  /** Present only when applied is false — "why," never left for the caller to infer from a
+   *  bare count. Distinguishes a guard miss (row changed since 2026-09-02) from a genuine
+   *  write error, since an admin acting on this needs to know which. */
+  reason?: string;
+}
+
+/**
+ * The 35-row description-contamination cleanup (data/research/opportunities/
+ * description_contamination_cleanup_2026-09-02.sql, converted to typed data — see that file's
+ * own header) — CEO's explicit approval, 2026-09-02: "the 35-row cleanup is approved to apply —
+ * through your button, not raw SQL... your button gives per-row before/after preview, each
+ * row's own guard, and visible reporting of any row that doesn't take."
+ *
+ * Each of the 35 is applied independently via `.like(description, guardPrefix + "%")` — the
+ * PostgREST-expressible equivalent of the original SQL's `left(description, N) = guardPrefix`
+ * exact-prefix guard. Postgres/PostgREST does not error on a zero-row match, so a guard miss is
+ * a normal, visible `count: 0` outcome to check, not an exception — matching the original file's
+ * own stated behavior exactly: "the other 36 are unaffected and safe to apply as-is... a 0-row
+ * match on one does not roll back." No explicit transaction wraps all 35: each statement was
+ * already independent in the source file, and CEO's own words confirm this is the intended
+ * shape, not a shortcut ("34 applying and 1 flagged is better than all-or-nothing").
+ *
+ * Every attempt — applied or skipped — writes its own `admin_actions` row in the same request as
+ * the update itself, recording the old and new description as `before_value`/`after_value`. If
+ * the audit write itself fails, that row's whole attempt is reported as not applied (`reason`
+ * names the audit failure specifically) even if the description update itself already
+ * succeeded — deliberately fails toward "admin re-checks a row that's actually fine" rather than
+ * "a real change exists with no record of it," the opposite of the gap this table exists to close.
+ */
+export async function applyContaminationCleanup(): Promise<ContaminationCleanupOutcome[]> {
+  const adminProfile = await requireAdmin();
+  const admin = createAdminClient();
+
+  const outcomes: ContaminationCleanupOutcome[] = [];
+  for (const entry of CONTAMINATION_CLEANUP_2026_09_02) {
+    const { data: beforeRow } = await admin.from("opportunities").select("description").eq("id", entry.id).maybeSingle();
+    if (!beforeRow) {
+      outcomes.push({ id: entry.id, title: entry.title, applied: false, reason: "Row not found — id may be stale." });
+      continue;
+    }
+
+    const { data: updatedRows, error: updateError } = await admin
+      .from("opportunities")
+      .update({ description: entry.newDescription })
+      .eq("id", entry.id)
+      .like("description", `${entry.guardPrefix}%`)
+      .select("id");
+    if (updateError) {
+      console.error("[admin] contamination cleanup update failed", { id: entry.id, code: updateError.code, message: updateError.message });
+      outcomes.push({ id: entry.id, title: entry.title, applied: false, reason: "Write failed — see server logs." });
+      continue;
+    }
+    if (!updatedRows || updatedRows.length === 0) {
+      outcomes.push({ id: entry.id, title: entry.title, applied: false, reason: "Description changed since 2026-09-02 — guard did not match, nothing written." });
+      continue;
+    }
+
+    const { error: auditError } = await admin.from("admin_actions").insert({
+      admin_user_id: adminProfile.id,
+      action: "apply_description_cleanup",
+      target_table: "opportunities",
+      target_id: entry.id,
+      before_value: { description: beforeRow.description },
+      after_value: { description: entry.newDescription },
+    });
+    if (auditError) {
+      console.error("[admin] contamination cleanup audit write failed after a real update", { id: entry.id, code: auditError.code, message: auditError.message });
+      outcomes.push({ id: entry.id, title: entry.title, applied: false, reason: "Saved, but the audit record failed to write — flag this row for a manual check." });
+      continue;
+    }
+
+    outcomes.push({ id: entry.id, title: entry.title, applied: true });
+  }
+
+  revalidatePath("/admin");
+  return outcomes;
 }

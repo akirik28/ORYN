@@ -298,7 +298,21 @@ describe("migration numbering", () => {
     // operational admin actions -- landed on main during this same rebase, bumping the
     // ceiling here to 97 rather than 95; see that migration's own header for its reasoning,
     // not duplicated here since it isn't this entry's migration to narrate.
-    expect(Math.max(...numbers.map(Number))).toBe(97);
+    //
+    // 0098 (admin_actions) is the field-level audit trail the admin panel's course
+    // correction (2026-09-02: founder wants a control panel, not a report) surfaced a live
+    // need for -- two real writes already happened that night with zero record of who or
+    // why (AI Scholars disabled, per oryn-a7's own account). One append-only table shared by
+    // every write-capable catalog-health action rather than one per action -- see
+    // docs/catalog-health-actions-design-2026-09-02.md. Deliberately a second table alongside
+    // 0097's admin_action_log rather than merged into it -- checked directly rather than
+    // assumed compatible: admin_action_log's schema (target_user_id, a human-readable label +
+    // freeform detail) doesn't fit a non-user target without misusing target_user_id for an
+    // opportunity id. CEO's own ruling, once flagged rather than decided unilaterally: keep
+    // both tables, unify them at the read layer instead (getAdminActivityTimeline, lib/admin/
+    // queries.ts) -- the schema split stays real underneath, a founder reading "recent
+    // activity" never has to know it exists. Still unapplied.
+    expect(Math.max(...numbers.map(Number))).toBe(98);
   });
 });
 

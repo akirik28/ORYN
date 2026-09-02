@@ -18,6 +18,7 @@ import { isOpportunityActionable, isOpportunitySufficientlyVerified, hasDeadline
 import { isUndefinedColumnError, isUndefinedTableError } from "@/lib/supabase/errors";
 import { ULTRA_PRICE_TRY } from "@/lib/admin/finance";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
+import { CONTAMINATION_CLEANUP_2026_09_02 } from "@/lib/opportunities/contamination-cleanup-2026-09-02";
 
 /**
  * Every admin-panel read, one module (docs/admin-panel-architecture-2026-09-02.md, D1). Each
@@ -1497,4 +1498,52 @@ export async function getNeverWrittenColumnChecks(admin: SupabaseClient<Database
       };
     })
   );
+}
+
+// ---------------------------------------------------------------------------------------------
+// Catalog tab, write-capable actions (course correction, 2026-09-02 — see
+// docs/catalog-health-actions-design-2026-09-02.md). Preview only below; the actual mutation
+// (applyContaminationCleanup) lives in app/(app)/admin/actions.ts alongside every other
+// admin Server Action, per this file's own D1 scope ("every admin-panel READ, one module") —
+// queries.ts reads, actions.ts writes, the same split this file already draws for
+// removeReportedPost/restoreReportedPost.
+// ---------------------------------------------------------------------------------------------
+
+export interface ContaminationCleanupPreviewRow {
+  id: string;
+  title: string;
+  currentDescription: string | null;
+  newDescription: string;
+  /** Whether `.like(description, guardPrefix + "%")` would currently match this row — computed
+   *  the same way the apply action itself checks, so a preview showing "will apply" can never
+   *  disagree with what actually happens a moment later on the same data. `null` means the row
+   *  itself could not be found (deleted or the id is stale) — a third state, not folded into
+   *  `false`, because "guard failed" and "row is gone" call for different messages to an admin
+   *  reading this before clicking apply. */
+  guardWouldPass: boolean | null;
+}
+
+/**
+ * Read-only. Fetches the current live description for all 35 rows in
+ * CONTAMINATION_CLEANUP_2026_09_02 and checks each guard against it — the exact preview CEO
+ * asked for ("old value, new value, per row, before the button that commits anything is even
+ * enabled"). Never writes; the apply action re-checks the identical guard at commit time rather
+ * than trusting this preview's own read, since the two calls are not atomic with each other and
+ * a row could change in between.
+ */
+export async function getContaminationCleanupPreview(admin: SupabaseClient<Database>): Promise<ContaminationCleanupPreviewRow[]> {
+  const ids = CONTAMINATION_CLEANUP_2026_09_02.map((e) => e.id);
+  const { data } = await admin.from("opportunities").select("id, description").in("id", ids);
+  const currentById = new Map((data ?? []).map((r) => [r.id, r.description]));
+
+  return CONTAMINATION_CLEANUP_2026_09_02.map((entry) => {
+    const current = currentById.get(entry.id);
+    return {
+      id: entry.id,
+      title: entry.title,
+      currentDescription: current ?? null,
+      newDescription: entry.newDescription,
+      guardWouldPass: current == null ? null : current.startsWith(entry.guardPrefix),
+    };
+  });
 }
