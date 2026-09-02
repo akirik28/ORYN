@@ -110,6 +110,7 @@ export function UniversityBrowseGrid({
               cost={m.cost}
               researchTopics={m.researchTopics}
               imageUrl={m.imageUrl}
+              hasResearchDepth={m.hasResearchDepth}
               compact={compact}
               countryHref={university.country ? (buildCountryHref?.[university.country] ?? null) : null}
             />

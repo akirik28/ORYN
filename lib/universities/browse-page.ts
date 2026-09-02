@@ -24,6 +24,8 @@ export interface UniversityBrowseParams {
   cost: CostBucketValue[];
   size: SizeBucketValue[];
   rank: RankTierValue | null;
+  /** See lib/universities/data-depth.ts / lib/universities/filters.ts's RangeFilters.detailedOnly. */
+  detailedOnly: boolean;
   page: number;
 }
 
@@ -59,10 +61,10 @@ export async function loadUniversityBrowsePage(
   supabase: SupabaseClient<Database>,
   params: UniversityBrowseParams,
   supersededIds: readonly string[],
-  rangeData: { costMap?: Map<string, number>; qsRankMap?: Map<string, number> }
+  rangeData: { costMap?: Map<string, number>; qsRankMap?: Map<string, number>; depthIds?: Set<string> }
 ): Promise<UniversityBrowseResult> {
-  const { q, scopedCountries, type, sort, cost, size, rank, page } = params;
-  const rangeFilters = { size, cost, rank };
+  const { q, scopedCountries, type, sort, cost, size, rank, detailedOnly, page } = params;
+  const rangeFilters = { size, cost, rank, detailedOnly };
 
   // ---- Path 1: text search -------------------------------------------------
   if (q) {
@@ -72,7 +74,7 @@ export async function loadUniversityBrowsePage(
     return { universities: matched, total: matched.length, sizeUnknownCount: sizeUnknown, costUnknownCount: costUnknown };
   }
 
-  const useIdIntersectionPath = sort === "ranking" || cost.length > 0 || size.length > 0 || rank !== null;
+  const useIdIntersectionPath = sort === "ranking" || cost.length > 0 || size.length > 0 || rank !== null || detailedOnly;
 
   // ---- Path 2: in-memory id intersection -----------------------------------
   if (useIdIntersectionPath) {
@@ -153,17 +155,28 @@ export interface UniversityCardMeta {
   cost?: { amount: number; currency: string | null };
   researchTopics?: string[];
   imageUrl?: string;
+  /** True only for the minority with real program/requirement/source/statistics depth —
+   *  see lib/universities/queries.ts's getAllResearchDepthUniversityIds. Never explicitly
+   *  false: the majority simply omits this field, the same "silence is the default state"
+   *  convention as researchTopics/imageUrl above, so a card doesn't carry a negative badge. */
+  hasResearchDepth?: boolean;
 }
 
 /**
  * Batch-fetched separately rather than joined into the main query (the hand-authored
  * Database type can't model FK embedding reliably), so a card can show "QS #N" without
  * slowing the primary browse path.
+ *
+ * `depthIds` is the caller's already-fetched global set (getAllResearchDepthUniversityIds),
+ * not re-fetched here — it's the same one-page-worth-of-universities-at-a-time function
+ * that gets called on every infinite-scroll batch, and that global set doesn't change
+ * page to page the way qsRank/cost do.
  */
 export async function getUniversityCardMeta(
   supabase: SupabaseClient<Database>,
   universities: University[],
-  categorizeTopics: (raw: string[]) => string[]
+  categorizeTopics: (raw: string[]) => string[],
+  depthIds: Set<string>
 ): Promise<Record<string, UniversityCardMeta>> {
   if (universities.length === 0) return {};
   const ids = universities.map((u) => u.id);
@@ -191,6 +204,9 @@ export async function getUniversityCardMeta(
     } else if (m.metric_code === "primary_image_url") {
       entry(m.university_id).imageUrl = m.value_text;
     }
+  }
+  for (const u of universities) {
+    if (depthIds.has(u.id)) entry(u.id).hasResearchDepth = true;
   }
   return meta;
 }

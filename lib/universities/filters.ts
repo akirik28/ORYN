@@ -115,6 +115,11 @@ export interface RangeFilters {
   size?: SizeBucketValue[];
   cost?: CostBucketValue[];
   rank?: RankTierValue | null;
+  /** Keep only rows with real program/requirement/source/statistics depth — see
+   *  lib/universities/data-depth.ts. Unlike size/cost/rank this isn't a range with an
+   *  "unknown" case of its own: a row is either in `data.depthIds` or it isn't, so there's
+   *  no separate *Unknown count to track the way sizeUnknown/costUnknown do. */
+  detailedOnly?: boolean;
 }
 
 export interface RangeFilterResult<T> {
@@ -144,7 +149,7 @@ export interface RangeFilterResult<T> {
 export function applyRangeFilters<T extends RangeFilterRow>(
   rows: T[],
   filters: RangeFilters,
-  data: { costMap?: Map<string, number>; qsRankMap?: Map<string, number> } = {}
+  data: { costMap?: Map<string, number>; qsRankMap?: Map<string, number>; depthIds?: Set<string> } = {}
 ): RangeFilterResult<T> {
   let stage = rows;
 
@@ -175,6 +180,11 @@ export function applyRangeFilters<T extends RangeFilterRow>(
       const rk = qsRankMap.get(r.id);
       return rk != null && rk <= threshold;
     });
+  }
+
+  if (filters.detailedOnly) {
+    const depthIds = data.depthIds ?? new Set<string>();
+    stage = stage.filter((r) => depthIds.has(r.id));
   }
 
   return { matched: stage, sizeUnknown, costUnknown };

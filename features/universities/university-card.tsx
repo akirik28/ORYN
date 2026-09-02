@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { MapPin, Bookmark, BookmarkCheck, Landmark, Users, Trophy, DollarSign, Scale } from "lucide-react";
+import { MapPin, Bookmark, BookmarkCheck, Landmark, Users, Trophy, DollarSign, Scale, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { addTargetUniversity } from "@/app/(app)/universities/actions";
 import { useCompare } from "@/features/universities/compare-context";
@@ -27,6 +27,7 @@ export function UniversityCard({
   cost,
   researchTopics,
   imageUrl,
+  hasResearchDepth,
   compact = false,
   countryHref,
 }: {
@@ -48,6 +49,13 @@ export function UniversityCard({
    * on our own Supabase Storage bucket. Absent for most universities today; falls back to
    * `logo_url` then a plain icon, never to a placeholder pretending to be a real photo. */
   imageUrl?: string | null;
+  /** True only for the minority of universities with real program/requirement/source/
+   * statistics depth (lib/universities/browse-page.ts's getUniversityCardMeta). Never
+   * rendered as an explicit "false" state — the other ~72% of cards simply omit this
+   * badge, the same silence-is-default convention every other optional field on this card
+   * already uses, so a majority of cards don't carry a visible negative marker. See
+   * docs/handoffs/university-data-depth-honesty-2026-09-02.md. */
+  hasResearchDepth?: boolean;
   /** Denser variant for the map view's ~42% results panel, where the full card's padding
    *  and 128px image band fit about four results on screen. Same content, tighter frame —
    *  not a different card, so the two views can't drift apart. */
@@ -103,7 +111,7 @@ export function UniversityCard({
           )}
         </div>
 
-        {(qsRank || university.student_size || university.institution_type) && (
+        {(qsRank || university.student_size || hasResearchDepth) && (
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
             {qsRank ? (
               <span className="flex items-center gap-1">
@@ -115,6 +123,12 @@ export function UniversityCard({
               <span className="flex items-center gap-1">
                 <Users className="size-3.5 shrink-0" />
                 {formatNumber(university.student_size)} {t("students")}
+              </span>
+            ) : null}
+            {hasResearchDepth ? (
+              <span className="flex items-center gap-1 text-brand-primary">
+                <BadgeCheck className="size-3.5 shrink-0" />
+                {t("detailedProfile")}
               </span>
             ) : null}
           </div>

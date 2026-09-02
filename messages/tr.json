@@ -754,7 +754,8 @@
       "compareLimitTooltip": "Aynı anda en fazla 4 tane karşılaştır",
       "comparing": "Karşılaştırılıyor",
       "compare": "Karşılaştır",
-      "costOfAttendanceSuffix": "/ yıl, öğrenim maliyeti"
+      "costOfAttendanceSuffix": "/ yıl, öğrenim maliyeti",
+      "detailedProfile": "Detaylı profil"
     },
     "browseGrid": {
       "loadingMoreSr": "Daha fazla üniversite yükleniyor",
@@ -863,10 +864,13 @@
       "sizeUnknownExcluded": "{count, plural, one {{formatted} ek üniversite} other {{formatted} ek üniversite}} öğrenci sayısı verisi mevcut olmadığı için hariç tutuldu.",
       "noUniversitiesFound": "Üniversite bulunamadı",
       "matchingQuerySuffix": " — “{query}” ile eşleşen",
-      "noMatchFilters": "Mevcut filtrelere uyan üniversite yok — maliyet, büyüklük veya sıralama aralığını genişletmeyi dene.",
+      "noMatchFilters": "Mevcut filtrelere uyan üniversite yok — maliyet, büyüklük veya sıralama aralığını genişletmeyi dene, ya da “Yalnızca detaylı profiller”i kapat.",
       "dataAddedOverTime": "Üniversite verileri zamanla ekleniyor — yakında tekrar kontrol et, ya da başka bir bölge dene.",
       "uncoveredNote": "Not: {count, plural, one {{formatted} incelenmekte olan ülke} other {{formatted} incelenmekte olan ülke}} henüz bir bölgeye eşleştirilmedi ({names}) — yukarıdaki toplama dahil, henüz hiçbir bölge sekmesinde değil.",
-      "sortByName": "Ad"
+      "sortByName": "Ad",
+      "researchDepth": "Araştırma derinliği",
+      "researchDepthHint": "Oryn'ın kataloğundaki çoğu üniversitenin henüz detaylı program ve gereklilik verisi yok — bu, verisi olanlara daraltır.",
+      "detailedProfilesOnly": "Yalnızca detaylı profiller"
     },
     "comparePage": {
       "title": "Üniversiteleri karşılaştır",

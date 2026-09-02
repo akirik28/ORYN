@@ -15,7 +15,7 @@ import { UniversitySearchBox } from "@/features/universities/university-search-b
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { regionById, regionLabel } from "@/lib/data/regions";
 import { getSupersededUniversityIds, loadSupersessionMap } from "@/lib/universities/canonical";
-import { getUniversityCountByCountry, getAllCostOfAttendance, getAllQsListPositions } from "@/lib/universities/queries";
+import { getUniversityCountByCountry, getAllCostOfAttendance, getAllQsListPositions, getAllResearchDepthUniversityIds } from "@/lib/universities/queries";
 import { formatNumber } from "@/lib/i18n/format";
 import {
   COST_BUCKETS,
@@ -62,6 +62,7 @@ export default async function UniversitiesPage({
     size?: string;
     rank?: string;
     view?: string;
+    detailed?: string;
   }>;
 }) {
   const {
@@ -75,6 +76,7 @@ export default async function UniversitiesPage({
     size: sizeParam,
     rank: rankParam,
     view: viewParam,
+    detailed: detailedParam,
   } = await searchParams;
   const locale = await resolveLocale();
   const t = await getTranslations("universities.browsePage");
@@ -102,6 +104,10 @@ export default async function UniversitiesPage({
   const type = TYPE_OPTIONS.find((t) => t.value === typeParam)?.value ?? null;
   const size = (sizeParam?.split(",") ?? []).filter((v): v is SizeBucketValue => SIZE_BUCKETS.some((b) => b.value === v));
   const rank = (RANK_TIERS as readonly string[]).includes(rankParam ?? "") ? (rankParam as (typeof RANK_TIERS)[number]) : null;
+  // "1" only, not any truthy string — a bare boolean-shaped flag, same convention as
+  // isListView's view === "list" just above. See lib/universities/data-depth.ts /
+  // docs/handoffs/university-data-depth-honesty-2026-09-02.md for what this narrows to.
+  const detailedOnly = detailedParam === "1";
   const session = await requireUser();
   const supabase = await createClient();
 
@@ -128,17 +134,21 @@ export default async function UniversitiesPage({
   // getAllQsListPositions) and intersecting client-side avoids the limit entirely, at the cost
   // of one extra small query when these filters (or Ranking sort) are actually in use.
   const needsQsRankMap = !q && (sort === "ranking" || rank !== null);
-  const [costMap, qsRankMap] = await Promise.all([
+  // depthIds is fetched unconditionally, unlike costMap/qsRankMap: it feeds the "Detailed
+  // profile" card badge on every page regardless of whether the filter itself is active,
+  // not just the filtered-narrowing path.
+  const [costMap, qsRankMap, depthIds] = await Promise.all([
     cost ? getAllCostOfAttendance(supabase) : Promise.resolve(null),
     needsQsRankMap ? getAllQsListPositions(supabase) : Promise.resolve(null),
+    getAllResearchDepthUniversityIds(supabase),
   ]);
 
-  const rangeData = { costMap: costMap ?? undefined, qsRankMap: qsRankMap ?? undefined };
+  const rangeData = { costMap: costMap ?? undefined, qsRankMap: qsRankMap ?? undefined, depthIds };
 
   const [browseResult, liveCountryCounts, targetsRes] = await Promise.all([
     loadUniversityBrowsePage(
       supabase,
-      { q: q ?? null, scopedCountries, type, sort, cost, size, rank, page },
+      { q: q ?? null, scopedCountries, type, sort, cost, size, rank, detailedOnly, page },
       supersededIds,
       rangeData
     ),
@@ -183,13 +193,13 @@ export default async function UniversitiesPage({
 
   // Same batched per-card metadata the infinite-scroll action uses, so an appended page's
   // cards carry exactly the fields the first page's do.
-  const cardMeta = await getUniversityCardMeta(supabase, universities, categorizeAndDedupeResearchTopics);
+  const cardMeta = await getUniversityCardMeta(supabase, universities, categorizeAndDedupeResearchTopics, depthIds);
 
   const scopeLabel = country ?? (region ? regionLabel(region, locale) : null);
 
   // Handed to the infinite-scroll grid, and to the Server Action behind it, so an appended
   // page is resolved with exactly the filters the first page used.
-  const browseParams = { q: q ?? null, scopedCountries, type, sort, cost, size, rank };
+  const browseParams = { q: q ?? null, scopedCountries, type, sort, cost, size, rank, detailedOnly };
   // Remount key: changing any filter or the sort produces a different result set, so the
   // grid must reset its accumulated pages. Keying it is how React is told that — cheaper
   // and less error-prone than syncing props into state inside the component.
@@ -204,7 +214,15 @@ export default async function UniversitiesPage({
     }
   }
 
-  function buildHref(overrides: { page?: number; sort?: SortOption; cost?: string[]; type?: string | null; size?: string[]; rank?: string | null }): string {
+  function buildHref(overrides: {
+    page?: number;
+    sort?: SortOption;
+    cost?: string[];
+    type?: string | null;
+    size?: string[];
+    rank?: string | null;
+    detailedOnly?: boolean;
+  }): string {
     const params = new URLSearchParams();
     if (country) params.set("country", country);
     if (region) params.set("region", region.id);
@@ -216,10 +234,12 @@ export default async function UniversitiesPage({
     const nextType = "type" in overrides ? overrides.type : type;
     const nextSize = overrides.size ?? size;
     const nextRank = "rank" in overrides ? overrides.rank : rank;
+    const nextDetailedOnly = overrides.detailedOnly ?? detailedOnly;
     if (nextCost.length > 0) params.set("cost", nextCost.join(","));
     if (nextType) params.set("type", nextType);
     if (nextSize.length > 0) params.set("size", nextSize.join(","));
     if (nextRank) params.set("rank", nextRank);
+    if (nextDetailedOnly) params.set("detailed", "1");
     // Any filter or sort change resets to page 1 (the result set just changed size); explicit
     // pagination passes its own target page.
     const nextPage = overrides.page ?? 1;
@@ -240,6 +260,7 @@ export default async function UniversitiesPage({
     if (type) params.set("type", type);
     if (size.length > 0) params.set("size", size.join(","));
     if (rank) params.set("rank", rank);
+    if (detailedOnly) params.set("detailed", "1");
     if (list) params.set("view", "list");
     const qs = params.toString();
     return qs ? `/universities?${qs}` : "/universities";
@@ -266,12 +287,13 @@ export default async function UniversitiesPage({
     if (type) params.set("type", type);
     if (size.length > 0) params.set("size", size.join(","));
     if (rank) params.set("rank", rank);
+    if (detailedOnly) params.set("detailed", "1");
     if (isListView) params.set("view", "list");
     return `/universities?${params.toString()}`;
   }
 
   const buildSortHref = (nextSort: SortOption) => buildHref({ sort: nextSort });
-  const buildFilterHref = (overrides: { cost?: string[]; type?: string | null; size?: string[]; rank?: string | null }) => buildHref(overrides);
+  const buildFilterHref = (overrides: { cost?: string[]; type?: string | null; size?: string[]; rank?: string | null; detailedOnly?: boolean }) => buildHref(overrides);
 
   /** Single-select: type and rank. Clicking the active option clears it, clicking another
    * replaces it — QS rank tiers are already cumulative ("Top 50" ⊇ "Top 10"), so more than one
@@ -298,7 +320,7 @@ export default async function UniversitiesPage({
     }));
   }
 
-  const activeFilterCount = cost.length + size.length + (type ? 1 : 0) + (rank ? 1 : 0);
+  const activeFilterCount = cost.length + size.length + (type ? 1 : 0) + (rank ? 1 : 0) + (detailedOnly ? 1 : 0);
 
   return (
     // Figma source marks Universities as one of its dark "isFull" screens (App.tsx
@@ -366,7 +388,7 @@ export default async function UniversitiesPage({
           </form>
           <FilterSheet
             activeCount={activeFilterCount}
-            clearHref={buildFilterHref({ cost: [], type: null, size: [], rank: null })}
+            clearHref={buildFilterHref({ cost: [], type: null, size: [], rank: null, detailedOnly: false })}
             groups={[
               {
                 label: t("costOfAttendance"),
@@ -380,6 +402,23 @@ export default async function UniversitiesPage({
                 options: toMultiOptions(SIZE_BUCKETS.map((b) => ({ value: b.value, label: sizeBucketLabel(b.value, locale) })), size, "size"),
               },
               { label: t("qsRanking"), options: toOptions(RANK_TIERS.map((v) => ({ value: v, label: rankOptionLabel(v, locale) })), rank, "rank") },
+              {
+                // A single on/off option, not a toOptions/toMultiOptions list — there's only
+                // one real value here ("show only the researched ones"), not a set of
+                // presets to pick among. Off by default, student-toggled, never applied for
+                // them: lib/universities/browse-page.ts's QS-unranked-appended-not-dropped
+                // precedent is the house rule this follows (CEO, 2026-09-02).
+                label: t("researchDepth"),
+                description: t("researchDepthHint"),
+                options: [
+                  {
+                    value: "detailed",
+                    label: t("detailedProfilesOnly"),
+                    active: detailedOnly,
+                    href: buildFilterHref({ detailedOnly: !detailedOnly }),
+                  },
+                ],
+              },
             ]}
           />
         </div>
