@@ -106,6 +106,11 @@ function evaluateOpportunityEligibility(
   const hasAgeRestriction = opportunity.minimum_age !== null || opportunity.maximum_age !== null;
   if (hasAgeRestriction && birthYear === null) {
     notes.push(eligibilityMessages.ageUnknown(locale));
+  } else if (!hasAgeRestriction) {
+    // No bound recorded at all — not evidence every age is welcome, just never researched.
+    // Same principle as the countryEligibilityUnverified note below, applied to the field
+    // that had no equivalent safeguard (2026-09-03).
+    notes.push(eligibilityMessages.ageEligibilityUnverified(locale));
   }
 
   // --- Country / residency (eligible_countries is the existing, already-in-wide-use
@@ -179,6 +184,10 @@ function evaluateOpportunityEligibility(
     } else if (!gradeMatchesEligibility(grade, opportunity.eligible_grades)) {
       return { verdict: "known_ineligible", notes: [eligibilityMessages.gradeNotEligible(opportunity.eligible_grades.join(", "), grade, locale)] };
     }
+  } else {
+    // No eligible_grades recorded at all — not evidence every grade is welcome, just never
+    // researched. Same principle as the age branch above.
+    notes.push(eligibilityMessages.gradeEligibilityUnverified(locale));
   }
 
   if (notes.length > 0) {

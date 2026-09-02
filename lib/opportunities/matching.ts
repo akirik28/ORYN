@@ -181,12 +181,32 @@ export const eligibilityMessages = {
   countryEligibilityUnverified: (locale: Locale) =>
     locale === "tr" ? "Ülke uygunluğu henüz doğrulanmadı — kısıtlamalar için resmi sayfayı kontrol et." : "Country eligibility not verified yet — check the official page for restrictions.",
 
+  // Same principle as countryEligibilityUnverified, same trigger shape: the OPPORTUNITY
+  // never recorded an age bound at all, distinct from ageUnknown above (which fires when
+  // the opportunity has a real bound but the STUDENT's birth year is what's missing). No
+  // bound on file is not evidence the programme suits every age — it's silence, and this
+  // says so rather than letting eligible:true stand uncaveated (2026-09-03, the age/grade
+  // half of the same unknown-called-eligible gap countryEligibilityUnverified already closed
+  // for country).
+  ageEligibilityUnverified: (locale: Locale) =>
+    locale === "tr"
+      ? "Yaş uygunluğu henüz doğrulanmadı — kısıtlamalar için resmi sayfayı kontrol et."
+      : "Age eligibility not verified yet — check the official page for restrictions.",
+
   gradeUnknown: (locale: Locale) => (locale === "tr" ? "Sınıf seviyesine göre kısıtlı — kontrol etmek için mezuniyet yılını ekle." : "Restricted by grade level — add your graduation year to check."),
 
   // `currentGrade` is the same kind of "kept from copy.ts" enrichment as citizenshipNotEligible
   // above.
   gradeNotEligible: (eligibleGrades: string, currentGrade: number, locale: Locale) =>
     locale === "tr" ? `Uygun sınıflar: ${eligibleGrades}; şu anki sınıfın: ${currentGrade}.` : `Restricted to grades ${eligibleGrades}; you're currently grade ${currentGrade}.`,
+
+  // Same principle as ageEligibilityUnverified immediately above, for the third field that
+  // had no safeguard: the opportunity never recorded eligible_grades at all, distinct from
+  // gradeUnknown (a real restriction exists but the student's graduation year is missing).
+  gradeEligibilityUnverified: (locale: Locale) =>
+    locale === "tr"
+      ? "Sınıf uygunluğu henüz doğrulanmadı — kısıtlamalar için resmi sayfayı kontrol et."
+      : "Grade eligibility not verified yet — check the official page for restrictions.",
 };
 
 export function computeEligibility(
@@ -209,13 +229,20 @@ export function computeEligibility(
   const hasAgeRestriction = opportunity.minimumAge !== null || opportunity.maximumAge !== null;
   if (hasAgeRestriction && student.age === null) {
     unknownNotes.push(eligibilityMessages.ageUnknown(locale));
-  } else {
+  } else if (hasAgeRestriction) {
     if (opportunity.minimumAge !== null && student.age !== null && student.age < opportunity.minimumAge) {
       return { eligible: false, notes: tr ? `Asgari ${opportunity.minimumAge} yaş gerektiriyor.` : `Requires minimum age ${opportunity.minimumAge}.` };
     }
     if (opportunity.maximumAge !== null && student.age !== null && student.age > opportunity.maximumAge) {
       return { eligible: false, notes: tr ? `Azami ${opportunity.maximumAge} yaş gerektiriyor.` : `Requires maximum age ${opportunity.maximumAge}.` };
     }
+  } else {
+    // No bound recorded at all — distinct from "recorded but the student's own age is
+    // unknown" (ageUnknown, above). Absence of a recorded age floor/ceiling is not evidence
+    // every age is welcome; it's just never having been researched. Same principle as
+    // countryEligibilityUnverified below, applied to the field that had no equivalent
+    // safeguard (2026-09-03 — the age/grade half of the same unknown-called-eligible gap).
+    unknownNotes.push(eligibilityMessages.ageEligibilityUnverified(locale));
   }
 
   const hasCountryRestriction = opportunity.eligibleCountries.length > 0;
@@ -282,6 +309,10 @@ export function computeEligibility(
     } else if (!gradeMatchesEligibility(grade, eligibleGrades)) {
       return { eligible: false, notes: eligibilityMessages.gradeNotEligible(eligibleGrades.join(", "), grade, locale) };
     }
+  } else {
+    // Same principle as the age `else` branch above: no eligible_grades recorded at all is
+    // not evidence every grade is welcome, just never researched.
+    unknownNotes.push(eligibilityMessages.gradeEligibilityUnverified(locale));
   }
 
   return { eligible: true, notes: unknownNotes.length > 0 ? unknownNotes.join(" ") : null };
