@@ -222,8 +222,8 @@
         "title": "Öne çıkanlar",
         "description": "Herkese açık profilinin en üstüne en iyi 3-5 öğeni sabitle."
       },
-      "strength": {
-        "title": "Profil Gücü",
+      "completeness": {
+        "title": "Profil Tamamlanma Durumu",
         "description": "Oryn'ın seni ne kadar tanıdığı — profilinin ne kadar güçlü olduğundan ayrı bir şey. Bunu yalnızca sen görebilirsin.",
         "percentComplete": "%{percent} tamamlandı",
         "fullyFilled": "Profilin tamamen dolduruldu."

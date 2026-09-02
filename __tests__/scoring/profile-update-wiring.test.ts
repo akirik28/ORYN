@@ -51,3 +51,30 @@ describe("recomputeCareerProfile's profile_update notification wiring", () => {
     expect(SRC).not.toContain('admin.from("profile_score_snapshots").select(');
   });
 });
+
+/**
+ * 2026-09-02 progress/history audit: live data showed one account with five identical
+ * score-0 "onboarding_completed" snapshots minutes apart, traced to
+ * `changedMeaningfully || opts?.snapshotReason` -- any caller passing an explicit reason
+ * got a snapshot on every call, whether or not the score moved. Fixed by dropping the
+ * `|| opts?.snapshotReason` bypass; `changedMeaningfully`'s own `previousScore === null`
+ * branch already covers the genuine first-ever computation (profiles.profile_strength_score
+ * defaults to null, confirmed live), so a real baseline snapshot is unaffected.
+ */
+describe("recomputeCareerProfile's snapshot-write condition (2026-09-02 fix)", () => {
+  test("a snapshot is written only when changedMeaningfully is true -- the reason-based bypass is gone", () => {
+    expect(SRC).toContain("if (changedMeaningfully) {");
+    expect(SRC).not.toMatch(/if\s*\(\s*changedMeaningfully\s*\|\|\s*opts\?\.snapshotReason\s*\)/);
+  });
+
+  test("the write condition appears after changedMeaningfully is computed, not a second, separately-defined check", () => {
+    const definitionIndex = SRC.indexOf("const changedMeaningfully =");
+    const conditionIndex = SRC.indexOf("if (changedMeaningfully) {");
+    expect(definitionIndex).toBeGreaterThan(0);
+    expect(conditionIndex).toBeGreaterThan(definitionIndex);
+  });
+
+  test("snapshot_reason itself still falls through to the caller's explicit reason when a snapshot IS written -- only the write condition changed, not what gets stored", () => {
+    expect(SRC).toContain('snapshot_reason: opts?.snapshotReason ?? "profile_updated"');
+  });
+});
