@@ -1,6 +1,7 @@
--- NOT APPLIED. Founder-gated, per the per-user AI spend cap package (2026-09-02) this
--- migration belongs to -- write and leave unapplied, same discipline as every other schema
--- change this project has proposed rather than run tonight.
+-- APPLIED (confirmed live against the real DB, 2026-09-02 -- this header said "NOT APPLIED"
+-- for long enough after that stopped being true that lib/ai/usage.ts's logAIUsage kept
+-- omitting these two columns from its insert well past when it needed to; see that file's
+-- own comment for the fix, caught by oryn-31's migration audit).
 --
 -- Adds two nullable columns so `ai_usage` can record whether a call was degraded by
 -- lib/ai/limits/budget.ts's per-user spend cap, and why. Additive, no backfill needed: every
@@ -8,12 +9,7 @@
 -- was never subject to a budget decision" -- not "known not degraded", a real distinction the
 -- nullability preserves rather than collapsing into a default that would misrepresent history.
 --
--- Until this is applied, lib/ai/usage.ts's logAIUsage deliberately omits `degraded`/
--- `degrade_reason` from its insert payload (PostgREST rejects an insert naming an unknown
--- column, for the whole row, not just that field) -- the decision is still fully computed by
--- lib/ai/limits/budget.ts and available to every caller (ModelSelection.degraded/.reason),
--- just not yet persisted. See that file's own comment for what changes once this runs: the two
--- lines currently commented out of the insert start being sent.
+-- lib/ai/usage.ts's logAIUsage now writes `degraded`/`degrade_reason` on every insert.
 --
 -- degrade_reason stores lib/ai/limits/budget.ts's ModelSelectionReason values verbatim
 -- ("at_or_over_target", "unknown_cost_this_month", etc.) rather than a DB enum -- that type is

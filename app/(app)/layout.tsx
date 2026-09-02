@@ -86,7 +86,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     // selectModelForUser has no side effects here, it only answers whether this student is
     // currently past lib/ai/limits/budget.ts's target, same table getMonthlyQuota already
     // reads.
-    getMonthlyQuota(session.userId!, "advisor_chat"),
+    getMonthlyQuota(session.userId!),
     selectModelForUser(session.userId!),
   ]);
   const notifications = notificationsRes.data;

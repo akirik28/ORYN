@@ -1091,7 +1091,7 @@
       "tryAgain": "Try again",
       "placeholderReady": "Ask Oryn…",
       "placeholderNotConfigured": "The AI counselor isn't configured yet",
-      "placeholderExhausted": "This month's messages are used up",
+      "placeholderExhausted": "This month's Oryn AI is used up",
       "sendAriaLabel": "Send message",
       "degradeNote": {
         "label": "Shorter reply",
@@ -1104,13 +1104,13 @@
     },
     "usageMeter": {
       "thisMonth": "This month",
-      "ariaUnknown": "Counselor messages left this month could not be loaded. The monthly allowance is {limit}.",
-      "ariaKnown": "{remaining} of {limit} counselor messages left this month",
-      "unknown": "We couldn't load how many messages you've used. Your {limit}-message allowance still applies and resets {date}.",
-      "exhausted": "All {limit} messages used. Resets {date}.",
+      "ariaUnknown": "How much of this month's Oryn AI you have left could not be loaded. The monthly allowance is {limit}.",
+      "ariaKnown": "{remaining} of {limit} Oryn AI uses left this month",
+      "unknown": "We couldn't load how much you've used. Your {limit}-use monthly allowance still applies and resets {date}.",
+      "exhausted": "All {limit} AI uses are gone for this month. Resets {date}.",
       "low": "Only {remaining} left. Resets {date}.",
-      "degraded": "Shorter replies for the rest of this month. Resets {date}.",
-      "normal": "{remaining} counselor messages left. Resets {date}."
+      "degraded": "You've used a lot of Oryn's AI this month, so replies are shorter for now. Resets {date}.",
+      "normal": "{remaining} Oryn AI uses left. Resets {date}."
     },
     "strategyPanel": {
       "ariaLabel": "What Oryn is working from",

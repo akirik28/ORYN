@@ -12,10 +12,10 @@ import type { MonthlyQuota } from "./monthly-quota";
  * Order matters and is not arbitrary: `unknown` (we cannot read the count at all) and
  * `exhausted` (a real zero) both say more than `degraded`, and `degraded` says more than
  * `low` — a student several degraded replies deep needs that fact before a generic
- * "running low" nudge, even if the message-count backstop (50, lib/ai/monthly-quota.ts)
- * still shows headroom (lib/ai/limits/budget.ts's $0.50 target is ~19 messages at
- * today's real per-message cost — well under the backstop, but not "nowhere near" it the
- * way it was when the backstop was 300).
+ * "running low" nudge, even if the shared AI-use backstop (50 uses across seven features,
+ * lib/ai/monthly-quota.ts) still shows headroom (lib/ai/limits/budget.ts's $0.50 target is
+ * ~17 uses in, at the reference cost that backstop is itself derived from — well under 50,
+ * not "nowhere near" it).
  */
 export type UsageState = "unknown" | "exhausted" | "degraded" | "low" | "normal";
 

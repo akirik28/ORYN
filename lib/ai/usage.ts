@@ -56,15 +56,20 @@ export async function logAIUsage(params: {
       input_tokens: params.usage.inputTokens,
       output_tokens: params.usage.outputTokens,
       estimated_cost: estimateCostUsd(params.model, params.usage.inputTokens, params.usage.outputTokens),
-      // `degraded`/`degrade_reason` columns: supabase/migrations/0076_ai_usage_degrade_columns.sql
-      // (written, NOT applied — founder-gated per this package's own constraints). Until that
-      // migration runs, PostgREST rejects unknown columns for the whole insert (confirmed
-      // pattern elsewhere in this codebase — see persist-matches.ts's own select("*") comments
-      // for the identical failure mode), so these are omitted from the payload rather than sent
-      // and silently dropped or erroring the insert. lib/ai/limits/budget.ts's decision is still
-      // fully computed and available to the caller (ModelSelection.degraded/.reason) even though
-      // it isn't persisted yet — see the same migration file's own header for what changes once
-      // it's applied.
+      // supabase/migrations/0076_ai_usage_degrade_columns.sql is live (confirmed against
+      // the real DB, 2026-09-02) — these two were previously omitted here with a comment
+      // saying the migration hadn't been applied yet, which stopped being true well before
+      // anyone updated the code to match. Every row written in between silently carries
+      // `degraded = false` (the column's own default), regardless of what selection.degraded
+      // actually was — not missing data, data asserting the opposite of the truth (caught
+      // by oryn-31's migration audit, not by this file). Fixed here, not with a defensive
+      // fallback-and-retry like app/(app)/advisor/actions.ts uses for the *different*,
+      // still-unapplied advisor_messages.degraded (migration 0088) — that pattern exists
+      // because that migration is genuinely unconfirmed; this one is confirmed live, so a
+      // plain, unconditional write is the correct fix, not extra defensiveness for a gap
+      // that no longer exists.
+      degraded: params.degraded ?? false,
+      degrade_reason: params.degradeReason ?? null,
     });
     if (error) {
       console.warn("[ai_usage] insert rejected", { feature: params.feature, error: error.message });

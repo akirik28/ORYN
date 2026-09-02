@@ -10,14 +10,23 @@ import { env } from "@/lib/env";
  * everyone else under $0.25 lifetime. The risk is the tail, and the tail already happened.
  *
  * The founder's explicit choice: **never a hard wall.** A student who hits a wall mid-
- * question doesn't come back. So there is exactly one enforcement mechanism — degrading to
- * a cheaper model once TARGET is reached — and CEILING is deliberately not a second,
- * harder-enforced threshold in this module. It's a monitoring/alerting number: the figure
- * the degrade mechanism is tuned to keep most students under, and worth surfacing to an
- * admin as "still over ceiling even on Haiku" for the rare case the soft mechanism alone
- * isn't enough — never a second code-enforced gate. If a hard stop is ever wanted, that is
- * a product decision for the founder to make explicitly, not an inference from "ceiling"
- * sounding stricter than "target".
+ * question doesn't come back. So there is exactly one *direct* enforcement mechanism in
+ * this module — degrading to a cheaper model once TARGET is reached — and CEILING is not a
+ * second threshold checked here.
+ *
+ * **CEILING stopped being monitoring-only on 2026-09-02.** This comment used to say CEILING
+ * was "never a second code-enforced gate" and that turning it into one "is a product
+ * decision for the founder to make explicitly, not an inference from 'ceiling' sounding
+ * stricter than 'target'." That decision arrived that same day: the founder's token-
+ * metering directive, relayed through oryn-a7 ("meter by tokens, not messages"), asked for
+ * exactly this. `lib/ai/monthly-quota.ts`'s `MONTHLY_AI_USE_LIMIT` (50, shared across seven
+ * student-facing features) is now a hard stop derived from CEILING with margin — see that
+ * file's `usesConsumed` for the two-phase pre/post-degrade accounting, and its own comment
+ * for why 50 lands around $0.83 of real spend, genuinely under this $1.00, not at its edge.
+ * CEILING itself is still not read as a second live check anywhere in this file — the
+ * enforcement lives in monthly-quota.ts, calibrated against this number rather than
+ * duplicating it — but it is no longer true to say nothing in this codebase enforces past
+ * TARGET. A future reader should trust that sentence, not the one above it.
  */
 export const MONTHLY_BUDGET_TARGET_USD = 0.5;
 export const MONTHLY_BUDGET_CEILING_USD = 1.0;

@@ -1,10 +1,11 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { MONTHLY_BUDGET_TARGET_USD } from "./limits/budget";
 
 /**
- * Calendar-month quotas for AI-backed features, enforced server-side and surfaced in the
- * UI as a real remaining balance.
+ * Calendar-month AI allowance, enforced server-side and surfaced in the UI as a real
+ * remaining balance — denominated in cost (USD), displayed as a whole number of "AI uses".
  *
  * Distinct from lib/ai/rate-limit.ts, which is a short sliding-window abuse guard (bursts
  * over ten minutes). This one is the monthly allowance a student is actually budgeting
@@ -12,24 +13,121 @@ import { createClient } from "@/lib/supabase/server";
  * every AI call already writes a row there (lib/ai/usage.ts) — so no second counter can
  * drift out of sync with reality.
  *
- * 50, not the original 300: derived from the founder's own $0.50 target / $1.00 ceiling
- * (lib/ai/limits/budget.ts) against measured real advisor-chat token usage (2026-09-02:
- * ~3,628 input / ~1,095 output tokens/message on average), not the round number 300 was —
- * that number was never derived from anything. At real costs the $1.00 ceiling alone
- * covers roughly 70 messages before the degrade-then-backstop sequence would cross it,
- * with headroom even at the expensive end of the observed per-message range; 50 lands
- * comfortably inside that with margin to spare, rather than at the edge of it.
+ * **2026-09-02, founder directive relayed through oryn-a7, verbatim: "sadece senden
+ * isteğim mesajla değil tokenla ölç ai şeyini" — meter by tokens, not messages.** This
+ * replaces the message-count version of this file (`MONTHLY_AI_QUOTAS.advisor_chat = 50`,
+ * one row = one unit, one feature). Two decisions made in answering that directive, both
+ * worth recording plainly rather than letting them read as arbitrary:
  *
- * Unlike 300, a genuinely active student can reach 50 in a real month — the point of this
- * change is that the backstop becomes a real ceiling instead of a number nobody reaches
- * (docs/opportunity's degrade-copy and premium-decision work, 2026-09-02: at 300 the
- * $1 ceiling had no code-enforced backstop at all).
+ * **Cost, not raw tokens.** A raw token ceiling would reintroduce the same denominator
+ * problem one level down: `selectModelForUser` (lib/ai/limits/budget.ts) switches a
+ * degraded student from Sonnet to Haiku mid-month, and a Haiku output token costs 1/5 what
+ * a Sonnet output token costs (lib/ai/pricing.ts) — so a raw-token budget would drain at a
+ * rate disconnected from the student's real consumption, exactly like a message count did.
+ * `estimated_cost` (already computed per row by lib/ai/pricing.ts's `estimateCostUsd`,
+ * already what lib/ai/limits/budget.ts's degrade check sums) is the only unit that means
+ * the same thing on both sides of a degrade. This file now shares that exact accounting
+ * with the degrade mechanism instead of running a second, message-counted system beside it.
+ *
+ * **Seven features share one pool, not ten.** `ai_usage.feature` has ten distinct values
+ * (grepped `feature: "` across lib/), but verified from each one's actual call site — not
+ * from the names, which mislead here — only seven ever carry a real student's `userId`:
+ * the ones in `PER_STUDENT_AI_FEATURES` below. `opportunity_extraction` and
+ * `requirement_extraction` always pass `userId: null` (one call site says so in its own
+ * comment) — global catalog ingest, no student to charge, correctly outside any per-
+ * student pool. `requirement_interpretation` passes an admin's id, not a student's — an
+ * admin action, not student spend; left out of this pool as a separate, smaller concern
+ * for another day, not folded in here.
  */
-export const MONTHLY_AI_QUOTAS = {
-  advisor_chat: 50,
-} as const;
+export const PER_STUDENT_AI_FEATURES = [
+  "advisor_chat",
+  "research_generator",
+  "weekly_plan",
+  "cv_extraction",
+  "achievement_refinement",
+  "counselor_explanation",
+  "essay_story_bank",
+] as const;
 
-export type MonthlyQuotaFeature = keyof typeof MONTHLY_AI_QUOTAS;
+/**
+ * The shared monthly allowance, in "AI uses" — a display/enforcement unit derived from
+ * real spend, not a literal count of anything. Kept at 50: this is a re-derivation against
+ * the same $1.00 ceiling and the same margin logic that produced the prior message-count
+ * 50 (see git history), not a coincidence — the real dollar economics didn't move, only
+ * the unit and the scope (one feature to seven) did. See `usesConsumed` below for exactly
+ * how a dollar amount becomes this number.
+ *
+ * This is also the founder-level decision lib/ai/limits/budget.ts's own comment on
+ * `MONTHLY_BUDGET_CEILING_USD` said would be needed before that number stopped being
+ * monitoring-only — see that file's updated comment for what changed and when.
+ */
+export const MONTHLY_AI_USE_LIMIT = 50;
+
+/**
+ * Reference cost of one "AI use" pre-degrade, and the basis for `usesConsumed` below.
+ * $0.03, from real `ai_usage` rows queried 2026-09-02 (calendar month to date):
+ *
+ *   advisor_chat            n=11  avg $0.0287/call
+ *   weekly_plan              n=115 avg $0.0292/call   <- by far the largest real sample
+ *   cv_extraction            n=3   avg $0.0471/call   (thin; structurally pricier — a full
+ *                                                       résumé as input, expected)
+ *   achievement_refinement  n=1   avg $0.0055/call   (unreliable; short focused prompt)
+ *   research_generator, counselor_explanation, essay_story_bank:  n=0 — never called in
+ *   production. No real data exists for 3 of these 7 features yet.
+ *
+ * $0.03 is anchored on the two well-sampled, convergent features (advisor_chat and
+ * weekly_plan land within 2% of each other despite very different call shapes — a real
+ * signal, not a coincidence trusted from n=11 alone) — not on all seven. **Re-run the
+ * query below once the three zero-data features have accumulated real usage, and revisit
+ * this constant if their averages pull the picture meaningfully off $0.03** — the same
+ * discipline that turned the original, undated 300 into a measured 50 should apply here
+ * again, not stop applying just because a number is already in the file:
+ *
+ *   select feature, count(*) n, round(avg(estimated_cost)::numeric,5) avg_cost_usd
+ *   from ai_usage where user_id is not null group by feature order by n desc;
+ */
+export const REFERENCE_COST_PER_USE_USD = 0.03;
+
+/**
+ * Reference cost of one "AI use" post-degrade — lib/ai/limits/budget.ts's own comment on
+ * `DEGRADE_MODEL` puts Haiku at "about 3x cheaper" than Sonnet for the same advisor
+ * message, so the reference cost drops by the same ratio here rather than a second,
+ * independently-chosen number.
+ */
+const DEGRADED_REFERENCE_COST_PER_USE_USD = REFERENCE_COST_PER_USE_USD / 3;
+
+/**
+ * Converts real month-to-date spend into "AI uses", piecewise across the pre/post-degrade
+ * boundary — deliberately not a flat `spend / REFERENCE_COST_PER_USE_USD` division.
+ *
+ * A flat division would make `MONTHLY_AI_USE_LIMIT` mean the wrong thing: 50 uses at a
+ * flat $0.03 each is $1.50, above the real $1.00 ceiling this number is supposed to
+ * protect — a flat rate ignores that spend past the $0.50 target is already running on
+ * the cheaper degraded model, so it silently weakens the ceiling by 50%. This function is
+ * the same two-phase accounting that derived 50 in the first place (see
+ * `MONTHLY_AI_USE_LIMIT`'s comment), made live instead of one-time: uses accumulate at
+ * `REFERENCE_COST_PER_USE_USD` up to the $0.50 target, then at the cheaper
+ * `DEGRADED_REFERENCE_COST_PER_USE_USD` beyond it. Reaching all 50 this way costs a
+ * student roughly $0.83 in real spend — genuinely below the $1.00 ceiling, the margin
+ * `MONTHLY_AI_USE_LIMIT`'s own comment describes, not an accident of this formula.
+ *
+ * The point of tying display and enforcement to this one function, rather than deriving
+ * `used` from cost for display and checking raw spend against the ceiling separately for
+ * enforcement: those two would not reach zero/blocked at the same moment (a heavy
+ * cv_extraction-only student would be blocked by a raw-dollar check while the display
+ * still showed uses remaining, or vice versa for a heavy achievement_refinement-only
+ * student) — a real, confidently-wrong-number risk, not a rounding nicety. Reading `used`
+ * and the exhausted check off the same computed value makes that impossible by
+ * construction: they are the same number.
+ */
+function usesConsumed(spendUsd: number): number {
+  const preDegradeCapacityUses = MONTHLY_BUDGET_TARGET_USD / REFERENCE_COST_PER_USE_USD;
+  if (spendUsd <= MONTHLY_BUDGET_TARGET_USD) {
+    return spendUsd / REFERENCE_COST_PER_USE_USD;
+  }
+  const postDegradeSpendUsd = spendUsd - MONTHLY_BUDGET_TARGET_USD;
+  return preDegradeCapacityUses + postDegradeSpendUsd / DEGRADED_REFERENCE_COST_PER_USE_USD;
+}
 
 export interface MonthlyQuota {
   used: number;
@@ -58,8 +156,8 @@ function startOfNextMonthUTC(now = new Date()): Date {
 }
 
 /**
- * Reads this calendar month's usage for one feature. Never throws: a counting failure must
- * not take down the surface that displays it.
+ * Reads this calendar month's shared allowance across all seven `PER_STUDENT_AI_FEATURES`.
+ * Never throws: a counting failure must not take down the surface that displays it.
  *
  * An earlier version of this comment justified the fail-open by saying "the separate
  * sliding-window limiter still guards the actual call." That is not true for the failure
@@ -74,22 +172,43 @@ function startOfNextMonthUTC(now = new Date()): Date {
  * That is a deliberate availability choice — failing closed would block every AI feature on
  * a transient database error — and it is one the founder should be able to revisit, which
  * requires it being visible rather than accidental.
+ *
+ * A row with a NULL `estimated_cost` (a model absent from lib/ai/pricing.ts, same gap
+ * `selectModelForUser` guards — see that function's own `hasUnknownCostRows` comment) is
+ * treated as unknown too, for the same reason: `SUM` silently ignores NULLs, so summing
+ * through it would under-count exactly the spend this check most needs to see. Reusing
+ * `usedIsKnown` for this — rather than quietly summing only the priced rows — keeps this
+ * module's one failure signal meaning one thing: "the number below is not trustworthy,"
+ * not "trustworthy, but possibly missing something."
  */
-export async function getMonthlyQuota(userId: string, feature: MonthlyQuotaFeature): Promise<MonthlyQuota> {
-  const limit = MONTHLY_AI_QUOTAS[feature];
+export async function getMonthlyQuota(userId: string): Promise<MonthlyQuota> {
+  const limit = MONTHLY_AI_USE_LIMIT;
   const resetsAt = startOfNextMonthUTC().toISOString();
 
   let used = 0;
   let usedIsKnown = true;
   try {
     const supabase = await createClient();
-    const { count } = await supabase
+    const { data, error } = await supabase
       .from("ai_usage")
-      .select("id", { count: "exact", head: true })
+      .select("estimated_cost")
       .eq("user_id", userId)
-      .eq("feature", feature)
+      .in("feature", PER_STUDENT_AI_FEATURES)
       .gte("created_at", startOfMonthUTC().toISOString());
-    used = count ?? 0;
+    if (error) throw error;
+
+    const rows = data ?? [];
+    if (rows.some((row) => row.estimated_cost === null)) {
+      usedIsKnown = false;
+    } else {
+      const spendUsd = rows.reduce((sum, row) => sum + (row.estimated_cost ?? 0), 0);
+      // Floored, not rounded: this is the same value the exhausted check below reads, so
+      // rounding up could block a student whose real usage hasn't actually reached the
+      // limit yet — a rounding technicality producing the exact hard-wall-by-accident the
+      // founder has repeatedly rejected elsewhere in this system. Floor means "used >=
+      // limit" only fires once spend has genuinely earned it.
+      used = Math.floor(usesConsumed(spendUsd));
+    }
   } catch (error) {
     usedIsKnown = false;
     console.error("[monthly-quota] failed to read usage", error instanceof Error ? error.stack : error);
@@ -107,15 +226,21 @@ export async function getMonthlyQuota(userId: string, feature: MonthlyQuotaFeatu
 }
 
 /**
- * True when the caller has already spent this month's allowance.
+ * True when the caller has already spent this month's shared allowance.
  *
  * An unreadable count returns false — the call is permitted. Written as an explicit branch
  * rather than falling out of `used = 0` so that the choice is visible at the point it is
  * made: this permits spend we cannot account for, and the reason is availability, not
  * confidence. See getMonthlyQuota's note on why the burst limiter is not a second guard here.
+ *
+ * Reads `remaining` from the same `getMonthlyQuota` call a caller's UI already uses to
+ * display the balance — deliberately not a separate raw-dollar check against
+ * `MONTHLY_BUDGET_CEILING_USD`. See `usesConsumed`'s own comment for why: a second,
+ * independently-computed enforcement path is exactly what could show a student a positive
+ * "uses left" while already blocked, or the reverse.
  */
-export async function isMonthlyQuotaExhausted(userId: string, feature: MonthlyQuotaFeature): Promise<boolean> {
-  const quota = await getMonthlyQuota(userId, feature);
+export async function isMonthlyQuotaExhausted(userId: string): Promise<boolean> {
+  const quota = await getMonthlyQuota(userId);
   if (!quota.usedIsKnown) return false;
   return quota.remaining <= 0;
 }

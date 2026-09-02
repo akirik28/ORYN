@@ -1873,9 +1873,20 @@ export interface AiUsage {
   input_tokens: number;
   output_tokens: number;
   estimated_cost: number | null;
+  /** Migration 0076. `not null default false` — never null itself, but false both for a
+   * genuinely non-degraded call and for any row predating this column (that default is the
+   * honest value for "never subject to a budget decision" — see the migration's own
+   * comment). */
+  degraded: boolean;
+  /** Migration 0076. lib/ai/limits/budget.ts's ModelSelectionReason, verbatim, only when
+   * degraded is true — plain text, not a DB enum (see the migration for why). */
+  degrade_reason: string | null;
   created_at: string;
 }
-export type AiUsageInsert = Insertable<AiUsage, "id" | "created_at" | "input_tokens" | "output_tokens" | "estimated_cost">;
+export type AiUsageInsert = Insertable<
+  AiUsage,
+  "id" | "created_at" | "input_tokens" | "output_tokens" | "estimated_cost" | "degraded" | "degrade_reason"
+>;
 
 export interface RateLimitEvent {
   id: string;
