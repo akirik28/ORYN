@@ -35,6 +35,31 @@ artifact I read — only described.
 element inventory should silently pick a side on. Flagged for oryn-4e/the founder before any
 color value is finalized — this inventory is about *which elements*, not *exactly how saturated*.
 
+## Update, before this was reported: oryn-4e's comparator research bears on this directly
+
+Two adjacent branches landed while this doc was being written, worth reading before treating the
+tension above as still fully open. `docs/ultra-visual-direction-research-2026-09-02.md`
+(oryn-4e, merged) checked the prototype's own cited precedent — Snapchat+ — against Snapchat's
+actual support docs, and found it doesn't support a full-surface reskin at any saturation: the
+entire Snapchat+ visual signifier is one small black star, off by default. Khanmigo, Perplexity
+Education, and Duolingo were checked too; none marks a paid tier with an animated transformation
+of the interface. **The finding reframes the variable: not saturation (the prototype's own
+proposed fix), but scope** — contained (a badge, an icon) versus environmental (the whole surface
+changes, persistently). `docs/ultra-map-investigation-2026-09-02.md` (a parallel university-map
+investigation, also merged) already applied this: pins-first (small, contained, attached to one
+tapped element) while holding land-fill/ambient (large, persistent, whole-surface) pending the
+founder's scope call.
+
+**This doesn't change this doc's core recommendation.** The two elements proposed below (the
+match-tier label + ring, the bell's unread dot) were already contained-signal by construction —
+small, attached to one specific meaningful element, gated by an existing threshold so most cards
+don't even qualify, no ambient/particle technique anywhere in either. **It does walk back one
+specific line below**, marked inline where it appears: the suggestion that the opportunity detail
+page, being a single instance, could reasonably opt into the shared ambient layer. The new
+research says instance-count isn't what makes an environmental treatment precedented — scope is,
+and a rotating ambient layer is environmental regardless of how many instances of it exist on
+screen at once.
+
 ## The two constraints, as concrete rules
 
 1. **Standard renders identically, provably.** Every rule below is written to be reachable only
@@ -71,7 +96,12 @@ threshold. The single-opportunity detail page is a different context: one instan
 twenty, so it's the one place on this surface that could reasonably opt into the shared page-level
 ambient layer (oryn-4e's foundation, not built per-component here) the same way the prototype's
 own single card does. Naming this distinction explicitly because it isn't obvious from "the same
-component, same treatment everywhere."
+component, same treatment everywhere." **Superseded — see the update above.** oryn-4e's
+comparator research (merged after this paragraph was first written) found scope, not
+instance-count, is what makes an environmental treatment precedented. Hold this specific
+suggestion pending the founder's scope call, same as the map investigation's land-fill/ambient
+items — the detail page should be treated as "contained signal only" too, same as the grid,
+until that call lands.
 
 **Deliberately staying calm, and why, not just left off the list:**
 - **`OpportunityStandingBadge`** (not eligible / not open right now / needs verification) —
