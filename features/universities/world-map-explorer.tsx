@@ -16,6 +16,7 @@ import { pickLabelPriorityCountries, resolveCountryFillStyle } from "@/lib/data/
 import { formatNumber } from "@/lib/i18n/format";
 import type { Locale } from "@/lib/i18n/config";
 import type { UniversityMapPin } from "@/lib/universities/map-pins";
+import type { PlanTier } from "@/types/database";
 
 const worldGeo = feature(
   worldTopology as unknown as Topology,
@@ -68,12 +69,18 @@ export function WorldMapExplorer({
   countryCounts,
   region = WORLD_REGION,
   pins = [],
+  tier = "standard",
 }: {
   countryCounts: CountryCount[];
   region?: MapRegion;
   /** Individual universities for the selected country, already coordinate-filtered
    *  server-side (lib/universities/map-pins.ts). Empty unless a country is selected. */
   pins?: UniversityMapPin[];
+  /** Defaults to "standard", matching resolvePlanTier's own "absent means standard"
+   *  convention (lib/tier/plan-tier.ts) — a caller that hasn't been threaded a real tier
+   *  yet (this file's own dev-preview harness, unless it opts in) renders exactly what
+   *  Standard has always rendered, not a broken or half-styled state. */
+  tier?: PlanTier;
 }) {
   const t = useTranslations("universities.explorer");
   const locale = useLocale() as Locale;
@@ -193,6 +200,25 @@ export function WorldMapExplorer({
         style={{ width: "100%", height: "auto" }}
         className="relative"
       >
+        {tier === "ultra" ? (
+          // One shared def for every Ultra pin on this map, not one per pin — SVG gradients
+          // are referenced by id, so a single def already covers every <circle> below.
+          // Radial, not the linear ramp app/globals.css's .tier-grad-fill/.tier-grad-text use:
+          // those are CSS `background`, which never applies to an SVG `fill` attribute at
+          // all (a genuinely different property, not a browser quirk) — this is the SVG-
+          // native equivalent, same three --tier-grad-* tokens, center-to-edge instead of
+          // corner-to-corner so a small circular pin reads as a glowing ember rather than a
+          // gradient swatch. Kept in this component rather than moved into app/globals.css:
+          // an SVG <linearGradient>/<radialGradient> def is meaningless outside an <svg>,
+          // so it belongs next to the one map that uses it, not the shared stylesheet.
+          <defs>
+            <radialGradient id="ultra-pin-gradient" cx="35%" cy="30%" r="75%">
+              <stop offset="0%" stopColor="var(--tier-grad-1)" />
+              <stop offset="55%" stopColor="var(--tier-grad-2)" />
+              <stop offset="100%" stopColor="var(--tier-grad-3)" />
+            </radialGradient>
+          </defs>
+        ) : null}
         <Geographies geography={worldGeo}>
           {({ geographies }) =>
             // The library's own runtime type (GeographyData.geographies: PreparedFeature[])
@@ -366,9 +392,16 @@ export function WorldMapExplorer({
                       the map itself has settled. */}
                   <g className="pin-drop" style={{ animationDelay: `${Math.min(index, 20) * 22}ms` }}>
                   {/* Halo only on hover — a permanent glow on every pin turns a dense city
-                      into a smear. */}
+                      into a smear. Ultra gets the same "only on hover" restraint, an
+                      animated ring instead of a static wash — motion-safe:animate-ping is
+                      not a new mechanism here, it's the identical utility the selected-
+                      country marker above already uses, applied to the pin layer instead. */}
                   {isPinHovered ? (
-                    <circle r={9} className="fill-primary/20" />
+                    tier === "ultra" ? (
+                      <circle r={9} fill="var(--tier-glow)" className="motion-safe:animate-ping" />
+                    ) : (
+                      <circle r={9} className="fill-primary/20" />
+                    )
                   ) : null}
                   {/* Invisible hit target. The visible dot is ~3.5 SVG units, which lands
                       around 3px on screen once the 800-wide viewBox is scaled into its
@@ -376,13 +409,29 @@ export function WorldMapExplorer({
                       a trackpad. Pointer events ride on this circle instead; the visible dot
                       stays small so a dense city doesn't turn into one blob. */}
                   <circle r={11} fill="transparent" />
-                  <circle
-                    r={isPinHovered ? 5 : 3.5}
-                    className={isPinHovered ? "fill-primary" : "fill-primary/85"}
-                    stroke="var(--card)"
-                    strokeWidth={1.2}
-                    style={{ transition: "r 140ms ease" }}
-                  />
+                  {/* Uniform per tier, never per-university: every pin on an Ultra map gets
+                      the identical gradient+glow regardless of what's known about that
+                      specific school (qsRank/imageUrl present or not) — a richer treatment
+                      tied to how complete a university's own data happens to be would dress
+                      a data gap up as if it were an achievement, which is exactly the trap
+                      named for this pass. Tier is the only input here, deliberately. */}
+                  {tier === "ultra" ? (
+                    <circle
+                      r={isPinHovered ? 5 : 3.5}
+                      fill="url(#ultra-pin-gradient)"
+                      stroke="var(--card)"
+                      strokeWidth={1.2}
+                      style={{ transition: "r 140ms ease", filter: "drop-shadow(0 0 5px var(--tier-glow))" }}
+                    />
+                  ) : (
+                    <circle
+                      r={isPinHovered ? 5 : 3.5}
+                      className={isPinHovered ? "fill-primary" : "fill-primary/85"}
+                      stroke="var(--card)"
+                      strokeWidth={1.2}
+                      style={{ transition: "r 140ms ease" }}
+                    />
+                  )}
                       </g>
                       </g>
                     );

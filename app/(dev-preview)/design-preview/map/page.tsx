@@ -24,17 +24,23 @@ const UK_PINS: UniversityMapPin[] = [
 
 const COUNTRY_COUNTS = SUPPORTED_COUNTRIES.map((c, i) => ({ country: c.name, count: [12, 8, 5, 4, 3, 21, 17][i % 7] ?? 1 }));
 
-export default function MapPreviewPage() {
+export default async function MapPreviewPage({ searchParams }: { searchParams: Promise<{ tier?: string }> }) {
   if (process.env.NODE_ENV === "production") notFound();
+  // ?tier=ultra toggles the Ultra pin treatment (2026-09-02) — this route has no session,
+  // so there's no real profile.plan_tier to read; a query param is this harness's own
+  // stand-in, the same role ?country= already plays for the fly-in above.
+  const { tier: tierParam } = await searchParams;
+  const tier = tierParam === "ultra" ? "ultra" : "standard";
 
   return (
     <PreviewShell signal={FIXTURE_PROFILE_SIGNAL}>
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Map harness. Append <code>?country=United Kingdom</code> to the URL to see the fly-in and pins —
-          the map reads the same <code>?country=</code> param the real explorer does.
+          Map harness. Append <code>?country=United Kingdom</code> to the URL to see the fly-in and pins,
+          and/or <code>&tier=ultra</code> to preview the Ultra pin treatment — the map reads the same
+          <code>?country=</code> param the real explorer does; <code>tier</code> is harness-only.
         </p>
-        <WorldMapExplorer countryCounts={COUNTRY_COUNTS} pins={UK_PINS} />
+        <WorldMapExplorer countryCounts={COUNTRY_COUNTS} pins={UK_PINS} tier={tier} />
       </div>
     </PreviewShell>
   );
