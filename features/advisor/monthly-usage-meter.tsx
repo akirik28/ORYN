@@ -29,16 +29,16 @@ import { usageState } from "@/lib/ai/usage-state";
  * note.
  *
  * `budgetDegraded` is a second, independent signal from `quota` (2026-09-02, degrade-
- * disclosure package) — `quota` is the 300-message/month hard backstop
- * (lib/ai/monthly-quota.ts), but replies actually start using the cheaper model far
- * earlier, once this month's spend crosses lib/ai/limits/budget.ts's $0.50 target (~14
- * messages at ~$0.035 each). Before this, the bar could show a full indigo-violet fill and
- * "270 messages left" while the student's last several replies were already degraded —
- * true about the message count, misleading about what's actually happening to their
- * conversation. `budgetDegraded` takes priority over the message-count colour/copy for
- * exactly that reason: being degraded is the more urgent, more immediate fact once it's
- * true, regardless of how much of the 300-message backstop remains. Optional and defaults
- * to `false` — a caller not yet passing it renders exactly as before, matching this
+ * disclosure package) — `quota` is the message-count backstop (50/month,
+ * lib/ai/monthly-quota.ts), but replies actually start using the cheaper model earlier,
+ * once this month's spend crosses lib/ai/limits/budget.ts's $0.50 target (~19 messages at
+ * today's real per-message cost). Before this, the bar could show a full indigo-violet
+ * fill and "30 messages left" while the student's last several replies were already
+ * degraded — true about the message count, misleading about what's actually happening to
+ * their conversation. `budgetDegraded` takes priority over the message-count colour/copy
+ * for exactly that reason: being degraded is the more urgent, more immediate fact once
+ * it's true, regardless of how much of the message-count backstop remains. Optional and
+ * defaults to `false` — a caller not yet passing it renders exactly as before, matching this
  * codebase's established "not yet wired up" convention (see lib/ai/usage.ts's `degraded?`
  * param doc).
  */

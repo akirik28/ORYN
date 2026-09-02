@@ -12,11 +12,21 @@ import { createClient } from "@/lib/supabase/server";
  * every AI call already writes a row there (lib/ai/usage.ts) — so no second counter can
  * drift out of sync with reality.
  *
- * Sized so a student using the counselor seriously through a normal month never notices
- * it, while an automated loop does.
+ * 50, not the original 300: derived from the founder's own $0.50 target / $1.00 ceiling
+ * (lib/ai/limits/budget.ts) against measured real advisor-chat token usage (2026-09-02:
+ * ~3,628 input / ~1,095 output tokens/message on average), not the round number 300 was —
+ * that number was never derived from anything. At real costs the $1.00 ceiling alone
+ * covers roughly 70 messages before the degrade-then-backstop sequence would cross it,
+ * with headroom even at the expensive end of the observed per-message range; 50 lands
+ * comfortably inside that with margin to spare, rather than at the edge of it.
+ *
+ * Unlike 300, a genuinely active student can reach 50 in a real month — the point of this
+ * change is that the backstop becomes a real ceiling instead of a number nobody reaches
+ * (docs/opportunity's degrade-copy and premium-decision work, 2026-09-02: at 300 the
+ * $1 ceiling had no code-enforced backstop at all).
  */
 export const MONTHLY_AI_QUOTAS = {
-  advisor_chat: 300,
+  advisor_chat: 50,
 } as const;
 
 export type MonthlyQuotaFeature = keyof typeof MONTHLY_AI_QUOTAS;
