@@ -156,7 +156,7 @@ export async function sendAdvisorMessage(
       .select("id")
       .single();
     if (assistantMessageError && isUndefinedColumnError(assistantMessageError, "degraded")) {
-      // Migration 0087 not applied yet (house pattern — see that file). The reply itself
+      // Migration 0088 not applied yet (house pattern — see that file). The reply itself
       // must still save; the disclosure just won't survive a reload until it lands.
       ({ data: assistantMessage, error: assistantMessageError } = await supabase
         .from("advisor_messages")
@@ -284,7 +284,7 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
       .update({ content: reply, status: "complete", error_message: null, degraded })
       .eq("id", failedMessageId);
     if (updateError && isUndefinedColumnError(updateError, "degraded")) {
-      // Same degrade-and-retry as sendAdvisorMessage above — migration 0087 not applied yet.
+      // Same degrade-and-retry as sendAdvisorMessage above — migration 0088 not applied yet.
       ({ error: updateError } = await supabase
         .from("advisor_messages")
         .update({ content: reply, status: "complete", error_message: null })
