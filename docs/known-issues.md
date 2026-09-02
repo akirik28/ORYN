@@ -620,6 +620,17 @@ correctly rejected. A report with neither column set is now rejected too, closed
 free by requiring at least one correctly-attributed branch. Founder-gated per standing
 rule; do not apply without review.
 
+**Update, 2026-09-02 (full migration audit, `docs/migration-state.md`): live.** Both this
+`0064` entry's "founder-gated, do not apply" and the `0065` entry below's "resolved,
+written, not applied" were checked directly against `oryn-qa-scratch`, not inferred: the
+`create own report` policy `0064` adds exists with its exact two-branch `WITH CHECK`, and
+all six `0065` tables (`profile_scores`, `profile_score_snapshots`, `opportunity_matches`,
+`student_requirement_evaluations`, `evidence_files`, `ai_recommendations`) carry the
+select/update/delete-only policy set this design describes, with no INSERT policy on any
+of them — the exact shape the migration exists to produce. Same pattern as `0062`/`0063`
+(see those entries and `docs/migration-state.md`): the file said founder-gated and
+unapplied; the database disagreed, and nobody had re-checked since.
+
 **Testing methodology note, not a product defect — recorded so the next lane doesn't
 repeat it**: `messages` and `message_reports` have **no RLS DELETE policy at all**
 (deliberate — permanent message/report history). This pass's own test-cleanup script,

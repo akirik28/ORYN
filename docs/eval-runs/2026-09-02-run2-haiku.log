@@ -1,0 +1,75 @@
+
+> oryn@0.1.0 eval:ai
+> tsx --tsconfig tsconfig.eval-cli.json scripts/run-ai-eval.ts --live --confirm-spend --judge
+
+
+Cost projection — model: claude-haiku-4-5 (assumed input/output pricing from lib/ai/pricing.ts)
+12 cases (2 fixtures x 3 targets x 2 locales).
+
+target          locale  fixture      input~tok  output~tok(assumed)  cost
+advisor_chat    en      regression        1550                 2000  $0.0115
+advisor_chat    tr      regression        1680                 2000  $0.0117
+weekly_plan     en      regression        1812                  600  $0.0048
+weekly_plan     tr      regression        1943                  600  $0.0049
+counselor_explain en      regression         471                  400  $0.0025
+counselor_explain tr      regression         606                  400  $0.0026
+advisor_chat    en      baseline          1627                 2000  $0.0116
+advisor_chat    tr      baseline          1765                 2000  $0.0118
+weekly_plan     en      baseline          1797                  600  $0.0048
+weekly_plan     tr      baseline          1935                  600  $0.0049
+counselor_explain en      baseline           396                  400  $0.0024
+counselor_explain tr      baseline           531                  400  $0.0025
+
+Target calls only:        $0.0761
+Target + judge calls:     $0.1010
+
+Output-token counts are documented assumptions, not measurements — see cost-estimate.ts's own header for what each is sourced from. Input-token counts are real, from the actual assembled prompts.
+
+Running live against the real API (target + judge calls)...
+
+
+[FAIL] advisor_chat/en/regression — 1 deterministic finding(s):
+  - unassessed_dimension_scored: "Your real gaps are:
+- **Research** (unassessed; no evidence yet)
+- **Intellectual Curiosity** (55/100)
+- **Execution / Project Depth** (60/100)
+
+You have a peer tutoring marketplace already in progress."
+       rubric: specific=5 concise=4 analytical=5 calm=5 evidenceAware=5 actionOriented=5 discourage=said_dont_do_this
+       judge notes: Opens with direct "No" and reasons from verified data (88/82 leadership/entrepreneurship scores vs. 55/60 gaps) rather than praising breadth. Distinguishes unassessed Research from measured low scores on Curiosity and Execution. Reframes the question itself—"what existing project" not "what else to start"—and anchors to concrete time budget. Closes with diagnostic question rather than assumption."
+[ok]   advisor_chat/tr/regression — no deterministic findings
+       rubric: specific=5 concise=5 analytical=5 calm=5 evidenceAware=5 actionOriented=5 discourage=said_dont_do_this
+       judge notes: Opens with direct "Hayır. Bunu yapmamalısın" and anchors the rejection in evidence: "Girişimcilik zaten güçlü (82/100)" with specific proof (club leadership, Student Council, award). Identifies the real gaps (no research evidence, Intellectual Curiosity 55/100) and quantifies the constraint ("haftalık 5-10 saat"). Closes with concrete action: the Youth Economics Research Fellowship with deadline, avoiding generic praise throughout. Every claim is grounded or qualified."
+[ok]   weekly_plan/en/regression — no deterministic findings
+       rubric: specific=5 concise=5 analytical=5 calm=5 evidenceAware=5 actionOriented=5 discourage=said_dont_do_this
+       judge notes: The reply cuts through to actionable priorities with surgical precision: identifies the unassessed research gap, flags the two regressions (self-reported tutoring project, breadth-over-depth leadership bloat), and explicitly discourages a third leadership activity with clear reasoning (\"Leadership and entrepreneurship are already your strongest dimensions—adding a third would deepen the breadth-over-depth problem rather than fix it\"). Every sentence delivers concrete direction grounded in evidence distinctions ([self-reported], no verified evidence, execution evidence lacking) without hedging or filler."
+[ok]   weekly_plan/tr/regression — no deterministic findings
+       rubric: specific=5 concise=4 analytical=4 calm=5 evidenceAware=5 actionOriented=5 discourage=said_dont_do_this
+       judge notes: The reply directly and correctly discourages a second entrepreneurship club, citing precise scores (88/82 already strong) and reasoning from gaps (research at 0, depth at 60). The reasoning is sound: "Bu enerji araştırma ve proje derinliğine yönlendirilmeli." Concrete actions (Youth Economics Fellowship, deepen tutoring marketplace, targeted reading plan) are grounded in Deniz's profile and LSE fit. The only minor friction is some sentence length variation and occasional repetition of the LSE framing, but nothing breaks the concise standard.
+[ok]   counselor_explain/en/regression — no deterministic findings
+       rubric: specific=5 concise=5 analytical=5 calm=5 evidenceAware=5 actionOriented=5 discourage=said_dont_do_this
+       judge notes: The reply identifies the exact gap ("research experience remains unassessed"), grounds the recommendation in the student's actual profile (74% completeness), explicitly discourages the wrong move ("Starting a second entrepreneurship club would duplicate existing strengths"), and explains why with reasoning from evidence ("address the research gap"). Every sentence earns its place; no filler or false certainty."
+[ok]   counselor_explain/tr/regression — no deterministic findings
+       rubric: specific=5 concise=5 analytical=4 calm=5 evidenceAware=4 actionOriented=5 discourage=said_dont_do_this
+       judge notes: The reply directly names the student's weakest dimension ("araştırma"), offers a concrete action tied to that gap (Youth Economics Research Fellowship with specific deadline), and explicitly tells the student not to found another entrepreneurship club because leadership is already strong. Each sentence is lean and purposeful; no hedging, no inflation.
+[ok]   advisor_chat/en/baseline — no deterministic findings
+       rubric: specific=5 concise=5 analytical=4 calm=5 evidenceAware=4 actionOriented=5 discourage=n/a
+       judge notes: Strong execution across the board. Specific to the student's exact timeline (exam season through mid-Sept), commitments (6 weekly swimming hours, named activities), and deadlines (Economics Challenge 2026-09-07, Science Fair 2026-10-01). Concise structure with short, clear directives. Analytical reasoning ties time pressure and profile gaps to decisions (e.g., Research gap + Science Fair eligibility). Calm and measured tone avoids cheerleading while setting clear priorities. Evidence-aware framing distinguishes what's known now (tight time budget, confirmed deadlines) from what requires follow-up (whether Science Fair project is ready). The one minor soft spot: \"this should be your extracurricular priority\" asserts importance without fully reasoning why the Economics Challenge specifically unlocks value relative to other activities—a small analytical gap that doesn't undermine the overall counsel."
+[ok]   advisor_chat/tr/baseline — no deterministic findings
+       rubric: specific=5 concise=4 analytical=4 calm=5 evidenceAware=5 actionOriented=5 discourage=said_dont_do_this
+       judge notes: Entirely grounded in Ada's actual commitments (2–5 hours, 6-hour swim team) and timeline (exam week, Sept 7 deadline, Sept 15 finish). Opens with direct reasoning ("exam period means no new commitments") and backs the do/don't list with evidence ("SAT improvement is your goal but you have no planned routine"). Closes with a direct check-in question rather than false reassurance.
+[ok]   weekly_plan/en/baseline — no deterministic findings
+       rubric: specific=5 concise=3 analytical=5 calm=4 evidenceAware=5 actionOriented=5 discourage=said_dont_do_this
+       judge notes: The reply excels at specificity (cites Ada's actual scores: 62 in Research, 40 in Career Exploration, 20 in Awards), reasoning from gaps ("Research lacks external validation and depth"), and action orientation (clear deadlines and sequential steps). The discourage is well-justified: "do not commit to [Science Fair] if it will conflict with exam prep," and the investment club advice ("Avoid for now") correctly prioritizes research over leadership. Concision suffers slightly from repetition—the research gap is explained three times across sections, and phrases like "would split attention during exam season" could tighten. Calm is solid (no hedging or inflation), though the density of bolded headings adds minor visual clutter."
+[ok]   weekly_plan/tr/baseline — no deterministic findings
+       rubric: specific=3 concise=2 analytical=2 calm=2 evidenceAware=4 actionOriented=3 discourage=said_dont_do_this
+       judge notes: The reply correctly identifies concrete gaps (Research 62/100, Awards 20/100) and grounded actions (complete data cleaning, focus on Science Fair). However, it is verbose and repetitive — the youth unemployment dataset section repeats the research weakness without adding new direction, and the phrasing is often unclear or padded (e.g., "hem de araştırma boyutunu yükseltir" restates what was already implied). The discourage section about starting a new club is appropriately grounded in evidence (Leadership 45/100 already needs work) and gives a concrete timeline (one month, or after Science Fair), but the overall tone lacks the crispness and economy of language the spec calls for."
+[ok]   counselor_explain/en/baseline — no deterministic findings
+       rubric: specific=4 concise=2 analytical=3 calm=4 evidenceAware=3 actionOriented=4 discourage=n/a
+       judge notes: The reply is specific and action-oriented, naming the Regional Science Fair with a concrete deadline and identifying Research as the gap. However, it is repetitive—the same recommendation appears in nearly identical language twice ("currently unassessed strength" is vague, and "high-impact" is used twice without differentiation), which hurts conciseness. The analytical reasoning is thin: "Research" as "least-evidenced" is stated but not reasoned from actual profile data, and the connection between a science fair and "meaningful evidence" isn't explained."
+[ok]   counselor_explain/tr/baseline — no deterministic findings
+       rubric: specific=4 concise=2 analytical=3 calm=4 evidenceAware=4 actionOriented=4 discourage=n/a
+       judge notes: The reply correctly identifies the profile gap (Research at 0%) and proposes a concrete, evidence-based action (Regional Science Fair by October 2026). However, "yüksek etkili" and "kritik boşluğu" introduce some redundancy and filler language; the second paragraph repeats "yüksek etkili ve yüksek çabalı" unnecessarily, diluting conciseness.
+
+1 of 12 cases had a deterministic finding.
+Actual usage this run: 38314 input tokens, 7953 output tokens.

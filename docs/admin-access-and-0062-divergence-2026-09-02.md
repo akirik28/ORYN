@@ -110,6 +110,13 @@ direction. If narrowed is right, apply main's version. If the wide guard has ear
 place, main's file needs to say so and its comment needs rewriting. Do not leave them
 disagreeing.
 
+**Resolved, same day**: the wide guard is correct — confirmed the live function/trigger
+are produced exactly by applying 0062 then 0063 in sequence (`pg_get_functiondef`/
+`pg_get_triggerdef`, byte-for-byte, not inferred). Both files' headers rewritten in place
+to say so; full writeup in `docs/migration-state.md`. Finding 1 above (the founder has no
+admin access) is untouched and still open — that one needs a live write only the founder
+or an explicitly-authorized session should make.
+
 ---
 
 ## A note on how this was nearly reported wrong

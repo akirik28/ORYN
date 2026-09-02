@@ -45,7 +45,7 @@ if it were the branch's content.
 | Prior checkpoint | `0cefab01`, 2026-09-01 ~17:55 — **12 packages merged since**, see `git log 0cefab01..main` |
 | Gate on this checkpoint's commit | lint clean · typecheck clean · **3,243 tests** · production build compiles |
 | Live DB measured against | `oryn-qa-scratch` (`qtcvcflzxbuagvvwahhu`), via Supabase MCP, 2026-09-02 |
-| Which migrations are actually live | **Every one of the 76 replayed against empty Postgres and diffed object-by-object against live** — see `docs/would-a-fresh-deploy-match-live-2026-09-02.md`. This supersedes the per-migration probing of the prior checkpoint, and corrects it. |
+| Which migrations are actually live | **`docs/migration-state.md` is the current, authoritative table** — every migration replayed against empty Postgres and diffed object-by-object against live; also names a real, live gap (`0048`) no prior checkpoint had found, and (added this pass) four live objects — three indexes plus a foreign key — with no migration file anywhere, which a replay cannot reproduce regardless of ledger state. |
 | Deployment | **Never deployed.** Vercel account holds zero projects; no scheduled job has ever run. |
 
 If this file and a handoff doc disagree, this file is newer and wins *for the date stamped
@@ -236,14 +236,27 @@ was **wrong for five files**. On 2026-09-02 all **76** migrations were replayed 
 empty Postgres and the result diffed object-by-object against live —
 `docs/would-a-fresh-deploy-match-live-2026-09-02.md`. Trust that, not the earlier list.
 
-**A fresh deploy reproduces live almost exactly.** Zero replay errors. The live `profiles`
-guard trigger is `0062` + `0063` applied together, reproduced byte-for-byte via
-`pg_get_functiondef` rather than by paraphrase.
+**A fresh deploy reproduces live almost exactly, with two distinct kinds of exception.**
+Zero replay errors. The live `profiles` guard trigger is `0062` + `0063` applied together,
+reproduced byte-for-byte via `pg_get_functiondef` rather than by paraphrase — both files'
+own headers, which claimed "WRITTEN BUT NOT APPLIED" while being fully live, are corrected
+in place as of the same day. Separately: four live objects (three research-queue indexes,
+one foreign key on `canonical_entity_merges.merged_by`) exist with **no migration file at
+all**, found by this audit and a follow-up constraint sweep — a replay cannot reproduce
+these regardless of ledger state, unlike the ledger-silent-but-tracked migrations below.
 
-**Genuinely unapplied — three, not the six previously claimed:**
+**Genuinely unapplied — five, not the six previously claimed:**
 - `0058` (`social_posts`) — see the warning below.
-- `0075` (`deadline_notification_log`) and `0076` (`ai_usage` degrade columns), both written
-  tonight, both founder-gated as intended.
+- `0048` (`profile_view_visibility_guard`) — a **real, live gap**: any authenticated
+  account can insert a `profile_views` row against an arbitrary profile UUID right now.
+  Found the same day as the rest of this correction. Full detail in `migration-state.md`.
+- `0075` (`deadline_notification_log`), `0076` (`ai_usage` degrade columns), `0077`
+  (`weekly_actions.carried_forward`), all written the same night, all founder-gated as
+  intended. **`0077` is confirmed to have shipped a live outage** (weekly plan generation
+  broke for most students — `getOrCreateWeeklyPlan` writes a column that doesn't exist;
+  being fixed separately) — the sharpest evidence yet that "write migrations, leave them
+  unapplied" needs a second rule: code merged alongside one must degrade, not break,
+  without it.
 
 `0057`, `0059`, `0072`, `0073` and `0074` were listed as "not applied" at the prior
 checkpoint. **All are live.** `0072` in particular was asserted unapplied in two separate

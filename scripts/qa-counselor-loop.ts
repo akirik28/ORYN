@@ -64,7 +64,7 @@ function testScore(p: Partial<TestScore>): TestScore {
   return { id: id(), user_id: "qa", max_score: null, subscores: {}, test_date: null, test_name: "Untitled", score: "0", ...stamp, ...p };
 }
 function educationRecord(p: Partial<EducationRecord>): EducationRecord {
-  return { id: id(), user_id: "qa", school_entity_id: null, country: null, curriculum: null,
+  return { id: id(), user_id: "qa", school_entity_id: null, country_entity_id: null, country: null, curriculum: null,
     start_date: null, end_date: null, is_current: true, overall_gpa: null, gpa_scale: null, notes: null,
     school_name: "Unknown School", stage: "high_school", ...stamp, ...p };
 }

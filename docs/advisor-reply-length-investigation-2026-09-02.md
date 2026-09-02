@@ -253,3 +253,42 @@ Neither of those is a decision this document makes — it's the fork the evidenc
 - A single, isolated, hypothesis-first test of a density-specific instruction (distinct
   from both "be brief" and "permission to omit") — the one candidate this document
   identifies as genuinely untested rather than already-settled or already-measured-flat.
+
+---
+
+## Update, same day: the density-specific test ran, and it's a null result too
+
+Approved and run: `lib/ai/advisor-prompt.ts` got one new bullet, distinct in kind from
+both prior attempts — *"One idea per sentence. A sentence joining two claims with 'and',
+'while', or a comma reads as dense even when its word count is short — split it into two
+sentences instead... If you're restating a point you already made earlier in this same
+reply, even in different words, cut that sentence rather than let it stand."* This targets
+sentence-level density directly, not volume (brevity) or existence (permission-to-omit) —
+the one axis `judge.ts:18`'s "vs. padded or repetitive" language names that neither prior
+attempt touched.
+
+**Result: 317/360, `concise` mean 4.08 — identical to the baseline, and identical to the
+permission-to-omit run, to two decimals.** Raw log:
+`docs/eval-runs/2026-09-02-run4-sonnet-density-instruction.log`. Checked the judge notes
+directly for any qualitative shift even without a score change — the same complaint
+vocabulary appears at the same rate ("dense" x3, "repetitive" x2, "run-on" x1) as the prior
+run's notes. No hidden improvement papered over by a flat number; the number and the notes
+agree.
+
+**Four candidates in this document, three of them now measured, all three landing on the
+same score.** Brevity instruction (worse, 307). Permission-to-omit (flat, 323, real win on
+a different criterion). Density instruction (flat, 317). The fourth candidate (context
+size) remains untested for lack of a size-contrasted fixture pair. Three separate
+instruction families is enough to say plainly what the brief asked for if this happened:
+**`concise`, as `judge.ts` currently defines and scores it, does not appear to be
+addressable by prompt-level instruction on this model.** The founder's cost options for
+this specific number narrow to model choice and quota, not further prompt iteration —
+unless someone changes what the rubric is graded against, which is a different, editorial
+decision about the eval instrument, not a prompt question.
+
+Recommendation on the code: revert the density bullet. Unlike the permission-to-omit
+change, there's no offsetting win to weigh it against this time — clean null on the target
+metric, no qualitative shift in the judge notes, and a small added cost (more input tokens
+every call, forever, for an instruction that didn't do anything). Left in place on
+`oryn/density-prompt-2026-09-02` pending confirmation rather than reverted unilaterally,
+same as the disposition question on the permission-to-omit change.

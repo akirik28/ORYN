@@ -115,20 +115,29 @@ describe("migration numbering", () => {
     // unconstrained. So 0081 is the first migration that CREATES this FK, not merely the
     // first to set its delete rule — and it is the fourth known live object with no
     // migration provenance, after the three untraced research-queue indexes
-    // docs/would-a-fresh-deploy-match-live-2026-09-02.md names. All still unapplied. 0082 is
-    // deliberately absent from this worktree's own listing, not a gap to chase down — held
-    // for oryn-3f's concurrent work on a separate branch, the same avoidance this comment's
-    // own history already shows (0069/0070/0071/0072's renumbering) rather than a new kind
-    // of collision. 0083 (external_sync_jobs_errors_encountered) is the job-observability
-    // gap CEO named directly: items_processed alone can't tell a run that found nothing new
-    // apart from one that caught real per-item failures internally
-    // (discover_opportunities, discover_requirements, generate_weekly_plans, and
-    // sync_us_universities all do exactly that) -- both write items_processed: 0
-    // identically. This column is the missing half of that signal, and
-    // lib/jobs/run-with-tracking.ts carries the identical unapplied-column degradation
-    // pattern 0077/persist.ts already proved out, for the same reason: an UPDATE naming a
-    // column that doesn't exist throws on every call, not just the ones that would have
-    // matched a row.
+    // docs/would-a-fresh-deploy-match-live-2026-09-02.md names. All still unapplied.
+    //
+    // 0082 (global_university_discovery_indexes) is the migration for those three
+    // untraced indexes themselves — global_university_discovery_queue's and
+    // university_profile_verification_queue's own, first drafted as 0078, then 0079, then
+    // 0080, then 0081, each time colliding with another lane's migration landing on `main`
+    // faster than this one could push. Renumbered four times on one branch, not because
+    // anything about the migration itself was wrong — see
+    // docs/migration-state.md's own new "object live, no migration anywhere" category,
+    // which groups these three indexes with 0081's FK finding above as the sharper
+    // sibling of the ledger-silence problem the rest of this comment documents: a replay
+    // reproduces a ledger-silent-but-tracked migration; it cannot reproduce an object with
+    // no migration file at all, for either reason. Still unapplied.
+    //
+    // 0083 (external_sync_jobs_errors_encountered) is the job-observability gap CEO named
+    // directly: items_processed alone can't tell a run that found nothing new apart from
+    // one that caught real per-item failures internally (discover_opportunities,
+    // discover_requirements, generate_weekly_plans, and sync_us_universities all do
+    // exactly that) -- both write items_processed: 0 identically. This column is the
+    // missing half of that signal, and lib/jobs/run-with-tracking.ts carries the identical
+    // unapplied-column degradation pattern 0077/persist.ts already proved out, for the
+    // same reason: an UPDATE naming a column that doesn't exist throws on every call, not
+    // just the ones that would have matched a row.
     expect(Math.max(...numbers.map(Number))).toBe(83);
   });
 });

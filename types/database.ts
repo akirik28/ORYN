@@ -112,6 +112,16 @@ export interface Profile {
   /** Canonical Entity Autocomplete System — preferred over school_name once set; kept in
    * sync with the linked institution's canonical name at selection time. */
   school_entity_id: string | null;
+  /** Migration 0038 (canonical_entity_registry) — live (confirmed by direct
+   * information_schema query, not the migration ledger, which has no record of 0038/0039
+   * despite the columns genuinely existing; same "applied outside the ledger" shape as
+   * migrations 0061-0065) but never added to this interface until the 2026-09-02
+   * types/database.ts audit found it missing. Same canonical-identity pattern as
+   * school_entity_id above, for country instead of institution. */
+  country_entity_id: string | null;
+  /** Migration 0038, same provenance note as country_entity_id above — city's canonical
+   * geography identity. */
+  city_entity_id: string | null;
   graduation_year: number | null;
   curriculum: CurriculumType | null;
   preferred_language: string;
@@ -436,6 +446,13 @@ export interface EducationRecord {
   user_id: string;
   school_name: string;
   school_entity_id: string | null;
+  /** Migration 0038 (canonical_entity_registry) — same provenance note as
+   * Profile.country_entity_id: live (confirmed by direct information_schema query), never
+   * added to this interface until the 2026-09-02 audit found it missing. Unlike `profiles`,
+   * this table's own migration only added school_entity_id and country_entity_id, not a
+   * city variant — confirmed against the migration's own `alter table` statements, not
+   * assumed symmetric with `profiles`. */
+  country_entity_id: string | null;
   country: string | null;
   stage: EducationStage;
   curriculum: CurriculumType | null;
@@ -448,7 +465,10 @@ export interface EducationRecord {
   created_at: string;
   updated_at: string;
 }
-export type EducationRecordInsert = Insertable<EducationRecord, "id" | "created_at" | "updated_at" | "stage" | "is_current" | "school_entity_id">;
+export type EducationRecordInsert = Insertable<
+  EducationRecord,
+  "id" | "created_at" | "updated_at" | "stage" | "is_current" | "school_entity_id" | "country_entity_id"
+>;
 export type EducationRecordUpdate = Updatable<EducationRecord, "id" | "user_id" | "created_at" | "updated_at">;
 
 export interface Course {
@@ -766,6 +786,53 @@ export interface CanonicalEntitySearchRow {
   matched_via: "canonical" | "alias";
   score: number;
 }
+
+/** `entity_external_ids` (migration 0038) — one row per (id_system, external_id) pair
+ * recorded for a canonical entity (e.g. its ROR or Wikidata id). Added to types/database.ts
+ * 2026-09-02 (schema-type-drift audit) — live and queried through the typed client
+ * (scripts/expand-university-spine.ts) with zero column checking before this. Read/insert
+ * only in the codebase today; nothing updates a row after it's written. */
+export interface EntityExternalId {
+  id: string;
+  entity_id: string;
+  /** No DB-level allowlist (plain text, migration 0038) — e.g. "ror", "wikidata" — so not
+   * narrowed to a union here either, unlike verification_state below. */
+  id_system: string;
+  external_id: string;
+  source_url: string | null;
+  verification_state: "unverified" | "source_verified" | "official_verified" | "conflict" | "inactive";
+  verified_at: string | null;
+  created_at: string;
+}
+export type EntityExternalIdInsert = Insertable<EntityExternalId, "id" | "created_at" | "verification_state" | "verified_at">;
+
+/** `entity_relationships` (migration 0038) — a directed edge between two canonical entities
+ * (e.g. a campus `campus_of` its parent institution). Same provenance/discovery note as
+ * EntityExternalId above. `verification_state`'s allowed values are a narrower set than
+ * EntityExternalId's (no `inactive`) and than `EntityVerificationState` (no `user_submitted`/
+ * `merged` either) — checked against migration 0038's own CHECK constraint, not assumed to
+ * match a sibling table. */
+export interface EntityRelationship {
+  id: string;
+  subject_entity_id: string;
+  relationship_type:
+    | "part_of"
+    | "operated_by"
+    | "campus_of"
+    | "school_of"
+    | "provider_for"
+    | "member_of"
+    | "successor_of"
+    | "predecessor_of"
+    | "related_brand";
+  object_entity_id: string;
+  source_url: string | null;
+  verification_state: "unverified" | "source_verified" | "official_verified" | "conflict";
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+export type EntityRelationshipInsert = Insertable<EntityRelationship, "id" | "created_at" | "updated_at" | "verification_state" | "notes">;
 
 // ---------- Universities (global reference data) ----------
 
@@ -1231,6 +1298,67 @@ export type UniversityDeadlineInsert = Insertable<
   UniversityDeadline,
   "id" | "created_at" | "updated_at" | "recurrence" | "verification_state" | "data_status" | "last_checked_at"
 >;
+
+/** `requirement_research_queue` (migration 0051) — audit trail for the requirements research
+ * handoff: every decided record lands here with its outcome, promoted or not, so an
+ * excluded record is auditable rather than silently dropped (see that migration's own
+ * comment). Added to types/database.ts 2026-09-02 (schema-type-drift audit) — live,
+ * insert-only (no `.update()` anywhere in the codebase), and previously queried through the
+ * typed client (the `scripts/apply-*`/`ingest-requirements-deadlines.ts` family) with zero
+ * column checking. `_input` fields are the raw research-batch payload, un-narrowed on
+ * purpose (no DB-level allowlist on any of them, migration 0051's own CREATE TABLE) — only
+ * `outcome` has a CHECK constraint. RLS is disabled table-wide ("internal ingestion/admin
+ * tooling only" per that migration), matching its admin-client-only access in every real
+ * call site. */
+export interface RequirementResearchQueue {
+  id: string;
+  batch_id: string;
+  research_requirement_id: string;
+  university_id: string | null;
+  university_name_input: string | null;
+  university_country_input: string | null;
+  program_name_input: string | null;
+  requirement_type_input: string | null;
+  scope_input: string | null;
+  requirement_text_input: string | null;
+  source_url_input: string | null;
+  source_type_input: string | null;
+  verification_state_input: string | null;
+  raw_payload: Record<string, unknown>;
+  /** `superseded` exists here but not on DeadlineResearchQueue.outcome below — checked
+   * against migration 0051's own two separate CHECK constraints, not assumed symmetric. */
+  outcome: "accepted" | "duplicate" | "unresolved_university" | "superseded" | "not_ingestible" | "malformed_source" | "rejected";
+  outcome_detail: string | null;
+  promoted_requirement_id: string | null;
+  created_at: string;
+}
+export type RequirementResearchQueueInsert = Insertable<RequirementResearchQueue, "id" | "created_at" | "raw_payload">;
+
+/** `deadline_research_queue` (migration 0051) — the deadline-side sibling of
+ * RequirementResearchQueue above; same provenance, same access pattern, same reasoning.
+ * `outcome` has no `superseded` value here — this table's own CHECK constraint is one
+ * value narrower than the requirement queue's. */
+export interface DeadlineResearchQueue {
+  id: string;
+  batch_id: string;
+  research_deadline_id: string;
+  university_id: string | null;
+  university_name_input: string | null;
+  university_country_input: string | null;
+  program_name_input: string | null;
+  deadline_type_input: string | null;
+  deadline_date_input: string | null;
+  recurrence_input: string | null;
+  source_url_input: string | null;
+  source_type_input: string | null;
+  verification_state_input: string | null;
+  raw_payload: Record<string, unknown>;
+  outcome: "accepted" | "duplicate" | "unresolved_university" | "not_ingestible" | "malformed_source" | "rejected";
+  outcome_detail: string | null;
+  promoted_deadline_id: string | null;
+  created_at: string;
+}
+export type DeadlineResearchQueueInsert = Insertable<DeadlineResearchQueue, "id" | "created_at" | "raw_payload">;
 
 export interface UniversitySource {
   id: string;
@@ -1857,6 +1985,8 @@ export interface Database {
       career_goals: Table<CareerGoal, CareerGoalInsert, CareerGoalUpdate>;
       canonical_entities: Table<CanonicalEntity, never, never>;
       entity_aliases: Table<EntityAlias, never, never>;
+      entity_external_ids: Table<EntityExternalId, EntityExternalIdInsert, never>;
+      entity_relationships: Table<EntityRelationship, EntityRelationshipInsert, never>;
       universities: Table<University, UniversityInsert, UniversityUpdate>;
       university_rankings: Table<UniversityRanking, UniversityRankingInsert, Partial<UniversityRankingInsert>>;
       university_profile_metrics: Table<UniversityProfileMetric, UniversityProfileMetricInsert, Partial<UniversityProfileMetricInsert>>;
@@ -1867,6 +1997,8 @@ export interface Database {
       university_statistics: Table<UniversityStatistic, UniversityStatisticInsert, Partial<UniversityStatisticInsert>>;
       university_program_placement_cycles: Table<UniversityProgramPlacementCycle, UniversityProgramPlacementCycleInsert, Partial<UniversityProgramPlacementCycleInsert>>;
       university_deadlines: Table<UniversityDeadline, UniversityDeadlineInsert, Partial<UniversityDeadlineInsert>>;
+      requirement_research_queue: Table<RequirementResearchQueue, RequirementResearchQueueInsert, never>;
+      deadline_research_queue: Table<DeadlineResearchQueue, DeadlineResearchQueueInsert, never>;
       university_sources: Table<UniversitySource, UniversitySourceInsert, Partial<UniversitySourceInsert>>;
       target_universities: Table<TargetUniversity, TargetUniversityInsert, TargetUniversityUpdate>;
       applications: Table<Application, ApplicationInsert, ApplicationUpdate>;
