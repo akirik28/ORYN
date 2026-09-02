@@ -1728,6 +1728,28 @@
       "changeSuccess": "{name} is now {tier}.",
       "changeNoop": "{name} was already {tier}. Nothing changed."
     },
+    "opportunities": {
+      "sectionTitle": "Opportunities",
+      "searchPlaceholder": "Search by title or organization…",
+      "searchButton": "Search",
+      "empty": "No opportunities match that search.",
+      "statusActive": "Active",
+      "statusExpired": "Expired",
+      "statusUnderReview": "Under review",
+      "statusDisabled": "Disabled",
+      "disableButton": "Disable",
+      "reactivateButton": "Reactivate",
+      "disableReasonPlaceholder": "Reason (recorded)",
+      "confirmDisableTitle": "Disable {title}?",
+      "confirmDisableDescription": "Hides it from every student immediately. Reversible — you can reactivate it the same way.",
+      "confirmDisableButton": "Disable",
+      "confirmReactivateTitle": "Reactivate {title}?",
+      "confirmReactivateDescription": "Makes it visible to students again immediately.",
+      "confirmReactivateButton": "Reactivate",
+      "disableSuccess": "{title} is now hidden from students.",
+      "reactivateSuccess": "{title} is visible to students again.",
+      "changeNoop": "{title} was already in that state. Nothing changed."
+    },
     "warnings": {
       "sectionTitle": "Budget warnings",
       "message": "{name}: {amount} in the last 30 days ({percent}% of the {ceiling} monthly ceiling)",

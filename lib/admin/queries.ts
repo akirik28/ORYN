@@ -3,7 +3,7 @@ import "server-only";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, ExternalSyncJob, MessageReportStatus, Opportunity, OpportunityCategory, DataStatus, PlanTier } from "@/types/database";
+import type { Database, ExternalSyncJob, MessageReportStatus, Opportunity, OpportunityCategory, DataStatus, PlanTier, OpportunityStatus } from "@/types/database";
 import { getTranslations } from "next-intl/server";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import { JOB_DEFINITIONS } from "@/lib/jobs/schedule";
@@ -315,6 +315,56 @@ export async function getAdminUserList(admin: SupabaseClient<Database>): Promise
     signedUpAt: p.created_at,
     lastSeenAt: lastSeenById.get(p.id) ?? null,
     lifetimeSpendUsd: spendByUser.get(p.id) ?? 0,
+  }));
+}
+
+export interface AdminOpportunityRow {
+  id: string;
+  title: string;
+  organization: string | null;
+  category: string;
+  status: OpportunityStatus;
+  createdAt: string;
+}
+
+const ADMIN_OPPORTUNITY_LIST_LIMIT = 50;
+
+/**
+ * A moderation-scoped list, not the student browse catalog (lib/opportunities/browse.ts) —
+ * that one filters to `status = "active"` and joins per-user matching/eligibility, neither
+ * of which an admin looking for a bad record wants: they need to find and act on
+ * `"disabled"` rows too (to reactivate one, mistakenly disabled), and they aren't a
+ * student being matched against anything. No new migration — `status` already has
+ * `"disabled"` as a real value (types/database.ts), and every student-facing read already
+ * filters `.eq("status", "active")`, so setting it is already sufficient; this is purely
+ * the read side an admin needs to find what to act on.
+ *
+ * `q` searches title and organization (`ilike`, case-insensitive substring) — not a search
+ * index, a moderation tool for a founder who already knows roughly what they're looking
+ * for ("AI Scholars", the record oryn-a7 named). Empty query returns the
+ * ADMIN_OPPORTUNITY_LIST_LIMIT most recently created rows, since a bad record is most
+ * often a recent ingestion-batch problem (oryn-31's 37 garbled-description rows, all one
+ * batch) rather than evenly spread across the whole catalog.
+ */
+export async function getAdminOpportunityList(admin: SupabaseClient<Database>, q?: string): Promise<AdminOpportunityRow[]> {
+  let query = admin.from("opportunities").select("id, title, organization, category, status, created_at").order("created_at", { ascending: false }).limit(ADMIN_OPPORTUNITY_LIST_LIMIT);
+
+  const trimmed = q?.trim();
+  if (trimmed) {
+    // Escape ilike's own wildcards (%, _) in the search term so a literal "%" or "_" typed
+    // by an admin searches for that character rather than being interpreted as a wildcard.
+    const escaped = trimmed.replace(/[%_]/g, "\\$&");
+    query = query.or(`title.ilike.%${escaped}%,organization.ilike.%${escaped}%`);
+  }
+
+  const { data } = await query;
+  return (data ?? []).map((o) => ({
+    id: o.id,
+    title: o.title,
+    organization: o.organization,
+    category: o.category,
+    status: o.status,
+    createdAt: o.created_at,
   }));
 }
 

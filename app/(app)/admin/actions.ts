@@ -11,7 +11,7 @@ import { runWithTracking } from "@/lib/jobs/run-with-tracking";
 import { isJobDisabled, setJobDisabled } from "@/lib/jobs/job-controls";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { buildPostRemovalUpdate, buildPostRestoreUpdate, ModerationInputError } from "@/lib/social/posts-moderation";
-import { ADMIN_FINANCE_SETTINGS_ID } from "@/lib/admin/queries";
+import { ADMIN_FINANCE_SETTINGS_ID, getAdminOpportunityList, type AdminOpportunityRow } from "@/lib/admin/queries";
 import { isValidExchangeRate, isValidPrice } from "@/lib/admin/finance";
 import { isUndefinedTableError } from "@/lib/supabase/errors";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
@@ -433,4 +433,88 @@ export async function setUserPlanTier(userId: string, tier: PlanTier): Promise<S
 
   revalidatePath("/admin");
   return { changed: true, fromTier };
+}
+
+export interface SetOpportunityDisabledResult {
+  error?: string;
+  changed?: boolean;
+}
+
+/**
+ * oryn-a7's own named example, personally hit tonight: their own attempt to disable a bad
+ * opportunity record was blocked by the RLS permission layer (migration 0014 gives
+ * `opportunities` a select-only policy for authenticated users -- no write policy for any
+ * normal role, by design, same as every other global reference table), and the founder had
+ * to run raw SQL again. No new migration -- `status` already has `"disabled"` as a real
+ * value (types/database.ts) and every student-facing read already filters
+ * `.eq("status", "active")` (lib/opportunities/browse.ts, app/(app)/opportunities/page.tsx),
+ * so writing this column is already sufficient to hide a bad record everywhere a student
+ * would see it. This is that write path, through the one client that can actually make it
+ * (createAdminClient(), same as removeReportedPost/restoreReportedPost above).
+ *
+ * A reason is required to disable, same rule post-removal-control.tsx already enforces for
+ * posts -- the reason is the audit trail (logged to admin_action_log's `detail`, not a new
+ * column: unlike a post, an opportunity has no "author" who needs to keep seeing their own
+ * disabled content with a notice, so the lighter posts-lack-that-half version is enough
+ * here). No reason required to reactivate.
+ *
+ * Reactivating always restores to `"active"`, never to whatever status (e.g. "expired",
+ * "under_review") the row held before being disabled -- a deliberate simplification, not an
+ * oversight: nothing student-facing distinguishes those two statuses from "disabled" (only
+ * "active" is ever shown), so which one a reactivated row lands on has no visible effect.
+ * Flag if a case needs the distinction restored.
+ */
+export async function setOpportunityDisabled(opportunityId: string, disabled: boolean, reason?: string): Promise<SetOpportunityDisabledResult> {
+  const adminProfile = await requireAdmin();
+  if (!isUuidLike(opportunityId)) return { error: "Invalid opportunity." };
+  const trimmedReason = reason?.trim();
+  if (disabled && !trimmedReason) return { error: "A reason is required to disable an opportunity." };
+
+  const admin = createAdminClient();
+  const { data: before, error: readError } = await admin.from("opportunities").select("status, title").eq("id", opportunityId).maybeSingle();
+  if (readError || !before) {
+    console.error("[admin] failed to read opportunity before setting disabled state", { opportunityId, error: readError });
+    return { error: "Couldn't find that opportunity." };
+  }
+
+  const targetStatus = disabled ? "disabled" : "active";
+  if (before.status === targetStatus) return { changed: false };
+
+  const { data: updated, error } = await admin.from("opportunities").update({ status: targetStatus }).eq("id", opportunityId).select("id");
+  if (error) {
+    console.error("[admin] failed to set opportunity disabled state", { opportunityId, targetStatus, error });
+    return { error: "Couldn't save that. Please try again." };
+  }
+  if (!updated || updated.length === 0) {
+    console.error("[admin] opportunity disabled-state update matched zero rows", { opportunityId, targetStatus });
+    return { error: "That saved nothing — 0 rows were updated. The record may have just been deleted." };
+  }
+
+  await logAdminAction(admin, {
+    adminProfile,
+    action: disabled ? "disable_opportunity" : "reactivate_opportunity",
+    targetLabel: before.title,
+    detail: { from: before.status, to: targetStatus, reason: trimmedReason ?? null, opportunityId },
+  });
+
+  revalidatePath("/admin");
+  return { changed: true };
+}
+
+/**
+ * The moderation list's own search, called from OpportunityModerationList (a client
+ * component — search-as-you-type needs client state, unlike every other section on this
+ * page, which fetches once server-side and re-renders via router.refresh()). Thin wrapper:
+ * getAdminOpportunityList already does the real work, this just adds the requireAdmin()
+ * gate a Server Action needs regardless of what the page-level check already did.
+ */
+export async function searchAdminOpportunities(q?: string): Promise<{ rows: AdminOpportunityRow[]; error?: string }> {
+  await requireAdmin();
+  try {
+    const admin = createAdminClient();
+    return { rows: await getAdminOpportunityList(admin, q) };
+  } catch (error) {
+    console.error("[admin] opportunity search failed", { q, error });
+    return { rows: [], error: "Couldn't search opportunities. Please try again." };
+  }
 }

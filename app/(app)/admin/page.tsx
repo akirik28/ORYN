@@ -16,6 +16,7 @@ import { ProviderHealthSection } from "@/features/admin/sections/provider-health
 import { ScheduledJobsSection } from "@/features/admin/sections/scheduled-jobs-section";
 import { ReportsSection } from "@/features/admin/sections/reports-section";
 import { UserListSection } from "@/features/admin/sections/user-list-section";
+import { OpportunitiesSection } from "@/features/admin/sections/opportunities-section";
 import { ActivitySection } from "@/features/admin/sections/activity-section";
 import { AgeGateFlagsSection } from "@/features/admin/sections/age-gate-flags-section";
 
@@ -83,6 +84,9 @@ export default async function AdminPage() {
         <TabsContent value="people" className="space-y-10 pt-2">
           <Suspense fallback={<SectionSkeleton />}>
             <UserListSection />
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton />}>
+            <OpportunitiesSection />
           </Suspense>
           <Suspense fallback={<SectionSkeleton />}>
             <ReportsSection />
