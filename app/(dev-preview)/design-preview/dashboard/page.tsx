@@ -43,7 +43,7 @@ export default async function DashboardPreviewPage({ searchParams }: { searchPar
   return (
     <>
       <UltraAmbient tier={tier} />
-      <PreviewShell signal={FIXTURE_PROFILE_SIGNAL} tier={tier}>
+      <PreviewShell signal={FIXTURE_PROFILE_SIGNAL}>
         <DashboardView
           displayName={FIXTURE_STUDENT.displayName}
           tier={tier}

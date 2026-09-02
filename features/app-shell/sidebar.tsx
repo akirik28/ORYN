@@ -42,15 +42,21 @@ const SECONDARY_ITEMS = SECONDARY_NAV.filter((item) => item.href !== "/settings"
  * all — removed along with the canvas, since nothing here needs to know the tier anymore.
  * See app/globals.css's own comment on .tier-sidebar-surface for the full story.
  *
- * showUpgradeCta, added the same day: a standard-tier student sees a persistent "Upgrade
- * your plan" entry pointing at the real /settings/plan page (registerUltraInterestAction —
- * an analytics event, not a purchase; there is no billing flow to fake). Gated on the
- * caller's REAL resolved tier — app/(app)/layout.tsx's `realTier`, not the possibly-dev-
- * preview-overridden `planTier` it also computes — because a founder previewing Ultra via
- * the dev-preview toggle is still, in their real database row, a standard account, and
- * should still see the honest CTA while looking at what Ultra looks like. That coexistence
- * (the CTA on top of the animated gradient) is a real case, not a theoretical one, which is
- * why its contrast was checked against the gradient too.
+ * The "Upgrade your plan" CTA, added the same day, points at the real /settings/plan page
+ * (registerUltraInterestAction — an analytics event, not a purchase; there is no billing
+ * flow to fake). Always rendered here, hidden purely in CSS
+ * ([data-tier="ultra"] .tier-upgrade-cta, app/globals.css) rather than gated by a prop —
+ * first built as a `showUpgradeCta` boolean computed from the REAL resolved tier, on the
+ * theory that a founder previewing Ultra via the dev-preview toggle is still, in their real
+ * database row, a standard account. Corrected same day, founder direction, verbatim:
+ * "zaten premiumken yandan upgrade şeyi olmamalı" (when already on premium, the upgrade
+ * thing shouldn't be in the sidebar) — they were looking at a preview showing Ultra and
+ * the CTA read as a bug. The CSS-only version is also the more robust fix, not just the
+ * simpler one: it reads the exact same [data-tier="ultra"] attribute every other Ultra
+ * rule in this file already keys off, so the CTA's visibility structurally cannot disagree
+ * with what the rest of the sidebar is displaying — a JS-prop-driven boolean computed from
+ * a different tier value than data-tier is exactly the shape of bug that produced the
+ * founder's report in the first place.
  *
  * `ultra:text-white/80` / `ultra:hover:text-white` on every non-active nav item, same day:
  * the scrim in .tier-sidebar-surface alone couldn't clear 4.5:1 for the original
@@ -69,13 +75,11 @@ export function Sidebar({
   email,
   signal,
   isAdmin = false,
-  showUpgradeCta = false,
 }: {
   displayName: string;
   email: string | null;
   signal: DimensionSignal[];
   isAdmin?: boolean;
-  showUpgradeCta?: boolean;
 }) {
   const pathname = usePathname();
   const t = useTranslations("nav");
@@ -141,20 +145,18 @@ export function Sidebar({
         ) : null}
       </nav>
 
-      {showUpgradeCta ? (
-        <div className="px-2.5 pb-2">
-          <Link
-            href="/settings/plan"
-            className={cn(
-              "flex items-center gap-2 rounded-[10px] border border-white/15 bg-white/[0.08] px-3 py-2 text-[13px] font-medium text-white transition-colors",
-              "hover:bg-white/[0.13] focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
-            )}
-          >
-            <Flame className="size-[16px] shrink-0 text-[var(--tier-grad-1)]" strokeWidth={1.8} />
-            {t("upgradePlan")}
-          </Link>
-        </div>
-      ) : null}
+      <div className="tier-upgrade-cta px-2.5 pb-2">
+        <Link
+          href="/settings/plan"
+          className={cn(
+            "flex items-center gap-2 rounded-[10px] border border-white/15 bg-white/[0.08] px-3 py-2 text-[13px] font-medium text-white transition-colors",
+            "hover:bg-white/[0.13] focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
+          )}
+        >
+          <Flame className="size-[16px] shrink-0 text-[var(--tier-grad-1)]" strokeWidth={1.8} />
+          {t("upgradePlan")}
+        </Link>
+      </div>
 
       <div className="border-t border-white/[0.06]">
         <Link
