@@ -2,7 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AIResponseIncompleteError, AIStructuredResponseFailedError, type AIUsage } from "./provider";
-import { estimateCostUsd } from "./pricing";
+import { resolveModelCostUsd } from "./pricing";
 import { selectModelForUser, type ModelSelectionReason } from "./limits/budget";
 
 /**
@@ -55,7 +55,7 @@ export async function logAIUsage(params: {
       model: params.model,
       input_tokens: params.usage.inputTokens,
       output_tokens: params.usage.outputTokens,
-      estimated_cost: estimateCostUsd(params.model, params.usage.inputTokens, params.usage.outputTokens),
+      estimated_cost: await resolveModelCostUsd(params.model, params.usage.inputTokens, params.usage.outputTokens),
       // supabase/migrations/0076_ai_usage_degrade_columns.sql is live (confirmed against
       // the real DB, 2026-09-02) — these two were previously omitted here with a comment
       // saying the migration hadn't been applied yet, which stopped being true well before

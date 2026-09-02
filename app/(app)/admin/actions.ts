@@ -641,3 +641,35 @@ export async function resetQuotaThisMonth(userId: string): Promise<{ error?: str
   revalidatePath("/admin");
   return {};
 }
+
+/**
+ * Add or correct one model's per-token rate (migration 0100, ai_model_pricing) — the lever
+ * behind the unpriced-calls alert (AiFeatureShapeSection): every dollar figure on the spend
+ * screens already treats a null estimated_cost as $0, so closing the gap from here is what
+ * keeps those totals honest going forward, not just visible as a known gap. Checked before
+ * PRICE_PER_MILLION_TOKENS_USD's own hardcoded table by resolveModelCostUsd
+ * (lib/ai/pricing.ts) — takes effect on the next AI call, within that function's own short
+ * cache TTL, not after a deploy.
+ */
+export async function setModelPricing(model: string, inputRatePerMillion: number, outputRatePerMillion: number): Promise<{ error?: string }> {
+  const adminProfile = await requireAdmin();
+  const trimmedModel = model.trim();
+  if (!trimmedModel) return { error: "Enter a model name." };
+  if (!Number.isFinite(inputRatePerMillion) || inputRatePerMillion < 0) return { error: "Input rate must be a number of at least $0." };
+  if (!Number.isFinite(outputRatePerMillion) || outputRatePerMillion < 0) return { error: "Output rate must be a number of at least $0." };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("ai_model_pricing").upsert({
+    model: trimmedModel,
+    input_rate_per_million: inputRatePerMillion,
+    output_rate_per_million: outputRatePerMillion,
+    updated_by: adminProfile.id,
+  });
+  if (error) {
+    console.error("[admin] failed to set model pricing", { code: error.code, message: error.message });
+    return { error: "Couldn't save that. Please try again." };
+  }
+
+  revalidatePath("/admin");
+  return {};
+}
