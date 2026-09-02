@@ -361,6 +361,13 @@ export const LAWYER_FLAGS: LawyerFlag[] = [
     currentState:
       "Structurally mirrors the English exactly — same sections, same ids, same bullet counts, same unresolved placeholders, same hedges (e.g. Article 9's transfer mechanism is left unnamed in Turkish exactly as in English, not translated into a guessed term). A test (__tests__/legal/consent.test.ts) enforces structural parity between legalCopyEn and legalCopyTr so the two can't silently diverge. The Article 11 rights list is translated from the standard, widely-published paraphrase of the statutory list, not quoted from the law verbatim.",
   },
+  {
+    id: "opportunityImageLicensing",
+    question:
+      "Is an organizer publishing an og:image meta tag on their own official page a sufficient basis to download, re-encode, and re-host that image on Oryn's own infrastructure — or does the product need explicit organizer permission, an editorial-use argument, or to stop re-hosting third-party images altogether?",
+    currentState:
+      "scripts/acquire-opportunity-images.ts has re-hosted 65 opportunity images this way (full analysis in docs/opportunity-image-licensing.md). No organizer has granted an explicit licence; the claim rests on inferring intent from the meta tag, not on a stated permission. Every re-hosted image records the exact source page and retrieval date, and states plainly that no licence is declared and the depiction is not independently verified — that documents provenance, it does not clear rights. No takedown mechanism exists yet; removal today is a manual database query and a storage-object delete.",
+  },
 ];
 
 // ---------------------------------------------------------------------------
