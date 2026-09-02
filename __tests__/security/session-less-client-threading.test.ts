@@ -109,6 +109,17 @@ describe("lib/admissions/scan.ts — scanStaleOutlooks threads its client into r
   const source = src("lib/admissions/scan.ts");
 
   test("the admin client is the fourth argument, not omitted", () => {
+    // The `undefined` in this position is the locale argument, not part of what this test
+    // guards — flagged separately (2026-09-02, locale-loss sibling sweep) as the same
+    // shape as a real bug found elsewhere the same night (buildCounselorGrounding
+    // defaulting every Turkish student's weekly-plan grounding to English), but confirmed
+    // currently inert here: refreshAdmissionOutlook's own comment says locale only affects
+    // notApplicableReason/admissionSystemMechanism on the *returned* result, nothing
+    // persisted, and this caller only checks the result's truthiness before discarding it.
+    // This assertion is not evidence the gap is intentional or verified — it just isn't
+    // this test's concern. It would stop being inert the moment anything reads those two
+    // fields; lib/deadlines/scan.ts's loadLocalesByUser is the precedent to copy if it
+    // ever needs fixing.
     expect(source).toContain("refreshAdmissionOutlook(target.id, target.user_id, undefined, supabase)");
   });
 });
