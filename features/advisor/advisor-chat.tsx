@@ -5,9 +5,11 @@ import { useTranslations, useLocale } from "next-intl";
 import { ArrowUp, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AdvisorMessage, AdvisorMessageThinking } from "@/components/oryn/advisor-message";
 import { Eyebrow } from "@/components/oryn/eyebrow";
 import { sendAdvisorMessage, retryAdvisorMessage } from "@/app/(app)/advisor/actions";
+import { formatAbsoluteDate } from "@/lib/i18n/date";
 import type { Locale } from "@/lib/i18n/config";
 import type { AdvisorMessage as AdvisorMessageRow } from "@/types/database";
 
@@ -33,10 +35,21 @@ export function AdvisorChat({
   conversationId,
   initialMessages,
   aiConfigured,
+  quotaExhausted = false,
+  quotaResetsAt,
 }: {
   conversationId: string | null;
   initialMessages: AdvisorMessageRow[];
   aiConfigured: boolean;
+  /** This month's message-count backstop (lib/ai/monthly-quota.ts) is genuinely spent —
+   * distinct from `degraded` on an individual reply. Optional and defaults to `false`,
+   * same "a caller not yet passing it renders exactly as before" convention as
+   * MonthlyUsageMeter's own `budgetDegraded` prop, so every existing caller (and test)
+   * stays correct without change. */
+  quotaExhausted?: boolean;
+  /** ISO date the allowance resets — required to say something concrete rather than "soon"
+   * whenever `quotaExhausted` is true; unused otherwise. */
+  quotaResetsAt?: string;
 }) {
   const t = useTranslations("advisor.chat");
   const locale = useLocale() as Locale;
@@ -81,7 +94,13 @@ export function AdvisorChat({
   }, [messages]);
 
   function submit(content: string) {
-    if (!content.trim() || isPending) return;
+    // The composer is already disabled while exhausted (see the Textarea/Button props
+    // below) — this is the same guard repeated at the call site, not a second decision.
+    // It exists for the same reason lib/ai/monthly-quota.ts's own comment gives for
+    // checking server-side too: a Server Action (and, here, this function) is directly
+    // callable regardless of what's rendered, so the thing that actually prevents a
+    // wasted round-trip has to live in the code path, not only in a disabled attribute.
+    if (!content.trim() || isPending || quotaExhausted) return;
     setError(null);
     localIdCounter.current += 1;
     const userMessage: LocalMessage = { id: `local-${localIdCounter.current}`, role: "user", content };
@@ -188,7 +207,11 @@ export function AdvisorChat({
                     variant="outline"
                     size="sm"
                     onClick={() => retry(message.id)}
-                    disabled={retryingId === message.id}
+                    // A retry spends real model budget too (app/(app)/advisor/actions.ts's
+                    // retryAdvisorMessage draws on the same allowance) — disabled here for
+                    // the same reason the composer is: no point offering a click that can
+                    // only repeat the same "used up" answer.
+                    disabled={retryingId === message.id || quotaExhausted}
                   >
                     <RotateCcw className="size-3.5" />
                     {t("tryAgain")}
@@ -222,7 +245,24 @@ export function AdvisorChat({
         )}
       </div>
 
-      {error ? <p className="pb-3 text-sm text-error">{error}</p> : null}
+      {/* Persistent, not tied to a failed submit attempt — quotaExhausted is a standing
+          state for the rest of the month, not a one-off error, so it renders declaratively
+          from the prop rather than only after the student tries and fails. Default `Alert`
+          variant (calm, `bg-card`), not `destructive`: this is a fact about a monthly
+          allowance, not something the student did wrong. States what changed (chat only)
+          and what didn't (everything else), per this task's own "what can they still do"
+          requirement — no tier/upgrade mention, since there is nowhere real to send one
+          yet (see the commit message). */}
+      {quotaExhausted && quotaResetsAt ? (
+        <Alert className="mb-3">
+          <AlertTitle>{t("exhausted.title")}</AlertTitle>
+          <AlertDescription>
+            {t("exhausted.detail", { date: formatAbsoluteDate(quotaResetsAt, locale, { month: "long", day: "numeric" }) })}
+          </AlertDescription>
+        </Alert>
+      ) : error ? (
+        <p className="pb-3 text-sm text-error">{error}</p>
+      ) : null}
 
       <form
         onSubmit={(e) => {
@@ -243,12 +283,19 @@ export function AdvisorChat({
               submit(input);
             }
           }}
-          placeholder={aiConfigured ? t("placeholderReady") : t("placeholderNotConfigured")}
-          disabled={!aiConfigured}
+          placeholder={
+            quotaExhausted ? t("placeholderExhausted") : aiConfigured ? t("placeholderReady") : t("placeholderNotConfigured")
+          }
+          disabled={!aiConfigured || quotaExhausted}
           rows={1}
           className="max-h-32 min-h-9 flex-1 resize-none"
         />
-        <Button type="submit" size="icon" aria-label={t("sendAriaLabel")} disabled={!aiConfigured || isPending || !input.trim()}>
+        <Button
+          type="submit"
+          size="icon"
+          aria-label={t("sendAriaLabel")}
+          disabled={!aiConfigured || quotaExhausted || isPending || !input.trim()}
+        >
           <ArrowUp className="size-4" />
         </Button>
       </form>

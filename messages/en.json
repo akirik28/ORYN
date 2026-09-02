@@ -1061,10 +1061,15 @@
       "tryAgain": "Try again",
       "placeholderReady": "Ask Oryn…",
       "placeholderNotConfigured": "The AI counselor isn't configured yet",
+      "placeholderExhausted": "This month's messages are used up",
       "sendAriaLabel": "Send message",
       "degradeNote": {
         "label": "Shorter reply",
         "detail": "This reply was kept brief — you're still getting the answer, just not the long explanation."
+      },
+      "exhausted": {
+        "title": "This month's allowance is used up",
+        "detail": "Chat resets on {date}. The rest of Oryn — your plan, opportunities, universities — stays open as always."
       }
     },
     "usageMeter": {

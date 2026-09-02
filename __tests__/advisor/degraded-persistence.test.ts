@@ -37,7 +37,7 @@ const {
   requireUserMock,
   resolveLocaleMock,
   assertWithinAIRateLimitMock,
-  isMonthlyQuotaExhaustedMock,
+  getMonthlyQuotaMock,
   generateAdvisorReplyMock,
   logEventMock,
   createClientMock,
@@ -45,7 +45,17 @@ const {
   requireUserMock: vi.fn(),
   resolveLocaleMock: vi.fn().mockResolvedValue("en"),
   assertWithinAIRateLimitMock: vi.fn().mockResolvedValue(undefined),
-  isMonthlyQuotaExhaustedMock: vi.fn().mockResolvedValue(false),
+  // Not exhausted by default — this suite is about the assistant-message insert/update
+  // degrading, not about the quota gate, so every test just needs a normal, well-under-
+  // limit quota to pass through both sendAdvisorMessage and retryAdvisorMessage unblocked.
+  getMonthlyQuotaMock: vi.fn().mockResolvedValue({
+    used: 0,
+    limit: 50,
+    remaining: 50,
+    fraction: 0,
+    resetsAt: "2026-10-01T00:00:00.000Z",
+    usedIsKnown: true,
+  }),
   generateAdvisorReplyMock: vi.fn(),
   logEventMock: vi.fn().mockResolvedValue(undefined),
   createClientMock: vi.fn(),
@@ -58,7 +68,7 @@ vi.mock("@/lib/ai/rate-limit", async () => {
   const actual = await vi.importActual<typeof import("@/lib/ai/rate-limit")>("@/lib/ai/rate-limit");
   return { ...actual, assertWithinAIRateLimit: assertWithinAIRateLimitMock };
 });
-vi.mock("@/lib/ai/monthly-quota", () => ({ isMonthlyQuotaExhausted: isMonthlyQuotaExhaustedMock }));
+vi.mock("@/lib/ai/monthly-quota", () => ({ getMonthlyQuota: getMonthlyQuotaMock }));
 vi.mock("@/lib/ai/advisor-chat", () => ({ generateAdvisorReply: generateAdvisorReplyMock }));
 vi.mock("@/lib/analytics/log", () => ({ logEvent: logEventMock }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: createClientMock }));
@@ -69,7 +79,14 @@ beforeEach(() => {
   requireUserMock.mockReset().mockResolvedValue({ isAuth: true, userId: USER_ID, email: "student@example.com" });
   resolveLocaleMock.mockReset().mockResolvedValue("en");
   assertWithinAIRateLimitMock.mockReset().mockResolvedValue(undefined);
-  isMonthlyQuotaExhaustedMock.mockReset().mockResolvedValue(false);
+  getMonthlyQuotaMock.mockReset().mockResolvedValue({
+    used: 0,
+    limit: 50,
+    remaining: 50,
+    fraction: 0,
+    resetsAt: "2026-10-01T00:00:00.000Z",
+    usedIsKnown: true,
+  });
   generateAdvisorReplyMock.mockReset();
   logEventMock.mockReset().mockResolvedValue(undefined);
   createClientMock.mockReset();
