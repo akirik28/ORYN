@@ -19,10 +19,37 @@ the 8 hero-gradient sites only.
 One new file, [components/oryn/hero-gradient.ts](../components/oryn/hero-gradient.ts),
 exports `heroGradientStyle(tier)` and `heroGradientStyleCompact(tier)` (Applications' hero
 is a 2-stop variant of the same gradient — preserved as its own shape rather than forced to
-match the other 7 sites, so Standard renders byte-identical everywhere). Both return a
-`CSSProperties` object: the exact original literal under `"standard"`, the flame tokens
-under `"ultra"`. All 8 call sites now import one of these and pass their resolved tier
-instead of inlining the literal.
+match the other 7 sites, so Standard renders byte-identical everywhere). All 8 call sites
+import one of these and pass their resolved tier instead of inlining the literal.
+
+**This package reversed direction once before landing — worth recording, since the first
+version was fully built, gated, and committed (never pushed) before it changed.** The first
+pass recolored the gradient itself to a darkened flame palette (matching the sidebar/ground
+work oryn-4e was landing in parallel). Before pushing, oryn-a7 relayed a direct founder
+correction: the reference prototype behind this whole ask
+(`.../scratchpad/oryn-ultra-skin.html`, "Rozet değil — yüzeyin tamamı değişiyor") was
+designed against a **dark** app ground, where an amber card glow made sense. The ground
+itself is now amber. The founder's own words, causal clause intact: *"since we made the
+background amber, port it so it glows blue"* — amber-on-amber would disappear, so the
+technique (a card that visibly glows) carries over but the hue inverts. Confirmed directly
+against the prototype's own CSS before building either version — see the code comment in
+`hero-gradient.ts` for the full reasoning, including where the file's literal colors and
+oryn-a7's prose description disagreed and had to be checked before assuming either was
+right.
+
+The shipped version: `background` no longer varies by tier **at all** — it's the exact
+original literal in both cases. What Ultra adds is a `border` color shift plus a two-layer
+`boxShadow` glow, both reading `var(--brand-primary)` — the app's own existing indigo, not
+a new invented blue, and not one of the flame `--tier-*` tokens (which stay reserved for the
+amber/red surfaces). The prototype's soft ambient halo (a separate blurred pseudo-element,
+`.aura`, positioned outside the card) is reproduced as a wide, low-opacity box-shadow layer
+on the *same* element instead of a new DOM node — deliberately, because box-shadow paints
+outside an element's own overflow clip, unlike a child element would, and 4 of the 8 sites
+set `overflow-hidden` on this exact div. The prototype's rotating conic aura and canvas
+ember-particle system are **not** ported — real animation/DOM work with no equivalent in
+any of these 8 static Server Component pages today, and out of scope for a gradient
+conversion. (Canvas-driven flame texture is already being built elsewhere tonight, in the
+topbar usage meter and tier slider, per oryn-a7.)
 
 This is a JS-level fix, not a CSS one, and deliberately so: a value set through the `style`
 prop is invisible to any CSS selector, `[data-tier="ultra"]` included — that mismatch is
@@ -46,38 +73,34 @@ universities pages, the real dashboard page):
 Every added `requireProfile()`/`getCurrentProfile()` call is a `cache()` hit, not a new
 query — same dedup this session already relied on for the map and the harness fix.
 
-## The color decision: dark card, not bright card
+## The color decision: unchanged card, blue glow
 
-The founder's own words (relayed by oryn-a7) were about the page ground and the sidebar —
-"I want the background to become amber, the dark blue bar on the left to become red, vivid
-colors" — not this card specifically. oryn-a7 flagged the risk rather than mandating a
-value: *"A dark card and a burning card are different design objects... don't leave white
-text on an amber card."* All 8 sites currently assume light-on-dark content sitting on this
-background — a `.dark` class scope, explicit `text-white/NN` labels, or (on the dashboard)
-`NextMove`'s own ink-token cascade — and none of that is touched by this package.
+All 8 sites currently assume light-on-dark content sitting on this background — a `.dark`
+class scope, explicit `text-white/NN` labels, or (on the dashboard) `NextMove`'s own
+ink-token cascade. Leaving `background` completely untouched between tiers means none of
+that needed to move, and there is no contrast question to check at all — the text sits on
+the identical dark surface it always has.
 
-Checked directly rather than assumed: the pure flame tokens' contrast against white text —
-computed from each hex's real WCAG relative luminance — is 4.2:1 for `--tier-grad-3`
-(red), 2.6:1 for `--tier-accent` (orange), and 1.6:1 for `--tier-grad-1` (gold). The lighter
-two fail outright; even the red is marginal. A straight swap to the undiluted tokens would
-have silently broken every line of text on this card.
+The glow reads `var(--brand-primary)`, not a `--tier-*` flame token, on purpose. Per
+oryn-a7: the prototype's `--calm: #7C6BF0` is its *Standard*-state indigo — every one of the
+prototype's `.ultra` rules overrides that color to flame. Under this reversed direction, the
+inversion flips: the cool color is what Ultra *keeps* on this one surface, while the flame
+tokens stay reserved for the surfaces that are actually going amber (ground, sidebar, and
+whatever oryn-f5's canvas work touches). Using the app's own existing brand token rather
+than a new hardcoded blue keeps a single source of truth the same way the flame tokens do
+for everything else tonight — if `--brand-primary` ever moves, this glow moves with it.
 
-The fix keeps the card **dark**, recolored rather than relit: each stop is
-`color-mix(in oklch, <tier token>, black N%)`, with `N` increasing for the stops that start
-lighter (20% for the red stop, 45% for orange, 60% for gold) so all three land in roughly
-the same dark band the current navy already occupies. Reasoning, not measurement — this
-session's own oklch-by-hand math produced at least one internally inconsistent result while
-checking this, so no exact resulting lightness/contrast number is asserted here. **Requesting
-a live measurement (data-tier, computed `background-image`, and ideally an actual contrast
-read against the text on top) before trusting the exact percentages**, the same ask made for
-the map's own vivid pass. The direction — a genuinely different, unmistakably red/orange/gold
-hue at a similar depth to the current indigo — should already be visible; the exact darkness
-of each stop is the part worth confirming live.
-
-Reading the tokens directly (`var(--tier-accent)`, `var(--tier-grad-1)`, `var(--tier-grad-3)`)
-rather than introducing new literal hex values was deliberate, per oryn-a7's instruction — if
-oryn-4e ever changes the approved flame palette, this gradient moves with it instead of
-drifting into a second source of truth.
+Two shadow layers, both intentional: a wide, low-opacity halo (`0 0 60px 10px ... 75%
+transparent`) standing in for the prototype's separate blurred `.aura` layer, and a tighter,
+downward-offset shadow (`0 25px 65px -20px ... 25% transparent`) for grounding/depth,
+matching the prototype's own two-layer technique. oryn-a7's explicit warning, carried over
+from the sidebar's three rejections, is that *an effect painted on an otherwise-unchanged
+surface risks reading as a sticker* — weighted the halo layer as the one doing that work,
+since it's the part that makes the glow read as ambient light around the card rather than a
+decoration on its edge. Not verified live (no local build/dev-server, per policy) — this is
+where a live look matters most, more than the earlier color-math question ever did, because
+"does this read as belonging to the card or pasted on it" isn't something contrast math can
+answer.
 
 ### Why not the isFull-screen pages' interior chrome
 
@@ -107,15 +130,21 @@ resolves a `tier` variable for `<UltraAmbient tier={tier} />` two lines above th
 ## Verification
 
 Typecheck, lint, and the full test suite only — no `next build`, per the disk-pressure gate
-policy for tonight (oryn-a7 runs the build once, centrally, at merge time). All three green:
-291 files / 4665 tests. 6 new tests in
-[__tests__/oryn/hero-gradient.test.ts](../__tests__/oryn/hero-gradient.test.ts) pin the
-standard-tier output to the exact original literals (both the 3-stop and 2-stop shapes),
-confirm the ultra output reads the real tier tokens rather than a second hardcoded palette,
-and confirm the compact variant shares its two stops with the full card rather than
-re-picking its own colors.
+policy for tonight (oryn-a7 runs the build once, centrally, at merge time). All three green.
+7 tests in [__tests__/oryn/hero-gradient.test.ts](../__tests__/oryn/hero-gradient.test.ts)
+pin the standard-tier output to the exact original literals (both the 3-stop and 2-stop
+shapes) with no border/shadow, confirm the background stays byte-identical under ultra,
+confirm the added border/glow read `--brand-primary` rather than a flame `--tier-*` token,
+and confirm the compact variant shares the exact same border/glow values as the full card
+rather than re-picking its own.
 
-No live render — same disk policy as every other package tonight. Asking oryn-a7 for the
-same kind of live confirmation the map's vivid pass got: `data-tier="ultra"` on a page with
-one of these heroes, the resolved `background-image` on the card, and ideally a check that
-the existing light text is still comfortably readable on it.
+No live render — same disk policy as every other package tonight, and the thing most worth
+seeing here (whether the glow reads as ambient light or a sticker) is exactly the thing
+static analysis can't answer. Asking oryn-a7 for a live look: `data-tier="ultra"` on a page
+with one of these heroes, and whether the halo actually reads as belonging to the card
+against the new amber ground.
+
+One more thing worth a mention rather than a fix: oryn-a7's own dev-preview doc
+(`b46afec0`, "say which surfaces actually show a tier difference yet") predates this
+package and will be stale for the hero cards once this lands — not edited here, since it's
+a shared decision doc outside this package's scope, but worth someone updating it.
