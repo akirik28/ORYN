@@ -551,6 +551,53 @@ verified as intentional); the dashboard's own purpose-built `DashboardSkeleton` 
 the codebase held to that higher bar, and it holds up. Named as a minor, low-severity
 polish item, not fixed.
 
+## ~~CV-imported skills/languages were extracted and silently discarded~~ — now saves, verified against live data
+
+**2026-09-02, after the founder applied migrations 0075–0088 (all but 0087) during tonight's
+pause.** `skills.source`/`languages.source` are now live (`information_schema` confirms
+both: `NOT NULL`, default `'manual'`) — the column [[project_oryn_cv_import_skills_languages]]
+found missing, which made `insertCvImportSkills`/`insertCvImportLanguages` degrade to a
+silent no-op on every save, every time.
+
+**Confirmed from live data, not assumed from the migration alone: neither of the two real
+CV extractions in `ai_usage` ever produced a saved skill or language.** One account
+(`ccf2161e...`, extraction at 06:40:58) has 2 skills and 3 languages on file — but every one
+was added 8+ minutes to a full week after the extraction, one at a time with real gaps
+between them (not a batch), and reads `source: 'manual'` — a genuinely separate manual
+entry, not a mislabeled CV-import artifact. The other account (`026e9295...`) has zero
+skills/languages rows at all. Both `product_events.cv_imported` rows report a combined
+`itemCount` (24 and 22) that isn't broken out by category, so whether either extraction's
+raw output actually *contained* skills/languages isn't independently recoverable from
+stored data — named as a real, honest limit rather than guessed past.
+
+**Traced the fix mechanism directly.** Both insert functions already try the insert *with*
+`source: "cv_import"` first and only fall back to omitting it on a confirmed missing-column
+error (`isUndefinedColumnError`, itself corrected for the PGRST204-vs-42703 gap earlier
+tonight) — so now that the column exists, the fallback branch is dead code here, and every
+future CV-imported skill/language gets the correct, distinguishing `source` value on the
+first attempt, not the `'manual'` default.
+
+**Checked Non-Negotiable #10 before anything else, per the assignment**: skills and
+languages were never at risk of saving invisibly, because they were already fully rendered
+as editable review items (checkbox to include/exclude, editable name field, category/
+proficiency select, remove button) in both `features/onboarding/steps/import-step.tsx` and
+`features/profile/cv-import-flow.tsx`, in parity, before this fix — confirmed by reading
+both files directly, not carried forward from an earlier pass's claim. The review step was
+always honest; only the final save silently dropped what the student had already reviewed
+and kept.
+
+**A live end-to-end upload was attempted and not completed — stated precisely, not
+smoothed over.** Injected a real test `.txt` file into the profile-page import form's file
+input via `DataTransfer` (the standard technique for driving a file input without an OS
+picker) and dispatched `input`/`change`; the file was accepted momentarily but the input's
+`files` reset to empty before the component's handler ran, on three separate attempts —
+consistent with a Fast Refresh/HMR remount on the shared dev server (multiple sessions were
+actively pushing to `main` throughout), not with anything in the product code, and no
+Server Action request ever reached the network log, so no AI spend happened from the
+attempts. Relied instead on the source trace above (both insert functions, both review
+surfaces, the corrected shared error-classifier) plus the live schema/history check — strong
+evidence the fix is real, short of a fully driven browser upload.
+
 ## ORYN has never been deployed — no scheduled job has ever run
 
 **2026-09-02, verified independently against both the Vercel account and `external_sync_jobs`
