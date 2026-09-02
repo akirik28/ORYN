@@ -1831,6 +1831,7 @@
       "ranDuration": "ran {duration}",
       "stillRunning": "still running",
       "never": "never",
+      "errorsEncounteredWarning": "{count} errors this run — the job still reports succeeded, since it caught these rather than throwing.",
       "emptyStreakWarning": "0 items processed on the last {count} consecutive runs — succeeding, but not doing anything. Worth checking whether a required credential is missing.",
       "runResult": "{items} processed, {errors} errors, {duration}. $0.00 spend — this job doesn't call the AI provider.",
       "runResultNoDuration": "{items} processed, {errors} errors. $0.00 spend — this job doesn't call the AI provider.",

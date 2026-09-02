@@ -4,7 +4,11 @@
     { "path": "/api/jobs/discover-opportunities", "schedule": "0 2 * * *" },
     { "path": "/api/jobs/discover-requirements", "schedule": "0 4 * * *" },
     { "path": "/api/jobs/sync-university-data", "schedule": "0 6 * * *" },
-    { "path": "/api/jobs/deadline-reminders", "schedule": "0 8 * * *" }
+    { "path": "/api/jobs/notify-university-changes", "schedule": "0 7 * * *" },
+    { "path": "/api/jobs/deadline-reminders", "schedule": "0 8 * * *" },
+    { "path": "/api/jobs/detect-stale-data", "schedule": "0 10 * * *" },
+    { "path": "/api/jobs/refresh-admission-outlooks", "schedule": "0 12 * * 0" },
+    { "path": "/api/jobs/scheduled-review", "schedule": "0 14 1 * *" }
   ],
   "functions": {
     "app/api/jobs/**": {

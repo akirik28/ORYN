@@ -2235,6 +2235,25 @@ investigation, not a schema-change task. Worth prioritizing given how much of to
 own work (the notification-prefs bug, the CV skills/languages save gap) has had this same
 shape: something that looks fine from the outside and fails 100% of the time underneath.
 
+## `generate-weekly-plans` (Job D) still needs an aggregate spend guard before it's armed
+
+**2026-09-03, confirmed still open while wiring up the other seven scheduled jobs.**
+`docs/weekly-plan-aggregate-budget-2026-09-02.md` names it precisely: no code anywhere sums
+`weekly_plan` AI spend across every student — `job-budget.ts` doesn't cover it (built for a
+different hole, `selectModelForUser(null)` features specifically), `budget.ts`'s degrade
+mechanism is deliberately per-student only, and the job orchestrator itself has no
+total-spend check. At today's scale (8 students) that's academic; it stops being academic as
+signups grow, since the cost scales linearly with headcount and nothing stops it.
+
+Coordinated directly with oryn-f5 (owns the budget surfaces, 2026-09-03) before writing this
+down: their addition is that the proposed fix — extend the existing per-student
+degrade-to-Haiku mechanism to an aggregate-spend version — is a genuinely new, third
+mechanism, not an extension of either of the two budget tables that already exist. They want
+it built before arming, not after, given this project has already hit "armed it, added the
+ceiling after a real incident" once tonight (the per-student cap itself exists because of a
+real $3.04/week case). Who builds it, and when, is an open oryn-a7 scoping decision — not
+resolved here.
+
 ## Pre-existing, still true (see `README.md` "Known limitations" for the full list)
 
 - No unified admin UI for browsing/editing global reference data beyond the one new

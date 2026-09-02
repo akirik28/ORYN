@@ -1,21 +1,33 @@
 /**
- * Expected cadence for the four scheduled jobs (spec Phase 30), used to tell "hasn't run
- * because nothing needed doing yet" apart from "hasn't run because the scheduler stopped
- * firing" — the same failure shape as the GET/405 bug this session already found: the
- * Vercel dashboard keeps showing a cron "scheduled" whether or not it actually executes.
+ * Expected cadence for the eight scheduled jobs (spec Phase 30 plus three extras — see
+ * docs/job-scheduling-decision-2026-09-02.md for the full per-job reasoning and
+ * docs/scheduled-jobs-phase30-mapping-2026-09-01.md for how each route maps to the spec),
+ * used to tell "hasn't run because nothing needed doing yet" apart from "hasn't run because
+ * the scheduler stopped firing" — the same failure shape as the GET/405 bug this session
+ * already found: the Vercel dashboard keeps showing a cron "scheduled" whether or not it
+ * actually executes.
  *
  * `jobName` must match exactly what `runWithTracking()` is called with — both the
  * `/api/jobs/*` routes and the admin panel's manual "run now" triggers share these same
  * strings (see app/api/jobs/*\/route.ts and app/(app)/admin/actions.ts).
  *
- * `expectedIntervalMs` has no single source of truth with vercel.json — keep it in sync
- * by hand. All four are `0 H * * *` (daily at a fixed UTC hour) today, so ONE_DAY_MS is
- * correct for all four; update the relevant entry here if a vercel.json schedule changes
- * (see docs/deployment.md §6.0 for the Hobby-vs-Pro cadence tradeoff that would drive that).
+ * `expectedIntervalMs` has no single source of truth with vercel.json — keep it in sync by
+ * hand. A ninth route, `generate-weekly-plans` (Phase 30 Job D / Phase 9's weekly review
+ * engine), deliberately has no entry here — it's the one job whose cost scales per student
+ * (an AI call each), and arming it is a founder tier/budget decision, not a scheduling one;
+ * see docs/job-scheduling-decision-2026-09-02.md §4 and
+ * docs/weekly-plan-aggregate-budget-2026-09-02.md for the full cost analysis and the still-
+ * open aggregate-spend-ceiling gap that decision depends on closing first.
  */
 
 export const ONE_HOUR_MS = 60 * 60 * 1000;
 export const ONE_DAY_MS = 24 * ONE_HOUR_MS;
+export const ONE_WEEK_MS = 7 * ONE_DAY_MS;
+/** Calendar months vary 28-31 days; a flat 30-day nominal interval with STALE_MULTIPLIER's
+ *  1.25x tolerance (37.5 days) comfortably covers every real gap between two "1st of the
+ *  month" firings, including the longest (31 days, e.g. Aug 1 -> Sep 1). Matches
+ *  lib/scoring/monthly-review.ts's own REVIEW_WINDOW_DAYS, not a separately-chosen number. */
+export const ONE_MONTH_MS = 30 * ONE_DAY_MS;
 
 export interface JobDefinition {
   readonly jobName: string;
@@ -27,7 +39,11 @@ export const JOB_DEFINITIONS: readonly JobDefinition[] = [
   { jobName: "discover_opportunities", label: "Opportunity discovery", expectedIntervalMs: ONE_DAY_MS },
   { jobName: "discover_requirements", label: "Requirement discovery", expectedIntervalMs: ONE_DAY_MS },
   { jobName: "sync_us_universities", label: "University sync", expectedIntervalMs: ONE_DAY_MS },
+  { jobName: "notify_university_changes", label: "University change notifications", expectedIntervalMs: ONE_DAY_MS },
   { jobName: "deadline_reminders", label: "Deadline reminders", expectedIntervalMs: ONE_DAY_MS },
+  { jobName: "detect_stale_data", label: "Stale data detection", expectedIntervalMs: ONE_DAY_MS },
+  { jobName: "refresh_admission_outlooks", label: "Admission outlook refresh", expectedIntervalMs: ONE_WEEK_MS },
+  { jobName: "scheduled_review", label: "Scheduled profile review", expectedIntervalMs: ONE_MONTH_MS },
 ];
 
 /**
