@@ -53,22 +53,44 @@ export function NotificationBell({ notifications, unreadCount }: { notifications
         <span className="relative">
           <Bell className="size-[17px]" strokeWidth={1.6} />
           {unreadCount > 0 ? (
-            // Ultra, 2026-09-02 revision: founder reversed the "contained signal" direction
-            // (three lanes' own independent convergence on it turned out to be evidence for
-            // engineering restraint, not for what the founder wants the product to feel like
-            // -- oryn-a7's own correction). This dot now grows under Ultra, not just glows --
-            // a same-size glow read as too subtle to be "unmissable... from across a room".
-            // Bigger, single box-shadow replaces tier-glow-sm entirely rather than adding a
-            // second box-shadow rule alongside it (the same collision this session already
-            // found on the card ring -- two box-shadow declarations don't layer). References
-            // var(--tier-glow) directly, not a hardcoded color, so this follows oryn-4e's
-            // token re-point automatically. Only ever renders alongside a real unread count
-            // -- never decorates an empty state, unchanged from before.
-            <span
-              aria-hidden="true"
-              style={{ background: "#3D35E8", borderColor: "white" }}
-              className="ultra:size-3.5 ultra:shadow-[0_0_32px_8px_var(--tier-glow)] absolute -right-1 -top-1 size-2 rounded-full border-[1.5px]"
-            />
+            <>
+              {/* Ultra, 2026-09-02 revision: founder reversed the "contained signal"
+                  direction (three lanes' own independent convergence on it turned out to be
+                  evidence for engineering restraint, not for what the founder wants the
+                  product to feel like -- oryn-a7's own correction). This dot now grows under
+                  Ultra, not just glows -- a same-size glow read as too subtle to be
+                  "unmissable... from across a room". Bigger, single box-shadow replaces
+                  tier-glow-sm entirely rather than adding a second box-shadow rule alongside
+                  it (the same collision this session already found on the card ring -- two
+                  box-shadow declarations don't layer). References var(--tier-glow) directly,
+                  not a hardcoded color, so this follows oryn-4e's token re-point
+                  automatically. Only ever renders alongside a real unread count -- never
+                  decorates an empty state, unchanged from before. */}
+              <span
+                aria-hidden="true"
+                style={{ background: "#3D35E8", borderColor: "white" }}
+                className="ultra:size-3.5 ultra:shadow-[0_0_32px_8px_var(--tier-glow)] absolute -right-1 -top-1 size-2 rounded-full border-[1.5px]"
+              />
+              {/* Motion pass, 2026-09-02: founder directive is "as much animation as
+                  possible" -- a static glow reads as an effect added on top, not something
+                  alive. motion-safe:animate-ping is the established pattern for exactly this
+                  (features/universities/world-map-explorer.tsx's selected-country marker),
+                  a separate ghost element rather than animating the dot itself, matching
+                  that same two-layer shape: a solid anchor plus a pulsing ring emanating from
+                  it. `hidden` is the real default here, not just an unstyled span -- every
+                  other class on this element is `ultra:motion-safe:`-prefixed, so under
+                  Standard OR reduced motion, `display:none` wins and nothing about this
+                  element (color, size, animation) has any computed effect at all. Under
+                  reduced motion specifically: the solid dot above still grows and glows
+                  (unaffected, not motion-gated), only this decorative ring disappears --
+                  "static-but-present, not gone" per docs/reduced-motion-standard-2026-09-02.md's
+                  own principle, applied to the base treatment, not this addition. */}
+              <span
+                aria-hidden="true"
+                style={{ background: "var(--tier-glow)" }}
+                className="hidden ultra:motion-safe:absolute ultra:motion-safe:-right-1 ultra:motion-safe:-top-1 ultra:motion-safe:block ultra:motion-safe:size-3.5 ultra:motion-safe:animate-ping ultra:motion-safe:rounded-full ultra:motion-safe:opacity-75"
+              />
+            </>
           ) : null}
           <span className="sr-only">{unreadCount > 0 ? t("unreadCount", { count: unreadCount }) : t("noUnread")}</span>
         </span>
