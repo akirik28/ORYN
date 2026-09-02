@@ -184,11 +184,22 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
   const daysUntilDeadline = opportunity.deadline
     ? differenceInCalendarDays(new Date(opportunity.deadline), new Date())
     : null;
+  const takeReasons = match ? takeSentences((match.reason_codes as string[]) ?? [], locale) : [];
   // Oryn only offers a take on a row it can vouch for; otherwise the caveats below speak
   // for themselves and a confident-sounding verdict on top of them would be the exact
-  // false certainty this product is not allowed to manufacture.
-  const canGiveTake = Boolean(match) && (eligibility?.eligible ?? true) && !needsVerification;
-  const takeReasons = match ? takeSentences((match.reason_codes as string[]) ?? [], locale) : [];
+  // false certainty this product is not allowed to manufacture. Found live 2026-09-02: 165
+  // eligible, verified matches share zero interest overlap, address no weak dimension, and
+  // aren't nearby -- buildReasonCodes (lib/opportunities/persist-matches.ts) deliberately
+  // leaves these with an empty reason_codes array rather than inventing a sentence to cover
+  // a matcher gap. Before this fix, `takeReasons.length > 0` only controlled the `why` prop
+  // below (undefined vs. a real paragraph) -- the headline (fitLabel) and the `fit` entry in
+  // `facts` rendered regardless, which is the same tier-claim-with-nothing-behind-it problem
+  // as opportunity-card.tsx's canClaimMatch had. `takeReasons` is computed once above so this
+  // check reflects exactly what the `why` section would have shown, not a separate proxy for
+  // it. The rest of the page (description, deadlines, source badges, actions, standing badge)
+  // is unaffected -- only this hero block disappears, same treatment an unverified or
+  // ineligible row already gets.
+  const canGiveTake = Boolean(match) && (eligibility?.eligible ?? true) && !needsVerification && takeReasons.length > 0;
 
   return (
     <div className="max-w-3xl space-y-10">

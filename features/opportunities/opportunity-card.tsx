@@ -278,13 +278,27 @@ export function OpportunityCard({
       <div className={cn("flex flex-1 flex-col gap-3", featured ? "p-6 md:p-8" : "p-5")}>
         {/* Why first (§ 19): the student's relationship to the opportunity outranks the
             opportunity's own metadata. */}
+        {/* Found live 2026-09-02: 165 eligible, verified matches share zero interest overlap,
+            don't address any weak dimension, and aren't nearby -- buildReasonCodes
+            (lib/opportunities/persist-matches.ts) deliberately leaves these with an empty
+            reason_codes array rather than inventing a sentence to cover a matcher gap (see
+            that function's own comment). Before this fix, the branch below this comment used
+            to show the confident tier label alone whenever canClaimMatch was true, regardless
+            of whether `reason` existed -- which is exactly spec Phase 12's forbidden "opaque
+            AI score": a tier claim with nothing behind it. Since the reason-codes-coverage
+            fix, `reason === null` for an eligible, verified match happens if and only if the
+            match is genuinely zero-overlap (every other eligible case now gets at least one
+            code) -- so the two-way branch below is now the complete, correct set: a real
+            reason, or nothing. The card still renders normally otherwise (title, facts,
+            deadline, actions); only this claim disappears, same treatment an unverified row
+            already gets. Not a badge explaining why -- OpportunityStandingBadge has nothing
+            to say about a row that IS eligible and IS verified, so silence is the honest
+            state, not a gap to fill with new copy. */}
         {canClaimMatch && reason ? (
           <div>
             <Eyebrow tone="brand" locale={locale}>{tier.label}</Eyebrow>
             <p className="mt-2 text-sm leading-relaxed text-ink-2">{reason}</p>
           </div>
-        ) : canClaimMatch ? (
-          <Eyebrow tone={tier.tone === "brand" ? "brand" : "neutral"} locale={locale}>{tier.label}</Eyebrow>
         ) : null}
 
         <div>
