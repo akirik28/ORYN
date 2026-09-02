@@ -339,7 +339,7 @@ export const LAWYER_FLAGS: LawyerFlag[] = [
       "On account deletion, is anonymizing an ai_usage row (nulling user_id, keeping feature/provider/model/token counts/cost) sufficient to satisfy an erasure right, or must the row be deleted outright?",
     currentState:
       "ai_usage.user_id is `on delete set null` (migration 0013_ops.sql), not cascade — the one exception among the 42 live tables referencing profiles(id), all of which cascade. logAIUsage() (lib/ai/usage.ts) never writes prompt or response text to this table, only those seven columns, so what survives is aggregate usage metering with no remaining identifier and no qualitative content. DATA_RIGHTS_AUDIT.md's read: this is a recognized way to satisfy erasure (anonymization), not a retained personal-data record — but that is engineering's non-lawyer reasoning, not a decision, and the alternative (cascade-delete the row like every other table) would lose the ability to reconstruct aggregate historical AI cost/usage once accounts are deleted." +
-      " Worth resolving before this drifts further: the published copy already overclaims relative to this open question, in both languages. Terms' 'ending' section says deletion is simply \"permanent\"; Privacy's 'your-rights' section and the KVKK notice's 'exercising' section both say account deletion \"permanently remove[s]\" the account \"and the data attached to it\"; the KVKK notice's 'rights' section promises \"erasure or destruction\" under Article 11. None of the four carries any exception. Whichever way this question resolves, the mechanism and the copy currently disagree — the mechanism is more conservative (one anonymized row survives) than what every one of those four sentences promises (unqualified removal) — see docs/legal-copy-vs-product-gap-2026-09-02.md.",
+      " 2026-09-02: the copy was corrected to match this mechanism rather than overclaiming past it — Terms' 'ending', Privacy's 'your-rights', and the KVKK notice's 'exercising' sections now each note that a small number of anonymised, no-longer-linkable usage records may be retained, in both languages (docs/legal-copy-vs-product-gap-2026-09-02.md found the mismatch; this flag's own admission that the question was unresolved is what showed the published copy had gotten ahead of it). The KVKK notice's 'rights' section (Article 11) was deliberately left untouched — it states the general statutory right to request erasure 'where the grounds for processing no longer apply,' already conditional, not an unqualified operational promise, so it wasn't making the overclaim the other three were. This is a wording fix only: it stops the copy from asserting more than is settled, it does not settle whether anonymizing (rather than deleting) the row actually satisfies an erasure right — that question stays exactly as open as it was.",
   },
   {
     id: "aiModelDegradationDisclosure",
@@ -644,7 +644,7 @@ export const legalCopyEn: LegalCopy = {
           ],
           bullets: [
             "Export everything: download a complete copy of your data in a machine-readable file.",
-            "Delete your account: permanently remove your account and the data attached to it.",
+            "Delete your account: permanently remove your account and the data attached to it, aside from a small number of usage records that are kept in anonymised form and can no longer be linked to you.",
             "Correct anything: edit or remove any item in your profile directly.",
             "Ask us: depending on where you live, you may also have the right to object to or restrict certain processing, or to lodge a complaint with your data protection authority. Contact details for making such a request are unresolved in this draft.",
           ],
@@ -742,7 +742,7 @@ export const legalCopyEn: LegalCopy = {
           heading: "What you put into Oryn",
           body: [
             "Your record stays yours. You give us permission to store and process it only to run the product for you — to calculate your scores, generate your plans, match you to opportunities, and answer your questions. Nothing more.",
-            "Only enter things that are true. Oryn labels an achievement as self-reported until evidence is attached, and attaching a file is not the same as independent verification — the product will not describe it as verified, and neither should you.",
+            "Only enter things that are true. Oryn treats an achievement as self-reported until evidence is attached, and attaching a file is not the same as independent verification — the product will not describe it as verified, and neither should you.",
             "Do not upload anything you do not have the right to share, and do not upload other people's personal information.",
           ],
         },
@@ -770,7 +770,7 @@ export const legalCopyEn: LegalCopy = {
           id: "ending",
           heading: "Ending your account",
           body: [
-            "You can delete your account at any time from Settings, and export your data first if you want a copy. Deletion is permanent.",
+            "You can delete your account at any time from Settings, and export your data first if you want a copy. Deletion is permanent: your account and the data attached to it are removed, aside from a small number of usage records that are kept in anonymised form and can no longer be linked to you.",
             "We may suspend an account that breaks these terms or puts other students at risk.",
           ],
         },
@@ -881,7 +881,7 @@ export const legalCopyEn: LegalCopy = {
           companyDetails: "contact",
           heading: "How to exercise these rights",
           body: [
-            "Two of these rights are built into the product and need no request: you can download a complete copy of your data, and permanently delete your account, from Settings. You can correct or remove any individual item directly.",
+            "Two of these rights are built into the product and need no request: you can download a complete copy of your data, and permanently delete your account, from Settings — removing your account and the data attached to it, aside from a small number of usage records that are kept in anonymised form and can no longer be linked to you. You can correct or remove any individual item directly.",
             "For anything else, a written application to the controller is the route the law provides, and the controller must respond within thirty days. The application address and the exact procedure are unresolved in this draft and must be set before publication.",
           ],
         },
@@ -1071,7 +1071,7 @@ export const legalCopyTr: LegalCopy = {
           ],
           bullets: [
             "Her şeyi dışa aktarın: verilerinizin eksiksiz bir kopyasını makine tarafından okunabilir bir dosya olarak indirin.",
-            "Hesabınızı silin: hesabınızı ve ona bağlı verileri kalıcı olarak kaldırın.",
+            "Hesabınızı silin: hesabınızı ve ona bağlı verileri kalıcı olarak kaldırın; yalnızca artık sizinle ilişkilendirilemeyen, anonim hale getirilmiş az sayıda kullanım kaydı saklanabilir.",
             "Herhangi bir şeyi düzeltin: profilinizdeki herhangi bir öğeyi doğrudan düzenleyin veya kaldırın.",
             "Bize başvurun: yaşadığınız yere bağlı olarak, belirli işleme faaliyetlerine itiraz etme veya bunları kısıtlama, ya da veri koruma otoritenize şikâyette bulunma hakkına da sahip olabilirsiniz. Bu tür bir talep için iletişim bilgileri bu taslakta henüz çözülmemiştir.",
           ],
@@ -1169,7 +1169,7 @@ export const legalCopyTr: LegalCopy = {
           heading: "Oryn'e girdikleriniz",
           body: [
             "Kaydınız sizin kalır. Bize, yalnızca ürünü sizin için çalıştırmak amacıyla — puanlarınızı hesaplamak, planlarınızı oluşturmak, sizi fırsatlarla eşleştirmek ve sorularınızı yanıtlamak için — saklama ve işleme izni verirsiniz. Bundan fazlası değil.",
-            "Yalnızca doğru olan bilgileri girin. Oryn, kanıt eklenene kadar bir başarıyı beyana dayalı olarak etiketler; bir dosya eklemek, bağımsız bir doğrulamayla aynı şey değildir — ürün bunu doğrulanmış olarak nitelendirmez, siz de nitelendirmemelisiniz.",
+            "Yalnızca doğru olan bilgileri girin. Oryn, kanıt eklenene kadar bir başarıyı beyana dayalı olarak değerlendirir; bir dosya eklemek, bağımsız bir doğrulamayla aynı şey değildir — ürün bunu doğrulanmış olarak nitelendirmez, siz de nitelendirmemelisiniz.",
             "Paylaşma hakkınız olmayan hiçbir şeyi yüklemeyin ve başkalarının kişisel bilgilerini yüklemeyin.",
           ],
         },
@@ -1197,7 +1197,7 @@ export const legalCopyTr: LegalCopy = {
           id: "ending",
           heading: "Hesabınızı kapatmak",
           body: [
-            "Hesabınızı istediğiniz zaman Ayarlar bölümünden silebilir, isterseniz önce verilerinizi dışa aktarabilirsiniz. Silme işlemi kalıcıdır.",
+            "Hesabınızı istediğiniz zaman Ayarlar bölümünden silebilir, isterseniz önce verilerinizi dışa aktarabilirsiniz. Silme işlemi kalıcıdır: hesabınız ve ona bağlı veriler kaldırılır. Yalnızca artık sizinle ilişkilendirilemeyen, anonim hale getirilmiş az sayıda kullanım kaydı saklanabilir.",
             "Bu şartları ihlal eden veya başka öğrencileri riske atan bir hesabı askıya alabiliriz.",
           ],
         },
@@ -1308,7 +1308,7 @@ export const legalCopyTr: LegalCopy = {
           companyDetails: "contact",
           heading: "Bu hakları nasıl kullanabilirsiniz",
           body: [
-            "Bu haklardan ikisi ürüne dahildir ve herhangi bir talep gerektirmez: Ayarlar bölümünden verilerinizin eksiksiz bir kopyasını indirebilir ve hesabınızı kalıcı olarak silebilirsiniz. Herhangi bir öğeyi doğrudan düzeltebilir veya kaldırabilirsiniz.",
+            "Bu haklardan ikisi ürüne dahildir ve herhangi bir talep gerektirmez: Ayarlar bölümünden verilerinizin eksiksiz bir kopyasını indirebilir ve hesabınızı kalıcı olarak silebilirsiniz; bu işlem hesabınızı ve ona bağlı verileri kaldırır, yalnızca artık sizinle ilişkilendirilemeyen, anonim hale getirilmiş az sayıda kullanım kaydı saklanabilir. Herhangi bir öğeyi doğrudan düzeltebilir veya kaldırabilirsiniz.",
             "Bunların dışındaki talepler için kanunun öngördüğü yol, veri sorumlusuna yazılı başvurudur; veri sorumlusu bu başvuruya otuz gün içinde yanıt vermek zorundadır. Başvuru adresi ve tam prosedür bu taslakta henüz çözülmemiş olup yayımlanmadan önce belirlenmelidir.",
           ],
         },
