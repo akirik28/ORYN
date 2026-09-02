@@ -114,6 +114,17 @@ export function formatCounselorGrounding(recommendations: CounselorRecommendatio
 }
 
 /**
+ * Pure half of buildCounselorGrounding's own recommendedTitles derivation, exported (2026-
+ * 09-02) so lib/ai/eval/harness.ts can compute the same list from a fixture's
+ * CounselorRecommendation[] without a database — same "extract the pure piece so the
+ * harness reuses it instead of hand-copying RECOMMENDED_CLASSES" reasoning as
+ * formatCounselorGrounding/buildWeeklyPlanInstruction above.
+ */
+export function counselorRecommendedTitles(recommendations: CounselorRecommendation[]): string[] {
+  return recommendations.filter((r) => RECOMMENDED_CLASSES.includes(r.recommendationClass)).map((r) => r.title);
+}
+
+/**
  * Counselor Core's already-ranked, already-verified candidates as extra grounding for the
  * weekly-plan prompt — additive only (spec §26/§27: reduces how much the model has to
  * invent, never required for weekly-plan generation to work). A failure here is non-fatal:
@@ -134,7 +145,7 @@ async function buildCounselorGrounding(
   try {
     const counselorResult = await getCounselorRecommendations(userId, undefined, supabaseClient);
     const text = formatCounselorGrounding(counselorResult.recommendations);
-    const recommendedTitles = counselorResult.recommendations.filter((r) => RECOMMENDED_CLASSES.includes(r.recommendationClass)).map((r) => r.title);
+    const recommendedTitles = counselorRecommendedTitles(counselorResult.recommendations);
     return { text, recommendedTitles };
   } catch (error) {
     console.error("[weekly-plan] failed to fetch counselor grounding, continuing without it", error);

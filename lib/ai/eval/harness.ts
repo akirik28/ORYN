@@ -2,7 +2,15 @@ import type { AIProvider } from "@/lib/ai/provider";
 import { ADVISOR_SYSTEM_PROMPT } from "@/lib/ai/advisor-prompt";
 import { formatContextForPrompt } from "@/lib/ai/student-context";
 import { formatOpportunityContext } from "@/lib/ai/opportunity-context";
-import { formatCounselorGrounding, buildWeeklyPlanInstruction, WeeklyPlanSchema, type WeeklyPlanGeneration } from "@/lib/ai/weekly-plan";
+import {
+  formatCounselorGrounding,
+  buildWeeklyPlanInstruction,
+  resolvePlanSelfContradiction,
+  enforceTimeBudget,
+  counselorRecommendedTitles,
+  WeeklyPlanSchema,
+  type WeeklyPlanGeneration,
+} from "@/lib/ai/weekly-plan";
 import { withOutputLanguage } from "@/lib/ai/output-language";
 import { explainCounselorRecommendations, buildCounselorExplanationPrompt, COUNSELOR_EXPLANATION_SYSTEM_PROMPT } from "@/lib/ai/counselor-explain";
 import { dimensionLabel, DIMENSION_ORDER } from "@/lib/scoring/labels";
@@ -42,13 +50,24 @@ import type { EvalCase, EvalCaseFailure, EvalCaseResult, EvalReport } from "./ty
  * this fix. A change to generateAdvisorReply's prompt assembly with no matching change to
  * buildAdvisorChatPrompt below would currently pass every gate silently.
  *
- * weekly_plan closed this gap (2026-09-02): buildWeeklyPlanPrompt below now calls
- * lib/ai/weekly-plan.ts's own exported buildWeeklyPlanInstruction() for the one part that
- * used to be hand-copied (context/grounding formatting were already shared via
- * formatContextForPrompt/formatCounselorGrounding) — there is nothing left to drift for
- * this target. counselor_explain never had this problem: buildCounselorExplainPrompt below
- * calls the real, exported buildCounselorExplanationPrompt directly, and runCounselorExplain
- * calls explainCounselorRecommendations itself — there is nothing to drift.
+ * weekly_plan closed the prompt half of this gap (2026-09-02): buildWeeklyPlanPrompt below
+ * now calls lib/ai/weekly-plan.ts's own exported buildWeeklyPlanInstruction() for the one
+ * part that used to be hand-copied (context/grounding formatting were already shared via
+ * formatContextForPrompt/formatCounselorGrounding) — there is nothing left to drift in
+ * what gets *sent* to the model for this target. counselor_explain never had this problem:
+ * buildCounselorExplainPrompt below calls the real, exported buildCounselorExplanationPrompt
+ * directly, and runCounselorExplain calls explainCounselorRecommendations itself — there is
+ * nothing to drift.
+ *
+ * A second, different weekly_plan gap was found and closed the same day (CEO's ruling,
+ * following up on the time-budget guardrail package): the prompt was faithfully
+ * reconstructed, but runWeeklyPlan below used to score the model's *raw* structured output
+ * — generateWeeklyPlan's own two deterministic post-processing passes
+ * (resolvePlanSelfContradiction, enforceTimeBudget) were never applied, so every eval run
+ * to date graded a plan no real student ever actually received. Both passes are pure and
+ * exported specifically so this harness can call them without a database, the same
+ * reasoning as buildWeeklyPlanInstruction above. See runWeeklyPlan's own comment for what
+ * changed and docs/eval-runs/README.md for what this means for runs recorded before the fix.
  *
  * Never calls getAIProvider() itself — `provider` always comes from the caller, so a test
  * passes a MockAIProvider and the gated CLI script (scripts/run-ai-eval.ts, the only place
@@ -111,7 +130,32 @@ export function buildCounselorExplainPrompt(evalCase: EvalCase): { system: strin
 async function runAdvisorChat(provider: AIProvider, evalCase: EvalCase) {
   const built = buildAdvisorChatPrompt(evalCase);
   const result = await provider.generateText(built);
-  return { text: result.text, usage: result.usage };
+  return { text: result.text, usage: result.usage, postProcessingChanged: undefined as boolean | undefined };
+}
+
+/**
+ * Runs the SAME two deterministic post-processing passes generateWeeklyPlan itself applies
+ * (its own final two lines) — CEO's ruling, 2026-09-02: the eval measures student-visible
+ * quality, and student-visible means post-processing included, not the model's raw
+ * structured output. Both passes are pure and exported specifically so this harness can
+ * call them without a database (same reasoning as buildWeeklyPlanInstruction's own
+ * extraction) — this is not a second, hand-copied implementation, it is the real one.
+ *
+ * `changed` is computed by reference equality, not a deep diff: both
+ * resolvePlanSelfContradiction and enforceTimeBudget already return the exact same object
+ * back when they make no change, and a new one only when they actually altered something —
+ * true by construction from how each is written (see either function's own early returns),
+ * not an assumption this file makes independently. Free (no extra model call), and answers
+ * CEO's counter-argument about post-processing masking a prompt regression: if this starts
+ * turning true often across a run, the raw model is drifting even though the graded output
+ * still looks fine.
+ */
+function applyWeeklyPlanPostProcessing(raw: WeeklyPlanGeneration, evalCase: EvalCase): { plan: WeeklyPlanGeneration; changed: boolean } {
+  const recommendedTitles = counselorRecommendedTitles(counselorResultFor(evalCase.fixture.id).recommendations);
+  const resolved = resolvePlanSelfContradiction(raw, recommendedTitles);
+  const weeklyTimeBudget = localizedContext(evalCase.fixture.id, evalCase.locale).student.weeklyTimeBudget;
+  const plan = enforceTimeBudget(resolved, weeklyTimeBudget);
+  return { plan, changed: resolved !== raw || plan !== resolved };
 }
 
 async function runWeeklyPlan(provider: AIProvider, evalCase: EvalCase) {
@@ -122,17 +166,17 @@ async function runWeeklyPlan(provider: AIProvider, evalCase: EvalCase) {
     schemaName: "record_weekly_plan",
     schemaDescription: "Records this week's prioritized action plan for the student.",
   });
-  const plan = result.data;
+  const { plan, changed } = applyWeeklyPlanPostProcessing(result.data, evalCase);
   const text = [plan.summary, ...plan.actions.map((a) => `${a.title}: ${a.reason}`), plan.avoidForNow ? `Avoid for now — ${plan.avoidForNow.activity}: ${plan.avoidForNow.reason}` : null]
     .filter((line): line is string => line !== null)
     .join("\n");
-  return { text, usage: result.usage };
+  return { text, usage: result.usage, postProcessingChanged: changed };
 }
 
 async function runCounselorExplain(provider: AIProvider, evalCase: EvalCase) {
   const result = counselorResultFor(evalCase.fixture.id);
   const explanation = await explainCounselorRecommendations(FIXTURE_USER_ID, result, provider, evalCase.locale);
-  if (!explanation) return { text: "", usage: { inputTokens: 0, outputTokens: 0 } };
+  if (!explanation) return { text: "", usage: { inputTokens: 0, outputTokens: 0 }, postProcessingChanged: undefined as boolean | undefined };
   const text = [explanation.summary, ...explanation.perRecommendation.map((p) => p.narrative)].join("\n");
   // explainCounselorRecommendations returns CounselorExplanation | null, not usage (it logs
   // usage internally via logAIUsage, which needs a real userId to succeed against a real
@@ -140,11 +184,14 @@ async function runCounselorExplain(provider: AIProvider, evalCase: EvalCase) {
   // spend without changing that function's return type, which is out of this package's
   // scope. cost-estimate.ts's separate size measurement (via buildCounselorExplainPrompt
   // above) is where this target's cost projection actually comes from.
-  return { text, usage: { inputTokens: 0, outputTokens: 0 } };
+  return { text, usage: { inputTokens: 0, outputTokens: 0 }, postProcessingChanged: undefined as boolean | undefined };
 }
 
 export async function runEvalCase(provider: AIProvider, evalCase: EvalCase, options: { includeJudge: boolean }): Promise<EvalCaseResult> {
-  const { text, usage: targetUsage } = await (evalCase.target === "advisor_chat"
+  // All three runners share a return shape (postProcessingChanged included) — only
+  // runWeeklyPlan ever sets it to a real boolean; advisor_chat/counselor_explain leave it
+  // undefined, matching EvalCaseResult.postProcessingChanged's own "doesn't apply" note.
+  const { text, usage: targetUsage, postProcessingChanged } = await (evalCase.target === "advisor_chat"
     ? runAdvisorChat(provider, evalCase)
     : evalCase.target === "weekly_plan"
       ? runWeeklyPlan(provider, evalCase)
@@ -167,7 +214,7 @@ export async function runEvalCase(provider: AIProvider, evalCase: EvalCase, opti
     judgeUsage = judgeResult.usage;
   }
 
-  return { case: evalCase, responseText: text, deterministicFindings, judge, targetUsage, judgeUsage };
+  return { case: evalCase, responseText: text, deterministicFindings, judge, targetUsage, judgeUsage, postProcessingChanged };
 }
 
 /**
@@ -206,6 +253,7 @@ export async function runEval(provider: AIProvider, cases: readonly EvalCase[], 
     results,
     failures,
     deterministicFailureCount: results.filter((r) => r.deterministicFindings.length > 0).length,
+    postProcessingInterventionCount: results.filter((r) => r.postProcessingChanged === true).length,
     totalUsage,
   };
 }

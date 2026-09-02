@@ -114,6 +114,63 @@ describe("runEvalCase — weekly_plan", () => {
     const result = await runEvalCase(provider, { fixture: baselineFixture, target: "weekly_plan", locale: "en" }, { includeJudge: false });
     expect(result.responseText).not.toContain("Avoid for now");
   });
+
+  test("a compliant plan reports postProcessingChanged: false, not undefined", async () => {
+    const provider = new MockAIProvider();
+    provider.queueStructured(planResponse());
+    const result = await runEvalCase(provider, { fixture: regressionFixture, target: "weekly_plan", locale: "en" }, { includeJudge: false });
+    expect(result.postProcessingChanged).toBe(false);
+  });
+
+  /**
+   * The exact bug found and fixed alongside this test: fixtures.ts's baselineFixture used
+   * to set weeklyTimeBudget to "2-5 hours" (display prose), not the real "2_5h" enum key —
+   * enforceTimeBudget's bucket lookup silently matched nothing, so a grossly over-budget
+   * fixture plan passed through untouched, with no error, no warning, and no test to catch
+   * it. baselineFixture's budget is 2_5h (300min upper bound, 360min with 20% tolerance).
+   */
+  test("runEvalCase applies enforceTimeBudget — an over-budget plan is trimmed before scoring, and postProcessingChanged is true", async () => {
+    const provider = new MockAIProvider();
+    provider.queueStructured(
+      planResponse({
+        avoidForNow: null,
+        actions: [
+          { title: "Action A", description: "d", reason: "r", category: "c", estimatedMinutes: 200, impact: "high" },
+          { title: "Action B", description: "d", reason: "r", category: "c", estimatedMinutes: 200, impact: "medium" },
+        ],
+      }),
+    );
+    const result = await runEvalCase(provider, { fixture: baselineFixture, target: "weekly_plan", locale: "en" }, { includeJudge: false });
+    expect(result.postProcessingChanged).toBe(true);
+    // 400min raw, trimmed to the single higher-priority action (200min) — under the 360min threshold.
+    expect(result.responseText).toContain("Action A");
+    expect(result.responseText).not.toContain("Action B");
+  });
+
+  test("runEvalCase applies resolvePlanSelfContradiction — a self-contradictory avoidForNow is dropped before scoring, and postProcessingChanged is true", async () => {
+    const provider = new MockAIProvider();
+    provider.queueStructured(
+      planResponse({
+        actions: [{ title: "Start another entrepreneurship club", description: "d", reason: "r", category: "c", estimatedMinutes: 60, impact: "high" }],
+        avoidForNow: { activity: "starting another entrepreneurship club", reason: "r" },
+      }),
+    );
+    const result = await runEvalCase(provider, { fixture: regressionFixture, target: "weekly_plan", locale: "en" }, { includeJudge: false });
+    expect(result.postProcessingChanged).toBe(true);
+    expect(result.responseText).not.toContain("Avoid for now");
+  });
+
+  test("advisor_chat and counselor_explain leave postProcessingChanged undefined — the concept doesn't apply to them", async () => {
+    const chatProvider = new MockAIProvider();
+    chatProvider.queueText("A reply.");
+    const chatResult = await runEvalCase(chatProvider, { fixture: regressionFixture, target: "advisor_chat", locale: "en" }, { includeJudge: false });
+    expect(chatResult.postProcessingChanged).toBeUndefined();
+
+    const explainProvider = new MockAIProvider();
+    explainProvider.queueStructured({ summary: "s", perRecommendation: [] });
+    const explainResult = await runEvalCase(explainProvider, { fixture: regressionFixture, target: "counselor_explain", locale: "en" }, { includeJudge: false });
+    expect(explainResult.postProcessingChanged).toBeUndefined();
+  });
 });
 
 describe("runEvalCase — counselor_explain", () => {

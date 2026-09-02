@@ -33,7 +33,14 @@ export const REGRESSION_CONTEXT: StudentAdvisorContext = {
     schoolName: "Istanbul International School",
     graduationYear: 2028,
     curriculum: "IB",
-    weeklyTimeBudget: "5-10 hours",
+    // The real TimeBudget enum key (types/database.ts), not display prose — a production
+    // prompt shows exactly this raw string (formatContextForPrompt never translates it),
+    // so this fixture previously showed the model prompt text no real student's profile
+    // would ever actually produce. Found 2026-09-02 while wiring enforceTimeBudget into
+    // the eval harness: the guardrail's bucket lookup needs the exact enum key to fire at
+    // all, and "5-10 hours" silently matched nothing, so a grossly over-budget fixture
+    // plan would have passed through untrimmed with no error and no warning either.
+    weeklyTimeBudget: "5_10h",
     busyMode: false,
     busyModeUntil: null,
     birthYear: 2010,
@@ -79,7 +86,7 @@ export const BASELINE_CONTEXT: StudentAdvisorContext = {
     schoolName: "Lincoln High School",
     graduationYear: 2027,
     curriculum: "AP",
-    weeklyTimeBudget: "2-5 hours",
+    weeklyTimeBudget: "2_5h", // see REGRESSION_CONTEXT's comment above — real enum key, not prose
     busyMode: true,
     busyModeUntil: inDays(14),
     birthYear: 2009,

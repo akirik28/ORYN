@@ -109,6 +109,9 @@ async function main() {
       console.log(`       rubric: specific=${s.specific} concise=${s.concise} analytical=${s.analytical} calm=${s.calm} evidenceAware=${s.evidenceAware} actionOriented=${s.actionOriented} discourage=${result.judge.discourage}`);
       console.log(`       judge notes: ${result.judge.notes}`);
     }
+    if (result.postProcessingChanged) {
+      console.log(`       [post-processed] resolvePlanSelfContradiction/enforceTimeBudget altered the raw plan before this was scored`);
+    }
   }
 
   for (const failure of report.failures) {
@@ -121,6 +124,9 @@ async function main() {
     );
   }
   console.log(`\n${report.deterministicFailureCount} of ${report.results.length} completed cases had a deterministic finding.`);
+  console.log(
+    `${report.postProcessingInterventionCount} of ${report.results.length} completed cases needed weekly-plan post-processing to correct the raw model output (0 is expected most runs; a rising count across runs is the "is a guardrail masking a prompt regression" signal).`,
+  );
   console.log(`Actual usage this run: ${report.totalUsage.inputTokens} input tokens, ${report.totalUsage.outputTokens} output tokens.`);
 }
 
