@@ -36,7 +36,13 @@ const TSX_BIN = join(process.cwd(), "node_modules", ".bin", "tsx");
 const TSCONFIG = join(process.cwd(), "tsconfig.eval-cli.json");
 const SCRIPT = join(process.cwd(), "scripts", "run-ai-eval.ts");
 const UNREACHABLE_BASE_URL = "http://127.0.0.1:1";
-const SPAWN_TIMEOUT_MS = 20_000;
+// 60s, not 20s. This spawns a real subprocess that type-checks and runs a CLI, and the
+// whole file takes ~17s on an IDLE machine -- so at 20s it had almost no headroom, and under
+// concurrent load the spawn timed out, returned no output, and the assertion then failed on
+// an empty string rather than on anything about the code. Raised 2026-09-02 after it took
+// down a merge gate that way. A test whose result depends on what else the machine is doing
+// makes every gate it sits in unreadable.
+const SPAWN_TIMEOUT_MS = 60_000;
 
 function runCli(cwd: string, extraEnv: Record<string, string | undefined>): { stdout: string; stderr: string; status: number | null } {
   const env = { ...process.env, ...extraEnv };
@@ -53,7 +59,7 @@ function runCli(cwd: string, extraEnv: Record<string, string | undefined>): { st
 describe("scripts/run-ai-eval.ts loads .env.local before the isAIConfigured gate", () => {
   test(
     "a key present only in .env.local (not the inherited environment) reaches past the gate",
-    { timeout: SPAWN_TIMEOUT_MS + 5_000 },
+    { timeout: SPAWN_TIMEOUT_MS + 10_000 },
     () => {
       const dir = mkdtempSync(join(tmpdir(), "oryn-eval-cli-test-"));
       try {
@@ -75,7 +81,7 @@ describe("scripts/run-ai-eval.ts loads .env.local before the isAIConfigured gate
     }
   );
 
-  test("no .env.local and no key in the environment: still refuses with the (improved) message, not a crash", { timeout: SPAWN_TIMEOUT_MS + 5_000 }, () => {
+  test("no .env.local and no key in the environment: still refuses with the (improved) message, not a crash", { timeout: SPAWN_TIMEOUT_MS + 10_000 }, () => {
     const dir = mkdtempSync(join(tmpdir(), "oryn-eval-cli-test-"));
     try {
       const { stdout, stderr, status } = runCli(dir, {});
