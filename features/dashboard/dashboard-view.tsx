@@ -434,8 +434,24 @@ export async function DashboardView({
             </InsightCard>
           ) : null}
 
-          <div className="grid gap-10 md:grid-cols-2 md:gap-8">
-            <section style={glassCard} className="glass-card-offset2 p-6">
+          {/* FIXED 2026-09-02 (docs/mobile-responsiveness-audit-2026-09-02.md): below `md`
+              this had no explicit column count, so the grid fell back to implicit
+              auto-sizing, and neither section set `min-w-0` -- a grid item's default
+              `min-width` is `auto`, not `0`, so each one refused to shrink below its own
+              content's intrinsic width. Both sections rendered ~473px wide inside a
+              ~343px container: ~26% clipped off-screen at 375px, ~32% at 320px, with no
+              scrollbar to reach it. `grid-cols-1` makes the single-column base explicit
+              (matching the *other* dashboard grid two sections up, which already gets
+              this right) rather than relying on implicit grid behavior; `min-w-0` on each
+              section is what actually lets them shrink -- same pattern that section's own
+              sibling already uses. Confirmed live against a production build (`next
+              start`, not dev -- no HMR to muddy the reading), via `getBoundingClientRect()`
+              on the real DOM: 320px 288/288 (was 473/473 inside a 288px container), 375px
+              343/343 (was 473/473 inside 343px), 768px 336/336 (unchanged), 1280px 414/414
+              (unchanged) -- a `min-width` fix that reflowed the desktop grid would have
+              been a worse bug than the one it replaced, so this checked, not assumed. */}
+          <div className="grid grid-cols-1 gap-10 md:grid-cols-2 md:gap-8">
+            <section style={glassCard} className="glass-card-offset2 min-w-0 p-6">
               <SectionHeader
                 title={t("universityOutlook")}
                 action={
@@ -469,7 +485,7 @@ export async function DashboardView({
               )}
             </section>
 
-            <section style={glassCard} className="glass-card p-6">
+            <section style={glassCard} className="glass-card min-w-0 p-6">
               <SectionHeader
                 title={t("opportunities")}
                 action={
