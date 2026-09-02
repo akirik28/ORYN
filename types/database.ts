@@ -1794,8 +1794,12 @@ export interface AdvisorMessage {
   /** Safe, user-facing text only (see lib/ai/advisor-failure.ts) — never the raw caught error. */
   error_message: string | null;
   created_at: string;
+  /** Migration 0087, unapplied — see that file's own comment. Written via
+   * isUndefinedColumnError's degrade-and-retry, so this is optional on every Insert/Update
+   * shape below regardless of live schema state. */
+  degraded: boolean;
 }
-export type AdvisorMessageInsert = Insertable<AdvisorMessage, "id" | "created_at" | "status" | "error_message">;
+export type AdvisorMessageInsert = Insertable<AdvisorMessage, "id" | "created_at" | "status" | "error_message" | "degraded">;
 
 // ---------- Notifications ----------
 

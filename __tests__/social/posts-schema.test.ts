@@ -159,6 +159,19 @@ describe("migration numbering", () => {
     // recreate-the-enum pattern this migration uses has no data to lose and nothing else
     // to fan out to.
     //
+    // 0086 (opportunity_match_confidence) adds `opportunity_matches.match_confidence`,
+    // CHECK-constrained to the same five EvidenceState values (lib/scoring/signal.ts) every
+    // other confidence surface in the product already uses rather than a second vocabulary --
+    // resolveMatchConfidence() picks the most-cautious state when a match spans several gap
+    // dimensions. Found a real landmine while building it, not after: the opportunity_matches
+    // upsert had no `{ error }` destructure at all, so once every row started always including
+    // this column, an unapplied migration would have rejected the upsert outright for every
+    // user on every page render that touches opportunities -- fixed with the same
+    // isUndefinedColumnError degrade-and-retry 0077/0083 already established, moved out of
+    // lib/universities/sync-us-universities.ts into the shared lib/supabase/errors.ts once a
+    // second, unrelated domain needed the identical check. Still unapplied.
+    //
+    //
     // 0087 (notifications_new_opportunity_dedupe) backstops
     // notifyNewlyEligibleMatches()'s check-then-insert dedup with a real database
     // constraint -- live-verified 2026-09-02 that the check alone lets a race through: 12
@@ -171,7 +184,22 @@ describe("migration numbering", () => {
     // no such notion at all), so a table-wide constraint would have silently broken at
     // least two of them. Still unapplied -- the 12 existing duplicate rows would violate it
     // on creation, and deleting them is a founder decision this migration doesn't make.
-    expect(Math.max(...numbers.map(Number))).toBe(87);
+    //
+    // 0088 (advisor_messages_degraded_column) exists so a degraded advisor reply's disclosure
+    // survives a page reload -- until this, `degraded` was live-session-only React state
+    // (features/advisor/advisor-chat.tsx), never persisted, so a reply that really was served
+    // by the cheaper model looked identical to a normal one the moment the page reloaded.
+    // Checked first, per CEO's own instruction, whether this could be derived from
+    // ai_usage.degraded (0076, also unapplied) instead of a second column: it can't -- logAIUsage's
+    // insert never returns its own row id, so there is no correlation key between an
+    // advisor_messages row and the ai_usage row its own generation logged, only
+    // (user_id, feature, approximate created_at). A timestamp-proximity join would be a guess
+    // dressed up as a derivation, and this feature exists specifically so the disclosure is
+    // something Oryn can stand behind, not something inferred after the fact. `not null default
+    // false` is still honest for rows written before this column existed: the only consumer
+    // renders `false` and "unknown" identically (no note), and nothing anywhere asserts a
+    // historical reply was confirmed NOT degraded. Still unapplied.
+    expect(Math.max(...numbers.map(Number))).toBe(88);
   });
 });
 
