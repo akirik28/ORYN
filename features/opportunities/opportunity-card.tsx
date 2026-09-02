@@ -21,7 +21,7 @@ import { Eyebrow } from "@/components/oryn/eyebrow";
 import { MediaImage } from "@/components/oryn/media-image";
 import { OpportunityStandingBadge } from "./standing-badge";
 import { setOpportunityStatus } from "@/app/(app)/opportunities/actions";
-import { selectivityLabel, cycleStatusLabel } from "@/lib/opportunities/lifecycle";
+import { selectivityLabel, cycleStatusLabel, CYCLE_STATUSES_WORTH_A_DESCRIPTOR } from "@/lib/opportunities/lifecycle";
 import { matchTierKey } from "@/lib/opportunities/matching";
 import type { Locale } from "@/lib/i18n/config";
 import type { Opportunity, SavedOpportunityStatus } from "@/types/database";
@@ -119,14 +119,9 @@ function reasonSentence(reasonCodes: string[], locale: Locale): string | null {
   return `${capitalized}.`;
 }
 
-// cycle_status is about whether *this* cycle is taking applications right now — distinct
-// from whether the opportunity is worth knowing about at all. Only the states a student
-// needs a heads-up about become a plain-text descriptor; "open" is the unremarkable default
-// and stays quiet — achieved here by simply not calling cycleStatusLabel for it, same effect
-// as the old local map not having an "open" key. (The old map's per-status `tone` field was
-// dead code — descriptors render as plain text, never a StatusBadge — so it isn't carried
-// forward; nothing here ever read it.)
-const CYCLE_STATUSES_WORTH_A_DESCRIPTOR = new Set<Opportunity["cycle_status"]>(["upcoming", "closed", "date_not_announced", "historical", "discontinued", "unverified"]);
+// CYCLE_STATUSES_WORTH_A_DESCRIPTOR moved to lib/opportunities/lifecycle.ts (2026-09-02) so
+// features/dashboard/dashboard-view.tsx can render the identical descriptor rather than
+// carrying a second copy — see that module's own comment on the set.
 
 /**
  * UI-V3 § 19 inverts this card's old hierarchy. It used to open with up to six badges —

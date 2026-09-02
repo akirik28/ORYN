@@ -64,6 +64,7 @@ export default function DesignPreviewPage() {
           title: o.opportunity.title,
           matchScore: o.matchScore,
           deadline: o.opportunity.deadline ?? null,
+          cycleStatus: o.opportunity.cycle_status ?? null,
         }))}
         opportunityMatchesRefreshed={true}
       />
