@@ -1,8 +1,10 @@
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { MapPin, Users, DollarSign, GraduationCap, ExternalLink, Trophy, Target, TrendingUp } from "lucide-react";
+import { MapPin, Users, DollarSign, GraduationCap, ExternalLink, Trophy, Target, TrendingUp, FileSearch } from "lucide-react";
 import { subjectLabel } from "@/lib/programs/subject-labels";
+import { EmptyState } from "@/components/oryn/empty-state";
+import { lacksResearchDepth } from "@/lib/universities/data-depth";
 import { requireUser, getCurrentProfile, getProfileScores } from "@/lib/security/dal";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
@@ -280,6 +282,18 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   const imageAttributionMetric = metricByCode.get("primary_image_attribution");
   const imageCaptionParts = [imageAttributionMetric?.value_text, imageLicenseMetric?.value_text].filter((v): v is string => Boolean(v));
 
+  // docs/handoffs/university-data-depth-honesty-2026-09-02.md: every section below is
+  // independently conditional on its own table having rows, so a university with none of
+  // the four just skipped straight from the header to a stat grid reading "Unavailable"
+  // four times over -- indistinguishable from an ordinary university missing one or two
+  // unpublished figures. This notice is the difference between those two cases.
+  const lacksDepth = lacksResearchDepth({
+    hasStatistics: stats !== null,
+    programCount: programsRes.data?.length ?? 0,
+    requirementCount: allRequirements.length,
+    sourceCount: sourcesRes.data?.length ?? 0,
+  });
+
   return (
     // Same dark "isFull"-screen treatment as the Explorer (app/(app)/universities/page.tsx)
     // — source's UniversityDetailScreen is dark too, and this page's whole component tree
@@ -323,6 +337,15 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       ) : null}
 
       {university.description ? <p className="max-w-3xl text-muted-foreground">{university.description}</p> : null}
+
+      {/* Phase 43/36/37/71: a page with no facts has nothing for SourceBadge to badge, so
+          per-fact provenance doesn't cover this case. Absence of Oryn's data is not absence
+          of the institution -- this only says Oryn hasn't researched it deeply, same
+          restrained, non-alarming register as lib/scoring/signal.ts's not_assessed state
+          ("Oryn is not making a judgement, because it cannot"), reused here for an
+          institution rather than a student. No action prop: there is no student action to
+          offer for a gap that's Oryn's to close, not theirs. */}
+      {lacksDepth ? <EmptyState icon={FileSearch} title={t("notResearchedTitle")} description={t("notResearchedDescription")} /> : null}
 
       {rankingsRes.data && rankingsRes.data.length > 0 ? (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">

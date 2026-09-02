@@ -702,6 +702,8 @@
       "testScores": "Standart sınav puanları",
       "graduationRate": "Mezuniyet oranı",
       "unavailable": "Mevcut değil",
+      "notResearchedTitle": "Oryn bu üniversiteyi henüz derinlemesine araştırmadı",
+      "notResearchedDescription": "Program, gereklilik ve kabul bilgileri henüz Oryn'ın kayıtlarında yok — bu, üniversitenin değil, bizim araştırmamızdaki bir eksiklik.",
       "undergradPostgradCaption": "{undergrad} lisans · {postgrad} lisansüstü",
       "qsSizeBandCaption": "QS büyüklük bandı, tam sayı değil",
       "domesticRateCaption": "Yerel ücret: {rate}",
