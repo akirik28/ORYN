@@ -22,6 +22,7 @@ import { MediaImage } from "@/components/oryn/media-image";
 import { OpportunityStandingBadge } from "./standing-badge";
 import { setOpportunityStatus } from "@/app/(app)/opportunities/actions";
 import { selectivityLabel, cycleStatusLabel } from "@/lib/opportunities/lifecycle";
+import { matchTierKey } from "@/lib/opportunities/matching";
 import type { Locale } from "@/lib/i18n/config";
 import type { Opportunity, SavedOpportunityStatus } from "@/types/database";
 
@@ -47,15 +48,15 @@ export function useNotInterestedReasons(): { value: string; label: string }[] {
   ];
 }
 
-/** "match" register — Browse's own recommendation framing. The detail page's fitFor (same
- * four thresholds) deliberately uses "fit" instead ("Oryn's take" is a first-person verdict,
+/** "match" register — Browse's own recommendation framing. The detail page's fitLabel
+ * (same lib/opportunities/matching.ts matchTierKey thresholds, not just coincidentally
+ * matching numbers) deliberately uses "fit" instead ("Oryn's take" is a first-person verdict,
  * not a ranked-list tag) — see that file's own comment. Middle two tiers share their English
  * text between the two files, but that's this codebase's actual wording, not a shortcut. */
 function tierFor(score: number, t: Translator): { label: string; tone: StatusTone } {
-  if (score >= 80) return { label: t("exceptional"), tone: "brand" };
-  if (score >= 60) return { label: t("strong"), tone: "brand" };
-  if (score >= 40) return { label: t("worthALook"), tone: "neutral" };
-  return { label: t("lowPriority"), tone: "neutral" };
+  const key = matchTierKey(score);
+  const tone: StatusTone = key === "exceptional" || key === "strong" ? "brand" : "neutral";
+  return { label: t(key), tone };
 }
 
 /**

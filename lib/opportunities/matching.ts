@@ -377,3 +377,23 @@ export function computeOpportunityMatch(
 
   return { eligible, eligibilityNotes: notes, relevanceScore, profileNeedScore, matchScore };
 }
+
+export type MatchTier = "exceptional" | "strong" | "worthALook" | "lowPriority";
+
+/**
+ * The score -> tier boundaries every surface that shows a match qualitatively (not as a raw
+ * percentage) shares -- features/opportunities/opportunity-card.tsx's tierFor and
+ * app/(app)/opportunities/[id]/page.tsx's fitLabel each duplicated these same four numbers
+ * before this existed, one per surface's own copy register ("match" vs "fit" -- see either
+ * file's own comment for why that split is deliberate, not a shortcut). Pulled out here so a
+ * third surface (features/dashboard/dashboard-view.tsx's opportunity preview, which used to
+ * show the bare matchScore percentage with no label at all) can reuse the identical
+ * boundaries without a fourth copy of the same four numbers, while still choosing its own
+ * label register via messages/*.json's opportunities.matchTier keys.
+ */
+export function matchTierKey(score: number): MatchTier {
+  if (score >= 80) return "exceptional";
+  if (score >= 60) return "strong";
+  if (score >= 40) return "worthALook";
+  return "lowPriority";
+}

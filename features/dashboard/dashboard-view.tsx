@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { getTranslations } from "next-intl/server";
+import { matchTierKey } from "@/lib/opportunities/matching";
 import { ArrowRight, Compass, FileText, Landmark, Minus, TrendingUp } from "lucide-react";
 import { Eyebrow } from "@/components/oryn/eyebrow";
 import { SectionHeader } from "@/components/oryn/section-header";
@@ -104,6 +105,12 @@ export async function DashboardView({
   // this call honours the prop directly. Same pattern already used for locale-less
   // contexts elsewhere (lib/plan/persist.ts, lib/opportunities/persist-matches.ts).
   const t = await getTranslations({ locale, namespace: "dashboard" });
+  // Same qualitative tier the opportunity card uses (opportunities.matchTier), not the raw
+  // matchScore percentage this block used to render bare -- Phase 7 describes this as a
+  // "short preview," so a tier label is the right ceiling here, not a full reason sentence
+  // (that's what /opportunities and the detail page are for). Explicit locale for the same
+  // reason as `t` above -- this call has the identical preview-page gap otherwise.
+  const tTier = await getTranslations({ locale, namespace: "opportunities.matchTier" });
   const hasAiPlan = Boolean(weeklyPlan && weeklyPlan.actions.length > 0);
   const usingCounselorFallback = !hasAiPlan && counselorThisWeek.length > 0;
   // See lib/scoring/dashboard-hero.ts for why this needs three states, not two — a rich
@@ -482,7 +489,7 @@ export async function DashboardView({
                     <li key={opp.title} className="border-b border-border/60 py-3 last:border-0">
                       <p className="text-sm leading-snug text-ink-2">{opp.title}</p>
                       <p className="mt-1.5 flex items-center gap-3">
-                        <span className="text-xs text-ink-3 tabular-nums">{t("matchPercent", { score: opp.matchScore })}</span>
+                        <span className="text-xs text-ink-3">{tTier(matchTierKey(opp.matchScore))}</span>
                         {opp.deadline ? <DeadlineBadge date={opp.deadline} locale={locale} /> : null}
                       </p>
                     </li>
