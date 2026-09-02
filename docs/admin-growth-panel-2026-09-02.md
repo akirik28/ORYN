@@ -291,9 +291,11 @@ and mark-feature-dead as record+display; impersonation deferred to a founder dec
   true` deletes the student's already-completed actions for the current week — the section
   below confirms that in an AlertDialog before the button is clickable, not just in code.
 - `app/api/admin/export-cohort/route.ts` + `lib/admin/cohort-csv.ts` (RFC-4180-minimal
-  escaping, unit tested) — a CSV of `getAdminUserList`'s own data, `tier` column omitted
-  since it's always null today (noise, not data, until the minor-payment legal research
-  settles what a tier attaches to).
+  escaping, unit tested) — a CSV of `getAdminUserList`'s own data. `tier` was written as
+  omitted (always null, noise not data, pending the minor-payment legal research) — landed
+  on main mid-rebase as real, resolved data instead (the user-management lane's migration
+  0089 work), so it ships included, matching this file's own original "add it back once the
+  field carries real values" intent rather than the stale plan.
 - Six section components under `features/admin/sections/growth-*.tsx`, wired into a new
   "Growth" tab in `page.tsx` (D1/D2), bilingual strings shipped in both `messages/en.json`
   and `messages/tr.json` from this commit (D7). Signups render as `BarChart` (4e's kit) —

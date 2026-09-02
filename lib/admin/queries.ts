@@ -1545,6 +1545,8 @@ export async function getNeverWrittenColumnChecks(admin: SupabaseClient<Database
       };
     })
   );
+}
+
 // ---------------------------------------------------------------------------------------------
 // Growth tab: signups, activation, feature census, loop closing, retention
 // (docs/admin-growth-panel-2026-09-02.md). Regenerate-plan and dead-feature-flag WRITES live

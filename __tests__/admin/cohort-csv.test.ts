@@ -6,7 +6,7 @@ function row(overrides: Partial<AdminUserRow> = {}): AdminUserRow {
   return {
     userId: "00000000-0000-0000-0000-000000000001",
     displayName: "Ada Öğrenci",
-    tier: null,
+    tier: "standard",
     signedUpAt: "2026-08-20T10:00:00.000Z",
     lastSeenAt: "2026-09-02T08:00:00.000Z",
     lifetimeSpendUsd: 1.2345,
@@ -17,23 +17,28 @@ function row(overrides: Partial<AdminUserRow> = {}): AdminUserRow {
 describe("buildCohortCsv", () => {
   test("header row matches the documented column order", () => {
     const csv = buildCohortCsv([]);
-    expect(csv.split("\n")[0]).toBe("user_id,display_name,signed_up_at,last_seen_at,lifetime_spend_usd");
+    expect(csv.split("\n")[0]).toBe("user_id,display_name,tier,signed_up_at,last_seen_at,lifetime_spend_usd");
   });
 
   test("empty cohort renders only the header, with a trailing newline", () => {
-    expect(buildCohortCsv([])).toBe("user_id,display_name,signed_up_at,last_seen_at,lifetime_spend_usd\n");
+    expect(buildCohortCsv([])).toBe("user_id,display_name,tier,signed_up_at,last_seen_at,lifetime_spend_usd\n");
   });
 
   test("a plain row round-trips every field", () => {
     const csv = buildCohortCsv([row()]);
     const dataLine = csv.split("\n")[1];
-    expect(dataLine).toBe("00000000-0000-0000-0000-000000000001,Ada Öğrenci,2026-08-20T10:00:00.000Z,2026-09-02T08:00:00.000Z,1.2345");
+    expect(dataLine).toBe("00000000-0000-0000-0000-000000000001,Ada Öğrenci,standard,2026-08-20T10:00:00.000Z,2026-09-02T08:00:00.000Z,1.2345");
+  });
+
+  test("an ultra-tier row renders the real tier, not the standard default", () => {
+    const csv = buildCohortCsv([row({ tier: "ultra" })]);
+    expect(csv.split("\n")[1]).toContain(",ultra,");
   });
 
   test("null displayName and lastSeenAt render as empty fields, not the literal word null", () => {
     const csv = buildCohortCsv([row({ displayName: null, lastSeenAt: null })]);
     const dataLine = csv.split("\n")[1];
-    expect(dataLine).toBe("00000000-0000-0000-0000-000000000001,,2026-08-20T10:00:00.000Z,,1.2345");
+    expect(dataLine).toBe("00000000-0000-0000-0000-000000000001,,standard,2026-08-20T10:00:00.000Z,,1.2345");
   });
 
   test("a display name containing a comma is quoted", () => {
