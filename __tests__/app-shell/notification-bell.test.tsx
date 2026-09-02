@@ -124,6 +124,33 @@ describe("NotificationBell — pinned success-path behavior", () => {
   });
 });
 
+/**
+ * Ultra visual tier -- the bell's unread dot is one of the two elements this session's own
+ * inventory (docs/ultra-visual-inventory-2026-09-02.md) named, gated on the class the
+ * foundation ships (`tier-glow-sm`, a no-op box-shadow without `[data-tier="ultra"]` on an
+ * ancestor). "Never flatter an absence": the dot must never carry the glow class when there
+ * is nothing unread, since it does not render at all in that state.
+ */
+describe("NotificationBell — Ultra tier dot", () => {
+  // Scoped to the trigger button specifically, not the whole container -- the popover's own
+  // per-row unread dots (features/notifications/*) share the same size-2/aria-hidden shape,
+  // so querying the container alone would be ambiguous about which dot matched.
+  test("an unread count renders the dot with tier-glow-sm", async () => {
+    renderBell([notification()], 1);
+
+    const bellButton = screen.getByRole("button", { name: "Notifications" });
+    const dot = bellButton.querySelector('span[aria-hidden="true"].size-2');
+    expect(dot).toHaveClass("tier-glow-sm");
+  });
+
+  test("zero unread renders no dot at all -- nothing to carry the glow class either way", async () => {
+    renderBell([notification({ read_at: new Date().toISOString() })], 0);
+
+    const bellButton = screen.getByRole("button", { name: "Notifications" });
+    expect(bellButton.querySelector('span[aria-hidden="true"].size-2')).not.toBeInTheDocument();
+  });
+});
+
 describe("NotificationBell — failure path (docs/feat2-error-surfacing-audit-2026-08-22.md finding #3)", () => {
   test("a failed mark-read shows the real server error rather than nothing", async () => {
     vi.mocked(markNotificationRead).mockResolvedValue({ error: "Couldn't update notification." });
