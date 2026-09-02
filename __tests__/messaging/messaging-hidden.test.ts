@@ -152,22 +152,27 @@ describe("layer: the kill switch fails closed", () => {
   });
 });
 
-describe("negative check: Connections is deliberately NOT gated by this flag", () => {
-  test("none of connections/actions.ts's exports reference the messaging flag at all", () => {
+// Updated 2026-09-02: this block originally asserted that Connections was deliberately
+// NOT gated by this flag — CEO's ruling at the time, to protect a loop established as
+// live and load-bearing. The founder overruled that the same night: connections is now
+// gated too, by its own flag (lib/social/connections-feature-flag.ts,
+// __tests__/social/connections-hidden.test.ts has the full per-function coverage). This
+// block is not deleted — its actual, narrower point still holds and is worth pinning
+// deliberately rather than by omission: the two features have SEPARATE flags, not one
+// shared switch, because CEO's instruction was "one switch family, consistent shape", not
+// "one switch". If a future change folds them into a single flag, that's a real decision
+// to make on purpose, not something that should happen by a well-intentioned refactor.
+describe("Connections has its own flag, deliberately separate from this one", () => {
+  test("connections/actions.ts references its own flag, not this one", () => {
     const contents = readFileSync(join(ROOT, CONNECTIONS_ACTIONS_PATH), "utf8");
-    expect(contents).not.toContain("assertMessagingEnabled");
+    expect(contents).toContain("connections-feature-flag");
     expect(contents).not.toContain("messaging-feature-flag");
+    expect(contents).not.toContain("assertMessagingEnabled");
   });
 
-  test("sendConnectionRequest, respondToConnectionRequest and removeConnection are still exported, unguarded", () => {
-    const contents = readFileSync(join(ROOT, CONNECTIONS_ACTIONS_PATH), "utf8");
-    for (const name of ["sendConnectionRequest", "respondToConnectionRequest", "removeConnection"]) {
-      expect(contents, `${name} must still exist in connections/actions.ts`).toContain(`export async function ${name}(`);
-    }
-  });
-
-  test("the /connections listing page does not import the messaging flag", () => {
+  test("the /connections listing page references its own flag, not this one", () => {
     const contents = readFileSync(join(ROOT, "app/(app)/connections/page.tsx"), "utf8");
+    expect(contents).toContain("connections-feature-flag");
     expect(contents).not.toContain("messaging-feature-flag");
   });
 });

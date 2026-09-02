@@ -9,8 +9,10 @@ import { createNotification } from "@/lib/notifications/create";
 import { assertWithinRateLimit, RateLimitExceededError } from "@/lib/security/rate-limit";
 import { RATE_LIMITS } from "@/lib/security/rate-limit-config";
 import { canRespondToConnectionRequest } from "@/lib/social/connection-transitions";
+import { assertConnectionsEnabled } from "@/lib/social/connections-feature-flag";
 
 export async function sendConnectionRequest(recipientId: string): Promise<{ error?: string }> {
+  assertConnectionsEnabled();
   const session = await requireUser();
   const userId = session.userId!;
   const t = await getTranslations("connections.errors");
@@ -55,6 +57,7 @@ export async function sendConnectionRequest(recipientId: string): Promise<{ erro
 }
 
 export async function respondToConnectionRequest(connectionId: string, accept: boolean): Promise<{ error?: string }> {
+  assertConnectionsEnabled();
   const session = await requireUser();
   const supabase = await createClient();
   const t = await getTranslations("connections.errors");
@@ -97,6 +100,7 @@ export async function respondToConnectionRequest(connectionId: string, accept: b
  * either direction. RLS ("either party deletes a connection") is the real gate; the
  * userId in the query below is redundant but keeps the intent readable. */
 export async function removeConnection(connectionId: string): Promise<{ error?: string }> {
+  assertConnectionsEnabled();
   await requireUser();
   const supabase = await createClient();
   const t = await getTranslations("connections.errors");
