@@ -381,9 +381,9 @@ export default async function ProfilePage() {
 
           <section className="grid gap-6 md:grid-cols-[1fr_auto] md:items-start">
             <div className="space-y-3">
-              <SectionHeader title={t("page.strength.title")} description={t("page.strength.description")} />
+              <SectionHeader title={t("page.completeness.title")} description={t("page.completeness.description")} />
               <Progress value={completenessPercent} />
-              <p className="text-sm text-muted-foreground">{t("page.strength.percentComplete", { percent: completenessPercent })}</p>
+              <p className="text-sm text-muted-foreground">{t("page.completeness.percentComplete", { percent: completenessPercent })}</p>
               {remainingSuggestions.length > 0 ? (
                 <ul className="grid gap-1.5 text-sm text-muted-foreground sm:grid-cols-2">
                   {remainingSuggestions.map((item) => (
@@ -391,7 +391,7 @@ export default async function ProfilePage() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground">{t("page.strength.fullyFilled")}</p>
+                <p className="text-sm text-muted-foreground">{t("page.completeness.fullyFilled")}</p>
               )}
             </div>
             <div className="shrink-0 space-y-1 text-sm text-muted-foreground md:text-right">

@@ -222,8 +222,8 @@
         "title": "Featured",
         "description": "Pin your best 3-5 items to the top of your public profile."
       },
-      "strength": {
-        "title": "Profile Strength",
+      "completeness": {
+        "title": "Profile Completeness",
         "description": "How much Oryn knows about you — separate from how strong your profile is. Only you can see this.",
         "percentComplete": "{percent}% complete",
         "fullyFilled": "Your profile is fully filled out."

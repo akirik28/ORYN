@@ -153,7 +153,19 @@ export async function recomputeCareerProfile(userId: string, opts?: { snapshotRe
     Math.abs(previousScore - careerProfile.overallScore) >= 1 ||
     dimensionChange.improved.some((d) => d.delta >= NOTIFIABLE_DIMENSION_DELTA) ||
     dimensionChange.declined.some((d) => Math.abs(d.delta) >= NOTIFIABLE_DIMENSION_DELTA);
-  if (changedMeaningfully || opts?.snapshotReason) {
+  // 2026-09-02 progress/history audit: this used to be `changedMeaningfully ||
+  // opts?.snapshotReason`, which wrote a snapshot on EVERY call that passed an explicit
+  // reason (onboarding_completed, cv_import) regardless of whether the score moved at
+  // all -- exactly the "noise from every trivial edit" this function's own header comment
+  // says the Phase-41 design exists to avoid. Live data showed the result: one account had
+  // five identical score-0 "onboarding_completed" snapshots minutes apart. The bypass
+  // turned out to be unnecessary for its own apparent purpose too -- `changedMeaningfully`
+  // already covers the genuine first-ever computation via `previousScore === null`
+  // (profiles.profile_strength_score defaults to null, confirmed live), so a real baseline
+  // snapshot still gets written without it. Dropping the reason-based bypass entirely, not
+  // narrowing it to "first snapshot only": that condition was already redundant with
+  // `changedMeaningfully`'s own first-call branch, not a second distinct case to preserve.
+  if (changedMeaningfully) {
     const { error: snapshotError } = await admin.from("profile_score_snapshots").insert({
       user_id: userId,
       score_version: careerProfile.version,
