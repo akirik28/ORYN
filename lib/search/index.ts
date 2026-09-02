@@ -66,7 +66,11 @@ async function searchOpportunities(supabase: DB, pattern: string): Promise<Searc
   return unwrap(result).map((o) => ({ type: "opportunity" as const, id: o.id, title: o.title, subtitle: o.organization, href: "/opportunities" }));
 }
 
-async function searchGoals(supabase: DB, userId: string, pattern: string): Promise<SearchResult[]> {
+// Exported (only) so 2026-09-02's search audit — verifying every user-owned source is
+// explicitly scoped to `userId` on top of RLS, per this file's own "defense in depth"
+// comment below — has a direct unit test rather than resting on a code read plus a live
+// RLS-policy check alone.
+export async function searchGoals(supabase: DB, userId: string, pattern: string): Promise<SearchResult[]> {
   const result = await supabase.from("career_goals").select("id, title, category").eq("user_id", userId).ilike("title", pattern).limit(PER_SOURCE_LIMIT);
   return unwrap(result).map((g) => ({ type: "goal" as const, id: g.id, title: g.title, subtitle: g.category, href: "/profile" }));
 }
@@ -78,7 +82,7 @@ async function searchGoals(supabase: DB, userId: string, pattern: string): Promi
  * existing preference (see ARCHITECTURE.md's "why some things are duplicated-looking")
  * for named, statically-typed calls over generic dispatch.
  */
-async function searchProfileItems(supabase: DB, userId: string, pattern: string): Promise<SearchResult[]> {
+export async function searchProfileItems(supabase: DB, userId: string, pattern: string): Promise<SearchResult[]> {
   const [activities, awards, certifications, projects, research, volunteering, work, education, testScores] = await Promise.all([
     supabase.from("activities").select("id, title, organization").eq("user_id", userId).ilike("title", pattern).limit(PER_SOURCE_LIMIT),
     supabase.from("awards").select("id, title, organization").eq("user_id", userId).ilike("title", pattern).limit(PER_SOURCE_LIMIT),
