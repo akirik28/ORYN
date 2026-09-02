@@ -1,17 +1,28 @@
-import "server-only";
-
-import { createClient } from "@/lib/supabase/server";
-import { isUndefinedColumnError } from "@/lib/supabase/errors";
-import { startOfMonthUTC, startOfNextMonthUTC } from "@/lib/ai/monthly-quota";
-import type { PlanTier } from "@/types/database";
+import { startOfMonthUTC, startOfNextMonthUTC } from "@/lib/date/month-boundary";
+import type { PlanTier, Profile } from "@/types/database";
 
 /**
  * The mechanism for the founder-approved, frequency-capped upgrade pop-up
  * (docs/upgrade-prompt-design-spec-2026-09-02.md,
  * docs/research/upgrade-prompt-frequency-precedent-2026-09-02.md). This file is the whole
- * decision: what to show, when, and how a dismissal is recorded — the UI component
- * (features/advisor/upgrade-prompt-overlay.tsx) and the Server Actions
+ * decision: what to show, when, and how a dismissal update is computed — the UI component
+ * (features/advisor/upgrade-prompt-overlay.tsx), the page that loads the dismissal state
+ * (app/(app)/advisor/page.tsx), and the Server Actions that write it
  * (app/(app)/advisor/actions.ts) are thin callers of what's here.
+ *
+ * Deliberately pure -- no `server-only`, no Supabase, nothing async. This file didn't
+ * start this way: it originally also queried `profiles` directly for the dismissal row,
+ * which meant `import "server-only"` at the top, which meant `next build` correctly
+ * refused the moment features/advisor/advisor-chat.tsx (a Client Component) imported
+ * `shouldShowUpgradePrompt` from the same module -- importing ANY export from a
+ * server-only file pulls the file's whole dependency chain into the client bundle
+ * analysis, not just the export actually used. Found by oryn-a7 running `next build`
+ * after typecheck/lint/4790 tests all passed clean; jsdom has no concept of the RSC
+ * boundary; this is the one class of bug that gate can't see. `extractUpgradePromptDismissalState`
+ * below replaces the old `getUpgradePromptDismissalState` query entirely rather than
+ * relocating it -- the caller (the advisor page) already loads the full profile via
+ * `getCurrentProfile()` for `resolvePlanTier`, so deriving from that same object needs no
+ * second round-trip, mirroring `resolvePlanTier`'s own `Pick<Profile, ...>` shape exactly.
  *
  * Storage is durable (migration 0093, flat columns on profiles), not localStorage — the
  * one asymmetry that decided it: a student who explicitly declined on one device and gets
@@ -45,54 +56,27 @@ export const NOT_YET_DISMISSED: UpgradePromptDismissalState = {
   dismissedForever: false,
 };
 
-/** All four in one literal select, same reasoning as lib/notifications/create.ts's
- * categoryIsEnabled: a single small row costs nothing extra to fetch in full, and the four
- * columns are added together (migration 0093), so if the database is missing any one of
- * them it's missing all four — one query degrades cleanly instead of needing per-column
- * handling. */
-const DISMISSAL_COLUMNS =
-  "upgrade_prompt_soft_dismissed_until, upgrade_prompt_not_now_at, upgrade_prompt_not_now_count, upgrade_prompt_dismissed_forever";
-
 /**
- * Fails open to "not yet dismissed" on every branch except a real, successful read that
- * says otherwise — migration 0093 unapplied (today's actual state: the founder applied
- * 0089–0091 by hand and hasn't run anything since) reads as "never dismissed," matched via
- * the shared `upgrade_prompt_` prefix rather than one exact column name, same reasoning as
- * every other unapplied-migration guard in this codebase: whichever of the four
- * Postgres/PostgREST names first, the rest are missing too. Any other read failure also
- * fails open and logs — a student who gets asked again after an infra hiccup is a minor,
- * recoverable annoyance; a page that fails to render the advisor at all because this one
- * read errored would be a much worse outcome for a check this far from load-bearing.
- *
- * Deliberately the opposite failure direction from oryn-31's 0092 (ultra_welcome_seen),
- * which fails toward staying silent while unapplied rather than showing — see migration
- * 0093's own comment for the full comparison; the short version is that this feature has an
- * independent per-session cap (sessionStorage) a one-time welcome moment doesn't, which
- * bounds how bad "absence -> can show" gets here in a way it wouldn't for them.
+ * Derives dismissal state from an already-loaded profile row, exactly like
+ * `resolvePlanTier` derives tier -- never fetches. Migration 0093 unapplied means these
+ * four columns are simply `undefined` on the row (this codebase's established
+ * `select("*")` convention: an unknown-to-cache column is omitted from the result, not a
+ * thrown error -- see lib/tier/plan-tier.ts's own comment for the same behavior on
+ * `plan_tier`), which every `?? default` below reads as "not yet dismissed," the same
+ * fail-open direction the old query-based version chose and argued in migration 0093's own
+ * header. That argument still holds unchanged; only the mechanism of reaching it moved.
  */
-export async function getUpgradePromptDismissalState(userId: string): Promise<UpgradePromptDismissalState> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("profiles").select(DISMISSAL_COLUMNS).eq("id", userId).maybeSingle();
-
-  if (error) {
-    if (!isUndefinedColumnError(error, "upgrade_prompt_")) {
-      console.warn("[upgrade-prompt] dismissal state read failed, defaulting to not-yet-dismissed", { userId, error });
-    }
-    return NOT_YET_DISMISSED;
-  }
-  if (!data) return NOT_YET_DISMISSED;
-
-  const row = data as unknown as {
-    upgrade_prompt_soft_dismissed_until: string | null;
-    upgrade_prompt_not_now_at: string | null;
-    upgrade_prompt_not_now_count: number | null;
-    upgrade_prompt_dismissed_forever: boolean | null;
-  };
+export function extractUpgradePromptDismissalState(
+  profile: Pick<
+    Profile,
+    "upgrade_prompt_soft_dismissed_until" | "upgrade_prompt_not_now_at" | "upgrade_prompt_not_now_count" | "upgrade_prompt_dismissed_forever"
+  >,
+): UpgradePromptDismissalState {
   return {
-    softDismissedUntil: row.upgrade_prompt_soft_dismissed_until ?? null,
-    notNowAt: row.upgrade_prompt_not_now_at ?? null,
-    notNowCount: row.upgrade_prompt_not_now_count ?? 0,
-    dismissedForever: row.upgrade_prompt_dismissed_forever ?? false,
+    softDismissedUntil: profile.upgrade_prompt_soft_dismissed_until ?? null,
+    notNowAt: profile.upgrade_prompt_not_now_at ?? null,
+    notNowCount: profile.upgrade_prompt_not_now_count ?? 0,
+    dismissedForever: profile.upgrade_prompt_dismissed_forever ?? false,
   };
 }
 
@@ -150,9 +134,9 @@ export interface NotNowUpdate {
  * click (currentNotNowCount already >= 1 — this is at least the second one ever) in a
  * calendar month genuinely later than the previous one's escalates to permanent. A
  * first-ever click never escalates regardless of month math, since currentNotNowCount is
- * still 0 at that point. Uses lib/ai/monthly-quota.ts's own month boundary rather than a
+ * still 0 at that point. Uses lib/date/month-boundary.ts's own month boundary rather than a
  * second, independently-written one, so "rest of the billing month" here can never quietly
- * drift from what that boundary means everywhere else in this codebase.
+ * drift from what the AI-allowance reset (lib/ai/monthly-quota.ts) means by the same words.
  */
 export function computeNotNowUpdate(currentNotNowAt: string | null, currentNotNowCount: number, now: Date = new Date()): NotNowUpdate {
   const isLaterMonth = currentNotNowAt !== null && startOfMonthUTC(new Date(currentNotNowAt)).getTime() !== startOfMonthUTC(now).getTime();

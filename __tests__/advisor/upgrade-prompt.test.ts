@@ -1,5 +1,11 @@
 import { describe, test, expect } from "vitest";
-import { shouldShowUpgradePrompt, computeSoftDismissUntil, computeNotNowUpdate, NOT_YET_DISMISSED } from "@/lib/advisor/upgrade-prompt";
+import {
+  shouldShowUpgradePrompt,
+  computeSoftDismissUntil,
+  computeNotNowUpdate,
+  extractUpgradePromptDismissalState,
+  NOT_YET_DISMISSED,
+} from "@/lib/advisor/upgrade-prompt";
 import type { UpgradePromptContext } from "@/lib/advisor/upgrade-prompt";
 
 /**
@@ -124,5 +130,46 @@ describe("computeNotNowUpdate — the escalation rule", () => {
     const now = new Date("2027-01-05T00:00:00.000Z");
     const update = computeNotNowUpdate(priorNotNowAt, 1, now);
     expect(update.dismissedForever).toBe(true);
+  });
+});
+
+describe("extractUpgradePromptDismissalState — derives from an already-loaded profile, never fetches", () => {
+  test("a fully-populated row maps through field for field", () => {
+    const state = extractUpgradePromptDismissalState({
+      upgrade_prompt_soft_dismissed_until: "2026-09-22T12:00:00.000Z",
+      upgrade_prompt_not_now_at: "2026-08-01T00:00:00.000Z",
+      upgrade_prompt_not_now_count: 2,
+      upgrade_prompt_dismissed_forever: false,
+    });
+    expect(state).toEqual({
+      softDismissedUntil: "2026-09-22T12:00:00.000Z",
+      notNowAt: "2026-08-01T00:00:00.000Z",
+      notNowCount: 2,
+      dismissedForever: false,
+    });
+  });
+
+  test("a genuinely never-dismissed row (nulls, zero, false) matches NOT_YET_DISMISSED", () => {
+    const state = extractUpgradePromptDismissalState({
+      upgrade_prompt_soft_dismissed_until: null,
+      upgrade_prompt_not_now_at: null,
+      upgrade_prompt_not_now_count: 0,
+      upgrade_prompt_dismissed_forever: false,
+    });
+    expect(state).toEqual(NOT_YET_DISMISSED);
+  });
+
+  // Migration 0093 unapplied: select("*") omits an unknown column rather than erroring
+  // (lib/tier/plan-tier.ts's own comment documents the same behavior for plan_tier), so
+  // these fields are `undefined` at runtime despite the Profile type saying otherwise —
+  // exactly the case this function exists to default safely rather than crash on.
+  test("columns absent (migration unapplied) default to not-yet-dismissed, not a throw", () => {
+    const rowFromAnUnmigratedDatabase = {} as {
+      upgrade_prompt_soft_dismissed_until: string | null;
+      upgrade_prompt_not_now_at: string | null;
+      upgrade_prompt_not_now_count: number;
+      upgrade_prompt_dismissed_forever: boolean;
+    };
+    expect(extractUpgradePromptDismissalState(rowFromAnUnmigratedDatabase)).toEqual(NOT_YET_DISMISSED);
   });
 });
