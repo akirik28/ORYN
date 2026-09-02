@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { DIMENSION_ORDER } from "@/lib/scoring/labels";
+import { CAREER_PROFILE_SCORE_VERSION } from "@/lib/scoring/types";
 import { getCohortDimensionScores } from "./cohort";
 import { evaluateBenchmarkDimension, describeCohort } from "./compute";
 import type { BenchmarkDimension, CohortFilter, PeerBenchmarkSummary } from "./types";
@@ -19,7 +20,7 @@ export async function getPeerBenchmarks(userId: string): Promise<PeerBenchmarkSu
   const supabase = await createClient();
   const [{ data: profile }, { data: myScores }] = await Promise.all([
     supabase.from("profiles").select("graduation_year, curriculum, profile_strength_score").eq("id", userId).single(),
-    supabase.from("profile_scores").select("dimension, score").eq("user_id", userId),
+    supabase.from("profile_scores").select("dimension, score").eq("user_id", userId).eq("calculation_version", CAREER_PROFILE_SCORE_VERSION),
   ]);
   if (!profile) return { cohortDescription: "All Oryn students", results: [] };
 

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { CAREER_PROFILE_SCORE_VERSION } from "@/lib/scoring/types";
 import type { BenchmarkDimension, CohortFilter } from "./types";
 
 /** Hard cap on how many peer profiles one cohort query will scan — a pre-launch safety
@@ -37,7 +38,11 @@ export async function getCohortDimensionScores(filter: CohortFilter, excludeUser
   if (overallScores.length > 0) byDimension.set("overall", overallScores);
 
   const peerIds = peers.map((p) => p.id);
-  const { data: scores } = await admin.from("profile_scores").select("user_id, dimension, score").in("user_id", peerIds);
+  // calculation_version filtered for the same reason as every other profile_scores reader
+  // (lib/security/dal.ts's getProfileScores) -- doubly so here, since this pools many
+  // students' scores together: a peer recomputed under a newer formula before everyone
+  // else would otherwise get compared on a different scale, not just shown a stale number.
+  const { data: scores } = await admin.from("profile_scores").select("user_id, dimension, score").eq("calculation_version", CAREER_PROFILE_SCORE_VERSION).in("user_id", peerIds);
   for (const row of scores ?? []) {
     byDimension.set(row.dimension, [...(byDimension.get(row.dimension) ?? []), row.score]);
   }

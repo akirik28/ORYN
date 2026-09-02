@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Profile, ProfileScore, University, UniversityStatistic } from "@/types/database";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile, getProfileScores } from "@/lib/security/dal";
+import { CAREER_PROFILE_SCORE_VERSION } from "@/lib/scoring/types";
 import { getUniversity, getUniversityStatistics } from "@/lib/universities/detail-reads";
 import { checkUndergraduateFieldAvailability } from "./field-availability";
 import { computeAdmissionOutlook, dataConfidenceForCompleteness, type AdmissionOutlookResult } from "./outlook";
@@ -79,8 +80,10 @@ export async function refreshAdmissionOutlook(
   const profilePromise: PromiseLike<{ data: Pick<Profile, "profile_strength_score" | "completeness_percent" | "country"> | null }> = client
     ? supabase.from("profiles").select("profile_strength_score, completeness_percent, country").eq("id", userId).single()
     : getCurrentProfile().then((data) => ({ data }));
+  // .eq("calculation_version", ...) matches getProfileScores' own filter (lib/security/
+  // dal.ts) -- this branch bypasses that helper for the no-session job path.
   const scoresPromise: PromiseLike<{ data: ProfileScore[] | null }> = client
-    ? supabase.from("profile_scores").select("*").eq("user_id", userId)
+    ? supabase.from("profile_scores").select("*").eq("user_id", userId).eq("calculation_version", CAREER_PROFILE_SCORE_VERSION)
     : getProfileScores(userId).then((data) => ({ data }));
   const statsPromise: PromiseLike<{ data: Pick<UniversityStatistic, "admission_rate" | "data_confidence"> | null }> = client
     ? supabase

@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Opportunity, OpportunityMatch, ProfileScore } from "@/types/database";
 import { createClient } from "@/lib/supabase/server";
 import { getProfileScores } from "@/lib/security/dal";
+import { CAREER_PROFILE_SCORE_VERSION } from "@/lib/scoring/types";
 import { buildStudentAdvisorContext, type StudentAdvisorContext } from "@/lib/ai/student-context";
 import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
 import { getCompletenessChecklist } from "@/lib/scoring/completeness";
@@ -110,8 +111,10 @@ export async function getCounselorState(userId: string, locale: Locale = DEFAULT
   // is request-scoped (no explicit supabaseClient) — the scheduled weekly-plan job
   // (lib/ai/weekly-plan.ts) passes its own client with no request/cookies behind it, so it
   // keeps its own direct query, unchanged.
+  // .eq("calculation_version", ...) matches getProfileScores' own filter (lib/security/
+  // dal.ts) -- this branch bypasses that helper for the no-session job path.
   const scoresPromise: PromiseLike<{ data: ProfileScore[] | null }> = supabaseClient
-    ? supabase.from("profile_scores").select("*").eq("user_id", userId)
+    ? supabase.from("profile_scores").select("*").eq("user_id", userId).eq("calculation_version", CAREER_PROFILE_SCORE_VERSION)
     : getProfileScores(userId).then((data) => ({ data }));
 
   const [advisor, facts, profileRes, scoresRes, skillsRes, featuredRes, contactRes, matchesRes] = await Promise.all([

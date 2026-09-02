@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { refreshAdmissionOutlook } from "./persist";
+import { isOutlookStale } from "./staleness";
 
 const DEFAULT_PAGE_SIZE = 500;
 
@@ -37,7 +38,7 @@ export async function scanStaleOutlooks(pageSize = DEFAULT_PAGE_SIZE): Promise<{
   for (;;) {
     const { data: targets, error } = await supabase
       .from("target_universities")
-      .select("id, user_id, outlook_calculated_at")
+      .select("id, user_id, outlook_calculated_at, outlook_model_version")
       .order("id", { ascending: true })
       .range(offset, offset + pageSize - 1);
     if (error) throw new Error(`scanStaleOutlooks: failed to page target_universities: ${error.message}`);
@@ -51,7 +52,7 @@ export async function scanStaleOutlooks(pageSize = DEFAULT_PAGE_SIZE): Promise<{
     const stale = targets.filter((t) => {
       const profileUpdatedAt = profileUpdatedAtById.get(t.user_id);
       if (profileUpdatedAt === undefined) return false; // Orphaned row, nothing to compare against — skip rather than guess.
-      return !t.outlook_calculated_at || new Date(t.outlook_calculated_at).getTime() < profileUpdatedAt;
+      return isOutlookStale(t, profileUpdatedAt);
     });
 
     checked += targets.length;

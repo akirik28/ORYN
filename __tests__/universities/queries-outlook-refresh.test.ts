@@ -185,4 +185,35 @@ describe("getTargetUniversitiesWithDetails — outlook staleness", () => {
     expect(result).toEqual([]);
     expect(refreshAdmissionOutlook).not.toHaveBeenCalled();
   });
+
+  // 2026-09-02, the version-tracking gap: outlook_model_version was written per row but
+  // never read back here — only outlook_calculated_at vs profiles.updated_at was checked,
+  // so a row with a fresh timestamp under a stale FORMULA would never refresh for a student
+  // whose profile hasn't otherwise changed. lib/admissions/staleness.ts's isOutlookStale is
+  // unit-tested directly for the full matrix; this proves it's actually wired in here.
+  test("a fresh-timestamped row under a different model version still refreshes", async () => {
+    const wrongVersion = target({ id: "t1", outlook_calculated_at: "2026-09-01T00:00:00.000Z", outlook_model_version: "admission_model_v0_hypothetical" });
+    const refreshedRow = target({ id: "t1", outlook: "reach", outlook_model_version: "admission_model_v1", outlook_calculated_at: "2026-09-02T00:00:00.000Z" });
+    // A profile timestamp OLDER than the row's own outlook_calculated_at -- if this test
+    // passed without the version check, it would prove the check ISN'T what triggered the
+    // refresh (timestamp staleness alone would say "not stale" here).
+    const supabase = makeSupabase({
+      targetUniversitiesQueue: [{ data: [wrongVersion] }, { data: [refreshedRow] }],
+      profileUpdatedAt: "2026-08-01T00:00:00.000Z",
+    });
+    vi.mocked(refreshAdmissionOutlook).mockResolvedValue({
+      outlook: "reach",
+      compositeScore: 40,
+      selectivityTier: "high",
+      estimateRangeLow: null,
+      estimateRangeHigh: null,
+      estimateConfidence: null,
+      modelVersion: "admission_model_v1",
+    } as never);
+
+    const result = await getTargetUniversitiesWithDetails(supabase, USER_ID);
+
+    expect(refreshAdmissionOutlook).toHaveBeenCalledWith("t1", USER_ID);
+    expect(result[0].outlook).toBe("reach");
+  });
 });

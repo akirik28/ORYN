@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, ProfileDimension } from "@/types/database";
 import { toProfileSignal, type DimensionSignal } from "./signal";
+import { CAREER_PROFILE_SCORE_VERSION } from "./types";
 
 const REVIEW_WINDOW_DAYS = 30;
 
@@ -42,7 +43,7 @@ export async function getMonthlyReview(supabase: SupabaseClient<Database>, userI
   const since = new Date(Date.now() - REVIEW_WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
   const [scoresRes, baselineSnapshotRes, projectsRes, applicationsRes] = await Promise.all([
-    supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId),
+    supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId).eq("calculation_version", CAREER_PROFILE_SCORE_VERSION),
     supabase
       .from("profile_score_snapshots")
       .select("overall_score, dimension_scores, created_at")

@@ -3,6 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { CAREER_PROFILE_SCORE_VERSION } from "@/lib/scoring/types";
 import type { Profile, ProfileScore } from "@/types/database";
 
 /**
@@ -96,10 +97,22 @@ export async function requireProfile() {
  * reads (`lib/benchmarking/cohort.ts`, many users at once via the admin client) are
  * structurally different queries this helper isn't shaped for — see this function's
  * callers for which ones actually apply.
+ *
+ * Filtered to `CAREER_PROFILE_SCORE_VERSION` (2026-09-02): `recomputeCareerProfile`'s own
+ * upsert keys on `(user_id, dimension, calculation_version)`, so a future version bump
+ * would INSERT fresh rows rather than overwrite old ones — without this filter, a student
+ * recomputed under a new version before every old row is cleaned up would get every
+ * dimension back twice. Harmless today (every live row shares one version, verified by
+ * group-by), load-bearing the day a second version exists. See
+ * docs/handoffs/version-tracking-gap-2026-09-02.md.
  */
 export const getProfileScores = cache(async (userId: string): Promise<ProfileScore[]> => {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("profile_scores").select("*").eq("user_id", userId);
+  const { data, error } = await supabase
+    .from("profile_scores")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("calculation_version", CAREER_PROFILE_SCORE_VERSION);
 
   if (error) {
     console.error("[dal] failed to load profile scores", { userId, error: error.message });
