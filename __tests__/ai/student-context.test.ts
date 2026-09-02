@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { formatContextForPrompt, isBusyModeActive, type StudentAdvisorContext } from "@/lib/ai/student-context";
-import type { EvidenceStatus } from "@/types/database";
+import { formatContextForPrompt, isBusyModeActive, timeBudgetLabel, reflectionOutcomeLabel, requirementTypeLabel, type StudentAdvisorContext } from "@/lib/ai/student-context";
+import type { EvidenceStatus, ReflectionOutcome, TimeBudget } from "@/types/database";
 
 /** Phase 65: the exact "marked exam week in November, never unmarked, should not still
  * read as busy in March" scenario CEO named — confirmed live nobody clears this
@@ -213,6 +213,143 @@ describe("formatContextForPrompt — target outlooks use the same words the badg
     );
     expect(text).toContain("LSE (target, Aşırı Zorlu)");
     expect(text).not.toContain("Extreme Reach");
+  });
+});
+
+/**
+ * 2026-09-02 raw-enum-leak sweep: the same class of bug the outlook tests above already
+ * cover (a raw DB identifier reaching the model, then a student, per CEO's framing —
+ * "the risk is echo, not comprehension") found live in curriculum and weeklyTimeBudget,
+ * both interpolated raw with no label accessor at all until this pass.
+ */
+describe("formatContextForPrompt — curriculum and weekly time budget use real labels", () => {
+  test("curriculum renders the readable label, not the raw enum member", () => {
+    const text = formatContextForPrompt({ ...baseContext(), student: { ...baseContext().student, curriculum: "turkish_curriculum" } });
+    expect(text).not.toContain("turkish_curriculum");
+  });
+
+  test("curriculum in Turkish is real Turkish, not the English label carried over", () => {
+    const text = formatContextForPrompt({ ...baseContext(), student: { ...baseContext().student, curriculum: "turkish_curriculum" } }, "tr");
+    expect(text).toContain("Türk müfredatı");
+  });
+
+  test("weeklyTimeBudget renders the readable label, not the raw enum member", () => {
+    const text = formatContextForPrompt({ ...baseContext(), student: { ...baseContext().student, weeklyTimeBudget: "5_10h" } });
+    expect(text).toContain("5-10 hours");
+    expect(text).not.toContain("5_10h");
+  });
+
+  test("weeklyTimeBudget in Turkish matches Settings' own wording for the same bucket", () => {
+    const text = formatContextForPrompt({ ...baseContext(), student: { ...baseContext().student, weeklyTimeBudget: "under_2h" } }, "tr");
+    expect(text).toContain("2 saatten az");
+  });
+
+  test("a null curriculum or time budget still says nothing rather than inventing one", () => {
+    const text = formatContextForPrompt(baseContext());
+    expect(text).toContain("unknown curriculum");
+    expect(text).toContain("Weekly time budget: not set");
+  });
+});
+
+/**
+ * Same sweep: reflectionOutcome was interpolated raw ("did_not_work",
+ * "opportunity_no_longer_available") in the recent-action-outcomes line.
+ */
+describe("formatContextForPrompt — reflection outcomes use the same words a student already picked", () => {
+  test("renders the readable label, not the raw enum member", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      recentActionOutcomes: [{ title: "Finish the dataset", status: "completed", reflectionOutcome: "did_not_work", reflectionNote: null }],
+    });
+    expect(text).toContain("(outcome: Didn't work)");
+    expect(text).not.toContain("did_not_work");
+  });
+
+  test("Turkish matches weekly-focus.tsx's own catalog wording for the same outcome", () => {
+    const text = formatContextForPrompt(
+      {
+        ...baseContext(),
+        recentActionOutcomes: [{ title: "Finish the dataset", status: "completed", reflectionOutcome: "opportunity_no_longer_available", reflectionNote: null }],
+      },
+      "tr",
+    );
+    expect(text).toContain("(outcome: Artık mevcut değil)");
+  });
+});
+
+describe("timeBudgetLabel", () => {
+  const ALL: TimeBudget[] = ["under_2h", "2_5h", "5_10h", "10h_plus"];
+  test("never returns the raw value in either locale", () => {
+    for (const v of ALL) {
+      expect(timeBudgetLabel(v, "en")).not.toBe(v);
+      expect(timeBudgetLabel(v, "tr")).not.toBe(v);
+    }
+  });
+});
+
+describe("reflectionOutcomeLabel", () => {
+  const ALL: ReflectionOutcome[] = ["completed_successfully", "partially_completed", "did_not_work", "opportunity_no_longer_available"];
+  test("never returns the raw value in either locale", () => {
+    for (const v of ALL) {
+      expect(reflectionOutcomeLabel(v, "en")).not.toBe(v);
+      expect(reflectionOutcomeLabel(v, "tr")).not.toBe(v);
+    }
+  });
+});
+
+/**
+ * Sixth instance, found by oryn-31 during this same sweep and confirmed live: 100% of
+ * live application_requirements rows have title IS NULL (createApplication's own insert
+ * sets it for every DEFAULT_REQUIREMENTS row), so every one hit the raw requirement_type
+ * fallback on every prompt build — not a rare edge case, and already observed once in a
+ * real advisor_messages row ("test_score" echoed verbatim).
+ */
+describe("formatContextForPrompt — pending application requirements fall back to a real label, not the raw type", () => {
+  test("a real title is used as-is, requirementType is never consulted", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      pendingApplicationRequirements: [{ applicationTitle: "MIT", requirementTitle: "Second recommendation letter", requirementType: "recommendation" }],
+    });
+    expect(text).toContain("Second recommendation letter (MIT)");
+  });
+
+  test("a null title falls back to the readable type label, not the raw value", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      pendingApplicationRequirements: [{ applicationTitle: "MIT", requirementTitle: null, requirementType: "test_score" }],
+    });
+    expect(text).toContain("Test score (MIT)");
+    expect(text).not.toContain("test_score (MIT)");
+  });
+
+  test("Turkish matches requirement-chip-grid.tsx's own catalog wording for the same type", () => {
+    const text = formatContextForPrompt(
+      { ...baseContext(), pendingApplicationRequirements: [{ applicationTitle: "MIT", requirementTitle: null, requirementType: "test_score" }] },
+      "tr",
+    );
+    expect(text).toContain("Sınav puanı (MIT)");
+  });
+
+  test("an unmapped/custom requirement_type still degrades to a readable label, not a raw underscore identifier — requirement_type has no closed DB enum", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      pendingApplicationRequirements: [{ applicationTitle: "MIT", requirementTitle: null, requirementType: "custom_future_type" }],
+    });
+    expect(text).toContain("custom future type (MIT)");
+    expect(text).not.toContain("custom_future_type");
+  });
+});
+
+describe("requirementTypeLabel", () => {
+  test("known types never return the raw value in either locale", () => {
+    for (const v of ["application", "transcript", "test_score", "essay", "recommendation", "portfolio", "interview", "financial_aid"]) {
+      expect(requirementTypeLabel(v, "en")).not.toContain("_");
+      expect(requirementTypeLabel(v, "tr")).not.toContain("_");
+    }
+  });
+
+  test("an unrecognized value still loses its underscores rather than failing a lookup", () => {
+    expect(requirementTypeLabel("some_new_type", "en")).toBe("some new type");
   });
 });
 

@@ -9,8 +9,20 @@ import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
 import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from "@/lib/universities/canonical";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { dimensionLabel } from "@/lib/scoring/labels";
+import { curriculumLabel } from "@/lib/requirements/copy";
 import { DEFAULT_LOCALE, isLocale, type Locale } from "@/lib/i18n/config";
-import type { ActionStatus, CurriculumType, Database, DataConfidence, EvidenceStatus, OutlookLabel, ProfileDimension, TargetStatus, TimeBudget } from "@/types/database";
+import type {
+  ActionStatus,
+  CurriculumType,
+  Database,
+  DataConfidence,
+  EvidenceStatus,
+  OutlookLabel,
+  ProfileDimension,
+  ReflectionOutcome,
+  TargetStatus,
+  TimeBudget,
+} from "@/types/database";
 
 /**
  * Phase 65: nothing clears `profiles.busy_mode` automatically once `busy_mode_until`
@@ -26,6 +38,103 @@ import type { ActionStatus, CurriculumType, Database, DataConfidence, EvidenceSt
  */
 export function isBusyModeActive(busyMode: boolean, busyModeUntil: string | null, today: string): boolean {
   return busyMode && (busyModeUntil === null || busyModeUntil >= today);
+}
+
+/**
+ * 2026-09-02 raw-enum-leak sweep: formatContextForPrompt used to interpolate
+ * `weeklyTimeBudget` raw — "5_10h"/"10h_plus" reaching the model exactly as stored, no
+ * `lib/`-level accessor existed anywhere (only the Settings UI's own component-scoped
+ * catalog keys, features/settings/capacity-form.tsx's tCapacity("timeBudgetOptions...")).
+ * Same wording, reused deliberately rather than invented fresh, so a value the advisor
+ * echoes back matches what a student already sees when they set it in Settings.
+ * Same synchronous (value, locale) => string shape as dimensionLabel/outlookLabel/
+ * curriculumLabel — formatContextForPrompt must stay a plain sync function, so this can't
+ * route through the async next-intl catalog the UI component itself uses.
+ */
+const TIME_BUDGET_LABEL_EN: Record<TimeBudget, string> = {
+  under_2h: "under 2 hours",
+  "2_5h": "2-5 hours",
+  "5_10h": "5-10 hours",
+  "10h_plus": "10+ hours",
+};
+
+const TIME_BUDGET_LABEL_TR: Record<TimeBudget, string> = {
+  under_2h: "2 saatten az",
+  "2_5h": "2-5 saat",
+  "5_10h": "5-10 saat",
+  "10h_plus": "10+ saat",
+};
+
+export function timeBudgetLabel(value: TimeBudget, locale: Locale): string {
+  return locale === "tr" ? TIME_BUDGET_LABEL_TR[value] : TIME_BUDGET_LABEL_EN[value];
+}
+
+/**
+ * Same sweep, same reasoning: `reflectionOutcome` was interpolated raw
+ * ("did_not_work", "opportunity_no_longer_available"...). The UI already has this solved
+ * — features/dashboard/weekly-focus.tsx's page-local reflectionLabel() reads
+ * dashboard.weeklyFocus.reflectionOptions.* from the message catalog — but that function
+ * is bound to useTranslations (a client hook), not callable from this sync server-only
+ * file. The *wording* below is copied from that same catalog rather than reinvented, so
+ * a value the advisor echoes back matches what a student already picked when they
+ * reflected on the action.
+ */
+const REFLECTION_OUTCOME_LABEL_EN: Record<ReflectionOutcome, string> = {
+  completed_successfully: "Completed successfully",
+  partially_completed: "Partially completed",
+  did_not_work: "Didn't work",
+  opportunity_no_longer_available: "No longer available",
+};
+
+const REFLECTION_OUTCOME_LABEL_TR: Record<ReflectionOutcome, string> = {
+  completed_successfully: "Başarıyla tamamlandı",
+  partially_completed: "Kısmen tamamlandı",
+  did_not_work: "İşe yaramadı",
+  opportunity_no_longer_available: "Artık mevcut değil",
+};
+
+export function reflectionOutcomeLabel(value: ReflectionOutcome, locale: Locale): string {
+  return locale === "tr" ? REFLECTION_OUTCOME_LABEL_TR[value] : REFLECTION_OUTCOME_LABEL_EN[value];
+}
+
+/**
+ * A sixth instance found by oryn-31 during this same sweep, confirmed live rather than
+ * theoretical: `application_requirements.requirement_type` has no closed DB enum (unlike
+ * curriculum/weeklyTimeBudget) — `DEFAULT_REQUIREMENTS`
+ * (app/(app)/applications/actions.ts) is the known seeded set of 8, but a custom/future
+ * value could exist too. Same wording as the UI's own
+ * features/applications/requirement-chip-grid.tsx (which reads
+ * `applications.requirementChecklist.typeLabels.*` from the message catalog), and the
+ * same graceful-fallback shape that component already uses for anything unmapped
+ * (`.replace(/_/g, " ")`) rather than a hard lookup failure — this can't be a
+ * `Record<RequirementType, string>` the way the closed-enum accessors above are, because
+ * there's no closed type to index by.
+ */
+const REQUIREMENT_TYPE_LABEL_EN: Record<string, string> = {
+  application: "Application",
+  transcript: "Transcript",
+  test_score: "Test score",
+  essay: "Essay",
+  recommendation: "Recommendation",
+  portfolio: "Portfolio",
+  interview: "Interview",
+  financial_aid: "Financial aid",
+};
+
+const REQUIREMENT_TYPE_LABEL_TR: Record<string, string> = {
+  application: "Başvuru",
+  transcript: "Transkript",
+  test_score: "Sınav puanı",
+  essay: "Deneme yazısı",
+  recommendation: "Tavsiye mektubu",
+  portfolio: "Portfolyo",
+  interview: "Mülakat",
+  financial_aid: "Mali yardım",
+};
+
+export function requirementTypeLabel(value: string, locale: Locale): string {
+  const map = locale === "tr" ? REQUIREMENT_TYPE_LABEL_TR : REQUIREMENT_TYPE_LABEL_EN;
+  return map[value] ?? value.replace(/_/g, " ");
 }
 
 export interface StudentAdvisorContext {
@@ -105,12 +214,26 @@ export interface StudentAdvisorContext {
    * table only ever logs "avoid_for_now" suggestions (see recentRecommendationTitles), never
    * the do/consider actions that make up the bulk of what's actually recommended.
    * `status` tightened from `string` to the real ActionStatus in the same 2026-09-02
-   * sweep as targetUniversities' own status field above. */
-  recentActionOutcomes: { title: string; status: ActionStatus; reflectionOutcome: string | null; reflectionNote: string | null }[];
+   * sweep as targetUniversities' own status field above; `reflectionOutcome` tightened in
+   * the follow-up raw-enum-leak sweep the same day, once reflectionOutcomeLabel() needed
+   * a real ReflectionOutcome to accept, not a bare string. */
+  recentActionOutcomes: { title: string; status: ActionStatus; reflectionOutcome: ReflectionOutcome | null; reflectionNote: string | null }[];
   /** Phase 22/62 — unfinished application checklist items (essay, recommendation, ...),
    * so the advisor can point at a concrete near-term task instead of only reasoning at the
-   * profile-dimension level. */
-  pendingApplicationRequirements: { applicationTitle: string; requirementTitle: string }[];
+   * profile-dimension level.
+   *
+   * `requirementTitle`/`requirementType` kept separate rather than pre-merged (same split
+   * as recentActionOutcomes' own reflectionOutcome above) — resolving "real title, or a
+   * readable label for the type" needs `locale`, which this array's own builder
+   * (getPendingApplicationRequirements) doesn't have access to without either threading it
+   * through buildStudentAdvisorContext's parallel Promise.all (real added latency on a hot
+   * path) or hardcoding English. formatContextForPrompt does the merge instead, where
+   * locale is already a parameter. Found live 2026-09-02 (oryn-31, same raw-enum-leak
+   * sweep): 100% of live application_requirements rows have title IS NULL — every one of
+   * them was hitting the raw requirement_type fallback on every prompt build, not a rare
+   * edge case, and a real advisor_messages row had already echoed `"test_score"` verbatim
+   * to a student before this was found. */
+  pendingApplicationRequirements: { applicationTitle: string; requirementTitle: string | null; requirementType: string }[];
 }
 
 /**
@@ -123,7 +246,7 @@ async function getPendingApplicationRequirements(
   supabase: SupabaseClient<Database>,
   userId: string,
   supersessionMap: SupersessionMap
-): Promise<{ applicationTitle: string; requirementTitle: string }[]> {
+): Promise<{ applicationTitle: string; requirementTitle: string | null; requirementType: string }[]> {
   const { data: pending } = await supabase
     .from("application_requirements")
     .select("title, requirement_type, application_id")
@@ -150,7 +273,7 @@ async function getPendingApplicationRequirements(
     const targetId = targetIdByApplication.get(p.application_id);
     const universityId = targetId ? universityIdByTarget.get(targetId) : undefined;
     const universityName = universityId ? universityNameById.get(universityId) : undefined;
-    return { applicationTitle: universityName ?? "Application", requirementTitle: p.title ?? p.requirement_type };
+    return { applicationTitle: universityName ?? "Application", requirementTitle: p.title, requirementType: p.requirement_type };
   });
 }
 
@@ -334,7 +457,11 @@ export async function buildStudentAdvisorContext(userId: string, supabaseClient?
  */
 export function formatContextForPrompt(context: StudentAdvisorContext, locale: Locale = "en"): string {
   const lines: string[] = [];
-  lines.push(`Student: ${context.student.displayName}, graduating ${context.student.graduationYear ?? "unknown"}, ${context.student.curriculum ?? "unknown curriculum"}, ${context.student.country ?? "unknown country"}.`);
+  // curriculum: raw "a_level"/"turkish_curriculum" until 2026-09-02's raw-enum-leak sweep
+  // — curriculumLabel() already existed and was already used elsewhere (lib/requirements/
+  // evaluate.ts), just never wired in here.
+  const curriculumText = context.student.curriculum ? curriculumLabel(context.student.curriculum, locale) : "unknown curriculum";
+  lines.push(`Student: ${context.student.displayName}, graduating ${context.student.graduationYear ?? "unknown"}, ${curriculumText}, ${context.student.country ?? "unknown country"}.`);
   /**
    * CEO finding, 2026-09-02: graduationYear was already in the line above, but nothing told
    * the model it's the thing to calibrate ambition and pacing against — the spec's own
@@ -361,7 +488,9 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
   const busyNote = context.student.busyMode
     ? ` Currently in a busy period (e.g. exams)${context.student.busyModeUntil ? `, until ${context.student.busyModeUntil}` : ""} — reduce recommendations.`
     : "";
-  lines.push(`Weekly time budget: ${context.student.weeklyTimeBudget ?? "not set"}.${busyNote}`);
+  // Raw "5_10h"/"10h_plus" until 2026-09-02's raw-enum-leak sweep — see timeBudgetLabel above.
+  const timeBudgetText = context.student.weeklyTimeBudget ? timeBudgetLabel(context.student.weeklyTimeBudget, locale) : "not set";
+  lines.push(`Weekly time budget: ${timeBudgetText}.${busyNote}`);
   lines.push(`Career Profile: ${context.overallScore}/100 overall. Profile completeness: ${context.completenessPercent}%.`);
   /**
    * Display labels, not the raw column values. The model reads this block and then writes
@@ -441,11 +570,19 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
   );
   lines.push(`Upcoming deadlines: ${context.upcomingDeadlines.map((d) => `${d.title} on ${d.date} (${d.source})`).join("; ") || "none"}`);
   if (context.pendingApplicationRequirements.length > 0) {
-    lines.push(`Unfinished application checklist items: ${context.pendingApplicationRequirements.map((r) => `${r.requirementTitle} (${r.applicationTitle})`).join("; ")}`);
+    // requirementTitle ?? raw requirement_type until this same 2026-09-02 sweep (oryn-31's
+    // finding) — see requirementTypeLabel above and pendingApplicationRequirements' own
+    // interface comment for why the merge happens here rather than at the fetch site.
+    lines.push(
+      `Unfinished application checklist items: ${context.pendingApplicationRequirements.map((r) => `${r.requirementTitle ?? requirementTypeLabel(r.requirementType, locale)} (${r.applicationTitle})`).join("; ")}`,
+    );
   }
   if (context.recentActionOutcomes.length > 0) {
     const describe = (a: StudentAdvisorContext["recentActionOutcomes"][number]) => {
-      if (a.status === "completed") return `COMPLETED "${a.title}"${a.reflectionOutcome ? ` (outcome: ${a.reflectionOutcome})` : ""}${a.reflectionNote ? ` — "${a.reflectionNote}"` : ""}`;
+      // Raw "did_not_work"/"opportunity_no_longer_available" until 2026-09-02's
+      // raw-enum-leak sweep — see reflectionOutcomeLabel above.
+      const outcomeText = a.reflectionOutcome ? ` (outcome: ${reflectionOutcomeLabel(a.reflectionOutcome, locale)})` : "";
+      if (a.status === "completed") return `COMPLETED "${a.title}"${outcomeText}${a.reflectionNote ? ` — "${a.reflectionNote}"` : ""}`;
       if (a.status === "skipped") return `SKIPPED "${a.title}"`;
       return `EXPIRED UNDONE "${a.title}"`;
     };

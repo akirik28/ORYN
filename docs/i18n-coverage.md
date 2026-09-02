@@ -229,6 +229,85 @@ the component rather than answered silently. Worth knowing before anyone "fixes"
 **When taking a package, grep it for direct `LABELS[` indexing as well as running the
 script.** The two find different things, and only one of them finds this.
 
+## The same gap, on the AI-prompt side specifically — six confirmed instances, 2026-09-02
+
+The `career_exploration` incident above reached a student through *rendering* — a
+component reading a raw map. The same class of bug reaches a student a second way: a raw
+DB enum interpolated into an **AI prompt**, which the model then echoes back verbatim in
+the reply it sends. This path is invisible to every guard in this file — `check:i18n`
+counts JSX text nodes, `label-accessors.test.ts` scans component/lib files for direct
+`LABELS[` indexing, neither one reads `lib/ai/*.ts`'s template literals as prompt text
+being assembled for a person to eventually read. CEO's framing, and the right one: *the
+risk here isn't the model failing to parse a snake_case identifier (it doesn't), it's the
+model reproducing that identifier in a reply a student then reads* — the prompt is the
+vector, the student is still the victim.
+
+`outlook` (`extreme_reach`) and the nine profile-dimension keys (`career_exploration`)
+were the first two found this way and are already fixed — `formatContextForPrompt`'s own
+comments record both incidents in detail. Swept the rest of the AI-prompt surface for the
+same shape and found six more, all still raw at the time of the sweep, now fixed:
+
+| Field | File | Values that were the problem |
+|---|---|---|
+| `curriculum` | `lib/ai/student-context.ts` | `a_level`, `turkish_curriculum`, `national_curriculum` |
+| `weeklyTimeBudget` | `lib/ai/student-context.ts` | all four (`under_2h` … `10h_plus`) |
+| `reflectionOutcome` | `lib/ai/student-context.ts` | `did_not_work`, `opportunity_no_longer_available`, `completed_successfully`, `partially_completed` |
+| `recommendationClass` | `lib/ai/weekly-plan.ts` (`formatOne`) | `avoid_for_now` (the others are already-natural English words) |
+| `recommendationClass` | `lib/ai/counselor-explain.ts` | same field, independently raw in a second file — no shared accessor existed anywhere before this pass |
+| `requirement_type` (as `pendingApplicationRequirements[].requirementTitle`'s fallback) | `lib/ai/student-context.ts` | **confirmed live, not theoretical** (found by oryn-31 mid-sweep): 100% of live `application_requirements` rows have `title IS NULL`, so every one hit this fallback on every prompt build; a real `advisor_messages` row had already echoed `"test_score"` verbatim before this was found |
+
+The sixth is the one worth reading twice. The other five were confirmed by reasoning from
+the type and, where possible, live data — none had yet been *caught in the act*. This one
+had: an admin QA account's advisor conversation already contained the raw value, in
+production, before anyone went looking. The other five were "this will happen"; this one
+was "this already happened." `requirement_type` also has no closed DB enum backing it
+(unlike the other five, all real DB-level unions) — `DEFAULT_REQUIREMENTS`
+(`app/(app)/applications/actions.ts`) is the known seeded set of 8, but nothing stops a
+future or custom value, so `requirementTypeLabel` degrades to a humanized fallback
+(`.replace(/_/g, " ")`) for anything unmapped, matching the UI's own
+`requirement-chip-grid.tsx`, rather than a hard lookup failure.
+
+Fixed by wiring in (`curriculum` — `curriculumLabel()` in `lib/requirements/copy.ts`
+already existed and was already used elsewhere, just never wired in here) or building new
+accessors matching the exact same shape `dimensionLabel`/`outlookLabel`/`curriculumLabel`
+already establish: synchronous `(value, locale) => string`, hardcoded EN/TR pairs in the
+`lib/` file itself, never routed through the async next-intl catalog, because
+`formatContextForPrompt` has to stay a plain sync function. `timeBudgetLabel`,
+`reflectionOutcomeLabel`, and `requirementTypeLabel` (all new, in
+`lib/ai/student-context.ts`) each reuse the exact wording already shown to students
+elsewhere — Settings' capacity form, the dashboard's weekly-focus reflection picker, and
+`requirement-chip-grid.tsx`'s own checklist labels respectively — rather than inventing
+new copy for a concept that already has an approved phrase.
+`recommendationClassLabel` (new, `lib/counselor/copy.ts`, shared by both callers) is
+genuinely new copy — no prior UI surface shows a student this field directly — kept
+deliberately short (the two surfaces this reaches carry roughly 90% of this product's AI
+spend) and `avoid_for_now`'s phrasing got the most scrutiny of the four: Phase 39's
+differentiating feature, the least legible raw value, and the one the system prompt
+explicitly asks the model to name and justify, so the one most likely to be quoted back.
+
+**Screen side swept clean in the same pass** — every raw `.status`/`.curriculum`/
+`.confidence`/`.recommendationClass`/`.weeklyTimeBudget` JSX interpolation across
+`app/`+`features/` was checked; all either pass through an established label component
+(`StatusBadge`, `RequirementEvaluationBadge`) or a `t()` call, or (one raw `.confidence`
+render, `universities/[id]/page.tsx`) are already-plain-English words needing no label,
+the same "ordinary words a student would recognise" standard `formatContextForPrompt`'s
+own comment already applies to `status`. The UI layer has working discipline here; the
+prompt path had none, which is why every live instance concentrated there.
+
+**Found as a direct byproduct, not a separate investigation**: threading `locale` through
+`buildCounselorGrounding` (needed to pass it to the new `recommendationClassLabel` calls)
+exposed that its call to `getCounselorRecommendations` was hardcoding `undefined` for
+locale — silently defaulting to English — regardless of the real student's language, for
+every weekly-plan generation, unconditionally. `getCounselorRecommendations` already
+threads locale into real, translated counselor reasoning (`lib/counselor/copy.ts`'s
+`gapWhyLine`/`alreadyStrongWhyLine`), so every Turkish student's weekly-plan prompt was
+being grounded in English counselor sentences it then had to translate or paraphrase on
+the fly, rather than the same authoritative Turkish sentence shown elsewhere. Fixed in
+the same pass, since it was the same line being touched for an unrelated reason and the
+fix (pass the real value already available in scope, matching the established sibling
+pattern `getCounselorState(userId, locale, supabaseClient)` already uses) was obviously
+correct rather than a design decision.
+
 ## Read the 332 as a floor, not a total
 
 The count matches JSX text nodes of two or more words plus

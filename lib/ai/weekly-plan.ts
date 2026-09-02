@@ -10,7 +10,9 @@ import { formatFeeCaveat } from "./fee-text";
 import { formatRequirementsCaveat } from "./requirements-text";
 import { withOutputLanguage } from "./output-language";
 import { getCounselorRecommendations } from "@/lib/counselor";
+import { recommendationClassLabel } from "@/lib/counselor/copy";
 import type { CounselorRecommendation, RecommendationClass } from "@/lib/counselor/types";
+import type { Locale } from "@/lib/i18n/config";
 import type { TimeBudget } from "@/types/database";
 
 const WeeklyActionSchema = z.object({
@@ -55,8 +57,8 @@ const RULED_OUT_CLASSES: readonly RecommendationClass[] = ["deprioritize", "avoi
 const MAX_RECOMMENDED_IN_GROUNDING = 8;
 const MAX_RULED_OUT_IN_GROUNDING = 4;
 
-function formatOne(recommendation: CounselorRecommendation): string {
-  const parts = [`[${recommendation.recommendationClass}] ${recommendation.title}`];
+function formatOne(recommendation: CounselorRecommendation, locale: Locale): string {
+  const parts = [`[${recommendationClassLabel(recommendation.recommendationClass, locale)}] ${recommendation.title}`];
   if (recommendation.why[0]) {
     parts.push(recommendation.why[0]);
   }
@@ -75,9 +77,9 @@ function formatOne(recommendation: CounselorRecommendation): string {
   return `- ${parts.join(" — ")}`;
 }
 
-function section(heading: string, recommendations: CounselorRecommendation[]): string | null {
+function section(heading: string, recommendations: CounselorRecommendation[], locale: Locale): string | null {
   if (recommendations.length === 0) return null;
-  return `${heading}\n${recommendations.map(formatOne).join("\n")}`;
+  return `${heading}\n${recommendations.map((r) => formatOne(r, locale)).join("\n")}`;
 }
 
 /**
@@ -90,7 +92,7 @@ function section(heading: string, recommendations: CounselorRecommendation[]): s
  * section with nothing in it is omitted entirely rather than emitted as an empty heading,
  * so the common case (no ruled-out candidates) reads exactly as it did before.
  */
-export function formatCounselorGrounding(recommendations: CounselorRecommendation[]): string {
+export function formatCounselorGrounding(recommendations: CounselorRecommendation[], locale: Locale): string {
   const recommended = recommendations
     .filter((r) => RECOMMENDED_CLASSES.includes(r.recommendationClass))
     .slice(0, MAX_RECOMMENDED_IN_GROUNDING);
@@ -102,10 +104,16 @@ export function formatCounselorGrounding(recommendations: CounselorRecommendatio
     section(
       "Oryn's Counselor Core has already identified these verified candidate actions this week (prefer these over inventing new ones when one genuinely fits — you may still propose something grounded in the student's own existing projects/activities/goals that isn't in this list, but never invent a new external program, competition, or deadline). A line marked ELIGIBILITY UNKNOWN or NOT ELIGIBLE has NOT been confirmed open to this student — pass that caveat on rather than presenting the item as a settled option. Never put one of these in \"avoidForNow\" — they are Counselor Core's recommendations, the opposite of something to discourage, even if you choose not to put it in \"actions\" yourself:",
       recommended,
+      locale,
     ),
     section(
-      'Counselor Core has separately ruled these out for this student right now — they are the OPPOSITE of recommendations. Never put any of them in "actions", and never describe one as something worth doing. They are here so you can name one in "avoidForNow" and explain why; the item tagged [avoid_for_now], if there is one, is Counselor Core\'s own pick for that field:',
+      // Tag text matches formatOne's own recommendationClassLabel output exactly (was the
+      // raw "[avoid_for_now]" until 2026-09-02's raw-enum-leak sweep) — this instruction
+      // tells the model what to look for in the list rendered just above it, so it has to
+      // name the actual tag that list uses, in whichever language it's rendered in.
+      `Counselor Core has separately ruled these out for this student right now — they are the OPPOSITE of recommendations. Never put any of them in "actions", and never describe one as something worth doing. They are here so you can name one in "avoidForNow" and explain why; the item tagged [${recommendationClassLabel("avoid_for_now", locale)}], if there is one, is Counselor Core's own pick for that field:`,
       ruledOut,
+      locale,
     ),
   ].filter((s): s is string => s !== null);
 
@@ -140,11 +148,21 @@ export function counselorRecommendedTitles(recommendations: CounselorRecommendat
  */
 async function buildCounselorGrounding(
   userId: string,
+  locale: Locale,
   supabaseClient?: Parameters<typeof getCounselorRecommendations>[2],
 ): Promise<{ text: string; recommendedTitles: string[] }> {
   try {
-    const counselorResult = await getCounselorRecommendations(userId, undefined, supabaseClient);
-    const text = formatCounselorGrounding(counselorResult.recommendations);
+    // Was `undefined` (silently defaulting to DEFAULT_LOCALE = "en") until this same
+    // 2026-09-02 sweep — found as a direct byproduct of threading locale through for
+    // recommendationClassLabel, not a separate investigation. getCounselorRecommendations
+    // already threads locale into runCounselorPipeline, which generates real, locale-aware
+    // "why" reasoning via lib/counselor/copy.ts's gapWhyLine/alreadyStrongWhyLine — so
+    // every weekly-plan generation for every Turkish student was quietly grounding the
+    // model in English counselor reasoning it then had to translate or paraphrase on the
+    // fly, rather than the same authoritative Turkish sentence a student would see
+    // elsewhere. Live and unconditional, not an edge case: every call went through this.
+    const counselorResult = await getCounselorRecommendations(userId, locale, supabaseClient);
+    const text = formatCounselorGrounding(counselorResult.recommendations, locale);
     const recommendedTitles = counselorRecommendedTitles(counselorResult.recommendations);
     return { text, recommendedTitles };
   } catch (error) {
@@ -351,7 +369,7 @@ export function buildWeeklyPlanInstruction(): string {
 // (lib/ai/usage.ts already uses the admin client, independent of this fix).
 export async function generateWeeklyPlan(userId: string, supabaseClient?: Parameters<typeof buildStudentAdvisorContext>[1]): Promise<WeeklyPlanGeneration> {
   const context = await buildStudentAdvisorContext(userId, supabaseClient);
-  const { text: counselorGrounding, recommendedTitles } = await buildCounselorGrounding(userId, supabaseClient);
+  const { text: counselorGrounding, recommendedTitles } = await buildCounselorGrounding(userId, context.student.preferredLanguage, supabaseClient);
   const provider = getAIProvider();
 
   // withUsageLogging resolves selectModelForUser(userId) itself and threads degraded/

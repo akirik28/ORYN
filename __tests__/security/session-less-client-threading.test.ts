@@ -81,7 +81,10 @@ describe("lib/ai/weekly-plan.ts — generateWeeklyPlan threads its client into b
   });
 
   test("buildCounselorGrounding (which reaches getCounselorRecommendations -> getCounselorState) receives supabaseClient", () => {
-    expect(source).toContain("buildCounselorGrounding(userId, supabaseClient)");
+    // locale inserted 2026-09-02 (raw-enum-leak sweep, also fixed the sibling bug this
+    // exposed: locale was previously hardcoded undefined here regardless of the real
+    // caller) — supabaseClient is still the last positional argument, still threaded.
+    expect(source).toContain("buildCounselorGrounding(userId, context.student.preferredLanguage, supabaseClient)");
   });
 });
 
