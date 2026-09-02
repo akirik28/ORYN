@@ -23,22 +23,34 @@ import { useSearchParams } from "next/navigation";
  * notFound()` on every design-preview page) — a production build never reaches this
  * component's children in the first place, so a second gate here would be redundant, not
  * defensive.
+ *
+ * .tier-transition-lock added 2026-09-02, later: mirrors ultra-ambient.tsx's identical fix
+ * for an identical bug — see that file's comment and app/globals.css's own comment on
+ * .tier-transition-lock. Both components set data-tier the same way (a post-mount effect),
+ * so both need the same one-frame transition suppression around the mutation or a
+ * transition-colors element previewed through this harness gets stuck on its pre-tier color.
  */
 export function DevPreviewTierStamp() {
   const searchParams = useSearchParams();
   const tier = searchParams.get("tier") === "ultra" ? "ultra" : "standard";
 
   useEffect(() => {
+    const html = document.documentElement;
+    html.classList.add("tier-transition-lock");
     // Same convention as UltraAmbient's own effect: only ever a real "ultra" value in the
     // DOM, never a literal "standard" string, since absence is the cleaner signal every
     // [data-tier="ultra"] selector already assumes.
     if (tier === "ultra") {
-      document.documentElement.dataset.tier = tier;
+      html.dataset.tier = tier;
     } else {
-      delete document.documentElement.dataset.tier;
+      delete html.dataset.tier;
     }
+    void html.offsetHeight;
+    const unlock = setTimeout(() => html.classList.remove("tier-transition-lock"), 50);
     return () => {
-      delete document.documentElement.dataset.tier;
+      clearTimeout(unlock);
+      html.classList.remove("tier-transition-lock");
+      delete html.dataset.tier;
     };
   }, [tier]);
 
