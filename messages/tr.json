@@ -1728,6 +1728,28 @@
       "changeSuccess": "{name} artık {tier}.",
       "changeNoop": "{name} zaten {tier} idi. Bir şey değişmedi."
     },
+    "opportunities": {
+      "sectionTitle": "Fırsatlar",
+      "searchPlaceholder": "Başlık veya kuruma göre ara…",
+      "searchButton": "Ara",
+      "empty": "Bu aramayla eşleşen fırsat yok.",
+      "statusActive": "Aktif",
+      "statusExpired": "Süresi doldu",
+      "statusUnderReview": "İnceleniyor",
+      "statusDisabled": "Devre dışı",
+      "disableButton": "Devre dışı bırak",
+      "reactivateButton": "Yeniden etkinleştir",
+      "disableReasonPlaceholder": "Neden (kaydedilir)",
+      "confirmDisableTitle": "{title} devre dışı bırakılsın mı?",
+      "confirmDisableDescription": "Bunu tüm öğrencilerden hemen gizler. Geri alınabilir — aynı şekilde yeniden etkinleştirebilirsiniz.",
+      "confirmDisableButton": "Devre dışı bırak",
+      "confirmReactivateTitle": "{title} yeniden etkinleştirilsin mi?",
+      "confirmReactivateDescription": "Öğrencilere hemen tekrar görünür hale gelir.",
+      "confirmReactivateButton": "Yeniden etkinleştir",
+      "disableSuccess": "{title} artık öğrencilerden gizli.",
+      "reactivateSuccess": "{title} öğrencilere tekrar görünüyor.",
+      "changeNoop": "{title} zaten bu durumdaydı. Bir şey değişmedi."
+    },
     "warnings": {
       "sectionTitle": "Bütçe uyarıları",
       "message": "{name}: son 30 günde {amount} (aylık {ceiling} tavanının %{percent}'i)",
