@@ -78,3 +78,33 @@ describe("recomputeCareerProfile's snapshot-write condition (2026-09-02 fix)", (
     expect(SRC).toContain('snapshot_reason: opts?.snapshotReason ?? "profile_updated"');
   });
 });
+
+/**
+ * 2026-09-02 scheduled-review job: recomputeCareerProfile now accepts optional
+ * supabaseClient/adminClient overrides so a job (no session to scope reads to) can pass
+ * its own admin client for both, mirroring the identical fix lib/plan/persist.ts's
+ * getOrCreateWeeklyPlan already needed for the same reason. Every EXISTING real-user-
+ * session caller passes neither, so the defaults (createClient()/tryCreateAdminClient())
+ * must be exactly what they were before this change -- the whole point of an optional
+ * param over changing the required signature.
+ */
+describe("recomputeCareerProfile's client overrides (2026-09-02, scheduled review job)", () => {
+  test("supabaseClient defaults to createClient() -- unchanged for every existing caller that doesn't pass one", () => {
+    expect(SRC).toContain("const supabase = opts?.supabaseClient ?? (await createClient());");
+  });
+
+  test("adminClient defaults to tryCreateAdminClient() -- unchanged for every existing caller", () => {
+    expect(SRC).toContain("const admin = opts?.adminClient ?? tryCreateAdminClient();");
+  });
+
+  test("the function now reports whether a snapshot was actually written, on every return path", () => {
+    expect(SRC).toContain("return { careerProfile, completeness, snapshotWritten: false };");
+    expect(SRC).toContain("return { careerProfile, completeness, snapshotWritten };");
+    // snapshotWritten must be derived from the same changedMeaningfully gate that decides
+    // whether the insert happens at all -- a second, independently-computed flag here
+    // could silently drift from what was actually written.
+    const snapshotWrittenIndex = SRC.indexOf("const snapshotWritten = changedMeaningfully;");
+    const conditionIndex = SRC.indexOf("if (changedMeaningfully) {");
+    expect(snapshotWrittenIndex).toBeGreaterThan(conditionIndex);
+  });
+});

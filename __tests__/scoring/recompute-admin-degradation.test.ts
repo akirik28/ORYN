@@ -22,7 +22,11 @@ describe("recomputeCareerProfile degrades instead of throwing when the admin cli
   test("uses tryCreateAdminClient, not the throwing createAdminClient", () => {
     expect(SRC).toContain('import { tryCreateAdminClient } from "@/lib/supabase/admin";');
     expect(SRC).not.toMatch(/import \{ createAdminClient \} from "@\/lib\/supabase\/admin";/);
-    expect(SRC).toContain("const admin = tryCreateAdminClient();");
+    // 2026-09-02: an opts?.adminClient override was added (see profile-update-wiring.test.ts's
+    // own "client overrides" describe block) so a scheduled job can pass its own admin
+    // client -- every call site that doesn't pass one still falls through to
+    // tryCreateAdminClient() here, unchanged.
+    expect(SRC).toContain("const admin = opts?.adminClient ?? tryCreateAdminClient();");
   });
 
   test("checks admin before any of the three writes, and returns the computed (unpersisted) result instead of throwing", () => {
@@ -32,7 +36,7 @@ describe("recomputeCareerProfile degrades instead of throwing when the admin cli
     expect(firstWriteIndex).toBeGreaterThan(checkIndex);
     const guardBlock = SRC.slice(checkIndex, firstWriteIndex);
     expect(guardBlock).toContain("console.error(");
-    expect(guardBlock).toContain("return { careerProfile, completeness };");
+    expect(guardBlock).toContain("return { careerProfile, completeness, snapshotWritten: false };");
   });
 
   test("every one of its four call sites already wraps it in try/catch (why this is lower priority, not why it's unfixed)", () => {
