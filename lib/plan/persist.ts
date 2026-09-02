@@ -3,6 +3,7 @@ import "server-only";
 import { startOfWeek, formatISO } from "date-fns";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { isUndefinedColumnError } from "@/lib/supabase/errors";
 import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { generateWeeklyPlan } from "@/lib/ai/weekly-plan";
 import { assertWithinAIRateLimit } from "@/lib/ai/rate-limit";
@@ -169,7 +170,8 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
     .update({ carried_forward: true })
     .eq("plan_id", plan.id)
     .in("status", ["completed", "skipped", "expired"]);
-  const carriedForwardColumnMissing = preserveError?.code === "42703" && preserveError.message?.includes("carried_forward");
+  // Shared check — a write's missing-column error is not plain 42703; see lib/supabase/errors.ts.
+  const carriedForwardColumnMissing = isUndefinedColumnError(preserveError, "carried_forward");
   if (preserveError && !carriedForwardColumnMissing) {
     throw new Error(`Failed to preserve this week's completed actions: ${preserveError.message}`);
   }

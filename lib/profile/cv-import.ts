@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { EntityScope } from "@/lib/entities/field-policy";
+import { isUndefinedColumnError } from "@/lib/supabase/errors";
 import type { SkillCategory } from "@/types/database";
 import type { CVExtractionResult } from "@/lib/ai/cv-extraction";
 import type { Locale } from "@/lib/i18n/config";
@@ -208,12 +209,11 @@ export function flattenCvLanguages(result: CVExtractionResult): CvImportReviewLa
   }));
 }
 
-/** True whenever a write hits the specific "this column doesn't exist yet" error a not-yet-
- * applied migration produces (Postgres error 42703) — the same defensive check
- * lib/plan/persist.ts (migration 0077) and lib/jobs/run-with-tracking.ts (migration 0083)
- * already use, extended to whichever column name the caller is currently trying to write. */
+/** Delegates to the shared check — see lib/supabase/errors.ts for why a write's missing-column
+ * error is NOT the 42703 this used to test for alone. Kept as a named local so every call site
+ * below reads unchanged. */
 function isMissingColumnError(error: { code?: string; message?: string } | null, column: string): boolean {
-  return error?.code === "42703" && (error.message?.includes(column) ?? false);
+  return isUndefinedColumnError(error, column);
 }
 
 export interface CvImportSkillCandidate {

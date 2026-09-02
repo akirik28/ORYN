@@ -33,4 +33,34 @@ describe("isUndefinedColumnError", () => {
   test("matches for a completely different column too -- the check is generic, not tied to any one migration", () => {
     expect(isUndefinedColumnError({ code: "42703", message: 'column "match_confidence" of relation "opportunity_matches" does not exist' }, "match_confidence")).toBe(true);
   });
+
+  test("PGRST204 — the code a WRITE actually returns — is matched, not just Postgres's 42703", () => {
+    // The regression this whole file exists for. PostgREST validates an INSERT/UPDATE/UPSERT
+    // payload against its schema cache before any SQL runs and returns its own code; 42703 is
+    // what Postgres raises when SQL executes, which is the SELECT path. Every degrade guard in
+    // this codebase tested only 42703 and was therefore inert on writes -- proved live on
+    // 2026-09-02 when refreshOpportunityMatches took its non-degrade branch against a genuinely
+    // absent match_confidence column.
+    expect(
+      isUndefinedColumnError(
+        { code: "PGRST204", message: "Could not find the 'match_confidence' column of 'opportunity_matches' in the schema cache" },
+        "match_confidence",
+      ),
+    ).toBe(true);
+  });
+
+  test("a PGRST204 naming a DIFFERENT column still fails loudly — widening the code set did not widen the tolerance", () => {
+    expect(
+      isUndefinedColumnError(
+        { code: "PGRST204", message: "Could not find the 'something_else' column of 'opportunity_matches' in the schema cache" },
+        "match_confidence",
+      ),
+    ).toBe(false);
+  });
+
+  test("an unrelated error code is never treated as a missing column, whatever its message says", () => {
+    expect(isUndefinedColumnError({ code: "23505", message: 'duplicate key value violates unique constraint "match_confidence_idx"' }, "match_confidence")).toBe(false);
+    expect(isUndefinedColumnError(null, "match_confidence")).toBe(false);
+    expect(isUndefinedColumnError({ message: "no code at all, mentions match_confidence" }, "match_confidence")).toBe(false);
+  });
 });

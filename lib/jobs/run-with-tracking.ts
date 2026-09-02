@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isUndefinedColumnError } from "@/lib/supabase/errors";
 
 /**
  * Wraps a background job body with an external_sync_jobs row (Phase 30) so the admin panel
@@ -47,7 +48,8 @@ export async function runWithTracking<T>(
         .update({ status: "succeeded", finished_at: finishedAt, items_processed: itemsProcessed, errors_encountered: errorsEncountered })
         .eq("id", job.id);
 
-      const errorsColumnMissing = updateError?.code === "42703" && updateError.message?.includes("errors_encountered");
+      // Shared check — a write's missing-column error is not plain 42703; see lib/supabase/errors.ts.
+      const errorsColumnMissing = isUndefinedColumnError(updateError, "errors_encountered");
       if (errorsColumnMissing) {
         console.warn("[jobs] errors_encountered column not yet live (migration 0083 unapplied) — recording status/items_processed only", {
           jobName,
