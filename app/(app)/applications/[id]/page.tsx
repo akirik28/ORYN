@@ -128,7 +128,16 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           saveLabel={t("notesField.save")}
           savedLabel={t("notesField.saved")}
           errorFallback={t("notesField.error")}
-          onSave={(notes) => updateApplicationNotes(application.id, notes)}
+          // `.bind`, not an arrow closure. This page is a Server Component and NotesField is
+          // "use client", so an inline `(notes) => updateApplicationNotes(id, notes)` is a plain
+          // function crossing the boundary — React rejects it at render with "Event handlers
+          // cannot be passed to Client Component props" and the whole route falls to its error
+          // boundary. A bound Server Action stays serializable, so it crosses fine.
+          //
+          // The identical-looking `onSave={(notes) => …}` in requirement-checklist.tsx is
+          // correct and must stay: that file is itself "use client", so its closure never
+          // crosses a boundary. The two sites look the same and are not the same.
+          onSave={updateApplicationNotes.bind(null, application.id)}
         />
       </div>
 
