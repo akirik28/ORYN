@@ -141,6 +141,25 @@ export function EntityCombobox({
     });
   }, [entityId, scope, linkedEntity]);
 
+  // Cancel a pending debounced search when this component goes away. Without this the
+  // timer set below still fires after unmount and calls searchEntitiesAction -- a real
+  // server action -- for a component nobody is looking at any more: every abandoned
+  // keystroke within DEBOUNCE_MS of navigating away costs a request whose result is
+  // discarded. The requestIdRef guard inside the timer only protects against *stale*
+  // results racing a newer search; it does nothing about the call itself, and nothing at
+  // all once the component is gone.
+  //
+  // Found 2026-09-03 through a cross-test leak rather than by reading this file: a
+  // pending timer from one test fired during the next one, so the assertion that failed
+  // was in a test whose own behaviour was correct, carrying the *previous* test's query
+  // in the call args. Worth knowing next time an unrelated-looking test goes flaky under
+  // parallel load -- a timer with no unmount cleanup looks exactly like that.
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
   function runSearch(text: string) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     const trimmed = text.trim();

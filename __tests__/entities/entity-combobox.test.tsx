@@ -158,6 +158,22 @@ describe("EntityCombobox — no-result state", () => {
     expect(screen.queryByText("No matches found.")).not.toBeInTheDocument();
     expect(mockedSearch).not.toHaveBeenCalled();
   });
+
+  test("a pending debounced search is cancelled on unmount, not left to fire at a component that is gone", async () => {
+    // Regression, 2026-09-03. entity-combobox.tsx set a DEBOUNCE_MS timer in runSearch and
+    // never cleared it on unmount, so navigating away within 300ms of a keystroke still
+    // fired searchEntitiesAction -- a real server action -- for a component nobody was
+    // looking at. It surfaced as a *different* test failing under parallel load, carrying
+    // this test's query in its call args, which is why the assertion below is about the
+    // leak itself rather than about whatever ran next.
+    mockedSearch.mockResolvedValue([]);
+    const { unmount } = render(<Harness scope="school" allowCustom />);
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "Leaky Query" } });
+    unmount();
+    // Well past DEBOUNCE_MS: if the timer survived unmount it has fired by now.
+    await new Promise((r) => setTimeout(r, AFTER_DEBOUNCE));
+    expect(mockedSearch).not.toHaveBeenCalled();
+  });
 });
 
 describe("EntityCombobox — error state (f6c353f regression)", () => {
