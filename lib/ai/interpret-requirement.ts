@@ -2,8 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 import { getAIProvider } from "./index";
-import { logAIUsage } from "./usage";
-import { selectModelForUser } from "./limits/budget";
+import { withUsageLogging } from "./usage";
 import { RULE_FIELD_SCHEMAS_BY_KIND, ruleAuthoringRefusal } from "@/lib/validation/requirements";
 import { categoryToRuleKind } from "@/lib/requirements/types";
 import type { RequirementCategory } from "@/types/database";
@@ -45,24 +44,21 @@ export async function interpretRequirementText(params: {
 
   const fieldSchema = RULE_FIELD_SCHEMAS_BY_KIND[kind];
   const provider = getAIProvider();
-  const selection = await selectModelForUser(params.adminUserId);
-  const result = await provider.generateStructured({
-    system: SYSTEM_PROMPT,
-    prompt: `Requirement title: ${params.title}\nCategory: ${params.category}\nSourced text:\n${params.requirementDetail.slice(0, 4000)}\n\nStructure this as a "${kind}" rule.`,
-    schema: fieldSchema as z.ZodType<Record<string, unknown>>,
-    schemaName: "record_requirement_rule",
-    schemaDescription: `Records the structured "${kind}" rule extracted from the requirement text.`,
-    maxTokens: 512,
-    model: selection.model,
-  });
+  // withUsageLogging (2026-09-02): see essay-outlines.ts's identical comment — a
+  // retry-exhausted schema-validation failure used to spend up to two real, billed calls
+  // with no ai_usage record at all, the same shape already fixed elsewhere. This surface is
+  // admin-triggered rather than student-facing, but the gap and the fix are identical.
+  const result = await withUsageLogging({ userId: params.adminUserId, feature: "requirement_interpretation" }, (model) =>
+    provider.generateStructured({
+      system: SYSTEM_PROMPT,
+      prompt: `Requirement title: ${params.title}\nCategory: ${params.category}\nSourced text:\n${params.requirementDetail.slice(0, 4000)}\n\nStructure this as a "${kind}" rule.`,
+      schema: fieldSchema as z.ZodType<Record<string, unknown>>,
+      schemaName: "record_requirement_rule",
+      schemaDescription: `Records the structured "${kind}" rule extracted from the requirement text.`,
+      maxTokens: 512,
+      model,
+    }),
+  );
 
-  await logAIUsage({
-    userId: params.adminUserId,
-    feature: "requirement_interpretation",
-    usage: result.usage,
-    model: result.model,
-    degraded: selection.degraded,
-    degradeReason: selection.degraded ? selection.reason : null,
-  });
   return { kind, ...result.data } as StructuredRule;
 }

@@ -7,12 +7,16 @@ import { MockAIProvider } from "../../stubs/mock-ai-provider";
  * MockAIProvider's queued fake responses. No live model call is ever made here, the same
  * discipline __tests__/ai/weekly-plan.test.ts already established for the real generator.
  *
- * counselor_explain's own real function (explainCounselorRecommendations) calls
- * logAIUsage, which reaches a real Supabase admin client — mocked out here for the same
- * reason weekly-plan.test.ts mocks it.
+ * counselor_explain's own real function (explainCounselorRecommendations) now goes through
+ * withUsageLogging (2026-09-02, closing the same off-the-books-spend gap weekly-plan.test.ts's
+ * own mock comment already describes for that surface) — reaches a real Supabase admin
+ * client via logAIUsage, so both are mocked out here the identical way
+ * weekly-plan.test.ts does: run the callback with a fixed model, skip the real
+ * selectModelForUser/budget check and the real DB write.
  */
 vi.mock("@/lib/ai/usage", () => ({
   logAIUsage: vi.fn().mockResolvedValue(undefined),
+  withUsageLogging: async <T>(_meta: unknown, run: (model: string) => Promise<T>) => run("claude-sonnet-5"),
 }));
 
 const { runEvalCase, runEval } = await import("@/lib/ai/eval/harness");

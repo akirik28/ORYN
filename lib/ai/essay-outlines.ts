@@ -2,8 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 import { getAIProvider } from "./index";
-import { logAIUsage } from "./usage";
-import { selectModelForUser } from "./limits/budget";
+import { withUsageLogging } from "./usage";
 import { withOutputLanguage } from "./output-language";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
@@ -94,34 +93,34 @@ export async function generateEssayOutlines(params: {
   goals: string[];
 }): Promise<EssayOutlineResponse> {
   const provider = getAIProvider();
-  const selection = await selectModelForUser(params.userId);
 
-  const result = await provider.generateStructured({
-    system: withOutputLanguage(SYSTEM_PROMPT, params.locale ?? DEFAULT_LOCALE),
-    prompt: [
-      `Essay prompt the student is answering:\n${params.essayPrompt}`,
-      "",
-      `The student's stated goals: ${params.goals.length > 0 ? params.goals.join("; ") : "(none recorded)"}`,
-      "",
-      "The student's recorded experiences:",
-      params.experiences.map(formatExperience).join("\n"),
-      "",
-      "Pick the 2-3 experiences with the most real material for this specific prompt, and give 2-3 genuinely different outlines for each. Use only what's above.",
-    ].join("\n"),
-    schema: EssayOutlineResponseSchema,
-    schemaName: "essay_story_outlines",
-    schemaDescription: "Records story candidates drawn from the student's own experiences, with structural outlines for each.",
-    maxTokens: 3000,
-    model: selection.model,
-  });
+  // withUsageLogging (2026-09-02): a retry-exhausted schema-validation failure is up to two
+  // real, billed Anthropic calls (lib/ai/anthropic-provider.ts's generateStructured retries
+  // once). This function used to call selectModelForUser + generateStructured + logAIUsage
+  // directly, logging usage only on the success path — the same off-the-books-spend shape
+  // already found and fixed in cv_extraction/achievement_refinement/weekly_plan/
+  // research_generator/opportunity_extraction/requirement_extraction, just never extended
+  // here. Found auditing every structured-output surface's failure path, not a live incident.
+  const result = await withUsageLogging({ userId: params.userId, feature: "essay_story_bank" }, (model) =>
+    provider.generateStructured({
+      system: withOutputLanguage(SYSTEM_PROMPT, params.locale ?? DEFAULT_LOCALE),
+      prompt: [
+        `Essay prompt the student is answering:\n${params.essayPrompt}`,
+        "",
+        `The student's stated goals: ${params.goals.length > 0 ? params.goals.join("; ") : "(none recorded)"}`,
+        "",
+        "The student's recorded experiences:",
+        params.experiences.map(formatExperience).join("\n"),
+        "",
+        "Pick the 2-3 experiences with the most real material for this specific prompt, and give 2-3 genuinely different outlines for each. Use only what's above.",
+      ].join("\n"),
+      schema: EssayOutlineResponseSchema,
+      schemaName: "essay_story_outlines",
+      schemaDescription: "Records story candidates drawn from the student's own experiences, with structural outlines for each.",
+      maxTokens: 3000,
+      model,
+    }),
+  );
 
-  await logAIUsage({
-    userId: params.userId,
-    feature: "essay_story_bank",
-    usage: result.usage,
-    model: result.model,
-    degraded: selection.degraded,
-    degradeReason: selection.degraded ? selection.reason : null,
-  });
   return result.data;
 }

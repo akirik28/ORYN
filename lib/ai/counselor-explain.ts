@@ -2,8 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 import { getAIProvider } from "./index";
-import { logAIUsage } from "./usage";
-import { selectModelForUser } from "./limits/budget";
+import { withUsageLogging } from "./usage";
 import { AIProviderNotConfiguredError } from "./provider";
 import { withOutputLanguage } from "./output-language";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
@@ -131,24 +130,24 @@ export async function explainCounselorRecommendations(
   if (result.recommendations.length === 0) return null;
 
   try {
-    const selection = await selectModelForUser(userId);
-    const response = await provider.generateStructured({
-      system: withOutputLanguage(COUNSELOR_EXPLANATION_SYSTEM_PROMPT, locale),
-      prompt: buildCounselorExplanationPrompt(result, locale),
-      schema: CounselorExplanationSchema,
-      schemaName: "record_counselor_explanation",
-      schemaDescription: "Records a short overall summary and one narrative sentence per recommendation id.",
-      maxTokens: 1024,
-      model: selection.model,
-    });
-    await logAIUsage({
-      userId,
-      feature: "counselor_explanation",
-      usage: response.usage,
-      model: response.model,
-      degraded: selection.degraded,
-      degradeReason: selection.degraded ? selection.reason : null,
-    });
+    // withUsageLogging (2026-09-02): this call used to select its model and log usage
+    // manually, on the success path only — a retry-exhausted schema-validation failure
+    // (lib/ai/anthropic-provider.ts retries once) spent up to two real, billed calls with
+    // no ai_usage record at all. Same gap, same fix already applied to six other structured
+    // surfaces tonight; this feature has zero live callers today (see docs/handoffs/
+    // spend-artefact-sweep-2026-09-02.md) so the gap has never actually cost anything, but
+    // the code path is real and reachable the moment something calls it.
+    const response = await withUsageLogging({ userId, feature: "counselor_explanation" }, (model) =>
+      provider.generateStructured({
+        system: withOutputLanguage(COUNSELOR_EXPLANATION_SYSTEM_PROMPT, locale),
+        prompt: buildCounselorExplanationPrompt(result, locale),
+        schema: CounselorExplanationSchema,
+        schemaName: "record_counselor_explanation",
+        schemaDescription: "Records a short overall summary and one narrative sentence per recommendation id.",
+        maxTokens: 1024,
+        model,
+      }),
+    );
     return response.data;
   } catch (error) {
     if (error instanceof AIProviderNotConfiguredError) return null;

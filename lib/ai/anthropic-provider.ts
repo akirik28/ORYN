@@ -202,7 +202,14 @@ export class AnthropicProvider implements AIProvider {
       const parsed = request.schema.safeParse(toolUse.input);
       if (parsed.success) {
         await recordProviderSuccess(PROVIDER_NAME);
-        return { data: parsed.data, usage, model };
+        // accumulatedUsage, not the current attempt's usage alone: a validation failure that
+        // succeeds on retry still spent real tokens on the first (discarded) attempt. Using
+        // only the final attempt's usage here would silently under-bill by exactly that much
+        // on every retried-then-succeeded call — the success-path sibling of the gap
+        // AIStructuredResponseFailedError's own usage field exists to close on the failure
+        // path. Found auditing this exact function for the 2026-09-02 structured-output
+        // validation-failure sweep, not from a live incident.
+        return { data: parsed.data, usage: accumulatedUsage, model };
       }
 
       lastError = parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");
