@@ -43,14 +43,23 @@ export function EvidenceSignal({
   locale?: Locale;
   className?: string;
 }) {
-  // Ultra's gradient-text treatment (app/globals.css's [data-tier="ultra"] .tier-grad-text)
-  // applies to neutral/positive only — never `missing`. An absent piece of evidence ("0
-  // verified research projects") getting the same celebratory flame treatment as a real
-  // number would misrepresent an absence as an achievement, which is exactly the kind of
-  // fake-precision/false-confidence this product's whole design explicitly refuses.
+  // No Ultra gradient-text treatment on the value, any tone, as of 2026-09-02 — reverted
+  // from an earlier version that put `.tier-grad-text` on neutral AND positive, which made
+  // them render identically under Ultra: the one thing this color is FOR (telling a student
+  // "9 assessed" apart from "5 already strong" at a glance) stopped working the moment both
+  // became the same flame gradient. oryn-3f's fleet-wide survey found this as the one real
+  // instance of a broader principle: Ultra may add signal, it must never make two states
+  // that were previously distinguishable harder to tell apart. The template is
+  // components/oryn/eyebrow.tsx's own `ultra` prop — flame goes on a purely decorative
+  // element (that component's hairline rule, aria-hidden, no text), never on the thing a
+  // reader actually has to read to know what's true. There is no equivalent
+  // fully-decorative element here to redirect it to without inventing one, so this pass
+  // removes the miscolored signal rather than replacing it with a different one — a
+  // gradient hairline for `bordered` evidence lists is a reasonable follow-up, not done
+  // here, since it's additive (a new touch) rather than corrective (fixing this one).
   const valueTone = {
-    neutral: "text-ink-1 tier-grad-text",
-    positive: "text-success tier-grad-text",
+    neutral: "text-ink-1",
+    positive: "text-success",
     missing: "text-ink-3",
   }[tone];
 
