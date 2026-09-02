@@ -58,7 +58,7 @@ vi.mock("@/lib/counselor", () => ({
   }),
 }));
 
-const { generateWeeklyPlan, formatCounselorGrounding, resolvePlanSelfContradiction, enforceTimeBudget } = await import("@/lib/ai/weekly-plan");
+const { generateWeeklyPlan, formatCounselorGrounding, resolvePlanSelfContradiction, rankPlanActions, enforceTimeBudget } = await import("@/lib/ai/weekly-plan");
 const { formatEligibilityCaveat } = await import("@/lib/ai/eligibility-text");
 
 function rec(overrides: Partial<CounselorRecommendation> = {}): CounselorRecommendation {
@@ -524,6 +524,143 @@ describe("enforceTimeBudget (pure) — Phase 64's deterministic backstop", () =>
     const result = enforceTimeBudget(plan, "5_10h");
     expect(result.avoidForNow).toEqual({ activity: "X", reason: "Y" });
     expect(result.summary).toBe("original summary");
+  });
+});
+
+describe("rankPlanActions (pure) — Phase 38, founder-directed 2026-09-02: real ranking, not model array order", () => {
+  function action(overrides: Partial<{ title: string; impact: "low" | "medium" | "high" | "very_high" }> = {}) {
+    return {
+      title: "Untitled action",
+      description: "d",
+      reason: "r",
+      category: "c",
+      estimatedMinutes: 60,
+      impact: "medium" as const,
+      ...overrides,
+    };
+  }
+  function plan(actions: ReturnType<typeof action>[]) {
+    return { summary: "s", actions, avoidForNow: null };
+  }
+
+  test("fewer than 2 actions — returned unchanged, identity preserved (nothing to rank)", () => {
+    const p = plan([action({ title: "Only one" })]);
+    expect(rankPlanActions(p, [])).toBe(p);
+  });
+
+  test("no Counselor Core data at all — falls back to ranking by the action's own impact alone, fixing the real defect found in live data (a lower-impact action written first)", () => {
+    // The exact shape found querying oryn-qa-scratch directly: priority 1 was "high" impact,
+    // priority 2 was "very_high" — 3 of 9 real plans had this. rankPlanActions with zero
+    // recommendations must still fix it, since impact is the one factor that's always real.
+    const p = plan([action({ title: "Written first by the model", impact: "high" }), action({ title: "Written second by the model", impact: "very_high" })]);
+    const result = rankPlanActions(p, []);
+    expect(result.actions.map((a) => a.title)).toEqual(["Written second by the model", "Written first by the model"]);
+  });
+
+  test("within the same impact tier, a matched candidate with strong urgency/confidence and low effort outranks one with weak signals", () => {
+    const weak = action({ title: "Weak signal action", impact: "high" });
+    const strong = action({ title: "Strong signal action", impact: "high" });
+    const p = plan([weak, strong]); // model wrote the weak one first
+    const recommendations = [
+      rec({ title: "Weak signal action", urgency: "low", confidence: "low", effort: "high" }),
+      rec({ title: "Strong signal action", urgency: "high", confidence: "high", effort: "low" }),
+    ];
+    const result = rankPlanActions(p, recommendations);
+    expect(result.actions.map((a) => a.title)).toEqual(["Strong signal action", "Weak signal action"]);
+  });
+
+  test("matching reuses namesSameActivity — a differently-cased, differently-punctuated title still matches its candidate", () => {
+    const p = plan([action({ title: "Apply to the Economics Challenge!", impact: "medium" }), action({ title: "Unrelated low-signal action", impact: "medium" })]);
+    const recommendations = [
+      rec({ title: "unrelated low-signal action", urgency: "low", confidence: "low", effort: "high" }),
+      rec({ title: "applying to the economics challenge", urgency: "high", confidence: "high", effort: "low" }),
+    ];
+    const result = rankPlanActions(p, recommendations);
+    expect(result.actions[0].title).toBe("Apply to the Economics Challenge!");
+  });
+
+  test("an unmatched action's other-factor contribution is a constant, not an invented signal — proven by it never outranking a matched action's genuinely strong one, nor losing to a matched action's genuinely weak one, at equal impact", () => {
+    const unmatched = action({ title: "No Counselor Core candidate for this one", impact: "high" });
+    const strongMatch = action({ title: "Strong match", impact: "high" });
+    const weakMatch = action({ title: "Weak match", impact: "high" });
+    const p = plan([weakMatch, unmatched, strongMatch]);
+    const recommendations = [
+      rec({ title: "Strong match", urgency: "high", confidence: "high", effort: "low" }),
+      rec({ title: "Weak match", urgency: "low", confidence: "low", effort: "high" }),
+    ];
+    const result = rankPlanActions(p, recommendations);
+    expect(result.actions.map((a) => a.title)).toEqual(["Strong match", "No Counselor Core candidate for this one", "Weak match"]);
+  });
+
+  test("ties (identical score) preserve the model's own original order — a stable sort, not an arbitrary one", () => {
+    const p = plan([action({ title: "First", impact: "medium" }), action({ title: "Second", impact: "medium" }), action({ title: "Third", impact: "medium" })]);
+    const result = rankPlanActions(p, []); // no matches at all -- every action scores identically
+    expect(result.actions.map((a) => a.title)).toEqual(["First", "Second", "Third"]);
+  });
+
+  test("no numerical instability at the extremes — Phase 38's own warning about a near-zero factor swamping the result does not apply, because this is additive with no factor ever at 0", () => {
+    const bestPossible = rec({ title: "Best", urgency: "high", confidence: "high", effort: "low" });
+    const worstPossible = rec({ title: "Worst", urgency: "low", confidence: "low", effort: "high" });
+    const p = plan([action({ title: "Worst", impact: "high" }), action({ title: "Best", impact: "high" })]);
+    const result = rankPlanActions(p, [bestPossible, worstPossible]);
+    // Best beats Worst, and the gap is the bounded, predictable amount the formula implies
+    // (urgency 3-1 + confidence 3-1 - effort(1-3) = 2+2+2 = 6), not an outsized swing from
+    // one factor dominating — no NaN, no Infinity, no single factor able to swamp the rest.
+    expect(result.actions.map((a) => a.title)).toEqual(["Best", "Worst"]);
+  });
+
+  test("summary and avoidForNow survive reordering untouched", () => {
+    const p = { summary: "original summary", actions: [action({ title: "A", impact: "low" }), action({ title: "B", impact: "high" })], avoidForNow: { activity: "X", reason: "Y" } };
+    const result = rankPlanActions(p, []);
+    expect(result.summary).toBe("original summary");
+    expect(result.avoidForNow).toEqual({ activity: "X", reason: "Y" });
+  });
+});
+
+describe("generateWeeklyPlan end to end — ranking is wired into the real pipeline, not just unit-tested in isolation", () => {
+  test("the persisted action order reflects Counselor Core's ranking, not the model's own array order", async () => {
+    h.recommendations = [
+      rec({ title: "Low-priority-looking action", impact: "high", urgency: "low", confidence: "low", effort: "high" }),
+      rec({ title: "High-priority-looking action", impact: "high", urgency: "high", confidence: "high", effort: "low" }),
+    ];
+    const { plan } = await runPlan(
+      planResponse({
+        actions: [
+          // The model writes the weaker one first -- exactly the shape of the real 3-of-9
+          // defect this whole package traces back to.
+          { title: "Low-priority-looking action", description: "d", reason: "r", category: "c", estimatedMinutes: 60, impact: "high" },
+          { title: "High-priority-looking action", description: "d", reason: "r", category: "c", estimatedMinutes: 60, impact: "high" },
+        ],
+      }),
+    );
+    expect(plan.actions.map((a) => a.title)).toEqual(["High-priority-looking action", "Low-priority-looking action"]);
+  });
+
+});
+
+describe("rankPlanActions composed with enforceTimeBudget — the pipeline-order regression risk named directly in this package's assignment", () => {
+  test("trimming after ranking removes the actually-lowest-ranked action, not whichever the model wrote last", () => {
+    const weak = { title: "Weak but written first", description: "d", reason: "r", category: "c", estimatedMinutes: 400, impact: "medium" as const };
+    const strong = { title: "Strong but written last", description: "d", reason: "r", category: "c", estimatedMinutes: 400, impact: "medium" as const };
+    const original = { summary: "s", actions: [weak, strong], avoidForNow: null };
+    const recommendations = [
+      rec({ title: "Weak but written first", urgency: "low", confidence: "low", effort: "high" }),
+      rec({ title: "Strong but written last", urgency: "high", confidence: "high", effort: "low" }),
+    ];
+
+    // 800 total minutes comfortably exceeds under_2h's 144min threshold, trimming to the
+    // 1-action floor -- correct only if ranking already reordered the array before
+    // enforceTimeBudget trims from its end.
+    const ranked = rankPlanActions(original, recommendations);
+    const trimmed = enforceTimeBudget(ranked, "under_2h");
+    expect(trimmed.actions).toHaveLength(1);
+    expect(trimmed.actions[0].title).toBe("Strong but written last");
+
+    // The order matters: running enforceTimeBudget FIRST (on the model's raw, unranked
+    // order) would keep the wrong one -- this is the actual regression this test guards,
+    // not just a restatement of the line above.
+    const trimmedWithoutRanking = enforceTimeBudget(original, "under_2h");
+    expect(trimmedWithoutRanking.actions[0].title).toBe("Weak but written first");
   });
 });
 

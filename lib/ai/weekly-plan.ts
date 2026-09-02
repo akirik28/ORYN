@@ -11,7 +11,7 @@ import { formatRequirementsCaveat } from "./requirements-text";
 import { withOutputLanguage } from "./output-language";
 import { getCounselorRecommendations } from "@/lib/counselor";
 import { recommendationClassLabel } from "@/lib/counselor/copy";
-import type { CounselorRecommendation, RecommendationClass } from "@/lib/counselor/types";
+import type { BoundedLevel, CounselorRecommendation, RecommendationClass } from "@/lib/counselor/types";
 import type { Locale } from "@/lib/i18n/config";
 import type { TimeBudget } from "@/types/database";
 
@@ -38,6 +38,7 @@ export const WeeklyPlanSchema = z.object({
 });
 
 export type WeeklyPlanGeneration = z.infer<typeof WeeklyPlanSchema>;
+type WeeklyActionGeneration = WeeklyPlanGeneration["actions"][number];
 
 /** Counselor Core's four-value `recommendation_class` enum splits cleanly in two, and the
  * prompt must respect that split. `do`/`consider` are things to put in front of the student;
@@ -145,12 +146,19 @@ export function counselorRecommendedTitles(recommendations: CounselorRecommendat
  * echoed into `actions`. On failure both come back empty, matching the text-only failure
  * mode this function already had: no grounding means no cross-check either, not a blocked
  * plan.
+ *
+ * Also returns the raw `recommendations` array (2026-09-02, founder-directed Phase 38
+ * wiring) so `rankPlanActions` below can read each candidate's real impact/urgency/
+ * confidence/effort — the same data this function already fetched to build the prompt text,
+ * not a second query. On failure it comes back empty too, same degrade: no Counselor Core
+ * data means `rankPlanActions` falls back to ranking by the model's own stated impact alone,
+ * not a blocked plan.
  */
 async function buildCounselorGrounding(
   userId: string,
   locale: Locale,
   supabaseClient?: Parameters<typeof getCounselorRecommendations>[2],
-): Promise<{ text: string; recommendedTitles: string[] }> {
+): Promise<{ text: string; recommendedTitles: string[]; recommendations: CounselorRecommendation[] }> {
   try {
     // Was `undefined` (silently defaulting to DEFAULT_LOCALE = "en") until this same
     // 2026-09-02 sweep — found as a direct byproduct of threading locale through for
@@ -164,10 +172,10 @@ async function buildCounselorGrounding(
     const counselorResult = await getCounselorRecommendations(userId, locale, supabaseClient);
     const text = formatCounselorGrounding(counselorResult.recommendations, locale);
     const recommendedTitles = counselorRecommendedTitles(counselorResult.recommendations);
-    return { text, recommendedTitles };
+    return { text, recommendedTitles, recommendations: counselorResult.recommendations };
   } catch (error) {
     console.error("[weekly-plan] failed to fetch counselor grounding, continuing without it", error);
-    return { text: "", recommendedTitles: [] };
+    return { text: "", recommendedTitles: [], recommendations: [] };
   }
 }
 
@@ -266,6 +274,92 @@ export function resolvePlanSelfContradiction(plan: WeeklyPlanGeneration, counsel
   return { ...plan, avoidForNow: null };
 }
 
+const LEVEL_WEIGHT: Record<BoundedLevel, number> = { low: 1, medium: 2, high: 3 };
+const ACTION_IMPACT_WEIGHT: Record<WeeklyActionGeneration["impact"], number> = { low: 1, medium: 2, high: 3, very_high: 4 };
+
+/** Neutral midpoint on the same 1-3 scale as LEVEL_WEIGHT, substituted for urgency/
+ * confidence/effort when an action has no matched Counselor Core candidate. Chosen so its
+ * net contribution (urgency + confidence - effort) is a *constant* 2 regardless of match
+ * status disagreement, not because "medium" is a meaningful guess — see rankPlanActions'
+ * own doc comment for why a constant offset is what makes the no-match case degrade to
+ * "rank by impact alone" instead of silently attaching invented signal to an unmatched action. */
+const NEUTRAL_LEVEL_WEIGHT = LEVEL_WEIGHT.medium;
+
+/**
+ * Phase 38, founder-directed 2026-09-02: connect Counselor Core's real, deterministic
+ * impact/urgency/confidence/effort to the dashboard's top-3 ordering. Before this, nothing
+ * ranked the three actions at all — `lib/plan/persist.ts` wrote `priority: index + 1`
+ * straight from the model's own generation order, and a live check against every plan in
+ * the database found 3 of 9 non-monotonic against even `impact`, the one factor that
+ * exists in `WeeklyActionSchema` at all (see docs/i18n-coverage.md-adjacent finding,
+ * reported to the founder directly). The founder's decision: wire the real engine, don't
+ * invent the missing two factors (`profileNeed`/`goalAlignment` exist nowhere outside the
+ * unrelated opportunity matcher — not synthesised here either).
+ *
+ * **Matching, the hard part named explicitly in the assignment**: the model's `actions`
+ * carry no candidate id, only a free-text title, so each action is matched back to a
+ * Counselor Core recommendation via `namesSameActivity` — the exact function
+ * `resolvePlanSelfContradiction` above already uses for the identical "does this free-text
+ * title name that free-text title" problem, not a second implementation of title matching.
+ * An action with no match (the model proposed something grounded in the student's own
+ * existing work rather than a Counselor Core candidate — explicitly allowed by
+ * `buildWeeklyPlanInstruction`) is not an error; it is handled by the neutral-weight
+ * degrade below, not treated as unranked or dropped.
+ *
+ * **The formula, and why it can't hit Phase 38's own named failure mode.** Phase 38's spec
+ * warns a raw product/quotient of factors is numerically unstable — a near-zero confidence
+ * or effort swamps everything. This is additive, not multiplicative, by deliberate choice:
+ * `score = impactWeight + (matched ? urgencyWeight + confidenceWeight - effortWeight : neutralConstant)`.
+ * Every weight is an integer on a 1-3 (or 1-4 for the action's own 4-value impact) scale —
+ * there is no division anywhere, and no weight is ever 0, so there is no factor whose
+ * proximity to zero can dominate the sum. The action's own `impact` field is used for every
+ * action, matched or not — a single consistent source for the one factor that's always
+ * available, rather than switching between the model's 4-value scale and Counselor Core's
+ * 3-value one depending on match status.
+ *
+ * **The no-match fallback is "rank by impact alone" by construction, not a separate branch.**
+ * An unmatched action's urgency/confidence/effort terms substitute `NEUTRAL_LEVEL_WEIGHT`
+ * for all three, which nets to a *constant* +2 contribution (2 + 2 - 2) — comparing two
+ * unmatched actions therefore reduces exactly to comparing their impact weights, which is
+ * the fallback the founder's decision asked for, without a second formula to keep in sync
+ * with the first.
+ *
+ * **Ties break to the model's own original order**, via a stable sort keyed last on each
+ * action's index in the array `generateStructured` actually returned — not an arbitrary
+ * default, and not left to a JS engine's sort-stability guarantee going unstated: when the
+ * deterministic signal doesn't distinguish two actions, the model's own judgment about
+ * which it wrote first is a real (if weaker) signal, not noise.
+ *
+ * **This function only reorders `actions` — every downstream consumer of "array order is
+ * priority" (`enforceTimeBudget`'s own trim-from-the-end, `lib/plan/persist.ts`'s
+ * `priority: index + 1`) keeps working unchanged, because this runs before both**: the
+ * order they read is now the ranked order instead of the raw model order, with no other
+ * code path needing to change. Must run after `resolvePlanSelfContradiction` (which is
+ * order-independent, so the relative sequencing with that function doesn't matter) and
+ * before `enforceTimeBudget` (which does depend on it — trimming must remove the actions
+ * this ranking considers lowest-priority, not whatever happened to be last in the model's
+ * own draft).
+ */
+export function rankPlanActions(plan: WeeklyPlanGeneration, recommendations: readonly CounselorRecommendation[]): WeeklyPlanGeneration {
+  if (plan.actions.length < 2) return plan;
+
+  function score(action: WeeklyActionGeneration): number {
+    const matched = recommendations.find((r) => namesSameActivity(action.title, r.title));
+    // NEUTRAL_LEVEL_WEIGHT here is the unmatched case's `2 + 2 - 2` collapsed to its own
+    // result — see this function's own doc comment for why that constant is what makes the
+    // fallback reduce to ranking by impact alone.
+    const counselorContribution = matched ? LEVEL_WEIGHT[matched.urgency] + LEVEL_WEIGHT[matched.confidence] - LEVEL_WEIGHT[matched.effort] : NEUTRAL_LEVEL_WEIGHT;
+    return ACTION_IMPACT_WEIGHT[action.impact] + counselorContribution;
+  }
+
+  const ranked = plan.actions
+    .map((action, originalIndex) => ({ action, originalIndex, score: score(action) }))
+    .sort((a, b) => b.score - a.score || a.originalIndex - b.originalIndex)
+    .map((entry) => entry.action);
+
+  return { ...plan, actions: ranked };
+}
+
 /**
  * Upper bound per stated weekly-time-budget bucket, in minutes. Only the upper bound
  * matters here — recommending fewer or shorter actions than a student's stated capacity
@@ -309,10 +403,14 @@ function sumMinutes(actions: WeeklyPlanGeneration["actions"]): number {
  * unchanged rather than blocking generation — same "absent input, no confident output"
  * discipline as everywhere else this codebase applies it.
  *
- * Drops the lowest-priority action(s) first — array order is the model's own priority
- * (lib/plan/persist.ts writes `priority: index + 1` straight from this order), so trimming
- * from the end preserves what the model ranked highest. Never drops to zero: a single
- * over-budget action is a better outcome than an empty plan (`actions` already has a
+ * Drops the lowest-priority action(s) first — array order is priority (`lib/plan/
+ * persist.ts` writes `priority: index + 1` straight from this order), so trimming from the
+ * end preserves what's ranked highest. Must run after `rankPlanActions` (2026-09-02): before
+ * that function existed, "priority" here meant only the model's own generation order; it
+ * now means `rankPlanActions`' deterministic ranking, and this function's own logic didn't
+ * need to change at all — it has always trusted whatever order `actions` arrived in, which
+ * is exactly what makes running it after the reorder, not before, sufficient. Never drops to
+ * zero: a single over-budget action is a better outcome than an empty plan (`actions` already has a
  * schema-level `.min(1)` floor `resolvePlanSelfContradiction` depends on too), so a plan
  * whose top action alone exceeds the budget is logged, not further reduced.
  */
@@ -369,7 +467,7 @@ export function buildWeeklyPlanInstruction(): string {
 // (lib/ai/usage.ts already uses the admin client, independent of this fix).
 export async function generateWeeklyPlan(userId: string, supabaseClient?: Parameters<typeof buildStudentAdvisorContext>[1]): Promise<WeeklyPlanGeneration> {
   const context = await buildStudentAdvisorContext(userId, supabaseClient);
-  const { text: counselorGrounding, recommendedTitles } = await buildCounselorGrounding(userId, context.student.preferredLanguage, supabaseClient);
+  const { text: counselorGrounding, recommendedTitles, recommendations } = await buildCounselorGrounding(userId, context.student.preferredLanguage, supabaseClient);
   const provider = getAIProvider();
 
   // withUsageLogging resolves selectModelForUser(userId) itself and threads degraded/
@@ -392,10 +490,13 @@ export async function generateWeeklyPlan(userId: string, supabaseClient?: Parame
     }),
   );
 
-  // Contradiction resolution first, on the model's full original output, then the time-
-  // budget trim on top — trimming first could remove the very action that made
-  // avoidForNow self-contradictory, and resolvePlanSelfContradiction should see everything
-  // the model actually said, not an already-shortened list.
+  // Contradiction resolution first, on the model's full original output — trimming or
+  // reordering first could remove the very action that made avoidForNow self-contradictory,
+  // and resolvePlanSelfContradiction should see everything the model actually said. Ranking
+  // next, so the time-budget trim after it removes what's genuinely lowest-priority rather
+  // than whatever the model happened to write last (see rankPlanActions' and
+  // enforceTimeBudget's own doc comments for why this order is load-bearing).
   const resolved = resolvePlanSelfContradiction(result.data, recommendedTitles);
-  return enforceTimeBudget(resolved, context.student.weeklyTimeBudget);
+  const ranked = rankPlanActions(resolved, recommendations);
+  return enforceTimeBudget(ranked, context.student.weeklyTimeBudget);
 }
