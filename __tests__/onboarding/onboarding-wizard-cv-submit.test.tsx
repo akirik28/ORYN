@@ -48,9 +48,26 @@ const completeOnboarding = vi.hoisted(() => vi.fn<(input: CompleteOnboardingInpu
 
 vi.mock("@/app/(onboarding)/onboarding/actions", () => ({ uploadAndExtractCV, completeOnboarding }));
 
+// id-associated fields (step 1's school field, via its own <Label htmlFor="school">) get no
+// aria-label, so getByLabelText resolves through the association as normal; ImportStep's
+// per-achievement-item organization/school combobox passes no id at all, so it falls back
+// to aria-label from its own placeholder (onboarding.import.schoolPlaceholder/
+// organizationPlaceholder resolve to the literal "School"/"Organization" — a different,
+// shorter namespace than the wizard's own step-1 field text). Giving an id-bearing instance
+// both would let aria-label silently win the accessible name over the <Label> text.
 vi.mock("@/features/entities/entity-combobox", () => ({
-  EntityCombobox: ({ id, value, onChange }: { id?: string; value: string; onChange: (next: { id: string | null; displayName: string }) => void }) => (
-    <input id={id} value={value ?? ""} onChange={(e) => onChange({ id: null, displayName: e.target.value })} />
+  EntityCombobox: ({
+    id,
+    value,
+    placeholder,
+    onChange,
+  }: {
+    id?: string;
+    value: string;
+    placeholder?: string;
+    onChange: (next: { id: string | null; displayName: string }) => void;
+  }) => (
+    <input id={id} aria-label={id ? undefined : placeholder} value={value ?? ""} onChange={(e) => onChange({ id: null, displayName: e.target.value })} />
   ),
 }));
 vi.mock("@/features/entities/suggest-input", () => ({
@@ -204,6 +221,130 @@ describe("OnboardingWizard — a CV-review edit reaches the real completeOnboard
     expect(payload.extractedSkills).toEqual([
       { name: "Python", category: "technical", proficiency: null },
       { name: "Debate", category: "communication", proficiency: null },
+    ]);
+  });
+});
+
+/**
+ * 2026-09-02, oryn-a7's follow-up: the same chain, proven above for skills/languages, was
+ * never proven for the other six extraction categories (education, activities, awards,
+ * projects, research, workExperience) — `reviewedItems` in ImportStep, `extractedItems` in
+ * completeOnboarding's payload. Audited before writing anything (per oryn-a7's own framing:
+ * report the precise gap, don't write six redundant tests):
+ *
+ * - The extraction->flatten mapping is already covered at the pure-function level, including
+ *   education's one genuinely distinct behavior (preferring the dedicated `schoolName` field
+ *   over `organization`) — __tests__/onboarding/import-step-flatten.test.ts.
+ * - The review-screen edit/uncheck/delete mechanism for achievement items is already proven
+ *   generically on the *other* surface — __tests__/profile/cv-import-flow.test.tsx covers
+ *   both education (organization/school field edit) and activities (title edit, uncheck,
+ *   delete, low-confidence default). Grepping both import-step.tsx and cv-import-flow.tsx
+ *   for `.category ===` found exactly one branch in each — education's placeholder/label
+ *   text — and CV_IMPORT_CATEGORY_TO_ORGANIZATION_SCOPE/CATEGORY_LABEL_KEYS are both
+ *   `satisfies Record<CvImportCategory, ...>`, so a missing category is a compile error, not
+ *   a silent gap. The other four categories (awards, projects, research, workExperience)
+ *   share 100% identical update/remove/save code with activities — no category-specific
+ *   logic exists for them to test separately.
+ * - What had **zero** coverage, isolated or chained: ImportStep's own rendering of
+ *   `reviewedItems` on the onboarding surface. import-step-skills-languages.test.tsx always
+ *   renders with `reviewedItems={[]}`; onboarding-wizard.test.tsx mocks ImportStep away
+ *   entirely; the skills/languages tests above never populate `reviewedItems`. Nothing
+ *   before this traced an edited or unchecked achievement item through finish() into
+ *   completeOnboarding's `extractedItems` — the same shape of gap the skills/languages
+ *   package closed, one field over.
+ *
+ * These three tests close that specific gap: one edit (a non-education category, to prove
+ * the generic path independently of education's own distinct handling), one edit of
+ * education's School field specifically (the one place a wrong mapping could hide), and one
+ * uncheck. Not six tests for six categories — the mechanism is proven generic above, and
+ * repeating it per category would just be re-asserting the same lookup-table completeness
+ * TypeScript already guarantees at compile time.
+ */
+const ITEMS_EXTRACTION: CVExtractionResult = {
+  education: [
+    {
+      title: "IB Diploma",
+      organization: null,
+      schoolName: "Test International School",
+      description: null,
+      startDate: null,
+      endDate: null,
+      confidence: "high",
+    },
+  ],
+  activities: [],
+  awards: [],
+  projects: [],
+  research: [
+    {
+      title: "Youth Unemployment Study",
+      organization: "Local University",
+      description: null,
+      startDate: null,
+      endDate: null,
+      confidence: "high",
+    },
+  ],
+  workExperience: [],
+  skills: [],
+  languages: [],
+  unclassified: [],
+};
+
+async function reachItemsReview() {
+  await reachImportStep();
+  fireEvent.click(screen.getByText("Upload CV"));
+  uploadAndExtractCV.mockResolvedValue({ success: true, extraction: ITEMS_EXTRACTION, filePath: "u/1-cv.pdf" });
+  const file = new File(["cv content"], "cv.pdf", { type: "application/pdf" });
+  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+  await fireEvent.change(input, { target: { files: [file] } });
+  return await screen.findByDisplayValue("IB Diploma");
+}
+
+describe("OnboardingWizard — an achievement-item edit reaches the real completeOnboarding payload", () => {
+  test("editing a non-education item's title sends the edited value, not the extracted one", async () => {
+    await reachItemsReview();
+    fireEvent.change(screen.getByDisplayValue("Youth Unemployment Study"), {
+      target: { value: "Youth Unemployment Study (extended)" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Finish/ }));
+
+    await waitFor(() => expect(completeOnboarding).toHaveBeenCalled());
+    const payload = completeOnboarding.mock.calls[0][0];
+    expect(payload.extractedItems).toContainEqual(
+      expect.objectContaining({ category: "research", title: "Youth Unemployment Study (extended)" }),
+    );
+  });
+
+  test("editing the education item's School field sends the edited displayName, with no entity link", async () => {
+    await reachItemsReview();
+    fireEvent.change(screen.getByLabelText("School"), { target: { value: "Springfield International School" } });
+
+    fireEvent.click(screen.getByRole("button", { name: /Finish/ }));
+
+    await waitFor(() => expect(completeOnboarding).toHaveBeenCalled());
+    const payload = completeOnboarding.mock.calls[0][0];
+    expect(payload.extractedItems).toContainEqual(
+      expect.objectContaining({
+        category: "education",
+        organization: "Springfield International School",
+        organizationEntityId: null,
+      }),
+    );
+  });
+
+  test("unchecking an item excludes it from the payload while the untouched item is still sent", async () => {
+    await reachItemsReview();
+    // Render order matches CATEGORY_LABELS' key order: education first, research second.
+    fireEvent.click(screen.getAllByRole("checkbox")[0]); // education item
+
+    fireEvent.click(screen.getByRole("button", { name: /Finish/ }));
+
+    await waitFor(() => expect(completeOnboarding).toHaveBeenCalled());
+    const payload = completeOnboarding.mock.calls[0][0];
+    expect(payload.extractedItems).toEqual([
+      expect.objectContaining({ category: "research", title: "Youth Unemployment Study" }),
     ]);
   });
 });
