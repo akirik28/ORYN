@@ -1,7 +1,13 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isUniqueViolation } from "@/lib/supabase/errors";
 import type { NotificationCategory } from "@/types/database";
+
+/** Name of migration 0087's partial unique index — see that migration's own comment for why
+ * it's scoped to `new_opportunity` only, and this file's own comment below for why a plain
+ * insert plus this check is the mechanism instead of `ON CONFLICT`/`upsert`. */
+const NEW_OPPORTUNITY_DEDUPE_INDEX = "notifications_new_opportunity_link_unique_idx";
 
 /**
  * Notifications are always system-generated (Phase 24) — there is deliberately no RLS
@@ -21,6 +27,21 @@ import type { NotificationCategory } from "@/types/database";
  * rejected insert (an RLS violation, a constraint) returned normally with `error` set and
  * nothing here ever looked at it. Checking `.error` explicitly is a real fix, not just
  * plumbing for the new return type.
+ *
+ * A `new_opportunity` insert that loses migration 0087's unique-index race returns `true`,
+ * not `false` — the state the caller actually wants (this student has a notification for
+ * this match) is satisfied by whichever concurrent call won, same as
+ * `lib/deadlines/scan.ts`'s own `upsert(..., { ignoreDuplicates: true })` already treats a
+ * duplicate deadline-log row as success, not failure. This works identically whether or not
+ * migration 0087 is applied: unapplied, no such constraint exists, so no insert can ever
+ * violate it and this branch is simply never reached — today's exact behavior, unchanged.
+ * Applied, a genuine race (two `refreshOpportunityMatches` calls landing within the same
+ * window — the documented cause of the 12-row live duplicate this migration exists to close,
+ * see docs/notification-center-live-verification-2026-09-02.md) now loses cleanly instead of
+ * writing a second identical row. `notifyNewlyEligibleMatches`'s own pre-flight `SELECT`
+ * still runs first and is kept deliberately — it avoids a pointless insert attempt in the
+ * ordinary, non-racing case; this catch is the backstop for the case it can't close on its
+ * own, not a replacement for it.
  */
 export async function createNotification(params: {
   userId: string;
@@ -39,6 +60,9 @@ export async function createNotification(params: {
       link: params.link ?? null,
     });
     if (error) {
+      if (isUniqueViolation(error, NEW_OPPORTUNITY_DEDUPE_INDEX)) {
+        return true;
+      }
       console.warn("[notifications] failed to create", { category: params.category, error });
       return false;
     }

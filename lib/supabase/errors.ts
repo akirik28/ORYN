@@ -52,3 +52,30 @@ const MISSING_COLUMN_CODES = new Set(["42703", "PGRST204"]);
 export function isUndefinedColumnError(error: { code?: string; message?: string } | null, columnName: string): boolean {
   return !!error?.code && MISSING_COLUMN_CODES.has(error.code) && !!error.message?.includes(columnName);
 }
+
+/**
+ * The opposite direction from `isUndefinedColumnError` above, and a genuinely different error
+ * class, not a copy-paste of it: a unique-constraint violation only exists once real SQL
+ * executes against real row data, so PostgREST has no schema-cache checkpoint to short-circuit
+ * it at the way it does for a missing column. `23505` (`unique_violation`) is a standard,
+ * documented Postgres SQLSTATE, not an inferred/uncaptured PostgREST-specific spelling like
+ * `PGRST204` was — one code is enough here, unlike the two `isUndefinedColumnError` needs.
+ *
+ * Narrowed by index name for the same reason `isUndefinedColumnError` narrows by column name:
+ * `notifications` (or any other table) can gain other unique constraints later, and this must
+ * only ever treat *this* specific one as an expected, benign outcome — a different constraint
+ * firing is a real bug and should still fail loudly. Postgres's own violation message names
+ * the constraint verbatim (`duplicate key value violates unique constraint "<name>"`), so
+ * checking for the index name in the message is exact, not a guess.
+ *
+ * Written for migration 0087 (`notifications_new_opportunity_link_unique_idx`,
+ * lib/notifications/create.ts) — a caller treats this as "the row I wanted already exists,"
+ * the same outcome `ON CONFLICT ... DO NOTHING` would give, without needing `ON CONFLICT`
+ * itself: Postgres requires an `ON CONFLICT` target's predicate to match a partial index's own
+ * `WHERE` clause exactly, and PostgREST's `onConflict` option only ever accepts a plain column
+ * list with no way to supply one — see that migration's own comment for why a plain insert
+ * with this check after it is the correct mechanism here, not upsert/onConflict.
+ */
+export function isUniqueViolation(error: { code?: string; message?: string } | null, indexOrConstraintName: string): boolean {
+  return error?.code === "23505" && !!error.message?.includes(indexOrConstraintName);
+}
