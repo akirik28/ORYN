@@ -389,8 +389,20 @@ export function OpportunityCard({
             a cycle label, this says nothing rather than guessing. Gated on no deadline:
             when a real deadline exists it's already the clearer, more specific signal,
             and repeating a cycle label beside it would just be noise. */}
+        {/* line-clamp-2 ADDED 2026-09-03: these strings were written as research
+            bookkeeping and only became student-facing copy when the block above started
+            rendering them. Measured on live data the same day: of the 126 active
+            no-deadline rows that reach this line, 55 exceed 80 characters and the longest
+            is 283 -- four unclamped lines of small grey text inside a card, which also
+            desynchronises every card height in the grid. Clamped to 2 to match the
+            `description` above it. Clamping is only honest because the detail page now
+            renders the same label in full when there is no deadline (see
+            app/(app)/opportunities/[id]/page.tsx) -- before that change this was the ONLY
+            surface showing it, since the detail page's own cycle-label render was gated on
+            a deadline EXISTING, the exact inverse of this one. Do not clamp here again
+            without checking that the full text still has somewhere to live. */}
         {!opportunity.deadline && opportunity.current_cycle_label ? (
-          <p className="text-xs text-ink-3">{t("currentCycleLabelPrefix", { label: opportunity.current_cycle_label })}</p>
+          <p className="line-clamp-2 text-xs text-ink-3">{t("currentCycleLabelPrefix", { label: opportunity.current_cycle_label })}</p>
         ) : null}
 
         {/* Descriptors: facts about the opportunity, not warnings about the match. */}

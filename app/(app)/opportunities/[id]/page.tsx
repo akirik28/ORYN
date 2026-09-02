@@ -311,6 +311,22 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
               {opportunity.current_cycle_label ? ` (${opportunity.current_cycle_label})` : ""}
             </span>
           </div>
+        ) : opportunity.current_cycle_label ? (
+          /* ADDED 2026-09-03. The branch above renders the cycle label only when a deadline
+             exists; opportunity-card.tsx renders it only when one does NOT. The two gates
+             are exact inverses, so for the 126 active no-deadline rows carrying a label
+             (live count, 2026-09-03) this page said nothing about timing at all -- a
+             student clicked a card reading "Rolling submissions, no fixed deadline" and
+             landed on a detail page with strictly less information than the card that sent
+             them here. Reuses the card's own key rather than a new string: it is the same
+             fact on two surfaces, and wording that drifts between them reads as two
+             different claims. items-start, not items-center, because these labels run long
+             (283 chars at the longest) and a centred icon floats away from the first line.
+             Full text, no clamp -- this page is where the card's clamp sends the reader. */
+          <div className="flex items-start gap-2">
+            <Calendar className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+            <span>{tCard("currentCycleLabelPrefix", { label: opportunity.current_cycle_label })}</span>
+          </div>
         ) : null}
         {opportunity.country || opportunity.location_mode ? (
           <div className="flex items-center gap-2">
