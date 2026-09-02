@@ -10,10 +10,12 @@ import { isUuidLike } from "@/lib/validation/uuid";
 import { getConnectionWith } from "@/lib/social/connections";
 import { assertWithinRateLimit, RateLimitExceededError } from "@/lib/security/rate-limit";
 import { RATE_LIMITS } from "@/lib/security/rate-limit-config";
+import { assertMessagingEnabled } from "@/lib/messaging/messaging-feature-flag";
 
 const MAX_BODY_LENGTH = 4000;
 
 export async function sendMessage(recipientId: string, body: string): Promise<{ error?: string }> {
+  assertMessagingEnabled();
   const session = await requireUser();
   const userId = session.userId!;
   const trimmed = body.trim();
@@ -67,6 +69,7 @@ export async function sendMessage(recipientId: string, body: string): Promise<{ 
 }
 
 export async function markConversationRead(otherUserId: string): Promise<{ error?: string }> {
+  assertMessagingEnabled();
   const session = await requireUser();
   const t = await getTranslations("messaging.errors");
   if (!isUuidLike(otherUserId)) return { error: t("invalidConversation") };
@@ -89,6 +92,7 @@ export async function markConversationRead(otherUserId: string): Promise<{ error
 }
 
 export async function blockUser(userId: string): Promise<{ error?: string }> {
+  assertMessagingEnabled();
   const session = await requireUser();
   const t = await getTranslations("messaging.errors");
   if (!isUuidLike(userId) || userId === session.userId) return { error: t("invalidUser") };
@@ -104,6 +108,7 @@ export async function blockUser(userId: string): Promise<{ error?: string }> {
 }
 
 export async function unblockUser(userId: string): Promise<{ error?: string }> {
+  assertMessagingEnabled();
   const session = await requireUser();
   const t = await getTranslations("messaging.errors");
   if (!isUuidLike(userId)) return { error: t("invalidUser") };
@@ -118,6 +123,7 @@ export async function unblockUser(userId: string): Promise<{ error?: string }> {
 }
 
 export async function reportMessage(messageId: string, reportedUserId: string, reason: string): Promise<{ error?: string }> {
+  assertMessagingEnabled();
   const session = await requireUser();
   const t = await getTranslations("messaging.errors");
   if (!isUuidLike(messageId) || !isUuidLike(reportedUserId)) return { error: t("invalidReport") };

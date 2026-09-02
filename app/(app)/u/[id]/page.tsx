@@ -9,6 +9,7 @@ import { getPublicProfile, getPublicPortfolio, getPublicSkills, isCurrentlyPubli
 import { getFeaturedItems } from "@/lib/social/featured";
 import { getConnectionWith } from "@/lib/social/connections";
 import { canShowMessageButton } from "@/lib/social/public-profile-authorization";
+import { isMessagingEnabled } from "@/lib/messaging/messaging-feature-flag";
 import { getFilteredContactInfo } from "@/lib/social/contact-info";
 import { getEndorsementsForSkills, type SkillEndorsementInfo } from "@/lib/social/endorsements";
 import { getRecommendationsFor } from "@/lib/social/recommendations-query";
@@ -188,7 +189,12 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
         </div>
         {!isSelf ? (
           <div className="flex gap-2">
-            {canShowMessageButton(connection?.status ?? null) ? (
+            {/* Messaging is switched off (lib/messaging/messaging-feature-flag.ts) —
+                the button must not render at all, not render and then fail when clicked.
+                A disabled control invites a support question about a feature that isn't
+                supposed to exist; the underlying route 404s regardless, this is belt and
+                braces against the door being left visibly open. */}
+            {isMessagingEnabled() && canShowMessageButton(connection?.status ?? null) ? (
               <Button size="sm" variant="outline" render={<Link href={`/messages/${id}`} />} nativeButton={false}>
                 <MessageCircle className="size-3.5" /> {t("message")}
               </Button>
