@@ -3,8 +3,9 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { FileUp, Loader2, Check, AlertCircle } from "lucide-react";
+import { FileUp, Loader2, Check, AlertCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eyebrow } from "@/components/oryn/eyebrow";
 import { EmptyState } from "@/components/oryn/empty-state";
@@ -13,7 +14,8 @@ import { cn } from "@/lib/utils";
 // upload action is not re-exported through it.
 import { uploadAndExtractCV } from "@/app/(onboarding)/onboarding/actions";
 import { importReviewedCvItems } from "@/app/(app)/profile/import/actions";
-import type { CvImportCategory, CvImportItem } from "@/lib/profile/cv-import";
+import { EntityCombobox } from "@/features/entities/entity-combobox";
+import { CV_IMPORT_CATEGORY_TO_ORGANIZATION_SCOPE, type CvImportCategory, type CvImportItem } from "@/lib/profile/cv-import";
 import type { CVExtractionResult } from "@/lib/ai/cv-extraction";
 
 const CATEGORY_LABEL_KEYS = {
@@ -37,11 +39,19 @@ function flatten(result: CVExtractionResult): ReviewItem[] {
   for (const category of Object.keys(CATEGORY_LABEL_KEYS) as CvImportCategory[]) {
     for (const raw of result[category]) {
       n += 1;
+      // Education items carry a dedicated `schoolName` (lib/ai/cv-extraction.ts's schema
+      // extends the shared item shape with it, specifically for this category) — preferred
+      // over `organization` for exactly the same reason
+      // features/onboarding/steps/import-step.tsx's flatten() prefers it. Without this, a
+      // school the model correctly extracted showed up blank in the (now-editable)
+      // organization field on this surface, even though the same data rendered correctly
+      // on the onboarding surface — found while wiring this field up to be editable.
+      const schoolName = "schoolName" in raw ? raw.schoolName : null;
       items.push({
         id: `item-${n}`,
         category,
         title: raw.title,
-        organization: raw.organization ?? null,
+        organization: schoolName ?? raw.organization ?? null,
         organizationEntityId: null,
         description: raw.description ?? null,
         startDate: raw.startDate ?? null,
@@ -66,10 +76,19 @@ function flatten(result: CVExtractionResult): ReviewItem[] {
  * way to use it again. This is the same upload → extract → **review** → save flow; the
  * review step is not optional, because nothing AI-extracted may be written to a profile
  * without the student confirming it.
+ *
+ * Review affordances (editable title, entity-linked organization/school, per-item delete)
+ * match features/onboarding/steps/import-step.tsx's exactly — non-negotiable #10 in
+ * AGENTS.md is "Students must be able to edit AI-extracted information," not just choose
+ * which items to keep, and a returning student re-importing here must get the same deal a
+ * first-time student gets during onboarding. `country` scopes entity search the same way
+ * ImportStep's does; unlike onboarding (where it's still local wizard state, not yet saved),
+ * here it comes from the student's own saved profile.
  */
-export function CvImportFlow() {
+export function CvImportFlow({ country }: { country: string | null }) {
   const t = useTranslations("profile");
   const tImport = useTranslations("profile.cvImport");
+  const tOnboardingImport = useTranslations("onboarding.import");
   const tCommon = useTranslations("common");
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -100,6 +119,14 @@ export function CvImportFlow() {
       }
       setItems(flat);
     });
+  }
+
+  function updateItem(id: string, patch: Partial<ReviewItem>) {
+    setItems((prev) => prev && prev.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  }
+
+  function removeItem(id: string) {
+    setItems((prev) => prev && prev.filter((item) => item.id !== id));
   }
 
   function save() {
@@ -148,25 +175,47 @@ export function CvImportFlow() {
           {items.map((item) => (
             <li key={item.id} className="flex items-start gap-3 border-b border-border/60 py-3.5">
               <Checkbox
-                id={item.id}
                 checked={item.included}
-                onCheckedChange={(checked) =>
-                  setItems((prev) =>
-                    prev!.map((i) => (i.id === item.id ? { ...i, included: checked === true } : i)),
-                  )
-                }
-                className="mt-0.5"
+                onCheckedChange={(checked) => updateItem(item.id, { included: checked === true })}
+                className="mt-1.5"
               />
-              <label htmlFor={item.id} className="min-w-0 flex-1 cursor-pointer">
-                <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                  <span className="font-medium text-ink-1">{item.title}</span>
-                  <span className="text-xs text-ink-3">{t(CATEGORY_LABEL_KEYS[item.category])}</span>
-                  {item.confidence === "low" ? (
-                    <span className="text-xs text-warning">{tImport("unsureAboutThis")}</span>
-                  ) : null}
-                </span>
-                {item.organization ? <span className="mt-0.5 block text-sm text-ink-3">{item.organization}</span> : null}
-              </label>
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-ink-3">
+                  <span>{t(CATEGORY_LABEL_KEYS[item.category])}</span>
+                  {item.confidence === "low" ? <span className="text-warning">{tImport("unsureAboutThis")}</span> : null}
+                </div>
+                <Input
+                  value={item.title}
+                  onChange={(e) => updateItem(item.id, { title: e.target.value })}
+                  className="h-8"
+                  disabled={!item.included}
+                />
+                {/* EntityCombobox has no native `disabled` — an unincluded item still won't be
+                    persisted (gated on `included` at save time), this just mutes the affordance
+                    to match the title input's own disabled look above. */}
+                <div className={item.included ? "" : "pointer-events-none opacity-50"}>
+                  <EntityCombobox
+                    scope={CV_IMPORT_CATEGORY_TO_ORGANIZATION_SCOPE[item.category]}
+                    value={item.organization ?? ""}
+                    entityId={item.organizationEntityId}
+                    context={{ country: country?.trim() || null }}
+                    placeholder={item.category === "education" ? tOnboardingImport("schoolPlaceholder") : tOnboardingImport("organizationPlaceholder")}
+                    allowCustom
+                    customLabel={item.category === "education" ? "school" : "organization"}
+                    onChange={(next) => updateItem(item.id, { organization: next.displayName, organizationEntityId: next.id })}
+                  />
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => removeItem(item.id)}
+                className="mt-0.5 shrink-0 text-ink-3 hover:text-destructive"
+                aria-label={tOnboardingImport("removeItemAriaLabel")}
+              >
+                <Trash2 className="size-4" />
+              </Button>
             </li>
           ))}
         </ul>

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { EntityScope } from "@/lib/entities/field-policy";
 
 /**
  * Persisting AI-extracted CV items into the profile tables.
@@ -40,6 +41,25 @@ export const CV_IMPORT_CATEGORY_TABLE = {
   research: "research_experiences",
   workExperience: "work_experiences",
 } as const;
+
+/**
+ * Mirrors features/profile/field-config.ts's per-table entity scopes exactly — CV-import
+ * items land in the same tables the manual profile forms do, so a school extracted here and
+ * a school typed by hand on /profile must resolve against the same registry slice.
+ *
+ * Single source for both CV-review surfaces (features/onboarding/steps/import-step.tsx and
+ * features/profile/cv-import-flow.tsx) — two independent copies of a mapping that decides
+ * which entity registry a search hits is exactly the kind of drift that would quietly point
+ * one surface's "School" field at the wrong entity type while the other stayed correct.
+ */
+export const CV_IMPORT_CATEGORY_TO_ORGANIZATION_SCOPE: Record<CvImportCategory, EntityScope> = {
+  education: "school",
+  activities: "activity_organization",
+  awards: "award_organization",
+  projects: "project_organization",
+  research: "research_organization",
+  workExperience: "work_organization",
+};
 
 /** Groups items by category so each table takes one insert rather than one per row. */
 export function groupCvItemsByCategory(items: CvImportItem[]): Map<CvImportCategory, CvImportItem[]> {
