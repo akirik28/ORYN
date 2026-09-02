@@ -229,7 +229,7 @@ the component rather than answered silently. Worth knowing before anyone "fixes"
 **When taking a package, grep it for direct `LABELS[` indexing as well as running the
 script.** The two find different things, and only one of them finds this.
 
-## The same gap, on the AI-prompt side specifically — five confirmed instances, 2026-09-02
+## The same gap, on the AI-prompt side specifically — six confirmed instances, 2026-09-02
 
 The `career_exploration` incident above reached a student through *rendering* — a
 component reading a raw map. The same class of bug reaches a student a second way: a raw
@@ -245,7 +245,7 @@ vector, the student is still the victim.
 `outlook` (`extreme_reach`) and the nine profile-dimension keys (`career_exploration`)
 were the first two found this way and are already fixed — `formatContextForPrompt`'s own
 comments record both incidents in detail. Swept the rest of the AI-prompt surface for the
-same shape and found five more, all still raw at the time of the sweep, now fixed:
+same shape and found six more, all still raw at the time of the sweep, now fixed:
 
 | Field | File | Values that were the problem |
 |---|---|---|
@@ -254,16 +254,30 @@ same shape and found five more, all still raw at the time of the sweep, now fixe
 | `reflectionOutcome` | `lib/ai/student-context.ts` | `did_not_work`, `opportunity_no_longer_available`, `completed_successfully`, `partially_completed` |
 | `recommendationClass` | `lib/ai/weekly-plan.ts` (`formatOne`) | `avoid_for_now` (the others are already-natural English words) |
 | `recommendationClass` | `lib/ai/counselor-explain.ts` | same field, independently raw in a second file — no shared accessor existed anywhere before this pass |
+| `requirement_type` (as `pendingApplicationRequirements[].requirementTitle`'s fallback) | `lib/ai/student-context.ts` | **confirmed live, not theoretical** (found by oryn-31 mid-sweep): 100% of live `application_requirements` rows have `title IS NULL`, so every one hit this fallback on every prompt build; a real `advisor_messages` row had already echoed `"test_score"` verbatim before this was found |
+
+The sixth is the one worth reading twice. The other five were confirmed by reasoning from
+the type and, where possible, live data — none had yet been *caught in the act*. This one
+had: an admin QA account's advisor conversation already contained the raw value, in
+production, before anyone went looking. The other five were "this will happen"; this one
+was "this already happened." `requirement_type` also has no closed DB enum backing it
+(unlike the other five, all real DB-level unions) — `DEFAULT_REQUIREMENTS`
+(`app/(app)/applications/actions.ts`) is the known seeded set of 8, but nothing stops a
+future or custom value, so `requirementTypeLabel` degrades to a humanized fallback
+(`.replace(/_/g, " ")`) for anything unmapped, matching the UI's own
+`requirement-chip-grid.tsx`, rather than a hard lookup failure.
 
 Fixed by wiring in (`curriculum` — `curriculumLabel()` in `lib/requirements/copy.ts`
 already existed and was already used elsewhere, just never wired in here) or building new
 accessors matching the exact same shape `dimensionLabel`/`outlookLabel`/`curriculumLabel`
 already establish: synchronous `(value, locale) => string`, hardcoded EN/TR pairs in the
 `lib/` file itself, never routed through the async next-intl catalog, because
-`formatContextForPrompt` has to stay a plain sync function. `timeBudgetLabel` and
-`reflectionOutcomeLabel` (new, in `lib/ai/student-context.ts`) reuse the exact wording
-already shown to students in Settings' capacity form and the dashboard's weekly-focus
-reflection picker, rather than inventing new copy for the same concept.
+`formatContextForPrompt` has to stay a plain sync function. `timeBudgetLabel`,
+`reflectionOutcomeLabel`, and `requirementTypeLabel` (all new, in
+`lib/ai/student-context.ts`) each reuse the exact wording already shown to students
+elsewhere — Settings' capacity form, the dashboard's weekly-focus reflection picker, and
+`requirement-chip-grid.tsx`'s own checklist labels respectively — rather than inventing
+new copy for a concept that already has an approved phrase.
 `recommendationClassLabel` (new, `lib/counselor/copy.ts`, shared by both callers) is
 genuinely new copy — no prior UI surface shows a student this field directly — kept
 deliberately short (the two surfaces this reaches carry roughly 90% of this product's AI

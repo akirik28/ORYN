@@ -97,6 +97,46 @@ export function reflectionOutcomeLabel(value: ReflectionOutcome, locale: Locale)
   return locale === "tr" ? REFLECTION_OUTCOME_LABEL_TR[value] : REFLECTION_OUTCOME_LABEL_EN[value];
 }
 
+/**
+ * A sixth instance found by oryn-31 during this same sweep, confirmed live rather than
+ * theoretical: `application_requirements.requirement_type` has no closed DB enum (unlike
+ * curriculum/weeklyTimeBudget) — `DEFAULT_REQUIREMENTS`
+ * (app/(app)/applications/actions.ts) is the known seeded set of 8, but a custom/future
+ * value could exist too. Same wording as the UI's own
+ * features/applications/requirement-chip-grid.tsx (which reads
+ * `applications.requirementChecklist.typeLabels.*` from the message catalog), and the
+ * same graceful-fallback shape that component already uses for anything unmapped
+ * (`.replace(/_/g, " ")`) rather than a hard lookup failure — this can't be a
+ * `Record<RequirementType, string>` the way the closed-enum accessors above are, because
+ * there's no closed type to index by.
+ */
+const REQUIREMENT_TYPE_LABEL_EN: Record<string, string> = {
+  application: "Application",
+  transcript: "Transcript",
+  test_score: "Test score",
+  essay: "Essay",
+  recommendation: "Recommendation",
+  portfolio: "Portfolio",
+  interview: "Interview",
+  financial_aid: "Financial aid",
+};
+
+const REQUIREMENT_TYPE_LABEL_TR: Record<string, string> = {
+  application: "Başvuru",
+  transcript: "Transkript",
+  test_score: "Sınav puanı",
+  essay: "Deneme yazısı",
+  recommendation: "Tavsiye mektubu",
+  portfolio: "Portfolyo",
+  interview: "Mülakat",
+  financial_aid: "Mali yardım",
+};
+
+export function requirementTypeLabel(value: string, locale: Locale): string {
+  const map = locale === "tr" ? REQUIREMENT_TYPE_LABEL_TR : REQUIREMENT_TYPE_LABEL_EN;
+  return map[value] ?? value.replace(/_/g, " ");
+}
+
 export interface StudentAdvisorContext {
   student: {
     displayName: string;
@@ -180,8 +220,20 @@ export interface StudentAdvisorContext {
   recentActionOutcomes: { title: string; status: ActionStatus; reflectionOutcome: ReflectionOutcome | null; reflectionNote: string | null }[];
   /** Phase 22/62 — unfinished application checklist items (essay, recommendation, ...),
    * so the advisor can point at a concrete near-term task instead of only reasoning at the
-   * profile-dimension level. */
-  pendingApplicationRequirements: { applicationTitle: string; requirementTitle: string }[];
+   * profile-dimension level.
+   *
+   * `requirementTitle`/`requirementType` kept separate rather than pre-merged (same split
+   * as recentActionOutcomes' own reflectionOutcome above) — resolving "real title, or a
+   * readable label for the type" needs `locale`, which this array's own builder
+   * (getPendingApplicationRequirements) doesn't have access to without either threading it
+   * through buildStudentAdvisorContext's parallel Promise.all (real added latency on a hot
+   * path) or hardcoding English. formatContextForPrompt does the merge instead, where
+   * locale is already a parameter. Found live 2026-09-02 (oryn-31, same raw-enum-leak
+   * sweep): 100% of live application_requirements rows have title IS NULL — every one of
+   * them was hitting the raw requirement_type fallback on every prompt build, not a rare
+   * edge case, and a real advisor_messages row had already echoed `"test_score"` verbatim
+   * to a student before this was found. */
+  pendingApplicationRequirements: { applicationTitle: string; requirementTitle: string | null; requirementType: string }[];
 }
 
 /**
@@ -194,7 +246,7 @@ async function getPendingApplicationRequirements(
   supabase: SupabaseClient<Database>,
   userId: string,
   supersessionMap: SupersessionMap
-): Promise<{ applicationTitle: string; requirementTitle: string }[]> {
+): Promise<{ applicationTitle: string; requirementTitle: string | null; requirementType: string }[]> {
   const { data: pending } = await supabase
     .from("application_requirements")
     .select("title, requirement_type, application_id")
@@ -221,7 +273,7 @@ async function getPendingApplicationRequirements(
     const targetId = targetIdByApplication.get(p.application_id);
     const universityId = targetId ? universityIdByTarget.get(targetId) : undefined;
     const universityName = universityId ? universityNameById.get(universityId) : undefined;
-    return { applicationTitle: universityName ?? "Application", requirementTitle: p.title ?? p.requirement_type };
+    return { applicationTitle: universityName ?? "Application", requirementTitle: p.title, requirementType: p.requirement_type };
   });
 }
 
@@ -518,7 +570,12 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
   );
   lines.push(`Upcoming deadlines: ${context.upcomingDeadlines.map((d) => `${d.title} on ${d.date} (${d.source})`).join("; ") || "none"}`);
   if (context.pendingApplicationRequirements.length > 0) {
-    lines.push(`Unfinished application checklist items: ${context.pendingApplicationRequirements.map((r) => `${r.requirementTitle} (${r.applicationTitle})`).join("; ")}`);
+    // requirementTitle ?? raw requirement_type until this same 2026-09-02 sweep (oryn-31's
+    // finding) — see requirementTypeLabel above and pendingApplicationRequirements' own
+    // interface comment for why the merge happens here rather than at the fetch site.
+    lines.push(
+      `Unfinished application checklist items: ${context.pendingApplicationRequirements.map((r) => `${r.requirementTitle ?? requirementTypeLabel(r.requirementType, locale)} (${r.applicationTitle})`).join("; ")}`,
+    );
   }
   if (context.recentActionOutcomes.length > 0) {
     const describe = (a: StudentAdvisorContext["recentActionOutcomes"][number]) => {

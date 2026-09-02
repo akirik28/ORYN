@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { formatContextForPrompt, isBusyModeActive, timeBudgetLabel, reflectionOutcomeLabel, type StudentAdvisorContext } from "@/lib/ai/student-context";
+import { formatContextForPrompt, isBusyModeActive, timeBudgetLabel, reflectionOutcomeLabel, requirementTypeLabel, type StudentAdvisorContext } from "@/lib/ai/student-context";
 import type { EvidenceStatus, ReflectionOutcome, TimeBudget } from "@/types/database";
 
 /** Phase 65: the exact "marked exam week in November, never unmarked, should not still
@@ -294,6 +294,62 @@ describe("reflectionOutcomeLabel", () => {
       expect(reflectionOutcomeLabel(v, "en")).not.toBe(v);
       expect(reflectionOutcomeLabel(v, "tr")).not.toBe(v);
     }
+  });
+});
+
+/**
+ * Sixth instance, found by oryn-31 during this same sweep and confirmed live: 100% of
+ * live application_requirements rows have title IS NULL (createApplication's own insert
+ * sets it for every DEFAULT_REQUIREMENTS row), so every one hit the raw requirement_type
+ * fallback on every prompt build — not a rare edge case, and already observed once in a
+ * real advisor_messages row ("test_score" echoed verbatim).
+ */
+describe("formatContextForPrompt — pending application requirements fall back to a real label, not the raw type", () => {
+  test("a real title is used as-is, requirementType is never consulted", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      pendingApplicationRequirements: [{ applicationTitle: "MIT", requirementTitle: "Second recommendation letter", requirementType: "recommendation" }],
+    });
+    expect(text).toContain("Second recommendation letter (MIT)");
+  });
+
+  test("a null title falls back to the readable type label, not the raw value", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      pendingApplicationRequirements: [{ applicationTitle: "MIT", requirementTitle: null, requirementType: "test_score" }],
+    });
+    expect(text).toContain("Test score (MIT)");
+    expect(text).not.toContain("test_score (MIT)");
+  });
+
+  test("Turkish matches requirement-chip-grid.tsx's own catalog wording for the same type", () => {
+    const text = formatContextForPrompt(
+      { ...baseContext(), pendingApplicationRequirements: [{ applicationTitle: "MIT", requirementTitle: null, requirementType: "test_score" }] },
+      "tr",
+    );
+    expect(text).toContain("Sınav puanı (MIT)");
+  });
+
+  test("an unmapped/custom requirement_type still degrades to a readable label, not a raw underscore identifier — requirement_type has no closed DB enum", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      pendingApplicationRequirements: [{ applicationTitle: "MIT", requirementTitle: null, requirementType: "custom_future_type" }],
+    });
+    expect(text).toContain("custom future type (MIT)");
+    expect(text).not.toContain("custom_future_type");
+  });
+});
+
+describe("requirementTypeLabel", () => {
+  test("known types never return the raw value in either locale", () => {
+    for (const v of ["application", "transcript", "test_score", "essay", "recommendation", "portfolio", "interview", "financial_aid"]) {
+      expect(requirementTypeLabel(v, "en")).not.toContain("_");
+      expect(requirementTypeLabel(v, "tr")).not.toContain("_");
+    }
+  });
+
+  test("an unrecognized value still loses its underscores rather than failing a lookup", () => {
+    expect(requirementTypeLabel("some_new_type", "en")).toBe("some new type");
   });
 });
 
