@@ -66,7 +66,14 @@ const PREVIEW_UNREAD_COUNT = PREVIEW_NOTIFICATIONS.filter((n) => !n.read_at).len
 // A representative mid-month state, not an edge case — same "realistic, not a corner
 // case" spirit as PREVIEW_NOTIFICATIONS above. usage-indicator.tsx and monthly-usage-meter.tsx
 // each have their own dedicated preview surfaces for exercising exhausted/degraded/unknown.
-const PREVIEW_QUOTA: MonthlyQuota = { used: 42, limit: 300, remaining: 258, fraction: 42 / 300, resetsAt: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 1)).toISOString(), usedIsKnown: true };
+//
+// limit: 50, not 300 -- lib/ai/monthly-quota.ts's MONTHLY_AI_QUOTAS.advisor_chat has been 50
+// since it was re-derived from real token costs (2026-09-02); this fixture was never updated
+// when that landed, so every screenshot of this harness was showing a ceiling nobody could
+// actually hit. used: 20 (40%) picked fresh against the new limit for the same "mid-month,
+// not an edge case" reason the comment above already states -- not scaled proportionally
+// from the old 42/300 (14%), which wasn't a deliberately-chosen fraction to begin with.
+const PREVIEW_QUOTA: MonthlyQuota = { used: 20, limit: 50, remaining: 30, fraction: 20 / 50, resetsAt: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 1)).toISOString(), usedIsKnown: true };
 
 // Mirrors app/(app)/layout.tsx's structure with fixture data — real shell components, no
 // auth/data-fetching. See app/(dev-preview)/design-preview/page.tsx.
