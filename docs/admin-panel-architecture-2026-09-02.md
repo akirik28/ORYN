@@ -131,6 +131,17 @@ that stops a call is never split between a screen and a library.
 
 ## What this does not decide
 
+**UPDATE, 2026-09-02, superseding the paragraph below:** the premise turned out not to
+apply. `profiles.plan_tier` (migration 0089) shipped as a visual skin — "standard" | "ultra"
+— explicitly not a billing/subscription entity (that migration's own header: "no payment,
+no upgrade flow... per CEO's own explicit scope for this pass, 'skin only'"), so the
+minor-as-payer question this section was blocked on never actually applies to it: there is
+no payer to attach it to yet. D8 above ("the admin surface may later *set* a value") is now
+true — the user list renders the real tier and a control to change it
+(features/admin/plan-tier-control.tsx, 2026-09-02), per the founder's own direct request
+after being stuck running raw SQL to set their own tier by hand. The paragraph below is kept
+for the history, not as current guidance.
+
 Tiers. Free/mid/premium exist in the plan and the user list carries a tier column, but what
 the tiers *are* depends on the minor-payment legal research now in progress — if the payer
 must be a parent, "tier" attaches to a different entity than the student, and the user list

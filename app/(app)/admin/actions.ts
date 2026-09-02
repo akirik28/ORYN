@@ -14,6 +14,9 @@ import { ADMIN_FINANCE_SETTINGS_ID } from "@/lib/admin/queries";
 import { isValidExchangeRate, isValidPrice } from "@/lib/admin/finance";
 import { isUndefinedTableError } from "@/lib/supabase/errors";
 import type { MessageReportStatus } from "@/types/database";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
+import { logAdminAction } from "@/lib/admin/log";
+import type { MessageReportStatus, PlanTier } from "@/types/database";
 
 /**
  * Manual "run now" triggers for the admin panel — call the same underlying job logic the
@@ -230,4 +233,69 @@ export async function updateFinanceSettings(input: { usdTryRate?: number; ultraP
 
   revalidatePath("/admin");
   return {};
+export interface SetUserPlanTierResult {
+  error?: string;
+  /** true once a write actually happened; false when the target was already on the
+   * requested tier (a real outcome, not an error — the UI renders it as "already Ultra",
+   * not a failure). Absent (undefined) only alongside `error`. */
+  changed?: boolean;
+  fromTier?: PlanTier;
+}
+
+/**
+ * The founder's own example of what this whole package exists to fix: they asked oryn-a7 to
+ * run raw SQL twice to set their own plan_tier to 'ultra', and once it silently affected
+ * zero rows with neither of them knowing why. The fix isn't "run the same UPDATE from a
+ * button" — it's making a no-op impossible to mistake for a success.
+ *
+ * Three distinguishable outcomes, not two: an error (the write failed), a genuine no-op
+ * (`changed: false` — the user was already on that tier, nothing to do, not a failure), and
+ * a confirmed change (`changed: true`). The no-op/change distinction is only knowable
+ * because this reads the row first rather than firing the UPDATE blind — the same blindness
+ * that let the founder's SQL affect zero rows without either of them noticing.
+ *
+ * `.update(...).select("id")` (not a bare `.update(...)`, which returns no data at all) is
+ * what makes an actually-zero-rows-affected UPDATE detectable here even in the case this
+ * function's own pre-read doesn't anticipate (a row deleted between the read and the write,
+ * a race this codebase has no transaction wrapping either side against) — `updated` coming
+ * back empty is reported as a real error, not swallowed as if `error === null` were the
+ * whole story, which is exactly the gap the founder's raw SQL fell into.
+ */
+export async function setUserPlanTier(userId: string, tier: PlanTier): Promise<SetUserPlanTierResult> {
+  const adminProfile = await requireAdmin();
+  if (!isUuidLike(userId)) return { error: "Invalid user." };
+  if (tier !== "standard" && tier !== "ultra") return { error: "Invalid tier." };
+
+  const admin = createAdminClient();
+  const { data: before, error: readError } = await admin.from("profiles").select("plan_tier, display_name").eq("id", userId).maybeSingle();
+  if (readError || !before) {
+    console.error("[admin] failed to read profile before setting plan tier", { userId, error: readError });
+    return { error: "Couldn't find that user." };
+  }
+
+  const fromTier = resolvePlanTier(before);
+  if (fromTier === tier) {
+    return { changed: false, fromTier };
+  }
+
+  const { data: updated, error } = await admin.from("profiles").update({ plan_tier: tier }).eq("id", userId).select("id");
+  if (error) {
+    console.error("[admin] failed to set plan tier", { userId, tier, error });
+    return { error: "Couldn't save that. Please try again." };
+  }
+  if (!updated || updated.length === 0) {
+    console.error("[admin] plan tier update matched zero rows", { userId, tier });
+    return { error: "That saved nothing — 0 rows were updated. The account may have just been deleted." };
+  }
+
+  await logAdminAction(admin, {
+    adminProfile,
+    action: "set_plan_tier",
+    targetUserId: userId,
+    targetLabel: before.display_name,
+    detail: { from: fromTier, to: tier },
+  });
+
+  revalidatePath("/admin");
+  return { changed: true, fromTier };
 }

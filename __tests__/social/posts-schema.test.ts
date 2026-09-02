@@ -285,20 +285,7 @@ describe("migration numbering", () => {
     // only "pick the failure direction that costs less for this feature's actual shape,"
     // not a rule either column's default was allowed to inherit from the other's.
     //
-    // 0094 (admin_finance_settings) is the finance dashboard's editable rate/price
-    // (CEO's course correction: the founder wants a control panel, "the founder can set it
-    // here", not an env var needing a deploy). No numbering collision this time -- confirmed
-    // 0093 was already merged to main before this branch's migration was written, unlike
-    // several pairs above. A genuinely new table, not a column added to an existing one, so
-    // its own unapplied-migration story is different in kind from every migration above:
-    // absence means the whole relation doesn't exist yet, which PostgREST reports as a
-    // schema-cache miss on the table itself (isUndefinedTableError, lib/supabase/errors.ts)
-    // rather than the column-level 42703/PGRST204 split every migration above this one deals
-    // with. No RLS, unlike a profiles-column addition -- matches 0013_ops.sql's existing
-    // provider_health/external_sync_jobs/ai_usage exactly: admin-only, service-role-only,
-    // no policy needed because nothing but the service-role client (which bypasses RLS
-    // regardless) ever queries it.
-    expect(Math.max(...numbers.map(Number))).toBe(94);
+    expect(Math.max(...numbers.map(Number))).toBe(97);
   });
 });
 
