@@ -30,11 +30,14 @@ equivalent `git add <explicit-file>.log` errors loudly instead — this looks li
 that difference), so the README shipped describing two files that don't exist in the
 tracked tree. `git ls-tree -r origin/main -- docs/eval-runs/` before this commit showed
 only this README. Run3 and run4 above are added with `git add -f` specifically to not
-repeat that. **Run1 and run2's actual content could not be recovered by this session** —
-they live in a different session's scratchpad, which this session has no access to; only
-whoever ran them (or still has that terminal history) can restore them. Flagging precisely
-rather than quietly re-adding two placeholder rows, per this file's own reason for
-existing.
+repeat that. **Run1 and run2 have since been recovered and force-added** by the session that ran
+them — the logs were still in its own scratchpad, so "not recoverable" was true from where
+it was written and false in general. Flagging it precisely rather than quietly re-adding two
+placeholder rows was the right call either way: it was what made the recovery happen.
+
+**The rule this leaves behind: `git add -f` for every file in this directory.** The blanket
+`*.log` ignore stays, because build and dev-server logs genuinely should not be tracked.
+Anything landing here is deliberate, so it should have to say so.
 
 A third run (`oryn/empty-slot-prompt`, 323/360) was reported in prose before this directory
 existed; its raw log was not preserved *by that point in time*. That specific gap is now
