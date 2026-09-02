@@ -2,8 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 import { getAIProvider } from "./index";
-import { logAIUsage } from "./usage";
-import { selectModelForUser } from "./limits/budget";
+import { withUsageLogging } from "./usage";
 import { assertWithinJobBudget } from "./limits/job-budget";
 import { REQUIREMENT_CATEGORIES } from "@/lib/requirements/types";
 import { StructuredRuleSchema } from "@/lib/validation/requirements";
@@ -63,24 +62,30 @@ export async function extractRequirementsFromContent(params: {
   // Same reasoning as opportunity-extraction.ts's identical line: no per-student cap sees
   // this call, so nothing else stops it from running unbounded. Throws
   // JobBudgetExceededError once requirement_extraction is over its monthly figure — see
-  // lib/ai/limits/job-budget.ts, caught in lib/requirements/discover.ts.
+  // lib/ai/limits/job-budget.ts, caught in lib/requirements/discover.ts. Deliberately
+  // outside withUsageLogging below: this throws before any AI call happens, so there is no
+  // usage to log and it must reach discover.ts as JobBudgetExceededError specifically,
+  // unwrapped.
   await assertWithinJobBudget("requirement_extraction");
 
   const provider = getAIProvider();
-  // Same reasoning as opportunity-extraction.ts's identical line: always null (a catalog
-  // job, not a student's), routed through selectModelForUser anyway for consistency with
-  // every other call site rather than assuming env.anthropic.model directly.
-  const selection = await selectModelForUser(null);
-  const result = await provider.generateStructured({
-    system: SYSTEM_PROMPT,
-    prompt: `Source URL: ${params.sourceUrl}\n\n<page_content>\n${params.content.slice(0, 12000)}\n</page_content>`,
-    schema: RequirementPageExtractionSchema,
-    schemaName: "record_requirements",
-    schemaDescription: "Records the distinct admission requirements stated on this page.",
-    maxTokens: 3072,
-    model: selection.model,
-  });
+  // withUsageLogging (2026-09-02) resolves selectModelForUser(null) itself and, critically,
+  // recovers usage from a retry-exhausted generateStructured failure before it reaches
+  // discover.ts's own catch -- checkJobBudget above sums ai_usage.estimated_cost for this
+  // exact feature, so a failure that logged nothing made the next call believe there was
+  // more budget left than there actually was. Always null here (a catalog job, not a
+  // student's own usage).
+  const result = await withUsageLogging({ userId: null, feature: "requirement_extraction" }, (model) =>
+    provider.generateStructured({
+      system: SYSTEM_PROMPT,
+      prompt: `Source URL: ${params.sourceUrl}\n\n<page_content>\n${params.content.slice(0, 12000)}\n</page_content>`,
+      schema: RequirementPageExtractionSchema,
+      schemaName: "record_requirements",
+      schemaDescription: "Records the distinct admission requirements stated on this page.",
+      maxTokens: 3072,
+      model,
+    }),
+  );
 
-  await logAIUsage({ userId: null, feature: "requirement_extraction", usage: result.usage, model: result.model });
   return { candidates: result.data.requirements, usage: result.usage };
 }

@@ -29,6 +29,12 @@ vi.mock("@/lib/ai/index", () => ({
 
 vi.mock("@/lib/ai/usage", () => ({
   logAIUsage: vi.fn().mockResolvedValue(undefined),
+  // This file's own tests are about plan content (the self-contradiction fix), not usage
+  // logging -- that's __tests__/ai/advisor-chat-usage.test.ts / structured-output-usage.test.ts's
+  // job, both of which drive the real withUsageLogging against a stubbed admin client. A
+  // faithful-enough stand-in here: run the callback with a fixed model and return/throw
+  // whatever it does, consistent with this file's own "no live model call, ever" rule above.
+  withUsageLogging: async <T>(_meta: unknown, run: (model: string) => Promise<T>) => run("claude-sonnet-5"),
 }));
 
 vi.mock("@/lib/ai/student-context", () => ({

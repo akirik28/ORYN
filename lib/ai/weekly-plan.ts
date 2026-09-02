@@ -2,8 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 import { getAIProvider } from "./index";
-import { logAIUsage } from "./usage";
-import { selectModelForUser } from "./limits/budget";
+import { withUsageLogging } from "./usage";
 import { ADVISOR_SYSTEM_PROMPT } from "./advisor-prompt";
 import { buildStudentAdvisorContext, formatContextForPrompt } from "./student-context";
 import { formatEligibilityCaveat } from "./eligibility-text";
@@ -263,21 +262,26 @@ export async function generateWeeklyPlan(userId: string, supabaseClient?: Parame
   const context = await buildStudentAdvisorContext(userId, supabaseClient);
   const { text: counselorGrounding, recommendedTitles } = await buildCounselorGrounding(userId, supabaseClient);
   const provider = getAIProvider();
-  // Checked here, not just in principle: this is the exact feature the founder's own
-  // measured incident came from (2026-09-02) -- one student regenerating this plan 102
-  // times in a week, $3.04, 3x the monthly ceiling. See lib/ai/limits/budget.ts.
-  const selection = await selectModelForUser(userId);
 
-  const result = await provider.generateStructured({
-    system: withOutputLanguage(ADVISOR_SYSTEM_PROMPT, context.student.preferredLanguage),
-    prompt: `Here is the student's current context:\n\n${formatContextForPrompt(context, context.student.preferredLanguage)}${counselorGrounding}\n\n${buildWeeklyPlanInstruction()}`,
-    schema: WeeklyPlanSchema,
-    schemaName: "record_weekly_plan",
-    schemaDescription: "Records this week's prioritized action plan for the student.",
-    maxTokens: 2048,
-    model: selection.model,
-  });
+  // withUsageLogging resolves selectModelForUser(userId) itself and threads degraded/
+  // degradeReason into logAIUsage on both the success path AND a retry-exhausted
+  // generateStructured failure (added 2026-09-02) -- this feature is the exact one the
+  // founder's own measured incident came from (one student regenerating this plan 102
+  // times in a week, $3.04, 3x the monthly ceiling, see lib/ai/limits/budget.ts), and it
+  // carries roughly 90% of the product's AI spend to date, so a retry-exhausted call here
+  // losing its usage entirely would be the largest single instance of the class the
+  // 2026-09-02 sweep found in cv_extraction/achievement_refinement.
+  const result = await withUsageLogging({ userId, feature: "weekly_plan" }, (model) =>
+    provider.generateStructured({
+      system: withOutputLanguage(ADVISOR_SYSTEM_PROMPT, context.student.preferredLanguage),
+      prompt: `Here is the student's current context:\n\n${formatContextForPrompt(context, context.student.preferredLanguage)}${counselorGrounding}\n\n${buildWeeklyPlanInstruction()}`,
+      schema: WeeklyPlanSchema,
+      schemaName: "record_weekly_plan",
+      schemaDescription: "Records this week's prioritized action plan for the student.",
+      maxTokens: 2048,
+      model,
+    }),
+  );
 
-  await logAIUsage({ userId, feature: "weekly_plan", usage: result.usage, model: result.model, degraded: selection.degraded, degradeReason: selection.degraded ? selection.reason : null });
   return resolvePlanSelfContradiction(result.data, recommendedTitles);
 }
