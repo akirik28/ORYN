@@ -11,6 +11,22 @@ import type { Profile, ProfileScore } from "@/types/database";
  * touches user data must call verifySession() (or requireUser()) itself; never rely on a
  * parent layout having already checked (layouts don't re-run on client-side navigation).
  * See node_modules/next/dist/docs/01-app/02-guides/authentication.md.
+ *
+ * Every export below is `cache()`-wrapped (React's per-request memoization) — but that only
+ * dedupes inside a real Server Component render (a `page.tsx`/`layout.tsx` actually being
+ * rendered). Confirmed directly, 2026-09-02 (docs/performance.md §2's `getProfileScores`
+ * entry): a bare test calling one of these twice does not dedupe at all (no active
+ * Next.js request-render scope exists outside the real server runtime), and neither does a
+ * Route Handler (an `app/api` `route.ts` file, including every `/api/jobs/*` cron route) —
+ * three calls from inside one `GET`/`POST` handler fired three real queries, not one. Route
+ * Handlers are plain functions Next.js invokes directly; they are not part of the React
+ * Server Component render tree `cache()` actually scopes itself to. If you're reaching for
+ * one of these from a Route Handler expecting dedup across repeated calls (a per-item loop,
+ * for instance), it isn't there — and these functions are also all session/cookie-derived in
+ * the first place, so a Route Handler with no user session (a cron job) gets nothing useful
+ * from them regardless of caching; see each job's own client-threading instead
+ * (`refreshAdmissionOutlook`/`getCounselorState`'s optional `client`/`supabaseClient`
+ * parameter, used exactly for this).
  */
 export const verifySession = cache(async () => {
   const supabase = await createClient();
