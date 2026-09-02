@@ -457,6 +457,26 @@ export function cycleStatusLabel(status: Opportunity["cycle_status"], locale: Lo
 }
 
 /**
+ * cycle_status is about whether *this* cycle is taking applications right now — distinct from
+ * whether the opportunity is worth knowing about at all. Only the states a student needs a
+ * heads-up about become a plain-text descriptor; "open" is the unremarkable default and stays
+ * quiet, achieved by simply not calling cycleStatusLabel for it.
+ *
+ * Moved here from features/opportunities/opportunity-card.tsx (2026-09-02) so
+ * features/dashboard/dashboard-view.tsx can render the identical descriptor rather than
+ * carrying a second copy of this set — the exact "#140/#141" duplication this module's other
+ * comments already warn about. opportunity-card.tsx's own copy removed, now imports this one.
+ */
+export const CYCLE_STATUSES_WORTH_A_DESCRIPTOR = new Set<Opportunity["cycle_status"]>([
+  "upcoming",
+  "closed",
+  "date_not_announced",
+  "historical",
+  "discontinued",
+  "unverified",
+]);
+
+/**
  * Same duplication shape, two copies (opportunity-card.tsx and [id]/page.tsx, byte-identical
  * English on every key). "unknown" is deliberately absent from both maps — an absent key
  * means "say nothing" (see either caller's own `?? null` / falsy check), not a value to

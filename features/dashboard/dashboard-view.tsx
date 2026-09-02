@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import { getTranslations } from "next-intl/server";
 import { matchTierKey } from "@/lib/opportunities/matching";
+import { CYCLE_STATUSES_WORTH_A_DESCRIPTOR, cycleStatusLabel } from "@/lib/opportunities/lifecycle";
 import { ArrowRight, Compass, FileText, Landmark, Minus, TrendingUp } from "lucide-react";
 import { Eyebrow } from "@/components/oryn/eyebrow";
 import { SectionHeader } from "@/components/oryn/section-header";
@@ -24,7 +25,7 @@ import type { getTargetUniversitiesWithDetails } from "@/lib/universities/querie
 import type { getUpcomingDeadlines, DeadlineSource } from "@/lib/deadlines/upcoming";
 import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
 import type { CounselorRecommendation } from "@/lib/counselor";
-import type { ProfileDimension } from "@/types/database";
+import type { ProfileDimension, Opportunity } from "@/types/database";
 
 const DEADLINE_SOURCE_ICONS: Record<DeadlineSource, typeof FileText> = {
   application: FileText,
@@ -60,7 +61,7 @@ export interface DashboardViewProps {
   avoidRecommendation: { title: string; reason: string } | null;
   upcomingDeadlines: Awaited<ReturnType<typeof getUpcomingDeadlines>>;
   targetUniversities: Awaited<ReturnType<typeof getTargetUniversitiesWithDetails>>;
-  opportunityPreview: { title: string; matchScore: number; deadline: string | null }[];
+  opportunityPreview: { title: string; matchScore: number; deadline: string | null; cycleStatus: Opportunity["cycle_status"] | null }[];
   /** False only when refreshOpportunityMatches skipped its write this render (the admin
    * client wasn't configured) -- never for "genuinely zero matches," which is its own,
    * non-stale outcome. AGENTS.md Phase 45 / Rule 4: never let a page imply this preview
@@ -501,15 +502,25 @@ export async function DashboardView({
               ) : null}
               {opportunityPreview.length > 0 ? (
                 <ul className="mt-5">
-                  {opportunityPreview.map((opp) => (
-                    <li key={opp.title} className="border-b border-border/60 py-3 last:border-0">
-                      <p className="text-sm leading-snug text-ink-2">{opp.title}</p>
-                      <p className="mt-1.5 flex items-center gap-3">
-                        <span className="text-xs text-ink-3">{tTier(matchTierKey(opp.matchScore))}</span>
-                        {opp.deadline ? <DeadlineBadge date={opp.deadline} locale={locale} /> : null}
-                      </p>
-                    </li>
-                  ))}
+                  {opportunityPreview.map((opp) => {
+                    // Same descriptor Browse renders for the identical cycle_status values
+                    // (features/opportunities/opportunity-card.tsx) — this block used to have
+                    // no field to render it from at all. See dashboard/page.tsx's own comment
+                    // on why cycle_status can say "unverified" even for a row that otherwise
+                    // passed every gate this block applies.
+                    const cycleDescriptor =
+                      opp.cycleStatus && CYCLE_STATUSES_WORTH_A_DESCRIPTOR.has(opp.cycleStatus) ? cycleStatusLabel(opp.cycleStatus, locale) : null;
+                    return (
+                      <li key={opp.title} className="border-b border-border/60 py-3 last:border-0">
+                        <p className="text-sm leading-snug text-ink-2">{opp.title}</p>
+                        <p className="mt-1.5 flex items-center gap-3">
+                          <span className="text-xs text-ink-3">{tTier(matchTierKey(opp.matchScore))}</span>
+                          {cycleDescriptor ? <span className="text-xs text-ink-3">{cycleDescriptor}</span> : null}
+                          {opp.deadline ? <DeadlineBadge date={opp.deadline} locale={locale} /> : null}
+                        </p>
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : (
                 <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-2">{t("noOpportunityMatches")}</p>

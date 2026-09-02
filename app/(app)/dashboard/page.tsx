@@ -17,6 +17,7 @@ import { getCounselorState } from "@/lib/counselor/state";
 import { buildCounselorDashboardContract, resolveAvoidRecommendation, type CounselorDashboardContract } from "@/lib/counselor/dashboard-contract";
 import { greeting } from "@/lib/dashboard/greeting";
 import { DashboardView } from "@/features/dashboard/dashboard-view";
+import type { Opportunity } from "@/types/database";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("nav");
@@ -188,12 +189,22 @@ export default async function DashboardPage() {
   const opportunityPreview = opportunityMatches
     .map((m) => {
       const opportunity = opportunityById.get(m.opportunity_id);
-      // `deadline` comes from the same row, past the same verification_state and
-      // recommendability gates as the title — so surfacing it adds urgency without
-      // widening what this block is willing to vouch for.
-      return { title: opportunity?.title, matchScore: m.match_score, deadline: opportunity?.deadline ?? null };
+      // `deadline` and `cycleStatus` both come from the same row, past the same
+      // verification_state and recommendability gates as the title — so surfacing them adds
+      // urgency/caveats without widening what this block is willing to vouch for.
+      //
+      // cycleStatus specifically: the verification_state='verified_current' filter above
+      // (and isOpportunityRecommendable's own isOpportunitySufficientlyVerified check) both
+      // accept a row on the strength of ANY verification timestamp ever written, which is a
+      // fact about which ingestion pipeline touched the row, not proof this year's cycle was
+      // reconfirmed — lib/opportunities/lifecycle.ts's own extensive comment says so. A row can
+      // pass every gate here while still carrying cycle_status='unverified'. Browse already
+      // renders this honestly (CYCLE_STATUSES_WORTH_A_DESCRIPTOR); this preview used to have no
+      // field to render it from at all — not degraded, structurally absent. Verified live
+      // 2026-09-02: 12 of this block's eligible candidates carry exactly that shape.
+      return { title: opportunity?.title, matchScore: m.match_score, deadline: opportunity?.deadline ?? null, cycleStatus: opportunity?.cycle_status ?? null };
     })
-    .filter((o): o is { title: string; matchScore: number; deadline: string | null } => Boolean(o.title))
+    .filter((o): o is { title: string; matchScore: number; deadline: string | null; cycleStatus: Opportunity["cycle_status"] | null } => Boolean(o.title))
     // Cut to size only now that unrecommendable rows are gone, so the block shows the best
     // rows a student can actually act on rather than whatever survived the top two.
     .slice(0, OPPORTUNITY_PREVIEW_SIZE);
