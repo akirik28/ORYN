@@ -35,7 +35,10 @@ import type { PlanTier } from "@/types/database";
  * Ultra tier, second founder request the same night, verbatim: "onu biraz daha havalı
  * yapalım büyüt ve pixel pixel yanıyor efektini ver bittikçe rengi değişsin falan ama
  * dalgalansın ora da" — bigger, a pixel-by-pixel burning effect, colour changes with
- * depletion, and it should undulate. Built on the exact reference oryn-a7 handed off
+ * depletion, and it should undulate. Widened again, third request that same night after
+ * seeing it live — "üstteki bar bildirimlerin solundaki barı uzat biraz daha" — w-24 to
+ * w-32; the height stays as first built, only the length grew a second time. Built on the
+ * exact reference oryn-a7 handed off
  * (features/app-shell/sidebar-flame.tsx, itself ported from a founder-approved prototype,
  * 99.11% coverage) — the per-dot math below (turbulence, additive compositing, the
  * white-hot-to-tail temperature ramp) is that same closed-form structure, re-oriented
@@ -102,7 +105,7 @@ export function UsageIndicator({ quota, budgetDegraded, tier }: { quota: Monthly
             className={cn(
               "flex shrink-0 items-center overflow-hidden rounded-[9px] border px-2 transition-colors hover:border-current focus-visible:outline-none",
               isUltra
-                ? "h-11 w-24 border-[#2A2440] bg-[#100D1B] dark:border-white/12"
+                ? "h-11 w-32 border-[#2A2440] bg-[#100D1B] dark:border-white/12"
                 : "h-[34px] w-14 dark:border-white/12 dark:bg-transparent",
             )}
           />

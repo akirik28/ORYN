@@ -19,6 +19,7 @@ import { selectModelForUser } from "@/lib/ai/limits/budget";
 import { MonthlyUsageMeter } from "@/features/advisor/monthly-usage-meter";
 import { ResponseModeSlider } from "@/features/advisor/response-mode-slider";
 import { resolveResponseMode } from "@/lib/tier/response-mode";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tMeta = await getTranslations("nav");
@@ -54,6 +55,7 @@ export default async function AdvisorPage() {
   // "balanced" default resolveResponseMode itself falls back to for a genuinely missing
   // column, just handled one layer up here for a genuinely missing profile.
   const responseMode = profile ? resolveResponseMode(profile) : "balanced";
+  const planTier = resolvePlanTier(profile ?? { plan_tier: "standard" });
 
   const conversation = conversationRes.data;
   const messages = conversation
@@ -115,7 +117,7 @@ export default async function AdvisorPage() {
           inside an error message the student only sees once they hit the wall. */}
       <section className="space-y-4">
         <SectionHeader title={t("talkItThrough")} description={t("talkItThroughDescription")} />
-        <ResponseModeSlider responseMode={responseMode} budgetDegraded={budgetDegraded} quota={quota} />
+        <ResponseModeSlider responseMode={responseMode} budgetDegraded={budgetDegraded} quota={quota} planTier={planTier} />
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <div className="glass-card flex min-h-[34rem] flex-col rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7">
             <AdvisorChat
