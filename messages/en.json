@@ -447,7 +447,7 @@
     },
     "peerBenchmark": {
       "notEnoughStudents": "Not enough comparable Oryn students yet",
-      "notEnoughDescription": "To show peer comparison ({cohort}, minimum {min}).",
+      "notEnoughDescription": "Needs at least {min} comparable students ({cohort}) — showing a percentile with fewer would be a guess, not a real comparison.",
       "comparedTo": "Compared to {cohort}",
       "overallProfile": "Overall profile",
       "percentile": "{percentile}th percentile",

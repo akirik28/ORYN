@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CAREER_PROFILE_SCORE_VERSION } from "@/lib/scoring/types";
+import { evidenceStateFor, isAssessed } from "@/lib/scoring/signal";
 import type { BenchmarkDimension, CohortFilter } from "./types";
 
 /** Hard cap on how many peer profiles one cohort query will scan — a pre-launch safety
@@ -42,8 +43,22 @@ export async function getCohortDimensionScores(filter: CohortFilter, excludeUser
   // (lib/security/dal.ts's getProfileScores) -- doubly so here, since this pools many
   // students' scores together: a peer recomputed under a newer formula before everyone
   // else would otherwise get compared on a different scale, not just shown a stale number.
-  const { data: scores } = await admin.from("profile_scores").select("user_id, dimension, score").eq("calculation_version", CAREER_PROFILE_SCORE_VERSION).in("user_id", peerIds);
+  const { data: scores } = await admin
+    .from("profile_scores")
+    .select("user_id, dimension, score, confidence, reason_codes")
+    .eq("calculation_version", CAREER_PROFILE_SCORE_VERSION)
+    .in("user_id", peerIds);
+  // Every dimension gets a row on every recompute regardless of evidence (score 0 by
+  // construction when nothing's recorded — see lib/scoring/signal.ts's own header on why
+  // that's the single most misleading thing to report as a real value). A peer's
+  // not_assessed/limited_evidence row is real data about the RECORD, not a genuine score
+  // to compare against -- pooling it in would let peers with nothing recorded quietly pad
+  // (or skew) a dimension's distribution with phantom near-zeros, the exact thing Phase 68
+  // and this same evidence-state machinery exist to prevent everywhere else it's used.
+  // isAssessed/evidenceStateFor reused directly, not reimplemented.
   for (const row of scores ?? []) {
+    const hasEvidence = Array.isArray(row.reason_codes) && row.reason_codes.length > 0;
+    if (!isAssessed(evidenceStateFor(row.score, row.confidence, hasEvidence))) continue;
     byDimension.set(row.dimension, [...(byDimension.get(row.dimension) ?? []), row.score]);
   }
 
