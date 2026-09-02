@@ -8,6 +8,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
+import { matchTierKey } from "@/lib/opportunities/matching";
 import {
   insufficientVerificationReason,
   isOpportunitySufficientlyVerified,
@@ -83,13 +84,11 @@ function locationModeLabel(mode: string, locale: Locale): string {
 
 /** "fit" register — this page's own first-person verdict framing ("Oryn's take"), not
  * Browse's ranked-list "match" wording (features/opportunities/opportunity-card.tsx's
- * tierFor). Same four thresholds and, deliberately, the same English text for the middle two
- * tiers — that's this codebase's actual copy, not a shortcut taken while translating. */
+ * tierFor). Same lib/opportunities/matching.ts matchTierKey thresholds and, deliberately,
+ * the same English text for the middle two tiers — that's this codebase's actual copy, not a
+ * shortcut taken while translating. */
 function fitLabel(score: number, t: Translator): string {
-  if (score >= 80) return t("exceptional");
-  if (score >= 60) return t("strong");
-  if (score >= 40) return t("worthALook");
-  return t("lowPriority");
+  return t(matchTierKey(score));
 }
 
 /** Same reason vocabulary as the card, written long-form for the detail page. Kept local for

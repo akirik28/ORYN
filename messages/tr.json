@@ -58,7 +58,6 @@
     "exploreUniversities": "Üniversiteleri keşfet",
     "noTargetUniversitiesSuffix": "ilkini eklemek için — Oryn nerede durduğunu göstermeye başlasın.",
     "couldntRefreshMatches": "Eşleşmelerini şu an yenileyemedik. Aşağıdaki liste son bilinen sonucun, güncel olmayabilir.",
-    "matchPercent": "%{score} eşleşme",
     "noOpportunityMatches": "Oryn'ın seni dürüstçe sıralayabilmesi için profilinde yeterli sinyal oluştuğunda kişiselleştirilmiş eşleşmeler burada görünecek.",
     "weeklyFocus": {
       "markComplete": "Tamamlandı olarak işaretle",

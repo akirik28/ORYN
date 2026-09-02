@@ -58,7 +58,6 @@
     "exploreUniversities": "Explore universities",
     "noTargetUniversitiesSuffix": "to add your first — Oryn will start showing you where you stand.",
     "couldntRefreshMatches": "We couldn't refresh your matches just now. The list below is your last known result, not necessarily current.",
-    "matchPercent": "{score}% match",
     "noOpportunityMatches": "Personalized matches appear here once your profile has enough signal for Oryn to rank them honestly.",
     "weeklyFocus": {
       "markComplete": "Mark as complete",
