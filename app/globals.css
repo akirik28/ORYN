@@ -3,6 +3,13 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+/* Same mechanism as `dark` above, for the Ultra visual tier (see that section further down
+   this file for the full architecture). `data-tier="ultra"` is set on <html> itself
+   (features/app-shell/ultra-ambient.tsx), so every real element in the app is a descendant
+   — this lets any component write `ultra:text-transparent ultra:bg-[image:var(--tier-...)]`
+   etc. directly as Tailwind utilities, the same way it already writes `dark:...`, instead of
+   every Ultra-aware component needing its own hand-written CSS block. */
+@custom-variant ultra (&:is([data-tier="ultra"] *));
 
 @theme inline {
   --color-background: var(--background);
@@ -533,6 +540,158 @@
   }
   .blob-drift {
     animation: none;
+  }
+}
+
+/* ── Ultra visual tier (founder-approved, 2026-09-02) ────────────────────────────────
+   Prototype: docs/ultra-tier-2026-09-02.md. Founder's own words: "her şey farklı gözüksün"
+   (let everything look different) — and one explicit warning that shaped this whole
+   architecture: "dikkat et etraftan çıkan ışık birbirini kapamasın" (make sure the light
+   coming from around doesn't cover/block each other).
+
+   THE RULE, stated once, here, because every other file just applies it:
+   ── Components get gradient fills, gradient text, animated borders, and glow on SMALL
+      elements only (a knob, a chip, a badge). They do NOT get their own `filter: blur(Npx)`
+      halo. Exactly one ambient layer exists for the whole app — the fixed, page-level glow
+      + ember canvas mounted once in the app shell (features/app-shell/ultra-ambient.tsx) —
+      and nothing else may add a second one. A dozen blurred conic gradients bleeding into
+      each other is mud, not premium; that's the literal failure mode the founder named. ──
+
+   This app already has a per-card glow system (.glass-card/.glass-card-fast/
+   .glass-card-offset/.glass-card-offset2 below, staggered aurora-border animations) that
+   predates this pass and stays completely untouched here — constraint #1 for this whole
+   effort is that Standard renders byte-identical to before. Ultra's new signature lives in
+   genuinely new territory (page-level ambient glow, gradient text/fills, small-element
+   glow) rather than retinting or duplicating that existing per-card system.
+
+   Tokens, not hardcoded colors: any component that reads var(--tier-accent) (etc.) already
+   works correctly today, because at :root — no [data-tier="ultra"] present — every one of
+   these resolves to the exact brand tokens already in use. Only the block below changes
+   anything, and only under that one attribute selector. This is the mechanism that makes
+   "even the map looks different" tractable without 40 hand edits per surface.
+
+   data-tier is set from profiles.plan_tier (migration 0089), not from any response-mode/
+   answer-style control — see that migration's own comment for why those are deliberately
+   different signals. */
+:root {
+  --tier-accent: var(--brand-primary);
+  --tier-accent-strong: var(--brand-primary-strong);
+  --tier-grad-1: var(--brand-primary);
+  --tier-grad-2: var(--brand-primary-strong);
+  --tier-grad-3: var(--brand-primary-hover);
+  /* Fully transparent at baseline — a component that adds `box-shadow: 0 0 Npx
+     var(--tier-glow)` for its Ultra state costs nothing when not ultra, rather than needing
+     a separate `[data-tier="ultra"] &` rule just to turn the shadow on. */
+  --tier-glow: transparent;
+}
+
+[data-tier="ultra"] {
+  /* The flame ramp — identical across light/dark, deliberately: it's Ultra's own accent
+     identity, not a themed color that should invert. Same hex values in both the founder's
+     prototype and here, not re-derived in OKLCH, so this exactly matches what was approved. */
+  --tier-accent: #ff7a1a;
+  --tier-accent-strong: #e8342c;
+  --tier-grad-1: #ffc24a;
+  --tier-grad-2: #ff7a1a;
+  --tier-grad-3: #e8342c;
+  --tier-glow: rgba(255, 122, 26, 0.45);
+}
+
+/* Small reusable pieces built on the tokens above — gradient text/fill and a bounded
+   small-element glow, matching what the prototype's own score/badge/chip use. Deliberately
+   NOT a blur/halo utility; nothing in this file offers one.
+
+   Every declaration below lives inside a [data-tier="ultra"] block, on purpose, even though
+   these class names could be applied unconditionally with the gradient itself doing nothing
+   visible until `color: transparent` also applies. Scoping the whole property set, not just
+   the one that makes it visible, is what makes "diff the free surface before and after" a
+   clean, literal answer: a standard-tier element with .tier-grad-text on it carries zero
+   non-default computed styles from this rule, not merely zero visible ones. */
+[data-tier="ultra"] .tier-grad-text {
+  background: linear-gradient(120deg, var(--tier-grad-1), var(--tier-grad-2) 60%, var(--tier-grad-3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 14px var(--tier-glow));
+}
+[data-tier="ultra"] .tier-grad-fill {
+  background: linear-gradient(100deg, var(--tier-grad-1), var(--tier-grad-2) 55%, var(--tier-grad-3));
+}
+/* KNOWN ISSUE, not resolved tonight: pairing .tier-grad-fill with an element that also
+   carries a plain Tailwind text-color utility (e.g. .text-brand-primary-strong) does not
+   reliably win the text-color cascade for legibility against the fill -- confirmed live
+   that even an inline style()/!important on the element itself failed to change the
+   computed color, which rules out a simple specificity/layer explanation and points at
+   something this pass didn't get to the bottom of (possibly interaction with
+   `transition-colors`, confirmed present on the one element this was tried against).
+   Left unused in this push rather than shipped half-working -- the caller is responsible
+   for its own contrasting text color until this is actually understood, not this class. */
+[data-tier="ultra"] .tier-glow-sm {
+  box-shadow: 0 0 16px -3px var(--tier-glow);
+}
+
+@keyframes tier-flow {
+  to {
+    background-position: 220% 0;
+  }
+}
+.tier-flow-bar {
+  background: linear-gradient(90deg, var(--tier-grad-1), var(--tier-grad-2), var(--tier-grad-3), var(--tier-grad-2), var(--tier-grad-1));
+  background-size: 220% 100%;
+}
+[data-tier="ultra"] .tier-flow-bar {
+  animation: tier-flow 5s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tier-flow-bar {
+    animation: none;
+  }
+}
+
+/* The one exception to "no component gets its own blur halo" — because this IS the single
+   ambient layer the rule is about, not a component. Rendered by
+   features/app-shell/ultra-ambient.tsx, mounted once in the app shell. Off-center (70% 20%,
+   not dead-center) so it reads as a light source in the room rather than a ring around the
+   viewport; low opacity and a wide blur so it stays a wash behind content, never something
+   a student has to look through. This is the effect that would turn into "mud" if any
+   individual component also tried to add its own — see the header comment above. */
+.ultra-ambient-glow {
+  position: absolute;
+  inset: -20%;
+  opacity: 0;
+  background: conic-gradient(from 0deg at 70% 20%, var(--tier-grad-3), var(--tier-grad-2), var(--tier-grad-1), var(--tier-grad-2), var(--tier-grad-3));
+  filter: blur(120px);
+  transition: opacity 1.1s ease;
+}
+[data-tier="ultra"] .ultra-ambient-glow {
+  opacity: 0.16;
+  animation: tier-spin 22s linear infinite;
+}
+@keyframes tier-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ultra-ambient-embers {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.1s ease;
+}
+[data-tier="ultra"] .ultra-ambient-embers {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ultra-ambient-glow {
+    animation: none;
+  }
+  [data-tier="ultra"] .ultra-ambient-glow {
+    /* Static premium wash, not zero — matches the prototype's own reduced-motion posture:
+       everything stops, the surface still reads premium. */
+    opacity: 0.12;
   }
 }
 

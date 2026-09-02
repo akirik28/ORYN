@@ -8,6 +8,7 @@ import { Sidebar } from "@/features/app-shell/sidebar";
 import { Topbar } from "@/features/app-shell/topbar";
 import { MobileNav } from "@/features/app-shell/mobile-nav";
 import { RouteAmbientBlobs } from "@/features/app-shell/route-ambient-blobs";
+import { UltraAmbient } from "@/features/app-shell/ultra-ambient";
 import { NotConfiguredNotice } from "@/features/system/not-configured-notice";
 import { integrationStatus } from "@/lib/env";
 import { toProfileSignal } from "@/lib/scoring/signal";
@@ -91,6 +92,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const unreadCount = unreadRes.count ?? 0;
   const profileSignal = toProfileSignal(scores);
   const budgetDegraded = modelSelection.degraded;
+  // Migration 0089 unapplied-safe: `profile.plan_tier` is absent from the row, not merely
+  // null, until that column exists on a given environment — the type says it's always
+  // there (every real read defaults it), but this is the one place that default actually
+  // gets applied, since requireProfile() returns the raw row.
+  const planTier = profile.plan_tier ?? "standard";
 
   return (
     // Literal source ambient background (App.tsx `App()`'s root container) — the ground
@@ -139,6 +145,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             wrapper picks the config from the pathname, so each section has its own
             background weighting instead of one identical wash everywhere. */}
         <RouteAmbientBlobs />
+        {/* Same fixed/inset-0/pointer-events-none convention as RouteAmbientBlobs above —
+            mounted once here, not per-page. Sets data-tier on <html> itself; see that
+            component's own doc comment for why that happens client-side, scoped to this
+            authenticated shell, rather than server-side on the public root layout. */}
+        <UltraAmbient tier={planTier} />
         <Topbar notifications={notifications ?? []} unreadCount={unreadCount} quota={quota} budgetDegraded={budgetDegraded} />
         <main id="main-content" className="relative z-[1] min-w-0 flex-1 overflow-x-hidden">
           {/* max-w-[1200px] is the reading/composition measure (UI-V3 § 6). Pages that want
