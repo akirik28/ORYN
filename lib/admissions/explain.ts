@@ -63,6 +63,28 @@ const UNKNOWNS_BY_SHAPE_TR: Record<AdmissionSystemShape, string[]> = {
   unknown: ["Kompozisyonlar", "Referans mektupları", "Bu başvuru döneminin aday havuzu"],
 };
 
+/**
+ * Found auditing per-country admissions coverage 2026-09-03: `holistic_review` and
+ * `unknown` are the two shapes where `classifyOutlook` actually computes a confident
+ * reach/competitive/likely-family label from `compositeScore` — and `compositeScore` folds
+ * in `SELECTIVITY_PENALTY.unknown` (a flat, generic penalty) whenever the target university
+ * has no `admission_rate` on file, with nothing anywhere disclosing that substitution.
+ * Measured live (`oryn-qa-scratch`): 533 institutions carry a country outside the 15-country
+ * system-shape registry (`unknown` shape, none suppressed) and **zero** of them have any
+ * `university_statistics` row; the United Kingdom alone (`holistic_review`, 79 institutions)
+ * has exactly one. Every one of those targets gets a labelled, confident-looking badge
+ * computed the same way a real-data target's is, with no visual or textual difference.
+ *
+ * `academic_rank_competitive`/`academic_threshold` are deliberately NOT given this
+ * treatment — `computeAdmissionOutlook` suppresses both to `not_applicable` before
+ * `classifyOutlook` ever runs (Gate 1 short-circuits them), so there is no rate-dependent
+ * label there to caveat; adding this item to their lists would manufacture doubt about a
+ * number that was never used, the identical reasoning `academic_threshold`'s empty list
+ * above already states for cutoff/reviewer questions.
+ */
+const ADMISSION_RATE_UNKNOWN_ITEM = "This institution's own admission rate";
+const ADMISSION_RATE_UNKNOWN_ITEM_TR = "Bu kurumun kendi kabul oranı";
+
 const STRENGTH_GAP_THRESHOLD = 55;
 const MAX_NAMED = 2;
 
@@ -96,16 +118,25 @@ function byScoreAscThenDimensionAsc(a: DimensionScoreInput, b: DimensionScoreInp
  * the Gate 1 wiring follows: Oryn changes what it says only where it has *established* that
  * the holistic framing does not describe the target, never on a guess.
  *
+ * `admissionRateKnown` — false when the target has no `university_statistics.admission_rate`
+ * on file. No default: every real call site already has this (it's the same value fed into
+ * `computeAdmissionOutlook`'s own `admissionRate`), and defaulting it to `true` would silently
+ * re-hide the exact gap this parameter exists to surface for any caller that forgot to pass
+ * it. Only affects the `holistic_review`/`unknown` branches below — see
+ * `ADMISSION_RATE_UNKNOWN_ITEM`'s own comment for why `academic_rank_competitive`/
+ * `academic_threshold` are deliberately excluded.
+ *
  * `locale` defaults to English; see lib/counselor/evidence.ts's buildRecommendation for the
  * reasoning shared across this codebase's i18n work.
  */
 export function explainOutlook(
   scores: DimensionScoreInput[],
-  admissionSystemShape?: AdmissionSystemShape | null,
+  admissionSystemShape: AdmissionSystemShape | null | undefined,
+  admissionRateKnown: boolean,
   locale: Locale = DEFAULT_LOCALE
 ): OutlookExplanation {
   const shape = admissionSystemShape ?? "unknown";
-  const unknowns = locale === "tr" ? UNKNOWNS_BY_SHAPE_TR[shape] : UNKNOWNS_BY_SHAPE[shape];
+  const baseUnknowns = locale === "tr" ? UNKNOWNS_BY_SHAPE_TR[shape] : UNKNOWNS_BY_SHAPE[shape];
 
   // Gate 1 established that nothing here reads non-academic evidence. Strengths and gaps are
   // withheld rather than computed: they are true statements about the student, but this panel
@@ -117,9 +148,17 @@ export function explainOutlook(
   // `insufficientData` is deliberately false here even for an empty profile: it drives "we
   // don't know enough about you yet", and that is the wrong sentence for a target where more
   // profile data would not change the answer.
+  //
+  // admissionRateKnown is irrelevant here on purpose: this shape was already suppressed to
+  // not_applicable before classifyOutlook ran, so there is no rate-derived label to caveat.
   if (reviewsNonAcademicEvidence(shape) === false) {
-    return { strengths: [], gaps: [], unknowns, insufficientData: false, profileNotAnInput: true };
+    return { strengths: [], gaps: [], unknowns: baseUnknowns, insufficientData: false, profileNotAnInput: true };
   }
+
+  // holistic_review/unknown are the two shapes classifyOutlook actually labels from — see
+  // this function's own doc and ADMISSION_RATE_UNKNOWN_ITEM's comment for the measured scale
+  // of targets this reaches with no admission_rate on file at all.
+  const unknowns = admissionRateKnown ? baseUnknowns : [...baseUnknowns, locale === "tr" ? ADMISSION_RATE_UNKNOWN_ITEM_TR : ADMISSION_RATE_UNKNOWN_ITEM];
 
   const evidenced = scores.filter((s) => s.confidence !== "low");
   if (evidenced.length === 0) {

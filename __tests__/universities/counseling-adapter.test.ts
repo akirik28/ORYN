@@ -62,7 +62,9 @@ describe("buildUniversityCounselingView — outlook (never a fake acceptance cha
       })
     );
     const expectedOutlook = computeAdmissionOutlook({ profileStrength: 70, admissionRate: 0.3, dataConfidence: "high" });
-    const expectedExplanation = explainOutlook(scores);
+    // admissionRateKnown: true -- this fixture's own admissionRate (0.3) is a real, known
+    // rate, matching what buildUniversityCounselingView's real call now passes.
+    const expectedExplanation = explainOutlook(scores, undefined, true);
 
     expect(view.isTarget).toBe(true);
     expect(view.targetStatus).toBe("target");
