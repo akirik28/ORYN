@@ -79,9 +79,16 @@ describe("generateWeeklyPlansForActiveStudents", () => {
     const results = await generateWeeklyPlansForActiveStudents();
 
     expect(results).toEqual([{ userId: "student-2", status: "generated" }]);
-    // Exactly one argument, the userId -- never a second { force: true }, which is the
-    // one thing that would make this job capable of the destructive delete path.
-    expect((getOrCreateWeeklyPlan as ReturnType<typeof vi.fn>).mock.calls[0]).toEqual(["student-2"]);
+    // Never force: true (the one thing that would make this job capable of the destructive
+    // delete path), and the job's own admin client must actually be passed through --
+    // omitting it is a real, previously-live bug: getOrCreateWeeklyPlan defaults to the
+    // session-scoped client, which has no session in a job context, so a real AI call
+    // would still be spent and then silently fail to save (RLS-blocked write) on every
+    // student, every run. See lib/plan/persist.ts's own comment on getOrCreateWeeklyPlan.
+    const call = (getOrCreateWeeklyPlan as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(call[0]).toBe("student-2");
+    expect(call[1]?.force).not.toBe(true);
+    expect(call[1]?.supabaseClient).toBeDefined();
   });
 
   test("records a per-student failure without aborting the batch for the rest", async () => {

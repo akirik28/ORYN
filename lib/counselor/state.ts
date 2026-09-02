@@ -86,8 +86,11 @@ async function getRequirementCandidateInputs(
  * buildStudentAdvisorContext's contract a second time in this pass to keep the change
  * additive (see lib/ai/student-context.ts's own Phase B extension).
  */
-export async function getCounselorState(userId: string, locale: Locale = DEFAULT_LOCALE): Promise<CounselorState> {
-  const supabase = await createClient();
+// Same reasoning and same caller as buildStudentAdvisorContext's identical parameter
+// (lib/ai/student-context.ts) — defaults to the session-scoped client, overridden only by
+// the scheduled weekly-plan job, which has no session of its own to default to.
+export async function getCounselorState(userId: string, locale: Locale = DEFAULT_LOCALE, supabaseClient?: Awaited<ReturnType<typeof createClient>>): Promise<CounselorState> {
+  const supabase = supabaseClient ?? (await createClient());
 
   // Recompute-on-read, same convention as the Opportunities/Dashboard pages already use.
   await refreshOpportunityMatches(userId, locale);

@@ -35,7 +35,11 @@ export { rankDimensionStrengths } from "./strengths";
  * one accidentally. Only app/(app)/advisor/page.tsx and app/(app)/dashboard/page.tsx pass
  * the resolved student locale.
  */
-export async function getCounselorRecommendations(userId: string, locale: Locale = DEFAULT_LOCALE): Promise<CounselorResult> {
-  const state = await getCounselorState(userId, locale);
+export async function getCounselorRecommendations(
+  userId: string,
+  locale: Locale = DEFAULT_LOCALE,
+  supabaseClient?: Parameters<typeof getCounselorState>[2],
+): Promise<CounselorResult> {
+  const state = await getCounselorState(userId, locale, supabaseClient);
   return runCounselorPipeline(state, new Date(), locale);
 }
