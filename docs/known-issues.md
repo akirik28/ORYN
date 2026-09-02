@@ -307,13 +307,77 @@ QA-account population that exists today:
   students, ever. The control works; it's simply unused so far.
   `docs/time-budget-busy-mode-audit-2026-09-02.md`.
 
-### Two items named by CEO tonight with no findable source doc — checked directly instead
+### The reflection loop — the product's own stated center — has never once been observed working
 
-- **"137 unmerged branches"**: confirmed close to exactly right — `git branch -r
-  --no-merged origin/main` reads 136 as of this pass (this number moves constantly as the
-  fleet pushes and merges all night; a 1-branch difference is drift, not a discrepancy).
-  458 remote branches exist in total, 136 of which are not yet merged to `origin/main`.
-  Verified directly; no handoff doc covers this specifically.
+**The single most important finding in this pass, and it very nearly went uncited.** Phase
+10's act → reflect → advisor-adjusts loop has **never once been observed working end to end
+in this environment's live data, before or after any fix, across two independent
+measurements taken ~150 commits apart**: `weekly_actions` — 22 rows, 0 with
+`status='completed'`, 0 with `reflection_outcome` set, unchanged between both measurements.
+Pass 1 of this same investigation found `getOrCreateWeeklyPlan` throwing unconditionally
+for 7 of 8 students (an unconditional write gated on unapplied migration 0077). That fix is
+now real, correctly scoped, and covered by dedicated tests with negative cases — but **has
+not been exercised by a single live plan generation since it landed**: every weekly-plan
+number (8 rows, latest `week_start_date` still 2026-08-31, 1 plan at that latest week) is
+identical to Pass 1's, meaning nothing has called this function successfully since the fix
+merged. Strong code and test evidence the fix is correct; zero live evidence it has actually
+run, because nothing has triggered it. `docs/what-a-student-cannot-do-yet-2026-09-02-v2.md`
+("The single most important change since Pass 1").
+
+### Two more precise, currently-true facts worth naming plainly
+
+- **The deadline-reminder cron's dedup table doesn't exist live.** `deadline_reminders` has
+  run exactly twice, both 2026-08-22, both `items_processed: 0` (already recorded in "ORYN
+  has never been deployed" below) — new here: migration `0075`'s `deadline_notification_log`
+  table is unapplied live, so even a real run that found something to send would silently
+  no-op at the dedup step. Founder-gated (apply `0075`).
+  `docs/what-a-student-cannot-do-yet-2026-09-02-v2.md`, item 13.
+- **This session's own `reason_codes` coverage fix (559 of 724 rows now say why) is correct
+  code, but no live `opportunity_matches` row reflects it yet.** Every live row's
+  `calculated_at` predates that merge; recomputation only happens on a student's own page
+  visit, and no backfill job exists. Not a bug — the exact "built, not yet live" distinction
+  this whole pass exists to preserve — but a founder comparing the claimed number against
+  today's live data won't see it until a student revisits their dashboard.
+  `docs/what-a-student-cannot-do-yet-2026-09-02-v2.md`, item 9.
+
+### Correction to this file's own lineage — evidence_status column count
+
+An earlier entry in this session's own work (`docs/portfolio-audit-2026-09-02.md`) claimed 8
+of 9 evidence-linkable tables carry `evidence_status`, only `education_records` missing it.
+A separate same-night audit (`docs/evidence-flow-audit-2026-09-02.md`) said both
+`education_records` **and** `test_scores` are missing it. A direct live
+`information_schema.columns` query settled it: **exactly 7 of 9 have the column** — the
+evidence-flow audit was right, the portfolio audit's specific count was wrong. Fix written
+(migration `0079_education_test_score_evidence_status.sql`) but not applied — founder-gated.
+Live practical effect today: a student attaching evidence to a transcript or test score gets
+a false-success (the file and `evidence_files` row save correctly; the achievement item's
+own status silently fails to mirror) — the silent-failure half of that was itself already
+fixed and confirmed live this session (the mirroring-write error now logs rather than
+discarding), so the gap degrades observably rather than silently, even though the schema gap
+itself is still open pending the founder applying `0079`.
+`docs/what-a-student-cannot-do-yet-2026-09-02-v2.md`, item 5 — not independently
+re-verified here beyond noting the correction is the later doc's own.
+
+### Two items named by CEO tonight with initially no findable source doc
+
+- **"137 unmerged branches"**: this pass's own first check (a raw `git branch -r
+  --no-merged origin/main` count, 136) missed that a real, deep audit already exists —
+  found only via a memory cross-check after this section was first drafted, worth naming
+  as a near-miss. `docs/unmerged-branch-audit-2026-09-02.md` traced all 137: **74 (54%)
+  eliminated by patch-ID equivalence** (already landed via squash/rebase, zero reading
+  needed), **5 more folded as exact duplicates**, leaving **58 distinct real survivors**.
+  Of those, the largest confirmed-real code gap is `gate2-ai-counselor` +
+  `ui-redesign-v3`, which share a base redoing profile scoring with a languages/skills
+  taxonomy still genuinely absent from `lib/scoring` today (confirmed by direct grep) —
+  the same hole this session's own CV-import work found from the other direction. The
+  other major finding, ~1,447 opportunity-research records across the S5/S6/S7 branches,
+  was itself already followed up on and corrected in a later same-night package
+  (`docs/opportunity-research-staging-2026-09-02.md`): the research wasn't actually
+  sitting only in unmerged branches — all 83 files were already on `main` as
+  `data/research/opportunities/*.jsonl` — and staging it against the real ingest contract
+  found 97 accepted (~86 real, a dedup blind spot found and quantified along the way), of
+  which only 14 carry an actionable deadline. Staged, gate-checked, **not applied** — the
+  founder decides whether any of it enters the live catalogue.
 - **"`product_events`' two absent event types"**: could not confirm as stated. Every one
   of Phase 52's 10 named events has a real `logEvent()` call site today, including
   `opportunity_saved`/`opportunity_applied` (easy to miss on a first grep — both are
