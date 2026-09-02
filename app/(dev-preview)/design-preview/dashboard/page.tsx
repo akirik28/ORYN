@@ -46,6 +46,7 @@ export default async function DashboardPreviewPage({ searchParams }: { searchPar
       <PreviewShell signal={FIXTURE_PROFILE_SIGNAL} tier={tier}>
         <DashboardView
           displayName={FIXTURE_STUDENT.displayName}
+          tier={tier}
           greeting="Good evening"
           locale="en"
           biggestGap={FIXTURE_BIGGEST_GAP}

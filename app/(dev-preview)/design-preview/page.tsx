@@ -90,15 +90,18 @@ export default async function DesignPreviewPage({ searchParams }: { searchParams
             in the database). The toggle at the bottom of the screen switches Standard/Ultra and follows you between
             pages, so you can walk through the same screen both ways.
           </p>
-          {/* 2026-09-02: the Ultra visual work is mid-flight, not finished — most of the app
-              (sidebar, page background, the hero gradients) is still hardcoded inline styles
-              no [data-tier="ultra"] rule can reach yet (docs/hardcoded-color-sweep-2026-09-02.md),
-              so toggling Ultra there does nothing visible today. Said here directly rather than
-              letting that read as this page being broken. */}
+          {/* 2026-09-02: the three big hardcoded surfaces docs/hardcoded-color-sweep-2026-09-02.md
+              found (page ground, sidebar, hero gradients) are all converted now (sidebar/ground:
+              oryn/ultra-tier-foundation-2026-09-02; hero gradients:
+              oryn/hero-gradient-tier-2026-09-02 + oryn/hero-gradient-tier-prop-fix-2026-09-02 —
+              the initial hero-gradient landing left every DashboardView/ApplicationsView call
+              on this page itself still not passing `tier` through, a separate bug from the
+              conversion itself, fixed in the prop-fix follow-up). The Ultra visual work is
+              still mid-flight elsewhere in the app, so don't take this list as exhaustive. */}
           <p className="text-sm text-muted-foreground">
-            Only some surfaces show a difference yet: the university map, the opportunity card&apos;s Ultra halo, and
-            the notification bell dot. The sidebar, page background and card gradients are still being converted and
-            will look the same on both for now — that&apos;s expected, not a bug in this page.
+            The university map, the opportunity card&apos;s Ultra halo, the notification bell dot, the sidebar, the
+            page background, and the hero cards below all now show a real difference. Ultra visual work is still in
+            progress elsewhere in the app — this list will keep growing, not shrinking.
           </p>
         </div>
         <ul className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
@@ -128,6 +131,7 @@ export default async function DesignPreviewPage({ searchParams }: { searchParams
       </div>
       <DashboardView
         displayName={FIXTURE_STUDENT.displayName}
+        tier={tier}
         greeting="Good evening"
         biggestGap={FIXTURE_BIGGEST_GAP}
         profileChange={FIXTURE_PROFILE_CHANGE}
@@ -176,6 +180,7 @@ export default async function DesignPreviewPage({ searchParams }: { searchParams
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Applications</p>
         <ApplicationsView
           hasTargets
+          tier={tier}
           availableTargets={[{ id: "t1", name: "Bocconi University" }]}
           applications={[
             {
@@ -213,7 +218,7 @@ export default async function DesignPreviewPage({ searchParams }: { searchParams
 
       <div className="mt-16 space-y-3 border-t pt-16">
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Applications — empty, no targets saved yet</p>
-        <ApplicationsView hasTargets={false} availableTargets={[]} applications={[]} />
+        <ApplicationsView hasTargets={false} availableTargets={[]} applications={[]} tier={tier} />
       </div>
     </PreviewShell>
   );
