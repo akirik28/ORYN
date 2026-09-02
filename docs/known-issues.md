@@ -2203,6 +2203,38 @@ this pass.
 - **No people-search/student directory** — deliberate, see `product-decisions.md`.
   Connections are discoverable only via a shared `/u/[id]` link.
 
+## A hard AI-call failure is structurally invisible in `ai_usage` — not under-reported, invisible
+
+**2026-09-02, found while building the admin panel's operational-health section, at
+oryn-a7's request to write it up.** `lib/ai/usage.ts`'s `withUsageLogging` correctly logs
+a row for a retry-exhausted `AIStructuredResponseFailedError` or `AIResponseIncompleteError`
+(the SEV-1 fix earlier tonight that stopped these calls from spending real tokens "off the
+books") — but that row is logged with the **exact same shape as a successful call**: same
+`feature`, `model`, `input_tokens`/`output_tokens`, `estimated_cost`. There is no column
+recording whether the call actually produced a usable result.
+
+`degraded`/`degrade_reason` (migration 0076) look like they might answer this and don't —
+they describe *model selection* (a student got a cheaper model under the spend cap), which
+is orthogonal to whether the call the model *did* run ultimately succeeded or threw. A
+`degraded: false` row and a genuinely-failed row are indistinguishable by any column on
+this table today.
+
+**Consequence, confirmed while building `getAIReliabilityTrend`
+(`lib/admin/queries.ts`)**: the admin panel can show a real, correct trend of *degraded*
+calls, but cannot show a failure rate at all — not "the number is probably low," the
+number cannot be computed from this table under any query. Shipped
+`hardFailureTrackingAvailable: false` as an explicit field on that trend's return type
+rather than silently omitting a failure chart, specifically so this reads as "not
+measurable yet" rather than as "zero failures happened" to whoever eventually builds the
+chart against it.
+
+**Fix needs a migration** (an `outcome`/`succeeded` column on `ai_usage`, set from
+`withUsageLogging`'s own success/failure branches — the exact two call sites that already
+know which branch they're in) — not added in this pass, since this was a read-only
+investigation, not a schema-change task. Worth prioritizing given how much of tonight's
+own work (the notification-prefs bug, the CV skills/languages save gap) has had this same
+shape: something that looks fine from the outside and fails 100% of the time underneath.
+
 ## Pre-existing, still true (see `README.md` "Known limitations" for the full list)
 
 - No unified admin UI for browsing/editing global reference data beyond the one new

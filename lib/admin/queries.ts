@@ -61,6 +61,11 @@ export async function getJobHealth(admin: SupabaseClient<Database>): Promise<Job
   return JOB_DEFINITIONS.map((def, i) => summarizeJobHealth(def, (jobRunsByDefinition[i].data as ExternalSyncJob[] | null) ?? []));
 }
 
+/** Re-exported so the section component's reads all come from this one module (D1), even
+ *  though the underlying function also serves the non-admin /api/jobs/* cron routes and so
+ *  lives in lib/jobs/ rather than here — see lib/jobs/job-controls.ts's own comment. */
+export { getJobControls } from "@/lib/jobs/job-controls";
+
 const RELIABILITY_TREND_DAYS = 30;
 
 /** UTC calendar date from a PostgREST-returned ISO timestamp string — matches the

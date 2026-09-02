@@ -285,6 +285,19 @@ describe("migration numbering", () => {
     // only "pick the failure direction that costs less for this feature's actual shape,"
     // not a rule either column's default was allowed to inherit from the other's.
     //
+    // 0094 (admin_finance_settings) landed on main between this pass's first rebase attempt
+    // and this one -- an earlier version of this paragraph said it wasn't present yet, which
+    // was accurate at the time and stopped being true within the same session; corrected
+    // here rather than left stale, the same discipline this file asks of every other entry.
+    // 0095 (job_controls) is the admin ops-panel pivot's "disable future runs" flag -- a new
+    // table, not a column addition, so it carries no fail-open-on-missing-column tension the
+    // way 0092/0093 above do; the equivalent question for a whole new table (a missing row,
+    // including "the table itself doesn't exist yet," should read as "not disabled") is
+    // answered in lib/jobs/job-controls.ts's own comment instead. 0096 is unclaimed as of
+    // this pass. 0097 (admin_action_log) is a separate lane's shared audit-log table for
+    // operational admin actions -- landed on main during this same rebase, bumping the
+    // ceiling here to 97 rather than 95; see that migration's own header for its reasoning,
+    // not duplicated here since it isn't this entry's migration to narrate.
     expect(Math.max(...numbers.map(Number))).toBe(97);
   });
 });

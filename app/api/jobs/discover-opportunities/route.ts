@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyCronRequest } from "@/lib/jobs/verify-cron-request";
 import { runWithTracking } from "@/lib/jobs/run-with-tracking";
+import { isJobDisabled } from "@/lib/jobs/job-controls";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { discoverOpportunitiesForQuery, DEFAULT_DISCOVERY_QUERIES } from "@/lib/opportunities/discover";
 
 /**
@@ -12,6 +14,13 @@ import { discoverOpportunitiesForQuery, DEFAULT_DISCOVERY_QUERIES } from "@/lib/
 export async function POST(request: NextRequest) {
   if (!verifyCronRequest(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  // Checked before any real work — the admin panel's "disable future runs" control
+  // (migration 0095) must actually prevent the next attempt, cron or manual alike. A
+  // disabled job returns a clean 200/skipped, not an error: this is an intentional, correct
+  // gate, not a failure.
+  if (await isJobDisabled(createAdminClient(), "discover_opportunities")) {
+    return NextResponse.json({ skipped: true, reason: "disabled" });
   }
 
   const customQuery = request.nextUrl.searchParams.get("query");

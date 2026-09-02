@@ -8,6 +8,7 @@ import { syncUsUniversities, DEFAULT_US_UNIVERSITIES } from "@/lib/universities/
 import { scanDeadlines } from "@/lib/deadlines/scan";
 import { discoverRequirementsForUncoveredUniversities } from "@/lib/requirements/discover";
 import { runWithTracking } from "@/lib/jobs/run-with-tracking";
+import { isJobDisabled, setJobDisabled } from "@/lib/jobs/job-controls";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { buildPostRemovalUpdate, buildPostRestoreUpdate, ModerationInputError } from "@/lib/social/posts-moderation";
 import { ADMIN_FINANCE_SETTINGS_ID } from "@/lib/admin/queries";
@@ -15,6 +16,10 @@ import { isValidExchangeRate, isValidPrice } from "@/lib/admin/finance";
 import { isUndefinedTableError } from "@/lib/supabase/errors";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { logAdminAction } from "@/lib/admin/log";
+import { tavilyProvider } from "@/lib/providers/tavily";
+import { collegeScorecardProvider } from "@/lib/providers/college-scorecard";
+import { openAlexProvider } from "@/lib/providers/openalex";
+import { getAIProvider, isAIConfigured } from "@/lib/ai";
 import type { MessageReportStatus, PlanTier } from "@/types/database";
 
 /**
@@ -24,8 +29,37 @@ import type { MessageReportStatus, PlanTier } from "@/types/database";
  * itself; never assume the page-level check is enough for a Server Action.
  */
 
-export async function triggerOpportunityDiscovery(): Promise<{ error?: string }> {
+export interface JobRunResult {
+  error?: string;
+  itemsProcessed?: number;
+  errorsEncountered?: number;
+  durationMs?: number;
+}
+
+/**
+ * `runWithTracking` writes items_processed/errors_encountered/finished_at to the fresh
+ * external_sync_jobs row and returns only the caller's own `result` — the stats themselves
+ * are computed and discarded internally. Re-reading the row it just wrote is simpler and
+ * lower-risk than changing runWithTracking's return shape, which every one of the four
+ * /api/jobs/* cron routes also depends on and would need updating in lockstep for no
+ * benefit those routes actually need (they return the result to a cron log, not a toast).
+ */
+async function readLatestRunStats(jobName: string): Promise<JobRunResult> {
+  const admin = createAdminClient();
+  const { data } = await admin.from("external_sync_jobs").select("*").eq("job_name", jobName).order("started_at", { ascending: false }).limit(1).maybeSingle();
+  if (!data) return {};
+  return {
+    itemsProcessed: data.items_processed,
+    errorsEncountered: data.errors_encountered,
+    durationMs: data.finished_at ? new Date(data.finished_at).getTime() - new Date(data.started_at).getTime() : undefined,
+  };
+}
+
+export async function triggerOpportunityDiscovery(): Promise<JobRunResult> {
   await requireAdmin();
+  if (await isJobDisabled(createAdminClient(), "discover_opportunities")) {
+    return { error: "This job's future runs are currently disabled — re-enable it first." };
+  }
   try {
     await runWithTracking("discover_opportunities", async () => {
       const runs = [];
@@ -40,11 +74,14 @@ export async function triggerOpportunityDiscovery(): Promise<{ error?: string }>
     return { error: error instanceof Error ? error.message : "Job failed." };
   }
   revalidatePath("/admin");
-  return {};
+  return await readLatestRunStats("discover_opportunities");
 }
 
-export async function triggerUniversitySync(): Promise<{ error?: string }> {
+export async function triggerUniversitySync(): Promise<JobRunResult> {
   await requireAdmin();
+  if (await isJobDisabled(createAdminClient(), "sync_us_universities")) {
+    return { error: "This job's future runs are currently disabled — re-enable it first." };
+  }
   try {
     await runWithTracking("sync_us_universities", async () => {
       const runs = await syncUsUniversities(DEFAULT_US_UNIVERSITIES);
@@ -58,11 +95,14 @@ export async function triggerUniversitySync(): Promise<{ error?: string }> {
     return { error: error instanceof Error ? error.message : "Job failed." };
   }
   revalidatePath("/admin");
-  return {};
+  return await readLatestRunStats("sync_us_universities");
 }
 
-export async function triggerDeadlineScan(): Promise<{ error?: string }> {
+export async function triggerDeadlineScan(): Promise<JobRunResult> {
   await requireAdmin();
+  if (await isJobDisabled(createAdminClient(), "deadline_reminders")) {
+    return { error: "This job's future runs are currently disabled — re-enable it first." };
+  }
   try {
     await runWithTracking("deadline_reminders", async () => {
       const { notified, checked } = await scanDeadlines();
@@ -72,11 +112,14 @@ export async function triggerDeadlineScan(): Promise<{ error?: string }> {
     return { error: error instanceof Error ? error.message : "Job failed." };
   }
   revalidatePath("/admin");
-  return {};
+  return await readLatestRunStats("deadline_reminders");
 }
 
-export async function triggerRequirementDiscovery(): Promise<{ error?: string }> {
+export async function triggerRequirementDiscovery(): Promise<JobRunResult> {
   await requireAdmin();
+  if (await isJobDisabled(createAdminClient(), "discover_requirements")) {
+    return { error: "This job's future runs are currently disabled — re-enable it first." };
+  }
   try {
     await runWithTracking("discover_requirements", async () => {
       const runs = await discoverRequirementsForUncoveredUniversities();
@@ -89,6 +132,97 @@ export async function triggerRequirementDiscovery(): Promise<{ error?: string }>
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Job failed." };
   }
+  revalidatePath("/admin");
+  return await readLatestRunStats("discover_requirements");
+}
+
+/**
+ * `job_controls` (migration 0095) toggle. Deliberately does not attempt to stop a run
+ * already in progress — no API exists to terminate an in-flight Vercel invocation from
+ * application code, and pretending otherwise (marking the current run "failed" while the
+ * real process keeps executing regardless) would misrepresent what actually happened. This
+ * only ever gates the *next* attempt, cron or manual — see lib/jobs/job-controls.ts and
+ * migration 0095's own comments.
+ */
+export async function toggleJobDisabled(jobName: string, disabled: boolean): Promise<{ error?: string }> {
+  const admin_profile = await requireAdmin();
+  const admin = createAdminClient();
+  const result = await setJobDisabled(admin, jobName, disabled, admin_profile.id);
+  if (result.error) return result;
+
+  // migration 0097's admin_action_log — joining lib/admin/log.ts's shared write path
+  // rather than a bespoke one, per that migration's own comment naming job actions as a
+  // roadmap item this integrates with. No targetUserId: this action targets a job, not a
+  // profile; the job name lives in targetLabel/detail instead.
+  await logAdminAction(admin, {
+    adminProfile: admin_profile,
+    action: disabled ? "disable_job" : "enable_job",
+    targetLabel: jobName,
+    detail: { jobName },
+  });
+
+  revalidatePath("/admin");
+  return {};
+}
+
+export interface ProviderRecheckResult {
+  error?: string;
+  notConfigured?: boolean;
+}
+
+/**
+ * Triggers one small, real call to the named provider right now, through the same code
+ * path (lib/providers/fetch-json.ts, or lib/ai/anthropic-provider.ts for Anthropic) that
+ * already records provider_health on every real call the app makes organically — this
+ * doesn't write provider_health itself, it just gives an admin a way to make one happen on
+ * demand instead of waiting for real traffic. A provider with no API key configured is
+ * reported as `notConfigured`, not attempted and not recorded as a failure — Tavily/College
+ * Scorecard/Anthropic's own `isConfigured()`/`isAIConfigured()` checks already short-circuit
+ * before ever reaching provider_health for exactly this reason (see lib/providers/tavily.ts,
+ * lib/providers/college-scorecard.ts, lib/ai/anthropic-provider.ts's own comments): a
+ * missing key is a deployment fact, not a live health signal, and recording it as a failure
+ * would make the panel read "degraded" when the honest statement is "never configured".
+ */
+export async function recheckProvider(provider: string): Promise<ProviderRecheckResult> {
+  await requireAdmin();
+
+  try {
+    switch (provider) {
+      case "anthropic": {
+        if (!isAIConfigured()) return { notConfigured: true };
+        await getAIProvider().generateText({ prompt: "Reply with the single word OK.", maxTokens: 8 });
+        break;
+      }
+      case "tavily": {
+        if (!tavilyProvider.isConfigured()) return { notConfigured: true };
+        const result = await tavilyProvider.search("test", { maxResults: 1 });
+        if (!result.success) return { error: result.error.message };
+        break;
+      }
+      case "college_scorecard": {
+        if (!collegeScorecardProvider.isConfigured()) return { notConfigured: true };
+        const result = await collegeScorecardProvider.searchByName("test", 1);
+        if (!result.success) return { error: result.error.message };
+        break;
+      }
+      case "openalex": {
+        // No API key — OpenAlex is a free, keyless public API, so there is no
+        // "not configured" state for it the way the other three have.
+        const result = await openAlexProvider.searchWorks("test", 1);
+        if (!result.success) return { error: result.error.message };
+        break;
+      }
+      default:
+        return { error: "Unknown provider." };
+    }
+  } catch (error) {
+    // Anthropic's generateText throws rather than returning a ProviderResult — the two
+    // failure shapes (AIResponseIncompleteError with usage attached, or a plain transport
+    // error) are both already recorded to provider_health inside anthropic-provider.ts
+    // itself before this catches them; this only needs to turn the throw into a message.
+    return { error: error instanceof Error ? error.message : "Check failed." };
+  }
+
   revalidatePath("/admin");
   return {};
 }

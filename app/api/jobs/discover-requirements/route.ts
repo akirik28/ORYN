@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyCronRequest } from "@/lib/jobs/verify-cron-request";
 import { runWithTracking } from "@/lib/jobs/run-with-tracking";
+import { isJobDisabled } from "@/lib/jobs/job-controls";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { discoverRequirementsForUncoveredUniversities } from "@/lib/requirements/discover";
 
 /**
@@ -14,6 +16,9 @@ import { discoverRequirementsForUncoveredUniversities } from "@/lib/requirements
 export async function POST(request: NextRequest) {
   if (!verifyCronRequest(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (await isJobDisabled(createAdminClient(), "discover_requirements")) {
+    return NextResponse.json({ skipped: true, reason: "disabled" });
   }
 
   const results = await runWithTracking("discover_requirements", async () => {
