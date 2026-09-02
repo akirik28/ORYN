@@ -133,7 +133,17 @@ function friendlyDbError(action: CrudAction, table: string, error: { message: st
   return toFriendlyDbErrorMessage(action);
 }
 
-async function crudCreate<T extends Record<string, unknown>>(table: string, schema: ZodLike<T>, input: T): Promise<ActionResult> {
+/**
+ * `extraFields` is spread in last, after the form-validated `linked.data` — for columns a
+ * caller needs to set server-side that must never be reachable through the Zod `schema`
+ * itself (schema = what a client-submitted form is allowed to contain). `source` on
+ * research_experiences is the first user: a saved AI-generated idea needs to record that
+ * provenance (same reason lib/profile/cv-import.ts's own rows are written with
+ * `source: "cv_import"`), but `ResearchExperienceSchema` is also the plain manual-entry
+ * form's schema — adding `source` there would let a normal form submission claim any
+ * provenance it likes, including a fake one.
+ */
+async function crudCreate<T extends Record<string, unknown>>(table: string, schema: ZodLike<T>, input: T, extraFields?: Record<string, unknown>): Promise<ActionResult> {
   const session = await requireUser();
   const parsed = schema.safeParse(input);
   if (!parsed.success || !parsed.data) return { error: parsed.error?.issues[0]?.message ?? "Invalid input." };
@@ -143,7 +153,7 @@ async function crudCreate<T extends Record<string, unknown>>(table: string, sche
   if (linked.error) return { error: linked.error };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table name varies per call site; the Zod schema above is the real type check.
-  const { error } = await (supabase.from(table as any) as any).insert({ ...linked.data, user_id: session.userId! });
+  const { error } = await (supabase.from(table as any) as any).insert({ ...linked.data, ...extraFields, user_id: session.userId! });
   if (error) return { error: friendlyDbError("save", table, error) };
 
   await logEvent(session.userId!, "profile_item_added", { table });
@@ -367,23 +377,32 @@ export async function generateResearchIdeas(field: string): Promise<{ data?: Res
 
 export async function saveResearchIdea(project: ResearchProject, field: string): Promise<{ error?: string }> {
   const session = await requireUser();
-  const result = await crudCreate("research_experiences", ResearchExperienceSchema, {
-    title: project.researchQuestion,
-    organization: null,
-    mentor_name: null,
-    field,
-    description: `${project.whyItFits}\n\nMethod: ${project.method}\nExpected output: ${project.expectedOutput}`,
-    methodology: project.method,
-    independence_level: null,
-    output_type: "none",
-    output_url: null,
-    start_date: null,
-    end_date: null,
-    ongoing: true,
-    hours_per_week: null,
-    location: null,
-    story_notes: null,
-  });
+  const result = await crudCreate(
+    "research_experiences",
+    ResearchExperienceSchema,
+    {
+      title: project.researchQuestion,
+      organization: null,
+      mentor_name: null,
+      field,
+      description: `${project.whyItFits}\n\nMethod: ${project.method}\nExpected output: ${project.expectedOutput}`,
+      methodology: project.method,
+      independence_level: null,
+      output_type: "none",
+      output_url: null,
+      start_date: null,
+      end_date: null,
+      ongoing: true,
+      hours_per_week: null,
+      location: null,
+      story_notes: null,
+    },
+    // Without this, research_experiences.source falls back to its own default ('manual') --
+    // indistinguishable from an entry the student typed by hand. Same reason
+    // lib/profile/cv-import.ts's rows are written with source: "cv_import" instead of
+    // letting that default apply.
+    { source: "research_generator" },
+  );
   if (!result.error) {
     await logEvent(session.userId!, "research_project_started", { field });
   }
