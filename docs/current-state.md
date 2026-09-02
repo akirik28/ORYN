@@ -44,6 +44,7 @@ if it were the branch's content.
 | Code measurement timestamp | **2026-09-02 ~02:10** |
 | Prior checkpoint | `0cefab01`, 2026-09-01 ~17:55 — **12 packages merged since**, see `git log 0cefab01..main` |
 | Gate on this checkpoint's commit | lint clean · typecheck clean · **3,243 tests** · production build compiles |
+| **Staleness pass** (not a full rewrite — see `docs/doc-staleness-audit-2026-09-02.md`) | **`main` @ `579093f4`, 2026-09-02, ~40 packages merged since the row above. 3,617 tests.** Everything below this table is otherwise as of the original checkpoint; only the specific corrections in that audit doc were re-verified and fixed in place. |
 | Live DB measured against | `oryn-qa-scratch` (`qtcvcflzxbuagvvwahhu`), via Supabase MCP, 2026-09-02 |
 | Which migrations are actually live | **`docs/migration-state.md` is the current, authoritative table** — every migration replayed against empty Postgres and diffed object-by-object against live; also names a real, live gap (`0048`) no prior checkpoint had found, and (added this pass) four live objects — three indexes plus a foreign key — with no migration file anywhere, which a replay cannot reproduce regardless of ledger state. |
 | Deployment | **Never deployed.** Vercel account holds zero projects; no scheduled job has ever run. |
@@ -151,6 +152,15 @@ file is a snapshot, not a live view.
   Nothing in it was optimized; every number in it is what the codebase does today, not a target.
   Read it directly for the actual figures rather than a summary here.
 
+- **Added this staleness pass, since it's the specific shape of claim being hunted for: a real,
+  per-student AI dollar cap already exists.** `lib/ai/limits/budget.ts` implements the
+  founder's own $0.50 soft / $1.00 ceiling figures, verified from actual call sites (not
+  inferred from feature names) to cover all ten distinct `ai_usage.feature` values through one
+  shared `withUsageLogging` path — seven student-triggered, two background jobs, one
+  admin-triggered. Full call-site-by-call-site trail: `docs/ai-spend-cap-2026-09-02.md`. If a
+  claim that most AI features have no cost cap is heard anywhere, it's wrong; this is the
+  correction, not the risk.
+
 - **An AI eval harness exists** (`lib/ai/eval/`, `scripts/run-ai-eval.ts`) and is safe to run by
   design: a plain `npm run eval:ai` makes **zero network calls** and only prints a cost
   projection; spending money requires both `--live` and `--confirm-spend` together, deliberately
@@ -158,9 +168,12 @@ file is a snapshot, not a live view.
   fixture set: 12 cases (2 fixtures × 3 targets — `advisor_chat`, `weekly_plan`,
   `counselor_explain` — × en/tr). Projected cost for a real run: **$0.23** for target-model calls
   only, **$0.30** including judge calls. Input-token counts in that projection are real, from
-  actually-assembled prompts; output-token counts are documented assumptions. No real (paid) run
-  has been executed — this closes the "infrastructure to build" half of the AI-output-quality
-  gap above, not the "actually measured" half.
+  actually-assembled prompts; output-token counts are documented assumptions.
+
+  **Update, this staleness pass: two real, paid runs have since been executed** (one Sonnet
+  baseline, one Haiku comparison) — raw logs preserved in `docs/eval-runs/`, full findings in
+  `docs/ai-quality-eval-2026-09-02.md`. This closes the "actually measured" half named above,
+  at least once; a single run per model is a first data point, not a trend line.
 
 ## Live database (measured 2026-09-01, this checkpoint — every number re-queried, none carried forward)
 
@@ -191,18 +204,21 @@ patch and the dashboard control. It has simply never had data. Worth one real pa
 launch, by someone who can write to a live account — not something an agent should do on the
 founder's account.
 
-**And it is not the only feedback loop with no data.** Phase 12.1's other one — asking why a
-student is not interested in an opportunity, and using that in future recommendations — is
-collected and discarded. `not_interested_reason` is written by
-`app/(app)/opportunities/actions.ts` and read by nothing in `lib/`. The *status* is honoured
-(`lib/opportunities/matching.ts:115` excludes `not_interested` outright), so a rejected
-opportunity does stop being recommended; it is the seven-category reason that goes nowhere.
-Live today: 4 saved opportunities, zero `not_interested`, zero reasons — latent rather than a
-live defect, since nobody has used that flow yet.
+**Update, this staleness pass: the other feedback loop's read half is now built.** Phase 12.1's
+`not_interested_reason` was collected and discarded as of the checkpoint above — confirmed
+true at the time, independently re-derived rather than taken on report. Three of the seven
+reasons (`not_interested_topic`, `too_expensive`, `location`) now feed future matching, as a
+capped relevance penalty gated on 2+ repeated dismissals, never an eligibility exclusion — the
+other four are deliberately left alone with the reasoning for each written into the code
+(`too_competitive` is a judgment about the student, not the opportunity, and automating it
+would push easier work toward exactly the students who least need it). Full detail:
+`docs/not-interested-reason-audit-2026-09-02.md`. Still true as of this pass: **zero live
+dismissals exist to exercise either path** — the `weekly_actions` reflection loop above and
+this one are both real, tested, and both still waiting for a first real use.
 
-Taken together: **both of the mechanisms that make Oryn learn from a student have never run.**
-That is a usage fact, not a broken one — but it means the differentiating half of the product
-is the least exercised.
+Taken together: **both of the mechanisms that make Oryn learn from a student are built now, and
+both have still never run on real data.** That is a usage fact, not a broken one — but it means
+the differentiating half of the product is the least exercised.
 
 - `universities`: **1,019** rows — 1,010 canonical, 9 superseded — unchanged.
 - `university_programs`: **17,046** — unchanged.
@@ -251,12 +267,14 @@ these regardless of ledger state, unlike the ledger-silent-but-tracked migration
   account can insert a `profile_views` row against an arbitrary profile UUID right now.
   Found the same day as the rest of this correction. Full detail in `migration-state.md`.
 - `0075` (`deadline_notification_log`), `0076` (`ai_usage` degrade columns), `0077`
-  (`weekly_actions.carried_forward`), all written the same night, all founder-gated as
-  intended. **`0077` is confirmed to have shipped a live outage** (weekly plan generation
-  broke for most students — `getOrCreateWeeklyPlan` writes a column that doesn't exist;
-  being fixed separately) — the sharpest evidence yet that "write migrations, leave them
-  unapplied" needs a second rule: code merged alongside one must degrade, not break,
-  without it.
+  (`weekly_actions.carried_forward`, still unapplied, re-verified this staleness pass — the
+  column is absent live), all written the same night, all founder-gated as intended.
+  **`0077` shipped a live outage** (weekly plan generation broke for most students —
+  `getOrCreateWeeklyPlan` wrote a column that didn't exist) — **confirmed fixed this
+  staleness pass**, read directly in `lib/plan/persist.ts`: the write path now catches the
+  specific `42703` error for this exact column and degrades to a warning instead of throwing.
+  Still the sharpest evidence yet that "write migrations, leave them unapplied" needs a second
+  rule: code merged alongside one must degrade, not break, without it.
 
 `0057`, `0059`, `0072`, `0073` and `0074` were listed as "not applied" at the prior
 checkpoint. **All are live.** `0072` in particular was asserted unapplied in two separate
