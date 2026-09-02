@@ -20,7 +20,17 @@ interface UsageRow {
  *  per-student query (called internally by selectModelForWeeklyPlan). Lets one mock serve
  *  both this module's function and the real, unmocked selectModelForUser it composes with
  *  -- vitest can't mock a same-module function call from within a test of a sibling export
- *  in that same module, so the real per-student check has to run against something. */
+ *  in that same module, so the real per-student check has to run against something.
+ *
+ *  quota_grants (migration 0096, lib/ai/limits/grants.ts) is a concurrent lane's addition
+ *  that landed inside selectModelForUser itself after this file's own composition tests
+ *  were first written -- every composition test below that passes a real (non-null) userId
+ *  now runs the real getMonthlyGrantsUsd too, which this mock must answer or it throws
+ *  "unexpected table: quota_grants" before ever reaching the per-student budget logic.
+ *  Always empty here: these tests assert the per-student/aggregate interaction, not grants
+ *  behavior (that's grants.ts's/budget.test.ts's own concern) -- an empty grants list keeps
+ *  effectiveSpendUsd === knownSpendUsd, i.e. exactly what every usageByUser fixture above
+ *  already assumed before grants existed. */
 function mockAdmin({
   settings,
   usageByFeature,
@@ -43,6 +53,9 @@ function mockAdmin({
             }),
           }),
         };
+      }
+      if (table === "quota_grants") {
+        return { select: () => ({ eq: () => ({ gte: async () => ({ data: [], error: null }) }) }) };
       }
       throw new Error(`unexpected table: ${table}`);
     },

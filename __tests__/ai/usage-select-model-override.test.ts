@@ -23,9 +23,23 @@ const { insertMock, selectModelForUserMock } = vi.hoisted(() => ({
   selectModelForUserMock: vi.fn(),
 }));
 
-vi.mock("@/lib/supabase/admin", () => ({
-  createAdminClient: () => ({ from: () => ({ insert: (row: Record<string, unknown>) => insertMock(row) }) }),
-}));
+// Spread `actual`, not a bare replacement — resolveModelCostUsd (lib/ai/pricing.ts, a
+// concurrent lane's ai_model_pricing work landed 2026-09-03) calls this module's own
+// tryCreateAdminClient() independently of the createAdminClient() logAIUsage itself uses.
+// A bare `{ createAdminClient: ... }` mock left tryCreateAdminClient undefined, so
+// resolveModelCostUsd threw before the insert's argument list even finished evaluating —
+// silently swallowed by logAIUsage's own try/catch, so insertMock was never called at all
+// (every test here saw an empty usageInserts()). The real tryCreateAdminClient already
+// fails open (returns null, no SUPABASE_SECRET_KEY in the test env) exactly the way
+// resolveModelCostUsd's own fallback-to-estimateCostUsd path expects, so spreading it
+// through needs no additional mocking of its own.
+vi.mock("@/lib/supabase/admin", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/supabase/admin")>();
+  return {
+    ...actual,
+    createAdminClient: () => ({ from: () => ({ insert: (row: Record<string, unknown>) => insertMock(row) }) }),
+  };
+});
 
 vi.mock("@/lib/ai/limits/budget", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/ai/limits/budget")>();
