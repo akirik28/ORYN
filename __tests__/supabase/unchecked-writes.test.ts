@@ -188,7 +188,16 @@ describe("a Supabase write's result is always destructured for error, never disc
   });
 
   test("finds a real number of write-call sites (guards against the .from()-chain match silently matching nothing)", () => {
-    const total = files.reduce((sum, f) => sum + scanFile(f).offenders.length + scanFile(f).skipped, 0);
+    // One scanFile() per file, not two. This previously called scanFile(f) twice in the same
+    // reduce -- once for .offenders.length, once for .skipped -- doubling 300+ synchronous
+    // TypeScript parses against a fixed timeout. It passed on an idle machine and tipped over
+    // whenever anything else was using the CPU, which on 2026-09-02 meant it failed inside
+    // several lanes' gate runs while being green in others. A test that reports differently
+    // depending on machine load makes every gate it sits in unreadable.
+    const total = files.reduce((sum, f) => {
+      const scanned = scanFile(f);
+      return sum + scanned.offenders.length + scanned.skipped;
+    }, 0);
     // Not a useful count on its own (SAFE sites aren't counted here at all) -- this only
     // guards against the shape-matcher itself going quiet. The real fixture below is what
     // proves it actually recognizes a safe call.
