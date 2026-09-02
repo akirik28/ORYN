@@ -510,6 +510,12 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
    *
    * So an unassessed dimension is described, never numbered. Assessed ones keep the score,
    * where it is a real reading and the model needs it to rank.
+   *
+   * `confidence` (`DataConfidence`) is left raw here deliberately, same standard as
+   * `targetUniversities[].status` below: "high"/"medium"/"low" are ordinary words a student
+   * would recognise, not identifiers — found undocumented and closed by
+   * `__tests__/i18n/ai-prompt-enum-labels.test.ts`'s own first real run, 2026-09-02; see
+   * that file's `EXEMPT` list, which now enforces this decision rather than only recording it.
    */
   lines.push("Dimension states (describe these as states; never quote a score for a dimension Oryn has not assessed):");
   for (const d of context.profileScores) {
@@ -559,7 +565,9 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
    * prompt cannot drift apart.
    *
    * `status` is left as-is deliberately — its values are ordinary words a student would
-   * recognise ("applying", "accepted", "waitlisted"), not identifiers.
+   * recognise ("applying", "accepted", "waitlisted"), not identifiers. Enforced, not just
+   * recorded: `__tests__/i18n/ai-prompt-enum-labels.test.ts`'s `EXEMPT` list names this
+   * exact field, so a future accidental removal of this reasoning would still be caught.
    */
   lines.push(
     `Target universities: ${

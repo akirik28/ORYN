@@ -458,6 +458,66 @@ wrong about what they checked — each was silently checking less than its own n
 The useful question about any of these checks going forward isn't "is it correct" — it
 already is, by its own narrow definition — it's "what does it not look at."
 
+## A fifth guard: the AI-prompt path now has a standing check, not just a memory of a sweep
+
+The six-instance sweep above fixed every live case by hand. It did not leave anything behind
+that would catch a seventh — `check:i18n` counts JSX text, `label-accessors.test.ts` scans
+for direct map indexing, neither reads `lib/ai/*.ts`'s template literals at all. CEO's
+question, asked directly: is that gap even decidable, or does it belong in the same place as
+`t(someVar)` above — "properly automating it needs type-aware resolution... a different kind
+of tool"?
+
+**It is decidable, but only with that different tool — a real type-checker, not a second
+regex.** `translation-keys.test.ts` and `server-component-prop-boundary.test.ts` both answer
+"which declaration does this name resolve to," pure scope resolution, decidable from syntax
+alone (`ts.createSourceFile`, no `Program`). This question is "what is this expression's
+static type," which needs real type information. Built
+`__tests__/i18n/ai-prompt-enum-labels.test.ts` on `ts.createProgram` +
+`TypeChecker.getTypeAtLocation`, scoped to `lib/ai/` and `lib/counselor/` (this file's own
+name for the AI-prompt surface), checking every template-literal substitution's resolved
+type against the eight closed DB enums that produced all six original leaks
+(`RecommendationClass`, `TimeBudget`, `ReflectionOutcome`, `EvidenceState`, `TargetStatus`,
+`ActionStatus`, `DataConfidence`, `CurriculumType`).
+
+**Once real types are available, the check is simpler than the syntax-only ones, not more
+complex.** A value already passed through a label accessor is, at the type level, no longer
+the tracked type — `getTypeAtLocation` on a call expression returns its *result* type, so
+`` `${recommendationClassLabel(x, locale)}` `` resolves to plain `string` automatically. No
+accessor-name allowlist to keep in sync with reality.
+
+**Verified against the real codebase, not a hypothetical — and it found a real, live,
+previously undocumented gap on its first run.** `lib/ai/student-context.ts:519`,
+`` confidence: ${d.confidence} `` interpolates `DataConfidence` raw, with no comment,
+sitting eleven lines from `status`'s own already-reasoned exemption for the identical
+standard. Same fix: "high"/"medium"/"low" are ordinary words a student would recognise, not
+identifiers — not a bug to relabel, a decision that had been made once (for `status`) and
+never propagated to its neighbor. Both fields now carry a matching comment, and both are
+named in the test's own `EXEMPT` list, so the decision is enforced, not only recorded —
+closing the exact "documentation records a fix, it doesn't apply the fix elsewhere" gap this
+session kept finding in other forms tonight.
+
+**A second near-miss the build caught, worth naming because it shows why matching on the
+type's *name* is necessary and not merely tidy**: `counselor-explain.ts:89`'s
+`` confidence: ${rec.confidence} `` looks identical to the bug above, but
+`CounselorRecommendation.confidence` is typed `BoundedLevel`
+(`"low" | "medium" | "high"`) — a different declared alias that happens to share
+`DataConfidence`'s three literals in a different order. A check comparing the *set of
+values* instead of the alias's own declared name would have flagged real, correct code.
+Matching on `type.aliasSymbol?.getName()` doesn't.
+
+**Named, not built: `ActionStatus` has no accessor**, because it has zero live
+template-literal occurrences today — `recentActionOutcomes[].status` is only ever compared
+with `===` inside hardcoded English branches ("COMPLETED"/"SKIPPED"/"EXPIRED UNDONE"), never
+interpolated. Nothing to fix; worth a line so the day it does get interpolated, whoever
+writes that line finds this note instead of rediscovering the gap.
+
+**Cost, measured rather than assumed, the same discipline as the shadowing rewrite above**:
+building the `ts.Program` (41 real root files, ~1,200 in the resolved transitive closure —
+essentially the whole app graph) takes roughly 2.5–4.8s in isolation, against a run-to-run
+variance of nearly 2x on its own — this machine runs several parallel sessions most nights,
+so isolated timing is the only number attributable to this file specifically; full-suite
+wall time on a shared, busy machine isn't a clean measurement of one file's cost.
+
 ## What this means for a launch date
 
 A Turkish student switching to Turkish today gets a translated shell, translated legal
