@@ -21,6 +21,19 @@ function normalizeUrl(url: string): string {
   return /^https?:\/\//.test(url) ? url : `https://${url}`;
 }
 
+/**
+ * migration 0080 added university_statistics.last_changed_at, but a written migration isn't
+ * guaranteed applied everywhere this code runs (lib/plan/persist.ts's own note on
+ * carried_forward/migration 0077 is the canonical statement of that rule for this codebase).
+ * Confirmed live 2026-09-02: universities.last_changed_at already exists (migration 0078),
+ * university_statistics.last_changed_at does not yet. Postgres validates a statement's target
+ * columns before touching any row, so retrying the identical write with the column omitted is
+ * safe -- nothing partial can have landed from the first attempt.
+ */
+export function isUndefinedColumnError(error: { code?: string; message?: string } | null, columnName: string): boolean {
+  return error?.code === "42703" && !!error.message?.includes(columnName);
+}
+
 /** The fields this sync actually writes to `universities` (see universityPayload below) —
  * shared type so the comparator and the payload can never silently drift apart. */
 interface ComparableUniversityFields {
@@ -71,7 +84,7 @@ interface ComparableStatisticsFields {
 }
 
 /**
- * Same role as hasUniversityDataChanged, for university_statistics (migration 0079 gives
+ * Same role as hasUniversityDataChanged, for university_statistics (migration 0080 gives
  * that table its own last_changed_at). `cost_currency`/`source`/`data_confidence` are
  * deliberately not compared: they are this sync's own fixed constants for every US row
  * ("USD"/"College Scorecard"/"high"), never a fact that varies between reads, so including
@@ -150,10 +163,11 @@ async function syncOne(schoolName: string): Promise<SyncResult> {
     // `string | null` typing and, more importantly, is what actually leaves the column
     // untouched: PostgREST only writes columns present in the payload.
     const changed = hasUniversityDataChanged(existing, incomingFields);
-    await supabase
+    const { error: updateError } = await supabase
       .from("universities")
       .update({ ...sharedFields, ...(changed ? { last_changed_at: now } : {}) })
       .eq("id", universityId);
+    if (updateError) return { schoolName, status: "error", detail: updateError.message };
   } else {
     // A brand-new row's own creation is its first "change" -- always stamped, same as
     // scripts/expand-university-spine.ts's own convention for a freshly-created row.
@@ -189,23 +203,44 @@ async function syncOne(schoolName: string): Promise<SyncResult> {
   // actually differs from what this exact (university, stat_year) row already holds, not
   // on every scheduled re-sync regardless of outcome.
   const statsChanged = !existingStats || hasStatisticsChanged(existingStats, incomingStats);
-  await supabase.from("university_statistics").upsert(
-    {
-      university_id: universityId,
-      stat_year: statYear,
-      ...incomingStats,
-      cost_currency: "USD",
-      source: "College Scorecard",
-      data_confidence: "high",
-      retrieved_at: now,
-      ...(statsChanged ? { last_changed_at: now } : {}),
-    },
-    { onConflict: "university_id,stat_year" }
-  );
+  const statsPayload = {
+    university_id: universityId,
+    stat_year: statYear,
+    ...incomingStats,
+    cost_currency: "USD",
+    source: "College Scorecard",
+    data_confidence: "high" as const,
+    retrieved_at: now,
+  };
+  const { error: statsError } = await supabase
+    .from("university_statistics")
+    .upsert({ ...statsPayload, ...(statsChanged ? { last_changed_at: now } : {}) }, { onConflict: "university_id,stat_year" });
+  if (statsError && isUndefinedColumnError(statsError, "last_changed_at")) {
+    // Found 2026-09-02 (oryn-3f's unapplied-migration sweep, verified by CEO and independently
+    // confirmed live above): this call used to check neither `error` nor `data` at all, so this
+    // exact rejection -- Postgres refusing the whole upsert because last_changed_at doesn't
+    // exist on university_statistics yet -- was completely invisible, and statsChanged is true
+    // for both a real change AND `!existingStats`, i.e. every first-time sync. It would have
+    // silently blocked US institution statistics from ever being written the first time Job C
+    // runs, with the job still reporting success. Degrading (not throwing) matches
+    // lib/plan/persist.ts's rule: losing the change-notification signal is acceptable, losing
+    // the statistics themselves is not.
+    console.warn("[sync-us-universities] university_statistics.last_changed_at not yet live (migration 0080 unapplied) -- retrying without it", { universityId, statYear });
+    const { error: retryError } = await supabase
+      .from("university_statistics")
+      .upsert(statsPayload, { onConflict: "university_id,stat_year" });
+    if (retryError) return { schoolName, status: "error", detail: retryError.message };
+  } else if (statsError) {
+    return { schoolName, status: "error", detail: statsError.message };
+  }
 
   // Same reasoning: migration 0032 added a (university_id, source_url) unique index so
-  // this doesn't accumulate a duplicate source row on every re-sync.
-  await supabase
+  // this doesn't accumulate a duplicate source row on every re-sync. Logged, not failed: the
+  // university identity and statistics rows above already saved successfully by this point,
+  // and a citation write is provenance metadata for those facts, not the fact itself --
+  // flipping the whole sync to "error" over a citation failure would misreport a genuinely
+  // successful sync in Job C's own error count (app/api/jobs/sync-university-data/route.ts).
+  const { error: sourceError } = await supabase
     .from("university_sources")
     .upsert(
       {
@@ -219,6 +254,9 @@ async function syncOne(schoolName: string): Promise<SyncResult> {
       },
       { onConflict: "university_id,source_url" }
     );
+  if (sourceError) {
+    console.error("[sync-us-universities] failed to write source citation", { universityId, error: sourceError.message });
+  }
 
   return { schoolName, status: existing ? "updated" : "created" };
 }
