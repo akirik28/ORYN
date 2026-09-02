@@ -264,7 +264,11 @@ export async function detectStaleUniversityDeadlines(supabase: SupabaseClient<Da
  * matching deadline-reminders' own `itemsProcessed: notified` rather than a raw scan count),
  * `result` is the full JSON response body.
  */
-export async function detectStaleData(now: Date = new Date()): Promise<{ itemsProcessed: number; result: { changed: number; checked: number; byTable: Record<string, { changed: number; checked: number }> } }> {
+export async function detectStaleData(now: Date = new Date()): Promise<{
+  itemsProcessed: number;
+  errorsEncountered: number;
+  result: { changed: number; checked: number; byTable: Record<string, { changed: number; checked: number }> };
+}> {
   const supabase = createAdminClient();
   const [universities, requirements, deadlines] = await Promise.all([
     detectStaleUniversities(supabase, now),
@@ -277,6 +281,10 @@ export async function detectStaleData(now: Date = new Date()): Promise<{ itemsPr
 
   return {
     itemsProcessed: changed,
+    // A pure, stored-data-only recompute (see this file's own top comment) -- no network
+    // call, no source re-fetch, no AI call, nothing with a per-item failure mode short of
+    // the whole run throwing. 0 is what's actually true here, not an unset placeholder.
+    errorsEncountered: 0,
     result: {
       changed,
       checked,

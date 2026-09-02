@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
       if (run.stoppedForBudget) break;
     }
     const itemsProcessed = runs.reduce((sum, r) => sum + r.opportunitiesStored, 0);
-    return { itemsProcessed, result: runs };
+    const errorsEncountered = runs.reduce((sum, r) => sum + r.errors.length, 0);
+    return { itemsProcessed, errorsEncountered, result: runs };
   });
 
   return NextResponse.json({ runs: results });

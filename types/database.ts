@@ -1685,6 +1685,10 @@ export interface ExternalSyncJob {
   started_at: string;
   finished_at: string | null;
   items_processed: number;
+  /** Migration 0083, not applied — see that file and lib/jobs/run-with-tracking.ts's own
+   * comment. Count of per-item failures a run caught internally without the whole job
+   * throwing, distinct from `error` below (the message when the entire job itself threw). */
+  errors_encountered: number;
   error: string | null;
   created_at: string;
 }

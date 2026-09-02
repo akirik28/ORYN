@@ -27,7 +27,8 @@ export async function POST(request: NextRequest) {
   const results = await runWithTracking("generate_weekly_plans", async () => {
     const runs = await generateWeeklyPlansForActiveStudents();
     const itemsProcessed = runs.filter((r) => r.status === "generated").length;
-    return { itemsProcessed, result: runs };
+    const errorsEncountered = runs.filter((r) => r.status === "error").length;
+    return { itemsProcessed, errorsEncountered, result: runs };
   });
 
   return NextResponse.json({ runs: results });

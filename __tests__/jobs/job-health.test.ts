@@ -14,6 +14,7 @@ function makeRun(overrides: Partial<ExternalSyncJob>): ExternalSyncJob {
     started_at: NOW.toISOString(),
     finished_at: NOW.toISOString(),
     items_processed: 0,
+    errors_encountered: 0,
     error: null,
     created_at: NOW.toISOString(),
     ...overrides,

@@ -23,7 +23,9 @@ export async function POST(request: NextRequest) {
 
   const result = await runWithTracking("notify_university_changes", async () => {
     const { notified, checked } = await scanUniversityDataChanges();
-    return { itemsProcessed: notified, result: { notified, checked } };
+    // Same as deadline-reminders' identical shape: no per-item external call here that can
+    // fail short of the whole run throwing, so 0 is a real fact, not an unset placeholder.
+    return { itemsProcessed: notified, errorsEncountered: 0, result: { notified, checked } };
   });
 
   return NextResponse.json(result);

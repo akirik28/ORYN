@@ -115,8 +115,21 @@ describe("migration numbering", () => {
     // unconstrained. So 0081 is the first migration that CREATES this FK, not merely the
     // first to set its delete rule — and it is the fourth known live object with no
     // migration provenance, after the three untraced research-queue indexes
-    // docs/would-a-fresh-deploy-match-live-2026-09-02.md names. All still unapplied.
-    expect(Math.max(...numbers.map(Number))).toBe(81);
+    // docs/would-a-fresh-deploy-match-live-2026-09-02.md names. All still unapplied. 0082 is
+    // deliberately absent from this worktree's own listing, not a gap to chase down — held
+    // for oryn-3f's concurrent work on a separate branch, the same avoidance this comment's
+    // own history already shows (0069/0070/0071/0072's renumbering) rather than a new kind
+    // of collision. 0083 (external_sync_jobs_errors_encountered) is the job-observability
+    // gap CEO named directly: items_processed alone can't tell a run that found nothing new
+    // apart from one that caught real per-item failures internally
+    // (discover_opportunities, discover_requirements, generate_weekly_plans, and
+    // sync_us_universities all do exactly that) -- both write items_processed: 0
+    // identically. This column is the missing half of that signal, and
+    // lib/jobs/run-with-tracking.ts carries the identical unapplied-column degradation
+    // pattern 0077/persist.ts already proved out, for the same reason: an UPDATE naming a
+    // column that doesn't exist throws on every call, not just the ones that would have
+    // matched a row.
+    expect(Math.max(...numbers.map(Number))).toBe(83);
   });
 });
 
