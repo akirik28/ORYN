@@ -14,6 +14,7 @@ import { buildPostRemovalUpdate, buildPostRestoreUpdate, ModerationInputError } 
 import { ADMIN_FINANCE_SETTINGS_ID, getAdminOpportunityList, type AdminOpportunityRow } from "@/lib/admin/queries";
 import { isValidExchangeRate, isValidPrice } from "@/lib/admin/finance";
 import { isUndefinedTableError } from "@/lib/supabase/errors";
+import { WEEKLY_PLAN_BUDGET_SETTINGS_ID } from "@/lib/ai/limits/weekly-plan-budget";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { logAdminAction } from "@/lib/admin/log";
 import { tavilyProvider } from "@/lib/providers/tavily";
@@ -396,6 +397,44 @@ export async function setJobBudgetOverride(feature: JobBudgetFeature, budgetUsd:
     console.error("[admin] failed to set job budget override", { code: error.code, message: error.message });
     return { error: "Couldn't save that. Please try again." };
   }
+
+  revalidatePath("/admin");
+  return {};
+}
+
+/**
+ * The one write path for `weekly_plan_budget_settings` (migration 0102) — the aggregate
+ * spend ceiling that must exist and be visible before generate-weekly-plans can be armed
+ * (see lib/ai/limits/weekly-plan-budget.ts's own header). Mirrors updateFinanceSettings'
+ * shape exactly: validate, upsert the one known row, degrade on a missing table rather than
+ * throw, log the change.
+ */
+export async function updateWeeklyPlanBudgetCeiling(ceilingUsd: number): Promise<{ error?: string }> {
+  const adminProfile = await requireAdmin();
+  if (!Number.isFinite(ceilingUsd) || ceilingUsd <= 0) return { error: "Enter a positive monthly ceiling." };
+
+  const admin = createAdminClient();
+  const now = new Date().toISOString();
+  const { error } = await admin.from("weekly_plan_budget_settings").upsert({
+    id: WEEKLY_PLAN_BUDGET_SETTINGS_ID,
+    monthly_ceiling_usd: ceilingUsd,
+    updated_by: adminProfile.id,
+    updated_at: now,
+  });
+
+  if (error) {
+    if (isUndefinedTableError(error, "weekly_plan_budget_settings")) {
+      return { error: "The weekly-plan budget setting isn't set up in the database yet — migration 0102 needs to be applied first." };
+    }
+    console.error("[admin] failed to update weekly-plan budget ceiling", { code: error.code, message: error.message });
+    return { error: "Couldn't save that. Please try again." };
+  }
+
+  await logAdminAction(admin, {
+    adminProfile,
+    action: "set_weekly_plan_budget_ceiling",
+    detail: { ceilingUsd },
+  });
 
   revalidatePath("/admin");
   return {};

@@ -1787,6 +1787,16 @@
       "message": "{name}: son 30 günde {amount} (aylık {ceiling} tavanının %{percent}'i)",
       "none": "Hiçbir öğrenci aylık tavanın %80'ini aşmadı."
     },
+    "weeklyPlanBudget": {
+      "sectionTitle": "Haftalık plan toplam bütçesi",
+      "subtitle": "generate-weekly-plans'ı zamanlamaya bağlamadan önce gereken ön koşul",
+      "status": "Bu ay tüm öğrenciler genelinde {ceiling} tavanının {spend} kadarı harcandı",
+      "spendUnavailable": "Bu ayki haftalık plan harcaması şu anda okunamadı.",
+      "degradingNow": "Tavana ulaşıldı — gelecek aya kadar her öğrenci için her haftalık plan çağrısı şu anda daha ucuz modeli kullanıyor.",
+      "ceilingLabel": "Aylık tavan (USD)",
+      "saveButton": "Kaydet",
+      "saved": "Tavan güncellendi."
+    },
     "aiBudget": {
       "featureShape": {
         "sectionTitle": "AI harcaması nereye gidiyor",

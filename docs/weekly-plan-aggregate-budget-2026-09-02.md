@@ -8,6 +8,31 @@ ceiling of its own. Today that's academic (8 students, ~$0.94/month); at 1,000 i
 deliberate or a gap, and if it's a gap, propose a ceiling — without arming anything, and
 without treating a per-run cap as a free win given the fairness problem a partial run creates.
 
+**Update, 2026-09-03: built.** §4's proposed direction (aggregate-scoped, degrade-not-stop,
+configurable, surfaced) is now real: migration 0102 (`weekly_plan_budget_settings`),
+`lib/ai/limits/weekly-plan-budget.ts` (`checkWeeklyPlanAggregateBudget`/
+`selectModelForWeeklyPlan`), wired into `lib/ai/weekly-plan.ts` via a new, general
+`selectModel` override on `withUsageLogging` (every other caller unaffected — the default
+still resolves through `selectModelForUser` exactly as before). Assigned directly by
+oryn-a7 after coordinating with f5 (this doc's own "who builds it, when" was left open;
+f5's addition on handoff: this needs to be built *before* `generate-weekly-plans` is armed,
+not after, given this codebase's own pattern of adding ceilings only after a real incident
+— the per-student cap itself exists because of the $3.04/week case this doc's §4 cites).
+
+The threshold is founder-editable from the admin panel (Spend tab, "Weekly plan aggregate
+budget") rather than an env var, matching `admin_finance_settings`' own "the founder can set
+it here, not an env var needing a deploy" precedent from the same night — not the formula
+this doc's §4 sketched (`N × $0.15/student/month`, pegged to an expected headcount nobody
+has stated), since a straight, admin-editable dollar figure is simpler for the founder to
+reason about and adjust directly as real growth happens, without this codebase guessing a
+target headcount it has no basis for. Defaults to $10.00/month — a documented placeholder,
+comfortably above today's real ~$0.94/month, adjustable without a deploy the moment the
+founder has a real number to set it to.
+
+**Does not itself arm `generate-weekly-plans`** — that's still a separate, later decision;
+this closes the one precondition oryn-a7/f5 named as blocking it, not the arming decision
+itself.
+
 ## 1. Why `weekly_plan` isn't in `JobBudgetFeature` — read before assumed
 
 `lib/ai/limits/job-budget.ts`'s own header states its scope precisely: it exists for

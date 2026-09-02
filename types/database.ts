@@ -1903,6 +1903,17 @@ export interface AdminFinanceSettings {
   updated_at: string;
 }
 
+/** Migration 0102, singleton row at WEEKLY_PLAN_BUDGET_SETTINGS_ID
+ *  (lib/ai/limits/weekly-plan-budget.ts) -- a separate singleton table from
+ *  admin_finance_settings above, not a second row in it; see that migration's own header
+ *  for the full "genuinely third mechanism" reasoning. */
+export interface WeeklyPlanBudgetSettings {
+  id: string;
+  monthly_ceiling_usd: number;
+  updated_by: string | null;
+  updated_at: string;
+}
+
 export interface ExternalSyncJob {
   id: string;
   job_name: string;
@@ -2204,6 +2215,7 @@ export interface Database {
       admin_finance_settings: Table<AdminFinanceSettings, Partial<AdminFinanceSettings>, Partial<AdminFinanceSettings>>;
       job_budget_overrides: Table<JobBudgetOverride, JobBudgetOverrideInsert, Partial<JobBudgetOverrideInsert>>;
       quota_grants: Table<QuotaGrant, QuotaGrantInsert, Partial<QuotaGrantInsert>>;
+      weekly_plan_budget_settings: Table<WeeklyPlanBudgetSettings, Partial<WeeklyPlanBudgetSettings>, Partial<WeeklyPlanBudgetSettings>>;
       rate_limit_events: Table<RateLimitEvent, RateLimitEventInsert, Partial<RateLimitEventInsert>>;
       product_events: Table<ProductEvent, ProductEventInsert, Partial<ProductEventInsert>>;
       birth_year_changes: Table<BirthYearChange, never, never>;

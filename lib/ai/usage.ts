@@ -3,7 +3,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { AIResponseIncompleteError, AIStructuredResponseFailedError, type AIUsage } from "./provider";
 import { resolveModelCostUsd } from "./pricing";
-import { selectModelForUser, type ModelSelectionReason } from "./limits/budget";
+import { selectModelForUser, type ModelSelection, type ModelSelectionReason } from "./limits/budget";
 
 /**
  * Records token usage for cost tracking and per-feature monitoring (Phase 27). Best-effort
@@ -117,12 +117,24 @@ export async function logAIUsage(params: {
  * function made — the provider is the one place that knows for certain what it actually
  * called, and a caller that ignored the suggested model (there's no reason one would, but
  * nothing prevents it) must never have its real spend mis-priced as a result.
+ *
+ * `selectModel` (2026-09-03, the weekly_plan aggregate budget package) defaults to
+ * `selectModelForUser` — every existing caller is unaffected. Overriding it is for a
+ * feature that needs a consideration *beyond* the per-student check, layered on top of it
+ * rather than replacing it — see lib/ai/limits/weekly-plan-budget.ts's own
+ * `selectModelForWeeklyPlan` for the one caller that does. Kept as an injectable function
+ * here, not a feature-name branch inside this file: this module stays feature-agnostic,
+ * and the recorded `degraded`/`degradeReason` in `ai_usage` still comes from whatever
+ * `selectModel` actually decided, so the audit trail never drifts from what really ran —
+ * the exact class of bug (a logged reason that doesn't match the model actually used)
+ * this file's own SEV-1 history already exists to prevent.
  */
 export async function withUsageLogging<T extends { usage: AIUsage; model: string }>(
-  meta: { userId: string | null; feature: string },
+  meta: { userId: string | null; feature: string; selectModel?: (userId: string | null) => Promise<ModelSelection> },
   run: (model: string) => Promise<T>,
 ): Promise<T> {
-  const selection = await selectModelForUser(meta.userId);
+  const selectModel = meta.selectModel ?? selectModelForUser;
+  const selection = await selectModel(meta.userId);
   let result: T;
   try {
     result = await run(selection.model);
