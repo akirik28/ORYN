@@ -76,6 +76,17 @@ export async function uploadAndExtractCV(formData: FormData): Promise<CVUploadRe
       return { success: false, error: error.message };
     }
     if (error instanceof CVExtractionFailedError) {
+      // Phase 61: "Log the failure." This is the actual extraction-failed case (a schema
+      // validation miss, a malformed model response, a document Claude couldn't parse) —
+      // logging `.cause` (the real underlying error `extractCVData` wrapped, not this
+      // wrapper's own friendly message) is what makes a systematic extraction problem
+      // (a schema drift, a provider change) visible in server logs instead of only ever
+      // reaching a student as "we couldn't fully read this document," indistinguishable
+      // from a genuinely bad upload. Found missing during the 2026-09-02 CV-import audit —
+      // every OTHER branch in this catch either logs or is a validated, expected condition
+      // (rate limit, misconfiguration, unsupported type); this one, the actual "parsing
+      // failed" case Phase 61 is about, was the one left silent.
+      console.error("[onboarding] CV extraction failed", { cause: error.cause });
       return { success: false, error: error.message };
     }
     console.error("[onboarding] CV extraction failed", error);
