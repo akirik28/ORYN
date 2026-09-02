@@ -27,9 +27,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export async function recordProviderSuccess(provider: string): Promise<void> {
   try {
     const supabase = createAdminClient();
-    await supabase
+    // supabase-js never throws on a Postgres-level error (a bad column, a constraint) — it
+    // resolves normally with `{ error }` set. The try/catch above only ever caught a
+    // network-level exception; this destructure is what actually delivers the "swallowed
+    // after a console warning" promise the docstring above already makes.
+    const { error } = await supabase
       .from("provider_health")
       .upsert({ provider, status: "healthy", last_success_at: new Date().toISOString() }, { onConflict: "provider" });
+    if (error) console.warn(`[provider_health] failed to record success for ${provider}`, error);
   } catch (error) {
     console.warn(`[provider_health] failed to record success for ${provider}`, error);
   }
@@ -38,10 +43,11 @@ export async function recordProviderSuccess(provider: string): Promise<void> {
 export async function recordProviderFailure(provider: string, errorMessage: string): Promise<void> {
   try {
     const supabase = createAdminClient();
-    await supabase.from("provider_health").upsert(
+    const { error } = await supabase.from("provider_health").upsert(
       { provider, status: "degraded", last_failure_at: new Date().toISOString(), last_error: errorMessage.slice(0, 500) },
       { onConflict: "provider" }
     );
+    if (error) console.warn(`[provider_health] failed to record failure for ${provider}`, error);
   } catch (error) {
     console.warn(`[provider_health] failed to record failure for ${provider}`, error);
   }

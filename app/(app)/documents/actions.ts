@@ -105,10 +105,32 @@ export async function deleteEvidence(evidenceId: string): Promise<{ error?: stri
   const { data: evidence } = await supabase.from("evidence_files").select("*").eq("id", evidenceId).eq("user_id", session.userId!).maybeSingle();
   if (!evidence) return { error: "Not found." };
 
+  // Both steps below used to run unchecked. The dangerous direction is storage succeeding
+  // to look skipped while actually failing: if the DB row were deleted regardless, the
+  // file would stay in the bucket forever with no row left to ever find it again — a
+  // student told their evidence is gone when the file itself still exists. So the DB row
+  // is only deleted once storage removal is confirmed, and a storage failure keeps the row
+  // (and the retry option) intact rather than reporting a false success.
   if (evidence.file_path) {
-    await supabase.storage.from("evidence").remove([evidence.file_path]);
+    const { error: storageError } = await supabase.storage.from("evidence").remove([evidence.file_path]);
+    if (storageError) {
+      console.error("[evidence] failed to remove file from storage — database row kept so deletion can be retried", {
+        evidenceId,
+        filePath: evidence.file_path,
+        error: storageError.message,
+      });
+      return { error: "Couldn't delete this file. Please try again." };
+    }
   }
-  await supabase.from("evidence_files").delete().eq("id", evidenceId);
+
+  const { error: deleteError } = await supabase.from("evidence_files").delete().eq("id", evidenceId);
+  if (deleteError) {
+    // Safer of the two orphan directions: the file is genuinely gone from storage, only the
+    // row referencing it remains — the item will show as broken rather than hiding a live
+    // file, and a retry here just deletes an already-storage-empty row.
+    console.error("[evidence] file removed from storage, but the database row failed to delete", { evidenceId, error: deleteError.message });
+    return { error: "Couldn't finish deleting this file. Please try again." };
+  }
 
   revalidatePath("/documents");
   return {};

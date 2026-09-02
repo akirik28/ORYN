@@ -102,7 +102,13 @@ export async function sendAdvisorMessage(
     // a student's own history can end up spread across multiple rows, and without this, the
     // one left visible would be whichever was *created* last, not whichever they were
     // actually last talking in — silently stranding the real, active one.
-    await supabase.from("advisor_conversations").update({ updated_at: new Date().toISOString() }).eq("id", convId);
+    const { error: touchError } = await supabase.from("advisor_conversations").update({ updated_at: new Date().toISOString() }).eq("id", convId);
+    if (touchError) {
+      // Ordering-only: a failed bump just leaves "which conversation is active" as stale as
+      // it already was, not wrong in a new way — logged so a real recurring failure is
+      // visible rather than silently repeating forever.
+      console.warn("[advisor] failed to bump conversation updated_at", { conversationId: convId, error: touchError.message });
+    }
   }
 
   if (!convId) {
@@ -143,13 +149,30 @@ export async function sendAdvisorMessage(
 
   try {
     const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: trimmed });
-    const { data: assistantMessage } = await supabase
+    const { data: assistantMessage, error: assistantMessageError } = await supabase
       .from("advisor_messages")
       .insert({ conversation_id: convId, user_id: userId, role: "assistant", content: reply, status: "complete" })
       .select("id")
       .single();
+    if (assistantMessageError) {
+      // The reply itself generated fine — only the save failed. Without this branch the
+      // caller below returned `content: reply` regardless, so the student watched the
+      // reply render once and found it gone on reload with no record it ever happened —
+      // exactly the silent-gap symptom the P0 fix in the catch block below exists to
+      // prevent, just from a different cause. Same remedy: best-effort record a failed
+      // row so a reload shows a retry-able bubble instead of nothing.
+      console.error("[advisor] reply generated but failed to save", { conversationId: convId, error: assistantMessageError.message });
+      const errorMessage = tr ? "Yanıt kaydedilemedi." : "Couldn't save the reply.";
+      const { data: failedMessage } = await supabase
+        .from("advisor_messages")
+        .insert({ conversation_id: convId, user_id: userId, role: "assistant", content: null, status: "failed", error_message: errorMessage })
+        .select("id")
+        .single();
+      revalidatePath("/advisor");
+      return { conversationId: convId, assistantMessageId: failedMessage?.id, error: errorMessage };
+    }
     revalidatePath("/advisor");
-    return { conversationId: convId, assistantMessageId: assistantMessage?.id, content: reply, degraded };
+    return { conversationId: convId, assistantMessageId: assistantMessage.id, content: reply, degraded };
   } catch (error) {
     // P0 fix: previously nothing was written here at all — the user's message stayed
     // saved with no reply and no persisted failure signal, only an ephemeral client-side
@@ -158,11 +181,17 @@ export async function sendAdvisorMessage(
     // reload shows a retry-able failed bubble instead of a silent gap.
     console.error("[advisor] failed to generate reply", error);
     const { status, errorMessage } = classifyAdvisorFailure(error, locale);
-    const { data: failedMessage } = await supabase
+    const { data: failedMessage, error: failedMessageError } = await supabase
       .from("advisor_messages")
       .insert({ conversation_id: convId, user_id: userId, role: "assistant", content: null, status, error_message: errorMessage })
       .select("id")
       .single();
+    if (failedMessageError) {
+      // Already returns `error: errorMessage` below regardless, so the student never sees
+      // a false success here — logged only so a repeat of this specific write failing is
+      // visible, since its only other symptom is a retry button with nothing to retry.
+      console.error("[advisor] failed to persist the failure record itself", { conversationId: convId, error: failedMessageError.message });
+    }
     revalidatePath("/advisor");
     return { conversationId: convId, assistantMessageId: failedMessage?.id, error: errorMessage };
   }
@@ -193,7 +222,13 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
   }
   // Same updated_at bump as sendAdvisorMessage, and for the same reason: a retry is real
   // activity on this conversation too.
-  await supabase.from("advisor_conversations").update({ updated_at: new Date().toISOString() }).eq("id", failedMessage.conversation_id);
+  const { error: touchError } = await supabase
+    .from("advisor_conversations")
+    .update({ updated_at: new Date().toISOString() })
+    .eq("id", failedMessage.conversation_id);
+  if (touchError) {
+    console.warn("[advisor] failed to bump conversation updated_at on retry", { conversationId: failedMessage.conversation_id, error: touchError.message });
+  }
 
   try {
     await assertWithinAIRateLimit(userId, "advisor_chat", { maxCalls: 30, windowMinutes: 10 }, locale);
@@ -234,13 +269,27 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
 
   try {
     const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: userMessage.content });
-    await supabase.from("advisor_messages").update({ content: reply, status: "complete", error_message: null }).eq("id", failedMessageId);
+    const { error: updateError } = await supabase
+      .from("advisor_messages")
+      .update({ content: reply, status: "complete", error_message: null })
+      .eq("id", failedMessageId);
+    if (updateError) {
+      // Unlike sendAdvisorMessage's insert, this is an UPDATE on a row that already exists —
+      // if it fails, the row simply stays in its prior "failed" state (still retry-able,
+      // nothing orphaned), so no fallback write is needed here, just no false success.
+      console.error("[advisor] retry succeeded but failed to save", { messageId: failedMessageId, error: updateError.message });
+      return { error: tr ? "Yanıt kaydedilemedi." : "Couldn't save the reply." };
+    }
     revalidatePath("/advisor");
     return { content: reply, degraded };
   } catch (error) {
     console.error("[advisor] retry failed", error);
     const { status, errorMessage } = classifyAdvisorFailure(error, locale);
-    await supabase.from("advisor_messages").update({ status, error_message: errorMessage }).eq("id", failedMessageId);
+    const { error: updateError } = await supabase.from("advisor_messages").update({ status, error_message: errorMessage }).eq("id", failedMessageId);
+    if (updateError) {
+      // Already returns `error: errorMessage` below regardless — logged only for visibility.
+      console.error("[advisor] failed to record retry failure", { messageId: failedMessageId, error: updateError.message });
+    }
     revalidatePath("/advisor");
     return { error: errorMessage };
   }

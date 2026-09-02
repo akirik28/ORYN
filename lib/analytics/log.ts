@@ -14,7 +14,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export async function logEvent(userId: string, eventName: string, metadata?: Record<string, unknown>): Promise<void> {
   try {
     const admin = createAdminClient();
-    await admin.from("product_events").insert({ user_id: userId, event_name: eventName, metadata: metadata ?? {} });
+    // supabase-js resolves `{ error }` rather than throwing on a Postgres-level failure, so
+    // the try/catch alone only ever caught a network exception — this destructure is what
+    // actually delivers "swallows its own errors" for a real query failure too.
+    const { error } = await admin.from("product_events").insert({ user_id: userId, event_name: eventName, metadata: metadata ?? {} });
+    if (error) console.error(`[analytics] failed to log "${eventName}"`, error);
   } catch (error) {
     console.error(`[analytics] failed to log "${eventName}"`, error);
   }
