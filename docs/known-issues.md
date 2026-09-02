@@ -618,6 +618,58 @@ proof that real students' real file-picker interactions already reach `handleFil
 server correctly today; the thing that was broken was never that trigger, only the
 provenance column downstream of it.
 
+**Update, same night: the remaining Non-Negotiable #10 question closed with a component
+test, not a browser.** With the file-input limitation confirmed three independent times
+(this session, its own isolated-server retest, and a second session's retest using a
+different injection technique) and ruled a tooling gap rather than a product defect,
+oryn-a7's next ask was narrower and specifically not about the browser: does an edit made
+on the review screen actually survive to what gets sent to the server, or only to the
+reviewing component's own state? The concern was the exact shape of a real bug found
+elsewhere the same night — seven notification-preference switches that rendered and
+toggled correctly and saved nothing, 100% of the time. A source read of the review UI
+(the checkbox/input/select markup cited above) can't rule that out; only driving the
+component and reading the actual call argument can.
+
+Checking what already existed found a real, precise gap. `cv-import-flow.tsx` (the
+post-onboarding re-import surface) already had a passing test proving an edited skill name
+survives to `importReviewedCvItems`'s payload — but nothing proved the *uncheck* direction
+for skills/languages specifically (only for achievement items). And the onboarding
+surface — `features/onboarding/onboarding-wizard.tsx`'s `finish()`, which filters
+`reviewedSkills`/`reviewedLanguages` by `included` and re-maps them into
+`CompleteOnboardingInput` before calling `completeOnboarding` — had **zero** coverage of
+this specific chain: `__tests__/onboarding/onboarding-wizard.test.tsx` deliberately mocks
+`ImportStep` out entirely (by design, for its own step-transition-timing purpose) and never
+reaches step 4, and `__tests__/onboarding/import-step-skills-languages.test.tsx` proves
+`ImportStep` calls `setReviewedSkills`/`setReviewedLanguages` correctly but stops at the
+parent's state setter — nothing traced that state on into the real submit call. A bug in
+`finish()`'s filter/map (a stale closure, a forgotten `.filter(included)`, a wrong field
+name) would have been invisible to every test that existed before today, while `ImportStep`
+itself kept rendering and updating correctly — precisely the notification-switch shape.
+
+Closed both gaps. `__tests__/profile/cv-import-flow.test.tsx` gained two tests: unchecking
+the skill excludes it from `importReviewedCvItems`'s payload while an untouched language is
+still sent, and the reverse. A new file,
+`__tests__/onboarding/onboarding-wizard-cv-submit.test.tsx`, drives the real,
+*unmocked* `OnboardingWizard` end to end — clicks through steps 0–3 with minimum valid data
+(only `SuggestInput`/`EntityCombobox`/`Select` are mocked, as plain interactive stand-ins;
+none of them is what's under test), reaches the real `ImportStep` at step 4, uploads
+(`uploadAndExtractCV` mocked to resolve a fixed extraction, same technique
+`cv-import-flow.test.tsx` already used), edits or unchecks a skill or a language, clicks
+Finish, and asserts on `completeOnboarding`'s actual call argument. Four tests: edit-a-skill,
+uncheck-a-skill, edit-a-language, uncheck-a-language — each confirming the edited/remaining
+values are exactly right and the excluded one is absent, not just uncounted.
+
+**State plainly what this does and doesn't prove**, per oryn-a7's own framing: it proves an
+edit or an uncheck made on the review screen reaches the Server Action's input, exactly as
+`finish()`/`save()` construct it today. It does not re-prove the server-side write — that's
+[[project_oryn_cv_upload_live_proof]]'s result from earlier tonight (a real extraction, a
+real insert, `source: 'cv_import'` confirmed against the live database). Neither piece
+alone is an end-to-end browser click-through; combined, they close the chain honestly
+without overclaiming one.
+
+Gate: typecheck/lint clean, 4665/4665 tests passed (up from 4591 — 6 new, everything else
+from the fleet's own merges tonight).
+
 ## ORYN has never been deployed — no scheduled job has ever run
 
 **2026-09-02, verified independently against both the Vercel account and `external_sync_jobs`
