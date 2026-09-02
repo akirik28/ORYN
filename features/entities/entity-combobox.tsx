@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { searchEntitiesAction, createCustomEntityAction } from "@/app/(app)/entities/actions";
+import { searchEntitiesAction, createCustomEntityAction, resolveEntityAction } from "@/app/(app)/entities/actions";
 import type { EntitySearchResult } from "@/lib/entities/types";
 import { ENTITY_SCOPES, type EntityScope } from "@/lib/entities/field-policy";
 
@@ -90,9 +90,22 @@ export function EntityCombobox({
   const [searchedQuery, setSearchedQuery] = useState<string | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
   const [customDialogKey, setCustomDialogKey] = useState(0);
+  // Whether the *currently linked* entity (not a search result — those already carry
+  // their own `isCustom` from the server) is a student-submitted row still awaiting a
+  // check. `entityId` alone can't answer this; it's just an id. Paired with the id it was
+  // resolved for, not stored as a bare boolean — a plain boolean reset to "unknown" every
+  // time entityId changes would stomp the optimistic value onCreated sets below the instant
+  // it sets it (found by the test for that path, not assumed correct because it compiled):
+  // the effect fires on the very entityId change onCreated just caused, and without this
+  // pairing it can't tell "I already know this" from "I need to ask again". Missing (or
+  // for a different id) covers two honestly-indistinguishable-to-the-student cases on
+  // purpose: not yet resolved, and resolved to nothing worth claiming either way — both
+  // render no message rather than a guess.
+  const [linkedEntity, setLinkedEntity] = useState<{ id: string; isCustom: boolean } | null>(null);
   const listboxId = useId();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestIdRef = useRef(0);
+  const linkedEntityRequestIdRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -102,6 +115,31 @@ export function EntityCombobox({
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
+
+  // Found 2026-09-02, onboarding audit: this used to render "Linked to a verified entry"
+  // for ANY entityId, including one the student just self-added seconds earlier through
+  // "Can't find your X?" — which honestly discloses the opposite in its own dialog
+  // (unverifiedNotice below). The component had no way to know better: `entityId` was its
+  // only signal about the link. This fetches the one fact it was missing.
+  //
+  // No branch here for `!entityId`: the id-matching check below (`linkedEntity?.id ===
+  // entityId`) already makes a stale `linkedEntity` from a previous id inapplicable the
+  // moment entityId no longer matches it — nothing else needs to notice entityId became
+  // null. Setting state synchronously in an effect body (rather than inside the async
+  // callback below, the pattern React's own hooks lint rule expects) is what an earlier
+  // draft did here to "reset" that case, and the linter was right to reject it: it wasn't
+  // needed.
+  useEffect(() => {
+    // Nothing to resolve, or already known for this exact id (a prior fetch settled it, or
+    // onCreated set it optimistically moments ago) — skip the round trip rather than fetch
+    // the same fact again, which would also briefly un-set the optimistic value while the
+    // redundant fetch was in flight.
+    if (!entityId || linkedEntity?.id === entityId) return;
+    const thisRequest = ++linkedEntityRequestIdRef.current;
+    resolveEntityAction(scope, entityId).then((resolved) => {
+      if (linkedEntityRequestIdRef.current === thisRequest) setLinkedEntity(resolved ? { id: entityId, isCustom: resolved.isCustom } : null);
+    });
+  }, [entityId, scope, linkedEntity]);
 
   function runSearch(text: string) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -202,7 +240,8 @@ export function EntityCombobox({
         {isSearching ? <Loader2 className="absolute right-2 top-1/2 size-3.5 -translate-y-1/2 animate-spin text-muted-foreground" /> : null}
       </div>
 
-      {entityId ? <p className="mt-1 text-xs text-muted-foreground">{t("linkedToVerified")}</p> : null}
+      {linkedEntity?.id === entityId && linkedEntity.isCustom === false ? <p className="mt-1 text-xs text-muted-foreground">{t("linkedToVerified")}</p> : null}
+      {linkedEntity?.id === entityId && linkedEntity.isCustom === true ? <p className="mt-1 text-xs text-muted-foreground">{t("linkedToUnverified")}</p> : null}
 
       {open && hasQuery && (results.length > 0 || canAddCustom || searchFailed || noResults) ? (
         <ul id={listboxId} role="listbox" className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-lg border bg-popover py-1 text-popover-foreground shadow-md ring-1 ring-foreground/10">
@@ -258,6 +297,14 @@ export function EntityCombobox({
           context={context}
           onCreated={(entity) => {
             onChange({ id: entity.id, displayName: entity.canonicalName });
+            // A freshly created entity: known synchronously, since createCustomEntity can
+            // only ever produce a user_submitted row (lib/entities/resolve.ts's own
+            // comment) — set directly rather than waiting on the entityId-change effect
+            // above to re-resolve the same fact a moment later. A "did you mean" pick is
+            // an existing entity this dialog never learned the real state of (see
+            // DuplicateCandidate's own comment) — left unknown (null) here on purpose;
+            // that effect resolves the true state within one round trip regardless.
+            setLinkedEntity(entity.isCustom === undefined ? null : { id: entity.id, isCustom: entity.isCustom });
             setCustomOpen(false);
           }}
         />
@@ -281,7 +328,7 @@ function CreateCustomEntityDialog({
   noun: string;
   initialName: string;
   context?: { country?: string | null; city?: string | null };
-  onCreated: (entity: { id: string; canonicalName: string }) => void;
+  onCreated: (entity: { id: string; canonicalName: string; isCustom?: boolean }) => void;
 }) {
   const t = useTranslations("entities");
   const tCommon = useTranslations("common");

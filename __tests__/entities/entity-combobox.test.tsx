@@ -32,14 +32,16 @@ import en from "@/messages/en.json";
 vi.mock("@/app/(app)/entities/actions", () => ({
   searchEntitiesAction: vi.fn(),
   createCustomEntityAction: vi.fn(),
+  resolveEntityAction: vi.fn(),
 }));
 
-import { searchEntitiesAction } from "@/app/(app)/entities/actions";
+import { searchEntitiesAction, resolveEntityAction } from "@/app/(app)/entities/actions";
 import { EntityCombobox, type EntityComboboxValue } from "@/features/entities/entity-combobox";
 import type { EntitySearchResult } from "@/lib/entities/types";
 import type { EntityScope } from "@/lib/entities/field-policy";
 
 const mockedSearch = vi.mocked(searchEntitiesAction);
+const mockedResolve = vi.mocked(resolveEntityAction);
 
 const DEBOUNCE_MS = 300;
 // Real timers, not fake ones: the component's own debounce is a plain setTimeout and the
@@ -96,6 +98,11 @@ function Harness({
 
 beforeEach(() => {
   mockedSearch.mockReset();
+  mockedResolve.mockReset();
+  // Sensible default so every test with an entityId doesn't have to opt in explicitly —
+  // "unresolved/nothing to claim" is the correct default for a test that isn't specifically
+  // exercising the linked-entity verification-state indicator.
+  mockedResolve.mockResolvedValue(null);
 });
 
 afterEach(() => {
@@ -266,7 +273,6 @@ describe("EntityCombobox — result selection", () => {
 
     fireEvent.click(option);
     await waitFor(() => expect(onChangeSpy).toHaveBeenLastCalledWith({ id: "entity-1", displayName: "Harvard University" }));
-    expect(screen.getByText("Linked to a verified entry.")).toBeInTheDocument();
   });
 
   test("editing the text after a selection clears the linked entity id (text and id never silently drift apart)", async () => {
@@ -277,12 +283,85 @@ describe("EntityCombobox — result selection", () => {
     fireEvent.change(input, { target: { value: "Harvard" } });
     const option = await screen.findByText("Harvard University", {}, { timeout: AFTER_DEBOUNCE });
     fireEvent.click(option);
-    await waitFor(() => expect(screen.getByText("Linked to a verified entry.")).toBeInTheDocument());
+    await waitFor(() => expect(onChangeSpy).toHaveBeenLastCalledWith({ id: "entity-1", displayName: "Harvard University" }));
 
     mockedSearch.mockResolvedValue([]);
     fireEvent.change(input, { target: { value: "Harvard Uni" } });
     await waitFor(() => expect(onChangeSpy).toHaveBeenLastCalledWith({ id: null, displayName: "Harvard Uni" }));
     expect(screen.queryByText("Linked to a verified entry.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Linked to an entry you added, not yet verified.")).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * Found 2026-09-02, onboarding audit: "Linked to a verified entry." used to render for ANY
+ * `entityId` at all — including one the student just self-added seconds earlier, whose own
+ * add dialog honestly discloses the opposite (unverifiedNotice). These pin the fix: the
+ * indicator now depends on actually resolving the linked entity's real state via
+ * resolveEntityAction, not merely on an id existing.
+ */
+describe("EntityCombobox — linked-entity verification indicator (2026-09-02 fix)", () => {
+  test("no entityId — neither message renders", () => {
+    render(<Harness scope="school" />);
+    expect(screen.queryByText("Linked to a verified entry.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Linked to an entry you added, not yet verified.")).not.toBeInTheDocument();
+  });
+
+  test("a linked entity that resolves as genuinely verified shows the verified message", async () => {
+    mockedResolve.mockResolvedValue({ id: "entity-1", canonicalName: "Central High School", isCustom: false });
+    render(<Harness scope="school" initialEntityId="entity-1" initialValue="Central High School" />);
+    expect(await screen.findByText("Linked to a verified entry.")).toBeInTheDocument();
+    expect(screen.queryByText("Linked to an entry you added, not yet verified.")).not.toBeInTheDocument();
+  });
+
+  // The exact regression: an entityId that resolves to a user_submitted row must NOT show
+  // the verified claim — this is the shape the founder found on the onboarding screen
+  // itself, the only door into the product.
+  test("a linked entity that resolves as self-added/unverified shows the honest message, never the verified one", async () => {
+    mockedResolve.mockResolvedValue({ id: "entity-2", canonicalName: "My Actual School", isCustom: true });
+    render(<Harness scope="school" initialEntityId="entity-2" initialValue="My Actual School" />);
+    expect(await screen.findByText("Linked to an entry you added, not yet verified.")).toBeInTheDocument();
+    expect(screen.queryByText("Linked to a verified entry.")).not.toBeInTheDocument();
+  });
+
+  test("switching from a verified link to a different, unverified one updates the message rather than leaving the stale claim", async () => {
+    mockedResolve.mockImplementation(async (_scope, id) =>
+      id === "entity-1" ? { id: "entity-1", canonicalName: "Verified School", isCustom: false } : { id: "entity-2", canonicalName: "My School", isCustom: true }
+    );
+    const { rerender } = render(<Harness scope="school" initialEntityId="entity-1" initialValue="Verified School" />);
+    await screen.findByText("Linked to a verified entry.");
+
+    // Re-render with a fresh Harness instance carrying the new id -- simplest way to change
+    // the controlled entityId prop from outside without wiring a second interaction path.
+    rerender(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <EntityCombobox scope="school" value="My School" entityId="entity-2" onChange={() => {}} />
+      </NextIntlClientProvider>
+    );
+    expect(await screen.findByText("Linked to an entry you added, not yet verified.")).toBeInTheDocument();
+    expect(screen.queryByText("Linked to a verified entry.")).not.toBeInTheDocument();
+  });
+
+  test("creating a custom entity shows the unverified message immediately, without waiting on a second resolve round trip", async () => {
+    mockedSearch.mockResolvedValue([]);
+    const { createCustomEntityAction } = await import("@/app/(app)/entities/actions");
+    vi.mocked(createCustomEntityAction).mockResolvedValue({
+      status: "created",
+      entity: { id: "new-entity-1", canonicalName: "My New School", isCustom: true },
+    });
+    // The entityId-change effect would also resolve this correctly, but slower -- mocking
+    // resolveEntityAction to reject makes sure THIS test is exercising the optimistic set
+    // in the onCreated handler, not silently passing because the effect covered for it.
+    mockedResolve.mockRejectedValue(new Error("must not be relied on for this test"));
+
+    render(<Harness scope="school" allowCustom />);
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "My New School" } });
+    await screen.findByText(/Can't find your school\?/, {}, { timeout: AFTER_DEBOUNCE });
+    fireEvent.click(screen.getByText(/Can't find your school\?/));
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "My New School" } });
+    fireEvent.click(screen.getByText("Add"));
+
+    expect(await screen.findByText("Linked to an entry you added, not yet verified.")).toBeInTheDocument();
   });
 });
 

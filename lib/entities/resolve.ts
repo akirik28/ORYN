@@ -11,6 +11,18 @@ import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/c
 export interface ResolvedEntity {
   id: string;
   canonicalName: string;
+  /**
+   * True for a `user_submitted` row — a student added this through the custom fallback
+   * and no one has checked it against an official source yet. Mirrors
+   * `EntitySearchResult.isCustom` (lib/entities/search.ts) exactly, same computation, same
+   * meaning — this is the field that was fetched here all along (`verification_state`,
+   * selected below to filter out merged/inactive rows) and discarded before reaching the
+   * caller, which is how `EntityCombobox` ended up unable to tell a verified link from a
+   * self-added one: `entity-combobox.tsx`'s own "linked" indicator had only ever seen an
+   * id, never this. Found 2026-09-02 during the onboarding audit — the label said
+   * "Linked to a verified entry" for any linked entity at all.
+   */
+  isCustom: boolean;
 }
 
 /**
@@ -43,7 +55,7 @@ export async function resolveCanonicalEntity(
   // A merged entity is a tombstone pointing at its replacement; linking to one would
   // freeze a row against an identity that no longer exists.
   if (!data || data.verification_state === "merged" || data.verification_state === "inactive") return null;
-  return { id: data.id, canonicalName: data.display_name };
+  return { id: data.id, canonicalName: data.display_name, isCustom: data.verification_state === "user_submitted" };
 }
 
 export async function resolveUniversity(supabase: SupabaseClient<Database>, id: string): Promise<ResolvedEntity | null> {
@@ -55,14 +67,18 @@ export async function resolveUniversity(supabase: SupabaseClient<Database>, id: 
   const supersessionMap = await loadSupersessionMap(supabase);
   const { data } = await supabase.from("universities").select("id, name").eq("id", canonicalUniversityId(supersessionMap, id)).maybeSingle();
   if (!data) return null;
-  return { id: data.id, canonicalName: data.name };
+  // Universities are a fully curated registry (field-policy.ts's own comment: no custom
+  // fallback exists for this scope at all) — never user-submitted, so always verified.
+  return { id: data.id, canonicalName: data.name, isCustom: false };
 }
 
 export async function resolveOpportunity(supabase: SupabaseClient<Database>, id: string): Promise<ResolvedEntity | null> {
   if (!isUuidLike(id)) return null;
   const { data } = await supabase.from("opportunities").select("id, title").eq("id", id).maybeSingle();
   if (!data) return null;
-  return { id: data.id, canonicalName: data.title };
+  // Same reasoning as resolveUniversity above — opportunities come from the discovery
+  // pipeline, never a student-typed name.
+  return { id: data.id, canonicalName: data.title, isCustom: false };
 }
 
 /** Scope-aware dispatcher for the generic EntityCombobox's own resolve call. Every
@@ -83,9 +99,19 @@ export interface CreateCustomEntityInput {
   country: string | null;
 }
 
+/** A "did you mean" suggestion, deliberately not a `ResolvedEntity` — the duplicate-check
+ * RPC below doesn't select `verification_state`, so there is no real `isCustom` to report
+ * for these, and claiming one either way would repeat the exact bug this type change
+ * exists to fix elsewhere. `EntityCombobox` treats a selection from this list as unknown
+ * until its own entityId-resolve effect confirms the real state a moment later. */
+export interface DuplicateCandidate {
+  id: string;
+  canonicalName: string;
+}
+
 export type CreateCustomEntityResult =
   | { status: "created"; entity: ResolvedEntity }
-  | { status: "possible_duplicates"; candidates: ResolvedEntity[] }
+  | { status: "possible_duplicates"; candidates: DuplicateCandidate[] }
   | { status: "error"; error: string };
 
 /** How close a search hit has to be before it is offered as "did you mean X?". The SQL
