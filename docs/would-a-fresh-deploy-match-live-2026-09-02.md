@@ -4,6 +4,15 @@
 written — none was needed; every real gap found already has an existing, unapplied
 migration file, or is genuinely absent from the migration history entirely (see §2).**
 
+**Update, same day, found while correcting `docs/migration-state.md` against this
+report's own findings**: migration 0048 (`profile_view_visibility_guard`) is *also*
+unapplied, and unlike 0057/0059 this one is a real, live, currently-exploitable-as-
+described RLS gap — this report's own §5 named policy-clause-text comparison as something
+this pass did NOT do exhaustively (existence only, for the 105 not specifically named);
+0048 is exactly the kind of thing that scope limitation was hiding. Full writeup, cost,
+and the fix (unapplied, migration 0048 itself already exists) in `docs/migration-state.md`
+— not restated here to avoid two documents drifting on the same fact.
+
 **Bottom line up front:** yes, almost exactly — replaying all 76 migrations in
 `supabase/migrations/` against an empty Postgres 17 database produces a schema that
 matches live (`oryn-qa-scratch`, `qtcvcflzxbuagvvwahhu`) object-for-object, with exactly

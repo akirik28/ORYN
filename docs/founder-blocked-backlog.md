@@ -425,6 +425,16 @@ closing first) or touch deduplication/identity resolution.
 **Depends on**: nothing technical — a founder go-ahead, same shape as item 25's original
 DDL-access gate but for authorization rather than access.
 
+> ### ✅ RESOLVED — `0057` is applied and live, found 2026-09-02, not authorized here.
+>
+> `university_programs.kilavuz_kodu` exists live on `oryn-qa-scratch` right now — confirmed
+> directly (`information_schema.columns`), not inferred. This item's own "confirmed still
+> not applied" was accurate as of 2026-08-22; it stopped being accurate sometime before
+> 2026-09-02's full migration audit (`docs/migration-state.md`) and nobody had re-checked
+> it since. No founder approval was recorded for this specific action anywhere this session
+> found — flagging that gap rather than assuming it happened, the same way item 36 above
+> flagged (and then resolved) the equivalent question for `0062`/`0063`.
+
 ## 27. Decide what happens to ~80 defective opportunity rows from your own Drive corpus
 
 **Action**: decide, for roughly 80 live `opportunities` rows, whether to (a) re-research them
@@ -1491,6 +1501,19 @@ item's call to make.
 (`university_programs.kilavuz_kodu`, a source-traceability column — related field, different
 table, different migration, independently blocked).
 **Depends on**: your call — DDL against a populated table, no different in kind from items 33/35.
+
+> ### ✅ RESOLVED — `0059` is applied and live, found 2026-09-02, not authorized here.
+>
+> `university_program_placement_cycles_key_idx` is live in its widened, 5-column form —
+> confirmed directly (`pg_get_indexdef`: `program_id, cycle_year, burs_orani_adi, fymk_id,
+> kilavuz_kodu`, matching this migration exactly), not inferred. This item's "confirmed
+> still not applied" was accurate as of 2026-09-01; it stopped being accurate before
+> 2026-09-02's full migration audit (`docs/migration-state.md`), which also confirmed 0059's
+> other changes (four new columns, two widened CHECK vocabularies) are live. No founder
+> approval for this specific action was recorded anywhere this session found — same
+> honestly-unresolved provenance question as item 26 above, not assumed either way. The
+> harder splitting-vs-widening question this item itself named as "not this item's call to
+> make" is still open and still isn't resettled by the key being live.
 
 ---
 

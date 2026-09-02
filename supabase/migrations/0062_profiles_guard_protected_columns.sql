@@ -96,9 +96,21 @@
 -- rather than resting on today's grants staying that way. Supabase's own linter flags the
 -- unqualified form as `function_search_path_mutable`.
 --
--- WRITTEN BUT NOT APPLIED, per BUG-1's standing package constraint and because this is a
--- security-critical, founder-gated change. Do not run against a live project without
--- explicit review.
+-- STATUS, corrected 2026-09-02 (docs/would-a-fresh-deploy-match-live-2026-09-02.md):
+-- APPLIED. This file originally read "WRITTEN BUT NOT APPLIED... founder-gated... do not
+-- run against a live project without explicit review" -- true when written, and the
+-- caution was real: see this file's own 0063 companion for exactly the mistake that
+-- discipline caught before merge (a version of this migration that would have frozen
+-- every student's score). It is no longer true of the live database. Confirmed live
+-- against `oryn-qa-scratch`, byte-for-byte: `pg_get_functiondef` on
+-- `profiles_guard_protected_columns()` and `pg_get_triggerdef` on
+-- `profiles_00_guard_protected_columns` both match this file exactly, in its 0063-amended
+-- form (all three columns guarded, not is_admin alone -- see 0063). Whether the founder's
+-- own review happened out-of-band before this was applied is not something a schema diff
+-- can see; only that the live behavior matches what both files describe. Left as a
+-- historical record that this migration passed through the founder-gated process this
+-- repo's other genuinely-unapplied migrations (e.g. 0075, 0076, 0077 as of this same date)
+-- are still held to -- not evidence that gate can be skipped.
 
 create or replace function public.profiles_guard_protected_columns()
 returns trigger

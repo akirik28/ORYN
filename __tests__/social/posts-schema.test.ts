@@ -116,7 +116,19 @@ describe("migration numbering", () => {
     // first to set its delete rule — and it is the fourth known live object with no
     // migration provenance, after the three untraced research-queue indexes
     // docs/would-a-fresh-deploy-match-live-2026-09-02.md names. All still unapplied.
-    expect(Math.max(...numbers.map(Number))).toBe(81);
+    //
+    // 0082 (global_university_discovery_indexes) is the migration for those three
+    // untraced indexes themselves — global_university_discovery_queue's and
+    // university_profile_verification_queue's own, first drafted as 0078, then 0079, then
+    // 0080, then 0081, each time colliding with another lane's migration landing on `main`
+    // faster than this one could push. Renumbered four times on one branch, not because
+    // anything about the migration itself was wrong — see
+    // docs/migration-state.md's own new "object live, no migration anywhere" category,
+    // which groups these three indexes with 0081's FK finding above as the sharper
+    // sibling of the ledger-silence problem the rest of this comment documents: a replay
+    // reproduces a ledger-silent-but-tracked migration; it cannot reproduce an object with
+    // no migration file at all, for either reason. Still unapplied.
+    expect(Math.max(...numbers.map(Number))).toBe(82);
   });
 });
 
