@@ -96,12 +96,17 @@ function reasonSentence(reasonCodes: string[], locale: Locale): string | null {
           reasonCodes.includes("matches_your_interests") ? "ilgi alanlarınla örtüşüyor" : null,
           reasonCodes.includes("shares_your_interest") ? "belirttiğin ilgi alanlarından biriyle örtüşüyor" : null,
           reasonCodes.includes("near_you") ? "kendi ülkende gerçekleşiyor" : null,
+          // A caveat, not a boost — joined into the same sentence rather than a separate
+          // callout, so it can't be missed the way a second, easy-to-skip line could be.
+          // section 62 explainability: a penalty needs the same visibility a boost gets.
+          reasonCodes.includes("similar_to_dismissed") ? "önceden ilgilenmediğini belirttiğin bir fırsata benziyor" : null,
         ].filter((p): p is string => p !== null)
       : [
           reasonCodes.includes("addresses_a_current_gap") ? "it addresses a current gap in your profile" : null,
           reasonCodes.includes("matches_your_interests") ? "it matches your interests" : null,
           reasonCodes.includes("shares_your_interest") ? "it shares one of your stated interests" : null,
           reasonCodes.includes("near_you") ? "it's based in your country" : null,
+          reasonCodes.includes("similar_to_dismissed") ? "it resembles something you previously marked not interested in" : null,
         ].filter((p): p is string => p !== null);
   if (parts.length === 0) return null;
   const joined =

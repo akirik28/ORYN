@@ -15,6 +15,11 @@ export interface StudentMatchProfile {
   citizenshipCountries?: string[];
   /** Feeds currentGradeLevel() for eligible_grades checks below. */
   graduationYear?: number | null;
+  /** Computed from this student's own `not_interested` dismissal history — see
+   * computeAvoidSignals below. Optional: absent (not merely empty) for any caller that
+   * hasn't fetched dismissal history, which must behave identically to a student with zero
+   * dismissals — no relevance penalty applies either way, so omitting this is always safe. */
+  dismissedSignals?: DismissalAvoidSignals;
 }
 
 export interface OpportunityForMatching {
@@ -52,6 +57,12 @@ export interface OpportunityForMatching {
    * Used only for a relevance boost below, never eligibility: an opportunity outside a
    * student's country is not a reason to hide it, only a reason to rank it lower. */
   country: string | null;
+  /** Feeds the too_expensive avoid-signal below. Optional/null: no price on file, never
+   * "free." */
+  cost?: number | null;
+  /** Feeds the location avoid-signal below. Optional/null for callers that don't fetch it
+   * yet. */
+  locationMode?: "online" | "in_person" | "hybrid" | null;
 }
 
 export interface EligibilityResult {
@@ -326,6 +337,88 @@ function normalizeFieldLabel(value: string): string {
 }
 
 /**
+ * A per-student summary of `saved_opportunities.not_interested_reason` (spec section 12.1:
+ * "Use this signal in recommendations" — never actually read anywhere until this pass; see
+ * docs/not-interested-reason-audit-2026-09-02.md for the full audit this came out of).
+ *
+ * Deliberately covers three of the seven reasons, not all seven. The other four were judged
+ * unsafe or not actionable, on purpose, not left out by oversight — see that doc:
+ * `too_competitive` is a judgment about the *student*, and quietly steering someone who
+ * dismisses hard things toward easier ones is the opposite of what this product is for, so
+ * it feeds nothing here; `no_time` has no opportunity-level effort/hours data to filter
+ * against yet (the product's real answer to "no time" is the separate weekly-time-budget
+ * system, section 64/65); `already_applied` is a state, not a preference, and arguably
+ * belongs on `status` directly rather than as a dismissal reason at all; `other` carries no
+ * structured signal.
+ *
+ * Each of the three included signals requires AVOID_SIGNAL_MIN_OCCURRENCES separate
+ * dismissals before it does anything — the same "don't fabricate a pattern from one data
+ * point" discipline this codebase already applies to peer benchmarking (gate on n≥100, spec
+ * section 19) and profile-strength claims generally. A single dismissal is already fully
+ * acted on by computeEligibility's own per-opportunity hard exclusion above; this is a
+ * separate, weaker, probabilistic signal about *other*, not-yet-dismissed opportunities, and
+ * earns a correspondingly higher bar before it moves anything.
+ */
+export interface DismissalAvoidSignals {
+  /** Normalized field labels (normalizeFieldLabel — same normalization computeRelevance
+   * already uses for interest matching) with 2+ not_interested_topic dismissals sharing
+   * that field. Counted per-field, not per-dismissal: two dismissals in unrelated fields
+   * say nothing about either field specifically. */
+  avoidFields: string[];
+  /** The lowest cost among 2+ too_expensive dismissals — a future opportunity at or above
+   * this floor gets a penalty, below it does not. The minimum, not the average or a fixed
+   * threshold: "the cheapest thing they still called too expensive" is the most
+   * conservative honest inference available from a handful of data points. Null when fewer
+   * than 2 too_expensive dismissals carry a cost. */
+  avoidCostFloor: number | null;
+  /** True once 2+ dismissals were both reason=location AND for an in-person opportunity
+   * not near the student (mirrors isNearStudent below, which already computes the
+   * opposite signal — a proximity *boost* — so this reuses the same notion of "far" rather
+   * than inventing a second one). An online/hybrid opportunity, or one already near the
+   * student, is never penalized by this signal regardless of how it's set. */
+  avoidsDistantInPerson: boolean;
+}
+
+/** How AVOID_SIGNAL_MIN_OCCURRENCES-gated a pattern needs to be before it moves a score —
+ * see DismissalAvoidSignals' own comment for why this isn't 1. */
+const AVOID_SIGNAL_MIN_OCCURRENCES = 2;
+
+export interface DismissedOpportunitySignal {
+  reason: string | null;
+  fields: string[];
+  cost: number | null;
+  /** Precomputed by the caller (which has the student profile in scope already) rather
+   * than recomputed here — keeps this function a pure aggregation step over data the
+   * caller assembled, not a second place that reimplements isNearStudent. */
+  isDistantInPerson: boolean;
+}
+
+/** Pure aggregation — no I/O, no student/opportunity matching logic beyond the caller-supplied
+ * `isDistantInPerson`. Takes exactly this student's own past dismissals (already joined to
+ * their reason and the dismissed opportunity's own fields/cost/location) and returns what,
+ * if anything, future matching should treat as an avoid-signal. Called once per refresh
+ * (lib/opportunities/persist-matches.ts), not once per opportunity being scored. */
+export function computeAvoidSignals(dismissals: DismissedOpportunitySignal[]): DismissalAvoidSignals {
+  const fieldCounts = new Map<string, number>();
+  for (const d of dismissals) {
+    if (d.reason !== "not_interested_topic") continue;
+    for (const field of d.fields) {
+      const normalized = normalizeFieldLabel(field);
+      fieldCounts.set(normalized, (fieldCounts.get(normalized) ?? 0) + 1);
+    }
+  }
+  const avoidFields = [...fieldCounts.entries()].filter(([, count]) => count >= AVOID_SIGNAL_MIN_OCCURRENCES).map(([field]) => field);
+
+  const costDismissals = dismissals.filter((d) => d.reason === "too_expensive" && d.cost !== null).map((d) => d.cost as number);
+  const avoidCostFloor = costDismissals.length >= AVOID_SIGNAL_MIN_OCCURRENCES ? Math.min(...costDismissals) : null;
+
+  const distantInPersonDismissals = dismissals.filter((d) => d.reason === "location" && d.isDistantInPerson);
+  const avoidsDistantInPerson = distantInPersonDismissals.length >= AVOID_SIGNAL_MIN_OCCURRENCES;
+
+  return { avoidFields, avoidCostFloor, avoidsDistantInPerson };
+}
+
+/**
  * Why computeRelevance landed on its score -- not shown to the student directly, but the
  * input buildReasonCodes (lib/opportunities/persist-matches.ts) needs to decide what, if
  * anything, honest to say about relevance when the 70+ "matches_your_interests" bar isn't
@@ -338,19 +431,74 @@ function normalizeFieldLabel(value: string): string {
  */
 export type RelevanceBasis = "opportunity_fields_missing" | "student_interests_missing" | "some_overlap" | "no_overlap";
 
+/** Which DismissalAvoidSignals actually moved this specific opportunity's score — empty
+ * whenever the student has no dismissedSignals, or has some but none apply here. Exposed
+ * (not just folded silently into the number) so buildReasonCodes can say so explicitly —
+ * section 62's recommendation-explainability requirement applies to a penalty exactly as
+ * much as to a boost; nothing about a student's own past choices should move a score
+ * invisibly. */
+export type AvoidReason = "topic" | "cost" | "location";
+
 interface RelevanceComputation {
   score: number;
   basis: RelevanceBasis;
   matchedInterests: string[];
+  avoidReasons: AvoidReason[];
+}
+
+const AVOID_FIELD_PENALTY = 20;
+const AVOID_COST_PENALTY = 15;
+const AVOID_DISTANT_PENALTY = 15;
+
+/** Applied uniformly after the base score, regardless of which branch below computed it —
+ * cost and location avoid-signals don't depend on interest/field overlap at all, so they
+ * apply even in the two early-return "nothing to compare" cases above. Subtractive, capped
+ * by clampScore same as every boost in this file, and never taken below the eligibility
+ * question itself — an avoided opportunity still shows, just lower, exactly like a `saved`
+ * bookmark still shows lower than a strong match. This never excludes; only
+ * computeEligibility's direct per-opportunity dismissal does that. */
+function applyAvoidSignals(
+  baseScore: number,
+  opportunity: OpportunityForMatching,
+  near: boolean,
+  avoid: DismissalAvoidSignals | undefined
+): { score: number; avoidReasons: AvoidReason[] } {
+  if (!avoid) return { score: baseScore, avoidReasons: [] };
+
+  let score = baseScore;
+  const avoidReasons: AvoidReason[] = [];
+
+  if (avoid.avoidFields.length > 0) {
+    const oppFields = opportunity.fields.map(normalizeFieldLabel);
+    if (avoid.avoidFields.some((field) => oppFields.includes(field))) {
+      score -= AVOID_FIELD_PENALTY;
+      avoidReasons.push("topic");
+    }
+  }
+
+  if (avoid.avoidCostFloor !== null && opportunity.cost != null && opportunity.cost >= avoid.avoidCostFloor) {
+    score -= AVOID_COST_PENALTY;
+    avoidReasons.push("cost");
+  }
+
+  if (avoid.avoidsDistantInPerson && opportunity.locationMode === "in_person" && !near) {
+    score -= AVOID_DISTANT_PENALTY;
+    avoidReasons.push("location");
+  }
+
+  return { score: clampScore(score), avoidReasons };
 }
 
 function computeRelevance(student: StudentMatchProfile, opportunity: OpportunityForMatching): RelevanceComputation {
   const near = isNearStudent(student, opportunity);
+
   if (opportunity.fields.length === 0) {
-    return { score: clampScore(40 + (near ? PROXIMITY_BOOST : 0)), basis: "opportunity_fields_missing", matchedInterests: [] };
+    const { score, avoidReasons } = applyAvoidSignals(40 + (near ? PROXIMITY_BOOST : 0), opportunity, near, student.dismissedSignals);
+    return { score, basis: "opportunity_fields_missing", matchedInterests: [], avoidReasons };
   }
   if (student.interests.length === 0) {
-    return { score: clampScore(40 + (near ? PROXIMITY_BOOST : 0)), basis: "student_interests_missing", matchedInterests: [] };
+    const { score, avoidReasons } = applyAvoidSignals(40 + (near ? PROXIMITY_BOOST : 0), opportunity, near, student.dismissedSignals);
+    return { score, basis: "student_interests_missing", matchedInterests: [], avoidReasons };
   }
 
   const fields = opportunity.fields.map(normalizeFieldLabel);
@@ -367,8 +515,9 @@ function computeRelevance(student: StudentMatchProfile, opportunity: Opportunity
   // fit to display as their own stated interest.
   const matchedInterests = student.interests.filter((interest) => fields.includes(normalizeFieldLabel(interest)));
 
-  const score = clampScore((matchedInterests.length / student.interests.length) * 100 + (near ? PROXIMITY_BOOST : 0));
-  return { score, basis: matchedInterests.length > 0 ? "some_overlap" : "no_overlap", matchedInterests };
+  const baseScore = (matchedInterests.length / student.interests.length) * 100 + (near ? PROXIMITY_BOOST : 0);
+  const { score, avoidReasons } = applyAvoidSignals(baseScore, opportunity, near, student.dismissedSignals);
+  return { score, basis: matchedInterests.length > 0 ? "some_overlap" : "no_overlap", matchedInterests, avoidReasons };
 }
 
 interface ProfileNeedComputation {
@@ -398,6 +547,10 @@ export interface OpportunityMatchResult {
   /** The student's weakest dimensions that this opportunity's category also targets --
    * empty whenever profileNeedScore is 45 (the category addresses none of them). */
   matchedGapDimensions: ProfileDimension[];
+  /** Which of the student's own dismissal-derived avoid-signals reduced relevanceScore for
+   * this opportunity, if any -- see AvoidReason's own comment on why this is surfaced
+   * rather than folded silently into the number. */
+  avoidReasons: AvoidReason[];
 }
 
 /**
@@ -426,6 +579,7 @@ export function computeOpportunityMatch(
     relevanceBasis: relevance.basis,
     matchedInterests: relevance.matchedInterests,
     matchedGapDimensions: profileNeed.matchedDimensions,
+    avoidReasons: relevance.avoidReasons,
   };
 }
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { computeEligibility, computeOpportunityMatch, isNearStudent } from "@/lib/opportunities/matching";
-import type { OpportunityForMatching, StudentMatchProfile } from "@/lib/opportunities/matching";
+import { computeEligibility, computeOpportunityMatch, computeAvoidSignals, isNearStudent } from "@/lib/opportunities/matching";
+import type { OpportunityForMatching, StudentMatchProfile, DismissedOpportunitySignal } from "@/lib/opportunities/matching";
 
 function opportunity(overrides: Partial<OpportunityForMatching> = {}): OpportunityForMatching {
   return {
@@ -378,5 +378,192 @@ describe("computeOpportunityMatch — relevanceBasis and matched detail", () => 
   test("matchedGapDimensions is empty when the category targets none of the student's weak dimensions", () => {
     const match = computeOpportunityMatch(student({ weakestDimensions: ["leadership"] }), opportunity({ category: "research" }));
     expect(match.matchedGapDimensions).toEqual([]);
+  });
+});
+
+function dismissal(overrides: Partial<DismissedOpportunitySignal> = {}): DismissedOpportunitySignal {
+  return { reason: null, fields: [], cost: null, isDistantInPerson: false, ...overrides };
+}
+
+describe("computeAvoidSignals", () => {
+  test("no signal from a single dismissal, of any reason — the pattern bar is 2", () => {
+    const signals = computeAvoidSignals([dismissal({ reason: "not_interested_topic", fields: ["Economics"] })]);
+    expect(signals).toEqual({ avoidFields: [], avoidCostFloor: null, avoidsDistantInPerson: false });
+  });
+
+  test("empty dismissal history produces no signal at all", () => {
+    expect(computeAvoidSignals([])).toEqual({ avoidFields: [], avoidCostFloor: null, avoidsDistantInPerson: false });
+  });
+
+  test("two not_interested_topic dismissals sharing a field flag that field", () => {
+    const signals = computeAvoidSignals([
+      dismissal({ reason: "not_interested_topic", fields: ["Economics"] }),
+      dismissal({ reason: "not_interested_topic", fields: ["Economics", "Public Policy"] }),
+    ]);
+    expect(signals.avoidFields).toEqual(["economics"]);
+  });
+
+  test("two not_interested_topic dismissals in DIFFERENT fields flag neither — counted per field, not per dismissal", () => {
+    const signals = computeAvoidSignals([
+      dismissal({ reason: "not_interested_topic", fields: ["Economics"] }),
+      dismissal({ reason: "not_interested_topic", fields: ["Chemistry"] }),
+    ]);
+    expect(signals.avoidFields).toEqual([]);
+  });
+
+  test("field labels are normalized the same way computeRelevance normalizes them (underscores, casing)", () => {
+    const signals = computeAvoidSignals([
+      dismissal({ reason: "not_interested_topic", fields: ["computer_science"] }),
+      dismissal({ reason: "not_interested_topic", fields: ["Computer Science"] }),
+    ]);
+    expect(signals.avoidFields).toEqual(["computer science"]);
+  });
+
+  test("two too_expensive dismissals set the floor to the CHEAPER of the two, not the average or the more recent", () => {
+    const signals = computeAvoidSignals([
+      dismissal({ reason: "too_expensive", cost: 500 }),
+      dismissal({ reason: "too_expensive", cost: 200 }),
+    ]);
+    expect(signals.avoidCostFloor).toBe(200);
+  });
+
+  test("a too_expensive dismissal with no cost on file doesn't count toward the pattern", () => {
+    const signals = computeAvoidSignals([
+      dismissal({ reason: "too_expensive", cost: 200 }),
+      dismissal({ reason: "too_expensive", cost: null }),
+    ]);
+    expect(signals.avoidCostFloor).toBeNull();
+  });
+
+  test("two location dismissals that were both distant in-person set avoidsDistantInPerson", () => {
+    const signals = computeAvoidSignals([
+      dismissal({ reason: "location", isDistantInPerson: true }),
+      dismissal({ reason: "location", isDistantInPerson: true }),
+    ]);
+    expect(signals.avoidsDistantInPerson).toBe(true);
+  });
+
+  test("a location dismissal that wasn't actually distant (online, or already near) doesn't count", () => {
+    const signals = computeAvoidSignals([
+      dismissal({ reason: "location", isDistantInPerson: true }),
+      dismissal({ reason: "location", isDistantInPerson: false }),
+    ]);
+    expect(signals.avoidsDistantInPerson).toBe(false);
+  });
+
+  test("the four reasons this pass deliberately doesn't act on never contribute to any signal, even repeated", () => {
+    const signals = computeAvoidSignals([
+      dismissal({ reason: "too_competitive", fields: ["Economics"], cost: 200, isDistantInPerson: true }),
+      dismissal({ reason: "too_competitive", fields: ["Economics"], cost: 200, isDistantInPerson: true }),
+      dismissal({ reason: "no_time", fields: ["Economics"], cost: 200, isDistantInPerson: true }),
+      dismissal({ reason: "no_time", fields: ["Economics"], cost: 200, isDistantInPerson: true }),
+      dismissal({ reason: "already_applied", fields: ["Economics"], cost: 200, isDistantInPerson: true }),
+      dismissal({ reason: "already_applied", fields: ["Economics"], cost: 200, isDistantInPerson: true }),
+      dismissal({ reason: "other", fields: ["Economics"], cost: 200, isDistantInPerson: true }),
+      dismissal({ reason: "other", fields: ["Economics"], cost: 200, isDistantInPerson: true }),
+    ]);
+    expect(signals).toEqual({ avoidFields: [], avoidCostFloor: null, avoidsDistantInPerson: false });
+  });
+});
+
+describe("computeOpportunityMatch — avoid signals never exclude, only lower relevance", () => {
+  test("a student with no dismissedSignals at all behaves identically to today — no penalty, empty avoidReasons", () => {
+    const match = computeOpportunityMatch(student({ interests: ["Economics"] }), opportunity({ fields: ["Economics"], cost: 5000 }));
+    expect(match.avoidReasons).toEqual([]);
+  });
+
+  test("a topic avoid-signal lowers relevanceScore for a matching field and is named in avoidReasons", () => {
+    const withSignal = computeOpportunityMatch(
+      student({ interests: ["Economics"], dismissedSignals: { avoidFields: ["economics"], avoidCostFloor: null, avoidsDistantInPerson: false } }),
+      opportunity({ fields: ["Economics"] })
+    );
+    const withoutSignal = computeOpportunityMatch(student({ interests: ["Economics"] }), opportunity({ fields: ["Economics"] }));
+    expect(withSignal.relevanceScore).toBeLessThan(withoutSignal.relevanceScore);
+    expect(withSignal.avoidReasons).toEqual(["topic"]);
+  });
+
+  test("a topic avoid-signal does nothing when the opportunity is in an unrelated field", () => {
+    const match = computeOpportunityMatch(
+      student({ interests: ["Chemistry"], dismissedSignals: { avoidFields: ["economics"], avoidCostFloor: null, avoidsDistantInPerson: false } }),
+      opportunity({ fields: ["Chemistry"] })
+    );
+    expect(match.avoidReasons).toEqual([]);
+  });
+
+  test("a cost avoid-signal penalizes an opportunity at or above the floor", () => {
+    const match = computeOpportunityMatch(
+      student({ dismissedSignals: { avoidFields: [], avoidCostFloor: 200, avoidsDistantInPerson: false } }),
+      opportunity({ cost: 200 })
+    );
+    expect(match.avoidReasons).toEqual(["cost"]);
+  });
+
+  test("a cost avoid-signal does not penalize an opportunity below the floor", () => {
+    const match = computeOpportunityMatch(
+      student({ dismissedSignals: { avoidFields: [], avoidCostFloor: 200, avoidsDistantInPerson: false } }),
+      opportunity({ cost: 50 })
+    );
+    expect(match.avoidReasons).toEqual([]);
+  });
+
+  test("a cost avoid-signal does not penalize an opportunity with no price on file", () => {
+    const match = computeOpportunityMatch(
+      student({ dismissedSignals: { avoidFields: [], avoidCostFloor: 200, avoidsDistantInPerson: false } }),
+      opportunity({ cost: null })
+    );
+    expect(match.avoidReasons).toEqual([]);
+  });
+
+  test("a location avoid-signal penalizes a distant in-person opportunity", () => {
+    const match = computeOpportunityMatch(
+      student({ country: "Turkey", dismissedSignals: { avoidFields: [], avoidCostFloor: null, avoidsDistantInPerson: true } }),
+      opportunity({ locationMode: "in_person", country: "United States" })
+    );
+    expect(match.avoidReasons).toEqual(["location"]);
+  });
+
+  test("a location avoid-signal does not penalize an online opportunity, even far away", () => {
+    const match = computeOpportunityMatch(
+      student({ country: "Turkey", dismissedSignals: { avoidFields: [], avoidCostFloor: null, avoidsDistantInPerson: true } }),
+      opportunity({ locationMode: "online", country: "United States" })
+    );
+    expect(match.avoidReasons).toEqual([]);
+  });
+
+  test("a location avoid-signal does not penalize an in-person opportunity that's actually near the student", () => {
+    const match = computeOpportunityMatch(
+      student({ country: "Turkey", dismissedSignals: { avoidFields: [], avoidCostFloor: null, avoidsDistantInPerson: true } }),
+      opportunity({ locationMode: "in_person", country: "Turkey" })
+    );
+    expect(match.avoidReasons).toEqual([]);
+  });
+
+  test("multiple avoid-signals can stack on the same opportunity, each named", () => {
+    const match = computeOpportunityMatch(
+      student({
+        interests: ["Economics"],
+        dismissedSignals: { avoidFields: ["economics"], avoidCostFloor: 200, avoidsDistantInPerson: false },
+      }),
+      opportunity({ fields: ["Economics"], cost: 300 })
+    );
+    expect(match.avoidReasons).toEqual(expect.arrayContaining(["topic", "cost"]));
+    expect(match.avoidReasons).toHaveLength(2);
+  });
+
+  test("an avoid-signal never makes an otherwise-eligible opportunity ineligible — it only lowers relevance", () => {
+    const match = computeOpportunityMatch(
+      student({ interests: ["Economics"], dismissedSignals: { avoidFields: ["economics"], avoidCostFloor: 0, avoidsDistantInPerson: false } }),
+      opportunity({ fields: ["Economics"], cost: 100000 })
+    );
+    expect(match.eligible).toBe(true);
+  });
+
+  test("a direct dismissal of THIS opportunity still hard-excludes regardless of avoid signals — the two mechanisms are independent", () => {
+    const match = computeOpportunityMatch(
+      student({ dismissedSignals: { avoidFields: [], avoidCostFloor: null, avoidsDistantInPerson: false } }),
+      opportunity({}),
+      "not_interested"
+    );
+    expect(match.eligible).toBe(false);
   });
 });

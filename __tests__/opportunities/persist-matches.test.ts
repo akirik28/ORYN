@@ -128,4 +128,22 @@ describe("buildReasonCodes", () => {
     const codes = buildReasonCodes(computeOpportunityMatch(s, opp), s, opp);
     expect(codes).toEqual(["ineligible"]);
   });
+
+  test("similar_to_dismissed appears alongside a positive code, not instead of it", () => {
+    const opp = opportunity({ fields: ["Economics"], cost: 200 });
+    const s = student({
+      interests: ["Economics"],
+      dismissedSignals: { avoidFields: [], avoidCostFloor: 200, avoidsDistantInPerson: false },
+    });
+    const codes = buildReasonCodes(computeOpportunityMatch(s, opp), s, opp);
+    expect(codes).toContain("matches_your_interests");
+    expect(codes).toContain("similar_to_dismissed");
+  });
+
+  test("similar_to_dismissed never fires when the student has no dismissedSignals", () => {
+    const opp = opportunity({ fields: ["Economics"], cost: 200 });
+    const s = student({ interests: ["Economics"] });
+    const codes = buildReasonCodes(computeOpportunityMatch(s, opp), s, opp);
+    expect(codes).not.toContain("similar_to_dismissed");
+  });
 });
