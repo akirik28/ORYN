@@ -319,8 +319,16 @@ export function OpportunityCard({
             // before this fix.
             return <CategoryGlyph aria-hidden="true" strokeWidth={1} className="absolute inset-0 m-auto size-[28cqw] text-ink-1/[0.14]" />;
           })()}
-          <Compass className="relative size-4" />
-          <span className="relative">{t("noImageYet")}</span>
+          {/* The label moved out of dead centre and lost its Compass, 2026-09-03. The band
+              previously held a Compass plus this text in the middle; once the category glyph
+              landed behind them, all three stacked on the same spot and the band read as a
+              broken image rather than a designed one. The Compass is now redundant -- it was
+              standing in for "an icon belongs here," which the glyph does properly and
+              per-category. The text itself stays, and stays honest: it is a founder-directed
+              string (2026-08-30) and it is the only thing on the card that says Oryn has no
+              real photograph of this programme. A prettier band that dropped it would be
+              claiming the glyph is a picture of something. */}
+          <span className="absolute bottom-2 left-3 text-[11px] text-ink-4/80">{t("noImageYet")}</span>
         </div>
       )}
 
