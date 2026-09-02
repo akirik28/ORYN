@@ -63,8 +63,7 @@ because `SET ROLE` persists for the rest of that editor session/connection other
 
 ## Step 2 — Apply migrations
 
-> **Updated 2026-09-02 ~13:15 — two more landed after the last revision (`0084`, `0085`).**
-> The list is now **`0075` through `0085`, eleven migrations.** All eleven re-verified
+> **Updated again — `0086` has since landed too.** The list is now **`0075` through `0086`.** All eleven re-verified
 > unapplied against `information_schema`, and all eleven re-verified re-run safe by reading
 > each file. **`0058` is still excluded and still needs a decision first — see below.**
 >
@@ -97,7 +96,26 @@ because `SET ROLE` persists for the rest of that editor session/connection other
 | `0083_external_sync_jobs_errors_encountered.sql` | A job that swallowed errors reports how many | Additive |
 | `0084_skills_languages_source.sql` | A skill imported from a CV is distinguishable from one typed by hand | Additive — CV extraction pulled skills and languages and **silently discarded both**, always |
 | `0085_drop_system_notification_category.sql` | Removes an enum value that never had a writer | Recreates the enum without `system`; zero of 113 live rows use it, so nothing to migrate |
+| `0086_opportunity_match_confidence.sql` | A match can say how much evidence it rests on | Additive — **the code degrades correctly without it, confirmed live** (see the note below) |
 | `0058_social_posts.sql` | — | **Never**, without deciding first. See below. |
+
+> ### The case for applying these got stronger on 2026-09-02, for a bad reason
+>
+> This project deliberately writes migrations and leaves them unapplied, and four separate
+> guards existed so that unapplied columns degrade instead of crashing. **All four were
+> checking for the wrong error code.** They tested Postgres's `42703`, which a *read* raises;
+> a *write* never gets that far — PostgREST rejects it from its own schema cache first with
+> `PGRST204`. So each guard sat inert on exactly the path it was written to protect, and
+> **every test for all four mocked `42703` and passed.**
+>
+> Found from a single live log line, and fixed the same day (`88775c0e`) — all four now share
+> one check accepting both codes, verified firing correctly against `0086`'s own missing
+> column.
+>
+> **What this changes for you:** the assurance that "the code degrades safely without the
+> migration" was, until today, less true than we believed. It is true now. But it means the
+> unapplied window has been riskier than it looked, and **applying these is a higher priority
+> than it was yesterday** — not lower.
 
 **Why 0077 is urgent, not routine**: `getOrCreateWeeklyPlan` — the function behind a
 student's first weekly plan *and* every "Regenerate" click — now unconditionally updates
