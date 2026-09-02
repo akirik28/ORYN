@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { DIMENSION_ORDER } from "@/lib/scoring/labels";
 import { CAREER_PROFILE_SCORE_VERSION } from "@/lib/scoring/types";
+import { evidenceStateFor, isAssessed } from "@/lib/scoring/signal";
 import { getCohortDimensionScores } from "./cohort";
 import { evaluateBenchmarkDimension, describeCohort } from "./compute";
 import type { BenchmarkDimension, CohortFilter, PeerBenchmarkSummary } from "./types";
@@ -20,7 +21,7 @@ export async function getPeerBenchmarks(userId: string): Promise<PeerBenchmarkSu
   const supabase = await createClient();
   const [{ data: profile }, { data: myScores }] = await Promise.all([
     supabase.from("profiles").select("graduation_year, curriculum, profile_strength_score").eq("id", userId).single(),
-    supabase.from("profile_scores").select("dimension, score").eq("user_id", userId).eq("calculation_version", CAREER_PROFILE_SCORE_VERSION),
+    supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId).eq("calculation_version", CAREER_PROFILE_SCORE_VERSION),
   ]);
   if (!profile) return { cohortDescription: "All Oryn students", results: [] };
 
@@ -46,7 +47,19 @@ export async function getPeerBenchmarks(userId: string): Promise<PeerBenchmarkSu
     peerScoresByDimension = new Map();
   }
 
-  const myScoreByDimension = new Map<BenchmarkDimension, number>((myScores ?? []).map((s) => [s.dimension, s.score]));
+  // Comparing this student's own not_assessed/limited_evidence dimension against peers
+  // would offer a percentile for a signal Oryn doesn't actually have -- the identical
+  // "score 0 reported as a real weakness" harm Phase 68 already forbids everywhere else
+  // (lib/scoring/signal.ts's isAssessed/evidenceStateFor, reused here, not reimplemented).
+  // "overall" is deliberately exempt: profile_strength_score is the one product-wide
+  // average across all 9 dimensions (lib/scoring/index.ts's computeCareerProfile), used
+  // unchanged as the dashboard's own headline number -- redefining what "overall" means
+  // just for this comparison would make it disagree with every other surface that shows it.
+  const myScoreByDimension = new Map<BenchmarkDimension, number>(
+    (myScores ?? [])
+      .filter((s) => isAssessed(evidenceStateFor(s.score, s.confidence, Array.isArray(s.reason_codes) && s.reason_codes.length > 0)))
+      .map((s) => [s.dimension, s.score])
+  );
   if (profile.profile_strength_score !== null) myScoreByDimension.set("overall", profile.profile_strength_score);
 
   const results = [...DIMENSION_ORDER, "overall" as const]

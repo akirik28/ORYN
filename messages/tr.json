@@ -447,7 +447,7 @@
     },
     "peerBenchmark": {
       "notEnoughStudents": "Henüz karşılaştırılabilir yeterli Oryn öğrencisi yok",
-      "notEnoughDescription": "Akran karşılaştırması gösterebilmek için ({cohort}, en az {min}).",
+      "notEnoughDescription": "En az {min} karşılaştırılabilir öğrenci gerekir ({cohort}) — daha azıyla gösterilecek bir yüzdelik dilim, gerçek bir karşılaştırma değil bir tahmin olurdu.",
       "comparedTo": "Karşılaştırma grubu: {cohort}",
       "overallProfile": "Genel profil",
       "percentile": "%{percentile}. dilim",
