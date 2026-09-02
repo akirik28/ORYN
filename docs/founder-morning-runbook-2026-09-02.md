@@ -63,17 +63,34 @@ because `SET ROLE` persists for the rest of that editor session/connection other
 
 ## Step 2 — Apply migrations
 
-Five migrations are relevant and none are applied yet (checked live, all six of the
-checks below currently return `false`):
+> **Updated 2026-09-02 ~10:45 — four more landed after this runbook was written.** All
+> nine below re-verified unapplied against `information_schema` just now, and all nine
+> re-verified re-run safe by reading each file.
 
-| Migration | Urgency | What it fixes |
+> ### ⚠️ Apply them in numeric order, all in one go
+>
+> **This supersedes the urgency column below, which was a mistake.** Tiering the list into
+> "now / before deploy / whenever" invites applying a subset — and **`0080` alters a table
+> that `0078` creates.** Apply `0080` without `0078` and it fails on a missing table,
+> mid-sequence. `docs/deployment.md` §0.1 records what a half-applied sequence cost this
+> project once already: `supabase db push` stopped at 21 of 68 and left a database that
+> **looked** complete with every RLS hardening silently absent.
+>
+> The urgency column below is still useful for understanding *what each one buys you*.
+> It is not a licence to pick.
+
+| Migration | What it buys | Note |
 |---|---|---|
-| `0077_weekly_actions_carried_forward.sql` | **Now** | Live regression — see below |
-| `0075_deadline_notification_log.sql` | Before deploy | New table, no dependents yet |
-| `0078_university_notification_log.sql` | Before deploy | New table, no dependents yet |
-| `0076_ai_usage_degrade_columns.sql` | Whenever | Additive columns, nothing reads them yet |
-| `0079_education_test_score_evidence_status.sql` | Whenever | Additive columns, nothing reads them yet |
-| `0058_social_posts.sql` | **Never** (without you deciding first) | See below |
+| `0075_deadline_notification_log.sql` | Deadline reminders stop re-sending nightly | New table |
+| `0076_ai_usage_degrade_columns.sql` | Records which replies used the cheaper model | Additive |
+| `0077_weekly_actions_carried_forward.sql` | Completed work separates from this week's focus | Was the live regression — the code degrades now, but the reflection split needs this |
+| `0078_university_notification_log.sql` | University-change notifications stop repeating | New table — **`0080` depends on it** |
+| `0079_education_test_score_evidence_status.sql` | Evidence status on education + test scores | Additive |
+| `0080_statistics_last_changed...sql` | US statistics can persist a change at all | **Requires `0078`.** Until applied, the nightly sync silently drops every statistics update |
+| `0081_canonical_entity_merges...sql` | An admin who merged an entity can still delete their account | First migration to *create* this FK — it was never in any migration |
+| `0082_global_university_discovery_indexes.sql` | A fresh deploy gets indexes live already has | No effect here; matters only for a new database |
+| `0083_external_sync_jobs_errors_encountered.sql` | A job that swallowed errors reports how many | Additive |
+| `0058_social_posts.sql` | — | **Never**, without deciding first. See below. |
 
 **Why 0077 is urgent, not routine**: `getOrCreateWeeklyPlan` — the function behind a
 student's first weekly plan *and* every "Regenerate" click — now unconditionally updates
