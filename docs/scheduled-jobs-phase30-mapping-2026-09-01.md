@@ -9,16 +9,37 @@ needs the founder's own push or a widened permission, not a merge conflict). Re-
 trusting this doc's "merged" claims against `origin/main` specifically if that gap is still
 open.
 
+**Re-verified 2026-09-02, at oryn-a7's request — this doc was stale in exactly the two
+places it named as real gaps.** §0 and §1 below are rewritten to current reality; §2–§5 are
+untouched from 2026-09-01 except where marked, because they're still accurate. What changed:
+**Job D and Job E (for universities) are now both built** — `e4eafe81` ("feat(jobs): add
+Phase 30 Job D — scheduled weekly plan generation route") and `42f9dfe5` ("feat(jobs): add
+Phase 30 Job E — stale data detection"), both after this doc first merged. Job D's own route
+comment cites this doc's §4 by name as the design it followed (`getOrCreateWeeklyPlan`
+without force, exactly the interpretation §4 argued was safe and recommended) — the
+recommendation below wasn't just correct, it was read and built to. Job B is still nowhere.
+Three more routes appeared alongside D and E that are worth naming but aren't part of the
+original five: `scheduled-review` (Phase 41, not Phase 30 — profile score snapshots),
+`refresh-admission-outlooks` (a weekly backstop for the read-time admission-outlook refresh,
+not one of the five either), and `notify-university-changes` (Phase 24 notification,
+structurally inert until Job C actually runs once). Nine routes exist under `app/api/jobs/`
+today, not four — all nine read in full for this pass, not just diffed against the old list.
+
 ---
 
 ## 0. Summary
 
-Phase 30 names five jobs (A–E). Four routes exist under `app/api/jobs/`. **One spec job (D)
-has no route at all. A second (E) has no route for either corpus it would need to cover.**
-Of the four routes that do exist, three have **never recorded a single run** — not "run
-before production," never, anywhere, including whatever manual/dev triggering has happened
-to date. Only `deadline-reminders` has ever executed (twice, 2026-08-22, both processing 0
-items).
+Phase 30 names five jobs (A–E). **Four now have a built route implementing them — only B has
+none.** Of those four, only two (A, C) are wired to an actual scheduler (`vercel.json`); D and
+E were built without being armed, matching the pattern their own route comments describe as
+deliberate — arming is a founder-gated decision because it turns on recurring cost (D, an AI
+call per student) or recurring writes (E). **Zero of the nine routes under `app/api/jobs/`
+have ever executed even once outside the two manual-looking `deadline_reminders` runs from
+2026-08-22** — re-confirmed live today, `external_sync_jobs` is unchanged since 2026-09-01,
+still exactly those two rows and nothing else.
+
+**The one sentence the founder's deploy decision needs:** five jobs are specified, four exist
+as built routes, two are armed to actually run on a schedule, and zero have ever executed.
 
 This is not a new problem to build around later — it's the honest state of the plumbing the
 day a production environment comes up, which per the founder's own build spec doesn't exist
@@ -27,31 +48,42 @@ draws on it.
 
 ## 1. The mapping
 
-| Spec job | What Phase 30 asks for | Route | Wired correctly? | Ever run? | Verdict |
+| Spec job | What Phase 30 asks for | Route | Armed (`vercel.json` + `JOB_DEFINITIONS`)? | Ever run? | Verdict |
 |---|---|---|---|---|---|
-| **A** — opportunity discovery | Find new opportunities | `discover-opportunities` | Yes (`runWithTracking`, cron in `vercel.json`) | **No** — 0 rows in `external_sync_jobs` | Built, never executed |
-| **B** — upcoming deadline validation | Re-check deadlines against the source | *(none)* | — | — | **Not built.** See §2 |
-| **C** — university information freshness | Keep university data current | `sync-university-data` | Yes | **No** — 0 rows | Built, never executed, and see §3 for what "freshness" currently means on this table |
-| **D** — weekly student plan generation | Scheduled plan generation (Phase 9) | *(none)* | — | — | **Not built.** See §4 |
-| **E** — stale data detection | Detect data that's gone stale | *(none)* | — | — | **Not built** for either corpus. See §2, §3 |
-| *(unnamed)* | — | `discover-requirements` | Yes | **No** — 0 rows | Self-labeled "Phase 69 follow-up to Job A's pattern" in its own route comment — not one of the original five, doesn't claim to be |
+| **A** — opportunity discovery | Find new opportunities | `discover-opportunities` | Yes | **No** — 0 rows in `external_sync_jobs` | Built, armed, never executed |
+| **B** — upcoming deadline validation | Re-check deadlines against the source | *(none)* | — | — | **Still not built**, for either corpus. See §2 |
+| **C** — university information freshness | Keep university data current | `sync-university-data` | Yes | **No** — 0 rows | Built, armed, never executed; US-only in scope. See §3 |
+| **D** — weekly student plan generation | Scheduled plan generation (Phase 9) | `generate-weekly-plans` **(new since 2026-09-01)** | **No** — deliberately unarmed, founder-gated on cost | **No** — 0 rows for `generate_weekly_plans` | Built 2026-09-02, not armed. See §4 |
+| **E** — stale data detection | Detect data that's gone stale | `detect-stale-data` **(new since 2026-09-01)** — universities, university_requirements, university_deadlines only, **not opportunities** | **No** — deliberately unarmed | **No** — 0 rows for `detect_stale_data` | Built 2026-09-02 for 3 of 4 tables that need it; opportunities' half still has no route. See §2, §3 |
+| *(extra)* | — | `discover-requirements` | Yes | **No** — 0 rows | Self-labeled "Phase 69 follow-up to Job A's pattern" — not one of the five |
+| *(extra)* | — | `scheduled-review` | No, deliberately | **No** — 0 rows | Phase 41 profile-snapshot job, not Phase 30 |
+| *(extra)* | — | `refresh-admission-outlooks` | No — absent from both `vercel.json` and `JOB_DEFINITIONS` | **No** — 0 rows | Weekly backstop for a read-time refresh, not one of the five |
+| *(extra)* | — | `notify-university-changes` | No, deliberately | **No** — 0 rows | Phase 24 notification; structurally has nothing to notify until Job C runs once |
 
-`vercel.json` configures exactly these four crons, at 0200/0400/0600/0800 UTC respectively.
-`lib/jobs/schedule.ts`'s `JOB_DEFINITIONS` (the admin-panel health tracker, merged
-2026-08-31) tracks exactly these same four `job_name`s — consistent, nothing untracked.
+`vercel.json` still configures exactly four crons (A, the Phase-69 requirement-discovery
+extra, C, and `deadline-reminders`), at 0200/0400/0600/0800 UTC — unchanged from
+2026-09-01. `lib/jobs/schedule.ts`'s `JOB_DEFINITIONS` still tracks exactly those same four
+`job_name`s, re-checked today — D, E, and `scheduled-review` are absent from it, consistent
+with each of their own route comments saying so explicitly.
 
-**Live `external_sync_jobs`, full table, verified today:**
+**Live `external_sync_jobs`, full table, re-verified today (2026-09-02) — unchanged from
+2026-09-01:**
 
 ```
-job_name           | status    | started_at           | items_processed
-deadline_reminders | succeeded | 2026-08-22 11:44:45  | 0
-deadline_reminders | succeeded | 2026-08-22 11:17:35  | 0
+job_name           | status    | started_at           | finished_at           | items_processed
+deadline_reminders | succeeded | 2026-08-22 11:44:45  | 2026-08-22 11:44:47   | 0
+deadline_reminders | succeeded | 2026-08-22 11:17:35  | 2026-08-22 11:17:35   | 0
 ```
 
-Two rows, both `deadline_reminders`, both zero-item, ten days ago. `discover_opportunities`,
-`discover_requirements`, and `sync_us_universities` have **no rows at all** — not stale, not
-failed, absent. Whatever exercised `deadline-reminders` twice on 2026-08-22 didn't touch the
-other three.
+Still two rows, both `deadline_reminders`, both zero-item, eleven days old now. Worth noting
+precisely rather than just repeating "manual, not cron": `deadline-reminders` **is** one of
+the four armed crons, scheduled for 08:00 UTC — but these two runs are timestamped 11:17 and
+11:44 UTC, three-plus hours off the scheduled hour and 27 minutes apart from each other. A
+daily cron does not fire twice 27 minutes apart, and Vercel Hobby's own minute-level jitter
+(§ note in `lib/jobs/schedule.ts`) doesn't stretch to a 3-hour offset. The timestamps
+themselves are consistent with manual/admin testing, not a cron firing — corroborating,
+not just asserting. Every other job_name — including both new ones, D and E — has **no rows
+at all**, still.
 
 ## 2. Jobs B and E (opportunities) — already designed, not duplicating it here
 
@@ -92,6 +124,17 @@ read. Read the doc as it stands now; there's nothing else to find.
 out explicitly: *"University data freshness (Phase 30 Job C). Same pattern, different corpus,
 separate design."* That design doesn't exist yet — see §3.
 
+**Update, 2026-09-02: it shipped anyway, without a preceding design doc — `detect-stale-data`
+(`42f9dfe5`).** Worth naming as a process point, not a defect in the result: the code itself
+draws the identical distinction this section does (its own top comment: "provenance and
+liveness are orthogonal," citing this design doc by name), and it stays inside the boundary
+that distinction implies — a pure stored-data age recompute, explicitly not a source re-fetch,
+explicitly not covering `opportunities` because that table's freshness question needs the
+harder job this doc describes and that job alone. So the boundary held even though the design
+step got skipped. It covers `universities`, `university_requirements`, and
+`university_deadlines`. Opportunities' Job E (and all of Job B) still has nothing built and
+still needs exactly what this section describes.
+
 ## 3. Job C — built, wired, never run, and "freshness" is currently a research artifact
 
 `sync-university-data` calls `syncUsUniversities(schools)`, defaulting to a hardcoded list of
@@ -130,7 +173,16 @@ Separately, worth naming even though it wasn't asked: `syncUsUniversities` is sc
 call). Phase 8's non-US admissions architecture (`CountryAdmissionProvider` per country) has
 no equivalent scheduled sync at all today — consistent with Job E's gap above, not a new one.
 
-## 4. Job D — no route, and the question you asked directly
+## 4. Job D — built 2026-09-02 exactly as recommended below, and the question you asked directly
+
+**Update, 2026-09-02: `generate-weekly-plans` (`e4eafe81`) now exists**, and its own route
+comment cites this section by name: *"Deliberately calls getOrCreateWeeklyPlan without force
+... see ... docs/scheduled-jobs-phase30-mapping-2026-09-01.md §4"* — the no-force
+interpretation argued for below, not the force-refresh one this section ruled out. It is not
+armed (no `vercel.json` entry, no `JOB_DEFINITIONS` entry) and has never run (0 rows for
+`generate_weekly_plans`) — arming it is the founder-gated cost decision the last paragraph of
+this section already named, not a new open question. The reasoning below is kept as written,
+since it's the reasoning that was acted on, not superseded by it.
 
 **Does Job D depend on item 39 (the founder-blocked-backlog decision about what "Regenerate"
 does to completed actions)? No — not if Job D is built the way Phase 9 actually describes it.**
@@ -188,11 +240,20 @@ naming the job as safe to build now.
 
 - **Nothing here is on fire.** No production environment exists yet (per the founder's own
   build spec), so "these jobs have never run" is expected, not a regression.
-- **The two real gaps are D and E.** Job D can be built today, independent of item 39, as
+- **Update, 2026-09-02: the two gaps named below (D, E-for-universities) are closed as of
+  today.** Both were built, both follow the boundaries this doc argued for, neither is armed
+  yet — arming is the remaining founder-gated step for both, not a build task. Original text
+  kept below since the "gap" framing is exactly what got closed and how.
+- ~~The two real gaps are D and E.~~ Job D can be built today, independent of item 39, as
   "call the existing no-force path on a schedule" — no new destructive-path exposure. Job E
   has a merged design for opportunities (plus an unmerged, more-current rev 2 worth reading
   first) and no design at all yet for universities.
+- **The one real gap left is B — nowhere, for either corpus.** Opportunities' half is fully
+  designed (the reverification doc) and unbuilt; universities' half was never designed and is
+  also unbuilt. Everything else the five spec jobs ask for now has a route.
 - **Job C's freshness data needs the same skepticism the opportunities corpus already got.**
   "100% of rows have `last_checked_at`" reads as healthy and isn't — it's one ingestion wave,
   not a working freshness mechanism, exactly the distinction §1.2 of the reverification doc
-  drew for the other table.
+  drew for the other table. Unchanged as of 2026-09-02 — Job C still has never actually run.
+- **Re-verified 2026-09-02: five jobs specified, four built, two armed, zero ever executed.**
+  That's the sentence for the founder's deploy decision — see §0.
