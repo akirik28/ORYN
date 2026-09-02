@@ -55,12 +55,27 @@ const SEVERITY_LABEL_EN: Record<GapSeverity, string> = {
   insufficient_data: "an area Oryn doesn't have enough data on yet",
 };
 
-/** The "Addresses {dimension}, {severity} ({score}/100)." family from evidence.ts. */
+/**
+ * The "Addresses {dimension}, {severity} ({score}/100)." family from evidence.ts.
+ *
+ * `insufficient_data` omits the score entirely (2026-09-02, Phase 79's audit) — this
+ * severity means Oryn hasn't confidently assessed the dimension at all, and the
+ * underlying score is 0 by construction for a dimension with no evidence (same fact
+ * lib/scoring/signal.ts's own EvidenceState machinery is built around). Before this fix,
+ * "insufficient data (0/100)" was live on every Counselor Core card for an unassessed
+ * dimension — quoting a score for a dimension Oryn admits it can't assess is exactly the
+ * "0 reported as a real weakness" Phase 68 forbids, the same principle the dashboard's own
+ * profile-signal panel already holds a few files away. `alreadyStrongWhyLine` below is not
+ * a sibling instance of this bug: `whyForOpportunity` (evidence.ts) only ever calls it when
+ * `score >= GAP_CLAIM_SCORE_CEILING`, so its score is always a genuinely, confidently high
+ * one.
+ */
 export function gapWhyLine(dimension: ProfileDimension, severity: GapSeverity, score: number, locale: Locale): string {
+  const scoreSuffix = severity === "insufficient_data" ? "" : ` (${score}/100)`;
   if (locale === "tr") {
-    return `${dimensionLabel(dimension, "tr")} — ${SEVERITY_LABEL_TR[severity]} (${score}/100).`;
+    return `${dimensionLabel(dimension, "tr")} — ${SEVERITY_LABEL_TR[severity]}${scoreSuffix}.`;
   }
-  return `Addresses ${dimensionLabel(dimension, "en")}, ${SEVERITY_LABEL_EN[severity]} (${score}/100).`;
+  return `Addresses ${dimensionLabel(dimension, "en")}, ${SEVERITY_LABEL_EN[severity]}${scoreSuffix}.`;
 }
 
 /** The "already strong, not a reason to prioritize" variant — kept separate from
