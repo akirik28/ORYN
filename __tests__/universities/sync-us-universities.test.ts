@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { hasUniversityDataChanged } from "@/lib/universities/sync-us-universities";
+import { hasUniversityDataChanged, hasStatisticsChanged } from "@/lib/universities/sync-us-universities";
 
 /**
  * hasUniversityDataChanged is what stops syncOne from stamping last_changed_at on every
@@ -53,5 +53,49 @@ describe("hasUniversityDataChanged", () => {
 
   test("a real external_ids value change is detected", () => {
     expect(hasUniversityDataChanged(fields({ external_ids: { college_scorecard_id: "12345" } }), fields({ external_ids: { college_scorecard_id: "99999" } }))).toBe(true);
+  });
+});
+
+
+function statsFields(overrides: Partial<Parameters<typeof hasStatisticsChanged>[0]> = {}) {
+  return {
+    admission_rate: 0.42,
+    sat_range_low: 1200,
+    sat_range_high: 1450,
+    act_range_low: 26,
+    act_range_high: 32,
+    graduation_rate: 0.88,
+    cost_of_attendance: 55000,
+    ...overrides,
+  };
+}
+
+describe("hasStatisticsChanged", () => {
+  test("identical fields report no change", () => {
+    expect(hasStatisticsChanged(statsFields(), statsFields())).toBe(false);
+  });
+
+  test("an admission_rate change is detected", () => {
+    expect(hasStatisticsChanged(statsFields(), statsFields({ admission_rate: 0.4 }))).toBe(true);
+  });
+
+  test("a SAT range change is detected", () => {
+    expect(hasStatisticsChanged(statsFields(), statsFields({ sat_range_low: 1210 }))).toBe(true);
+  });
+
+  test("an ACT range change is detected", () => {
+    expect(hasStatisticsChanged(statsFields(), statsFields({ act_range_high: 33 }))).toBe(true);
+  });
+
+  test("a graduation_rate change is detected", () => {
+    expect(hasStatisticsChanged(statsFields(), statsFields({ graduation_rate: 0.9 }))).toBe(true);
+  });
+
+  test("a cost_of_attendance change is detected", () => {
+    expect(hasStatisticsChanged(statsFields(), statsFields({ cost_of_attendance: 56000 }))).toBe(true);
+  });
+
+  test("a null-to-value change on a nullable field is detected", () => {
+    expect(hasStatisticsChanged(statsFields({ admission_rate: null }), statsFields({ admission_rate: 0.42 }))).toBe(true);
   });
 });

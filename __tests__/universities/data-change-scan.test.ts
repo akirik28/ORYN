@@ -5,6 +5,8 @@ import {
   hasChangedSinceTracked,
   scanTargetUniversityChanges,
   scanNewUniversityRequirements,
+  scanNewUniversityDeadlines,
+  scanUniversityStatisticsChanges,
   buildUniversityChangeNotification,
   type UniversityChangeHit,
 } from "@/lib/universities/data-change-scan";
@@ -83,14 +85,25 @@ function makeQueryBuilder<T extends Record<string, unknown>>(rows: T[]) {
 type TargetRow = { user_id: string; university_id: string; created_at: string; status: string };
 type UniversityRow = { id: string; name: string; last_changed_at: string | null };
 type RequirementRow = { university_id: string; created_at: string };
+type DeadlineRow = { university_id: string; created_at: string };
+type StatisticsRow = { university_id: string; last_changed_at: string | null };
 type ProfileRow = { id: string; preferred_language: string | null };
 
-function makeSupabase(tables: { target_universities: TargetRow[]; universities?: UniversityRow[]; university_requirements?: RequirementRow[]; profiles?: ProfileRow[] }) {
+function makeSupabase(tables: {
+  target_universities: TargetRow[];
+  universities?: UniversityRow[];
+  university_requirements?: RequirementRow[];
+  university_deadlines?: DeadlineRow[];
+  university_statistics?: StatisticsRow[];
+  profiles?: ProfileRow[];
+}) {
   const universities = tables.universities ?? [];
   const requirements = tables.university_requirements ?? [];
+  const deadlines = tables.university_deadlines ?? [];
+  const statistics = tables.university_statistics ?? [];
   const profiles = tables.profiles ?? [];
   return {
-    from: (table: "target_universities" | "universities" | "university_requirements" | "profiles") => {
+    from: (table: "target_universities" | "universities" | "university_requirements" | "university_deadlines" | "university_statistics" | "profiles") => {
       if (table === "target_universities") {
         // status filtering (`.in("status", ACTIVE_TARGET_STATUSES)`) happens before
         // `.select()` is even relevant here — the fixture is pre-filtered to active-status
@@ -100,6 +113,8 @@ function makeSupabase(tables: { target_universities: TargetRow[]; universities?:
       }
       if (table === "universities") return makeQueryBuilder(universities);
       if (table === "university_requirements") return makeQueryBuilder(requirements);
+      if (table === "university_deadlines") return makeQueryBuilder(deadlines);
+      if (table === "university_statistics") return makeQueryBuilder(statistics);
       return makeQueryBuilder(profiles);
     },
   } as unknown as SupabaseClient<Database>;
@@ -199,6 +214,119 @@ describe("scanNewUniversityRequirements", () => {
     });
 
     const result = await scanNewUniversityRequirements(supabase, EMPTY_SUPERSESSION_MAP);
+    expect(result.checked).toBe(0);
+    expect(result.hits).toEqual([]);
+  });
+});
+
+describe("scanNewUniversityDeadlines", () => {
+  test("a deadline added after the student started tracking is a hit", async () => {
+    const supabase = makeSupabase({
+      target_universities: [{ user_id: STUDENT_ID, university_id: "univ-1", created_at: "2026-08-01T00:00:00Z", status: "target" }],
+      universities: [{ id: "univ-1", name: "Yale University", last_changed_at: null }],
+      university_deadlines: [{ university_id: "univ-1", created_at: "2026-09-01T00:00:00Z" }],
+      profiles: [{ id: STUDENT_ID, preferred_language: "en" }],
+    });
+
+    const result = await scanNewUniversityDeadlines(supabase, EMPTY_SUPERSESSION_MAP);
+
+    expect(result.checked).toBe(1);
+    expect(result.hits).toEqual([{ userId: STUDENT_ID, locale: "en", universityId: "univ-1", universityName: "Yale University", source: "deadline", lastChangedAt: "2026-09-01T00:00:00Z" }]);
+  });
+
+  test("a deadline that predates the student tracking the university is not a hit", async () => {
+    const supabase = makeSupabase({
+      target_universities: [{ user_id: STUDENT_ID, university_id: "univ-1", created_at: "2026-09-01T00:00:00Z", status: "target" }],
+      universities: [{ id: "univ-1", name: "Yale University", last_changed_at: null }],
+      university_deadlines: [{ university_id: "univ-1", created_at: "2026-08-01T00:00:00Z" }],
+    });
+
+    const result = await scanNewUniversityDeadlines(supabase, EMPTY_SUPERSESSION_MAP);
+    expect(result.hits).toEqual([]);
+  });
+
+  test("of several deadlines for one university (e.g. several programs' rounds), only the newest one's timestamp is used", async () => {
+    const supabase = makeSupabase({
+      target_universities: [{ user_id: STUDENT_ID, university_id: "univ-1", created_at: "2026-07-01T00:00:00Z", status: "target" }],
+      universities: [{ id: "univ-1", name: "Yale University", last_changed_at: null }],
+      university_deadlines: [
+        { university_id: "univ-1", created_at: "2026-08-01T00:00:00Z" },
+        { university_id: "univ-1", created_at: "2026-09-15T00:00:00Z" },
+        { university_id: "univ-1", created_at: "2026-08-20T00:00:00Z" },
+      ],
+      profiles: [{ id: STUDENT_ID, preferred_language: "en" }],
+    });
+
+    const result = await scanNewUniversityDeadlines(supabase, EMPTY_SUPERSESSION_MAP);
+    expect(result.hits).toHaveLength(1);
+    expect(result.hits[0].lastChangedAt).toBe("2026-09-15T00:00:00Z");
+  });
+
+  test("a university with zero deadline rows is checked but produces no hit", async () => {
+    const supabase = makeSupabase({
+      target_universities: [{ user_id: STUDENT_ID, university_id: "univ-1", created_at: "2026-08-01T00:00:00Z", status: "target" }],
+      universities: [{ id: "univ-1", name: "Yale University", last_changed_at: null }],
+      university_deadlines: [],
+    });
+
+    const result = await scanNewUniversityDeadlines(supabase, EMPTY_SUPERSESSION_MAP);
+    expect(result.checked).toBe(0);
+    expect(result.hits).toEqual([]);
+  });
+});
+
+describe("scanUniversityStatisticsChanges", () => {
+  test("a statistics row whose last_changed_at moved after tracking started is a hit", async () => {
+    const supabase = makeSupabase({
+      target_universities: [{ user_id: STUDENT_ID, university_id: "univ-1", created_at: "2026-08-01T00:00:00Z", status: "target" }],
+      universities: [{ id: "univ-1", name: "Yale University", last_changed_at: null }],
+      university_statistics: [{ university_id: "univ-1", last_changed_at: "2026-09-01T00:00:00Z" }],
+      profiles: [{ id: STUDENT_ID, preferred_language: "en" }],
+    });
+
+    const result = await scanUniversityStatisticsChanges(supabase, EMPTY_SUPERSESSION_MAP);
+
+    expect(result.checked).toBe(1);
+    expect(result.hits).toEqual([{ userId: STUDENT_ID, locale: "en", universityId: "univ-1", universityName: "Yale University", source: "statistics", lastChangedAt: "2026-09-01T00:00:00Z" }]);
+  });
+
+  test("a statistics row that has never been observed to change (null last_changed_at) is checked but not a hit", async () => {
+    const supabase = makeSupabase({
+      target_universities: [{ user_id: STUDENT_ID, university_id: "univ-1", created_at: "2026-08-01T00:00:00Z", status: "target" }],
+      universities: [{ id: "univ-1", name: "Yale University", last_changed_at: null }],
+      university_statistics: [{ university_id: "univ-1", last_changed_at: null }],
+    });
+
+    const result = await scanUniversityStatisticsChanges(supabase, EMPTY_SUPERSESSION_MAP);
+    expect(result.checked).toBe(1);
+    expect(result.hits).toEqual([]);
+  });
+
+  test("of several stat_year rows for one university, only the newest last_changed_at is used", async () => {
+    const supabase = makeSupabase({
+      target_universities: [{ user_id: STUDENT_ID, university_id: "univ-1", created_at: "2026-07-01T00:00:00Z", status: "target" }],
+      universities: [{ id: "univ-1", name: "Yale University", last_changed_at: null }],
+      university_statistics: [
+        { university_id: "univ-1", last_changed_at: "2026-08-01T00:00:00Z" },
+        { university_id: "univ-1", last_changed_at: "2026-09-15T00:00:00Z" },
+        { university_id: "univ-1", last_changed_at: null },
+      ],
+      profiles: [{ id: STUDENT_ID, preferred_language: "en" }],
+    });
+
+    const result = await scanUniversityStatisticsChanges(supabase, EMPTY_SUPERSESSION_MAP);
+    expect(result.hits).toHaveLength(1);
+    expect(result.hits[0].lastChangedAt).toBe("2026-09-15T00:00:00Z");
+  });
+
+  test("a university with zero statistics rows at all is not checked and produces no hit", async () => {
+    const supabase = makeSupabase({
+      target_universities: [{ user_id: STUDENT_ID, university_id: "univ-1", created_at: "2026-08-01T00:00:00Z", status: "target" }],
+      universities: [{ id: "univ-1", name: "Yale University", last_changed_at: null }],
+      university_statistics: [],
+    });
+
+    const result = await scanUniversityStatisticsChanges(supabase, EMPTY_SUPERSESSION_MAP);
     expect(result.checked).toBe(0);
     expect(result.hits).toEqual([]);
   });
