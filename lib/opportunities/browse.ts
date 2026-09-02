@@ -161,7 +161,23 @@ export async function browseOpportunities(
   // joined in above, not a column `opportunities` itself can `.order()` by. Rows Oryn can't
   // vouch for sort below every row it can, regardless of score — a 95% match on a record
   // nobody has verified shouldn't outrank a 40% match on one that's confirmed current.
-  rows.sort((a, b) => Number(a.needsVerification) - Number(b.needsVerification) || b.matchScore - a.matchScore);
+  //
+  // FIXED 2026-09-02 (docs/opportunity-deadline-coverage-2026-09-02.md): that was always the
+  // stated intent of this comment, but the code only demoted `needsVerification`.
+  // `needsVerification` requires `eligible === true` (its own definition, above), and a
+  // `notActionable` row is `eligible: false` by construction (resolveStoredEligibility) — so
+  // a closed cycle or passed deadline landed `needsVerification: false` and sorted in the
+  // SAME top bucket as a genuinely open, verified row, purely on match score. A closed
+  // opportunity with a high score could outrank an open one with a lower score. The card
+  // itself never lied (notActionable already renders the real reason), but the ranking did.
+  // Demoting `notActionable` alongside `needsVerification` is the same shape the "For you"
+  // view already achieves by excluding non-actionable rows outright (page.tsx's ForYouView) —
+  // Browse still shows the row (it deliberately doesn't narrow what's visible), it just stops
+  // outranking rows Oryn can actually vouch for.
+  rows.sort(
+    (a, b) =>
+      Number(a.needsVerification || a.notActionable) - Number(b.needsVerification || b.notActionable) || b.matchScore - a.matchScore
+  );
 
   const start = (page - 1) * PAGE_SIZE;
   return { rows: rows.slice(start, start + PAGE_SIZE), total, pageSize: PAGE_SIZE };

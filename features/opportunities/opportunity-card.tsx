@@ -350,6 +350,23 @@ export function OpportunityCard({
 
         {eligibilityNotes ? <p className="text-xs text-ink-3">{eligibilityNotes}</p> : null}
 
+        {/* ADDED 2026-09-02 (docs/opportunity-deadline-coverage-2026-09-02.md): a
+            no-deadline row today looks identical whether it's rolling admission, a
+            researched-and-current programme just missing one field, or genuinely
+            unresearched -- a live sample found 8 opportunities whose own
+            `current_cycle_label` already says "rolling"/"no fixed deadline" in plain
+            text, and 9 more that are verified, current-cycle, official-source rows
+            (Tufts, Georgetown, Wharton M&TSI...) with nothing distinguishing them from
+            an unresearched one. Display-only, per explicit instruction: this renders the
+            stored string verbatim, never parses it into a structured claim (no
+            deadline_mode, no "this one is rolling" inference) -- if Oryn hasn't recorded
+            a cycle label, this says nothing rather than guessing. Gated on no deadline:
+            when a real deadline exists it's already the clearer, more specific signal,
+            and repeating a cycle label beside it would just be noise. */}
+        {!opportunity.deadline && opportunity.current_cycle_label ? (
+          <p className="text-xs text-ink-3">{t("currentCycleLabelPrefix", { label: opportunity.current_cycle_label })}</p>
+        ) : null}
+
         {/* Descriptors: facts about the opportunity, not warnings about the match. */}
         {descriptors.length > 0 || opportunity.deadline ? (
           <div className="mt-auto flex flex-wrap items-center gap-x-2.5 gap-y-1.5 pt-1 text-xs text-ink-3">

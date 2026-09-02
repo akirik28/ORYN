@@ -397,6 +397,62 @@ describe("browseOpportunities — insufficient verification is labelled, never h
   });
 });
 
+/**
+ * FIXED 2026-09-02 (docs/opportunity-deadline-coverage-2026-09-02.md): the sort key only
+ * ever demoted `needsVerification`, but a `notActionable` row (closed cycle / passed
+ * deadline) is `eligible: false` by construction (resolveStoredEligibility), which makes
+ * `needsVerification` false too — so it landed in the SAME top sort bucket as a genuinely
+ * open, verified row, ranked only by match score. A closed opportunity with a high score
+ * could outrank an open one with a lower score, even though its own card correctly says
+ * "deadline has passed". The row still isn't hidden (Browse deliberately doesn't narrow
+ * what's visible) — only its ranking changed.
+ */
+describe("browseOpportunities — a notActionable row is demoted in sort, same as needsVerification", () => {
+  test("a closed-cycle row with a higher score no longer outranks an open, verified row with a lower one", async () => {
+    const supabase = makeSupabase({
+      opportunities: [
+        opportunity("opp-closed-high-score", { cycle_status: "closed" }),
+        opportunity("opp-open-low-score", { cycle_status: "open", deadline: "2026-12-01", last_verified_at: "2026-08-20T00:00:00Z" }),
+      ],
+      opportunity_matches: [
+        match({ opportunity_id: "opp-closed-high-score", eligible: true, eligibility_notes: null, match_score: 95 }),
+        match({ opportunity_id: "opp-open-low-score", eligible: true, eligibility_notes: null, match_score: 40 }),
+      ],
+    });
+
+    const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
+    expect(rows.map((r) => r.opportunity.id)).toEqual(["opp-open-low-score", "opp-closed-high-score"]);
+  });
+
+  test("a past-deadline row with a higher score no longer outranks a genuinely open row with a lower one", async () => {
+    const supabase = makeSupabase({
+      opportunities: [
+        opportunity("opp-past-deadline-high-score", { cycle_status: "open", deadline: "2020-01-01" }),
+        opportunity("opp-future-deadline-low-score", { cycle_status: "open", deadline: "2026-12-01", last_verified_at: "2026-08-20T00:00:00Z" }),
+      ],
+      opportunity_matches: [
+        match({ opportunity_id: "opp-past-deadline-high-score", eligible: true, eligibility_notes: null, match_score: 90 }),
+        match({ opportunity_id: "opp-future-deadline-low-score", eligible: true, eligibility_notes: null, match_score: 30 }),
+      ],
+    });
+
+    const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
+    expect(rows.map((r) => r.opportunity.id)).toEqual(["opp-future-deadline-low-score", "opp-past-deadline-high-score"]);
+  });
+
+  test("the row keeps its place in the catalogue -- demoted, never hidden", async () => {
+    const supabase = makeSupabase({
+      opportunities: [opportunity("opp-closed", { cycle_status: "closed" })],
+      opportunity_matches: [match({ opportunity_id: "opp-closed", eligible: true, eligibility_notes: null, match_score: 99 })],
+    });
+
+    const { rows, total } = await browseOpportunities(supabase, USER_ID, {}, 1);
+    expect(total).toBe(1);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].notActionable).toBe(true);
+  });
+});
+
 describe("browseOpportunities — a stored eligibility note and the verification caveat coexist", () => {
   test("both are shown: they answer different questions and the badge would otherwise be unexplained", async () => {
     const supabase = makeSupabase({

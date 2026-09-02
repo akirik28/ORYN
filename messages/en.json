@@ -908,7 +908,8 @@
       "saved": "Saved",
       "applied": "Applied",
       "notInterestedAriaLabel": "Not interested",
-      "taughtInPrefix": "Taught in {languages}"
+      "taughtInPrefix": "Taught in {languages}",
+      "currentCycleLabelPrefix": "Current cycle: {label}"
     },
     "matchTier": {
       "exceptional": "Exceptional match",
