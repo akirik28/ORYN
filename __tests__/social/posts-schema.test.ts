@@ -138,7 +138,27 @@ describe("migration numbering", () => {
     // unapplied-column degradation pattern 0077/persist.ts already proved out, for the
     // same reason: an UPDATE naming a column that doesn't exist throws on every call, not
     // just the ones that would have matched a row.
-    expect(Math.max(...numbers.map(Number))).toBe(84);
+    //
+    // 0084 (skills_languages_source) gives skills/languages the same `source` column
+    // (manual/cv_import) every other achievement table has had since migration 0004 --
+    // CV extraction already pulls both categories, but neither the review surface nor the
+    // save path ever did anything with them until this pass wired them in, and a
+    // CV-imported row needs the same provenance tag every other imported claim carries.
+    //
+    // 0085 (drop_system_notification_category) is the last of the eight
+    // `notification_category` values with no writer, resolved rather than left flagged a
+    // third time: docs/handoffs/notification-categories-audit-2026-09-01.md recommended
+    // removing it back on 09-01 without drafting the migration; this is that migration,
+    // decided only after checking both concrete uses raised for keeping it (an async
+    // export-ready notification -- doesn't apply, export-data/route.ts is a synchronous
+    // GET with no later "ready" moment; a failed-job alert -- doesn't apply either, that
+    // already has its own home in features/admin/sections/{scheduled-jobs,provider-health}
+    // -section.tsx, unconnected to this student-facing table) and finding neither real.
+    // Zero of 113 live notifications rows use it, and it is the only column anywhere on
+    // `notification_category` (checked via information_schema.columns), so the type-swap
+    // recreate-the-enum pattern this migration uses has no data to lose and nothing else
+    // to fan out to.
+    expect(Math.max(...numbers.map(Number))).toBe(85);
   });
 });
 
