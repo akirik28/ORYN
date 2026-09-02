@@ -5,13 +5,19 @@ opportunity şeylerini araştır — yani iş var, 'iş bitti' deyip durma."*
 
 ## Nasıl kullanılır
 
-Bir paket bitip başka bir görev verilmediyse **buradan sıradaki boş bölgeyi al**, entegratöre
-(oryn-a7) hangisini aldığını söyle, ve bu dosyada o satırı `SAHİPLİ — <lane>` olarak işaretle.
-Aynı anda iki lane aynı bölgede çalışmasın; çakışma bu gece iki kez migration numarasında
-yaşandı ve ikisi de "sıradakini aldım" varsayımından çıktı.
+**Bu kuyruk entegratörün (oryn-a7) dağıtım listesidir. Lane kendi kendine bölge almaz.**
 
-**Boşta beklemek yerine buradan al.** Ama bir bölgeyi almadan önce **o bölgede daha önce ne
-yapıldığını oku** — bu gece dört oturum, hafızada zaten yazılı bir bilgiyi yeniden keşfetti.
+Bir paket bittiğinde: entegratöre bildir ve **sıradaki işi ondan iste.** Buradan kendin
+seçme — founder'ın açık talimatı bu yönde: *"sana sorsunlar, organizasyondan açık
+vermeyelim."*
+
+Sebebi somut: iki lane aynı bölgeye girdiğinde çakışma çıkıyor. Bu gece migration
+numarasında iki kez yaşandı ve ikisi de "sıradakini aldım" varsayımından çıktı. Tek bir yerden
+dağıtılmadığında kimin neyi aldığı da, ne kadarının bittiği de kimsede toplu durmuyor.
+
+Entegratör bir bölge verdiğinde o satırı `SAHİPLİ — <lane>` olarak işaretler. Bir bölgeye
+başlamadan önce **o bölgede daha önce ne yapıldığını oku** — bu gece dört oturum, hafızada
+zaten yazılı bir bilgiyi yeniden keşfetti.
 
 ## Ölçülmüş boşluklar — hepsi bu gece canlı veriden doğrulandı
 
