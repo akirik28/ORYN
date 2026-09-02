@@ -5,8 +5,10 @@ import {
   recomputeDataStatus,
   detectStaleUniversities,
   detectStaleUniversityRequirements,
+  detectStaleUniversityDeadlines,
   UNIVERSITY_STALE_AFTER_DAYS,
   UNIVERSITY_REQUIREMENT_STALE_AFTER_DAYS,
+  UNIVERSITY_DEADLINE_STALE_AFTER_DAYS,
 } from "@/lib/jobs/detect-stale-data";
 
 const NOW = new Date("2026-09-01T12:00:00Z");
@@ -176,5 +178,57 @@ describe("detectStaleUniversityRequirements", () => {
 
     expect(changes).toEqual([{ table: "university_requirements", id: "r-4", from: "stale", to: "fresh" }]);
     expect(updates).toEqual([{ table: "university_requirements", id: "r-4", patch: { data_status: "fresh" } }]);
+  });
+});
+
+/**
+ * detectStaleUniversityDeadlines — added 2026-09-02 once migration 0074 was confirmed live
+ * (list_migrations had wrongly reported it unapplied — see
+ * reference_list_migrations_unreliable_use_direct_probe in memory). Mirrors
+ * detectStaleUniversities exactly: no retrieved_at-equivalent column exists on this table,
+ * so the fallback is the same two-level last_checked_at ?? created_at chain.
+ */
+describe("detectStaleUniversityDeadlines", () => {
+  it("flags a deadline past the threshold as stale, leaves a recent one fresh, and never touches needs_review", async () => {
+    const rows = [
+      { id: "d-old", data_status: "fresh" as DataStatus, last_checked_at: daysAgo(UNIVERSITY_DEADLINE_STALE_AFTER_DAYS + 5), created_at: daysAgo(400) },
+      { id: "d-recent", data_status: "fresh" as DataStatus, last_checked_at: daysAgo(2), created_at: daysAgo(400) },
+      { id: "d-review", data_status: "needs_review" as DataStatus, last_checked_at: daysAgo(UNIVERSITY_DEADLINE_STALE_AFTER_DAYS + 500), created_at: daysAgo(600) },
+    ];
+    const { supabase, updates } = makeSupabaseMock("university_deadlines", rows);
+
+    const { changes, checked } = await detectStaleUniversityDeadlines(supabase, NOW);
+
+    expect(checked).toBe(3);
+    expect(changes).toEqual([{ table: "university_deadlines", id: "d-old", from: "fresh", to: "stale" }]);
+    expect(updates).toEqual([{ table: "university_deadlines", id: "d-old", patch: { data_status: "stale" } }]);
+  });
+
+  it("falls back to created_at when last_checked_at was never set — matches every real row in the table today (migration 0074 deliberately left last_checked_at NULL rather than backfilled)", async () => {
+    const rows = [{ id: "d-never-checked", data_status: "fresh" as DataStatus, last_checked_at: null, created_at: daysAgo(UNIVERSITY_DEADLINE_STALE_AFTER_DAYS + 1) }];
+    const { supabase } = makeSupabaseMock("university_deadlines", rows);
+
+    const { changes } = await detectStaleUniversityDeadlines(supabase, NOW);
+
+    expect(changes).toEqual([{ table: "university_deadlines", id: "d-never-checked", from: "fresh", to: "stale" }]);
+  });
+
+  it("a recently-created row (the shape of live data as of 2026-09-02: 0-16 days old) stays fresh", async () => {
+    const rows = [{ id: "d-fresh-batch", data_status: "fresh" as DataStatus, last_checked_at: null, created_at: daysAgo(16) }];
+    const { supabase } = makeSupabaseMock("university_deadlines", rows);
+
+    const { changes } = await detectStaleUniversityDeadlines(supabase, NOW);
+
+    expect(changes).toEqual([]);
+  });
+
+  it("a stale row that was genuinely re-checked recently self-heals back to fresh", async () => {
+    const rows = [{ id: "d-healed", data_status: "stale" as DataStatus, last_checked_at: daysAgo(1), created_at: daysAgo(500) }];
+    const { supabase, updates } = makeSupabaseMock("university_deadlines", rows);
+
+    const { changes } = await detectStaleUniversityDeadlines(supabase, NOW);
+
+    expect(changes).toEqual([{ table: "university_deadlines", id: "d-healed", from: "stale", to: "fresh" }]);
+    expect(updates).toEqual([{ table: "university_deadlines", id: "d-healed", patch: { data_status: "fresh" } }]);
   });
 });
