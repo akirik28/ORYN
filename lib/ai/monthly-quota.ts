@@ -179,12 +179,15 @@ export interface MonthlyQuota {
   usedIsKnown: boolean;
 }
 
-/** First instant of the current UTC calendar month. */
-function startOfMonthUTC(now = new Date()): Date {
+/** First instant of the current UTC calendar month. Exported 2026-09-02 --
+ * lib/advisor/upgrade-prompt.ts's "rest of the billing month" suppression window needs the
+ * exact same month boundary this file already uses for the AI-allowance reset, not a second,
+ * independently-written one that could quietly drift from it. */
+export function startOfMonthUTC(now = new Date()): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 }
 
-function startOfNextMonthUTC(now = new Date()): Date {
+export function startOfNextMonthUTC(now = new Date()): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
 }
 

@@ -14,6 +14,7 @@ import { isUndefinedColumnError } from "@/lib/supabase/errors";
 import { formatAbsoluteDate } from "@/lib/i18n/date";
 import { resolveResponseMode } from "@/lib/tier/response-mode";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
+import { computeNotNowUpdate, computeSoftDismissUntil } from "@/lib/advisor/upgrade-prompt";
 import type { AIMessage } from "@/lib/ai/provider";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -351,5 +352,74 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
     }
     revalidatePath("/advisor");
     return { error: errorMessage };
+  }
+}
+
+/**
+ * A passive dismiss of the upgrade prompt (click away, close without an explicit choice) —
+ * suppresses for 7 days. Distinct control from notNowUpgradePrompt below: this is what a
+ * plain close does, not the "Not now" button (docs/research/upgrade-prompt-frequency-
+ * precedent-2026-09-02.md's own distinction between a passive dismissal and an explicit
+ * decline, which earn different suppression lengths).
+ *
+ * Never surfaces an error to the caller. Closing a dismissible pop-up is not an action a
+ * student should see fail — the overlay hides client-side regardless of whether this write
+ * actually lands, same "never blocking" posture as the prompt itself. Real failures are
+ * still logged server-side for visibility; isUndefinedColumnError's branch (migration 0093
+ * unapplied) isn't logged at all, since that's the expected, unremarkable steady state.
+ */
+export async function softDismissUpgradePrompt(): Promise<void> {
+  const session = await requireUser();
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ upgrade_prompt_soft_dismissed_until: computeSoftDismissUntil() })
+    .eq("id", session.userId!);
+
+  if (error && !isUndefinedColumnError(error, "upgrade_prompt_")) {
+    console.warn("[advisor] failed to record upgrade-prompt soft dismiss", { userId: session.userId, error });
+  }
+}
+
+/**
+ * An explicit "Not now" click (equal visual weight to the CTA, per the design spec's own
+ * copy constraint). Read-then-write, not a blind increment — computeNotNowUpdate
+ * (lib/advisor/upgrade-prompt.ts) needs the PRIOR upgrade_prompt_not_now_at to decide
+ * whether this is the second explicit decline in a later calendar month, which is the
+ * escalation to permanent. On migration 0093 unapplied, the read already comes back empty
+ * (same isUndefinedColumnError path), so this computes against the same "never declined
+ * before" default the read side uses — the write then also fails the same way and is
+ * swallowed identically. Same never-surfaces-an-error posture as softDismissUpgradePrompt
+ * above, for the same reason.
+ */
+export async function notNowUpgradePrompt(): Promise<void> {
+  const session = await requireUser();
+  const supabase = await createClient();
+
+  const { data: current, error: readError } = await supabase
+    .from("profiles")
+    .select("upgrade_prompt_not_now_at, upgrade_prompt_not_now_count")
+    .eq("id", session.userId!)
+    .maybeSingle();
+
+  if (readError && !isUndefinedColumnError(readError, "upgrade_prompt_")) {
+    console.warn("[advisor] failed to read prior upgrade-prompt not-now state", { userId: session.userId, error: readError });
+  }
+
+  const row = current as { upgrade_prompt_not_now_at: string | null; upgrade_prompt_not_now_count: number | null } | null;
+  const update = computeNotNowUpdate(row?.upgrade_prompt_not_now_at ?? null, row?.upgrade_prompt_not_now_count ?? 0);
+
+  const { error: writeError } = await supabase
+    .from("profiles")
+    .update({
+      upgrade_prompt_not_now_at: update.notNowAt,
+      upgrade_prompt_not_now_count: update.notNowCount,
+      upgrade_prompt_dismissed_forever: update.dismissedForever,
+    })
+    .eq("id", session.userId!);
+
+  if (writeError && !isUndefinedColumnError(writeError, "upgrade_prompt_")) {
+    console.warn("[advisor] failed to record upgrade-prompt not-now", { userId: session.userId, error: writeError });
   }
 }

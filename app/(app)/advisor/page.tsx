@@ -20,6 +20,7 @@ import { MonthlyUsageMeter } from "@/features/advisor/monthly-usage-meter";
 import { ResponseModeSlider } from "@/features/advisor/response-mode-slider";
 import { resolveResponseMode } from "@/lib/tier/response-mode";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
+import { getUpgradePromptDismissalState } from "@/lib/advisor/upgrade-prompt";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tMeta = await getTranslations("nav");
@@ -33,12 +34,16 @@ export default async function AdvisorPage() {
   const locale = await resolveLocale();
   const t = await getTranslations("advisor.page");
 
-  const [conversationRes, profile, scores, upcomingDeadlines] = await Promise.all([
+  const [conversationRes, profile, scores, upcomingDeadlines, upgradePromptDismissalState] = await Promise.all([
     supabase.from("advisor_conversations").select("*").eq("user_id", userId).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
     getCurrentProfile(),
     // Shared, cache()'d — docs/performance.md §2; see app/(app)/layout.tsx's identical use.
     getProfileScores(userId),
     getUpcomingDeadlines(supabase, userId, 10),
+    // Migration 0093 — degrades to NOT_YET_DISMISSED on its own, safe to run unconditionally
+    // for every tier (an Ultra student's read is simply never acted on, since
+    // shouldShowUpgradePrompt's own tier gate makes the rest of this state irrelevant for them).
+    getUpgradePromptDismissalState(userId),
   ]);
 
   // The allowance the chat actually enforces (app/(app)/advisor/actions.ts) — shared
@@ -130,6 +135,8 @@ export default async function AdvisorPage() {
               // reported as exhausted, only a genuinely confirmed zero is.
               quotaExhausted={quota.usedIsKnown && quota.remaining <= 0}
               quotaResetsAt={quota.resetsAt}
+              tier={planTier}
+              upgradePromptDismissalState={upgradePromptDismissalState}
             />
           </div>
           <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">

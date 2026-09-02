@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
 import { describe, test, expect, afterEach, vi } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 import { AdvisorChat } from "@/features/advisor/advisor-chat";
+import { sendAdvisorMessage, notNowUpgradePrompt, softDismissUpgradePrompt } from "@/app/(app)/advisor/actions";
+import { NOT_YET_DISMISSED } from "@/lib/advisor/upgrade-prompt";
 import type { AdvisorMessage } from "@/types/database";
 
 /**
@@ -26,7 +28,12 @@ import type { AdvisorMessage } from "@/types/database";
  * exactly that: a code-path answer, not a live-observed one.
  */
 
-vi.mock("@/app/(app)/advisor/actions", () => ({ sendAdvisorMessage: vi.fn(), retryAdvisorMessage: vi.fn() }));
+vi.mock("@/app/(app)/advisor/actions", () => ({
+  sendAdvisorMessage: vi.fn(),
+  retryAdvisorMessage: vi.fn(),
+  softDismissUpgradePrompt: vi.fn(),
+  notNowUpgradePrompt: vi.fn(),
+}));
 
 // jsdom doesn't implement Element.scrollTo — AdvisorChat's own auto-scroll-on-new-message
 // effect calls it unconditionally, unrelated to anything this file actually tests.
@@ -35,12 +42,17 @@ Element.prototype.scrollTo = vi.fn();
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  // The upgrade-prompt overlay's own "shown once per session" cap is tracked here
+  // (features/advisor/advisor-chat.tsx) — real jsdom sessionStorage, not a mock, and it
+  // persists across tests within one file unless cleared, which would make a later test's
+  // result depend on test order.
+  sessionStorage.clear();
 });
 
-function renderChat(initialMessages: AdvisorMessage[]) {
+function renderChat(initialMessages: AdvisorMessage[], props: Partial<Parameters<typeof AdvisorChat>[0]> = {}) {
   return render(
     <NextIntlClientProvider locale="en" messages={en}>
-      <AdvisorChat conversationId="f5bc7909-6cee-485f-931f-fb322a940ebb" initialMessages={initialMessages} aiConfigured={true} />
+      <AdvisorChat conversationId="f5bc7909-6cee-485f-931f-fb322a940ebb" initialMessages={initialMessages} aiConfigured={true} {...props} />
     </NextIntlClientProvider>,
   );
 }
@@ -95,5 +107,93 @@ describe("AdvisorChat — the code path oryn.qa.b's own data cannot currently ex
   test("degraded: false still renders no note, same as the real data above — pinned explicitly, not only inferred", () => {
     renderChat([row({ id: "synthetic-2", role: "assistant", degraded: false, content: "A normal answer." })]);
     expect(screen.queryByText("Shorter reply")).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * The upgrade-prompt overlay (features/advisor/upgrade-prompt-overlay.tsx) — exercised
+ * through a real submit(), not the initial-render path above, since maybeShowUpgradePrompt
+ * only ever fires from a genuinely new reply's own result-handling code, never from seeding
+ * initialMessages. That's the mechanism that makes "only the first qualifying reply, never a
+ * reloaded historical one" true by construction rather than something asserted separately.
+ */
+async function sendAndAwaitReply(degraded: boolean) {
+  vi.mocked(sendAdvisorMessage).mockResolvedValue({
+    conversationId: "f5bc7909-6cee-485f-931f-fb322a940ebb",
+    assistantMessageId: "new-reply",
+    content: "A reply.",
+    degraded,
+  });
+  fireEvent.change(screen.getByPlaceholderText("Ask Oryn…"), { target: { value: "A question" } });
+  fireEvent.click(screen.getByRole("button", { name: "Send message" }));
+  await waitFor(() => expect(screen.getByText("A reply.")).toBeInTheDocument());
+}
+
+describe("AdvisorChat — upgrade prompt overlay (founder-approved pop-up, frequency-capped)", () => {
+  test("a degraded reply shows the overlay for a standard-tier student", async () => {
+    renderChat([], { tier: "standard" });
+    await sendAndAwaitReply(true);
+    expect(screen.getByText("See Ultra")).toBeInTheDocument();
+    expect(screen.getByText("Not now")).toBeInTheDocument();
+  });
+
+  test("never for Ultra — the same degraded reply shows nothing on an ultra-tier student", async () => {
+    renderChat([], { tier: "ultra" });
+    await sendAndAwaitReply(true);
+    expect(screen.queryByText("See Ultra")).not.toBeInTheDocument();
+  });
+
+  test("a non-degraded reply never shows the overlay, regardless of tier", async () => {
+    renderChat([], { tier: "standard" });
+    await sendAndAwaitReply(false);
+    expect(screen.queryByText("See Ultra")).not.toBeInTheDocument();
+  });
+
+  test("dismissed_forever suppresses the overlay even on a genuinely new degraded reply", async () => {
+    renderChat([], { tier: "standard", upgradePromptDismissalState: { ...NOT_YET_DISMISSED, dismissedForever: true } });
+    await sendAndAwaitReply(true);
+    expect(screen.queryByText("See Ultra")).not.toBeInTheDocument();
+  });
+
+  test("'Not now' hides the overlay immediately and calls notNowUpgradePrompt, not softDismissUpgradePrompt", async () => {
+    vi.mocked(notNowUpgradePrompt).mockResolvedValue(undefined);
+    renderChat([], { tier: "standard" });
+    await sendAndAwaitReply(true);
+
+    fireEvent.click(screen.getByText("Not now"));
+
+    expect(screen.queryByText("See Ultra")).not.toBeInTheDocument();
+    expect(notNowUpgradePrompt).toHaveBeenCalledTimes(1);
+    expect(softDismissUpgradePrompt).not.toHaveBeenCalled();
+  });
+
+  test("the close (×) control hides the overlay and calls softDismissUpgradePrompt, not notNowUpgradePrompt", async () => {
+    vi.mocked(softDismissUpgradePrompt).mockResolvedValue(undefined);
+    renderChat([], { tier: "standard" });
+    await sendAndAwaitReply(true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+
+    expect(screen.queryByText("See Ultra")).not.toBeInTheDocument();
+    expect(softDismissUpgradePrompt).toHaveBeenCalledTimes(1);
+    expect(notNowUpgradePrompt).not.toHaveBeenCalled();
+  });
+
+  test("once per session — a second degraded reply in the same render does not show a second overlay", async () => {
+    renderChat([], { tier: "standard" });
+    await sendAndAwaitReply(true);
+    fireEvent.click(screen.getByText("Not now")); // clears this one so a second could render if the cap didn't hold
+
+    vi.mocked(sendAdvisorMessage).mockResolvedValue({
+      conversationId: "f5bc7909-6cee-485f-931f-fb322a940ebb",
+      assistantMessageId: "new-reply-2",
+      content: "A second reply.",
+      degraded: true,
+    });
+    fireEvent.change(screen.getByPlaceholderText("Ask Oryn…"), { target: { value: "Another question" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send message" }));
+    await waitFor(() => expect(screen.getByText("A second reply.")).toBeInTheDocument());
+
+    expect(screen.queryByText("See Ultra")).not.toBeInTheDocument();
   });
 });

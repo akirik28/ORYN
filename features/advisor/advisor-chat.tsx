@@ -8,10 +8,39 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AdvisorMessage, AdvisorMessageThinking } from "@/components/oryn/advisor-message";
 import { Eyebrow } from "@/components/oryn/eyebrow";
-import { sendAdvisorMessage, retryAdvisorMessage } from "@/app/(app)/advisor/actions";
+import { UpgradePromptOverlay } from "@/features/advisor/upgrade-prompt-overlay";
+import { sendAdvisorMessage, retryAdvisorMessage, softDismissUpgradePrompt, notNowUpgradePrompt } from "@/app/(app)/advisor/actions";
+import { shouldShowUpgradePrompt, NOT_YET_DISMISSED, type UpgradePromptDismissalState } from "@/lib/advisor/upgrade-prompt";
 import { formatAbsoluteDate } from "@/lib/i18n/date";
 import type { Locale } from "@/lib/i18n/config";
-import type { AdvisorMessage as AdvisorMessageRow } from "@/types/database";
+import type { AdvisorMessage as AdvisorMessageRow, PlanTier } from "@/types/database";
+
+/** sessionStorage, not state -- "shown once per session" needs to survive this component
+ * remounting (a route change and back) within the same tab, but must NOT survive a new tab
+ * or a new day, which is exactly sessionStorage's own lifetime and none of localStorage's.
+ * The durable dismissal tiers (soft/not-now/forever) are a different question, answered by
+ * lib/advisor/upgrade-prompt.ts against the database -- this key only ever answers "have I
+ * shown it in this browser tab already," nothing more. */
+const UPGRADE_PROMPT_SESSION_KEY = "oryn:upgrade-prompt-shown";
+
+function hasShownUpgradePromptThisSession(): boolean {
+  try {
+    return sessionStorage.getItem(UPGRADE_PROMPT_SESSION_KEY) === "1";
+  } catch {
+    // Private browsing / storage disabled -- fail toward "not shown yet" rather than
+    // throwing, same posture as every other best-effort read in this feature.
+    return false;
+  }
+}
+
+function markUpgradePromptShownThisSession(): void {
+  try {
+    sessionStorage.setItem(UPGRADE_PROMPT_SESSION_KEY, "1");
+  } catch {
+    // Nothing to recover -- worst case this reappears once more later in the same
+    // session, which the durable per-account caps still bound.
+  }
+}
 
 interface LocalMessage {
   id: string;
@@ -37,6 +66,8 @@ export function AdvisorChat({
   aiConfigured,
   quotaExhausted = false,
   quotaResetsAt,
+  tier = "standard",
+  upgradePromptDismissalState = NOT_YET_DISMISSED,
 }: {
   conversationId: string | null;
   initialMessages: AdvisorMessageRow[];
@@ -50,6 +81,13 @@ export function AdvisorChat({
   /** ISO date the allowance resets — required to say something concrete rather than "soon"
    * whenever `quotaExhausted` is true; unused otherwise. */
   quotaResetsAt?: string;
+  /** Both optional, same "existing caller/test renders exactly as before" convention as
+   * quotaExhausted above — a caller not yet passing these gets tier="standard" (the more
+   * conservative default: the prompt CAN evaluate as eligible, same as a real standard
+   * account) and NOT_YET_DISMISSED (no suppression active), so nothing about not passing
+   * these silently blocks the feature for a caller that simply hasn't been updated yet. */
+  tier?: PlanTier;
+  upgradePromptDismissalState?: UpgradePromptDismissalState;
 }) {
   const t = useTranslations("advisor.chat");
   const locale = useLocale() as Locale;
@@ -86,12 +124,56 @@ export function AdvisorChat({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  // Which message (if any) currently shows the upgrade-prompt overlay directly below it —
+  // at most one at a time, by construction: maybeShowUpgradePrompt only ever sets this once
+  // per session (hasShownUpgradePromptThisSession), and nothing else clears it except the
+  // student's own dismissal.
+  const [upgradePromptMessageId, setUpgradePromptMessageId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const localIdCounter = useRef(0);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  /**
+   * The one call site for lib/advisor/upgrade-prompt.ts's shouldShowUpgradePrompt — called
+   * exactly once per genuinely new reply (from submit()'s and retry()'s own result-handling
+   * code below, never from a render pass over historical messages), which is what makes
+   * "only on the first qualifying reply" true by construction rather than something this
+   * function has to separately enforce beyond the session-shown check.
+   *
+   * `isStreaming` is always `false` here deliberately, not a placeholder — this component
+   * has no token-by-token streaming (the "thinking" placeholder is a spinner until the full
+   * reply arrives in one Server Action response), so by the time this runs the reply is
+   * already fully arrived, never mid-generation. Kept as an explicit field on
+   * UpgradePromptContext (not silently dropped) so a future streaming implementation has an
+   * obvious place to wire a real value in, rather than needing to rediscover the requirement.
+   */
+  function maybeShowUpgradePrompt(messageId: string, degraded: boolean | undefined) {
+    if (hasShownUpgradePromptThisSession()) return;
+    const shouldShow = shouldShowUpgradePrompt(
+      { tier, degraded: degraded ?? false, isStreaming: false, hasUnsentComposerText: input.trim().length > 0, alreadyShownThisSession: false },
+      upgradePromptDismissalState,
+    );
+    if (!shouldShow) return;
+    markUpgradePromptShownThisSession();
+    setUpgradePromptMessageId(messageId);
+  }
+
+  // Not wrapped in startTransition (that one is tied to isPending, which disables the
+  // composer while a message is in flight — an unrelated concern to a dismiss click). The
+  // overlay hides optimistically either way; these are fire-and-forget, matching the Server
+  // Actions' own contract of never surfacing an error for exactly this reason.
+  function handleUpgradePromptNotNow() {
+    setUpgradePromptMessageId(null);
+    void notNowUpgradePrompt();
+  }
+
+  function handleUpgradePromptSoftDismiss() {
+    setUpgradePromptMessageId(null);
+    void softDismissUpgradePrompt();
+  }
 
   function submit(content: string) {
     // The composer is already disabled while exhausted (see the Textarea/Button props
@@ -142,6 +224,7 @@ export function AdvisorChat({
             : m,
         )
       );
+      maybeShowUpgradePrompt(result.assistantMessageId ?? "thinking", result.degraded);
     });
   }
 
@@ -160,6 +243,7 @@ export function AdvisorChat({
       setMessages((prev) =>
         prev.map((m) => (m.id === messageId ? { ...m, pending: false, failed: false, content: result.content ?? "", degraded: result.degraded } : m)),
       );
+      maybeShowUpgradePrompt(messageId, result.degraded);
     });
   }
 
@@ -238,6 +322,15 @@ export function AdvisorChat({
                   <p className="mt-4 border-t border-border pt-3 text-sm text-ink-3">
                     {t("degradeNote.detail")}
                   </p>
+                ) : null}
+                {/* Anchored here, not as a page-level overlay -- see
+                    upgrade-prompt-overlay.tsx's own doc comment for why document-flow
+                    placement is what makes "never covers the reply" true by construction.
+                    Rendered as a sibling of the message content, inside the same
+                    AdvisorMessage, so it visually reads as attached to this specific reply
+                    without needing its own positioning logic. */}
+                {upgradePromptMessageId === message.id ? (
+                  <UpgradePromptOverlay onNotNow={handleUpgradePromptNotNow} onSoftDismiss={handleUpgradePromptSoftDismiss} />
                 ) : null}
               </AdvisorMessage>
             ),
