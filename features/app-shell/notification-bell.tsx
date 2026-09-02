@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Bell, CheckCheck } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { markReadIfUnread, markAllRead } from "@/features/notifications/mark-read";
+import { markReadIfUnread, markAllRead, markGroupRead } from "@/features/notifications/mark-read";
+import { groupNotifications, describeGroup, type Translate } from "@/features/notifications/group";
 import { formatRelativeTime } from "@/lib/i18n/date";
 import { toLocale } from "@/lib/i18n/config";
 import type { Notification } from "@/types/database";
@@ -22,7 +23,12 @@ export function NotificationBell({ notifications, unreadCount }: { notifications
   // A real total from the caller, not derived from `notifications` — that list is capped
   // (app/(app)/layout.tsx fetches the most recent 20) so filtering it silently under-counts
   // once a student has more than 20 unread. See that layout's own comment for the incident
-  // this was found from.
+  // this was found from. `unreadCount` stays that raw row count even once grouping collapses
+  // the popover's own rows — features/notifications/group.ts's own header explains why the
+  // badge and the list are allowed to disagree in shape: the badge answers "how much is
+  // unread," the list answers "how many things do I need to look at," and collapsing the
+  // second must never quietly change the first.
+  const items = useMemo(() => groupNotifications(notifications), [notifications]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -71,48 +77,61 @@ export function NotificationBell({ notifications, unreadCount }: { notifications
           ) : null}
         </div>
         <div className="max-h-96 overflow-y-auto">
-          {notifications.length === 0 ? (
+          {items.length === 0 ? (
             <p className="px-4 py-7 text-center text-[13px]" style={{ color: "#AAAABC" }}>{t("allCaughtUp")}</p>
           ) : (
-            notifications.map((notification) => {
-              const rowClassName = cn(
-                "flex w-full items-start gap-2.5 border-b px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-accent",
-                !notification.read_at ? "bg-[#FAFAFE]" : "bg-transparent"
-              );
+            items.map((item) => {
+              const key = item.kind === "single" ? item.notification.id : `group-${item.category}`;
+              const unread = item.kind === "single" ? !item.notification.read_at : true; // a group is unread-only by construction (group.ts)
+              const { title, body, link, createdAt, onActivate } =
+                item.kind === "single"
+                  ? {
+                      title: item.notification.title,
+                      body: item.notification.body,
+                      link: item.notification.link,
+                      createdAt: item.notification.created_at,
+                      onActivate: () => {
+                        setOpen(false);
+                        markReadIfUnread(item.notification, startTransition);
+                      },
+                    }
+                  : (() => {
+                      const d = describeGroup(item, t as Translate);
+                      return {
+                        ...d,
+                        createdAt: item.notifications[0].created_at,
+                        onActivate: () => {
+                          setOpen(false);
+                          markGroupRead(item.notifications.map((n) => n.id), startTransition);
+                        },
+                      };
+                    })();
+
+              const rowClassName = cn("flex w-full items-start gap-2.5 border-b px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-accent", unread ? "bg-[#FAFAFE]" : "bg-transparent");
               const rowContent = (
                 <>
-                  <span
-                    aria-hidden="true"
-                    style={{ background: notification.read_at ? "#D0D0E0" : "#3D35E8" }}
-                    className="mt-[5px] size-2 shrink-0 rounded-full"
-                  />
+                  <span aria-hidden="true" style={{ background: unread ? "#3D35E8" : "#D0D0E0" }} className="mt-[5px] size-2 shrink-0 rounded-full" />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[13px] leading-snug font-semibold" style={{ color: "#111118" }}>{notification.title}</span>
-                    {notification.body ? (
-                      <span className="mt-0.5 line-clamp-2 text-xs leading-[1.45]" style={{ color: "#7A7A8A" }}>{notification.body}</span>
-                    ) : null}
+                    <span className="block text-[13px] leading-snug font-semibold" style={{ color: "#111118" }}>{title}</span>
+                    {body ? <span className="mt-0.5 line-clamp-2 text-xs leading-[1.45]" style={{ color: "#7A7A8A" }}>{body}</span> : null}
                     <span className="mt-1 block text-[11px]" style={{ color: "#AAAABC" }}>
-                      {formatRelativeTime(notification.created_at, locale)}
+                      {formatRelativeTime(createdAt, locale)}
                     </span>
                   </span>
                 </>
               );
-              const onActivate = () => {
-                setOpen(false);
-                markReadIfUnread(notification, startTransition);
-              };
 
               // A notification with no `link` previously still rendered as a Link, falling
               // back to `href="#"` — a tap dutifully marked it read but visibly went
               // nowhere, indistinguishable from a dead control. Rendered as a real button
               // instead when there's nothing to navigate to, so the affordance matches what
               // actually happens on click.
-              return notification.link ? (
-                <Link key={notification.id} href={notification.link} onClick={onActivate} className={rowClassName}>
+              return link ? (
+                <Link key={key} href={link} onClick={onActivate} className={rowClassName}>
                   {rowContent}
                 </Link>
               ) : (
-                <button key={notification.id} type="button" onClick={onActivate} className={rowClassName}>
+                <button key={key} type="button" onClick={onActivate} className={rowClassName}>
                   {rowContent}
                 </button>
               );

@@ -20,13 +20,13 @@ import "@testing-library/jest-dom/vitest";
  * Package 5's rollback case.
  */
 
-vi.mock("@/app/(app)/notifications/actions", () => ({ markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn() }));
+vi.mock("@/app/(app)/notifications/actions", () => ({ markNotificationRead: vi.fn(), markAllNotificationsRead: vi.fn(), markNotificationsRead: vi.fn() }));
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 import { NotificationBell } from "@/features/app-shell/notification-bell";
-import { markNotificationRead, markAllNotificationsRead } from "@/app/(app)/notifications/actions";
+import { markNotificationRead, markAllNotificationsRead, markNotificationsRead } from "@/app/(app)/notifications/actions";
 import { toast } from "sonner";
 import type { Notification } from "@/types/database";
 
@@ -47,6 +47,7 @@ function notification(overrides: Partial<Notification> = {}): Notification {
 beforeEach(() => {
   vi.mocked(markNotificationRead).mockReset();
   vi.mocked(markAllNotificationsRead).mockReset();
+  vi.mocked(markNotificationsRead).mockReset();
   vi.mocked(toast.error).mockReset();
 });
 
@@ -142,5 +143,74 @@ describe("NotificationBell — failure path (docs/feat2-error-surfacing-audit-20
     fireEvent.click(screen.getByRole("button", { name: /Mark all read/ }));
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Couldn't update notifications."));
+  });
+});
+
+/**
+ * features/notifications/group.ts's grouping, exercised through the real component rather
+ * than only the pure function — deadline (this file's default fixture category) never
+ * groups, so none of the tests above touch this path at all.
+ */
+describe("NotificationBell — grouping (features/notifications/group.ts)", () => {
+  test("three unread new_opportunity notifications render as one collapsed row, not three", async () => {
+    renderBell([
+      notification({ id: "opp-1", category: "new_opportunity", title: "New match: IMO", link: "/opportunities/imo" }),
+      notification({ id: "opp-2", category: "new_opportunity", title: "New match: HMMT", link: "/opportunities/hmmt" }),
+      notification({ id: "opp-3", category: "new_opportunity", title: "New match: RSI", link: "/opportunities/rsi" }),
+    ]);
+    await openBell();
+
+    expect(screen.getByText("3 new opportunities match your profile")).toBeInTheDocument();
+    expect(screen.queryByText("New match: IMO")).not.toBeInTheDocument();
+  });
+
+  test("activating the collapsed row marks every member id read in one call, not one at a time", async () => {
+    vi.mocked(markNotificationsRead).mockResolvedValue({});
+    renderBell([
+      // Explicit, distinct created_at: groupNotifications sorts members most-recent-first,
+      // and three notification() calls this close together could otherwise share a
+      // millisecond (or land in real-clock order rather than array order), making an
+      // exact-array assertion flaky. The set of ids marked read is what this test actually
+      // cares about, not which one sorts first.
+      notification({ id: "opp-1", category: "new_opportunity", link: "/opportunities/imo", created_at: "2026-09-02T10:00:03.000Z" }),
+      notification({ id: "opp-2", category: "new_opportunity", link: "/opportunities/hmmt", created_at: "2026-09-02T10:00:02.000Z" }),
+      notification({ id: "opp-3", category: "new_opportunity", link: "/opportunities/rsi", created_at: "2026-09-02T10:00:01.000Z" }),
+    ]);
+    await openBell();
+
+    fireEvent.click(screen.getByText("3 new opportunities match your profile"));
+
+    await waitFor(() => expect(markNotificationsRead).toHaveBeenCalledTimes(1));
+    expect(new Set(vi.mocked(markNotificationsRead).mock.calls[0][0])).toEqual(new Set(["opp-1", "opp-2", "opp-3"]));
+    expect(markNotificationRead).not.toHaveBeenCalled();
+  });
+
+  test("a single unread new_opportunity notification is not grouped -- renders exactly as before", async () => {
+    renderBell([notification({ id: "opp-1", category: "new_opportunity", title: "New match: IMO", link: "/opportunities/imo" })]);
+    await openBell();
+
+    expect(screen.getByText("New match: IMO")).toBeInTheDocument();
+    expect(screen.queryByText(/new opportunities match your profile/)).not.toBeInTheDocument();
+  });
+
+  test("mixed read and unread new_opportunity: only the unread ones collapse, the read one stays its own row", async () => {
+    renderBell([
+      notification({ id: "opp-read", category: "new_opportunity", title: "New match: Already Seen", link: "/opportunities/seen", read_at: new Date().toISOString() }),
+      notification({ id: "opp-1", category: "new_opportunity", title: "New match: IMO", link: "/opportunities/imo" }),
+      notification({ id: "opp-2", category: "new_opportunity", title: "New match: HMMT", link: "/opportunities/hmmt" }),
+    ]);
+    await openBell();
+
+    expect(screen.getByText("New match: Already Seen")).toBeInTheDocument();
+    expect(screen.getByText("2 new opportunities match your profile")).toBeInTheDocument();
+  });
+
+  test("deadline notifications never collapse, however many are unread -- already write-time digested", async () => {
+    renderBell([notification({ id: "d1" }), notification({ id: "d2", title: "Another deadline" }), notification({ id: "d3", title: "A third deadline" })]);
+    await openBell();
+
+    expect(screen.getAllByText("Deadline tomorrow")).toHaveLength(1);
+    expect(screen.getByText("Another deadline")).toBeInTheDocument();
+    expect(screen.getByText("A third deadline")).toBeInTheDocument();
   });
 });
