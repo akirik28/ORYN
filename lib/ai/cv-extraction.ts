@@ -3,8 +3,7 @@ import "server-only";
 import { z } from "zod";
 import mammoth from "mammoth";
 import { getAIProvider } from "./index";
-import { logAIUsage } from "./usage";
-import { selectModelForUser } from "./limits/budget";
+import { withUsageLogging } from "./usage";
 
 const ExtractedItemSchema = z.object({
   title: z.string(),
@@ -75,7 +74,11 @@ export class CVExtractionFailedError extends Error {
  * since Claude's API doesn't accept DOCX directly.
  *
  * On failure, throws CVExtractionFailedError — callers must keep the uploaded file and
- * offer retry / manual entry (Phase 61), never silently drop it.
+ * offer retry / manual entry (Phase 61), never silently drop it. Goes through
+ * withUsageLogging (added 2026-09-02) rather than a bare generateStructured +
+ * logAIUsage pair — a retry-exhausted schema-validation failure is up to two real, billed
+ * calls, and without this the outer catch below would swallow that spend into
+ * CVExtractionFailedError with no record of it ever having happened.
  */
 export async function extractCVData(params: {
   userId: string;
@@ -86,26 +89,18 @@ export async function extractCVData(params: {
 
   try {
     const provider = getAIProvider();
-    const selection = await selectModelForUser(params.userId);
-    const result = await provider.generateStructured({
-      system: SYSTEM_PROMPT,
-      prompt: "Extract every education entry, activity, award, project, research experience, work experience, skill, and language from the attached CV.",
-      documents: [document],
-      schema: CVExtractionSchema,
-      schemaName: "record_cv_extraction",
-      schemaDescription: "Records the structured data extracted from the student's CV.",
-      maxTokens: 4096,
-      model: selection.model,
-    });
-
-    await logAIUsage({
-      userId: params.userId,
-      feature: "cv_extraction",
-      usage: result.usage,
-      model: result.model,
-      degraded: selection.degraded,
-      degradeReason: selection.degraded ? selection.reason : null,
-    });
+    const result = await withUsageLogging({ userId: params.userId, feature: "cv_extraction" }, (model) =>
+      provider.generateStructured({
+        system: SYSTEM_PROMPT,
+        prompt: "Extract every education entry, activity, award, project, research experience, work experience, skill, and language from the attached CV.",
+        documents: [document],
+        schema: CVExtractionSchema,
+        schemaName: "record_cv_extraction",
+        schemaDescription: "Records the structured data extracted from the student's CV.",
+        maxTokens: 4096,
+        model,
+      }),
+    );
     return result.data;
   } catch (error) {
     throw new CVExtractionFailedError(error);

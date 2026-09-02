@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { AIResponseIncompleteError, type AIUsage } from "./provider";
+import { AIResponseIncompleteError, AIStructuredResponseFailedError, type AIUsage } from "./provider";
 import { estimateCostUsd } from "./pricing";
 import { selectModelForUser, type ModelSelectionReason } from "./limits/budget";
 
@@ -83,18 +83,23 @@ export async function logAIUsage(params: {
  * spending real money off the books.
  *
  * Exactly-once by construction: the success and failure branches are mutually exclusive,
- * and only failures that actually carry usage (AIResponseIncompleteError) are recorded —
- * a connection error that never reached the model has no tokens to account for.
+ * and only failures that actually carry usage — AIResponseIncompleteError
+ * (generateText) or AIStructuredResponseFailedError (generateStructured, added
+ * 2026-09-02 once the same off-the-books-spend shape turned up there too: cv_extraction
+ * and achievement_refinement both called generateStructured directly and only ever logged
+ * usage on the success path, so a retry-exhausted failure was invisible to ai_usage the
+ * identical way the original SEV-1 was) — are recorded. A connection error that never
+ * reached the model has no tokens to account for either way.
  *
  * Also the per-user spend cap's integration point (2026-09-02): resolves
  * lib/ai/limits/budget.ts's model selection *before* `run`, and hands the chosen model to
  * `run` rather than letting the caller assume the ceiling model — the whole point of the
  * cap is that the model actually used can vary per call. The model recorded to `ai_usage`
  * always comes back from the result itself (`AITextResult.model` / `AIStructuredResult.model`,
- * or `AIResponseIncompleteError.model` on the billed-but-failed path) rather than from the
- * selection this function made — the provider is the one place that knows for certain what
- * it actually called, and a caller that ignored the suggested model (there's no reason one
- * would, but nothing prevents it) must never have its real spend mis-priced as a result.
+ * or the billed-but-failed error's own `.model`) rather than from the selection this
+ * function made — the provider is the one place that knows for certain what it actually
+ * called, and a caller that ignored the suggested model (there's no reason one would, but
+ * nothing prevents it) must never have its real spend mis-priced as a result.
  */
 export async function withUsageLogging<T extends { usage: AIUsage; model: string }>(
   meta: { userId: string | null; feature: string },
@@ -105,7 +110,7 @@ export async function withUsageLogging<T extends { usage: AIUsage; model: string
   try {
     result = await run(selection.model);
   } catch (error) {
-    if (error instanceof AIResponseIncompleteError) {
+    if (error instanceof AIResponseIncompleteError || error instanceof AIStructuredResponseFailedError) {
       await logAIUsage({ ...meta, usage: error.usage, model: error.model, degraded: selection.degraded, degradeReason: selection.degraded ? selection.reason : null });
     }
     throw error;

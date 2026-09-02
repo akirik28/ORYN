@@ -112,3 +112,29 @@ export class AIResponseIncompleteError extends Error {
     this.model = params.model;
   }
 }
+
+/**
+ * `generateStructured` exhausted its one retry (lib/ai/anthropic-provider.ts) without ever
+ * getting a schema-valid response — the model didn't call the required tool, or called it
+ * with input that failed validation, on both attempts. This is the structured-output
+ * sibling of AIResponseIncompleteError, for the same reason: up to two real, billed calls
+ * happened here (the retry's whole point is a second real attempt, not a local recheck),
+ * and a bare `Error` cannot carry that spend back to a caller that wants to log it.
+ *
+ * `usage` is the SUM across every attempt this call made, not just the last one — each
+ * attempt is a separate billed request, and reporting only the final one would undercount
+ * by exactly the tokens the first attempt spent before retrying.
+ */
+export class AIStructuredResponseFailedError extends Error {
+  readonly usage: AIUsage;
+  readonly model: string;
+
+  constructor(params: { lastError: string | null; usage: AIUsage; model: string }) {
+    // Same "no prompt or model reasoning in the message" rule as AIResponseIncompleteError —
+    // this reaches server logs.
+    super(`AI response failed schema validation after retry: ${params.lastError ?? "unknown validation error"}`);
+    this.name = "AIStructuredResponseFailedError";
+    this.usage = params.usage;
+    this.model = params.model;
+  }
+}

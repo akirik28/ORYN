@@ -7,11 +7,13 @@ import { recordProviderSuccess, recordProviderFailure } from "@/lib/providers/he
 import {
   AIProviderNotConfiguredError,
   AIResponseIncompleteError,
+  AIStructuredResponseFailedError,
   type AIProvider,
   type AIRequest,
   type AIStructuredRequest,
   type AIStructuredResult,
   type AITextResult,
+  type AIUsage,
 } from "./provider";
 
 /** Row name in `provider_health` — snake_case like the other three providers'
@@ -129,6 +131,12 @@ export class AnthropicProvider implements AIProvider {
 
     let lastError: string | null = null;
     const model = request.model ?? env.anthropic.model;
+    // Summed across every attempt, not replaced by the latest one — each attempt this loop
+    // makes is a separate billed request (that's the whole point of a real retry, not a
+    // local recheck), so a caller reading only the last attempt's usage would undercount by
+    // exactly what the earlier attempt(s) already spent. See AIStructuredResponseFailedError's
+    // own doc comment.
+    let accumulatedUsage: AIUsage = { inputTokens: 0, outputTokens: 0 };
 
     // One retry on schema-validation failure (Phase 26): the model occasionally omits a
     // required field or invents an out-of-enum value. A single retry with the validation
@@ -158,6 +166,7 @@ export class AnthropicProvider implements AIProvider {
       }
 
       const usage = { inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens };
+      accumulatedUsage = { inputTokens: accumulatedUsage.inputTokens + usage.inputTokens, outputTokens: accumulatedUsage.outputTokens + usage.outputTokens };
       const toolUse = message.content.find((block) => block.type === "tool_use");
 
       if (!toolUse || toolUse.type !== "tool_use") {
@@ -177,8 +186,14 @@ export class AnthropicProvider implements AIProvider {
     // Recorded as a health failure: the call reached Anthropic on both attempts, but the
     // response never matched the required schema — the same "landed but not usable"
     // signal AIResponseIncompleteError records in generateText above, just for the
-    // structured-output path's own failure shape.
-    const error = new Error(`AI response failed schema validation after retry: ${lastError}`);
+    // structured-output path's own failure shape. Carries accumulatedUsage rather than a
+    // bare Error — up to two real, billed calls happened by this point, and without this a
+    // caller has no way to log what was actually spent (found live: cv_extraction and
+    // achievement_refinement both call generateStructured directly and only ever logged
+    // usage on the success path, so a retry-exhausted failure here was spending real money
+    // completely invisibly to ai_usage — the identical shape as the SEV-1 generateText fix
+    // above, just never extended to this path).
+    const error = new AIStructuredResponseFailedError({ lastError, usage: accumulatedUsage, model });
     await recordProviderFailure(PROVIDER_NAME, error.message);
     throw error;
   }
