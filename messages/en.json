@@ -640,6 +640,7 @@
       "finish": "Finish",
       "settingUp": "Setting up your profile…",
       "schoolStepError": "Fill in your country, school, and curriculum to continue.",
+      "graduationYearError": "Pick a graduation year in the future.",
       "birthYearError": "Enter the year you were born — Oryn needs it to check age limits on programs.",
       "birthYearTooYoung": "Oryn isn't able to offer accounts below this age yet.",
       "pageTitle": "Set up your profile"
