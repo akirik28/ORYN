@@ -572,7 +572,31 @@
 
    data-tier is set from profiles.plan_tier (migration 0089), not from any response-mode/
    answer-style control — see that migration's own comment for why those are deliberately
-   different signals. */
+   different signals.
+
+   REVISED 2026-09-02, same day, later: the "contained" framing above governed the first
+   build and is left in place rather than rewritten, because it was a real decision, made
+   for a real reason, and the next person to touch this file should be able to see that
+   reasoning existed rather than finding a file that always looked the way it looks now.
+   It no longer governs what ships. The founder looked at the map pins live — amber
+   gradient, real glow, working exactly as designed — and said it didn't land, verbatim:
+   "ya mesela direkt olmamış harita, ben direkt arka planın sarılaşmasını, mesela soldaki
+   koyu mavi tüm barın kırmızılaşmasını falan istiyorum, canlı renkler olsun" (I want the
+   background itself to turn golden, the dark blue bar on the left to turn red across the
+   whole bar, vivid colors). Three lanes converged on "contained" independently overnight;
+   the person whose product this is looked at the result and disagreed, which settles it.
+
+   What's added below is the environmental layer that reasoning argued against: the page
+   background and the sidebar itself now recolor under this attribute, not just small
+   bounded elements. The engineering rule directly above this note — one ambient glow
+   layer for the whole app, no component gets its own second blur halo — is a different
+   claim (about how many independent blurred-conic-gradient light sources this file allows
+   before they visually collide) and stands completely unchanged; recoloring an existing
+   flat/gradient surface in place isn't adding a light source, so there's no tension
+   between the two. Standard's byte-identical guarantee is unchanged and still the first
+   constraint: every value pair below follows the same pattern as --tier-accent above it —
+   defined once at :root to today's exact literal values, redefined only under
+   [data-tier="ultra"]. */
 :root {
   --tier-accent: var(--brand-primary);
   --tier-accent-strong: var(--brand-primary-strong);
@@ -583,6 +607,27 @@
      var(--tier-glow)` for its Ultra state costs nothing when not ultra, rather than needing
      a separate `[data-tier="ultra"] &` rule just to turn the shadow on. */
   --tier-glow: transparent;
+
+  /* Environmental surfaces, 2026-09-02 — the page background (app/(app)/layout.tsx and its
+     preview-harness twin, app/(dev-preview)/design-preview/preview-shell.tsx, which must
+     stay in exact sync with it) and the sidebar (features/app-shell/sidebar.tsx). Defaults
+     here are today's literal hex values, unchanged, byte-for-byte — these tokens replace
+     the literals in each component's inline `style`, they don't introduce a new value at
+     baseline. */
+  --tier-page-bg-1: #DDDAF5;
+  --tier-page-bg-2: #D8DFF5;
+  --tier-page-bg-3: #DDD8F2;
+  --tier-page-bg-4: #D4DBF0;
+  --tier-sidebar-bg-1: #17153A;
+  --tier-sidebar-bg-2: #0E0D26;
+  --tier-sidebar-bg-3: #0A0920;
+  /* The active-nav-item accent bar. #7B75F5 is a cool periwinkle, chosen against a cool
+     dark-navy sidebar; it stays the Standard default here for that reason, and gets
+     replaced below rather than kept, because a cool purple accent bar on a hot red sidebar
+     is the literal "muddy" failure mode the founder's "canlı renkler" note pushed back on. */
+  --tier-sidebar-accent: #7B75F5;
+  --tier-topbar-border: rgba(61, 53, 232, 0.10);
+  --tier-topbar-bg: rgba(224, 221, 248, 0.75);
 }
 
 [data-tier="ultra"] {
@@ -595,7 +640,73 @@
   --tier-grad-2: #ff7a1a;
   --tier-grad-3: #e8342c;
   --tier-glow: rgba(255, 122, 26, 0.45);
+
+  /* TRIED AND REVERTED, 2026-09-02, same night — a blanket `--primary`/`--brand-primary`
+     override lived here briefly. The idea (CEO's, sound in isolation): --brand-primary-
+     hover/-strong/-soft/-subtle/-border are each `color-mix(in oklch, var(--brand-primary),
+     ...)`, so redeclaring the one variable they're mixed from recolors all 202 references to
+     it — plus --primary itself, reaching components/ui/button.tsx, badge.tsx, checkbox.tsx,
+     radio-group.tsx and progress.tsx — in one place, no per-component edits. It worked
+     exactly as designed and is NOT why it was reverted.
+     It was reverted because oryn-31's semantic-color audit (docs/ultra-flame-semantic-
+     color-audit-2026-09-02.md, merged 9e9e6d53) measured two real problems with the flame
+     hue specifically, not with the mechanism: (1) --destructive/--error sit at 22–25° in
+     OKLCH; the flame red (#e8342c) measures 28.3° — 3–6° away, close enough that a delete
+     button and ordinary Ultra chrome become hard to visually tell apart, on the one token
+     that exists to mean "this is dangerous." (2) features/dashboard/profile-signal.tsx
+     moved its "developing"/"emerging" dimension tones OFF warning-amber specifically because
+     amber read as alarming for a state that isn't a problem ("Amber here is what turned a
+     thin profile into a page of red flags" — that file's own comment). Flame is warmer than
+     amber and closer to the error hue family than amber was, so the override would have
+     reversed that decision for every Ultra student — a 14-year-old's ordinary early-stage
+     profile reading as a wall of red flags, on the paid tier.
+     Neither problem is specific to --brand-primary as a variable — it's that --brand-primary
+     feeds ramps (deadline urgency, admission outlook, application/requirement status) that
+     also embed --destructive/--warning/--success as fixed endpoints, so moving only the
+     middle can invert or collide with them. The --tier-* family below doesn't have this
+     problem: nothing semantic is derived from it, by construction, so recoloring the
+     surfaces that read it (page ground, sidebar) costs nothing in warning capacity. If Ultra
+     should eventually reach further than these bounded surfaces, that's a per-component
+     decision made against 31's list, not a second attempt at one blanket override. */
+
+  /* Vivid on purpose, per the founder's own "canlı renkler" — these are meaningfully more
+     saturated than the pastel/near-black ranges they replace, not a hue-rotation at the same
+     intensity. Kept in the same lightness envelope as the Standard values they override
+     (page: high-L pastel-adjacent; sidebar: near-black), so every foreground token built
+     against those envelopes — the white/NN sidebar text opacities in particular — keeps
+     working without also needing to change; verified live via computed contrast, not
+     assumed from the hex values alone (see the redesign report for the actual numbers). */
+  --tier-page-bg-1: #FCE3A6;
+  --tier-page-bg-2: #F8CE7E;
+  --tier-page-bg-3: #F5C596;
+  --tier-page-bg-4: #F0B98A;
+  --tier-sidebar-bg-1: #4A1220;
+  --tier-sidebar-bg-2: #330D18;
+  --tier-sidebar-bg-3: #210810;
+  /* Reuses the flame amber rather than inventing a fifth color: the accent bar and the
+     gradient-text/fill treatment elsewhere in Ultra now read as one family instead of two
+     unrelated palettes sharing a page. */
+  --tier-sidebar-accent: var(--tier-grad-1);
+  --tier-topbar-border: rgba(232, 142, 32, 0.16);
+  --tier-topbar-bg: rgba(250, 222, 168, 0.75);
 }
+
+/* Worth keeping even though the block that needed it above was reverted: .dark here is not
+   a root-level theme toggle, it's a class this app applies to nested <div>s mid-page
+   (dashboard-view.tsx's own hero wrapper is one of ~10). --primary/--brand-primary are
+   `var(--primary)`-style ALIASES, and an alias only re-resolves where it's actually
+   redeclared — .dark redeclares its own --primary/--brand-primary block specifically so a
+   nested .dark div doesn't inherit :root's already-resolved light-mode color straight
+   through. That mechanism doesn't know about data-tier: a .dark div sitting inside
+   <html data-tier="ultra"> would re-derive --primary from ITS OWN block, unconditionally,
+   undoing any [data-tier="ultra"] override the instant a nested .dark wrapper is in play —
+   confirmed live before the override itself was reverted for unrelated reasons. Any FUTURE
+   token that both (a) needs a per-tier value and (b) is also one of the tokens .dark already
+   redeclares (grep .dark's own block in this file) needs the same `[data-tier="ultra"]
+   .dark { ... }` redeclaration this comment used to sit above, or it will silently fail
+   inside every .dark-wrapped section exactly the way this one did. The tier-page-bg,
+   tier-sidebar and tier-topbar token groups below don't have this problem — .dark never
+   declares any of them, so there's nothing competing to redeclare. */
 
 /* Small reusable pieces built on the tokens above — gradient text/fill and a bounded
    small-element glow, matching what the prototype's own score/badge/chip use. Deliberately
@@ -617,15 +728,28 @@
 [data-tier="ultra"] .tier-grad-fill {
   background: linear-gradient(100deg, var(--tier-grad-1), var(--tier-grad-2) 55%, var(--tier-grad-3));
 }
-/* KNOWN ISSUE, not resolved tonight: pairing .tier-grad-fill with an element that also
-   carries a plain Tailwind text-color utility (e.g. .text-brand-primary-strong) does not
-   reliably win the text-color cascade for legibility against the fill -- confirmed live
-   that even an inline style()/!important on the element itself failed to change the
-   computed color, which rules out a simple specificity/layer explanation and points at
-   something this pass didn't get to the bottom of (possibly interaction with
-   `transition-colors`, confirmed present on the one element this was tried against).
-   Left unused in this push rather than shipped half-working -- the caller is responsible
-   for its own contrasting text color until this is actually understood, not this class. */
+/* RESOLVED 2026-09-02, later the same night — caught here first in isolation, then
+   reproduced identically on a `--brand-primary`-driven button while testing a theme-wide
+   override that was itself later reverted for unrelated semantic-color reasons (see the
+   TRIED AND REVERTED comment further down) — the bug and the fix below are independent of
+   that revert and still apply to this class. Root cause, confirmed by direct reproduction,
+   not inferred: an element with `transition-colors` or
+   `transition-all` whose color is driven by an ANCESTOR custom property (not a class this
+   element gains — --primary changing value, not .bg-primary starting to match) gets stuck
+   showing its PRE-tier color when that ancestor property first changes via a post-mount
+   `useEffect` (exactly how data-tier is set — see ultra-ambient.tsx). Confirmed live: an
+   inline `el.style.setProperty('transition','none','important')` fixes it INSTANTLY on the
+   same element, in the same script, no reload needed — so the correct color was always
+   being computed correctly underneath, only the transition's own start/end snapshot was
+   stuck. Confirmed NOT a general transition+custom-property incompatibility: manually
+   toggling data-tier off then back on again, well after mount, resolves cleanly with no
+   stuck frame at all — this is specifically a first-application-during-hydration timing
+   issue, not a permanent one. .tier-transition-lock below is the fix: suppress transitions
+   for one frame at the exact moment data-tier first changes, then release them. */
+.tier-transition-lock,
+.tier-transition-lock * {
+  transition: none !important;
+}
 [data-tier="ultra"] .tier-glow-sm {
   box-shadow: 0 0 16px -3px var(--tier-glow);
 }

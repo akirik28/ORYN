@@ -123,7 +123,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     // real page content into a sliver next to blank space. Sidebar is `hidden lg:flex`, so
     // it occupies nothing below `lg` regardless of direction; row is only needed once it's
     // actually on-screen.
-    <div className="flex min-h-svh flex-col lg:flex-row" style={{ background: "linear-gradient(145deg, #DDDAF5 0%, #D8DFF5 30%, #DDD8F2 55%, #D4DBF0 100%)" }}>
+    <div
+      className="flex min-h-svh flex-col lg:flex-row"
+      style={{ background: "linear-gradient(145deg, var(--tier-page-bg-1) 0%, var(--tier-page-bg-2) 30%, var(--tier-page-bg-3) 55%, var(--tier-page-bg-4) 100%)" }}
+    >
       {/* Keyboard users land here first; without it, reaching page content past the nav
           items costs several tabs on every navigation. */}
       <a
@@ -144,7 +147,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         budgetDegraded={budgetDegraded}
       />
 
-      <Sidebar displayName={displayName} email={session.email} signal={profileSignal} isAdmin={profile.is_admin} />
+      <Sidebar displayName={displayName} email={session.email} signal={profileSignal} isAdmin={profile.is_admin} tier={planTier} />
 
       <div className="relative flex min-w-0 flex-1 flex-col">
         {/* Hoisted here rather than wired into each individual page: position:fixed means

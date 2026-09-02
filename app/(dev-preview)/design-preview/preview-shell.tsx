@@ -7,7 +7,7 @@ import { MobileNav } from "@/features/app-shell/mobile-nav";
 import { RouteAmbientBlobs } from "@/features/app-shell/route-ambient-blobs";
 import { PreviewToolbar } from "./preview-toolbar";
 import type { DimensionSignal } from "@/lib/scoring/signal";
-import type { Notification } from "@/types/database";
+import type { Notification, PlanTier } from "@/types/database";
 import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
 
 // Real generated output from buildDigestNotification()/buildProfileUpdateNotification()
@@ -84,11 +84,20 @@ const PREVIEW_QUOTA: MonthlyQuota = { used: 20, limit: 50, remaining: 30, fracti
 // hoisted to the real layout) — this harness renders whatever the real layout renders,
 // so it needs the same structure or every page previewed through it drifts from
 // production.
-export function PreviewShell({ children, signal }: { children: ReactNode; signal: DimensionSignal[] }) {
+//
+// `tier` added 2026-09-02, optional and defaulted rather than required: this shell has many
+// callers and only a page that actually wants to preview Ultra needs to pass a real value.
+// Forwarded straight to Sidebar (whose flame texture and background both key off it) and
+// used for this file's own page-background gradient below — this component renders the real
+// Sidebar/Topbar, not a copy, but does NOT mount UltraAmbient (a different route group does
+// its own data-tier stamping instead, see app/(dev-preview)/layout.tsx), so anything Ultra
+// needs visible in this harness has to come from a token or a component this shell actually
+// renders — never from that page-level effect.
+export function PreviewShell({ children, signal, tier = "standard" }: { children: ReactNode; signal: DimensionSignal[]; tier?: PlanTier }) {
   return (
     <div
       className="flex min-h-svh flex-col lg:flex-row"
-      style={{ background: "linear-gradient(145deg, #DDDAF5 0%, #D8DFF5 30%, #DDD8F2 55%, #D4DBF0 100%)" }}
+      style={{ background: "linear-gradient(145deg, var(--tier-page-bg-1) 0%, var(--tier-page-bg-2) 30%, var(--tier-page-bg-3) 55%, var(--tier-page-bg-4) 100%)" }}
     >
       <MobileNav
         signal={signal}
@@ -99,7 +108,7 @@ export function PreviewShell({ children, signal }: { children: ReactNode; signal
         quota={PREVIEW_QUOTA}
         budgetDegraded={false}
       />
-      <Sidebar displayName="Ada" email="ada@example.com" signal={signal} />
+      <Sidebar displayName="Ada" email="ada@example.com" signal={signal} tier={tier} />
       <div className="relative flex min-w-0 flex-1 flex-col">
         <RouteAmbientBlobs />
         <Topbar notifications={PREVIEW_NOTIFICATIONS} unreadCount={PREVIEW_UNREAD_COUNT} quota={PREVIEW_QUOTA} budgetDegraded={false} />

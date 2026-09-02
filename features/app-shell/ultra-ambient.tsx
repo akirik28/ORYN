@@ -67,21 +67,38 @@ export function UltraAmbient({ tier }: { tier: PlanTier }) {
   const sizeRef = useRef({ width: 0, height: 0 });
 
   useEffect(() => {
+    const html = document.documentElement;
+    // See app/globals.css's own comment on .tier-transition-lock for the full story: an
+    // element with transition-colors/transition-all whose color depends on --primary (or
+    // any other tier-driven custom property) gets stuck on its pre-tier color the first
+    // time this effect sets the attribute, because that's a post-mount DOM mutation, not a
+    // class the element itself gains — confirmed live, not a general transition bug, only
+    // this specific first-application timing. Locking transitions off for one frame around
+    // the mutation, then releasing them, avoids the stuck frame instead of asking every
+    // future tier-reactive element to remember to avoid transition-colors.
+    html.classList.add("tier-transition-lock");
     // Only ever set for a real "ultra" value, never `data-tier="standard"` — every selector
     // in the app is `[data-tier="ultra"]`, so a literal "standard" string would be
     // functionally identical to leaving the attribute off, but absence is the cleaner
     // signal: exactly one value ever appears in the DOM, and nothing has to special-case a
     // stale "standard" left over if a third tier is ever added later.
     if (tier === "ultra") {
-      document.documentElement.dataset.tier = tier;
+      html.dataset.tier = tier;
     } else {
-      delete document.documentElement.dataset.tier;
+      delete html.dataset.tier;
     }
+    // Forces layout/style recalculation to happen NOW, while transitions are still locked,
+    // rather than whenever the browser next feels like it — the lock has to be in effect
+    // for the actual recalculation that picks up the new color, not just for the DOM write.
+    void html.offsetHeight;
+    const unlock = setTimeout(() => html.classList.remove("tier-transition-lock"), 50);
     return () => {
+      clearTimeout(unlock);
+      html.classList.remove("tier-transition-lock");
       // Only this component's own effect ever sets this attribute, so cleaning it up on
       // unmount (rather than leaving a stale "ultra" behind) is safe and correct — the
       // whole app shell unmounts together, not this component alone.
-      delete document.documentElement.dataset.tier;
+      delete html.dataset.tier;
     };
   }, [tier]);
 

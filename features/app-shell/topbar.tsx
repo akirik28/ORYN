@@ -13,6 +13,12 @@ import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
  * UsageIndicator added 2026-09-02 (founder: the usage bar must be always visible, not
  * confined to /advisor) — same utility-cluster slot as NotificationBell, same reasoning
  * for living here rather than being invented per-page.
+ *
+ * border/background read through --tier-topbar-border/--tier-topbar-bg (app/globals.css),
+ * 2026-09-02: this strip is frosted and color-matched to the page ground on purpose (it's
+ * translucent over whatever sits behind it), so it re-tints alongside the page background
+ * turning warm under Ultra rather than staying the one lavender-tinted surface left behind.
+ * Same literal values as before at Standard tier.
  */
 export function Topbar({
   notifications,
@@ -28,7 +34,7 @@ export function Topbar({
   return (
     <div
       className="sticky top-0 z-20 hidden h-[52px] items-center gap-3 border-b px-6 backdrop-blur-xl lg:flex"
-      style={{ borderColor: "rgba(61,53,232,0.10)", background: "rgba(224,221,248,0.75)" }}
+      style={{ borderColor: "var(--tier-topbar-border)", background: "var(--tier-topbar-bg)" }}
     >
       <div className="max-w-[400px] flex-1">
         <CommandPalette variant="bar" />

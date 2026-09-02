@@ -7,8 +7,10 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { UserMenu } from "./user-menu";
 import { LanguageSwitcher } from "./language-switcher";
+import { SidebarFlame } from "./sidebar-flame";
 import { PRIMARY_NAV, SECONDARY_NAV } from "./nav-items";
 import type { DimensionSignal } from "@/lib/scoring/signal";
+import type { PlanTier } from "@/types/database";
 
 const SETTINGS_ITEM = SECONDARY_NAV.find((item) => item.href === "/settings")!;
 const SECONDARY_ITEMS = SECONDARY_NAV.filter((item) => item.href !== "/settings");
@@ -21,17 +23,34 @@ const SECONDARY_ITEMS = SECONDARY_NAV.filter((item) => item.href !== "/settings"
  * list. That's not a styling choice — nav-items.ts documents a dated, minor-safety-driven
  * founder decision (2026-08-21) to keep student-to-student messaging out of navigation
  * for V1, and this pass doesn't relitigate that. Their routes/pages are unaffected.
+ *
+ * Background and active-accent-bar colors, 2026-09-02: read through --tier-sidebar-bg-1/2/3
+ * and --tier-sidebar-accent (app/globals.css) rather than the literal hex values above —
+ * still the exact same literals at Standard tier, redirected only under
+ * [data-tier="ultra"]. Nothing else in this file changed for Ultra: the white/NN text
+ * opacities stay as originally ported, verified live against the new sidebar color rather
+ * than assumed to still be fine.
+ *
+ * SidebarFlame added the same day, later: a static color change wasn't enough — the founder
+ * asked specifically for motion in the bar itself ("bar yanıyormuş gibi olsun"), not another
+ * page-level effect. Painted first, before every other child, so normal DOM-order stacking
+ * puts it behind the logo/nav/user-menu without needing an explicit z-index anywhere in this
+ * file. `tier` is a required prop (not read from context) because there are exactly two
+ * callers of this component — app/(app)/layout.tsx and the design-preview harness's
+ * PreviewShell — both already computing a tier value for other reasons.
  */
 export function Sidebar({
   displayName,
   email,
   signal,
   isAdmin = false,
+  tier,
 }: {
   displayName: string;
   email: string | null;
   signal: DimensionSignal[];
   isAdmin?: boolean;
+  tier: PlanTier;
 }) {
   const pathname = usePathname();
   const t = useTranslations("nav");
@@ -40,8 +59,9 @@ export function Sidebar({
   return (
     <aside
       className="sticky top-0 hidden h-svh w-[214px] shrink-0 flex-col lg:flex"
-      style={{ background: "linear-gradient(175deg, #17153A 0%, #0E0D26 55%, #0A0920 100%)" }}
+      style={{ background: "linear-gradient(175deg, var(--tier-sidebar-bg-1) 0%, var(--tier-sidebar-bg-2) 55%, var(--tier-sidebar-bg-3) 100%)" }}
     >
+      {tier === "ultra" ? <SidebarFlame tier={tier} /> : null}
       <Link href="/dashboard" aria-label={t("homeLink")} className="flex items-center gap-2.5 px-5 pt-[26px] pb-5">
         <Image src="/brand/logo-full.png" alt="Oryn" width={92} height={31} priority className="h-6 w-auto" />
       </Link>
@@ -65,7 +85,7 @@ export function Sidebar({
                 <span
                   aria-hidden="true"
                   className="absolute inset-y-[20%] left-0 w-[3px] rounded-r-[2px]"
-                  style={{ background: "#7B75F5" }}
+                  style={{ background: "var(--tier-sidebar-accent)" }}
                 />
               ) : null}
               <Icon className="size-[18px]" strokeWidth={1.6} />

@@ -47,6 +47,7 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   delete document.documentElement.dataset.tier;
+  document.documentElement.classList.remove("tier-transition-lock");
 });
 
 describe("UltraAmbient — sets the single source of truth every [data-tier=\"ultra\"] selector reads", () => {
@@ -109,5 +110,40 @@ describe("UltraAmbient — prefers-reduced-motion: a static frame, not a degrade
     matchMediaMatches = true;
     render(<UltraAmbient tier="standard" />);
     expect(window.requestAnimationFrame).not.toHaveBeenCalled();
+  });
+});
+
+describe("UltraAmbient — tier-transition-lock, so a stuck first-paint transition can't ship silently", () => {
+  test("ultra: <html> gains the lock class immediately, synchronously with the attribute", () => {
+    render(<UltraAmbient tier="ultra" />);
+    expect(document.documentElement.classList.contains("tier-transition-lock")).toBe(true);
+  });
+
+  test("the lock class is released shortly after, not left on indefinitely", () => {
+    vi.useFakeTimers();
+    render(<UltraAmbient tier="ultra" />);
+    expect(document.documentElement.classList.contains("tier-transition-lock")).toBe(true);
+    vi.advanceTimersByTime(50);
+    expect(document.documentElement.classList.contains("tier-transition-lock")).toBe(false);
+    vi.useRealTimers();
+  });
+
+  test("standard: the lock class is still applied and released around the (no-op) attribute removal", () => {
+    // Symmetry, not an oversight: the lock exists to cover whichever direction the
+    // transition runs, and flipping ultra -> standard changes computed colors back just as
+    // much as the reverse does.
+    vi.useFakeTimers();
+    render(<UltraAmbient tier="standard" />);
+    expect(document.documentElement.classList.contains("tier-transition-lock")).toBe(true);
+    vi.advanceTimersByTime(50);
+    expect(document.documentElement.classList.contains("tier-transition-lock")).toBe(false);
+    vi.useRealTimers();
+  });
+
+  test("unmounting before the release timer fires still leaves the lock removed, not stuck on", () => {
+    const { unmount } = render(<UltraAmbient tier="ultra" />);
+    expect(document.documentElement.classList.contains("tier-transition-lock")).toBe(true);
+    unmount();
+    expect(document.documentElement.classList.contains("tier-transition-lock")).toBe(false);
   });
 });
