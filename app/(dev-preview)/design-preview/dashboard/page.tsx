@@ -27,6 +27,7 @@ export default function DashboardPreviewPage() {
       <DashboardView
         displayName={FIXTURE_STUDENT.displayName}
         greeting="Good evening"
+        locale="en"
         biggestGap={FIXTURE_BIGGEST_GAP}
         profileChange={FIXTURE_PROFILE_CHANGE}
         profileSignal={FIXTURE_PROFILE_SIGNAL}

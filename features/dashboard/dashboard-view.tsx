@@ -95,7 +95,15 @@ export async function DashboardView({
   opportunityPreview,
   opportunityMatchesRefreshed,
 }: DashboardViewProps) {
-  const t = await getTranslations("dashboard");
+  // Explicit locale, not the bare `getTranslations("dashboard")` shorthand: that form
+  // re-resolves locale from the request (cookie/Accept-Language) independently of the
+  // `locale` prop above. On the real page the two happen to always agree today (both
+  // trace back to the same cache()d resolveLocale() call within one request — see
+  // app/(app)/dashboard/page.tsx), but a preview page that pins `locale` to a fixed
+  // value with no real request to resolve from has no way to make the two agree unless
+  // this call honours the prop directly. Same pattern already used for locale-less
+  // contexts elsewhere (lib/plan/persist.ts, lib/opportunities/persist-matches.ts).
+  const t = await getTranslations({ locale, namespace: "dashboard" });
   const hasAiPlan = Boolean(weeklyPlan && weeklyPlan.actions.length > 0);
   const usingCounselorFallback = !hasAiPlan && counselorThisWeek.length > 0;
   // See lib/scoring/dashboard-hero.ts for why this needs three states, not two — a rich
