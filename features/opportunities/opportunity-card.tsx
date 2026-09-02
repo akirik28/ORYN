@@ -73,16 +73,34 @@ function tierFor(score: number, t: Translator): { label: string; tone: StatusTon
  * "ilgi", so the bug is reachable, not theoretical).
  */
 function reasonSentence(reasonCodes: string[], locale: Locale): string | null {
+  // limited_opportunity_information/limited_profile_information only ever appear alone
+  // (lib/opportunities/persist-matches.ts's buildReasonCodes gates them behind "nothing
+  // else applied") -- they're a caveat about why there's nothing stronger to say, not a
+  // clause that reads naturally comma-joined with a real reason, so they're handled as
+  // their own full sentence before the joined-fragments shape below.
+  if (reasonCodes.includes("limited_opportunity_information")) {
+    return locale === "tr"
+      ? "Oryn'ın bu fırsatın odak alanları hakkında henüz yeterli bilgisi yok."
+      : "Oryn doesn't have enough information about this opportunity's focus areas yet.";
+  }
+  if (reasonCodes.includes("limited_profile_information")) {
+    return locale === "tr"
+      ? "İlgi alanlarını eklersen Oryn bu eşleşmeyi daha net açıklayabilir."
+      : "Add your interests to your profile for Oryn to explain this match more specifically.";
+  }
+
   const parts: string[] =
     locale === "tr"
       ? [
           reasonCodes.includes("addresses_a_current_gap") ? "profilindeki bir boşluğu kapatıyor" : null,
           reasonCodes.includes("matches_your_interests") ? "ilgi alanlarınla örtüşüyor" : null,
+          reasonCodes.includes("shares_your_interest") ? "belirttiğin ilgi alanlarından biriyle örtüşüyor" : null,
           reasonCodes.includes("near_you") ? "kendi ülkende gerçekleşiyor" : null,
         ].filter((p): p is string => p !== null)
       : [
           reasonCodes.includes("addresses_a_current_gap") ? "it addresses a current gap in your profile" : null,
           reasonCodes.includes("matches_your_interests") ? "it matches your interests" : null,
+          reasonCodes.includes("shares_your_interest") ? "it shares one of your stated interests" : null,
           reasonCodes.includes("near_you") ? "it's based in your country" : null,
         ].filter((p): p is string => p !== null);
   if (parts.length === 0) return null;

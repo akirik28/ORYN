@@ -237,7 +237,24 @@ export async function notifyNewlyEligibleMatches(
   }
 }
 
-function buildReasonCodes(
+/**
+ * Found live 2026-09-02: 724 of 1,931 opportunity_matches rows had an empty reason_codes
+ * array -- eligible, shown to the student with a real match_score, nothing said why (spec
+ * Phase 12 forbids exactly this: "do not call this one opaque AI score"). Traced by basis:
+ *   - 337 rows: the opportunity has no `fields` recorded at all, so relevance never ran a
+ *     real comparison (matching.ts's computeRelevance defaults to 40 with nothing to compare).
+ *   - 143 rows: same default, because the STUDENT has no recorded interests instead.
+ *   - 165 rows: a real comparison ran on both sides and found zero overlap, the category
+ *     doesn't address a weak dimension, and the opportunity isn't in the student's country.
+ *   - 79 rows: a real comparison found *some* overlap (1 of N interests), just not enough
+ *     to clear the 70-point bar for matches_your_interests.
+ * shares_your_interest and the two limited_*_information codes below cover the first three
+ * of those honestly. The 165 "no_overlap" rows are deliberately left with nothing added here
+ * -- there is no true positive thing to say about them, and CEO's read (correct) is that an
+ * eligible match with zero shared interest, no gap-relevance, and no proximity is a finding
+ * about the matcher's own inclusion bar, not something a reason sentence should paper over.
+ */
+export function buildReasonCodes(
   match: ReturnType<typeof computeOpportunityMatch>,
   student: StudentMatchProfile,
   opportunity: OpportunityForMatching
@@ -247,5 +264,17 @@ function buildReasonCodes(
   if (match.relevanceScore >= 70) codes.push("matches_your_interests");
   if (match.profileNeedScore >= 70) codes.push("addresses_a_current_gap");
   if (isNearStudent(student, opportunity)) codes.push("near_you");
+  if (match.relevanceScore < 70 && match.matchedInterests.length > 0) codes.push("shares_your_interest");
+
+  // Fallback of last resort, reached only when none of the five checks above added
+  // anything -- never crowds out a real reason when one exists.
+  if (match.eligible && codes.length === 0) {
+    if (match.relevanceBasis === "opportunity_fields_missing") {
+      codes.push("limited_opportunity_information");
+    } else if (match.relevanceBasis === "student_interests_missing") {
+      codes.push("limited_profile_information");
+    }
+  }
+
   return codes;
 }

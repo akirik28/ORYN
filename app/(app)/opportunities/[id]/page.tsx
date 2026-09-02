@@ -104,8 +104,17 @@ function takeSentences(reasonCodes: string[], locale: Locale): string[] {
     if (reasonCodes.includes("matches_your_interests")) {
       out.push("Oryn'a takip ettiğini söylediğin bir alanda yer alıyor; bu da sürdürmesini kolaylaştırır ve profilinin geri kalanıyla daha tutarlı olmasını sağlar.");
     }
+    if (reasonCodes.includes("shares_your_interest")) {
+      out.push("Oryn'a söylediğin ilgi alanlarından biriyle örtüşüyor, tek başına güçlü bir eşleşme olmasa da.");
+    }
     if (reasonCodes.includes("near_you")) {
       out.push("Kendi ülkende gerçekleşiyor; bu genellikle yurt dışındaki benzer bir programa kıyasla daha az seyahat, maliyet ve vize engeli anlamına gelir.");
+    }
+    if (reasonCodes.includes("limited_opportunity_information")) {
+      out.push("Oryn'ın bu fırsatın odak alanları hakkında henüz yeterli bilgisi yok, bu yüzden eşleşmeyi daha net açıklayamıyoruz — uygunluk bilgisi gerçek, ilgi alanı karşılaştırması henüz yapılamıyor.");
+    }
+    if (reasonCodes.includes("limited_profile_information")) {
+      out.push("Profilinde kayıtlı ilgi alanı olmadığı için Oryn bunu henüz ilgi alanlarınla karşılaştıramıyor — birkaç tane eklersen daha net bir açıklama alabilirsin.");
     }
     return out;
   }
@@ -116,8 +125,17 @@ function takeSentences(reasonCodes: string[], locale: Locale): string[] {
   if (reasonCodes.includes("matches_your_interests")) {
     out.push("It sits in a field you've told Oryn you're pursuing, which makes it easier to sustain and more coherent alongside the rest of your record.");
   }
+  if (reasonCodes.includes("shares_your_interest")) {
+    out.push("It overlaps with one of the interests you've told Oryn about, even though the match isn't as close as some others on your list.");
+  }
   if (reasonCodes.includes("near_you")) {
     out.push("It's based in your country, which usually means fewer travel, cost and visa obstacles than an equivalent programme abroad.");
+  }
+  if (reasonCodes.includes("limited_opportunity_information")) {
+    out.push("Oryn doesn't yet have enough detail on this opportunity's focus areas to explain the match more specifically — the eligibility read is real, the interest comparison just isn't possible yet.");
+  }
+  if (reasonCodes.includes("limited_profile_information")) {
+    out.push("Oryn can't yet compare this against your interests because your profile doesn't have any recorded — add a few for a more specific read.");
   }
   return out;
 }

@@ -325,29 +325,61 @@ function normalizeFieldLabel(value: string): string {
   return value.trim().toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
 }
 
-function computeRelevanceScore(student: StudentMatchProfile, opportunity: OpportunityForMatching): number {
+/**
+ * Why computeRelevance landed on its score -- not shown to the student directly, but the
+ * input buildReasonCodes (lib/opportunities/persist-matches.ts) needs to decide what, if
+ * anything, honest to say about relevance when the 70+ "matches_your_interests" bar isn't
+ * cleared. Found live 2026-09-02 auditing 724 of 1,931 opportunity_matches rows with zero
+ * reason codes: two thirds of those were "opportunity_fields_missing"/"student_interests_
+ * missing" -- the 40-point default below firing because there was nothing to compare, not
+ * because comparison found no overlap -- and conflating that with a genuine "no_overlap"
+ * would say something false (implying Oryn checked and it didn't match, when Oryn couldn't
+ * check at all).
+ */
+export type RelevanceBasis = "opportunity_fields_missing" | "student_interests_missing" | "some_overlap" | "no_overlap";
+
+interface RelevanceComputation {
+  score: number;
+  basis: RelevanceBasis;
+  matchedInterests: string[];
+}
+
+function computeRelevance(student: StudentMatchProfile, opportunity: OpportunityForMatching): RelevanceComputation {
   const near = isNearStudent(student, opportunity);
-  if (opportunity.fields.length === 0 || student.interests.length === 0) {
-    return clampScore(40 + (near ? PROXIMITY_BOOST : 0));
+  if (opportunity.fields.length === 0) {
+    return { score: clampScore(40 + (near ? PROXIMITY_BOOST : 0)), basis: "opportunity_fields_missing", matchedInterests: [] };
+  }
+  if (student.interests.length === 0) {
+    return { score: clampScore(40 + (near ? PROXIMITY_BOOST : 0)), basis: "student_interests_missing", matchedInterests: [] };
   }
 
   const fields = opportunity.fields.map(normalizeFieldLabel);
-  const interests = student.interests.map(normalizeFieldLabel);
   // counselor-loop QA defect #3 (docs/handoffs/counselor-loop-qa-report.md): substring
   // containment (field.includes(interest) / interest.includes(field)) treats "computer
   // science" as matching a field merely called "science" — the shorter string being a
   // substring of the longer one is not the same as the two naming the same field. Exact
   // (post-normalization) equality only; each array entry is already meant to be one field/
   // interest, not a combined phrase to search within.
-  const overlapCount = interests.filter((interest) => fields.some((field) => field === interest)).length;
+  //
+  // matchedInterests keeps the student's own original-cased entries (not the normalized
+  // form used only for comparison) -- these are what a reason sentence would name back to
+  // the student, and normalizeFieldLabel's output ("computer science", lowercased) is not
+  // fit to display as their own stated interest.
+  const matchedInterests = student.interests.filter((interest) => fields.includes(normalizeFieldLabel(interest)));
 
-  return clampScore((overlapCount / interests.length) * 100 + (near ? PROXIMITY_BOOST : 0));
+  const score = clampScore((matchedInterests.length / student.interests.length) * 100 + (near ? PROXIMITY_BOOST : 0));
+  return { score, basis: matchedInterests.length > 0 ? "some_overlap" : "no_overlap", matchedInterests };
 }
 
-function computeProfileNeedScore(student: StudentMatchProfile, opportunity: OpportunityForMatching): number {
+interface ProfileNeedComputation {
+  score: number;
+  matchedDimensions: ProfileDimension[];
+}
+
+function computeProfileNeed(student: StudentMatchProfile, opportunity: OpportunityForMatching): ProfileNeedComputation {
   const relevantDimensions = CATEGORY_DIMENSIONS[opportunity.category] ?? [];
-  const addressesWeakness = relevantDimensions.some((dimension) => student.weakestDimensions.includes(dimension));
-  return addressesWeakness ? 85 : 45;
+  const matchedDimensions = relevantDimensions.filter((dimension) => student.weakestDimensions.includes(dimension));
+  return { score: matchedDimensions.length > 0 ? 85 : 45, matchedDimensions };
 }
 
 export interface OpportunityMatchResult {
@@ -356,6 +388,16 @@ export interface OpportunityMatchResult {
   relevanceScore: number;
   profileNeedScore: number;
   matchScore: number;
+  /** Why relevanceScore landed where it did -- see RelevanceBasis's own comment. Lets
+   * buildReasonCodes distinguish "genuinely no shared interest" from "couldn't tell" rather
+   * than treating both as equally silent. */
+  relevanceBasis: RelevanceBasis;
+  /** The student's own stated interests (original casing) that matched this opportunity's
+   * fields -- empty whenever relevanceBasis isn't "some_overlap". */
+  matchedInterests: string[];
+  /** The student's weakest dimensions that this opportunity's category also targets --
+   * empty whenever profileNeedScore is 45 (the category addresses none of them). */
+  matchedGapDimensions: ProfileDimension[];
 }
 
 /**
@@ -371,11 +413,20 @@ export function computeOpportunityMatch(
   locale: Locale = DEFAULT_LOCALE
 ): OpportunityMatchResult {
   const { eligible, notes } = computeEligibility(student, opportunity, savedStatus, locale);
-  const relevanceScore = computeRelevanceScore(student, opportunity);
-  const profileNeedScore = computeProfileNeedScore(student, opportunity);
-  const matchScore = eligible ? clampScore(relevanceScore * 0.4 + profileNeedScore * 0.6) : 0;
+  const relevance = computeRelevance(student, opportunity);
+  const profileNeed = computeProfileNeed(student, opportunity);
+  const matchScore = eligible ? clampScore(relevance.score * 0.4 + profileNeed.score * 0.6) : 0;
 
-  return { eligible, eligibilityNotes: notes, relevanceScore, profileNeedScore, matchScore };
+  return {
+    eligible,
+    eligibilityNotes: notes,
+    relevanceScore: relevance.score,
+    profileNeedScore: profileNeed.score,
+    matchScore,
+    relevanceBasis: relevance.basis,
+    matchedInterests: relevance.matchedInterests,
+    matchedGapDimensions: profileNeed.matchedDimensions,
+  };
 }
 
 export type MatchTier = "exceptional" | "strong" | "worthALook" | "lowPriority";
