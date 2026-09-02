@@ -119,18 +119,29 @@ rendering-cost one, and this investigation didn't find an analogous layout gap i
 the 375px viewport itself, so it already has margin to spare at the narrowest common phone
 width).
 
-## 3. One thing worth naming, not re-litigating
+## 3. One thing worth naming, not re-litigating — and it changes which of these options to lead with
 
-The prototype's own callout is candid about a real tension: the flame/red palette reads as
-"speed and power," gaming-adjacent, and the founder is likely the payer while a 16-year-old
-is the daily user — a parent evaluating a paid tier might read gaming cues as less serious
-than the calm/analytical tone the base product deliberately holds. **That's the founder's
-already-made call, not something this report reopens.** Naming the one place it's sharper for
-a map specifically: a country fill covers real screen area, differently from a small
-gradient-text score number or a thin progress bar. If the flame treatment on selected-country
-fill reads as too saturated in practice, the prototype's own suggested middle ground (lower
-saturation, amber-weighted, sparser embers) is a tuning knob already on the table — worth
-trying both once building starts, not a reason to hold off starting.
+The prototype's own callout named a tension (flame/red reads gaming-adjacent, the founder is
+likely the payer, a parent might read it as less serious than the base product's calm tone)
+and proposed lowering saturation as the fix. **oryn-4e's research
+(`docs/ultra-visual-direction-research-2026-09-02.md`, merged same day) checked that exact
+proposal against Khanmigo, Perplexity Education, Duolingo, and Snapchat+ — the precedent the
+prototype itself cited — and found saturation isn't the variable that matters. Scope is.**
+None of the four studied products signal a paid tier with a full-surface animated
+transformation, at any saturation; every one keeps it small and contained (a badge, an icon).
+That's the founder's call to weigh, not something this report reopens — but it's directly
+relevant to *which of §1's options to build first*, not just a footnote:
+
+**This makes the pins-first recommendation stronger, not weaker.** A styled pin — or even a
+pulsing ring on the selected one — is close in kind to "a badge, an icon": small, contained,
+attached to one interactive element a student already taps. **Land fill and ambient/ember are
+the opposite shape** — they change the color of a large, always-visible region and add a
+persistent animation to the whole surface, which is exactly the pattern oryn-4e's research
+found no precedent for at any intensity. If the broader Ultra scope decision moves toward
+"contained signal" per that research, this report's land-fill and ambient proposals should be
+held pending that call rather than built on the current assumption that a bigger reskin is
+the target — pins are very likely to survive that call regardless of how it lands; the larger
+map-wide treatments may not be.
 
 ## 4. Summary
 
@@ -138,13 +149,16 @@ trying both once building starts, not a reason to hold off starting.
   `topojson-client`), every fill already CSS-custom-property-driven. The 3-option tile
   framing (provider style / filter overlay / blend-mode) doesn't apply — there's nothing
   raster to filter or blend against.
-- **Pins are the clear, cheap win**, and the codebase already has the exact animated-ring
-  precedent (`motion-safe:animate-ping` on the selected-country marker) to extend rather than
-  invent.
+- **Pins are the clear, cheap win, and now also the scope-safe one** — small, contained,
+  attached to one element a student taps, the same shape as the "badge/icon" pattern
+  oryn-4e's research found across every studied comparator. Build this first regardless of
+  how the broader scope question resolves.
 - **Land fill is a real extension of an already-tested pure function**, not new plumbing —
-  same ladder shape, Ultra tokens instead of `--brand-primary`.
+  same ladder shape, Ultra tokens instead of `--brand-primary`. **But hold it pending the
+  scope call** — a large always-visible region changing color is closer to the
+  "full-surface reskin" shape oryn-4e's research found no precedent for than to pins.
 - **Ocean/ambient likely needs nothing map-specific** — check against oryn-4e's page-level
-  layer once it lands before building a second one for this surface alone.
+  layer once it lands, and same scope caveat as land fill applies if it does need its own.
 - **No mobile-perf red flag found.** 364 SVG nodes at world scale, clean at 375px measured
   live, pin-glow already scoped to hover/selection only in the existing code.
 - **Standard is untouched by anything in this report** — every mechanism described is an
