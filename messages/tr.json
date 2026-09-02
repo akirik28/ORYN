@@ -1072,7 +1072,7 @@
       "unknown": "Kaç mesaj kullandığını yükleyemedik. {limit} mesajlık hakkın yine de geçerli ve {date} tarihinde yenilenir.",
       "exhausted": "{limit} mesajın tamamı kullanıldı. {date} tarihinde yenilenir.",
       "low": "Sadece {remaining} mesaj kaldı. {date} tarihinde yenilenir.",
-      "degraded": "Bu ayın kalanında kısa yanıtlar. {date} tarihinde yenilenir.",
+      "degraded": "Bu ay çok mesaj gönderdin, bu yüzden yanıtlar şimdilik daha kısa. {date} tarihinde yenilenir.",
       "normal": "{remaining} danışman mesajı kaldı. {date} tarihinde yenilenir."
     },
     "strategyPanel": {

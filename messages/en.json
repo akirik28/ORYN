@@ -1072,7 +1072,7 @@
       "unknown": "We couldn't load how many messages you've used. Your {limit}-message allowance still applies and resets {date}.",
       "exhausted": "All {limit} messages used. Resets {date}.",
       "low": "Only {remaining} left. Resets {date}.",
-      "degraded": "Shorter replies for the rest of this month. Resets {date}.",
+      "degraded": "You've sent a lot of messages this month, so replies are shorter for now. Resets {date}.",
       "normal": "{remaining} counselor messages left. Resets {date}."
     },
     "strategyPanel": {
