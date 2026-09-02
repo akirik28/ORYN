@@ -13,7 +13,6 @@ import { buildPostRemovalUpdate, buildPostRestoreUpdate, ModerationInputError } 
 import { ADMIN_FINANCE_SETTINGS_ID } from "@/lib/admin/queries";
 import { isValidExchangeRate, isValidPrice } from "@/lib/admin/finance";
 import { isUndefinedTableError } from "@/lib/supabase/errors";
-import type { MessageReportStatus } from "@/types/database";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { logAdminAction } from "@/lib/admin/log";
 import type { MessageReportStatus, PlanTier } from "@/types/database";
@@ -233,6 +232,8 @@ export async function updateFinanceSettings(input: { usdTryRate?: number; ultraP
 
   revalidatePath("/admin");
   return {};
+}
+
 export interface SetUserPlanTierResult {
   error?: string;
   /** true once a write actually happened; false when the target was already on the
