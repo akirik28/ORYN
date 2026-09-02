@@ -9,7 +9,7 @@ import { removeAllUserStorage, StorageCleanupError } from "@/lib/account/delete-
 import { UpdatePasswordSchema } from "@/lib/validation/auth";
 import { meetsMinimumSignupAge } from "@/lib/legal/age-policy";
 import { logEvent } from "@/lib/analytics/log";
-import type { TimeBudget } from "@/types/database";
+import type { NotificationCategory, TimeBudget } from "@/types/database";
 
 /**
  * Change the password of the already-signed-in student.
@@ -174,6 +174,37 @@ export async function updateVisibility(isPublic: boolean, lookingFor: string | n
   if (error) return { error: "Couldn't update." };
   revalidatePath("/settings");
   revalidatePath("/profile");
+  return {};
+}
+
+/**
+ * Migration 0090 — per-category notification toggles. Going-forward only, same as every
+ * write lib/notifications/create.ts's createNotification() gates: this changes nothing about
+ * notifications already sitting in a student's list, only whether a future one for a given
+ * category gets created. All seven written in one call, matching updateVisibility's own
+ * batched-fields shape above, rather than one Server Action per toggle.
+ */
+export async function updateNotificationPreferences(preferences: Record<NotificationCategory, boolean>): Promise<{ error?: string }> {
+  const session = await requireUser();
+  const supabase = await createClient();
+
+  // Explicit per-field, not a dynamic keyed loop -- seven is few enough that this stays
+  // readable, and it keeps the object a real Partial<Profile> literal (needed for the
+  // generated Supabase types to accept it) rather than a widened Record<string, boolean>.
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      notify_deadline: preferences.deadline,
+      notify_new_opportunity: preferences.new_opportunity,
+      notify_weekly_plan: preferences.weekly_plan,
+      notify_profile_update: preferences.profile_update,
+      notify_university_data_changed: preferences.university_data_changed,
+      notify_connection: preferences.connection,
+      notify_message: preferences.message,
+    })
+    .eq("id", session.userId!);
+  if (error) return { error: "Couldn't update your notification settings." };
+  revalidatePath("/settings");
   return {};
 }
 

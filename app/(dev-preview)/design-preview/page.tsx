@@ -70,7 +70,7 @@ export default function DesignPreviewPage() {
 
       <div className="mt-16 space-y-3 border-t pt-16">
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Settings</p>
-        <SettingsView email="ada@example.com" userId="fixture-user" profile={null} />
+        <SettingsView email="ada@example.com" userId="fixture-user" profile={null} unreadNotificationCount={0} />
       </div>
 
       <div className="mt-16 max-w-2xl space-y-3 border-t pt-16">

@@ -210,7 +210,27 @@ describe("migration numbering", () => {
     // anywhere in the codebase yet -- because a paying student choosing a faster answer
     // style is still paying, and shouldn't visually downgrade over an unrelated choice.
     // Still unapplied.
-    expect(Math.max(...numbers.map(Number))).toBe(89);
+    //
+    // 0090 (notification_preferences) closes the gap this session's own
+    // docs/notification-settings-gap-2026-09-02.md audit found: nothing anywhere let a
+    // student turn a notification category off -- not the Settings page, not the schema, not
+    // lib/notifications/create.ts's single shared insert path, checked directly rather than
+    // assumed missing. Deliberately numbered to skip 0089 -- that draft was still uncommitted
+    // in another session's worktree, invisible to this branch and to git, when this one was
+    // written; landing on the far side of a real 0089 rather than colliding with it was the
+    // point, not a coincidence of the number itself. Seven flat `notify_<category>` columns
+    // on profiles, one per NotificationCategory, `not null default true` so migration day
+    // changes nobody's actual behavior -- matches this table's own existing convention for a
+    // small fixed set of per-student flags (busy_mode, is_public) rather than a new join for
+    // seven enum values that don't change shape often. Enforced once, inside
+    // createNotification() itself -- the same choke point 0087's dedupe already lives in --
+    // rather than at each of the seven call sites, degrading to "every category enabled" via
+    // isUndefinedColumnError (matched on the shared `notify_` prefix, since whichever of the
+    // seven Postgres/PostgREST names first, the rest are missing too -- they land together)
+    // for as long as this migration stays unapplied, the same pattern 0077/0083/0086 already
+    // established. Going-forward only, not retroactive -- see this migration's own header for
+    // why that distinction matters to whoever reads it next. Still unapplied.
+    expect(Math.max(...numbers.map(Number))).toBe(90);
   });
 });
 
