@@ -72,7 +72,15 @@ describe("profiles_guard_protected_columns", () => {
     expect(flat).toContain("before update of is_admin on public.profiles");
   });
 
-  test("the migration announces it is not applied", () => {
-    expect(MIGRATION).toContain("WRITTEN BUT NOT APPLIED");
+  // Corrected 2026-09-02 (docs/migration-state.md): this header used to read "WRITTEN BUT
+  // NOT APPLIED" unconditionally — true when written, false by the time a full
+  // replay-vs-live audit checked. It now states APPLIED and quotes the old language
+  // verbatim as history, which is why the string is still found — inside a quote, not as
+  // a live claim. See __tests__/security/computed-columns-guard.test.ts's sibling
+  // correction for 0063, which this file's own header comment already points to.
+  test("the migration's header states it is applied, and quotes its old status as history rather than asserting it", () => {
+    expect(MIGRATION).toContain("STATUS, corrected 2026-09-02");
+    expect(MIGRATION).toContain("APPLIED. This file originally read");
+    expect(MIGRATION).toContain('"WRITTEN BUT NOT APPLIED');
   });
 });

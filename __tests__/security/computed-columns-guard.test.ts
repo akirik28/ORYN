@@ -142,12 +142,27 @@ describe("ai_recommendations is deliberately absent from this migration", () => 
   });
 });
 
-describe("the migration announces it is not applied", () => {
-  test("header states the standing constraint", () => {
-    expect(MIGRATION).toContain("WRITTEN BUT NOT APPLIED");
+describe("the migration's header records its real applied status, not a stale one", () => {
+  // Corrected 2026-09-02 (docs/migration-state.md): this file's header used to read
+  // "WRITTEN BUT NOT APPLIED" unconditionally -- true when written, false by the time a
+  // full replay-vs-live audit checked, and the file said the opposite of reality for some
+  // stretch of that gap. The header now states it is APPLIED and quotes the old language
+  // verbatim as history, which is why both assertions below still find their old strings
+  // present -- inside a quote, not as a live claim. Pinning that distinction explicitly
+  // rather than just re-asserting substring presence, which would pass either way.
+  test("header states it is applied, not that it's still pending", () => {
+    expect(MIGRATION).toContain("STATUS, corrected 2026-09-02");
+    expect(MIGRATION).toContain("APPLIED, in full");
   });
 
-  test("states its dependency on migration 0062", () => {
+  test("quotes the original 'not applied' language as history, inside the correction, not as a live claim", () => {
+    const correctionIndex = MIGRATION.indexOf("STATUS, corrected 2026-09-02");
+    expect(correctionIndex).toBeGreaterThanOrEqual(0);
+    const correctionBlock = MIGRATION.slice(correctionIndex);
+    expect(correctionBlock).toContain('"WRITTEN BUT NOT APPLIED');
+  });
+
+  test("still documents its relationship to migration 0062", () => {
     expect(MIGRATION).toContain("Requires migration 0062");
   });
 });

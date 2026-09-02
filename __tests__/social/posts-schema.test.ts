@@ -80,9 +80,15 @@ describe("migration numbering", () => {
     // earlier than the guard itself would have caught it. 0077
     // (weekly_actions_carried_forward) is the "Regenerate destroys completed actions and
     // their reflections" fix — docs/founder-blocked-backlog.md item 39 — adding the column
-    // that tells a preserved-through-regeneration action apart from a fresh one. All still
-    // unapplied.
-    expect(Math.max(...numbers.map(Number))).toBe(77);
+    // that tells a preserved-through-regeneration action apart from a fresh one. 0078
+    // (global_university_discovery_indexes) captures three indexes that were live on
+    // oryn-qa-scratch with no migration anywhere — found by the 2026-09-02 full replay
+    // audit (docs/would-a-fresh-deploy-match-live-2026-09-02.md), which is also why this
+    // comment can say precisely which of 0057-0078 are genuinely unapplied for the first
+    // time: 0048, 0058, 0075, 0076, 0077, and this one — see docs/migration-state.md,
+    // rewritten the same day, rather than trusting any range this comment names as still
+    // current by the time you're reading it.
+    expect(Math.max(...numbers.map(Number))).toBe(78);
   });
 });
 

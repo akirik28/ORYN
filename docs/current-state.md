@@ -54,7 +54,7 @@ item 0-bis on the launch plan.
 | Prior checkpoint | `9ca9371d`, 2026-09-01 evening — **44 commits / 14 merges since**, not individually reconstructed here; see `git log 9ca9371d..main` for the full record |
 | Gate on this checkpoint's commit | lint clean · typecheck clean · **211 files / 3,086 tests** · production build compiles |
 | Live DB measured against | `oryn-qa-scratch` (`qtcvcflzxbuagvvwahhu`), via Supabase MCP, 2026-09-01, this checkpoint |
-| Which migrations are actually live | See **Migrations** below — every migration from `0057` through `0074` individually probed against live schema objects this checkpoint, not the ledger, which has no row for several of them |
+| Which migrations are actually live | **See `docs/migration-state.md`, not the Migrations section below** — that section's own "not applied" list was wrong by 2026-09-02 for four of five entries (re-probed directly); `migration-state.md` is the current, corrected table and also names a real live gap (`0048`) this checkpoint missed entirely |
 | RLS re-verified live | 2026-09-01, this checkpoint: 78/78 `public` tables have RLS enabled, unchanged from prior checkpoint |
 
 If this file and a handoff doc disagree, this file is newer and wins *for the date stamped
@@ -239,27 +239,42 @@ still enforce the same guarantee structurally, independent of when the live quer
 
 ## Migrations
 
-**Latest applied live**: `0071` (`calendar_bound_fact_class`). Every migration from `0057`
-through `0074` was individually probed against live schema objects this checkpoint (columns,
-function grants, indexes, table existence, column comments — not the ledger, which has no row
-for several of the ones below that are, in fact, live).
+**Superseded 2026-09-02 — see `docs/migration-state.md` for the current, authoritative
+table.** The paragraph below is kept for its own history (it's what motivated the
+2026-09-02 full re-check, which found this checkpoint's own "not applied" list for
+`0057`/`0059`/`0072`/`0073`/`0074` was already wrong the day it was written), not as a
+current source. Read `migration-state.md` first — it also names a *new* live gap (`0048`)
+this checkpoint never checked for, and corrects `0062`/`0063`'s own file headers, which
+claimed unapplied while being fully live.
 
-**Applied**: `0060` (`opportunity_country_eligibility_confirmed_open`), the Security Gate 1 set
-`0061`–`0065` (admin self-grant guard, `message_reports` forgery guard, and related — see
-`docs/known-issues.md`, which corrects an earlier framing of these as founder-gated/unapplied;
-they are live), `0066` (opportunity language + image columns), `0067` (revokes `anon` EXECUTE
-on `is_blocked_between` — confirmed by privilege check, no ledger row), `0068` (target-university
-null-program dedup index — confirmed by index presence, no ledger row), `0070`
-(documentation-only column comment), `0071`.
+**Latest applied live, as of this now-superseded checkpoint**: `0071`
+(`calendar_bound_fact_class`). Every migration from `0057` through `0074` was individually
+probed against live schema objects this checkpoint (columns, function grants, indexes,
+table existence, column comments — not the ledger, which has no row for several of the
+ones below that are, in fact, live).
 
-**Not applied**: `0057` (YÖK Atlas `kilavuz_kodu` column), `0058` (deliberately withheld —
-the social-posts kill switch, not meant to be applied casually), `0059` (`ucas_code` column),
-`0072` (birth-year change audit trail), `0073` (`product_events` RLS policy), `0074` (Nordic/
-Belgian/Austrian batch prerequisite). A same-checkpoint commit
+**Applied, as of this checkpoint**: `0060` (`opportunity_country_eligibility_confirmed_open`),
+the Security Gate 1 set `0061`–`0065` (admin self-grant guard, `message_reports` forgery guard,
+and related — see `docs/known-issues.md`, which corrects an earlier framing of these as
+founder-gated/unapplied; they are live), `0066` (opportunity language + image columns), `0067`
+(revokes `anon` EXECUTE on `is_blocked_between` — confirmed by privilege check, no ledger row),
+`0068` (target-university null-program dedup index — confirmed by index presence, no ledger
+row), `0070` (documentation-only column comment), `0071`.
+
+**Recorded "not applied" here — wrong by the next checkpoint (2026-09-02), re-probed
+directly, all four now confirmed live**: `0057` (YÖK Atlas `kilavuz_kodu` column), `0059`
+(`ucas_code` and three sibling columns, plus two widened CHECK vocabularies — confirmed via
+`pg_get_constraintdef`, not just column presence), `0072` (birth-year change audit trail),
+`0073` (`product_events` RLS policy). `0074` was also re-confirmed live (unchanged
+conclusion, this time via `pg_get_constraintdef`/column default rather than assumed).
+**`0058` is the one that was correctly "not applied" here and still is** — deliberately
+withheld, the social-posts kill switch; still the founder's call, not resettled by any of
+this. **`0048` was not on this checkpoint's list at all and is a real, live gap** — see
+`docs/migration-state.md`. A same-checkpoint commit
 (`fix(migrations): make the five unapplied migrations safe to re-run`) added `if not exists` /
-`drop ... if exists` guards to `0057`, `0072`, and `0073` (`0059` and `0074` already had them),
-so all five — everything except the deliberately-separate `0058` — are safe for the founder to
-apply in any order, with no ordering dependency between them.
+`drop ... if exists` guards to `0057`, `0072`, and `0073` (`0059` and `0074` already had them)
+— harmless now that all four are confirmed live, and still correct practice for whatever's
+genuinely unapplied as of 2026-09-02 (`0048`, `0075`, `0076`, `0077`, `0078`).
 
 **One live-state finding that contradicts a currently-open backlog item**: `0069`
 (`drop_ad_hoc_backup_tables`) targets nine specific `_backup_*`/staging tables. None of the

@@ -230,6 +230,15 @@ create trigger evidence_files_00_guard_verification_status
 -- the plan pipeline; not decided or acted on here.
 -- ---------------------------------------------------------------------------
 
--- WRITTEN BUT NOT APPLIED, per BUG-1's standing package constraint and because this is a
--- security-critical, founder-gated change. Do not run against a live project without
--- explicit review. Requires migration 0062 (amended) applied first.
+-- STATUS, corrected 2026-09-02 (docs/would-a-fresh-deploy-match-live-2026-09-02.md):
+-- APPLIED, in full -- all six guard functions/triggers this migration defines (profiles,
+-- profile_scores, profile_score_snapshots, opportunity_matches,
+-- student_requirement_evaluations, evidence_files) confirmed live against
+-- `oryn-qa-scratch`, `pg_get_functiondef` compared byte-for-byte against this file, not
+-- just checked by name. This file originally read "WRITTEN BUT NOT APPLIED... founder-
+-- gated... do not run against a live project without explicit review. Requires migration 0062
+-- (amended) applied first" -- true when written; see 0062's own corrected header for the
+-- same note and the reasoning it links to. Whether the founder's own review happened
+-- out-of-band before this was applied is not something a schema diff can see; only that
+-- live behavior matches what this file describes. Left as a historical record of the
+-- process this migration passed through, not evidence that process can be skipped.
