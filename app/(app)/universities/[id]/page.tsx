@@ -514,6 +514,26 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         <StatCard icon={TrendingUp} label={t("graduationRate")} value={stats?.graduation_rate != null ? `${Math.round(stats.graduation_rate * 100)}%` : t("unavailable")} />
       </div>
 
+      {/* Phase 36/71: admission rate, test scores, and graduation rate above all come from
+          this one `university_statistics` row, and every row on file already carries a
+          real `source`/`data_confidence` (confirmed live: 129/129 do) — this badge was the
+          missing wire, not missing data. Placed once for the whole stat grid rather than
+          once per card: they share one row, so repeating it per card would imply four
+          independent sources instead of one. Deliberately separate from "Your outlook"
+          above (which already carries its own "not a guarantee" disclaimer) — this badge's
+          job is only to say where the raw institutional number came from, not to reinterpret
+          the personalized estimate. */}
+      {stats?.source ? (
+        <SourceBadge
+          sourceName={stats.source}
+          checkedAt={stats.updated_at}
+          confidence={stats.data_confidence ?? undefined}
+          locale={locale}
+          sourceLabel={tSourceBadge("source")}
+          checkedLabel={(time) => tSourceBadge("checked", { time })}
+          viewSourceLabel={tSourceBadge("viewSource")}
+        />
+      ) : null}
 
       {programsRes.data && programsRes.data.length > 0 ? (
         <section className="space-y-5">
