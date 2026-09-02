@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { getCurrentProfile, requireUser } from "@/lib/security/dal";
+import { createClient } from "@/lib/supabase/server";
 import { SettingsView } from "@/features/settings/settings-view";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -17,5 +18,19 @@ export default async function SettingsPage() {
   const session = await requireUser();
   const profile = await getCurrentProfile();
 
-  return <SettingsView email={session.email} userId={session.userId!} profile={profile} />;
+  // Same query app/(app)/notifications/page.tsx already runs for its own unread count —
+  // duplicated rather than shared because that page's version is entangled with its own
+  // category filter param, and this one never needs to be. Feeds the new notification
+  // preferences section's "Mark all read" control, so a student who just muted a category
+  // can clear an existing backlog from the same screen instead of navigating away.
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", session.userId!)
+    .is("read_at", null);
+
+  return (
+    <SettingsView email={session.email} userId={session.userId!} profile={profile} unreadNotificationCount={count ?? 0} />
+  );
 }

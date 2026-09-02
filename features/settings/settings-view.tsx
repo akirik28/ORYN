@@ -12,14 +12,32 @@ import { BirthYearForm } from "@/features/settings/birth-year-form";
 import { LanguageSwitcher } from "@/features/app-shell/language-switcher";
 import { CapacityForm } from "@/features/settings/capacity-form";
 import { VisibilityForm } from "@/features/settings/visibility-form";
+import { NotificationPreferencesForm } from "@/features/settings/notification-preferences-form";
 import { DeleteAccountDialog } from "@/features/settings/delete-account-dialog";
 import { PasswordForm } from "@/features/settings/password-form";
-import type { Profile } from "@/types/database";
+import type { NotificationCategory, Profile } from "@/types/database";
 
 export interface SettingsViewProps {
   email: string | null;
   userId: string;
   profile: Profile | null;
+  unreadNotificationCount: number;
+}
+
+// Falls back to enabled for every category when profile is null or migration 0090 hasn't
+// applied yet (the columns are simply absent from the fetched row) — the same "enabled unless
+// explicitly turned off" default lib/notifications/create.ts's write-side gate uses, so a
+// student never sees a toggle read "off" for a category nothing ever actually disabled.
+function initialNotificationPreferences(profile: Profile | null): Record<NotificationCategory, boolean> {
+  return {
+    deadline: profile?.notify_deadline ?? true,
+    new_opportunity: profile?.notify_new_opportunity ?? true,
+    weekly_plan: profile?.notify_weekly_plan ?? true,
+    profile_update: profile?.notify_profile_update ?? true,
+    university_data_changed: profile?.notify_university_data_changed ?? true,
+    connection: profile?.notify_connection ?? true,
+    message: profile?.notify_message ?? true,
+  };
 }
 
 // glass-card grouping — literal source values (Figma App.tsx `SettingsScreen`), same
@@ -35,7 +53,7 @@ export interface SettingsViewProps {
 const cardClassName = "glass-card space-y-6 rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7";
 const cardClassNameOffset = "glass-card-offset space-y-6 rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7";
 
-export async function SettingsView({ email, userId, profile }: SettingsViewProps) {
+export async function SettingsView({ email, userId, profile, unreadNotificationCount }: SettingsViewProps) {
   const t = await getTranslations("settings.view");
   const tNav = await getTranslations("nav");
   const locale = await getLocale();
@@ -136,6 +154,12 @@ export async function SettingsView({ email, userId, profile }: SettingsViewProps
             initialIsPublic={profile?.is_public ?? false}
             initialLookingFor={profile?.looking_for ?? null}
           />
+        </div>
+
+        <div className="space-y-1.5 border-t border-brand-primary-border/40 pt-6">
+          <h3 className="text-sm font-medium">{t("notificationsTitle")}</h3>
+          <p className="text-sm text-muted-foreground">{t("notificationsDescription")}</p>
+          <NotificationPreferencesForm initialPreferences={initialNotificationPreferences(profile)} unreadCount={unreadNotificationCount} />
         </div>
       </section>
 

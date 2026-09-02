@@ -118,6 +118,8 @@
       "studyCapacityDescription": "Haftalık planın gerçekçi olarak yapabileceklerinle eşleşmesine yardımcı olur.",
       "visibilityTitle": "Görünürlük",
       "visibilityDescription": "Diğer Oryn öğrencilerinin senin hakkında ne görebileceğini kontrol et.",
+      "notificationsTitle": "Bildirimler",
+      "notificationsDescription": "Bir kategoriyi kapatmak, o türden yeni bildirimleri durdurur. Bu, zaten sahip olduğun bildirimleri temizlemez — temiz bir başlangıç istiyorsan aşağıdaki \"Tümünü okundu işaretle\"yi kullan.",
       "dangerZone": "Tehlikeli bölge",
       "dangerZoneDescription": "Oryn'ın senin hakkında sakladığı her şeyi indir veya hesabını kalıcı olarak sil.",
       "exportData": "Verilerimi dışa aktar",
@@ -195,6 +197,11 @@
     "location": {
       "countryLabel": "Ülke",
       "cityLabel": "Şehir (isteğe bağlı)",
+      "saved": "Kaydedildi"
+    },
+    "notifications": {
+      "on": "Açık",
+      "off": "Kapalı",
       "saved": "Kaydedildi"
     }
   },

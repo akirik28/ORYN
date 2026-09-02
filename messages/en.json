@@ -118,6 +118,8 @@
       "studyCapacityDescription": "Helps the weekly plan match what you can realistically do.",
       "visibilityTitle": "Visibility",
       "visibilityDescription": "Control what other Oryn students can see about you.",
+      "notificationsTitle": "Notifications",
+      "notificationsDescription": "Turn a category off to stop new notifications like it. This doesn't clear notifications you already have — use \"Mark all read\" below if you want a clean slate.",
       "dangerZone": "Danger zone",
       "dangerZoneDescription": "Download everything Oryn has stored about you, or permanently delete your account.",
       "exportData": "Export my data",
@@ -195,6 +197,11 @@
     "location": {
       "countryLabel": "Country",
       "cityLabel": "City (optional)",
+      "saved": "Saved"
+    },
+    "notifications": {
+      "on": "On",
+      "off": "Off",
       "saved": "Saved"
     }
   },

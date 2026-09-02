@@ -2,20 +2,21 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 /**
  * lib/notifications/create.ts's dedup catch for migration 0087
- * (notifications_new_opportunity_link_unique_idx). The whole point of this migration is that
- * it must work identically whether or not it has been applied — both paths are tested
- * explicitly here, not just the happy one, per this codebase's own standing discipline for
- * every unapplied-migration guard (lib/supabase/errors.ts's isUndefinedColumnError,
- * lib/plan/persist.ts's carried_forward comment).
+ * (notifications_new_opportunity_link_unique_idx), and its preference gate for migration 0090
+ * (notify_* columns). Both are unapplied-migration guards and both are tested the same way —
+ * applied and unapplied, explicitly, not just the happy path — per this codebase's own
+ * standing discipline (lib/supabase/errors.ts's isUndefinedColumnError, lib/plan/persist.ts's
+ * carried_forward comment).
  */
 
-const { insertMock } = vi.hoisted(() => ({ insertMock: vi.fn() }));
+const { insertMock, profilesSelectMock } = vi.hoisted(() => ({ insertMock: vi.fn(), profilesSelectMock: vi.fn() }));
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({
     from: (table: string) => {
-      if (table !== "notifications") throw new Error(`create.test.ts: unexpected table "${table}"`);
-      return { insert: insertMock };
+      if (table === "notifications") return { insert: insertMock };
+      if (table === "profiles") return { select: () => ({ eq: () => ({ maybeSingle: profilesSelectMock }) }) };
+      throw new Error(`create.test.ts: unexpected table "${table}"`);
     },
   }),
 }));
@@ -26,6 +27,15 @@ const baseParams = { userId: "user-1", category: "new_opportunity" as const, tit
 
 beforeEach(() => {
   insertMock.mockReset();
+  profilesSelectMock.mockReset();
+  // Default: migration 0090 unapplied — today's actual state on most databases this runs
+  // against, and the state every test in the describe blocks below (other than the dedicated
+  // "preference gate" one) implicitly relies on: the gate must be a no-op unless a test
+  // overrides this mock to say otherwise.
+  profilesSelectMock.mockResolvedValue({
+    data: null,
+    error: { code: "PGRST204", message: "Could not find the 'notify_deadline' column of 'profiles' in the schema cache" },
+  });
 });
 
 describe("createNotification — migration 0087 unapplied (today's actual state)", () => {
@@ -112,5 +122,98 @@ describe("createNotification — other categories are never affected by the new_
     expect(result).toBe(false);
     expect(warnSpy).toHaveBeenCalledTimes(1);
     warnSpy.mockRestore();
+  });
+});
+
+describe("createNotification — migration 0090 preference gate", () => {
+  test("category explicitly disabled -- skips the insert entirely, returns false", async () => {
+    profilesSelectMock.mockResolvedValue({ data: { notify_new_opportunity: false }, error: null });
+
+    const result = await createNotification(baseParams);
+
+    expect(result).toBe(false);
+    expect(insertMock).not.toHaveBeenCalled();
+  });
+
+  test("category explicitly enabled -- inserts normally, same as before 0090 existed", async () => {
+    profilesSelectMock.mockResolvedValue({ data: { notify_new_opportunity: true }, error: null });
+    insertMock.mockResolvedValue({ error: null });
+
+    const result = await createNotification(baseParams);
+
+    expect(result).toBe(true);
+    expect(insertMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("reads the column for the category actually being created, not a different one", async () => {
+    // All seven come back in one row; only weekly_plan is off. A bug that checked the wrong
+    // column (e.g. always notify_deadline) would pass the "explicitly enabled" test above by
+    // accident -- this is the test that would actually catch it.
+    profilesSelectMock.mockResolvedValue({
+      data: {
+        notify_deadline: true,
+        notify_new_opportunity: true,
+        notify_weekly_plan: false,
+        notify_profile_update: true,
+        notify_university_data_changed: true,
+        notify_connection: true,
+        notify_message: true,
+      },
+      error: null,
+    });
+    insertMock.mockResolvedValue({ error: null });
+
+    const weeklyPlanResult = await createNotification({ userId: "user-1", category: "weekly_plan", title: "Your weekly plan is ready", link: "/plan" });
+    const opportunityResult = await createNotification(baseParams);
+
+    expect(weeklyPlanResult).toBe(false);
+    expect(opportunityResult).toBe(true);
+    expect(insertMock).toHaveBeenCalledTimes(1); // only the enabled category actually inserted
+  });
+
+  test("migration unapplied (undefined-column error) -- degrades to enabled, inserts normally, no warning logged", async () => {
+    // This is the beforeEach default, asserted explicitly here as its own case instead of
+    // staying implicit in every other test in this file.
+    insertMock.mockResolvedValue({ error: null });
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const result = await createNotification(baseParams);
+
+    expect(result).toBe(true);
+    expect(insertMock).toHaveBeenCalledTimes(1);
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  test("an unrelated read failure on the preference check fails OPEN, not closed -- a muted notification that arrives anyway is recoverable, a real one silently dropped over an infra hiccup is not", async () => {
+    profilesSelectMock.mockResolvedValue({ data: null, error: { code: "PGRST301", message: "JWT expired" } });
+    insertMock.mockResolvedValue({ error: null });
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const result = await createNotification(baseParams);
+
+    expect(result).toBe(true);
+    expect(insertMock).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledTimes(1); // unlike the undefined-column case, this one is worth knowing about
+    warnSpy.mockRestore();
+  });
+
+  test("no profile row found -- fails open rather than blocking a notification on a lookup that found nothing", async () => {
+    profilesSelectMock.mockResolvedValue({ data: null, error: null });
+    insertMock.mockResolvedValue({ error: null });
+
+    const result = await createNotification(baseParams);
+
+    expect(result).toBe(true);
+    expect(insertMock).toHaveBeenCalledTimes(1);
+  });
+
+  test("a null column value reads as enabled -- the real column is not-null default true, this is defense in depth for the mock layer only", async () => {
+    profilesSelectMock.mockResolvedValue({ data: { notify_new_opportunity: null }, error: null });
+    insertMock.mockResolvedValue({ error: null });
+
+    const result = await createNotification(baseParams);
+
+    expect(result).toBe(true);
   });
 });

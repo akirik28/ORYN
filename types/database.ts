@@ -162,6 +162,18 @@ export interface Profile {
   /** Opt-in: education_records.overall_gpa/gpa_scale and courses.grade_value are only
    * ever shown on the public profile when this is true. */
   show_gpa: boolean;
+  /** Migration 0090, one column per NotificationCategory (all seven), default true so
+   * migration day changes nobody's behavior. Read by lib/notifications/create.ts before
+   * every write; false suppresses future notifications for that category only -- never
+   * retroactive. Absent on a database where 0090 hasn't applied yet, which
+   * createNotification() degrades from (isUndefinedColumnError) to "enabled". */
+  notify_deadline: boolean;
+  notify_new_opportunity: boolean;
+  notify_weekly_plan: boolean;
+  notify_profile_update: boolean;
+  notify_university_data_changed: boolean;
+  notify_connection: boolean;
+  notify_message: boolean;
   created_at: string;
   updated_at: string;
 }
