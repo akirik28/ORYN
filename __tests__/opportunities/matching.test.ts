@@ -71,6 +71,22 @@ describe("computeEligibility", () => {
     expect(result.notes).toMatch(/age/i);
   });
 
+  // 2026-09-03: absence of a recorded age bound is not evidence every age is welcome — it's
+  // just never having been researched (~67% of live rows at the time this was found). Same
+  // principle, and same test shape, as the "unverified country eligibility" block below;
+  // kept here rather than folded into that block since it's a different field, not a
+  // sub-case of the country check.
+  test("surfaces a not-verified note when the opportunity records no age bound at all", () => {
+    const result = computeEligibility(student(), opportunity());
+    expect(result.eligible).toBe(true); // never an exclusion — no bound is not a known mismatch
+    expect(result.notes).toMatch(/age eligibility not verified yet/i);
+  });
+
+  test("no age-unverified note when a real bound is on file, regardless of match outcome", () => {
+    const result = computeEligibility(student({ age: 16 }), opportunity({ minimumAge: 14, maximumAge: 18 }));
+    expect(result.notes ?? "").not.toMatch(/age eligibility not verified yet/i);
+  });
+
   test("is ineligible when a citizenship restriction is known to exclude the student", () => {
     const result = computeEligibility(
       student({ citizenshipCountries: ["Canada"] }),
@@ -82,8 +98,8 @@ describe("computeEligibility", () => {
 
   test("is eligible when the student holds one of the eligible citizenships", () => {
     const result = computeEligibility(
-      student({ citizenshipCountries: ["Canada", "United States"] }),
-      opportunity({ eligibleCitizenships: ["United States"] })
+      student({ citizenshipCountries: ["Canada", "United States"], graduationYear: new Date().getFullYear() + 1 }),
+      opportunity({ eligibleCitizenships: ["United States"], minimumAge: 0, maximumAge: 120, eligibleGrades: ["12"] })
     );
     expect(result.eligible).toBe(true);
     expect(result.notes).toBeNull();
@@ -106,6 +122,20 @@ describe("computeEligibility", () => {
     const result = computeEligibility(student({ graduationYear: null }), opportunity({ eligibleGrades: ["9", "10"] }));
     expect(result.eligible).toBe(true);
     expect(result.notes).toMatch(/grade/i);
+  });
+
+  // Same principle as the age-unverified test above, for the field that had the identical
+  // gap: eligibleGrades empty means never researched, not "every grade welcome."
+  test("surfaces a not-verified note when the opportunity records no eligible grades at all", () => {
+    const result = computeEligibility(student(), opportunity());
+    expect(result.eligible).toBe(true);
+    expect(result.notes).toMatch(/grade eligibility not verified yet/i);
+  });
+
+  test("no grade-unverified note when a real grade list is on file, regardless of match outcome", () => {
+    const nextYear = new Date().getFullYear() + 1;
+    const result = computeEligibility(student({ graduationYear: nextYear }), opportunity({ eligibleGrades: ["9", "10", "11", "12"] }));
+    expect(result.notes ?? "").not.toMatch(/grade eligibility not verified yet/i);
   });
 
   // Confirmed live against a real profile this session: a student's own stored country
@@ -147,28 +177,43 @@ describe("computeEligibility", () => {
   // before this rule both rendered identically: eligible, no warning. Only the first
   // has earned silence.
   describe("unverified country eligibility", () => {
+    // This block isolates the country/citizenship dimension on purpose — age and grade need
+    // their own resolved values here so the 2026-09-03 age/grade-unverified notes (added
+    // alongside this exact country safeguard, same principle) don't show up as noise in
+    // assertions that are specifically about what country/citizenship data does. A student
+    // whose graduation year actually resolves to a listed grade, on an opportunity with a
+    // real (trivially wide) age band and a matching eligibleGrades entry, is fully resolved
+    // on both dimensions — only country/citizenship notes can appear below.
+    const resolvedGradeYear = new Date().getFullYear() + 1;
+    function resolvedOpportunity(overrides: Partial<OpportunityForMatching> = {}): OpportunityForMatching {
+      return opportunity({ minimumAge: 0, maximumAge: 120, eligibleGrades: ["12"], ...overrides });
+    }
+    function resolvedStudent(overrides: Partial<StudentMatchProfile> = {}): StudentMatchProfile {
+      return student({ graduationYear: resolvedGradeYear, ...overrides });
+    }
+
     test("surfaces a not-verified note when eligibleCountries is empty and not research-confirmed open", () => {
-      const result = computeEligibility(student(), opportunity());
+      const result = computeEligibility(resolvedStudent(), resolvedOpportunity());
       expect(result.eligible).toBe(true); // never an exclusion — absence of research is not evidence of a restriction
       expect(result.notes).toMatch(/not verified yet/i);
     });
 
     test("no note when research confirmed the program open worldwide", () => {
-      const result = computeEligibility(student(), opportunity({ countryEligibilityConfirmedOpen: true }));
+      const result = computeEligibility(resolvedStudent(), resolvedOpportunity({ countryEligibilityConfirmedOpen: true }));
       expect(result.eligible).toBe(true);
       expect(result.notes).toBeNull();
     });
 
     test("no note when a populated allow-list already covers the row (researched-restricted case)", () => {
-      const result = computeEligibility(student({ country: "Canada" }), opportunity({ eligibleCountries: ["United States", "Canada"] }));
+      const result = computeEligibility(resolvedStudent({ country: "Canada" }), resolvedOpportunity({ eligibleCountries: ["United States", "Canada"] }));
       expect(result.eligible).toBe(true);
       expect(result.notes).toBeNull();
     });
 
     test("no note when a structured citizenship gate already covers the row", () => {
       const result = computeEligibility(
-        student({ citizenshipCountries: ["United States"] }),
-        opportunity({ eligibleCitizenships: ["United States"] })
+        resolvedStudent({ citizenshipCountries: ["United States"] }),
+        resolvedOpportunity({ eligibleCitizenships: ["United States"] })
       );
       expect(result.eligible).toBe(true);
       expect(result.notes).toBeNull();
@@ -181,15 +226,15 @@ describe("computeEligibility", () => {
     // about one row's own text (live-confirmed on Garcia Summer Research Program).
     test("surfaces a note quoting citizenship-restriction prose instead of going silent", () => {
       const result = computeEligibility(
-        student(),
-        opportunity({ citizenshipRestrictions: "Applicants must be U.S. citizens or U.S. permanent residents." })
+        resolvedStudent(),
+        resolvedOpportunity({ citizenshipRestrictions: "Applicants must be U.S. citizens or U.S. permanent residents." })
       );
       expect(result.eligible).toBe(true); // prose alone is never a hard exclusion, only a structured gate is
       expect(result.notes).toContain("Applicants must be U.S. citizens or U.S. permanent residents.");
     });
 
     test("surfaces a note quoting residency-restriction prose the same way", () => {
-      const result = computeEligibility(student(), opportunity({ residencyRestrictions: "Open only to residents of EU member states." }));
+      const result = computeEligibility(resolvedStudent(), resolvedOpportunity({ residencyRestrictions: "Open only to residents of EU member states." }));
       expect(result.eligible).toBe(true);
       expect(result.notes).toContain("Open only to residents of EU member states.");
     });
@@ -199,19 +244,19 @@ describe("computeEligibility", () => {
     // be a weaker version of the same disagreement this package fixes.
     test("the prose note matches the counselor's exact wording", () => {
       const prose = "Applicants must be U.S. citizens or U.S. permanent residents.";
-      const result = computeEligibility(student(), opportunity({ citizenshipRestrictions: prose }));
+      const result = computeEligibility(resolvedStudent(), resolvedOpportunity({ citizenshipRestrictions: prose }));
       expect(result.notes).toBe(`Citizenship restriction on file (not automatically verified): ${prose}`);
     });
 
     test("no separate 'not verified yet' note when restriction prose already answers the question", () => {
-      const result = computeEligibility(student(), opportunity({ citizenshipRestrictions: "Open only to EU citizens." }));
+      const result = computeEligibility(resolvedStudent(), resolvedOpportunity({ citizenshipRestrictions: "Open only to EU citizens." }));
       expect(result.notes).not.toMatch(/not verified yet/i);
     });
 
     test("citizenship prose stays quiet when a structured citizenship gate already resolved the row", () => {
       const result = computeEligibility(
-        student({ citizenshipCountries: ["United States"] }),
-        opportunity({ eligibleCitizenships: ["United States"], citizenshipRestrictions: "Applicants must be U.S. citizens." })
+        resolvedStudent({ citizenshipCountries: ["United States"] }),
+        resolvedOpportunity({ eligibleCitizenships: ["United States"], citizenshipRestrictions: "Applicants must be U.S. citizens." })
       );
       expect(result.eligible).toBe(true);
       expect(result.notes).toBeNull();
@@ -219,8 +264,8 @@ describe("computeEligibility", () => {
 
     test("residency prose stays quiet when a structured country allow-list already resolved the row", () => {
       const result = computeEligibility(
-        student({ country: "Canada" }),
-        opportunity({ eligibleCountries: ["Canada"], residencyRestrictions: "Open only to North American residents." })
+        resolvedStudent({ country: "Canada" }),
+        resolvedOpportunity({ eligibleCountries: ["Canada"], residencyRestrictions: "Open only to North American residents." })
       );
       expect(result.eligible).toBe(true);
       expect(result.notes).toBeNull();

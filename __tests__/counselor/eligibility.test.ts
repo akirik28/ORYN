@@ -106,9 +106,23 @@ function state(opp: Opportunity, birthYear: number | null = 2009, overrides: Par
   };
 }
 
+// Grade 12 today, the same computation __tests__/opportunities/matching.test.ts's own
+// "unverified country eligibility" block uses — kept local rather than imported since these
+// two suites don't otherwise share fixtures.
+const RESOLVED_GRADE_YEAR = new Date().getFullYear() + 1;
+// Spread into an opportunity() call to resolve age and grade (2026-09-03's own
+// eligibility-not-verified safeguard for those two fields), for tests whose actual subject
+// is a different dimension entirely and shouldn't see that note as noise.
+const AGE_AND_GRADE_RESOLVED = { minimum_age: 0, maximum_age: 120, eligible_grades: ["12"] };
+
 describe("evaluateCandidateEligibility — opportunities", () => {
   test("known_eligible when no restrictions exist and country eligibility is research-confirmed open", () => {
-    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ country_eligibility_confirmed_open: true })));
+    const result = evaluateCandidateEligibility(
+      opportunityCandidate(),
+      state(opportunity({ country_eligibility_confirmed_open: true, ...AGE_AND_GRADE_RESOLVED }), 2009, {
+        advisor: { student: { birthYear: 2009, graduationYear: RESOLVED_GRADE_YEAR } } as CounselorState["advisor"],
+      })
+    );
     expect(result.verdict).toBe("known_eligible");
     expect(result.notes).toEqual([]);
   });
@@ -159,7 +173,9 @@ describe("evaluateCandidateEligibility — opportunities", () => {
   test("no not-verified note when eligible_countries is populated", () => {
     const eligible = evaluateCandidateEligibility(
       opportunityCandidate(),
-      state(opportunity({ eligible_countries: ["Turkey"] }), 2009, { advisor: { student: { birthYear: 2009, country: "Türkiye" } } as CounselorState["advisor"] })
+      state(opportunity({ eligible_countries: ["Turkey"], ...AGE_AND_GRADE_RESOLVED }), 2009, {
+        advisor: { student: { birthYear: 2009, country: "Türkiye", graduationYear: RESOLVED_GRADE_YEAR } } as CounselorState["advisor"],
+      })
     );
     expect(eligible.verdict).toBe("known_eligible");
     expect(eligible.notes).toEqual([]);
@@ -176,8 +192,13 @@ describe("evaluateCandidateEligibility — opportunities", () => {
   });
 
   test("known_eligible (not unknown) when an age restriction exists and the student's age is known", () => {
-    // confirmed-open so this test stays about the age dimension alone.
-    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ minimum_age: 14, country_eligibility_confirmed_open: true }), 2009));
+    // confirmed-open, and grade resolved, so this test stays about the age dimension alone.
+    const result = evaluateCandidateEligibility(
+      opportunityCandidate(),
+      state(opportunity({ minimum_age: 14, country_eligibility_confirmed_open: true, eligible_grades: ["12"] }), 2009, {
+        advisor: { student: { birthYear: 2009, graduationYear: RESOLVED_GRADE_YEAR } } as CounselorState["advisor"],
+      })
+    );
     expect(result.verdict).toBe("known_eligible");
   });
 
@@ -197,7 +218,9 @@ describe("evaluateCandidateEligibility — opportunities", () => {
   test("known_eligible when the opportunity lists eligible countries and the student's country is on file", () => {
     const result = evaluateCandidateEligibility(
       opportunityCandidate(),
-      state(opportunity({ eligible_countries: ["United States"] }), 2009, { advisor: { student: { birthYear: 2009, country: "United States" } } as CounselorState["advisor"] })
+      state(opportunity({ eligible_countries: ["United States"], ...AGE_AND_GRADE_RESOLVED }), 2009, {
+        advisor: { student: { birthYear: 2009, country: "United States", graduationYear: RESOLVED_GRADE_YEAR } } as CounselorState["advisor"],
+      })
     );
     expect(result.verdict).toBe("known_eligible");
   });
@@ -229,8 +252,14 @@ describe("evaluateCandidateEligibility — opportunities", () => {
   });
 
   test("known_eligible when verification_state is verified_current (the normal case)", () => {
-    // confirmed-open so this test stays about the verification_state dimension alone.
-    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ verification_state: "verified_current", country_eligibility_confirmed_open: true })));
+    // confirmed-open, and age/grade resolved, so this test stays about the verification_state
+    // dimension alone.
+    const result = evaluateCandidateEligibility(
+      opportunityCandidate(),
+      state(opportunity({ verification_state: "verified_current", country_eligibility_confirmed_open: true, ...AGE_AND_GRADE_RESOLVED }), 2009, {
+        advisor: { student: { birthYear: 2009, graduationYear: RESOLVED_GRADE_YEAR } } as CounselorState["advisor"],
+      })
+    );
     expect(result.verdict).toBe("known_eligible");
   });
 });

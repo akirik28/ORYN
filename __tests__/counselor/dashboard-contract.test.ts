@@ -270,11 +270,25 @@ describe("buildCounselorDashboardContract", () => {
   });
 
   test("a recommendation keeps FACT (evidence/sourceUrl), ASSESSMENT (eligibility/confidence), and RECOMMENDATION (recommendationClass/why) as distinct typed fields, never flattened into one string", () => {
-    // country_eligibility_confirmed_open: this test's premise is a fully-known row, and
-    // known_eligible now (correctly) requires country eligibility to be research-confirmed,
-    // not just absent — an unconfirmed row is verdict "unknown" with an advisory note.
-    const opp = opportunity("opp-1", { fields: ["Research"], official_url: "https://example.org/opp-1", country_eligibility_confirmed_open: true });
-    const state = baseState({ eligibleOpportunityMatches: [{ opportunity: opp, match: match("opp-1", { relevance_score: 90 }) }] });
+    // country_eligibility_confirmed_open, minimum_age/maximum_age, and eligible_grades
+    // (matched by the student's own graduationYear override below) are all set because this
+    // test's premise is a fully-known row: known_eligible now (correctly) requires every one
+    // of country/age/grade eligibility to be resolved, not just absent — an unresolved
+    // dimension is verdict "unknown" with an advisory note (2026-09-03 extended this same
+    // country-eligibility principle to age and grade, which previously had no equivalent
+    // safeguard).
+    const opp = opportunity("opp-1", {
+      fields: ["Research"],
+      official_url: "https://example.org/opp-1",
+      country_eligibility_confirmed_open: true,
+      minimum_age: 0,
+      maximum_age: 120,
+      eligible_grades: ["12"],
+    });
+    const state = baseState({
+      advisor: { student: { birthYear: 2009, country: "United States", graduationYear: new Date().getFullYear() + 1 }, completenessPercent: 80, targetUniversities } as CounselorState["advisor"],
+      eligibleOpportunityMatches: [{ opportunity: opp, match: match("opp-1", { relevance_score: 90 }) }],
+    });
     const contract = buildCounselorDashboardContract(state, []);
     const rec = contract.thisWeekActions[0] ?? contract.worthConsidering[0];
     expect(rec).toBeDefined();

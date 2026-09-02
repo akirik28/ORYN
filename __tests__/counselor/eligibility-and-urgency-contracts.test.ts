@@ -161,7 +161,17 @@ describe("Test I (spec Part R) — known citizenship mismatch", () => {
   });
 
   test("dual citizenship: known_eligible (on the citizenship axis) as soon as ONE citizenship matches", () => {
-    const opp = opportunity("us-citizens-only-3", { eligible_citizenships: ["United States"] });
+    // minimum_age/maximum_age/eligible_grades resolved (grade "11" matches this file's
+    // baseState default graduationYear: 2028 as of today) so this test stays about the
+    // citizenship axis alone — 2026-09-03's age/grade-unverified notes would otherwise be
+    // noise here, same reasoning as this file's existing country_eligibility_confirmed_open
+    // isolation pattern elsewhere.
+    const opp = opportunity("us-citizens-only-3", {
+      eligible_citizenships: ["United States"],
+      minimum_age: 0,
+      maximum_age: 120,
+      eligible_grades: ["11"],
+    });
     const state = baseState(opp, { citizenshipCountries: ["Turkey", "United States"] });
     const result = evaluateCandidateEligibility(candidateFor(opp, state), state);
     expect(result.verdict).toBe("known_eligible");
@@ -351,6 +361,11 @@ describe("Regression — expired opportunities never reach counselor recommendat
       cycle_status: "open",
       country_eligibility_confirmed_open: true,
       last_verified_at: "2026-08-20T00:00:00Z",
+      // Resolved so this test stays about the deadline dimension alone — grade "11" matches
+      // this block's own stateWith default graduationYear: 2028.
+      minimum_age: 0,
+      maximum_age: 120,
+      eligible_grades: ["11"],
     });
     const state = stateWith([noDeadline]);
 
@@ -445,6 +460,10 @@ describe("Regression — never-verified, deadline-less opportunities never reach
       last_verified_at: null,
       cycle_status: "open",
       country_eligibility_confirmed_open: true,
+      // Resolved so this test stays about the freshness-gate dimension alone.
+      minimum_age: 0,
+      maximum_age: 120,
+      eligible_grades: ["11"],
     });
     const state = stateWith([hasDeadline]);
 
@@ -500,6 +519,11 @@ describe("Regression — a legacy-generation opportunity reaches counselor recom
     verification_state: "verified_current" as const,
     cycle_status: "upcoming" as const,
     country_eligibility_confirmed_open: true,
+    // Resolved so both tests below stay about this block's own subject (a legacy row's
+    // verification columns), not the unrelated 2026-09-03 age/grade-unverified notes.
+    minimum_age: 0,
+    maximum_age: 120,
+    eligible_grades: ["11"],
   };
 
   test("it is eligible -- not excluded because an older column happens to be empty", () => {
