@@ -7,6 +7,7 @@ import { MobileNav } from "@/features/app-shell/mobile-nav";
 import { RouteAmbientBlobs } from "@/features/app-shell/route-ambient-blobs";
 import type { DimensionSignal } from "@/lib/scoring/signal";
 import type { Notification } from "@/types/database";
+import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
 
 // Real generated output from buildDigestNotification()/buildProfileUpdateNotification()
 // (lib/deadlines/scan.ts, lib/scoring/profile-update-notification.ts) against realistic
@@ -62,6 +63,11 @@ const PREVIEW_NOTIFICATIONS: Notification[] = [
 // back into the bug that query exists to avoid (a badge derived from a capped list).
 const PREVIEW_UNREAD_COUNT = PREVIEW_NOTIFICATIONS.filter((n) => !n.read_at).length;
 
+// A representative mid-month state, not an edge case — same "realistic, not a corner
+// case" spirit as PREVIEW_NOTIFICATIONS above. usage-indicator.tsx and monthly-usage-meter.tsx
+// each have their own dedicated preview surfaces for exercising exhausted/degraded/unknown.
+const PREVIEW_QUOTA: MonthlyQuota = { used: 42, limit: 300, remaining: 258, fraction: 42 / 300, resetsAt: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 1)).toISOString(), usedIsKnown: true };
+
 // Mirrors app/(app)/layout.tsx's structure with fixture data — real shell components, no
 // auth/data-fetching. See app/(dev-preview)/design-preview/page.tsx.
 //
@@ -82,11 +88,13 @@ export function PreviewShell({ children, signal }: { children: ReactNode; signal
         email="ada@example.com"
         notifications={PREVIEW_NOTIFICATIONS}
         unreadCount={PREVIEW_UNREAD_COUNT}
+        quota={PREVIEW_QUOTA}
+        budgetDegraded={false}
       />
       <Sidebar displayName="Ada" email="ada@example.com" signal={signal} />
       <div className="relative flex min-w-0 flex-1 flex-col">
         <RouteAmbientBlobs />
-        <Topbar notifications={PREVIEW_NOTIFICATIONS} unreadCount={PREVIEW_UNREAD_COUNT} />
+        <Topbar notifications={PREVIEW_NOTIFICATIONS} unreadCount={PREVIEW_UNREAD_COUNT} quota={PREVIEW_QUOTA} budgetDegraded={false} />
         <main className="relative z-[1] min-w-0 flex-1 overflow-x-hidden">
           <div className="mx-auto w-full max-w-[1200px] px-4 pt-8 pb-24 md:px-8 md:pt-12 lg:pb-12">{children}</div>
         </main>

@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { requireProfile, verifySession, getProfileScores } from "@/lib/security/dal";
+import { getMonthlyQuota } from "@/lib/ai/monthly-quota";
+import { selectModelForUser } from "@/lib/ai/limits/budget";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/features/app-shell/sidebar";
 import { Topbar } from "@/features/app-shell/topbar";
@@ -58,7 +60,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // *result*, not the timing, so running it here in parallel still costs nothing extra
   // on the first call each request, and is what makes this the read that populates the
   // cache before any page-level code runs.
-  const [notificationsRes, unreadRes, scores] = await Promise.all([
+  const [notificationsRes, unreadRes, scores, quota, modelSelection] = await Promise.all([
     supabase
       .from("notifications")
       .select("*")
@@ -75,10 +77,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       .eq("user_id", session.userId!)
       .is("read_at", null),
     getProfileScores(session.userId!),
+    // Founder, 2026-09-02, verbatim: the usage bar must be "hep görünen" (always visible),
+    // not confined to the one page (advisor) that already showed it — see
+    // features/app-shell/usage-indicator.tsx's own doc comment. Same "second, independent
+    // read purely for display" pattern app/(app)/advisor/page.tsx already established:
+    // selectModelForUser has no side effects here, it only answers whether this student is
+    // currently past lib/ai/limits/budget.ts's target, same table getMonthlyQuota already
+    // reads.
+    getMonthlyQuota(session.userId!, "advisor_chat"),
+    selectModelForUser(session.userId!),
   ]);
   const notifications = notificationsRes.data;
   const unreadCount = unreadRes.count ?? 0;
   const profileSignal = toProfileSignal(scores);
+  const budgetDegraded = modelSelection.degraded;
 
   return (
     // Literal source ambient background (App.tsx `App()`'s root container) — the ground
@@ -113,6 +125,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         notifications={notifications ?? []}
         unreadCount={unreadCount}
         isAdmin={profile.is_admin}
+        quota={quota}
+        budgetDegraded={budgetDegraded}
       />
 
       <Sidebar displayName={displayName} email={session.email} signal={profileSignal} isAdmin={profile.is_admin} />
@@ -125,7 +139,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             wrapper picks the config from the pathname, so each section has its own
             background weighting instead of one identical wash everywhere. */}
         <RouteAmbientBlobs />
-        <Topbar notifications={notifications ?? []} unreadCount={unreadCount} />
+        <Topbar notifications={notifications ?? []} unreadCount={unreadCount} quota={quota} budgetDegraded={budgetDegraded} />
         <main id="main-content" className="relative z-[1] min-w-0 flex-1 overflow-x-hidden">
           {/* max-w-[1200px] is the reading/composition measure (UI-V3 § 6). Pages that want
               the full bleed — the university map, in particular — opt out with their own

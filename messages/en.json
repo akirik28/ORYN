@@ -1056,8 +1056,8 @@
       "placeholderNotConfigured": "The AI counselor isn't configured yet",
       "sendAriaLabel": "Send message",
       "degradeNote": {
-        "label": "Lighter model",
-        "detail": "This reply used a lighter model — this month's advisor budget is in use."
+        "label": "Shorter reply",
+        "detail": "This reply was kept brief — you're still getting the answer, just not the long explanation."
       }
     },
     "usageMeter": {
@@ -1067,7 +1067,7 @@
       "unknown": "We couldn't load how many messages you've used. Your {limit}-message allowance still applies and resets {date}.",
       "exhausted": "All {limit} messages used. Resets {date}.",
       "low": "Only {remaining} left. Resets {date}.",
-      "degraded": "Replies are using a lighter model this month. Resets {date}.",
+      "degraded": "Shorter replies for the rest of this month. Resets {date}.",
       "normal": "{remaining} counselor messages left. Resets {date}."
     },
     "strategyPanel": {

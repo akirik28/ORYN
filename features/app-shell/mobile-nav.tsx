@@ -11,10 +11,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import type { DimensionSignal } from "@/lib/scoring/signal";
 import { UserMenu } from "./user-menu";
 import { NotificationBell } from "./notification-bell";
+import { UsageIndicator } from "./usage-indicator";
 import { CommandPalette } from "@/features/search/command-palette";
 import { LanguageSwitcher } from "./language-switcher";
 import { PRIMARY_NAV, SECONDARY_NAV } from "./nav-items";
 import type { Notification } from "@/types/database";
+import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
 
 const BOTTOM_NAV = PRIMARY_NAV.filter((item) => item.mobilePrimary);
 const OVERFLOW_NAV = [...PRIMARY_NAV.filter((item) => !item.mobilePrimary), ...SECONDARY_NAV];
@@ -45,6 +47,8 @@ export function MobileNav({
   notifications,
   unreadCount,
   isAdmin = false,
+  quota,
+  budgetDegraded,
 }: {
   signal: DimensionSignal[];
   displayName: string;
@@ -52,6 +56,8 @@ export function MobileNav({
   notifications: Notification[];
   unreadCount: number;
   isAdmin?: boolean;
+  quota: MonthlyQuota;
+  budgetDegraded: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -68,6 +74,7 @@ export function MobileNav({
         </Link>
         <div className="flex items-center gap-1">
           <CommandPalette />
+          <UsageIndicator quota={quota} budgetDegraded={budgetDegraded} />
           <NotificationBell notifications={notifications} unreadCount={unreadCount} />
           <UserMenu displayName={displayName} email={email} signal={signal} isAdmin={isAdmin} />
         </div>

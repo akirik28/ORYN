@@ -1056,8 +1056,8 @@
       "placeholderNotConfigured": "Yapay zeka danışmanı henüz yapılandırılmadı",
       "sendAriaLabel": "Mesajı gönder",
       "degradeNote": {
-        "label": "Daha hafif model",
-        "detail": "Bu yanıt daha hafif bir modelle üretildi — bu ayın danışman bütçesi kullanımda."
+        "label": "Kısa yanıt",
+        "detail": "Bu yanıt kısa tutuldu — sonucu yine alıyorsun, sadece uzun gerekçeyi değil."
       }
     },
     "usageMeter": {
@@ -1067,7 +1067,7 @@
       "unknown": "Kaç mesaj kullandığını yükleyemedik. {limit} mesajlık hakkın yine de geçerli ve {date} tarihinde yenilenir.",
       "exhausted": "{limit} mesajın tamamı kullanıldı. {date} tarihinde yenilenir.",
       "low": "Sadece {remaining} mesaj kaldı. {date} tarihinde yenilenir.",
-      "degraded": "Yanıtlar bu ay daha hafif bir modelle üretiliyor. {date} tarihinde yenilenir.",
+      "degraded": "Bu ayın kalanında kısa yanıtlar. {date} tarihinde yenilenir.",
       "normal": "{remaining} danışman mesajı kaldı. {date} tarihinde yenilenir."
     },
     "strategyPanel": {
