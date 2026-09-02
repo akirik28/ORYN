@@ -2,6 +2,7 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import { tryCreateAdminClient } from "@/lib/supabase/admin";
+import { getUniversityRequirements } from "@/lib/universities/detail-reads";
 import { assembleRequirementFacts } from "./facts";
 import { evaluateRequirement } from "./evaluate";
 import { INFORMATIONAL_CATEGORIES } from "./types";
@@ -45,10 +46,18 @@ export async function refreshRequirementEvaluations(
     console.error("[requirement-evaluations] SUPABASE_SECRET_KEY not configured — skipping evaluation refresh, page will render with existing (possibly stale) evaluations");
     return;
   }
-  const supabase = await createClient();
 
-  const { data: requirements } = await supabase.from("university_requirements").select("*").eq("university_id", universityId);
-  if (!requirements || requirements.length === 0) return;
+  // Shared, cache()'d — docs/performance.md §5. This function has exactly one real
+  // caller (the university detail page) and no background-sweep path, unlike
+  // lib/admissions/persist.ts's refreshAdmissionOutlook, so this needs no conditional
+  // fallback — it always constructs its own request-scoped client internally. Was already
+  // querying identically to the page's own read here (select("*"), same filter, no
+  // narrowing on either side), so this closes a genuine duplicate, not just a shape
+  // reconciliation.
+  const requirements = await getUniversityRequirements(universityId);
+  if (requirements.length === 0) return;
+
+  const supabase = await createClient();
 
   // A row a research pass has since confirmed closed (verified_historical) or unresolved
   // (conflicting) is real, correctly-sourced data worth keeping in the table — never worth

@@ -114,7 +114,14 @@ describe("lib/requirements/persist.ts", () => {
   });
 
   test("reading university_requirements stays RLS-scoped -- that table's own authenticated-read policy is the correct gate", () => {
-    expect(src).toContain('supabase.from("university_requirements").select(');
+    // Moved to the shared getUniversityRequirements(universityId) helper 2026-09-02
+    // (docs/performance.md §5, closing a duplicate read against the university detail
+    // page's own identical query) -- it constructs its own createClient() internally
+    // (lib/universities/detail-reads.ts), the same RLS-scoped client this file used to
+    // construct directly, never an admin client. Same underlying property, new call shape.
+    expect(src).toContain('import { getUniversityRequirements } from "@/lib/universities/detail-reads";');
+    expect(src).toContain('getUniversityRequirements(universityId)');
+    expect(src).not.toContain('admin.from("university_requirements")');
   });
 
   test("the file's own header comment no longer claims no admin client is needed", () => {
