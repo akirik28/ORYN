@@ -367,13 +367,13 @@ describe("migration numbering", () => {
     // colliding with admin_finance_settings above -- both lanes read main's own max (93) as
     // the next free number, which is a lower bound on what's claimed, not the claim itself:
     // 0094-0100 were all separately taken on other unmerged branches by the time this
-    // rebased (0098 admin_actions, 0099 job_budget_overrides, 0100 ai_model_pricing).
-    // Renumbered to 0101, the actual next-free number checked against every remote branch,
-    // not just main, at rebase time. Only this branch's own migration is present in THIS
-    // worktree, so the max on disk here is 101, not 94-100 (those files live on other
-    // branches, not this one) -- if a future session finds this assertion failing against a
-    // lower actual max, that's this branch merging behind others that claimed 94-100, not a
-    // bug in this test.
+    // rebased (0098 admin_actions, 0099 job_budget_overrides, 0100 ai_model_pricing) -- same
+    // lesson oryn-f5 already applied claiming 0100. Renumbered to 0101, the actual next-free
+    // number checked against every remote branch, not just main, at rebase time. Only this
+    // branch's own migration is present in THIS worktree, so the max on disk here is 101,
+    // not 94-100 (those files live on other branches, not this one) -- if a future session
+    // finds this assertion failing against a lower actual max, that's this branch merging
+    // behind others that claimed 94-100, not a bug in this test.
     expect(Math.max(...numbers.map(Number))).toBe(101);
   });
 });

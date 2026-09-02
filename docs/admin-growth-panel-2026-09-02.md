@@ -271,7 +271,7 @@ and mark-feature-dead as record+display; impersonation deferred to a founder dec
 (requirements written up below, ready if they say yes).
 
 **Shipped this pass:**
-- Migration `0094_admin_dead_feature_flags.sql` — `admin_dead_feature_flags(feature_key pk,
+- Migration `0101_admin_dead_feature_flags.sql` — `admin_dead_feature_flags(feature_key pk,
   marked_by, marked_at, note)`, RLS enabled with zero policies (service_role/admin client
   only), same posture as `provider_health`/`external_sync_jobs`. Written, not applied to
   live — migrations stay founder-gated regardless of who authorized the build
