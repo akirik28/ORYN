@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
 import { tryCreateAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -116,22 +118,41 @@ function currentUtcMonthStartIso(): string {
 }
 
 /**
+ * Live override for one feature's monthly budget (migration 0099, job_budget_overrides) —
+ * admin-adjustable without a deploy, unlike JOB_BUDGET_USD's own AI_JOB_BUDGET_*_USD env-var
+ * default. A missing row, or a failed read, both fall back to JOB_BUDGET_USD[feature] — never
+ * to zero or "no budget" (oryn-a7, 2026-09-02): this gates a real, already-loose spend
+ * control (jobs stop, they don't degrade — see this file's own header), and failing toward
+ * "unbudgeted" would be exactly the silent-hole shape the rest of tonight has spent closing
+ * elsewhere. Takes an already-constructed admin client rather than making its own —
+ * checkJobBudget, its only caller, already has one in scope for the ai_usage read alongside
+ * it, and constructing a second serves no purpose.
+ */
+async function resolveJobBudgetUsd(admin: SupabaseClient<Database>, feature: JobBudgetFeature): Promise<number> {
+  const { data, error } = await admin.from("job_budget_overrides").select("budget_usd").eq("feature", feature).maybeSingle();
+  if (error || !data) return JOB_BUDGET_USD[feature];
+  return data.budget_usd;
+}
+
+/**
  * Reads this calendar month's `ai_usage` for `feature` and decides whether another call is
  * allowed. Checked fresh every call, same reasoning as ./budget.ts's selectModelForUser:
  * these jobs run in small batches (up to 30 calls/night), so a single indexed
  * (feature, created_at) query is cheap enough to run before every one, and caching risks the
- * same silent-staleness failure mode that file's own comment warns about.
+ * same silent-staleness failure mode that file's own comment warns about. The budget figure
+ * itself is now resolved the same way, fresh per call, for the same reason.
  */
 export async function checkJobBudget(feature: JobBudgetFeature): Promise<JobBudgetCheck> {
-  const budgetUsd = JOB_BUDGET_USD[feature];
-
   const admin = tryCreateAdminClient();
   if (!admin) {
     console.error(`[job-budget] SUPABASE_SECRET_KEY not configured — skipping the ${feature} budget check, allowing the call`);
-    return { allowed: true, reason: "usage_unavailable", monthToDateSpendUsd: null, budgetUsd };
+    return { allowed: true, reason: "usage_unavailable", monthToDateSpendUsd: null, budgetUsd: JOB_BUDGET_USD[feature] };
   }
 
-  const { data, error } = await admin.from("ai_usage").select("estimated_cost").eq("feature", feature).gte("created_at", currentUtcMonthStartIso());
+  const [budgetUsd, { data, error }] = await Promise.all([
+    resolveJobBudgetUsd(admin, feature),
+    admin.from("ai_usage").select("estimated_cost").eq("feature", feature).gte("created_at", currentUtcMonthStartIso()),
+  ]);
   if (error || !data) {
     console.error(`[job-budget] failed to read ai_usage for the ${feature} budget check — allowing the call`, error);
     return { allowed: true, reason: "usage_unavailable", monthToDateSpendUsd: null, budgetUsd };

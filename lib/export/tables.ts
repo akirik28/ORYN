@@ -52,6 +52,15 @@ export const EXPORT_TABLES = [
   "ai_recommendations",
   "ai_usage",
   /**
+   * Migration 0096. Same posture as ai_usage immediately above -- plain user_id column,
+   * service-role-written, student-readable via RLS ("select own quota grants", the same
+   * shape as ai_usage's own "select own ai usage") -- and arguably a clearer case for
+   * inclusion than ai_usage's own reasoning: a grant is an admin action taken ON the
+   * student's account, not just a log of their own activity, so there is even less
+   * question this is "their data."
+   */
+  "quota_grants",
+  /**
    * `action` + `created_at` only. DATA_RIGHTS_AUDIT.md Part 3 ranks this the thinnest case
    * for "the student's data" — closer in character to a web server's access log — and
    * explicitly declined to settle it, calling inclusion a risk-posture call for the founder

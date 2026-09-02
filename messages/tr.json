@@ -1696,13 +1696,18 @@
     "perUser": {
       "sectionTitle": "Öğrenci başına harcama",
       "subtitle": "Hedef {target}/ay · Tavan {ceiling}/ay",
+      "thisMonth": "Bu ay",
       "last30d": "Son 30 gün",
       "lifetime": "Toplam",
       "calls": "{count} çağrı",
       "overCeiling": "Tavanı aştı",
       "nearCeiling": "Tavana yakın",
       "unnamed": "İsimsiz öğrenci",
-      "none": "Henüz kaydedilmiş öğrenci harcaması yok."
+      "none": "Henüz kaydedilmiş öğrenci harcaması yok.",
+      "grant": "Ekle",
+      "resetThisMonth": "Bu ayı sıfırla",
+      "amountPlaceholder": "$ miktar",
+      "alreadyGranted": "bu ay {amount} zaten eklendi ·"
     },
     "credit": {
       "sectionTitle": "Kalan kredi",
@@ -1781,6 +1786,9 @@
         "status": "Bu ay {budget} bütçesinin {spent} kadarı kullanıldı",
         "unknown": "Bu ayki harcama bilinmiyor — aşağıya bakın.",
         "neverRun": "Bu ay kayıtlı çağrı yok.",
+        "overridden": "özel bütçe",
+        "save": "Kaydet",
+        "resetToDefault": "Varsayılana döndür",
         "reason": {
           "under_budget": "Bütçe dahilinde",
           "over_budget": "Bütçe aşıldı — gelecek aya kadar durduruldu",

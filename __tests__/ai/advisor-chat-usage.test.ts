@@ -40,7 +40,14 @@ vi.mock("@/lib/supabase/admin", () => {
       insert: (row: Record<string, unknown>) => insertMock({ table, row }),
       select: () => ({
         eq: () => ({
-          gte: async () => ({ data: monthToDateRowsRef.current, error: null }),
+          // quota_grants (lib/ai/limits/grants.ts's getMonthlyGrantsUsd, 2026-09-02/03) must
+          // NOT reuse monthToDateRowsRef here — those rows carry estimated_cost, not
+          // amount_usd, and summing amount_usd across them silently produces NaN, which then
+          // makes every >= target comparison downstream false regardless of real spend (this
+          // exact gap broke this file's own "at or over target" test until a full suite run
+          // caught it). No grants configured in these tests, so effective spend must equal
+          // real spend unchanged.
+          gte: async () => ({ data: table === "quota_grants" ? [] : monthToDateRowsRef.current, error: null }),
         }),
       }),
     }),

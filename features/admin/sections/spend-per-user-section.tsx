@@ -3,12 +3,23 @@ import { formatCurrency, formatNumber } from "@/lib/i18n/format";
 import { Badge } from "@/components/ui/badge";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getPerUserSpend, PER_STUDENT_MONTHLY_TARGET_USD, PER_STUDENT_MONTHLY_CEILING_USD } from "@/lib/admin/queries";
+import { GrantQuotaEditor } from "@/features/admin/grant-quota-editor";
+import { grantQuota, resetQuotaThisMonth } from "@/app/(app)/admin/actions";
 
 const money = (value: number) => formatCurrency(value, "USD", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 
-/** This is the screen version of the query that found a real student at $3.04 in one week
- *  against a $1.00/month ceiling — sorted highest-first so an overage is the first thing
- *  seen, not something found by scrolling. */
+/**
+ * This is the screen version of the query that found a real student at $3.04 in one week
+ * against a $1.00/month ceiling — sorted highest-first so an overage is the first thing
+ * seen, not something found by scrolling.
+ *
+ * GrantQuotaEditor (2026-09-02/03) is "the single most likely real support action" oryn-a7's
+ * control-panel course correction named: a student who legitimately exhausted their month
+ * had no recourse before this. monthToDateSpendUsd (calendar month) is shown alongside the
+ * existing last30dUsd/lifetimeUsd figures — deliberately not replacing them — since it's the
+ * one number that answers "what would Reset actually zero out right now," which neither of
+ * the rolling/lifetime figures does.
+ */
 export async function SpendPerUserSection() {
   const t = await getTranslations("admin.perUser");
   const admin = createAdminClient();
@@ -29,6 +40,7 @@ export async function SpendPerUserSection() {
             <li key={user.userId} className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 text-sm">
               <span className="font-medium">{user.displayName ?? t("unnamed")}</span>
               <div className="flex flex-wrap items-center gap-3 text-muted-foreground">
+                <span className="text-xs">{t("thisMonth")}: {money(user.monthToDateSpendUsd)}</span>
                 <span className="text-xs">{t("last30d")}: {money(user.last30dUsd)}</span>
                 <span className="text-xs">{t("lifetime")}: {money(user.lifetimeUsd)}</span>
                 <span className="text-xs">{t("calls", { count: formatNumber(user.callCount) })}</span>
@@ -42,6 +54,16 @@ export async function SpendPerUserSection() {
                   </Badge>
                 ) : null}
               </div>
+              <GrantQuotaEditor
+                userId={user.userId}
+                monthToDateGrantsUsd={user.monthToDateGrantsUsd}
+                grantAction={grantQuota}
+                resetAction={resetQuotaThisMonth}
+                grantLabel={t("grant")}
+                resetLabel={t("resetThisMonth")}
+                amountPlaceholder={t("amountPlaceholder")}
+                grantedNote={t("alreadyGranted", { amount: money(user.monthToDateGrantsUsd) })}
+              />
             </li>
           ))}
         </ul>

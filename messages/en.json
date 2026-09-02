@@ -1696,13 +1696,18 @@
     "perUser": {
       "sectionTitle": "Spend per student",
       "subtitle": "Target {target}/month · Ceiling {ceiling}/month",
+      "thisMonth": "This month",
       "last30d": "Last 30 days",
       "lifetime": "Lifetime",
       "calls": "{count} calls",
       "overCeiling": "Over ceiling",
       "nearCeiling": "Near ceiling",
       "unnamed": "Unnamed student",
-      "none": "No student spend recorded yet."
+      "none": "No student spend recorded yet.",
+      "grant": "Grant",
+      "resetThisMonth": "Reset this month",
+      "amountPlaceholder": "$ amount",
+      "alreadyGranted": "{amount} already granted this month ·"
     },
     "credit": {
       "sectionTitle": "Remaining credit",
@@ -1781,6 +1786,9 @@
         "status": "{spent} of {budget} this month",
         "unknown": "Spend unknown this month — see below.",
         "neverRun": "No calls recorded this month.",
+        "overridden": "custom budget",
+        "save": "Save",
+        "resetToDefault": "Reset to default",
         "reason": {
           "under_budget": "Under budget",
           "over_budget": "Over budget — stopped until next month",

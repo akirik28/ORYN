@@ -293,12 +293,39 @@ describe("migration numbering", () => {
     // table, not a column addition, so it carries no fail-open-on-missing-column tension the
     // way 0092/0093 above do; the equivalent question for a whole new table (a missing row,
     // including "the table itself doesn't exist yet," should read as "not disabled") is
-    // answered in lib/jobs/job-controls.ts's own comment instead. 0096 is unclaimed as of
-    // this pass. 0097 (admin_action_log) is a separate lane's shared audit-log table for
-    // operational admin actions -- landed on main during this same rebase, bumping the
-    // ceiling here to 97 rather than 95; see that migration's own header for its reasoning,
-    // not duplicated here since it isn't this entry's migration to narrate.
-    expect(Math.max(...numbers.map(Number))).toBe(97);
+    // answered in lib/jobs/job-controls.ts's own comment instead. 0097 (admin_action_log) is
+    // a separate lane's shared audit-log table for operational admin actions -- landed on
+    // main during this same rebase; see that migration's own header for its reasoning, not
+    // duplicated here since it isn't this entry's migration to narrate.
+    //
+    // 0096 and 0099 are this AI-spend deep-dive's own two, reserved as part of the same
+    // 0094-0099 block (five lanes working the same night, assigned up front specifically so
+    // nobody kept independently reaching for "the next free number" against different
+    // snapshots of main -- the exact shape of tonight's two earlier collisions, 0020 then
+    // 0069). 0098 (oryn-31's catalog audit) is not present in this branch, which is
+    // expected -- this guard only checks for duplicates and the true maximum on disk, never
+    // contiguity, so a gap is fine.
+    //
+    // 0096 (quota_grants) is an append-only admin top-up/reset ledger for a student's shared
+    // monthly AI allowance, never an edit to ai_usage itself -- "a student who legitimately
+    // exhausted their month has no recourse today" (oryn-a7, 2026-09-02), and this is that
+    // recourse without touching the one honest record of what was actually spent. Read by
+    // BOTH selectModelForUser's degrade decision and getMonthlyQuota's hard monthly stop
+    // through one shared function (lib/ai/limits/grants.ts), not summed independently in two
+    // places -- a "reset" that relieved only one of the two gates would leave a student
+    // still stuck on the degraded model, which isn't a reset. Students can read their own
+    // grant rows (same "select own X" shape ai_usage already established); only the service
+    // role can write one.
+    //
+    // 0099 (job_budget_overrides) is this same deep-dive's other lever: live-adjustable
+    // per-feature job budgets for the two catalog jobs (oryn-a7 dispatch, 2026-09-02/03) --
+    // one row per feature, not a singleton like 0094's admin_finance_settings, since job
+    // budgets are a growing set keyed by feature name rather than a handful of scalar
+    // settings. Same "a missing row means use the existing default, never zero or
+    // unbudgeted" discipline every fail-open path in this session already follows -- this
+    // one gates a real spend control, so failing toward "unbudgeted" would undo the entire
+    // point of the table it replaces a hardcoded constant with.
+    expect(Math.max(...numbers.map(Number))).toBe(99);
   });
 });
 

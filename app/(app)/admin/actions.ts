@@ -20,7 +20,14 @@ import { tavilyProvider } from "@/lib/providers/tavily";
 import { collegeScorecardProvider } from "@/lib/providers/college-scorecard";
 import { openAlexProvider } from "@/lib/providers/openalex";
 import { getAIProvider, isAIConfigured } from "@/lib/ai";
+import { JOB_BUDGET_USD, type JobBudgetFeature } from "@/lib/ai/limits/job-budget";
+import { getMonthlyGrantsUsd } from "@/lib/ai/limits/grants";
 import type { MessageReportStatus, PlanTier } from "@/types/database";
+
+function currentUtcMonthStartIso(): string {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+}
 
 /**
  * Manual "run now" triggers for the admin panel — call the same underlying job logic the
@@ -368,6 +375,31 @@ export async function updateFinanceSettings(input: { usdTryRate?: number; ultraP
   return {};
 }
 
+const JOB_BUDGET_FEATURES: readonly JobBudgetFeature[] = Object.keys(JOB_BUDGET_USD) as JobBudgetFeature[];
+
+/**
+ * Live-adjust one catalog job's monthly budget (migration 0099, job_budget_overrides) —
+ * lib/ai/limits/job-budget.ts's checkJobBudget reads this table before falling back to
+ * JOB_BUDGET_USD's own env/hardcoded default, so this takes effect on the very next call,
+ * not after a deploy. `budgetUsd >= 0` only — zero is a real, deliberate value (an admin can
+ * pause a job entirely this way, see checkJobBudget's own boundary test), negative isn't.
+ */
+export async function setJobBudgetOverride(feature: JobBudgetFeature, budgetUsd: number): Promise<{ error?: string }> {
+  const adminProfile = await requireAdmin();
+  if (!JOB_BUDGET_FEATURES.includes(feature)) return { error: "Unknown job." };
+  if (!Number.isFinite(budgetUsd) || budgetUsd < 0) return { error: "Budget must be a number of at least $0." };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("job_budget_overrides").upsert({ feature, budget_usd: budgetUsd, updated_by: adminProfile.id });
+  if (error) {
+    console.error("[admin] failed to set job budget override", { code: error.code, message: error.message });
+    return { error: "Couldn't save that. Please try again." };
+  }
+
+  revalidatePath("/admin");
+  return {};
+}
+
 export interface SetUserPlanTierResult {
   error?: string;
   /** true once a write actually happened; false when the target was already on the
@@ -517,4 +549,95 @@ export async function searchAdminOpportunities(q?: string): Promise<{ rows: Admi
     console.error("[admin] opportunity search failed", { q, error });
     return { rows: [], error: "Couldn't search opportunities. Please try again." };
   }
+}
+
+/** Deletes the override row so the job falls back to JOB_BUDGET_USD's own default —
+ *  reversible by construction, same reasoning as the override table itself never editing
+ *  ai_usage: this removes an admin-entered adjustment, never the spend history behind it. */
+export async function clearJobBudgetOverride(feature: JobBudgetFeature): Promise<{ error?: string }> {
+  await requireAdmin();
+  if (!JOB_BUDGET_FEATURES.includes(feature)) return { error: "Unknown job." };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("job_budget_overrides").delete().eq("feature", feature);
+  if (error) {
+    console.error("[admin] failed to clear job budget override", { code: error.code, message: error.message });
+    return { error: "Couldn't clear that. Please try again." };
+  }
+
+  revalidatePath("/admin");
+  return {};
+}
+
+/**
+ * Manual top-up of one student's shared monthly AI allowance (migration 0096, quota_grants)
+ * — "the single most likely real support action" (oryn-a7, 2026-09-02). Never edits
+ * ai_usage: adds an offsetting ledger row instead, read by both selectModelForUser's degrade
+ * decision and getMonthlyQuota's hard monthly stop (lib/ai/limits/grants.ts), so a grant
+ * relieves both rather than leaving a student still stuck on the degraded model.
+ */
+export async function grantQuota(userId: string, amountUsd: number, reason?: string): Promise<{ error?: string }> {
+  const adminProfile = await requireAdmin();
+  if (!isUuidLike(userId)) return { error: "Invalid student." };
+  if (!Number.isFinite(amountUsd) || amountUsd <= 0) return { error: "Grant amount must be a positive number." };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("quota_grants").insert({
+    user_id: userId,
+    amount_usd: amountUsd,
+    reason: reason?.trim() ? reason.trim().slice(0, 500) : null,
+    granted_by: adminProfile.id,
+  });
+  if (error) {
+    console.error("[admin] failed to grant quota", { code: error.code, message: error.message });
+    return { error: "Couldn't save that grant. Please try again." };
+  }
+
+  revalidatePath("/admin");
+  return {};
+}
+
+/**
+ * "Reset this month" — a grant equal to exactly the student's own remaining effective spend
+ * (real spend minus whatever's already been granted this month), so effective spend returns
+ * to $0 without the admin needing to know or type a figure. Same primitive as grantQuota
+ * (oryn-a7's own framing: "reset = grant equal to current month spend") — computed
+ * server-side from the authoritative source rather than trusting whatever number the admin's
+ * screen happened to be showing at click time, which could already be stale.
+ */
+export async function resetQuotaThisMonth(userId: string): Promise<{ error?: string }> {
+  const adminProfile = await requireAdmin();
+  if (!isUuidLike(userId)) return { error: "Invalid student." };
+
+  const admin = createAdminClient();
+  const monthStartIso = currentUtcMonthStartIso();
+  const [{ data: usageRows, error: usageError }, grantsUsd] = await Promise.all([
+    admin.from("ai_usage").select("estimated_cost").eq("user_id", userId).gte("created_at", monthStartIso),
+    getMonthlyGrantsUsd(admin, userId, monthStartIso),
+  ]);
+  if (usageError || !usageRows) {
+    console.error("[admin] failed to read ai_usage for reset", { code: usageError?.code, message: usageError?.message });
+    return { error: "Couldn't read this student's spend. Please try again." };
+  }
+
+  const knownSpendUsd = usageRows.reduce((sum, row) => sum + (row.estimated_cost ?? 0), 0);
+  const remainingEffectiveSpendUsd = Math.max(0, knownSpendUsd - grantsUsd);
+  // Already at $0 effective spend -- nothing to grant (a $0 amount would also violate
+  // quota_grants' own `amount_usd > 0` check constraint), and this is a normal outcome, not
+  // an error the admin needs to see.
+  if (remainingEffectiveSpendUsd <= 0) return {};
+
+  const { error } = await admin.from("quota_grants").insert({
+    user_id: userId,
+    amount_usd: remainingEffectiveSpendUsd,
+    reason: "Reset to $0 for this month",
+    granted_by: adminProfile.id,
+  });
+  if (error) {
+    console.error("[admin] failed to reset quota", { code: error.code, message: error.message });
+    return { error: "Couldn't reset that student's month. Please try again." };
+  }
+
+  revalidatePath("/admin");
+  return {};
 }
