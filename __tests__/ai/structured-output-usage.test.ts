@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { AIStructuredResponseFailedError } from "@/lib/ai/provider";
 import { MockAIProvider } from "../stubs/mock-ai-provider";
+import type { CounselorResult } from "@/lib/counselor/types";
 
 /**
  * Cost-observability regression tests for the generateStructured path — the sibling of
@@ -96,6 +97,166 @@ describe("extractCVData — usage recording", () => {
     const recorded = usageInserts();
     expect(recorded).toHaveLength(1);
     expect(recorded[0]?.row).toMatchObject({ user_id: USER_ID, feature: "cv_extraction", input_tokens: 5000, output_tokens: 800 });
+  });
+});
+
+describe("generateEssayOutlines — usage recording", () => {
+  const experiences = [
+    {
+      category: "activity",
+      title: "Debate club captain",
+      organization: "Lincoln High School",
+      description: "Led weekly practice for 12 members.",
+      storyNotes: "Nearly quit after a bad first tournament, then rebuilt the team's prep process.",
+      startDate: "2025-09-01",
+      endDate: null,
+      ongoing: true,
+    },
+  ];
+
+  test("a successful generation is recorded in ai_usage exactly once", async () => {
+    const { generateEssayOutlines } = await import("@/lib/ai/essay-outlines");
+    providerRef.current!.queueStructured({
+      candidates: [
+        {
+          experienceTitle: "Debate club captain",
+          whyThisStory: "Real setback and recovery arc.",
+          missingDetail: null,
+          outlines: [
+            {
+              angle: "Resilience",
+              hook: "The scoreboard read 0-3.",
+              context: "First tournament as captain.",
+              conflict: "The team's prep process was broken.",
+              action: "Rebuilt it from scratch.",
+              turningPoint: "The next tournament, they won two rounds.",
+              reflection: "Leadership means fixing the system, not just showing up.",
+              connectionToFuture: "Wants to study public policy.",
+            },
+          ],
+        },
+      ],
+      notEnoughMaterial: null,
+    });
+
+    await generateEssayOutlines({ userId: USER_ID, essayPrompt: "Describe a challenge you overcame.", experiences, goals: [] });
+
+    const recorded = usageInserts();
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0]?.row).toMatchObject({ user_id: USER_ID, feature: "essay_story_bank", input_tokens: 10, output_tokens: 10 });
+  });
+
+  test("a retry-exhausted failure still records the real, billed usage rather than throwing silently", async () => {
+    const { generateEssayOutlines } = await import("@/lib/ai/essay-outlines");
+    providerRef.current!.queueStructured(
+      new AIStructuredResponseFailedError({ lastError: "candidates: Required", usage: { inputTokens: 3200, outputTokens: 600 }, model: "claude-sonnet-5" }),
+    );
+
+    await expect(
+      generateEssayOutlines({ userId: USER_ID, essayPrompt: "Describe a challenge you overcame.", experiences, goals: [] }),
+    ).rejects.toBeInstanceOf(AIStructuredResponseFailedError);
+
+    const recorded = usageInserts();
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0]?.row).toMatchObject({ user_id: USER_ID, feature: "essay_story_bank", input_tokens: 3200, output_tokens: 600 });
+  });
+});
+
+describe("interpretRequirementText — usage recording", () => {
+  test("a successful interpretation is recorded in ai_usage exactly once", async () => {
+    const { interpretRequirementText } = await import("@/lib/ai/interpret-requirement");
+    providerRef.current!.queueStructured({ minGpa: 3.5, scale: 4 });
+
+    await interpretRequirementText({
+      adminUserId: USER_ID,
+      category: "minimum_grade",
+      title: "Minimum GPA",
+      requirementDetail: "Applicants must have a minimum unweighted GPA of 3.5 on a 4.0 scale.",
+    });
+
+    const recorded = usageInserts();
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0]?.row).toMatchObject({ user_id: USER_ID, feature: "requirement_interpretation", input_tokens: 10, output_tokens: 10 });
+  });
+
+  test("a retry-exhausted failure still records the real, billed usage rather than throwing silently", async () => {
+    const { interpretRequirementText } = await import("@/lib/ai/interpret-requirement");
+    providerRef.current!.queueStructured(
+      new AIStructuredResponseFailedError({ lastError: "minGpa: Required", usage: { inputTokens: 400, outputTokens: 90 }, model: "claude-sonnet-5" }),
+    );
+
+    await expect(
+      interpretRequirementText({
+        adminUserId: USER_ID,
+        category: "minimum_grade",
+        title: "Minimum GPA",
+        requirementDetail: "Applicants must have a minimum unweighted GPA of 3.5 on a 4.0 scale.",
+      }),
+    ).rejects.toBeInstanceOf(AIStructuredResponseFailedError);
+
+    const recorded = usageInserts();
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0]?.row).toMatchObject({ user_id: USER_ID, feature: "requirement_interpretation", input_tokens: 400, output_tokens: 90 });
+  });
+});
+
+describe("explainCounselorRecommendations — usage recording", () => {
+  const counselorResult: CounselorResult = {
+    scoreVersion: "counselor_ranking_v1",
+    gaps: [],
+    recommendations: [
+      {
+        id: "opportunity:opp-1",
+        title: "Youth Economics Research Program",
+        recommendationClass: "do",
+        why: ["Addresses Research, a significant current gap (20/100)."],
+        matchedGapDimensions: ["research"],
+        impact: "high",
+        effort: "high",
+        urgency: "medium",
+        deadline: null,
+        costOnFile: null,
+        applicationRequirements: [],
+        eligibility: { verdict: "known_eligible", notes: [] },
+        confidence: "high",
+        evidence: [],
+        warnings: [],
+        nextAction: { label: "View opportunity", type: "VIEW", href: "/opportunities/opp-1" },
+      },
+    ],
+    profileReadiness: { completenessPercent: 80, sufficientForJudgment: true },
+    studentIdentity: { displayName: "Ada", country: "United States", graduationYear: 2027, curriculum: "ap" },
+  };
+
+  test("a successful explanation is recorded in ai_usage exactly once", async () => {
+    const { explainCounselorRecommendations } = await import("@/lib/ai/counselor-explain");
+    providerRef.current!.queueStructured({
+      summary: "Research is the clearest current gap.",
+      perRecommendation: [{ id: "opportunity:opp-1", narrative: "A strong, achievable next step for research." }],
+    });
+
+    await explainCounselorRecommendations(USER_ID, counselorResult);
+
+    const recorded = usageInserts();
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0]?.row).toMatchObject({ user_id: USER_ID, feature: "counselor_explanation", input_tokens: 10, output_tokens: 10 });
+  });
+
+  test("a retry-exhausted failure still records the real, billed usage — even though the caller only ever sees null", async () => {
+    const { explainCounselorRecommendations } = await import("@/lib/ai/counselor-explain");
+    providerRef.current!.queueStructured(
+      new AIStructuredResponseFailedError({ lastError: "summary: Required", usage: { inputTokens: 1500, outputTokens: 300 }, model: "claude-sonnet-5" }),
+    );
+
+    // explainCounselorRecommendations swallows every failure into `null` (its own documented
+    // contract — a narrated explanation is optional, never worth breaking the dashboard for) —
+    // the point of this test is that the spend is still recorded before that swallow happens.
+    const explanation = await explainCounselorRecommendations(USER_ID, counselorResult);
+    expect(explanation).toBeNull();
+
+    const recorded = usageInserts();
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0]?.row).toMatchObject({ user_id: USER_ID, feature: "counselor_explanation", input_tokens: 1500, output_tokens: 300 });
   });
 });
 

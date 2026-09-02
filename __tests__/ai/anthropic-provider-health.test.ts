@@ -168,6 +168,19 @@ describe("generateStructured — provider_health recording", () => {
     expect(recordSuccessMock).toHaveBeenCalledWith("anthropic");
     expect(recordFailureMock).not.toHaveBeenCalled();
   });
+
+  test("a success on the second (retried) attempt reports the summed usage of both attempts, not just the second", async () => {
+    createMock
+      .mockResolvedValueOnce({ content: [{ type: "tool_use", input: { wrong_field: "nope" } }], stop_reason: "tool_use", usage: { input_tokens: 100, output_tokens: 30 } })
+      .mockResolvedValueOnce({ content: [{ type: "tool_use", input: { value: "corrected" } }], stop_reason: "tool_use", usage: { input_tokens: 150, output_tokens: 40 } });
+
+    const result = await new AnthropicProvider().generateStructured({ prompt: "hi", schema: TestSchema, schemaName: "record_test", schemaDescription: "test" });
+
+    // The first attempt's tokens were real and billed even though its output was discarded —
+    // reporting only the second attempt's usage here would silently under-count every
+    // retried-then-succeeded call by exactly what the first attempt cost.
+    expect(result.usage).toEqual({ inputTokens: 250, outputTokens: 70 });
+  });
 });
 
 describe("reportError — monitoring alongside provider_health, never with request content", () => {

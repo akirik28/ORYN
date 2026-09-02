@@ -52,6 +52,10 @@ export interface AITextResult {
 
 export interface AIStructuredResult<T> {
   data: T;
+  /** Summed across every attempt `generateStructured` made, not just the one that finally
+   * validated — a retry that failed schema validation on its first attempt still spent real,
+   * billed tokens before succeeding on its second. See AIStructuredResponseFailedError's own
+   * doc comment for the identical reasoning on the failure side of this same guarantee. */
   usage: AIUsage;
   /** See AITextResult.model's own doc — identical reasoning. */
   model: string;

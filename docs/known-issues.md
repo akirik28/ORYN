@@ -429,6 +429,72 @@ re-verified here beyond noting the correction is the later doc's own.
   package's notification section) or the claim doesn't hold today. Not recording a
   fabricated match — flagging the mismatch for CEO instead.
 
+## Structured-output validation failures — audited across every AI surface, 3 real gaps found and fixed
+
+**2026-09-02.** Phase 26 is explicit: *"validate with Zod... if validation fails, retry
+safely or return a controlled error."* Nobody had traced what actually happens when a model
+returns malformed JSON or valid JSON that fails the schema, across every structured-output
+surface: weekly plan, CV extraction, opportunity extraction, requirement extraction, research
+generator, achievement refinement, essay outlines, requirement interpretation, counselor
+explanation. Full account, per-surface: `docs/structured-output-failure-audit-2026-09-02.md`.
+
+**The mechanism itself is sound and bounded.** `lib/ai/anthropic-provider.ts`'s
+`generateStructured` retries **exactly once** on a schema-validation failure (2 attempts
+total, hard-coded) — not the unbounded-retry shape that cost $2.97 on `weekly_plan` in a
+different incident. A total failure throws `AIStructuredResponseFailedError` carrying the
+**summed** usage of every attempt made, specifically so a failed-but-billed call isn't
+invisible to `ai_usage`.
+
+**Real gap found and fixed: 3 of 9 structured-output features had the exact "spent money,
+no record" shape already fixed in the other 6.** `counselor_explanation`,
+`essay_story_bank`, and `requirement_interpretation` all called `generateStructured` directly
+and only ever logged usage on the success path — a retry-exhausted failure spent up to two
+real, billed calls with zero trace in `ai_usage`. This is the identical gap
+`docs/handoffs/spend-artefact-sweep-2026-09-02.md` already found and fixed for
+`cv_extraction`/`achievement_refinement` earlier the same night; it was never extended to
+these three. **Fixed**: migrated all three to `withUsageLogging`, the same pattern the other
+six already use. `counselor_explanation` and `essay_story_bank` are both currently unused by
+any real student (confirmed independently, multiple times, tonight), so this gap has never
+actually cost anything in production — but the code path is live and reachable.
+
+**Second, smaller gap found in the same audit: a call that succeeded on its second attempt
+was under-billed, not just a total failure.** `generateStructured`'s success path returned
+only the *final* attempt's token usage, not the summed total — a validation failure on
+attempt 1 that then succeeded on attempt 2 silently dropped attempt 1's real, billed tokens
+from `ai_usage`. This affects all 9 features equally, at the provider level. **Fixed**: the
+success path now returns `accumulatedUsage`, the same summed value the failure path already
+used. Confirmed the fix is real, not cosmetic: reverted it locally, reran the new test, it
+failed with the pre-fix (under-counted) value; restored and reran green.
+
+**Every controlled-error and degrade path checked, one surface at a time — genuinely well
+built.** The dashboard's weekly-plan generation failure shows a real deterministic fallback
+(Counselor Core's own ranked candidates, not a fabricated AI plan) when available, and an
+honest, translated `EmptyState` ("We couldn't generate this week's plan. Please try again.")
+when not — never a broken page, never silence. CV extraction's failure path matches Phase
+61 verbatim: the uploaded file is preserved (uploaded to storage *before* extraction is
+attempted), and the error message is Phase 61's own exact sentence. Every student-facing
+Server Action (weekly plan, CV import, research ideas, essay outlines) rate-limits itself
+(5-10 calls/60min) independent of `generateStructured`'s own internal bound, classifies
+`RateLimitExceededError`/`AIProviderNotConfiguredError` specifically, and falls through to
+an honest generic message — never an uncaught throw reaching the student's page. The two
+background jobs (opportunity/requirement extraction) isolate one candidate's failure from
+the rest of the batch and stop cleanly (not silently) on a real monthly budget ceiling.
+
+**Live evidence: no signature of this ever actually happening.** Queried `ai_usage` directly
+— only 4 features have any real rows at all (`weekly_plan` 115, `advisor_chat` 10,
+`cv_extraction` 2, `achievement_refinement` 1); the other 5 named surfaces have never been
+exercised against real traffic, so there's nothing to check for them specifically. Checked
+`weekly_plan`'s 115 rows for a token-count outlier consistent with a summed two-attempt row
+(would read roughly double a normal single-attempt call) — none found; every row falls
+within a tight band (avg 5500, stddev 392, max 6867 — nowhere near double the average). This
+can only rule out a *retry-exhausted* event, not a quiet succeeded-on-retry one (which, before
+today's fix, would have looked identical to a normal single-attempt row in this table) —
+stated as that specific limit, not overclaimed as "retries have never happened at all."
+
+**Not touched, named rather than silently skipped**: `advisor_chat` (a `generateText`
+surface, not `generateStructured` — Phase 26's structured-output framing doesn't apply to
+it, and it has its own, separately-audited `AIResponseIncompleteError` mechanism already).
+
 ## ORYN has never been deployed — no scheduled job has ever run
 
 **2026-09-02, verified independently against both the Vercel account and `external_sync_jobs`
