@@ -127,6 +127,36 @@
       "languageTitle": "Language",
       "languageDescription": "The language Oryn uses for the interface and for your counselor's replies. Your choice follows you to another device."
     },
+    "plan": {
+      "title": "Your plan",
+      "description": "See what's included in Standard and Ultra. Ultra isn't open for signups yet.",
+      "currentPlanLabel": "Current plan",
+      "standardName": "Standard",
+      "ultraName": "Ultra",
+      "ultraBadge": "Ultra",
+      "comparisonTitle": "Compare plans",
+      "comparisonFeatureColumn": "Feature",
+      "comparison": {
+        "visualTheme": {
+          "label": "App appearance",
+          "standard": "Standard theme",
+          "ultra": "Premium visual theme"
+        },
+        "advisorAllowance": {
+          "label": "Advisor replies",
+          "standard": "Shorter replies after heavy use this month",
+          "ultra": "Full-length replies for longer"
+        },
+        "weeklyPlanFocus": {
+          "label": "Weekly plan focus",
+          "same": "Top 3 priorities for everyone — kept small on purpose, so the advice stays sharp instead of diluted"
+        }
+      },
+      "interestTitle": "Interested in Ultra?",
+      "interestDescription": "Ultra isn't available to buy yet. Let us know you're interested and we'll reach out when it is.",
+      "interestButton": "I'm interested",
+      "interestConfirmed": "Thanks — we'll let you know."
+    },
     "birthYear": {
       "label": "Year you were born",
       "notSet": "Not set. Programs with an age limit will show as unverified rather than confirmed either way, because Oryn won't guess your age.",

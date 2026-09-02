@@ -127,6 +127,36 @@
       "languageTitle": "Dil",
       "languageDescription": "Oryn'ın arayüzde ve danışman cevaplarında kullandığı dil. Seçimin başka bir cihazda da geçerli olur."
     },
+    "plan": {
+      "title": "Planın",
+      "description": "Standard ve Ultra'da neler olduğuna bak. Ultra henüz kayıtlara açık değil.",
+      "currentPlanLabel": "Mevcut plan",
+      "standardName": "Standart",
+      "ultraName": "Ultra",
+      "ultraBadge": "Ultra",
+      "comparisonTitle": "Planları karşılaştır",
+      "comparisonFeatureColumn": "Özellik",
+      "comparison": {
+        "visualTheme": {
+          "label": "Uygulama görünümü",
+          "standard": "Standart tema",
+          "ultra": "Premium görsel tema"
+        },
+        "advisorAllowance": {
+          "label": "Danışman yanıtları",
+          "standard": "Yoğun kullanımdan sonra kısa yanıtlar",
+          "ultra": "Daha uzun süre tam uzunlukta yanıtlar"
+        },
+        "weeklyPlanFocus": {
+          "label": "Haftalık plan odağı",
+          "same": "Herkes için ilk 3 öncelik — bilinçli olarak küçük tutuluyor, böylece tavsiye seyrelmeden net kalıyor"
+        }
+      },
+      "interestTitle": "Ultra ile ilgileniyor musun?",
+      "interestDescription": "Ultra henüz satın alınamıyor. İlgilendiğini bildir, açıldığında sana haber verelim.",
+      "interestButton": "İlgileniyorum",
+      "interestConfirmed": "Teşekkürler — sana haber vereceğiz."
+    },
     "birthYear": {
       "label": "Doğduğun yıl",
       "notSet": "Belirtilmedi. Yaş sınırı olan programlar, onaylı ya da onaysız değil, doğrulanmamış olarak gösterilecek — çünkü Oryn yaşını tahmin etmez.",
