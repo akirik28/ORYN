@@ -31,11 +31,38 @@ describe("formatFeeCaveat", () => {
     expect(formatFeeCaveat(0)).toBeNull();
   });
 
-  test("a null cost is silent — nothing recorded is not the same as no fee", () => {
-    expect(formatFeeCaveat(null)).toBeNull();
-  });
-
   test("a negative cost is silent rather than rendered as a fee", () => {
     expect(formatFeeCaveat(-1)).toBeNull();
+  });
+
+  describe("a null cost — the third state (2026-09-03)", () => {
+    test("produces a caveat, not silence", () => {
+      expect(formatFeeCaveat(null)).not.toBeNull();
+    });
+
+    test("says the cost is unknown, and explicitly not to assume free", () => {
+      const line = formatFeeCaveat(null)!;
+      expect(line).toMatch(/not.*(recorded|on file)/i);
+      expect(line).toMatch(/do not assume.*free/i);
+    });
+
+    test("reads differently from both the fee line and the (silent) free case — three distinguishable outcomes, not two", () => {
+      const unknown = formatFeeCaveat(null);
+      const free = formatFeeCaveat(0);
+      const priced = formatFeeCaveat(500);
+
+      expect(unknown).not.toBe(free);
+      expect(unknown).not.toBe(priced);
+      expect(free).not.toBe(priced);
+      // free is the one silent case -- unknown must not collapse back into it.
+      expect(free).toBeNull();
+      expect(unknown).not.toBeNull();
+    });
+
+    test("never names a currency either — same reasoning as the priced case, nothing to name", () => {
+      const line = formatFeeCaveat(null)!;
+      expect(line).not.toMatch(/[$£€₺]/);
+      expect(line).not.toMatch(/\b(USD|GBP|EUR|TRY|CHF|dollars?|pounds?|euros?)\b/i);
+    });
   });
 });

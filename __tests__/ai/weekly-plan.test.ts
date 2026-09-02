@@ -399,6 +399,17 @@ describe("formatCounselorGrounding (pure)", () => {
     expect(text).toContain("Start another club");
     expect(text).not.toContain("prefer these");
   });
+
+  test("an unrecorded cost reaches weekly-plan grounding too (2026-09-03) — same fix as opportunity-context.ts, same shared formatFeeCaveat", () => {
+    const text = formatCounselorGrounding([rec({ costOnFile: null })], "en");
+    expect(text).toContain("COST NOT ON FILE");
+  });
+
+  test("a confirmed-free recommendation still adds no cost line here either", () => {
+    const text = formatCounselorGrounding([rec({ costOnFile: 0 })], "en");
+    expect(text).not.toContain("HAS A FEE");
+    expect(text).not.toContain("COST NOT ON FILE");
+  });
 });
 
 describe("resolvePlanSelfContradiction (pure)", () => {
