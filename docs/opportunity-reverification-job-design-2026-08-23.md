@@ -21,6 +21,36 @@ it documents.
 > §12. Section numbers §1.2, §3.3, §8.4 and §12 are cited by name from `lib/opportunities/
 > lifecycle.ts` and have deliberately **not** been renumbered.
 
+> **Revision note (rev 3), 2026-09-02, ORYN-31, CEO-assigned.** Not commissioned by a gap in
+> rev 2 — commissioned to check whether one exists, after an unrelated pass (the dashboard
+> verification-badge fix, same session) surfaced the exact blind spot §0 names: 74–75 active
+> `cycle_status='unverified'` rows reaching a recommendation surface on the strength of a
+> lineage timestamp, not a re-confirmed cycle. Read this document in full before writing
+> anything, on the same discipline §1's own header models — and it already answers every
+> question the assignment asked. **This revision does not redesign anything.** It re-measures
+> what rev 2 measured (below), and closes the one gap rev 2 stated it could not close on its
+> own: cost in real dollars against a real, code-enforced budget, which did not exist as a
+> checkable fact on 2026-08-23 (**new §5.4**). No section is renumbered; nothing in §0–§4, §6–§12
+> is edited. `lib/opportunities/lifecycle.ts`'s citations by section number remain valid.
+>
+> **Re-measured today, live, read-only** (project `qtcvcflzxbuagvvwahhu`) — full detail in new
+> §5.4's opening table:
+>
+> | Figure | Rev 2 (2026-08-23) | Today (2026-09-02) | Note |
+> |---|---|---|---|
+> | `active` rows | 271 | **283** | Catalog growth, +4.4% over 10 days — consistent with continued research/ingestion work, not a design-invalidating shift |
+> | §10.1(a) high-risk query (open/upcoming, null deadline) | 42 | **45** | Same query, re-run verbatim. Still the shape that dominates the priority queue |
+> | `cycle_status='unverified'`, active | 86 | **75** | **Moved the favorable direction** — 11 fewer rows in the riskiest bucket, likely other lanes' research work closing real gaps rather than any effect of this document. Independently corroborated the same night by two different sessions computing this count from two different predicates (see this doc's own §1.2's caution about predicates: one count included a `deadline IS NULL` filter the other didn't, and the 1-row gap between 74 and 75 resolved exactly on that difference) |
+> | `closed`-with-past-deadline control pool | 28 | **28** | **Unchanged.** A genuine stability check — the control population §10.1(b) samples from is not drifting |
+> | Distinct users in `opportunity_matches` | 7 | **8** | `exposure_norm`'s denominator (§4.1); recompute per run as already specified |
+> | ISSYP canary (`8980e51b-…`) | `under_review` / `unverified` | **unchanged** | Still `under_review` / `unverified` today — the canary in §10.1(c) is still live and still correctly outside the `status='active'` filter that would otherwise hide it from this measurement |
+>
+> Everything else in this document — the priority function (§4.1), the demotion envelope (§9),
+> the outcome taxonomy (§6.1/§7.5), the `source_verified_at` semantic contract (§8.5) — was
+> re-read against these fresh numbers and needs no change. The mechanism was built to be
+> data-derived (§4.2's own point: "when #146 deleted the special population, no line of §4.1
+> needed editing") and that held again, ten days and twelve rows later.
+
 ---
 
 ## 0. Summary
@@ -726,6 +756,69 @@ A full corpus pass therefore costs roughly **55 Tavily credits and ~125K LLM tok
 Haiku-class pricing the token side is cents, and even at Sonnet-class it stays in low single
 dollars. **The dominant cost is Tavily credits, not the model** — which is the strongest argument
 for keeping the model out of the common path.
+
+### 5.4 Cost in real dollars, against a real budget — closes the gap §5.3 left open (rev 3, 2026-09-02)
+
+§5.3 above declined to price this in dollars because, at the time, no dollar figure existed to
+check against — "I would be guessing at current rates." One now does: **`lib/ai/limits/
+job-budget.ts`, merged since rev 2, is a real, code-enforced, per-feature monthly Anthropic-spend
+cap**, keyed to `ai_usage.feature` and summed against `estimated_cost` on every call before it is
+allowed to proceed (`assertWithinJobBudget`, `checkJobBudget`). This section prices the LLM side
+of §5 against it. It does not and cannot price the Tavily side — that remains ungoverned by this
+mechanism and unresolved for the reason §5.3 already gives (Assumption A1, §11).
+
+**The LLM side is cheap, and the question is not whether it fits — it's whether it should share.**
+Using §5.3's own per-call shape (~2K input + ~300 output tokens per adjudication, Sonnet 5
+pricing $3/$15 per M — the same rate `job-budget.ts`'s own comment uses for
+`opportunity_extraction`) puts one adjudication call at roughly **$0.0105**. At the assumed
+~55 calls per full 283-row corpus pass (§5.3, 20% disagreement rate — still unmeasured, still
+Assumption A2), that is **≈$0.58 per full pass**. At the offered default cadence (`max_rows: 25`,
+daily — §2.4's non-binding guidance, ~11–12 calls to cover the corpus once, so a little over two
+full passes per month), that's **≈$1.30–1.50/month**. Even doubling every input generously —
+40% disagreement, Sonnet on every call, no Haiku routing — stays under **$3.50/month**.
+
+**It fits inside the existing $25/mo `opportunity_extraction` budget with room to spare in raw
+dollar terms. That is not the same question as whether it should share the bucket, and the
+answer to the second question is no.** Three reasons, none of them about the dollar total:
+
+1. **The existing bucket is not empty.** `job-budget.ts`'s own comment sizes
+   `opportunity_extraction`'s *current* occupant — Job A's discovery pipeline — at up to 30
+   Tavily-sourced extraction calls/night, "~$15/month unbounded at today's query count," inside
+   the same $25 cap. Re-verification sharing that tag would be a second, unrelated consumer of a
+   bucket already ~60% claimed by the job it is not part of.
+2. **Shared attribution defeats the reason `job-budget.ts` exists.** The whole point of a
+   per-*feature* (not per-app) budget is that `ai_usage.feature = X` answers "which job spent
+   this" without a join. Tagging re-verification's adjudication calls as `opportunity_extraction`
+   makes that question unanswerable from the same query the codebase already uses everywhere
+   else to answer it — a genuine, avoidable regression in the exact observability this mechanism
+   was built to provide.
+3. **Coupled availability is the wrong failure mode for two independent jobs.** `job-budget.ts`
+   stops the caller outright when the monthly cap is hit — deliberately, per its own header, the
+   opposite of the student-facing degrade-to-cheaper-model policy, because "nothing is 'hit' by a
+   wall" for a background job. That reasoning is correct *within* one job. Shared across two, it
+   stops being harmless: a discovery-side query-count bug or a genuine growth spurt in candidate
+   URLs could exhaust the shared $25 mid-month and silently stop re-verification's adjudication
+   path — the one thing standing between "unverified" being an honest, temporary label and a
+   permanent one — for a reason that has nothing to do with re-verification's own behaviour or
+   cost.
+
+**Recommendation: a third `JobBudgetFeature` value, own small budget.** Concretely:
+`JobBudgetFeature` (currently `"opportunity_extraction" | "requirement_extraction"`) gains
+`"opportunity_reverification"`, with its own `JOB_BUDGET_USD` entry and its own
+`AI_JOB_BUDGET_OPPORTUNITY_REVERIFICATION_USD` env override, matching the existing pattern
+exactly — this is additive to that file's own `Record`, not a restructuring of it. **$5/month is
+the offered default** — roughly 3–4× the $1.30–3.50 estimate above, the same "headroom for the
+number to be wrong without moving the ceiling" reasoning `job-budget.ts`'s own comment already
+uses for the existing two features, sized down because this job's LLM usage is genuinely smaller
+than either of them by design (§5.1: the model adjudicates disagreement only, never the common
+path). Like the existing two, this is an estimate pending real `ai_usage` data, not a
+founder-specified figure, and should be checked against actual spend after the job has run.
+
+**Tavily remains the dominant and unresolved cost, exactly as §5.3 already says, and this
+revision does not change that.** `job-budget.ts` prices Anthropic calls only; nothing in the
+codebase gates Tavily credit spend per feature today. Confirming current Tavily pricing and
+deciding whether it needs its own governance is still open work — carried forward as Assumption
+A1 (§11), not newly discovered here, and not this section's gap to close.
 
 ---
 
@@ -1532,4 +1625,12 @@ Explicit, because several of these are load-bearing and unverified.
 - The mislabelled "Phase 30, Job B" comment on `app/api/jobs/deadline-reminders/route.ts` (§1.3).
 - Two corpus rows list a faculty CV PDF as their opportunity URL (§7.0), and at least one lists a
   news article rather than a programme page (§7.6, ISSYP). Data errors, not job behaviour.
+- **New in rev 3:** `lib/ai/limits/job-budget.ts`'s `JobBudgetFeature` union should gain a third
+  value, `"opportunity_reverification"`, with its own small budget line (§5.4 recommends
+  $5/month) — not a share of `opportunity_extraction`'s existing $25. Whoever implements this job
+  should add that entry alongside the other two rather than reusing the existing tag.
+- **Still open, re-confirmed 2026-09-02:** the `machine_checked_at` → `source_verified_at` rename
+  (§8.5, flagged since rev 1/rev 2) has not happened — grepped `lib/opportunities/lifecycle.ts`
+  directly rather than assuming; the field is still named `machine_checked_at` at lines 312/384.
+  Still free (no column, no production reader) and still not this document's file to change.
 - **Resolved since rev 1:** the stale `lifecycle.ts` comments flagged in §1.1 were corrected by #146.
