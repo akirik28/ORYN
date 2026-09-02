@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import type { StaticImageData } from "next/image";
 import { PageHeader } from "@/components/oryn/page-header";
+import { heroGradientStyle } from "@/components/oryn/hero-gradient";
+import type { PlanTier } from "@/types/database";
 
 // Statically imported, not referenced by string path. Next fingerprints each file into
 // /_next/static/media/<name>.<contenthash>.webp, so replacing an illustration changes its
@@ -169,14 +171,14 @@ const GROUP_ORDER: Feature["group"][] = ["Your record", "Planning", "Exploring"]
 // Rotated per-card so a grid doesn't pulse in unison — same technique the dashboard uses.
 const GLOW_VARIANTS = ["glass-card", "glass-card-offset", "glass-card-fast", "glass-card-offset2"];
 
-export async function FeaturesView({ userId }: { userId: string }) {
+export async function FeaturesView({ userId, tier = "standard" }: { userId: string; tier?: PlanTier }) {
   const t = await getTranslations("catalog");
 
   return (
     <div className="space-y-10">
       <div
         className="dark relative overflow-hidden rounded-[28px] p-6 text-foreground md:p-8"
-        style={{ background: "linear-gradient(145deg, #111030 0%, #1A1650 50%, #0E1540 100%)" }}
+        style={heroGradientStyle(tier)}
       >
         <div
           aria-hidden="true"

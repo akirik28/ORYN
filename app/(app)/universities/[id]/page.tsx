@@ -6,6 +6,8 @@ import { subjectLabel } from "@/lib/programs/subject-labels";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { lacksResearchDepth } from "@/lib/universities/data-depth";
 import { requireUser, getCurrentProfile, getProfileScores } from "@/lib/security/dal";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
+import { heroGradientStyle } from "@/components/oryn/hero-gradient";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
@@ -301,7 +303,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
     // components), so `.dark` resolves it correctly the same way.
     <div
       className="dark space-y-8 rounded-[28px] p-4 text-foreground md:p-8"
-      style={{ background: "linear-gradient(145deg, #111030 0%, #1A1650 50%, #0E1540 100%)" }}
+      style={heroGradientStyle(profile ? resolvePlanTier(profile) : "standard")}
     >
       {imageMetric?.value_text ? (
         <DetailHeroImage

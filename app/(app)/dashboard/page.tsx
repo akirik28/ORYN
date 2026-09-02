@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { getCurrentProfile, getProfileScores, requireUser } from "@/lib/security/dal";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWeeklyPlan, getOrCreateWeeklyPlan } from "@/lib/plan/persist";
@@ -210,6 +211,7 @@ export default async function DashboardPage() {
     .slice(0, OPPORTUNITY_PREVIEW_SIZE);
 
   const displayName = profile?.display_name || profile?.first_name || "there";
+  const planTier = profile ? resolvePlanTier(profile) : "standard";
 
   // See resolveAvoidRecommendation's own doc comment (lib/counselor/dashboard-contract.ts)
   // for why a successful Counselor Core computation is trusted completely and the stored
@@ -219,6 +221,7 @@ export default async function DashboardPage() {
   return (
     <DashboardView
       displayName={displayName}
+      tier={planTier}
       greeting={greeting(locale, profile?.timezone ?? "UTC")}
       locale={locale}
       biggestGap={biggestGap ? { dimension: biggestGap.dimension, score: biggestGap.score } : null}

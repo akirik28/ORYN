@@ -2,7 +2,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
-import { requireUser } from "@/lib/security/dal";
+import { requireUser, requireProfile } from "@/lib/security/dal";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
+import { heroGradientStyle } from "@/components/oryn/hero-gradient";
 import { createClient } from "@/lib/supabase/server";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
@@ -29,6 +31,7 @@ const NA = <span className="text-muted-foreground">—</span>;
 export default async function CompareUniversitiesPage({ searchParams }: { searchParams: Promise<{ ids?: string }> }) {
   const { ids: idsParam } = await searchParams;
   await requireUser();
+  const planTier = resolvePlanTier(await requireProfile());
   const supabase = await createClient();
   const supersessionMap = await loadSupersessionMap(supabase);
   const locale = await resolveLocale();
@@ -65,7 +68,7 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
     return (
       <div
         className="dark space-y-8 rounded-[28px] p-4 text-foreground md:p-8"
-        style={{ background: "linear-gradient(145deg, #111030 0%, #1A1650 50%, #0E1540 100%)" }}
+        style={heroGradientStyle(planTier)}
       >
         <PageHeader title={t("title")} description={t("description")} />
         <EmptyState icon={Scale} title={t("notEnoughTitle")} description={t("notEnoughDescription")} />
@@ -157,7 +160,7 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
     // Universities section, same confirmed-token-based basis as the other two pages.
     <div
       className="dark space-y-6 rounded-[28px] p-4 text-foreground md:p-8"
-      style={{ background: "linear-gradient(145deg, #111030 0%, #1A1650 50%, #0E1540 100%)" }}
+      style={heroGradientStyle(planTier)}
     >
       <PageHeader title={t("title")} description={t("sideBySide", { count: ordered.length })} />
       <Link href="/universities" className="inline-flex items-center gap-1.5 text-sm text-brand-primary hover:underline">

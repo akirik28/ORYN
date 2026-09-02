@@ -25,7 +25,8 @@ import type { getTargetUniversitiesWithDetails } from "@/lib/universities/querie
 import type { getUpcomingDeadlines, DeadlineSource } from "@/lib/deadlines/upcoming";
 import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
 import type { CounselorRecommendation } from "@/lib/counselor";
-import type { ProfileDimension, Opportunity } from "@/types/database";
+import type { ProfileDimension, Opportunity, PlanTier } from "@/types/database";
+import { heroGradientStyle } from "@/components/oryn/hero-gradient";
 
 const DEADLINE_SOURCE_ICONS: Record<DeadlineSource, typeof FileText> = {
   application: FileText,
@@ -35,6 +36,12 @@ const DEADLINE_SOURCE_ICONS: Record<DeadlineSource, typeof FileText> = {
 
 export interface DashboardViewProps {
   displayName: string;
+  /** Drives the hero card's background (components/oryn/hero-gradient.ts) — the only thing
+   *  about this view that changes between Standard and Ultra. Optional, defaulting to
+   *  "standard", so the two dev-preview harnesses that render this view with fixtures
+   *  (app/(dev-preview)/design-preview — 4e's active territory tonight) don't need an
+   *  immediate edit; app/(app)/dashboard/page.tsx, the real caller, always passes it. */
+  tier?: PlanTier;
   greeting: string;
   /** The student's resolved locale (lib/i18n/locale.ts). Drives the hero's own copy and
    *  Profile dimensions directly (both still the older inline `tr ? … : …` pattern, from
@@ -83,6 +90,7 @@ const glassCard: CSSProperties = {
 
 export async function DashboardView({
   displayName,
+  tier = "standard",
   greeting,
   locale = DEFAULT_LOCALE,
   biggestGap,
@@ -140,7 +148,7 @@ export async function DashboardView({
           phone, so each one steps down below `sm` (founder report, 2026-08-31). */}
       <div
         className="relative overflow-hidden rounded-[28px] px-4 py-8 sm:px-6 sm:py-11 md:px-10 md:py-14"
-        style={{ background: "linear-gradient(145deg, #111030 0%, #1A1650 50%, #0E1540 100%)" }}
+        style={heroGradientStyle(tier)}
       >
         <div
           aria-hidden="true"
