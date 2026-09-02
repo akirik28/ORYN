@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/lib/security/dal";
+import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { generateAdvisorReply } from "@/lib/ai/advisor-chat";
@@ -12,6 +12,7 @@ import { logEvent } from "@/lib/analytics/log";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { isUndefinedColumnError } from "@/lib/supabase/errors";
 import { formatAbsoluteDate } from "@/lib/i18n/date";
+import { resolveResponseMode } from "@/lib/tier/response-mode";
 import type { AIMessage } from "@/lib/ai/provider";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -177,7 +178,9 @@ export async function sendAdvisorMessage(
   await logEvent(userId, "advisor_message_sent", { conversationId: convId });
 
   try {
-    const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: trimmed });
+    const profile = await getCurrentProfile();
+    const responseMode = profile ? resolveResponseMode(profile) : "balanced";
+    const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: trimmed, responseMode });
     let { data: assistantMessage, error: assistantMessageError } = await supabase
       .from("advisor_messages")
       .insert({ conversation_id: convId, user_id: userId, role: "assistant", content: reply, status: "complete", degraded })
@@ -312,7 +315,9 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
     .map((m) => ({ role: m.role, content: m.content ?? "" }));
 
   try {
-    const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: userMessage.content });
+    const profile = await getCurrentProfile();
+    const responseMode = profile ? resolveResponseMode(profile) : "balanced";
+    const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: userMessage.content, responseMode });
     let { error: updateError } = await supabase
       .from("advisor_messages")
       .update({ content: reply, status: "complete", error_message: null, degraded })

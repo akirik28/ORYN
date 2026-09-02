@@ -77,7 +77,7 @@ describe("generateAdvisorReply — token budget", () => {
   test("asks for a budget with real headroom above the measured thinking ceiling", async () => {
     providerRef.current!.queueText("Research is the clearer gap.");
 
-    await generateAdvisorReply({ userId: USER_ID, history: [], newMessage: "What next?" });
+    await generateAdvisorReply({ userId: USER_ID, history: [], newMessage: "What next?", responseMode: "balanced" });
 
     const requested = providerRef.current!.textCalls[0]?.maxTokens ?? 0;
     // The benchmark measured 1599-1736 thinking tokens on a rich profile, and 1024 (the
@@ -91,7 +91,7 @@ describe("generateAdvisorReply — usage recording", () => {
   test("(c) a successful call is recorded in ai_usage exactly once", async () => {
     providerRef.current!.queueText("Finish the economics dataset first.");
 
-    const reply = await generateAdvisorReply({ userId: USER_ID, history: [], newMessage: "What next?" });
+    const reply = await generateAdvisorReply({ userId: USER_ID, history: [], newMessage: "What next?", responseMode: "balanced" });
 
     expect(reply.text).toBe("Finish the economics dataset first.");
     expect(reply.degraded).toBe(false);
@@ -111,7 +111,7 @@ describe("generateAdvisorReply — usage recording", () => {
     );
 
     await expect(
-      generateAdvisorReply({ userId: USER_ID, history: [], newMessage: "What next?" }),
+      generateAdvisorReply({ userId: USER_ID, history: [], newMessage: "What next?", responseMode: "balanced" }),
     ).rejects.toBeInstanceOf(AIResponseIncompleteError);
 
     // The whole point: this spend used to be invisible to the $5/$10 gates.
@@ -129,7 +129,7 @@ describe("generateAdvisorReply — usage recording", () => {
     providerRef.current!.queueText(new Error("ECONNRESET: socket hang up"));
 
     await expect(
-      generateAdvisorReply({ userId: USER_ID, history: [], newMessage: "What next?" }),
+      generateAdvisorReply({ userId: USER_ID, history: [], newMessage: "What next?", responseMode: "balanced" }),
     ).rejects.toThrow(/ECONNRESET/);
 
     expect(usageInserts()).toHaveLength(0);
@@ -150,7 +150,7 @@ describe("generateAdvisorReply — the degraded decision actually reaches the ro
     monthToDateRowsRef.current = [{ estimated_cost: 0.1 }];
     providerRef.current!.queueText("Leadership is already strong.");
 
-    await generateAdvisorReply({ userId: USER_ID, history: [], newMessage: "What next?" });
+    await generateAdvisorReply({ userId: USER_ID, history: [], newMessage: "What next?", responseMode: "balanced" });
 
     const recorded = usageInserts();
     expect(recorded).toHaveLength(1);
@@ -163,7 +163,7 @@ describe("generateAdvisorReply — the degraded decision actually reaches the ro
     monthToDateRowsRef.current = [{ estimated_cost: 0.3 }, { estimated_cost: 0.25 }];
     providerRef.current!.queueText("Shorter answer, still real.");
 
-    const reply = await generateAdvisorReply({ userId: USER_ID, history: [], newMessage: "What next?" });
+    const reply = await generateAdvisorReply({ userId: USER_ID, history: [], newMessage: "What next?", responseMode: "balanced" });
 
     expect(reply.degraded).toBe(true);
     const recorded = usageInserts();

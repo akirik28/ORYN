@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatAbsoluteDate } from "@/lib/i18n/date";
-import { formatNumber } from "@/lib/i18n/format";
+import { formatTokenCount } from "@/lib/i18n/format";
 import type { Locale } from "@/lib/i18n/config";
 import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
 import { usageState } from "@/lib/ai/usage-state";
@@ -14,11 +14,15 @@ import { usageState } from "@/lib/ai/usage-state";
  * This month's shared Oryn AI allowance, as a real balance rather than decoration — the
  * number shown is the same one app/(app)/advisor/actions.ts enforces, derived from
  * `ai_usage` spend across all seven student-facing AI features (lib/ai/monthly-quota.ts's
- * `PER_STUDENT_AI_FEATURES`), not chat messages alone since the 2026-09-02 token-metering
- * change.
+ * `PER_STUDENT_AI_FEATURES`), denominated in tokens (2026-09-02, second pass on this
+ * surface the same day: the founder rejected the first pass's "AI uses" as the same
+ * message count relabelled — "hala 50 üstünden mesaj hesaplıyor token ver").
+ * `formatTokenCount` renders the big figure and every `{limit}`/`{remaining}` in the
+ * sentence below compactly ("236K", not "236,150") — see that function's own comment for
+ * why compact is the more honest choice here, not just the more legible one.
  *
  * The bar shows what is LEFT, not what has been spent, because everything around it does:
- * the big figure is `remaining`, and the sentence underneath reads "30 AI uses left".
+ * the big figure is `remaining`, and the sentence underneath reads "142K tokens left".
  * Drawing spent instead put the panel at odds with itself — at the start of a month it
  * said "300 messages left" above a completely empty bar, which reads as "you have none"
  * and was reported as the bar being missing (founder, 2026-08-31). Full at the start of
@@ -32,18 +36,18 @@ import { usageState } from "@/lib/ai/usage-state";
  * note.
  *
  * `budgetDegraded` is a second, independent signal from `quota` (2026-09-02, degrade-
- * disclosure package) — `quota` is the shared AI-use backstop (50/month,
+ * disclosure package) — `quota` is the shared token allowance (236,150/month,
  * lib/ai/monthly-quota.ts), but replies actually start using the cheaper model earlier,
- * once this month's spend crosses lib/ai/limits/budget.ts's $0.50 target (~17 uses in, at
- * the same reference cost the backstop is derived from). Before this, the bar could show a
- * full indigo-violet fill and "30 AI uses left" while the student's last several replies
- * were already degraded — true about the use count, misleading about what's actually
- * happening to their conversation. `budgetDegraded` takes priority over the use-count
- * colour/copy for exactly that reason: being degraded is the more urgent, more immediate
- * fact once it's true, regardless of how much of the shared backstop remains. Optional and
- * defaults to `false` — a caller not yet passing it renders exactly as before, matching this
- * codebase's established "not yet wired up" convention (see lib/ai/usage.ts's `degraded?`
- * param doc).
+ * once this month's spend crosses lib/ai/limits/budget.ts's $0.50 target (~79,000 tokens
+ * in, at the same reference cost the allowance is derived from). Before this, the bar
+ * could show a full indigo-violet fill and "142K tokens left" while the student's last
+ * several replies were already degraded — true about the token count, misleading about
+ * what's actually happening to their conversation. `budgetDegraded` takes priority over
+ * the token-count colour/copy for exactly that reason: being degraded is the more urgent,
+ * more immediate fact once it's true, regardless of how much of the shared allowance
+ * remains. Optional and defaults to `false` — a caller not yet passing it renders exactly
+ * as before, matching this codebase's established "not yet wired up" convention (see
+ * lib/ai/usage.ts's `degraded?` param doc).
  */
 export function MonthlyUsageMeter({
   quota,
@@ -128,9 +132,9 @@ export function MonthlyUsageMeter({
                   : "text-foreground",
             )}
           >
-            {unknown ? "—" : quota.remaining}
+            {unknown ? "—" : formatTokenCount(quota.remaining)}
           </span>
-          <span className="text-ink-3"> / {quota.limit}</span>
+          <span className="text-ink-3"> / {formatTokenCount(quota.limit)}</span>
         </p>
       </div>
 
@@ -142,8 +146,8 @@ export function MonthlyUsageMeter({
         aria-valuenow={unknown ? undefined : quota.remaining}
         aria-label={
           unknown
-            ? t("ariaUnknown", { limit: formatNumber(quota.limit) })
-            : t("ariaKnown", { remaining: formatNumber(quota.remaining), limit: formatNumber(quota.limit) })
+            ? t("ariaUnknown", { limit: formatTokenCount(quota.limit) })
+            : t("ariaKnown", { remaining: formatTokenCount(quota.remaining), limit: formatTokenCount(quota.limit) })
         }
       >
         <div
@@ -166,14 +170,14 @@ export function MonthlyUsageMeter({
 
       <p className="mt-2.5 text-xs text-muted-foreground">
         {unknown
-          ? t("unknown", { limit: formatNumber(quota.limit), date: resets })
+          ? t("unknown", { limit: formatTokenCount(quota.limit), date: resets })
           : exhausted
-            ? t("exhausted", { limit: formatNumber(quota.limit), date: resets })
+            ? t("exhausted", { limit: formatTokenCount(quota.limit), date: resets })
             : degraded
               ? t("degraded", { date: resets })
               : low
-                ? t("low", { remaining: formatNumber(quota.remaining), date: resets })
-                : t("normal", { remaining: formatNumber(quota.remaining), date: resets })}
+                ? t("low", { remaining: formatTokenCount(quota.remaining), date: resets })
+                : t("normal", { remaining: formatTokenCount(quota.remaining), date: resets })}
       </p>
     </div>
   );

@@ -10,7 +10,7 @@ import { removeAllUserStorage, StorageCleanupError } from "@/lib/account/delete-
 import { UpdatePasswordSchema } from "@/lib/validation/auth";
 import { meetsMinimumSignupAge } from "@/lib/legal/age-policy";
 import { logEvent } from "@/lib/analytics/log";
-import type { NotificationCategory, TimeBudget } from "@/types/database";
+import type { NotificationCategory, TimeBudget, ResponseMode } from "@/types/database";
 
 /**
  * Change the password of the already-signed-in student.
@@ -225,6 +225,38 @@ export async function updateNotificationPreferences(preferences: Record<Notifica
     return { error: "Couldn't update your notification settings." };
   }
   revalidatePath("/settings");
+  return {};
+}
+
+/**
+ * Migration 0091 — the response-mode slider's own persistence (features/advisor/response-
+ * mode-slider.tsx). Same shape as updateNotificationPreferences above and the same
+ * reasoning for failing loudly rather than retrying without the field: unlike
+ * advisor_messages.degraded (migration 0088, app/(app)/advisor/actions.ts), where a
+ * missing column means dropping one piece of metadata off a write that still has a real
+ * primary purpose (saving the reply), this write's *entire* purpose is the one field. There
+ * is nothing meaningful left to save if it's silently omitted — a student who picked
+ * "Ultra" and got no error, no confirmation, and no saved preference would reasonably
+ * assume it worked.
+ *
+ * Saving the preference is independent of whether it's currently in effect — spend-based
+ * degrade (lib/ai/limits/budget.ts) can still override which model actually answers the
+ * next message, same as it already does silently today. This action only ever records what
+ * the student asked for.
+ */
+export async function updateResponseMode(mode: ResponseMode): Promise<{ error?: string }> {
+  const session = await requireUser();
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("profiles").update({ response_mode: mode }).eq("id", session.userId!);
+  if (error) {
+    if (isUndefinedColumnError(error, "response_mode")) {
+      return { error: "Response mode isn't available on your account yet, so nothing was saved. Retrying won't change that." };
+    }
+    return { error: "Couldn't save your response mode." };
+  }
+
+  revalidatePath("/advisor");
   return {};
 }
 

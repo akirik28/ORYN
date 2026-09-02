@@ -154,6 +154,12 @@ describe("message catalogs", () => {
       // name, correctly differs (Standart) precisely because it *is* an ordinary word.
       "settings.plan.ultraName",
       "settings.plan.ultraBadge",
+      // Same "Ultra" precedent as settings.plan.ultraName directly above, a second surface
+      // for the identical word: the response-mode slider's third position (2026-09-02,
+      // founder-approved prototype, whose own Turkish sentence used "ultra" as a loanword
+      // directly — "hızlı standart ultra kayacının"). "Fast"/"Hızlı" and "Standard"/
+      // "Standart", its two siblings, correctly differ.
+      "advisor.responseMode.modes.thorough",
       ].sort(),
     );
   });

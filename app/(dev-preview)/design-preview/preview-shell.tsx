@@ -68,13 +68,13 @@ const PREVIEW_UNREAD_COUNT = PREVIEW_NOTIFICATIONS.filter((n) => !n.read_at).len
 // case" spirit as PREVIEW_NOTIFICATIONS above. usage-indicator.tsx and monthly-usage-meter.tsx
 // each have their own dedicated preview surfaces for exercising exhausted/degraded/unknown.
 //
-// limit: 50, not 300 -- lib/ai/monthly-quota.ts's MONTHLY_AI_QUOTAS.advisor_chat has been 50
-// since it was re-derived from real token costs (2026-09-02); this fixture was never updated
-// when that landed, so every screenshot of this harness was showing a ceiling nobody could
-// actually hit. used: 20 (40%) picked fresh against the new limit for the same "mid-month,
-// not an edge case" reason the comment above already states -- not scaled proportionally
-// from the old 42/300 (14%), which wasn't a deliberately-chosen fraction to begin with.
-const PREVIEW_QUOTA: MonthlyQuota = { used: 20, limit: 50, remaining: 30, fraction: 20 / 50, resetsAt: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 1)).toISOString(), usedIsKnown: true };
+// limit: 236,150 tokens, not 50 uses -- lib/ai/monthly-quota.ts's MONTHLY_AI_TOKEN_LIMIT is
+// the same allowance re-denominated a second time the same night (2026-09-02): the founder
+// rejected "50 AI uses" as the same message count relabelled and asked for the real token
+// figure. Same 40% used proportion this fixture already chose deliberately (not an edge
+// case) -- kept the ratio, moved the unit, so this stays the same illustrative mid-month
+// state it always was rather than a coincidentally-different one.
+const PREVIEW_QUOTA: MonthlyQuota = { used: 94460, limit: 236150, remaining: 141690, fraction: 94460 / 236150, resetsAt: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 1)).toISOString(), usedIsKnown: true };
 
 // Mirrors app/(app)/layout.tsx's structure with fixture data — real shell components, no
 // auth/data-fetching. See app/(dev-preview)/design-preview/page.tsx.
@@ -108,11 +108,12 @@ export function PreviewShell({ children, signal }: { children: ReactNode; signal
         unreadCount={PREVIEW_UNREAD_COUNT}
         quota={PREVIEW_QUOTA}
         budgetDegraded={false}
+        tier={tier}
       />
       <Sidebar displayName="Ada" email="ada@example.com" signal={signal} />
       <div className="relative flex min-w-0 flex-1 flex-col">
         <RouteAmbientBlobs />
-        <Topbar notifications={PREVIEW_NOTIFICATIONS} unreadCount={PREVIEW_UNREAD_COUNT} quota={PREVIEW_QUOTA} budgetDegraded={false} />
+        <Topbar notifications={PREVIEW_NOTIFICATIONS} unreadCount={PREVIEW_UNREAD_COUNT} quota={PREVIEW_QUOTA} budgetDegraded={false} tier={tier} />
         <main className="relative z-[1] min-w-0 flex-1 overflow-x-hidden">
           <div className="mx-auto w-full max-w-[1200px] px-4 pt-8 pb-24 md:px-8 md:pt-12 lg:pb-12">{children}</div>
         </main>

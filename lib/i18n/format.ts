@@ -26,6 +26,20 @@ export function formatNumber(value: number, options?: Intl.NumberFormatOptions):
   return new Intl.NumberFormat(NUMBER_FORMAT_LOCALE, options).format(value);
 }
 
+/**
+ * A token count as a student actually reads it — "142K", not "142,384". This isn't a
+ * legibility shortcut, it's the more honest number: a monthly allowance derived from a
+ * cost reference (lib/ai/monthly-quota.ts) was never precise to the exact token, so a full
+ * comma-grouped figure asserts a precision that was never real. `Intl`'s own compact
+ * notation already does the right thing below 1,000 — exact digits, no "K" — so a real
+ * small remainder (a student down to their last few hundred tokens) never rounds down to
+ * "0K" and reads as already exhausted when it isn't; this exists so every call site gets
+ * that for free instead of hand-rolling a threshold.
+ */
+export function formatTokenCount(value: number): string {
+  return formatNumber(value, { notation: "compact", compactDisplay: "short" });
+}
+
 export function formatCurrency(value: number, currency = "USD", options?: Intl.NumberFormatOptions): string {
   return new Intl.NumberFormat(NUMBER_FORMAT_LOCALE, { style: "currency", currency, maximumFractionDigits: 0, ...options }).format(value);
 }

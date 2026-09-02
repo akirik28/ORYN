@@ -35,6 +35,7 @@ const FAILED_MESSAGE_ID = "33333333-3333-3333-3333-333333333333";
 
 const {
   requireUserMock,
+  getCurrentProfileMock,
   resolveLocaleMock,
   assertWithinAIRateLimitMock,
   getMonthlyQuotaMock,
@@ -43,6 +44,12 @@ const {
   createClientMock,
 } = vi.hoisted(() => ({
   requireUserMock: vi.fn(),
+  // 2026-09-02, response-mode slider: sendAdvisorMessage/retryAdvisorMessage now read the
+  // student's saved preference before generating a reply. "balanced" is today's exact
+  // existing behaviour (the ceiling model, no prompt addition), so every test in this file
+  // that predates the slider keeps its original meaning without needing its own opinion on
+  // response mode.
+  getCurrentProfileMock: vi.fn().mockResolvedValue({ response_mode: "balanced" }),
   resolveLocaleMock: vi.fn().mockResolvedValue("en"),
   assertWithinAIRateLimitMock: vi.fn().mockResolvedValue(undefined),
   // Not exhausted by default — this suite is about the assistant-message insert/update
@@ -62,7 +69,7 @@ const {
 }));
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-vi.mock("@/lib/security/dal", () => ({ requireUser: requireUserMock }));
+vi.mock("@/lib/security/dal", () => ({ requireUser: requireUserMock, getCurrentProfile: getCurrentProfileMock }));
 vi.mock("@/lib/i18n/locale", () => ({ resolveLocale: resolveLocaleMock }));
 vi.mock("@/lib/ai/rate-limit", async () => {
   const actual = await vi.importActual<typeof import("@/lib/ai/rate-limit")>("@/lib/ai/rate-limit");
@@ -77,6 +84,7 @@ import { sendAdvisorMessage, retryAdvisorMessage } from "@/app/(app)/advisor/act
 
 beforeEach(() => {
   requireUserMock.mockReset().mockResolvedValue({ isAuth: true, userId: USER_ID, email: "student@example.com" });
+  getCurrentProfileMock.mockReset().mockResolvedValue({ response_mode: "balanced" });
   resolveLocaleMock.mockReset().mockResolvedValue("en");
   assertWithinAIRateLimitMock.mockReset().mockResolvedValue(undefined);
   getMonthlyQuotaMock.mockReset().mockResolvedValue({

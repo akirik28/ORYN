@@ -15,7 +15,7 @@ import { UsageIndicator } from "./usage-indicator";
 import { CommandPalette } from "@/features/search/command-palette";
 import { LanguageSwitcher } from "./language-switcher";
 import { PRIMARY_NAV, SECONDARY_NAV } from "./nav-items";
-import type { Notification } from "@/types/database";
+import type { Notification, PlanTier } from "@/types/database";
 import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
 
 const BOTTOM_NAV = PRIMARY_NAV.filter((item) => item.mobilePrimary);
@@ -49,6 +49,7 @@ export function MobileNav({
   isAdmin = false,
   quota,
   budgetDegraded,
+  tier,
 }: {
   signal: DimensionSignal[];
   displayName: string;
@@ -58,6 +59,7 @@ export function MobileNav({
   isAdmin?: boolean;
   quota: MonthlyQuota;
   budgetDegraded: boolean;
+  tier: PlanTier;
 }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -74,7 +76,7 @@ export function MobileNav({
         </Link>
         <div className="flex items-center gap-1">
           <CommandPalette />
-          <UsageIndicator quota={quota} budgetDegraded={budgetDegraded} />
+          <UsageIndicator quota={quota} budgetDegraded={budgetDegraded} tier={tier} />
           <NotificationBell notifications={notifications} unreadCount={unreadCount} />
           <UserMenu displayName={displayName} email={email} signal={signal} isAdmin={isAdmin} />
         </div>

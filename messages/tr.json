@@ -1105,13 +1105,24 @@
     },
     "usageMeter": {
       "thisMonth": "Bu ay",
-      "ariaUnknown": "Bu ay Oryn yapay zekasından ne kadar kaldığı yüklenemedi. Aylık hakkın {limit}.",
-      "ariaKnown": "Bu ay {limit} Oryn yapay zeka kullanımından {remaining} tanesi kaldı",
-      "unknown": "Ne kadar kullandığını yükleyemedik. {limit} kullanımlık aylık hakkın yine de geçerli ve {date} tarihinde yenilenir.",
-      "exhausted": "{limit} yapay zeka kullanımının tamamı bu ay için bitti. {date} tarihinde yenilenir.",
+      "ariaUnknown": "Bu ay kaç token kaldığı yüklenemedi. Aylık hakkın {limit} token.",
+      "ariaKnown": "Bu ay {limit} tokenin {remaining} tanesi kaldı",
+      "unknown": "Kaç token kullandığını yükleyemedik. {limit} tokenlik aylık hakkın yine de geçerli ve {date} tarihinde yenilenir.",
+      "exhausted": "{limit} tokenin tamamı bu ay için bitti. {date} tarihinde yenilenir.",
       "low": "Sadece {remaining} kaldı. {date} tarihinde yenilenir.",
       "degraded": "Bu ay Oryn'in yapay zekasını çok kullandın, bu yüzden yanıtlar şimdilik daha kısa. {date} tarihinde yenilenir.",
-      "normal": "{remaining} Oryn yapay zeka kullanımı kaldı. {date} tarihinde yenilenir."
+      "normal": "{remaining} token kaldı. {date} tarihinde yenilenir."
+    },
+    "responseMode": {
+      "label": "Yanıt",
+      "tokens": "token",
+      "ariaLabel": "Yanıt modu",
+      "modes": {
+        "fast": "Hızlı",
+        "balanced": "Standart",
+        "thorough": "Ultra"
+      },
+      "overridden": "Ultra tercihin saklı kalıyor — bu ayki kullanım nedeniyle yanıtlar şimdilik daha kısa. {date} tarihinde yenilenir."
     },
     "strategyPanel": {
       "ariaLabel": "Oryn'ın üzerinden çalıştığı bilgiler",
