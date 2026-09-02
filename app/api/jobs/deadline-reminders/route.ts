@@ -19,7 +19,10 @@ export async function POST(request: NextRequest) {
 
   const result = await runWithTracking("deadline_reminders", async () => {
     const { notified, checked } = await scanDeadlines();
-    return { itemsProcessed: notified, result: { notified, checked } };
+    // No per-item external call in this scan that can fail short of the whole run
+    // throwing (it reads already-stored deadlines and writes notifications) — 0 is a real
+    // fact here, not a placeholder standing in for a count nobody computed.
+    return { itemsProcessed: notified, errorsEncountered: 0, result: { notified, checked } };
   });
 
   return NextResponse.json(result);

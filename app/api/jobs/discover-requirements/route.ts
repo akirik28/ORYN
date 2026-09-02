@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
   const results = await runWithTracking("discover_requirements", async () => {
     const runs = await discoverRequirementsForUncoveredUniversities();
     const itemsProcessed = runs.reduce((sum, r) => sum + r.requirementsStored, 0);
-    return { itemsProcessed, result: runs };
+    const errorsEncountered = runs.reduce((sum, r) => sum + r.errors.length, 0);
+    return { itemsProcessed, errorsEncountered, result: runs };
   });
 
   return NextResponse.json({ runs: results });

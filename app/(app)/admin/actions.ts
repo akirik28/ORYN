@@ -25,7 +25,11 @@ export async function triggerOpportunityDiscovery(): Promise<{ error?: string }>
     await runWithTracking("discover_opportunities", async () => {
       const runs = [];
       for (const query of DEFAULT_DISCOVERY_QUERIES) runs.push(await discoverOpportunitiesForQuery(query));
-      return { itemsProcessed: runs.reduce((sum, r) => sum + r.opportunitiesStored, 0), result: runs };
+      return {
+        itemsProcessed: runs.reduce((sum, r) => sum + r.opportunitiesStored, 0),
+        errorsEncountered: runs.reduce((sum, r) => sum + r.errors.length, 0),
+        result: runs,
+      };
     });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Job failed." };
@@ -39,7 +43,11 @@ export async function triggerUniversitySync(): Promise<{ error?: string }> {
   try {
     await runWithTracking("sync_us_universities", async () => {
       const runs = await syncUsUniversities(DEFAULT_US_UNIVERSITIES);
-      return { itemsProcessed: runs.filter((r) => r.status === "created" || r.status === "updated").length, result: runs };
+      return {
+        itemsProcessed: runs.filter((r) => r.status === "created" || r.status === "updated").length,
+        errorsEncountered: runs.filter((r) => r.status === "error").length,
+        result: runs,
+      };
     });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Job failed." };
@@ -53,7 +61,7 @@ export async function triggerDeadlineScan(): Promise<{ error?: string }> {
   try {
     await runWithTracking("deadline_reminders", async () => {
       const { notified, checked } = await scanDeadlines();
-      return { itemsProcessed: notified, result: { notified, checked } };
+      return { itemsProcessed: notified, errorsEncountered: 0, result: { notified, checked } };
     });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Job failed." };
@@ -67,7 +75,11 @@ export async function triggerRequirementDiscovery(): Promise<{ error?: string }>
   try {
     await runWithTracking("discover_requirements", async () => {
       const runs = await discoverRequirementsForUncoveredUniversities();
-      return { itemsProcessed: runs.reduce((sum, r) => sum + r.requirementsStored, 0), result: runs };
+      return {
+        itemsProcessed: runs.reduce((sum, r) => sum + r.requirementsStored, 0),
+        errorsEncountered: runs.reduce((sum, r) => sum + r.errors.length, 0),
+        result: runs,
+      };
     });
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Job failed." };

@@ -16,7 +16,9 @@ export async function POST(request: NextRequest) {
 
   const result = await runWithTracking("refresh_admission_outlooks", async () => {
     const { checked, refreshed, refused, failed } = await scanStaleOutlooks();
-    return { itemsProcessed: refreshed, result: { checked, refreshed, refused, failed } };
+    // scanStaleOutlooks already counted this — see its own comment on `failed` — it just
+    // wasn't reaching external_sync_jobs.errors_encountered until now.
+    return { itemsProcessed: refreshed, errorsEncountered: failed, result: { checked, refreshed, refused, failed } };
   });
 
   return NextResponse.json(result);

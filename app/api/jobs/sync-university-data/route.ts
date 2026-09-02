@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
   const results = await runWithTracking("sync_us_universities", async () => {
     const runs = await syncUsUniversities(schools);
     const itemsProcessed = runs.filter((r) => r.status === "created" || r.status === "updated").length;
-    return { itemsProcessed, result: runs };
+    const errorsEncountered = runs.filter((r) => r.status === "error").length;
+    return { itemsProcessed, errorsEncountered, result: runs };
   });
 
   return NextResponse.json({ results });

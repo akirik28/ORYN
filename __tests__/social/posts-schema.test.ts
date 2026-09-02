@@ -128,7 +128,17 @@ describe("migration numbering", () => {
     // sibling of the ledger-silence problem the rest of this comment documents: a replay
     // reproduces a ledger-silent-but-tracked migration; it cannot reproduce an object with
     // no migration file at all, for either reason. Still unapplied.
-    expect(Math.max(...numbers.map(Number))).toBe(82);
+    //
+    // 0083 (external_sync_jobs_errors_encountered) is the job-observability gap CEO named
+    // directly: items_processed alone can't tell a run that found nothing new apart from
+    // one that caught real per-item failures internally (discover_opportunities,
+    // discover_requirements, generate_weekly_plans, and sync_us_universities all do
+    // exactly that) -- both write items_processed: 0 identically. This column is the
+    // missing half of that signal, and lib/jobs/run-with-tracking.ts carries the identical
+    // unapplied-column degradation pattern 0077/persist.ts already proved out, for the
+    // same reason: an UPDATE naming a column that doesn't exist throws on every call, not
+    // just the ones that would have matched a row.
+    expect(Math.max(...numbers.map(Number))).toBe(83);
   });
 });
 
