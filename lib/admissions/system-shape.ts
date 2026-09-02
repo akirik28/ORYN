@@ -548,6 +548,30 @@ const REGISTRY: AdmissionSystemEntry[] = [
     },
     sources: [DOC("sweden.md")],
   },
+  {
+    countryNames: ["Norway", "Norge"],
+    domestic: {
+      shape: "academic_rank_competitive",
+      mechanism:
+        "Norwegian-taught programmes admit through Samordna Opptak, a national points-based rank system: up to 60 points from your average grade plus bonus points for specific subjects, age and completed higher education, competed for across two parallel grade-based quotas. No essay, no reference, no interview.",
+    },
+    international: {
+      shape: "unknown",
+      mechanism:
+        "Most international applicants target English-taught programmes, which sit outside Samordna Opptak entirely — each institution runs its own separate application, and this pass could not establish one common selection mechanism across them. Check the specific institution's own admissions page.",
+    },
+    institutionOverrides: [
+      {
+        names: ["Norwegian University of Science and Technology", "NTNU"],
+        system: {
+          shape: "academic_rank_competitive",
+          mechanism:
+            "NTNU's own admissions page states that its English-taught Bachelor in Engineering programme is applied for through Samordna Opptak — the same points-based rank mechanism as Norwegian-taught programmes, despite the language of instruction.",
+        },
+      },
+    ],
+    sources: [DOC("norway.md")],
+  },
 ];
 
 // ---------------------------------------------------------------------------
