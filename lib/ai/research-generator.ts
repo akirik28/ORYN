@@ -2,8 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 import { getAIProvider } from "./index";
-import { logAIUsage } from "./usage";
-import { selectModelForUser } from "./limits/budget";
+import { withUsageLogging } from "./usage";
 import { openAlexProvider } from "@/lib/providers/openalex";
 import { buildStudentAdvisorContext } from "./student-context";
 import { withOutputLanguage } from "./output-language";
@@ -37,10 +36,11 @@ Bad (rejected): "Develop a new macroeconomic model predicting all European infla
 Good (accepted): "Compare youth unemployment and tertiary education rates across 10 European countries from
 2015-2025 using public OECD/Eurostat datasets."
 
-Scale difficulty and scope to the student's stated experience and available weekly time. Use the real paper
-titles and topics provided as grounding for what's currently being studied in this space — reference the
-kind of question being asked in the field, not the specific papers verbatim. Never fabricate a dataset,
-API, or source that doesn't actually exist publicly.`;
+Scale difficulty and scope to the student's stated experience, grade level, and available weekly time — a
+student three years from applying can take on more than one three months out. Use the real paper titles and
+topics provided as grounding for what's currently being studied in this space — reference the kind of
+question being asked in the field, not the specific papers verbatim. Never fabricate a dataset, API, or
+source that doesn't actually exist publicly.`;
 
 export async function generateResearchProjects(params: { userId: string; interests: string[]; field: string }): Promise<ResearchProject[]> {
   const context = await buildStudentAdvisorContext(params.userId);
@@ -51,25 +51,33 @@ export async function generateResearchProjects(params: { userId: string; interes
     ? worksResult.data.map((w) => `- "${w.title}" (${w.publicationYear ?? "n.d."}) — topics: ${w.topics.slice(0, 3).join(", ") || "n/a"}`).join("\n")
     : "No live research database results available — rely on general knowledge of the field and stay conservative about what's current.";
 
-  const provider = getAIProvider();
-  const selection = await selectModelForUser(params.userId);
-  const result = await provider.generateStructured({
-    system: withOutputLanguage(SYSTEM_PROMPT, context.student.preferredLanguage),
-    prompt: `Student field of interest: ${params.field}\nOther interests: ${params.interests.join(", ") || "none stated"}\nWeekly time budget: ${context.student.weeklyTimeBudget ?? "not set"}\nCurrent research score: ${context.profileScores.find((s) => s.dimension === "research")?.score ?? "unknown"}/100\n\nCurrent research literature in this space, for grounding:\n${themesContext}\n\nGenerate up to 3 achievable research project ideas.`,
-    schema: ResearchProjectListSchema,
-    schemaName: "record_research_projects",
-    schemaDescription: "Records up to 3 achievable research project ideas for the student.",
-    maxTokens: 2048,
-    model: selection.model,
-  });
+  // Phase 13's own words: "The system should scale the difficulty to the student's age and
+  // experience." graduationYear/birthYear were already fetched into context (Counselor Core's
+  // eligibility checks need them) but student-context.ts's own comment on both admits
+  // "not used in prompt text today" -- true here specifically, this function builds its own
+  // prompt rather than calling formatContextForPrompt. Without this, "scale to age" was only
+  // ever true in the generic sense that every output is pitched at "roughly 14-18" broadly,
+  // never adjusted for whether THIS student is 14 or 18 -- a real difference in what's
+  // realistically achievable that the model was never told to account for.
+  const currentYear = new Date().getFullYear();
+  const yearsUntilGraduation = context.student.graduationYear !== null ? context.student.graduationYear - currentYear : null;
+  const gradeContext =
+    yearsUntilGraduation !== null
+      ? `Graduating ${context.student.graduationYear} (${yearsUntilGraduation} year${yearsUntilGraduation === 1 ? "" : "s"} from now).`
+      : "Graduation year not on file.";
 
-  await logAIUsage({
-    userId: params.userId,
-    feature: "research_generator",
-    usage: result.usage,
-    model: result.model,
-    degraded: selection.degraded,
-    degradeReason: selection.degraded ? selection.reason : null,
-  });
+  const provider = getAIProvider();
+  const result = await withUsageLogging({ userId: params.userId, feature: "research_generator" }, (model) =>
+    provider.generateStructured({
+      system: withOutputLanguage(SYSTEM_PROMPT, context.student.preferredLanguage),
+      prompt: `Student field of interest: ${params.field}\nOther interests: ${params.interests.join(", ") || "none stated"}\n${gradeContext}\nWeekly time budget: ${context.student.weeklyTimeBudget ?? "not set"}\nCurrent research score: ${context.profileScores.find((s) => s.dimension === "research")?.score ?? "unknown"}/100\n\nCurrent research literature in this space, for grounding:\n${themesContext}\n\nGenerate up to 3 achievable research project ideas.`,
+      schema: ResearchProjectListSchema,
+      schemaName: "record_research_projects",
+      schemaDescription: "Records up to 3 achievable research project ideas for the student.",
+      maxTokens: 2048,
+      model,
+    }),
+  );
+
   return result.data.projects;
 }
