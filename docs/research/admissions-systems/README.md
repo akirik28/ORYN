@@ -73,6 +73,7 @@ docs — not as additional rows in the deep-comparison matrix.
 |---|---|---|---|
 | Sweden | [`sweden.md`](./sweden.md) | 2026-09-03 | Same merit mechanism (meritvärde) for both pathways — only the portal differs. |
 | Norway | [`norway.md`](./norway.md) | 2026-09-03 | A genuine pathway split, not a wording difference: the international/English-taught track's mechanism is honestly `unknown` at the general level (one named institutional exception, NTNU) — see norway.md §D. |
+| Portugal | [`portugal.md`](./portugal.md) | 2026-09-03 | Two officially-named competitions (national vs. international); DGES's own page confirms international selection varies by institution, Porto's own page narrows this further to by-faculty — too fine-grained for an honest institution override, see portugal.md §C. |
 
 Each doc follows the same structure: admissions architecture, qualification eligibility
 (with a **dedicated Türkiye-applicant section** in every country), academic evidence use,

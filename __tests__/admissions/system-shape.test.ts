@@ -47,7 +47,7 @@ describe("resolveAdmissionSystem — the three shapes the research actually foun
   });
 
   test("every resolved entry carries at least one traceable source document", () => {
-    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway"]) {
+    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal"]) {
       const result = resolveAdmissionSystem({ targetCountry: country, studentCountry: "Turkey" });
       expect(result.sources.length, country).toBeGreaterThan(0);
       expect(result.mechanism, country).not.toBeNull();
@@ -283,6 +283,40 @@ describe("resolveAdmissionSystem — Norway (2026-09-03, a genuine pathway split
   test("Norway traces to its own research document, not an invented source", () => {
     const result = resolveAdmissionSystem({ targetCountry: "Norway", studentCountry: "Norway" });
     expect(result.sources).toContain("docs/research/admissions-systems/norway.md");
+  });
+});
+
+describe("resolveAdmissionSystem — Portugal (2026-09-03, a third independently-found shape pattern)", () => {
+  // Confirmed directly from DGES's own page (docs/research/admissions-systems/portugal.md §B):
+  // rank-order until numerus-clausus places run out, no essay/interview/reference.
+  test("Portugal's domestic/EU track is rank-competitive via the Concurso Nacional de Acesso", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Portugal", studentCountry: "Portugal" });
+    expect(domestic.shape).toBe("academic_rank_competitive");
+    expect(reviewsNonAcademicEvidence(domestic.shape)).toBe(false);
+    expect(domestic.mechanism).toContain("Concurso Nacional de Acesso");
+  });
+
+  // DGES's own international-students page states procedures vary by institution; Porto's own
+  // page narrows this further to varying by faculty within one university — a real, sourced
+  // "unknown" finding with no institution-wide override recorded, unlike Norway's NTNU (see
+  // portugal.md §C for why an override would overclaim here).
+  test("Portugal's international track is honestly unknown — confirmed to vary even by faculty, not just by institution", () => {
+    const international = resolveAdmissionSystem({ targetCountry: "Portugal", studentCountry: "Turkey" });
+    expect(international.shape).toBe("unknown");
+    expect(reviewsNonAcademicEvidence(international.shape)).toBeNull();
+    expect(international.mechanism).toContain("faculty");
+    expect(international.sources.length).toBeGreaterThan(0);
+  });
+
+  test("Portugal has no institution override — the researched variation was too fine-grained to name one honestly", () => {
+    const porto = resolveAdmissionSystem({ targetCountry: "Portugal", studentCountry: "Turkey", targetUniversityName: "University of Porto" });
+    expect(porto.basis).not.toBe("institution");
+    expect(porto.shape).toBe("unknown");
+  });
+
+  test("Portugal traces to its own research document, not an invented source", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Portugal", studentCountry: "Portugal" });
+    expect(result.sources).toContain("docs/research/admissions-systems/portugal.md");
   });
 });
 
