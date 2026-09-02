@@ -97,7 +97,10 @@ doğrulanmış bir program aynı görünüyordu.
 İkincisi: 611+ üniversite, arkasında hiç veri olmadan kendinden emin bir seçicilik etiketi
 gösteriyordu. Açıklama notu eklendi.
 
-Üçüncüsü, aynı şeklin en kötü hali: fırsatların %65'inde fiyat kayıtlı değil, ve fiyatı
+Üçüncüsü, aynı şeklin en kötü hali: fırsatların %65'inde `cost` alanı boş — ama bu sayı
+**gerçek araştırma eksiğini olduğundan büyük gösteriyor**, çünkü alan tek bir sayı tutuyor
+ve kademeli fiyat oraya hiç yazılamıyor. Yani bazı fiyatlar biliniyor, sadece koyacak yer
+yok. Asıl sorun şuydu: fiyatı
 bilinmeyen bir program danışmana **ücretsiz olanla tamamen aynı** şekilde anlatılıyordu —
 "bilinmiyor" diye bir durum yoktu. Yani yapay zekâ, parası olmayan bir öğrenciye on bin
 dolarlık bir programı, bedava olduğunu ima ederek önerebilirdi. Düzeltiliyor.
