@@ -41,7 +41,11 @@ describe("PlanTierView — no buy button", () => {
   test("a standard-tier student sees an honest interest button, never anything resembling checkout", () => {
     renderView("standard");
     expect(screen.getByText("Interested in Ultra?")).toBeInTheDocument();
-    expect(screen.getByText(/Ultra isn't available to buy yet/)).toBeInTheDocument();
+    expect(screen.getByText(/isn't available to buy yet/)).toBeInTheDocument();
+    // The price sits next to the same honest disclosure, not in place of it -- a concrete
+    // price beside a button that can't take money is the fake-button case unless the page
+    // says plainly what the state is (CEO's own framing for this assignment).
+    expect(screen.getByText(/399\.99 TL\/month/)).toBeInTheDocument();
     const button = screen.getByRole("button", { name: "I'm interested" });
     expect(button).toBeInTheDocument();
     // The one interactive control on the whole page must not read like a purchase --
@@ -92,26 +96,35 @@ describe("PlanTierView — comparison table is data-driven, not hardcoded", () =
     // The two "differs" rows.
     expect(screen.getByText("App appearance")).toBeInTheDocument();
     expect(screen.getByText("Standard theme")).toBeInTheDocument();
-    expect(screen.getByText("Premium visual theme")).toBeInTheDocument();
-    expect(screen.getByText("Advisor replies")).toBeInTheDocument();
-    // The honest, specific claim (matches the real degraded-state copy,
-    // messages/en.json's own advisor.usage.degraded string), not a vague "more messages" --
-    // the actual mechanism a student meets is a reply-quality degrade, not a hard cutoff.
-    expect(screen.getByText(/Shorter replies/)).toBeInTheDocument();
-    expect(screen.getByText(/Full-length replies/)).toBeInTheDocument();
-    // The sameByDesign row: one label, one shared value spanning both columns, never a
-    // separate standard/ultra pair for it.
+    expect(screen.getByText(/animated flame theme/)).toBeInTheDocument();
+    expect(screen.getByText("Reply depth")).toBeInTheDocument();
+    // The honest, specific claim: a genuinely shipped, server-enforced difference
+    // (features/advisor/response-mode-slider.tsx's Ultra-only "thorough" mode), not the
+    // token-pool/degrade-timing split the assignment asked for -- neither of those shipped
+    // (the founder closed that discussion the same night), so this row states what's real
+    // instead of what was merely proposed. See lib/tier/comparison.ts's own note.
+    expect(screen.getByText(/Fast or Standard replies/)).toBeInTheDocument();
+    expect(screen.getByText(/Longer, more detailed replies/)).toBeInTheDocument();
+    // The two sameByDesign rows: one label each, one shared value spanning both columns,
+    // never a separate standard/ultra pair.
     expect(screen.getByText("Weekly plan focus")).toBeInTheDocument();
     expect(screen.getByText(/Top 3 priorities for everyone/)).toBeInTheDocument();
+    expect(screen.getByText("Research project ideas")).toBeInTheDocument();
+    expect(screen.getByText(/Up to 3 per generation for everyone/)).toBeInTheDocument();
   });
 
-  test("the honest floor: no fourth capability is claimed anywhere on the page", () => {
+  test("the honest floor: no fifth capability, and no urgency language on the trial, anywhere on the page", () => {
     renderView("standard");
     // Guards against a future edit accidentally reintroducing an unresearched claim --
-    // these words never appear on this page today because oryn-60's research doesn't
-    // support them yet (docs/ultra-tier-value-2026-09-02.md).
+    // these words never appear on this page today because they're not backed by shipped
+    // code (docs/ultra-tier-value-2026-09-02.md, docs/ultra-feature-recommendation-2026-09-02.md).
     for (const unresearched of ["quota", "unlimited", "priority support", "faster refresh"]) {
       expect(screen.queryByText(new RegExp(unresearched, "i"))).not.toBeInTheDocument();
+    }
+    // The free-trial fact must read as a stated term, never a pressure device -- CEO's
+    // explicit constraint on this assignment: no countdown, no "limited time", no urgency.
+    for (const forbiddenUrgency of ["limited time", "hurry", "act now", "today only", "don't miss", "expires"]) {
+      expect(screen.queryByText(new RegExp(forbiddenUrgency, "i"))).not.toBeInTheDocument();
     }
   });
 });

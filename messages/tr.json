@@ -141,20 +141,24 @@
         "visualTheme": {
           "label": "Uygulama görünümü",
           "standard": "Standart tema",
-          "ultra": "Premium görsel tema"
+          "ultra": "Animasyonlu bir alev teması: kenar çubuğunda, kullanım göstergesinde ve yanıt kaydırıcısında"
         },
-        "advisorAllowance": {
-          "label": "Danışman yanıtları",
-          "standard": "Yoğun kullanımdan sonra kısa yanıtlar",
-          "ultra": "Daha uzun süre tam uzunlukta yanıtlar"
+        "replyDepth": {
+          "label": "Yanıt derinliği",
+          "standard": "Hızlı veya Standart yanıtlar",
+          "ultra": "Gerektiğinde daha uzun, daha detaylı yanıtlar da var"
         },
         "weeklyPlanFocus": {
           "label": "Haftalık plan odağı",
           "same": "Herkes için ilk 3 öncelik — bilinçli olarak küçük tutuluyor, böylece tavsiye seyrelmeden net kalıyor"
+        },
+        "researchIdeaFocus": {
+          "label": "Araştırma proje fikirleri",
+          "same": "Herkes için üretim başına en fazla 3 fikir — bilinçli olarak küçük tutuluyor, böylece fikirler etkileyici görünüp ulaşılamaz olmak yerine gerçekçi kalıyor"
         }
       },
       "interestTitle": "Ultra ile ilgileniyor musun?",
-      "interestDescription": "Ultra henüz satın alınamıyor. İlgilendiğini bildir, açıldığında sana haber verelim.",
+      "interestDescription": "Ultra 399,99 TL/ay olacak, ilk hafta ücretsiz. Henüz satın alınamıyor — ilgilendiğini bildir, açıldığında sana haber verelim.",
       "interestButton": "İlgileniyorum",
       "interestConfirmed": "Teşekkürler — sana haber vereceğiz."
     },

@@ -141,20 +141,24 @@
         "visualTheme": {
           "label": "App appearance",
           "standard": "Standard theme",
-          "ultra": "Premium visual theme"
+          "ultra": "An animated flame theme — the sidebar, usage meter, and reply slider all carry it"
         },
-        "advisorAllowance": {
-          "label": "Advisor replies",
-          "standard": "Shorter replies after heavy use this month",
-          "ultra": "Full-length replies for longer"
+        "replyDepth": {
+          "label": "Reply depth",
+          "standard": "Fast or Standard replies",
+          "ultra": "Longer, more detailed replies too, when a question calls for it"
         },
         "weeklyPlanFocus": {
           "label": "Weekly plan focus",
           "same": "Top 3 priorities for everyone — kept small on purpose, so the advice stays sharp instead of diluted"
+        },
+        "researchIdeaFocus": {
+          "label": "Research project ideas",
+          "same": "Up to 3 per generation for everyone — kept small on purpose, so they stay realistic instead of impressive-sounding but out of reach"
         }
       },
       "interestTitle": "Interested in Ultra?",
-      "interestDescription": "Ultra isn't available to buy yet. Let us know you're interested and we'll reach out when it is.",
+      "interestDescription": "Ultra will be 399.99 TL/month, with the first week free. It isn't available to buy yet — let us know you're interested and we'll reach out when it is.",
       "interestButton": "I'm interested",
       "interestConfirmed": "Thanks — we'll let you know."
     },
