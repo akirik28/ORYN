@@ -552,6 +552,14 @@ export interface ContaminationCleanupOutcome {
  * names the audit failure specifically) even if the description update itself already
  * succeeded — deliberately fails toward "admin re-checks a row that's actually fine" rather than
  * "a real change exists with no record of it," the opposite of the gap this table exists to close.
+ *
+ * FAILS CLOSED, DELIBERATELY — the mirror of `logAdminAction`'s (lib/admin/log.ts) opposite
+ * choice; do not "fix" this to match it. Their table logs label/state changes, where losing
+ * one entry is recoverable — the state itself is still visible elsewhere. This one is the
+ * only record that an irreversible content rewrite happened at all; failing open here would
+ * let a real change through with nothing anywhere pointing back to it. Same instinct, two
+ * different stakes, two different correct answers — see that function's own comment for the
+ * mirror of this one.
  */
 export async function applyContaminationCleanup(): Promise<ContaminationCleanupOutcome[]> {
   const adminProfile = await requireAdmin();

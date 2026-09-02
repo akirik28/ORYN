@@ -1674,11 +1674,38 @@
   },
   "admin": {
     "pageTitle": "Yönetici Paneli",
-    "pageDescription": "Kurucunun görmesi ve yönetmesi gereken her şey — önce harcama, sonra sistem durumu, sonra kullanıcılar.",
+    "pageDescription": "Kurucunun görmesi ve yönetmesi gereken her şey — önce harcama, sonra sistem durumu, sonra kullanıcılar, sonra katalog.",
     "tabs": {
       "spend": "Harcama",
       "system": "Sistem",
-      "people": "Kullanıcılar"
+      "people": "Kullanıcılar",
+      "catalog": "Katalog"
+    },
+    "activityLog": {
+      "sectionTitle": "Son işlemler",
+      "empty": "Henüz kaydedilmiş bir yönetici işlemi yok."
+    },
+    "cleanup": {
+      "sectionTitle": "Açıklama temizliği",
+      "sectionDescription": "35 fırsat açıklaması, öğrenciye yönelik metin yerine araştırma süreci notları taşıyor. Her satır, herhangi bir şey yazılmadan önce canlı açıklamayla karşılaştırılıyor.",
+      "previewSummary": "{total} satır hazır — {passing} tanesi şu anda kendi koruma koşuluyla eşleşiyor ve uygulanacak.",
+      "appliedSummary": "{total} satırdan {applied} tanesi uygulandı.",
+      "applyButton": "{count} satırın tümünü uygula",
+      "applySuccessAll": "{count} açıklamanın tümü güncellendi.",
+      "applyPartial": "{applied} güncellendi, {skipped} atlandı — nedenini her satırda gör.",
+      "currentLabel": "Mevcut",
+      "newLabel": "Yeni metin",
+      "rowNotFound": "Satır bulunamadı.",
+      "confirmTitle": "{count} açıklama değişikliğinin tümü uygulansın mı?",
+      "confirmDescription": "{count} satırdan {passing} tanesi şu anda kendi koruma koşuluyla eşleşiyor ve yazılacak. Bu grup hazırlandıktan sonra açıklaması değişen herhangi bir satır sessizce üzerine yazılmak yerine atlanıp gösterilecek.",
+      "confirmCancel": "Vazgeç",
+      "confirmApply": "Uygula",
+      "statusApplied": "Uygulandı",
+      "statusSkipped": "Atlandı",
+      "statusNotFound": "Bulunamadı",
+      "statusWillApply": "Uygulanacak",
+      "statusGuardFailed": "Hazırlandıktan sonra değişti",
+      "notSetUp": "Henüz kurulmadı — Uygula'nın çalışması için 0098 (admin_actions) migration'ının uygulanması gerekiyor. Yukarıdaki önizleme yine de doğru; yalnızca yazma engellendi."
     },
     "spend": {
       "sectionTitle": "Yapay zekâ harcaması",

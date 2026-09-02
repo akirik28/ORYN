@@ -1674,11 +1674,38 @@
   },
   "admin": {
     "pageTitle": "Admin",
-    "pageDescription": "Everything the founder needs to see and manage — spend first, then system health, then people.",
+    "pageDescription": "Everything the founder needs to see and manage — spend first, then system health, then people, then the catalog.",
     "tabs": {
       "spend": "Spend",
       "system": "System",
-      "people": "People"
+      "people": "People",
+      "catalog": "Catalog"
+    },
+    "activityLog": {
+      "sectionTitle": "Recent activity",
+      "empty": "No admin actions recorded yet."
+    },
+    "cleanup": {
+      "sectionTitle": "Description cleanup",
+      "sectionDescription": "35 opportunity descriptions carrying research process-notes instead of student-facing text. Each row is checked against the live description before anything is written.",
+      "previewSummary": "{total} rows staged — {passing} currently match their guard and will apply.",
+      "appliedSummary": "{applied} of {total} rows applied.",
+      "applyButton": "Apply all {count}",
+      "applySuccessAll": "All {count} descriptions updated.",
+      "applyPartial": "{applied} updated, {skipped} skipped — see each row for why.",
+      "currentLabel": "Current",
+      "newLabel": "Replacement",
+      "rowNotFound": "Row not found.",
+      "confirmTitle": "Apply all {count} description rewrites?",
+      "confirmDescription": "{passing} of {count} currently match their guard and will be written. Any row whose description changed since this batch was staged will be skipped and shown, not silently overwritten.",
+      "confirmCancel": "Cancel",
+      "confirmApply": "Apply",
+      "statusApplied": "Applied",
+      "statusSkipped": "Skipped",
+      "statusNotFound": "Not found",
+      "statusWillApply": "Will apply",
+      "statusGuardFailed": "Changed since staged",
+      "notSetUp": "Not set up yet — migration 0098 (admin_actions) needs to be applied before Apply will work. The preview above is still accurate; only writing is blocked."
     },
     "spend": {
       "sectionTitle": "AI spend",
