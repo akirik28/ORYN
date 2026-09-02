@@ -10,6 +10,7 @@ import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-l
 import { isMonthlyQuotaExhausted } from "@/lib/ai/monthly-quota";
 import { logEvent } from "@/lib/analytics/log";
 import { isUuidLike } from "@/lib/validation/uuid";
+import { isUndefinedColumnError } from "@/lib/supabase/errors";
 import type { AIMessage } from "@/lib/ai/provider";
 
 // Student-facing strings in this file are additive-locale-branched inline (`tr ?  : `),
@@ -149,19 +150,28 @@ export async function sendAdvisorMessage(
 
   try {
     const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: trimmed });
-    const { data: assistantMessage, error: assistantMessageError } = await supabase
+    let { data: assistantMessage, error: assistantMessageError } = await supabase
       .from("advisor_messages")
-      .insert({ conversation_id: convId, user_id: userId, role: "assistant", content: reply, status: "complete" })
+      .insert({ conversation_id: convId, user_id: userId, role: "assistant", content: reply, status: "complete", degraded })
       .select("id")
       .single();
-    if (assistantMessageError) {
+    if (assistantMessageError && isUndefinedColumnError(assistantMessageError, "degraded")) {
+      // Migration 0087 not applied yet (house pattern — see that file). The reply itself
+      // must still save; the disclosure just won't survive a reload until it lands.
+      ({ data: assistantMessage, error: assistantMessageError } = await supabase
+        .from("advisor_messages")
+        .insert({ conversation_id: convId, user_id: userId, role: "assistant", content: reply, status: "complete" })
+        .select("id")
+        .single());
+    }
+    if (assistantMessageError || !assistantMessage) {
       // The reply itself generated fine — only the save failed. Without this branch the
       // caller below returned `content: reply` regardless, so the student watched the
       // reply render once and found it gone on reload with no record it ever happened —
       // exactly the silent-gap symptom the P0 fix in the catch block below exists to
       // prevent, just from a different cause. Same remedy: best-effort record a failed
       // row so a reload shows a retry-able bubble instead of nothing.
-      console.error("[advisor] reply generated but failed to save", { conversationId: convId, error: assistantMessageError.message });
+      console.error("[advisor] reply generated but failed to save", { conversationId: convId, error: assistantMessageError?.message });
       const errorMessage = tr ? "Yanıt kaydedilemedi." : "Couldn't save the reply.";
       const { data: failedMessage } = await supabase
         .from("advisor_messages")
@@ -269,10 +279,17 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
 
   try {
     const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: userMessage.content });
-    const { error: updateError } = await supabase
+    let { error: updateError } = await supabase
       .from("advisor_messages")
-      .update({ content: reply, status: "complete", error_message: null })
+      .update({ content: reply, status: "complete", error_message: null, degraded })
       .eq("id", failedMessageId);
+    if (updateError && isUndefinedColumnError(updateError, "degraded")) {
+      // Same degrade-and-retry as sendAdvisorMessage above — migration 0087 not applied yet.
+      ({ error: updateError } = await supabase
+        .from("advisor_messages")
+        .update({ content: reply, status: "complete", error_message: null })
+        .eq("id", failedMessageId));
+    }
     if (updateError) {
       // Unlike sendAdvisorMessage's insert, this is an UPDATE on a row that already exists —
       // if it fails, the row simply stays in its prior "failed" state (still retry-able,
