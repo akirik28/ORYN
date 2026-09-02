@@ -159,6 +159,28 @@ where a later lane corrected an earlier lane's own factual claim. A fixed-in-the
 finding is not listed here at all — that stays in git history, not this file, per this
 file's own long-standing convention.
 
+### Fixed just before this pass finished, worth flagging because it touches entries above and below
+
+**Every "degrade gracefully on an unapplied migration" guard in this codebase was silently
+inert on the exact path it existed to protect, until commit `88775c0e` (2026-09-02).** Four
+independent mechanisms — `lib/supabase/errors.ts` (migrations 0086/0080), `lib/plan/persist.ts`
+(0077, the `carried_forward` degrade this file's own 0077 entry above describes), `lib/profile/cv-import.ts`
+(0084, skills/languages `source`), `lib/jobs/run-with-tracking.ts` (0083, `errors_encountered`) —
+were all keyed on Postgres SQLSTATE `42703` (`undefined_column`), which is what the database
+raises when a *SELECT* runs against a missing column. **A write never reaches that code
+path**: PostgREST validates an INSERT/UPDATE/UPSERT payload against its own schema cache
+first and returns `PGRST204` instead — so a guard checking only `42703` never fired on a
+write, ever, on any of the four. Every test for all four mocked `42703` and passed, which is
+why nobody caught it by testing. Found from a real log line (`refreshOpportunityMatches`
+logging the non-degrade failure branch while `match_confidence` was confirmed genuinely
+absent), not from reading. **Fixed**: one shared `isUndefinedColumnError` now accepts both
+codes. This means the 0077 entry above ("Verified fixed... the write path catches the
+specific Postgres 42703 error... and degrades") was accurate about *intent* but describes a
+mechanism that was live-broken until this same night's very last hour — worth knowing if
+that entry's confidence is ever relied on for a date before `88775c0e`. No separate handoff
+doc; full account is the commit message and the code comment in `lib/supabase/errors.ts`
+itself.
+
 ### Real, named gaps — AI spend and cost
 
 - **Three code paths (`rate-limit.ts`'s burst limiter, `monthly-quota.ts`'s message quota,
