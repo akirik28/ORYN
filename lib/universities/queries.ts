@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, TargetUniversity, University } from "@/types/database";
 import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
+import { isOutlookStale } from "@/lib/admissions/staleness";
 
 const PAGE_SIZE = 1000;
 
@@ -236,7 +237,7 @@ async function refreshStaleOutlooks(supabase: SupabaseClient<Database>, userId: 
   if (!profile?.updated_at) return new Map();
   const profileUpdatedAt = new Date(profile.updated_at).getTime();
 
-  const stale = targets.filter((t) => !t.outlook_calculated_at || new Date(t.outlook_calculated_at).getTime() < profileUpdatedAt);
+  const stale = targets.filter((t) => isOutlookStale(t, profileUpdatedAt));
   if (stale.length === 0) return new Map();
 
   const results = await Promise.all(stale.map(async (t) => [t.id, await refreshAdmissionOutlook(t.id, userId)] as const));

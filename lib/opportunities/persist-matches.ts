@@ -6,6 +6,7 @@ import type { Database } from "@/types/database";
 import { createClient } from "@/lib/supabase/server";
 import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { getProfileScores } from "@/lib/security/dal";
+import { CAREER_PROFILE_SCORE_VERSION } from "@/lib/scoring/types";
 import { computeOpportunityMatch, computeAvoidSignals, isNearStudent } from "./matching";
 import type { StudentMatchProfile, OpportunityForMatching, DismissedOpportunitySignal } from "./matching";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
@@ -101,7 +102,10 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
     // session-cookie client internally, wrong for the same no-session path this whole
     // fix exists for. See lib/admissions/persist.ts's refreshAdmissionOutlook for the
     // identical conditional, one function over.
-    client ? supabase.from("profile_scores").select("*").eq("user_id", userId) : getProfileScores(userId).then((data) => ({ data })),
+    // .eq("calculation_version", ...) on the direct branch matches getProfileScores' own
+    // filter (lib/security/dal.ts's own comment on why) — this branch bypasses that helper
+    // entirely for the no-session job path, so it needs the identical filter applied by hand.
+    client ? supabase.from("profile_scores").select("*").eq("user_id", userId).eq("calculation_version", CAREER_PROFILE_SCORE_VERSION) : getProfileScores(userId).then((data) => ({ data })),
     supabase.from("student_interests").select("label").eq("user_id", userId),
     // select("*") for the same reason as above -- eligible_citizenships is migration 0047.
     supabase

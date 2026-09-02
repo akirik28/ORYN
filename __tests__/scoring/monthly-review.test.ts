@@ -20,7 +20,16 @@ const CURRENT_SCORES = [
 function makeSupabase(opts: { baselineSnapshot: { overall_score: number; dimension_scores: Record<string, number> } | null; projectsCount?: number; applicationsCount?: number }) {
   const from = vi.fn((table: string) => {
     if (table === "profile_scores") {
-      return { select: vi.fn(() => ({ eq: vi.fn(() => Promise.resolve({ data: CURRENT_SCORES, error: null })) })) };
+      // Chainable + directly awaitable (`.then`), not "one .eq() then resolve" -- the query
+      // now chains a second .eq("calculation_version", ...) (2026-09-02, the
+      // version-tracking gap fix), same reason queries-outlook-refresh.test.ts's own
+      // builder() helper works this way.
+      const builder: Record<string, unknown> = {
+        select: () => builder,
+        eq: () => builder,
+        then: (resolve: (r: { data: unknown; error: null }) => unknown) => resolve({ data: CURRENT_SCORES, error: null }),
+      };
+      return builder;
     }
     if (table === "profile_score_snapshots") {
       const builder = {

@@ -71,7 +71,10 @@ describe("scanStaleOutlooks", () => {
   test("skips a row whose outlook is newer than the profile", async () => {
     vi.mocked(createAdminClient).mockReturnValue(
       makeAdmin({
-        targetPages: [{ data: [{ id: "t1", user_id: "u1", outlook_calculated_at: "2026-09-01T00:00:00.000Z" }] }],
+        // outlook_model_version included and matching -- a genuinely fresh row is fresh on
+        // both counts; omitting it here would make this row indistinguishable from the new
+        // version-mismatch case below, which must NOT skip.
+        targetPages: [{ data: [{ id: "t1", user_id: "u1", outlook_calculated_at: "2026-09-01T00:00:00.000Z", outlook_model_version: "admission_model_v1" }] }],
         profiles: [{ id: "u1", updated_at: "2026-08-20T00:00:00.000Z" }],
       }) as never
     );
@@ -135,6 +138,24 @@ describe("scanStaleOutlooks", () => {
 
     expect(refreshAdmissionOutlook).not.toHaveBeenCalled();
     expect(result).toEqual({ checked: 1, refreshed: 0, refused: 0, failed: 0 });
+  });
+
+  // 2026-09-02, the version-tracking gap: mirrors the identical case added to
+  // queries-outlook-refresh.test.ts for the read-time path -- both refresh paths share
+  // lib/admissions/staleness.ts's isOutlookStale now, so both must catch this the same way.
+  test("refreshes a fresh-timestamped row under a different model version — a profile OLDER than the row proves the version check, not the timestamp check, triggered it", async () => {
+    vi.mocked(createAdminClient).mockReturnValue(
+      makeAdmin({
+        targetPages: [{ data: [{ id: "t1", user_id: "u1", outlook_calculated_at: "2026-09-01T00:00:00.000Z", outlook_model_version: "admission_model_v0_hypothetical" }] }],
+        profiles: [{ id: "u1", updated_at: "2026-08-01T00:00:00.000Z" }],
+      }) as never
+    );
+    vi.mocked(refreshAdmissionOutlook).mockResolvedValue({ outlook: "reach" } as never);
+
+    const result = await scanStaleOutlooks();
+
+    expect(refreshAdmissionOutlook).toHaveBeenCalledWith("t1", "u1", undefined, expect.anything());
+    expect(result).toEqual({ checked: 1, refreshed: 1, refused: 0, failed: 0 });
   });
 
   test("paginates across multiple pages of target_universities", async () => {
