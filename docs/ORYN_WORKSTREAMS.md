@@ -97,7 +97,7 @@ Turkey. `git worktree list` prints the branch each path is actually on — read 
 not the path. If you're about to write "the X lane" based on a directory name, `cd` in and
 check `git branch --show-current` first.
 
-## Right now — 2026-09-02, ~04:15 local
+## Right now — 2026-09-02, ~04:35 local
 
 Everything below is a snapshot from live `git`/`git worktree`/session state at the time
 this section was written, not carried forward from the stale rows underneath it. **Re-run
@@ -113,12 +113,19 @@ rather than trust a name-to-task mapping written here.
 
 | Directory | Branch | State |
 |---|---|---|
-| `ORYN-wt-density-prompt-2026-09-02` | `oryn/density-prompt-2026-09-02` | 1 local commit, not pushed, clean tree — "test a density-specific instruction — null result, and fix a real gap in docs/eval-runs/". Reads as a finished investigation ready to push, not open work-in-progress. Part of the reply-length/conciseness thread — see "AI prompts & spend" below. |
-| `ORYN-wt-error-tracking` | `oryn/job-error-tracking-2026-09-02` | 0 commits ahead of main, clean tree — freshly cut, work not yet started or not yet committed. Sits at the same commit as the just-merged `job-client-audit`, suggesting the same lane's next package. |
-| `ORYN-wt-migration-fix` | `oryn/fix-migration-provenance-2026-09-02` | 1 local commit ("wip: pre-rebase checkpoint"), not pushed, clean tree — mid-flight, likely about to rebase. |
-| `ORYN-wt-morning-runbook` | `oryn/founder-morning-runbook-2026-09-02` | 0 commits ahead of main, but **uncommitted untracked files present** (`app/(dev-preview)/design-preview/admin/`) — genuinely being written right now. **Do not start a second "what to tell the founder" doc** — check with whoever holds this branch first. |
+| `ORYN-wt-error-tracking` | `oryn/job-error-tracking-2026-09-02` | **Real uncommitted work in progress**: `__tests__/jobs/job-health.test.ts`, `app/(app)/admin/actions.ts`, `app/api/jobs/deadline-reminders/route.ts` all modified, not yet committed. |
+| `ORYN-wt-cron-verify-2026-09-02` | `oryn/cron-auth-verify-2026-09-02` | Uncommitted new test file (`__tests__/jobs/verify-cron-request.test.ts`) — active. |
+| `ORYN-wt-blocked-backlog` | `oryn/founder-blocked-backlog-verify-2026-09-02` | Uncommitted edit to `docs/founder-blocked-backlog.md` — active. |
+| `ORYN-legal-deletion-fix` | `fix/legal-copy-deletion-overclaim-2026-09-02` | 0 commits ahead of main, clean tree — freshly cut (right after `audit/legal-copy-vs-product-2026-09-02` merged), not yet started or not yet committed. |
+| `ORYN-wt-dashboard-spec-audit-2026-09-02` | `oryn/dashboard-spec-audit-2026-09-02` | 0 commits ahead of main, clean tree — freshly cut, not yet started or not yet committed. |
 | `.claude/worktrees/research-usage-limits` | `oryn/research-usage-limits-2026-09-02` | 0 commits ahead of main, clean tree — freshly cut, not yet started or not yet committed. |
-| `ORYN-wt-deadline-change-2026-09-02` | `oryn/deadline-change-detection-2026-09-02` | **Merged** (`db009ed7`). Worktree not yet removed — safe to `git worktree remove` once confirmed clean. |
+| `ORYN-wt-workstreams-2026-09-02` | `oryn/workstreams-refresh-2026-09-02` | This package — pushed, not yet merged as of this writing. |
+
+Several worktrees present in this table twenty minutes before this section was last edited
+(`density-prompt`, `fix-migration-provenance`, `founder-morning-runbook`,
+`deadline-change-detection`) have since merged and been correctly cleaned up — not listed
+above because they're gone, not because they were missed. That turnover speed is the whole
+reason this section says "re-run the checks" rather than "trust this."
 
 None of the above were independently verified beyond what `git log`/`git status` on that
 exact directory show — a one-line commit message is not the same as knowing the full scope
@@ -130,12 +137,13 @@ Per "the integrator removes it, at merge time" above — these should already be
 aren't yet. Confirmed clean (`git status --short` empty) and confirmed merged
 (`git merge-base --is-ancestor <branch> origin/main`) before listing here, not inferred:
 
-- `ORYN-constraint-sweep` (`audit/constraint-provenance-2026-09-02`, merged `da70351b`)
-- `ORYN-deletion-fix` (`fix/account-deletion-partial-failure-2026-09-02`, merged `48ceb447`)
-- `ORYN-wt-job-audit` (`oryn/job-client-audit-2026-09-02`, merged `8972dad9`)
-- `ORYN-wt-tr-depth` (`oryn/schema-type-drift-audit-2026-09-02`, merged `3866a876`) — see
-  the directory-name-drift lesson above; this path's next assignment should get a path that
-  matches its actual branch, not another reuse of a stale name.
+- `ORYN-legal-copy-audit` (`audit/legal-copy-vs-product-2026-09-02`, merged `e25e07f4`)
+
+**The four worktrees this section listed twenty minutes earlier
+(`ORYN-constraint-sweep`, `ORYN-deletion-fix`, `ORYN-wt-job-audit`, `ORYN-wt-tr-depth`) are
+now correctly gone** — the hygiene rule caught up between this section's first draft and
+its last edit before push. Left as a positive data point, not just a punch list: the rule
+works when someone actually runs it at merge time.
 
 ### Territories touched tonight (2026-09-02) — settled vs. still open
 
@@ -149,15 +157,18 @@ across sessions the way this file is).
 - **AI prompts & spend (`lib/ai/`).** Settled: per-user spend cap with Haiku degrade
   (no hard wall), per-job AI budget (stop, not degrade), the "empty slot" prompt fix
   (permission to produce nothing), degrade-signal threaded to the UI + a meter bug fixed.
-  **Still open, actively worked**: the advisor reply-length/conciseness question.
-  `oryn/advisor-reply-length-2026-09-02` shipped and was **reverted same night** — the one
-  live judged comparison scored worse, not better. Follow-up investigation
-  (`oryn/reply-length-investigation-2026-09-02`, merged) found the eval judge's own rubric
-  measures *density*, not length — a prompt telling the model to write less doesn't
-  necessarily lower that score. `oryn/density-prompt-2026-09-02` (see table above, pushed
-  imminently) tested a density-specific instruction next: **null result**. This is a live,
-  multi-session, multi-package thread with no landed fix yet — check it before touching
-  `lib/ai/advisor-prompt.ts` or the eval harness's rubric.
+  **The reply-length/conciseness thread is now four attempts deep, all four reverted,
+  each measured rather than assumed away** — `oryn/advisor-reply-length-2026-09-02`
+  (volume-focused prompt edit, reverted: the one live judged comparison scored worse);
+  `oryn/reply-length-investigation-2026-09-02` (found the eval judge's own rubric measures
+  *density*, not length); `oryn/density-prompt-2026-09-02` (a density-specific instruction,
+  run 3: null result); a fourth density-specific attempt by oryn-b9 (run 4, also reverted,
+  "three families, three runs, one number" — the flat result held a fourth way). Along the
+  way, found `docs/eval-runs/`'s own README claimed two run logs were preserved that were
+  never actually committed — fixed. **No landed fix as of this writing, and the pattern
+  across four independent attempts is starting to look like a property of the judge/rubric
+  rather than something a system-prompt edit can move** — read
+  `oryn/reply-length-investigation-2026-09-02`'s own doc before attempt five.
 
 - **Notifications (`lib/notifications/`, `lib/deadlines/scan.ts`,
   `lib/universities/data-change-scan.ts`, `lib/scoring/profile-update-notification.ts`).**
@@ -177,17 +188,22 @@ across sessions the way this file is).
   (A discover-opportunities, B deadline-reminders, C sync-university-data, D
   generate-weekly-plans, E stale-data-detection — E now covers all three Phase 29 freshness
   tables including `university_deadlines`). None wired into `vercel.json` — scheduling is
-  still a founder decision. **Open, in progress**: `oryn/job-client-audit-2026-09-02`
-  (merged tonight, "three jobs clean, and a graduation year that failed four steps too
-  late") was immediately followed by `oryn/job-error-tracking-2026-09-02` (see table
-  above) — read the client-audit package before assuming error tracking starts clean.
+  still a founder decision. **Open, in progress, two active worktrees right now**:
+  `oryn/job-client-audit-2026-09-02` (merged tonight, "three jobs clean, and a graduation
+  year that failed four steps too late") was followed by `oryn/job-error-tracking-2026-09-02`
+  (real uncommitted work as of this writing — touching `job-health.test.ts`, admin actions,
+  and the deadline-reminders route — see table above) and separately
+  `oryn/cron-auth-verify-2026-09-02` (new test file for `verify-cron-request`, also active).
+  Read the client-audit package before assuming either starts clean.
 
-- **Schema/migration provenance audits.** Very active tonight, mostly read-only findings
-  rather than code changes: `schema-type-drift-audit` ("20 live tables have no type at all"
-  — beyond the already-known migration-0074-class gaps), `constraint-provenance` (294/294
-  FKs traced, one real gap fixed), `fix-migration-provenance` (in progress, see table
-  above). **`list_migrations` (the Supabase MCP tool) has been shown unreliable relative to
-  the live schema more than once tonight** — verify any "migration X is/isn't applied"
+- **Schema/migration provenance audits.** Very active tonight, both findings and fixes:
+  `schema-type-drift-audit` found "20 live tables have no type at all" (beyond the
+  already-known migration-0074-class gaps) and a same-named follow-up package typed four of
+  them (`public_profiles` turned out already typed); `constraint-provenance` (294/294 FKs
+  traced, one real gap fixed); `fix-migration-provenance` (merged, "the docs now describe
+  the database" — read this one specifically before writing a fresh migration-state claim
+  anywhere). **`list_migrations` (the Supabase MCP tool) has been shown unreliable relative
+  to the live schema more than once tonight** — verify any "migration X is/isn't applied"
   claim directly (`information_schema.columns` / `to_regclass` / `pg_policies`) before
   relying on it, including claims in this file.
 
@@ -211,6 +227,13 @@ across sessions the way this file is).
 
 - **Applications page.** Settled: rebuilt (a touch-invisible dead end fixed, mobile nav,
   design pass).
+
+- **Legal copy vs. product reality (`docs/legal-copy-vs-product-gap-2026-09-02.md`).**
+  New tonight, still open. Audit checked five areas (age floor, evidence-status display,
+  AI spend-cap degradation, notification categories, `ai_usage` surviving deletion) against
+  what's actually live — found two real gaps, one of them legal copy overclaiming what the
+  product does. `fix/legal-copy-deletion-overclaim-2026-09-02` (see table above) is the
+  live fix for that specific gap; the second gap's fix isn't claimed by a branch yet.
 
 - **Research/docs, no code dependency**: freemium mechanics research (teen-facing
   products), minor-payment legal framework (TR/EU/UK/US), TOBB ETÜ selectivity figure
