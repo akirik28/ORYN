@@ -4,9 +4,11 @@ import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
 import { PageHeader } from "@/components/oryn/page-header";
 import { EmptyState } from "@/components/oryn/empty-state";
+import { SourceBadge } from "@/components/oryn/source-badge";
 import { Scale } from "lucide-react";
 import { COMPARE_MAX } from "@/lib/universities/compare-constants";
 import type { University } from "@/types/database";
@@ -29,7 +31,9 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
   await requireUser();
   const supabase = await createClient();
   const supersessionMap = await loadSupersessionMap(supabase);
+  const locale = await resolveLocale();
   const t = await getTranslations("universities.comparePage");
+  const tSourceBadge = await getTranslations("sourceBadge");
 
   const requestedIds = [...new Set((idsParam ?? "").split(",").map((id) => canonicalUniversityId(supersessionMap, id.trim())).filter(Boolean))].slice(0, COMPARE_MAX);
 
@@ -95,6 +99,34 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
       render: (u) => {
         const s = statsByUniId.get(u.id);
         return s?.admission_rate != null ? `${Math.round(s.admission_rate * 100)}%` : NA;
+      },
+    },
+    {
+      // Cost of attendance and admission rate above both come from this same
+      // university_statistics row — but unlike the detail page's stat grid (one row, one
+      // source, one badge for the whole grid), every COLUMN here is a different university
+      // with its own row and its own recency. One badge for the whole table would imply a
+      // single source/date shared by every column, which is exactly the false-precision-by-
+      // juxtaposition risk this page is being fixed for: two universities' admission rates
+      // pulled years apart would sit side by side with nothing marking the gap. A source row
+      // — one badge per university, in its own column, the same shape every other fact in
+      // this table already uses — is the placement that can't average that difference away.
+      label: t("statisticsSource"),
+      render: (u) => {
+        const s = statsByUniId.get(u.id);
+        return s?.source ? (
+          <SourceBadge
+            sourceName={s.source}
+            checkedAt={s.updated_at}
+            confidence={s.data_confidence ?? undefined}
+            locale={locale}
+            sourceLabel={tSourceBadge("source")}
+            checkedLabel={(time) => tSourceBadge("checked", { time })}
+            viewSourceLabel={tSourceBadge("viewSource")}
+          />
+        ) : (
+          NA
+        );
       },
     },
     {
