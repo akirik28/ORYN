@@ -53,10 +53,15 @@ export function NotificationBell({ notifications, unreadCount }: { notifications
         <span className="relative">
           <Bell className="size-[17px]" strokeWidth={1.6} />
           {unreadCount > 0 ? (
+            // Ultra: local glow only, not tier-grad-fill -- an 8px dot is too small for a
+            // gradient to read as one (this session's own inventory found this, checked
+            // against the real element). No existing box-shadow/ring utility on this span,
+            // so tier-glow-sm's box-shadow has nothing to collide with. Only ever renders
+            // alongside a real unread count -- never decorates an empty state.
             <span
               aria-hidden="true"
               style={{ background: "#3D35E8", borderColor: "white" }}
-              className="absolute -right-1 -top-1 size-2 rounded-full border-[1.5px]"
+              className="tier-glow-sm absolute -right-1 -top-1 size-2 rounded-full border-[1.5px]"
             />
           ) : null}
           <span className="sr-only">{unreadCount > 0 ? t("unreadCount", { count: unreadCount }) : t("noUnread")}</span>

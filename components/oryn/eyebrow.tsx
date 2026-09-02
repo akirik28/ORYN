@@ -17,11 +17,22 @@ export type EyebrowTone = "neutral" | "brand" | "positive" | "caution" | "critic
  * 2. **The tracking is the signature.** 0.18em at 11px is what reads as editorial rather
  *    than as a generic uppercase badge. Don't "fix" it to a Tailwind preset — `tracking-widest`
  *    is 0.1em and looks like a different product.
+ *
+ * `ultra` extends rule 1, doesn't break it: it adds `app/globals.css`'s `.tier-grad-fill` +
+ * `.tier-glow-sm` to the *rule bar only* — a gradient fill plus a small glow are still
+ * background/box-shadow effects on a background-colored bar, not a text-color change on the
+ * label, so `evidence-signal.tsx`'s known `.tier-grad-fill` + text-color cascade bug doesn't
+ * apply here (no text sits on top of this bar). Opt-in, default `false`, so all of this
+ * component's other 19+ call sites are untouched and every existing tone's rule color is
+ * unaffected under Standard — `.tier-grad-fill`/`.tier-glow-sm` are no-ops without
+ * `[data-tier="ultra"]` on an ancestor, the same guarantee every other Ultra-aware class in
+ * this codebase relies on.
  */
 export function Eyebrow({
   children,
   tone = "neutral",
   rule = true,
+  ultra = false,
   locale = DEFAULT_LOCALE,
   className,
 }: {
@@ -29,6 +40,11 @@ export function Eyebrow({
   tone?: EyebrowTone;
   /** Drop the rule when the eyebrow already sits against a container edge or an index. */
   rule?: boolean;
+  /** Ultra-tier emphasis on the rule bar only — see this component's own doc comment.
+   * Caller decides when this is honest to show (e.g. a real, verified claim worth noticing),
+   * the same way every other Ultra-aware element in this codebase gates itself rather than
+   * decorating unconditionally. */
+  ultra?: boolean;
   /**
    * The actual language of `children` — declared explicitly, never inherited from the
    * page's `<html lang>`. `text-transform: uppercase` case-folds per the *element's*
@@ -55,7 +71,9 @@ export function Eyebrow({
 
   return (
     <p className={cn("flex items-center gap-3", className)}>
-      {rule ? <span aria-hidden="true" className={cn("h-px w-8 shrink-0", ruleTone[tone])} /> : null}
+      {rule ? (
+        <span aria-hidden="true" className={cn("h-px w-8 shrink-0", ruleTone[tone], ultra && "tier-grad-fill tier-glow-sm")} />
+      ) : null}
       <span lang={locale} className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">
         {children}
       </span>

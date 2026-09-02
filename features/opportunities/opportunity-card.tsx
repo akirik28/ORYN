@@ -296,7 +296,13 @@ export function OpportunityCard({
             state, not a gap to fill with new copy. */}
         {canClaimMatch && reason ? (
           <div>
-            <Eyebrow tone="brand" locale={locale}>{tier.label}</Eyebrow>
+            {/* Ultra: the existing >=80 ring threshold, reused rather than a new one -- the
+                product already draws this line (see the ring className below), so Ultra
+                amplifies a signal it already makes instead of inventing a second one. Only
+                the rule bar carries it (Eyebrow's own `ultra` prop) -- the label text stays
+                exactly as Standard renders it, per that component's own "never color the
+                label" rule. */}
+            <Eyebrow tone="brand" ultra={matchScore >= 80} locale={locale}>{tier.label}</Eyebrow>
             <p className="mt-2 text-sm leading-relaxed text-ink-2">{reason}</p>
           </div>
         ) : null}

@@ -629,6 +629,19 @@
 [data-tier="ultra"] .tier-glow-sm {
   box-shadow: 0 0 16px -3px var(--tier-glow);
 }
+/* .tier-glow-sm is a plain box-shadow -- it OVERRIDES, not layers with, any other rule that
+   also sets box-shadow on the same element (two separate `box-shadow` declarations don't
+   compose; whichever wins the cascade wins outright). Confirmed live 2026-09-02: pairing this
+   with a Tailwind `ring-*` utility (also box-shadow-based) made the ring disappear entirely,
+   not glow-plus-ring. Two independent lanes hit variants of this same wall the same night --
+   oryn-60 found `tier-glow-sm` doesn't paint on an SVG shape at all (box-shadow isn't an SVG
+   property); this session found it silently drops a competing box-shadow on a DOM element.
+   Both resolved the same way: use `filter: drop-shadow(...)` instead, which composes
+   correctly alongside box-shadow/ring utilities (confirmed live: a ring rule plus
+   `filter: drop-shadow()` produced BOTH computed styles, not one replacing the other) and
+   works on SVG. There is no `.tier-glow-filter` utility class for this yet -- add one here,
+   with this same comment attached, rather than each future caller rediscovering the same
+   two dead ends first. */
 
 @keyframes tier-flow {
   to {
