@@ -4,7 +4,15 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { recomputeCareerProfile } from "@/lib/scoring/persist";
-import { insertCvImportItems, type CvImportItem } from "@/lib/profile/cv-import";
+import {
+  insertCvImportItems,
+  insertCvImportSkills,
+  insertCvImportLanguages,
+  type CvImportItem,
+  type CvImportCategory,
+  type CvImportSkillCandidate,
+  type CvImportLanguageCandidate,
+} from "@/lib/profile/cv-import";
 import { logEvent } from "@/lib/analytics/log";
 
 // No re-export of `uploadAndExtractCV` here, deliberately. A "use server" module may only
@@ -29,16 +37,30 @@ import { logEvent } from "@/lib/analytics/log";
  */
 export async function importReviewedCvItems(
   items: CvImportItem[],
+  skills: CvImportSkillCandidate[] = [],
+  languages: CvImportLanguageCandidate[] = [],
 ): Promise<{ inserted?: number; error?: string }> {
   const session = await requireUser();
   const userId = session.userId!;
 
-  if (items.length === 0) {
+  if (items.length === 0 && skills.length === 0 && languages.length === 0) {
     return { error: "Nothing was selected to import." };
   }
 
   const supabase = await createClient();
-  const { inserted, failedCategories } = await insertCvImportItems(supabase, userId, items);
+  const { inserted: achievementsInserted, failedCategories }: { inserted: number; failedCategories: CvImportCategory[] } =
+    items.length > 0 ? await insertCvImportItems(supabase, userId, items) : { inserted: 0, failedCategories: [] };
+  const { inserted: skillsInserted, skippedDuplicate: skillsSkippedDuplicate, skippedCap: skillsSkippedCap } = await insertCvImportSkills(
+    supabase,
+    userId,
+    skills,
+  );
+  const { inserted: languagesInserted, skippedDuplicate: languagesSkippedDuplicate } = await insertCvImportLanguages(
+    supabase,
+    userId,
+    languages,
+  );
+  const inserted = achievementsInserted + skillsInserted + languagesInserted;
 
   if (inserted === 0) {
     return { error: "We couldn't save anything from that CV. Please try again." };
@@ -57,12 +79,20 @@ export async function importReviewedCvItems(
   revalidatePath("/profile");
   revalidatePath("/dashboard");
 
-  // Reported honestly rather than as a flat success: a partial import is a real outcome,
-  // and the student should be told which parts didn't land.
-  if (failedCategories.length > 0) {
+  // Reported honestly rather than as a flat success: a partial import is a real outcome
+  // (a failed achievement category, a skill over the 15-cap, a name that duplicated
+  // something already on the profile), and the student should be told which parts didn't
+  // land rather than have them silently vanish.
+  const notes: string[] = [];
+  if (failedCategories.length > 0) notes.push(`${failedCategories.join(", ")} couldn't be saved`);
+  if (skillsSkippedCap > 0) notes.push(`${skillsSkippedCap} skill${skillsSkippedCap === 1 ? "" : "s"} skipped (15 max)`);
+  const skippedDuplicate = skillsSkippedDuplicate + languagesSkippedDuplicate;
+  if (skippedDuplicate > 0) notes.push(`${skippedDuplicate} already on your profile`);
+
+  if (notes.length > 0) {
     return {
       inserted,
-      error: `Saved ${inserted} item${inserted === 1 ? "" : "s"}, but ${failedCategories.join(", ")} couldn't be saved. You can add those manually.`,
+      error: `Saved ${inserted} item${inserted === 1 ? "" : "s"}, but ${notes.join("; ")}. You can add those manually.`,
     };
   }
 

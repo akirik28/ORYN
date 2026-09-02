@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { recomputeCareerProfile } from "@/lib/scoring/persist";
-import { insertCvImportItems } from "@/lib/profile/cv-import";
+import { insertCvImportItems, insertCvImportSkills, insertCvImportLanguages } from "@/lib/profile/cv-import";
 import {
   extractCVData,
   SUPPORTED_CV_MIME_TYPES,
@@ -63,7 +63,17 @@ export async function uploadAndExtractCV(formData: FormData): Promise<CVUploadRe
   try {
     await assertWithinAIRateLimit(session.userId!, "cv_extraction", { maxCalls: 5, windowMinutes: 60 }, await resolveLocale());
     const extraction = await extractCVData({ userId: session.userId!, mimeType: file.type, buffer });
-    await logEvent(session.userId!, "cv_imported", { itemCount: extraction.education.length + extraction.activities.length + extraction.awards.length + extraction.projects.length + extraction.research.length + extraction.workExperience.length });
+    await logEvent(session.userId!, "cv_imported", {
+      itemCount:
+        extraction.education.length +
+        extraction.activities.length +
+        extraction.awards.length +
+        extraction.projects.length +
+        extraction.research.length +
+        extraction.workExperience.length +
+        extraction.skills.length +
+        extraction.languages.length,
+    });
     return { success: true, extraction, filePath };
   } catch (error) {
     if (error instanceof RateLimitExceededError) {
@@ -209,6 +219,15 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
         // title; work_experiences.organization is NOT NULL) live there rather than being
         // written out twice.
         await insertCvImportItems(supabase, userId, data.extractedItems);
+      }
+      // Same shared functions the post-onboarding importer uses — cap/dedupe against
+      // whatever the student already has (nothing yet, for a first-time onboarding save,
+      // but the functions don't assume that) rather than a bare insert.
+      if (data.extractedSkills && data.extractedSkills.length > 0) {
+        await insertCvImportSkills(supabase, userId, data.extractedSkills);
+      }
+      if (data.extractedLanguages && data.extractedLanguages.length > 0) {
+        await insertCvImportLanguages(supabase, userId, data.extractedLanguages);
       }
 
       await recomputeCareerProfile(userId, { snapshotReason: "onboarding_completed" });

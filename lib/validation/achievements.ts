@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LANGUAGE_PROFICIENCY_VALUES } from "@/lib/vocabularies/languages";
 
 const dateField = z.string().min(1).nullable();
 const optionalText = z.string().nullable();
@@ -247,8 +248,6 @@ export type SkillFormInput = z.infer<typeof SkillSchema>;
  */
 export const LanguageSchema = z.object({
   name: z.string().min(1, { error: "Language is required." }).max(60, { error: "Keep it under 60 characters." }),
-  proficiency: z
-    .enum(["native", "bilingual", "c2", "c1", "b2", "b1", "a2", "a1"], { error: "Choose a proficiency level." })
-    .nullable(),
+  proficiency: z.enum(LANGUAGE_PROFICIENCY_VALUES, { error: "Choose a proficiency level." }).nullable(),
 });
 export type LanguageFormInput = z.infer<typeof LanguageSchema>;

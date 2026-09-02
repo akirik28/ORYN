@@ -28,6 +28,14 @@ export interface ProficiencyLevel {
   hint: string;
 }
 
+/** Single source for the closed CEFR-plus-two set — every Zod schema and TS type that needs
+ * "one of these 8 exact values or null" (lib/validation/achievements.ts's LanguageSchema,
+ * lib/validation/onboarding.ts's extractedLanguages, lib/profile/cv-import.ts's review/save
+ * types) derives from this tuple rather than re-listing the 8 values, so the set can't
+ * silently diverge between where it's validated and where it's typed. */
+export const LANGUAGE_PROFICIENCY_VALUES = ["native", "bilingual", "c2", "c1", "b2", "b1", "a2", "a1"] as const;
+export type LanguageProficiencyValue = (typeof LANGUAGE_PROFICIENCY_VALUES)[number];
+
 export const LANGUAGE_PROFICIENCY_LEVELS: ProficiencyLevel[] = [
   { value: "native", label: "Native", hint: "A first language you grew up speaking." },
   { value: "bilingual", label: "Bilingual", hint: "Two languages at native or near-native level." },

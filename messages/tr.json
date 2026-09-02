@@ -685,6 +685,10 @@
       "schoolPlaceholder": "Okul",
       "organizationPlaceholder": "Kurum",
       "removeItemAriaLabel": "Öğeyi kaldır",
+      "skillsSectionTitle": "Beceriler",
+      "languagesSectionTitle": "Diller",
+      "cvSaid": "CV'inde: {level}",
+      "proficiencyPlaceholder": "Düzey seç",
       "startOver": "Baştan başla"
     }
   },

@@ -651,10 +651,16 @@ export interface Skill {
   name: string;
   category: SkillCategory;
   proficiency: string | null;
+  /** Migration 0084, not yet applied — 'cv_import' vs 'manual' (the DB default). Typed as
+   * required (matching weekly_actions.carried_forward / external_sync_jobs.errors_encountered's
+   * own precedent for an unapplied migration's column): the type describes the intended final
+   * shape, and the code that writes it (lib/profile/cv-import.ts) is responsible for tolerating
+   * the column's current absence at runtime, the same way those two already do. */
+  source: string;
   created_at: string;
   updated_at: string;
 }
-export type SkillInsert = Insertable<Skill, "id" | "created_at" | "updated_at" | "category">;
+export type SkillInsert = Insertable<Skill, "id" | "created_at" | "updated_at" | "category" | "source">;
 export type SkillUpdate = Updatable<Skill, "id" | "user_id" | "created_at" | "updated_at">;
 
 export interface Language {
@@ -662,10 +668,12 @@ export interface Language {
   user_id: string;
   name: string;
   proficiency: string | null;
+  /** Migration 0084, not yet applied — see Skill.source above. */
+  source: string;
   created_at: string;
   updated_at: string;
 }
-export type LanguageInsert = Insertable<Language, "id" | "created_at" | "updated_at">;
+export type LanguageInsert = Insertable<Language, "id" | "created_at" | "updated_at" | "source">;
 export type LanguageUpdate = Updatable<Language, "id" | "user_id" | "created_at" | "updated_at">;
 
 export interface EvidenceFile {
