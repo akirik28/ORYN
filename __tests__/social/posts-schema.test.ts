@@ -230,7 +230,23 @@ describe("migration numbering", () => {
     // for as long as this migration stays unapplied, the same pattern 0077/0083/0086 already
     // established. Going-forward only, not retroactive -- see this migration's own header for
     // why that distinction matters to whoever reads it next. Still unapplied.
-    expect(Math.max(...numbers.map(Number))).toBe(90);
+    //
+    // 0091 (profiles_response_mode) is the response-mode slider's own persistence --
+    // Fast/Standard/Ultra as the founder-approved UI labels (a prototype the founder had
+    // already seen and signed off on before this was built, "kayacının tasarımı var zaten
+    // yaptın ya o çok güzeldi"), deliberately NOT the stored values: profiles.plan_tier
+    // (0089) already uses the literal strings "standard"/"ultra" for a different concept
+    // -- visual skin, not model selection -- and reusing them here would be exactly the
+    // "which ultra" confusion that migration's own header already flagged a future
+    // response-mode toggle to keep separate from. "fast"/"balanced"/"thorough" internally
+    // instead, `not null default 'balanced'` so migration day changes nobody's actual
+    // behavior, same convention 0090 already established. Spend-based degrade
+    // (lib/ai/limits/budget.ts) always overrides which model actually answers a call
+    // regardless of this column's value -- it records a student's preference, not a live
+    // guarantee, and stays selectable/saved even while overridden, this product's own
+    // "never a hard wall" posture applied to a new control rather than a special case for
+    // this one. Still unapplied.
+    expect(Math.max(...numbers.map(Number))).toBe(91);
   });
 });
 

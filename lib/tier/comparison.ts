@@ -37,14 +37,14 @@
  * (`docs/ultra-tier-value-2026-09-02.md`'s own closing line: "a visual treatment and a
  * bigger advisor allowance today"). Deliberately no numbers in either row's catalog copy —
  * the doc flags the one concrete figure it found (~19 messages before the spend-based
- * model-quality degrade — since independently confirmed, and since re-derived as ~17 AI
- * uses under the 2026-09-02 token-metering change's own reference cost, same underlying
- * dollar figure) as a fact worth citing carefully, and the 50/month shared allowance,
- * while directly read from `MONTHLY_AI_USE_LIMIT` (lib/ai/monthly-quota.ts, no longer a
- * per-feature `MONTHLY_AI_QUOTAS` lookup — see that file), is a product-copy call (whether
- * to publish the literal number) this file doesn't make unilaterally. A short
- * list is an honest list, not a broken page — `PlanTierView` renders however many rows
- * exist, with no special-casing for "not enough content yet."
+ * model-quality degrade, since independently confirmed, since re-derived as ~79,000 tokens
+ * under the 2026-09-02 token-display change, same underlying dollar figure throughout) as a
+ * fact worth citing carefully, and the shared 236,150-token monthly allowance, while
+ * directly read from `MONTHLY_AI_TOKEN_LIMIT` (lib/ai/monthly-quota.ts, no longer a
+ * per-feature `MONTHLY_AI_QUOTAS` lookup or a message count at all — see that file), is a
+ * product-copy call (whether to publish the literal number) this file doesn't make
+ * unilaterally. A short list is an honest list, not a broken page — `PlanTierView` renders
+ * however many rows exist, with no special-casing for "not enough content yet."
  */
 interface DiffersRow {
   kind: "differs";

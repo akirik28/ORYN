@@ -19,8 +19,8 @@ import { env } from "@/lib/env";
  * decision for the founder to make explicitly, not an inference from 'ceiling' sounding
  * stricter than 'target'." That decision arrived that same day: the founder's token-
  * metering directive, relayed through oryn-a7 ("meter by tokens, not messages"), asked for
- * exactly this. `lib/ai/monthly-quota.ts`'s `MONTHLY_AI_USE_LIMIT` (50, shared across seven
- * student-facing features) is now a hard stop derived from CEILING with margin — see that
+ * exactly this. `lib/ai/monthly-quota.ts`'s shared allowance (236,150 tokens, shared across
+ * seven student-facing features) is now a hard stop derived from CEILING with margin — see that
  * file's `usesConsumed` for the two-phase pre/post-degrade accounting, and its own comment
  * for why 50 lands around $0.83 of real spend, genuinely under this $1.00, not at its edge.
  * CEILING itself is still not read as a second live check anywhere in this file — the
@@ -40,8 +40,14 @@ export const MONTHLY_BUDGET_CEILING_USD = 1.0;
  * Defaults to Haiku 4.5, the model the founder's own cost comparison used: an advisor
  * message on Sonnet 5 is ~$0.035; the same message on Haiku 4.5 is ~$0.0116, about 3x
  * cheaper — degrading doesn't stop the product, it slows the burn rate.
+ *
+ * Exported (2026-09-02, response-mode slider): "Fast" is a student *choosing* this same
+ * model voluntarily, not spend forcing it — lib/ai/advisor-chat.ts reads this directly
+ * rather than duplicating the env/default logic a second time. `selectModelForUser` itself
+ * is untouched by that feature; a chat-specific UI preference has no business inside a
+ * function every one of the seven student-facing features shares.
  */
-const DEGRADE_MODEL = process.env.ANTHROPIC_DEGRADE_MODEL?.trim() || "claude-haiku-4-5";
+export const DEGRADE_MODEL = process.env.ANTHROPIC_DEGRADE_MODEL?.trim() || "claude-haiku-4-5";
 
 export type ModelSelectionReason =
   /** Under target this month — full ceiling model, the normal case. */

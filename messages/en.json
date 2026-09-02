@@ -1104,13 +1104,24 @@
     },
     "usageMeter": {
       "thisMonth": "This month",
-      "ariaUnknown": "How much of this month's Oryn AI you have left could not be loaded. The monthly allowance is {limit}.",
-      "ariaKnown": "{remaining} of {limit} Oryn AI uses left this month",
-      "unknown": "We couldn't load how much you've used. Your {limit}-use monthly allowance still applies and resets {date}.",
-      "exhausted": "All {limit} AI uses are gone for this month. Resets {date}.",
+      "ariaUnknown": "How many tokens you have left this month could not be loaded. The monthly allowance is {limit} tokens.",
+      "ariaKnown": "{remaining} of {limit} tokens left this month",
+      "unknown": "We couldn't load how many tokens you've used. Your {limit}-token monthly allowance still applies and resets {date}.",
+      "exhausted": "All {limit} tokens are used for this month. Resets {date}.",
       "low": "Only {remaining} left. Resets {date}.",
       "degraded": "You've used a lot of Oryn's AI this month, so replies are shorter for now. Resets {date}.",
-      "normal": "{remaining} Oryn AI uses left. Resets {date}."
+      "normal": "{remaining} tokens left. Resets {date}."
+    },
+    "responseMode": {
+      "label": "Response",
+      "tokens": "tokens",
+      "ariaLabel": "Response mode",
+      "modes": {
+        "fast": "Fast",
+        "balanced": "Standard",
+        "thorough": "Ultra"
+      },
+      "overridden": "Ultra is saved for after this resets — this month's usage means shorter replies for now. Resets {date}."
     },
     "strategyPanel": {
       "ariaLabel": "What Oryn is working from",

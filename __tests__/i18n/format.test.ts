@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { formatNumber, formatCurrency, formatDuration } from "@/lib/i18n/format";
+import { formatNumber, formatCurrency, formatDuration, formatTokenCount } from "@/lib/i18n/format";
 
 describe("formatNumber", () => {
   test("adds thousands separators", () => {
@@ -8,6 +8,29 @@ describe("formatNumber", () => {
 
   test("passes through Intl.NumberFormat options", () => {
     expect(formatNumber(0.42, { style: "percent" })).toBe("42%");
+  });
+});
+
+describe("formatTokenCount", () => {
+  test("below 1,000: exact digits, not compact — a real remainder must never round to 0K", () => {
+    expect(formatTokenCount(312)).toBe("312");
+    expect(formatTokenCount(999)).toBe("999");
+  });
+
+  test("zero reads as 0, not blank", () => {
+    expect(formatTokenCount(0)).toBe("0");
+  });
+
+  test("1,000 and above: compact K notation", () => {
+    expect(formatTokenCount(1000)).toBe("1K");
+    expect(formatTokenCount(9446)).toBe("9.4K");
+    expect(formatTokenCount(236150)).toBe("236K");
+  });
+
+  test("the real shared monthly limit renders as the founder-recognizable ~236K", () => {
+    // lib/ai/monthly-quota.ts's MONTHLY_AI_TOKEN_LIMIT — the number that landed within
+    // 0.06% of the founder-approved response-mode prototype's own 236,000 figure.
+    expect(formatTokenCount(50 * 4723)).toBe("236K");
   });
 });
 

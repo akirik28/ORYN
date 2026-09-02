@@ -30,6 +30,11 @@ export type TimeBudget = "under_2h" | "2_5h" | "5_10h" | "10h_plus";
  * header for the full reasoning and Profile.plan_tier's comment for how a missing/unreadable
  * value degrades. */
 export type PlanTier = "standard" | "ultra";
+/** Migration 0091. Which model/prompt style answers advisor chat, absent an active spend
+ * degrade — deliberately not "standard"/"ultra" despite those being the exact founder-
+ * approved UI labels for two of the three positions; see that migration's own header for
+ * why the stored values and the display labels are kept apart on purpose. */
+export type ResponseMode = "fast" | "balanced" | "thorough";
 export type TargetGeography = "usa" | "uk" | "europe" | "canada" | "turkey" | "not_sure";
 export type EducationStage = "middle_school" | "high_school" | "pre_university" | "undergraduate" | "other";
 export type CourseLevel = "regular" | "honors" | "ap" | "ib_hl" | "ib_sl" | "a_level" | "dual_enrollment" | "other";
@@ -139,6 +144,11 @@ export interface Profile {
    * defaults an absent/unreadable value to "standard", so this is optional everywhere a
    * Profile gets read, regardless of live schema state. */
   plan_tier: PlanTier;
+  /** Migration 0091, unapplied — student preference for advisor chat's model/prompt style,
+   * overridden by spend-based degrade whenever that's active (lib/ai/limits/budget.ts).
+   * Every read defaults an absent/unreadable value to "balanced" — see
+   * lib/tier/response-mode.ts's resolveResponseMode, the one place this fallback happens. */
+  response_mode: ResponseMode;
   target_geographies: TargetGeography[];
   weekly_time_budget: TimeBudget | null;
   busy_mode: boolean;

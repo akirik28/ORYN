@@ -17,6 +17,8 @@ import { getCounselorRecommendations } from "@/lib/counselor";
 import { getMonthlyQuota } from "@/lib/ai/monthly-quota";
 import { selectModelForUser } from "@/lib/ai/limits/budget";
 import { MonthlyUsageMeter } from "@/features/advisor/monthly-usage-meter";
+import { ResponseModeSlider } from "@/features/advisor/response-mode-slider";
+import { resolveResponseMode } from "@/lib/tier/response-mode";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tMeta = await getTranslations("nav");
@@ -48,6 +50,10 @@ export default async function AdvisorPage() {
   // it just answers "is this student currently past lib/ai/limits/budget.ts's target" so
   // the meter can say so before the student notices from the replies themselves.
   const { degraded: budgetDegraded } = await selectModelForUser(userId);
+  // getCurrentProfile() (unlike layout.tsx's requireProfile()) can return null — same
+  // "balanced" default resolveResponseMode itself falls back to for a genuinely missing
+  // column, just handled one layer up here for a genuinely missing profile.
+  const responseMode = profile ? resolveResponseMode(profile) : "balanced";
 
   const conversation = conversationRes.data;
   const messages = conversation
@@ -109,6 +115,7 @@ export default async function AdvisorPage() {
           inside an error message the student only sees once they hit the wall. */}
       <section className="space-y-4">
         <SectionHeader title={t("talkItThrough")} description={t("talkItThroughDescription")} />
+        <ResponseModeSlider responseMode={responseMode} budgetDegraded={budgetDegraded} quota={quota} />
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <div className="glass-card flex min-h-[34rem] flex-col rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7">
             <AdvisorChat

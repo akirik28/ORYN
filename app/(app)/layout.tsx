@@ -145,6 +145,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         isAdmin={profile.is_admin}
         quota={quota}
         budgetDegraded={budgetDegraded}
+        tier={planTier}
       />
 
       <Sidebar displayName={displayName} email={session.email} signal={profileSignal} isAdmin={profile.is_admin} tier={planTier} />
@@ -168,7 +169,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             every authenticated page, matching where a real subscription indicator would
             eventually live. */}
         {devPreviewAllowed ? <DevTierPreviewToggle realTier={realTier} effectiveTier={planTier} /> : null}
-        <Topbar notifications={notifications ?? []} unreadCount={unreadCount} quota={quota} budgetDegraded={budgetDegraded} />
+        <Topbar notifications={notifications ?? []} unreadCount={unreadCount} quota={quota} budgetDegraded={budgetDegraded} tier={planTier} />
         <main id="main-content" className="relative z-[1] min-w-0 flex-1 overflow-x-hidden">
           {/* max-w-[1200px] is the reading/composition measure (UI-V3 § 6). Pages that want
               the full bleed — the university map, in particular — opt out with their own

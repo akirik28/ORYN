@@ -1,7 +1,7 @@
 import { CommandPalette } from "@/features/search/command-palette";
 import { NotificationBell } from "./notification-bell";
 import { UsageIndicator } from "./usage-indicator";
-import type { Notification } from "@/types/database";
+import type { Notification, PlanTier } from "@/types/database";
 import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
 
 /**
@@ -25,11 +25,13 @@ export function Topbar({
   unreadCount,
   quota,
   budgetDegraded,
+  tier,
 }: {
   notifications: Notification[];
   unreadCount: number;
   quota: MonthlyQuota;
   budgetDegraded: boolean;
+  tier: PlanTier;
 }) {
   return (
     <div
@@ -40,7 +42,7 @@ export function Topbar({
         <CommandPalette variant="bar" />
       </div>
       <div className="ml-auto flex shrink-0 items-center gap-2">
-        <UsageIndicator quota={quota} budgetDegraded={budgetDegraded} />
+        <UsageIndicator quota={quota} budgetDegraded={budgetDegraded} tier={tier} />
         <NotificationBell notifications={notifications} unreadCount={unreadCount} />
       </div>
     </div>

@@ -5,9 +5,11 @@ import { withUsageLogging } from "./usage";
 import { ADVISOR_SYSTEM_PROMPT } from "./advisor-prompt";
 import { buildStudentAdvisorContext, formatContextForPrompt } from "./student-context";
 import { buildOpportunityContextText } from "./opportunity-context";
+import { DEGRADE_MODEL } from "./limits/budget";
 import type { AIMessage } from "./provider";
 import { withOutputLanguage } from "./output-language";
 import { env } from "@/lib/env";
+import type { ResponseMode } from "@/types/database";
 
 export interface AdvisorReply {
   text: string;
@@ -15,14 +17,32 @@ export interface AdvisorReply {
    * than the ceiling model — derived from the model the provider actually reports using
    * (`result.model`), not re-asked of the budget module, so this can never disagree with
    * what really happened to this specific call (2026-09-02, the degrade-disclosure spec's
-   * own instruction: "one boolean, honestly derived", not a second, possibly-stale read). */
+   * own instruction: "one boolean, honestly derived", not a second, possibly-stale read).
+   * Also true for a `responseMode: "fast"` reply that was never spend-degraded at all — a
+   * student's own choice of the cheap model produces the identical, accurate signal
+   * ("this reply used the cheaper model"); the composer's existing degradeNote copy stays
+   * correct either way, just slightly redundant context for someone who asked for it. */
   degraded: boolean;
 }
+
+/**
+ * "Ultra" response-mode's one real behavioural difference from "Standard" — same model,
+ * asked for more (features/advisor/response-mode-slider.tsx's own header has the full
+ * reasoning for why this is a prompt instruction rather than a third model). Deliberately
+ * NOT a maxTokens increase: the comment on that parameter below already documents, from a
+ * real benchmark, that it is a thinking-budget ceiling, not a length lever, and there is no
+ * benchmark yet for what a longer answer under this instruction actually needs — raising it
+ * without one would be exactly the "re-tighten... never by assumption" mistake that
+ * comment warns against, just in the other direction.
+ */
+const THOROUGH_INSTRUCTION =
+  "For this reply specifically, give a more thorough answer than usual — more supporting detail and reasoning — while staying exactly as specific and evidence-based as always. Do not pad it; every added sentence should carry real information.";
 
 export async function generateAdvisorReply(params: {
   userId: string;
   history: AIMessage[];
   newMessage: string;
+  responseMode: ResponseMode;
 }): Promise<AdvisorReply> {
   const context = await buildStudentAdvisorContext(params.userId);
   const opportunityContext = await buildOpportunityContextText(params.userId);
@@ -34,12 +54,23 @@ export async function generateAdvisorReply(params: {
     locale,
   );
 
-  const result = await withUsageLogging({ userId: params.userId, feature: "advisor_chat" }, (model) =>
-    provider.generateText({
-      system,
+  const result = await withUsageLogging({ userId: params.userId, feature: "advisor_chat" }, (model) => {
+    // Spend-based degrade always wins over a student's own response-mode preference — the
+    // precedence is one rule, not a case matrix. `model` here already reflects
+    // selectModelForUser's decision (env.anthropic.model normally, DEGRADE_MODEL once
+    // spend-degraded); "fast" only ever asks for the SAME cheap model degrade would also
+    // choose, so honoring it can never weaken the cap. "thorough" only ever adds an
+    // instruction when the effective model is still the ceiling model — asking an
+    // already-degraded, already-cheaper model to write MORE would undermine the entire
+    // reason it degraded in the first place, not just misrepresent the student's
+    // preference.
+    const effectiveModel = params.responseMode === "fast" && model === env.anthropic.model ? DEGRADE_MODEL : model;
+    const thorough = params.responseMode === "thorough" && effectiveModel === env.anthropic.model;
+    return provider.generateText({
+      system: thorough ? `${system}\n\n${THOROUGH_INSTRUCTION}` : system,
       prompt: params.newMessage,
       history: params.history,
-      model,
+      model: effectiveModel,
       // This budget covers the model's thinking *and* the reply. Adaptive thinking is on by
       // default on claude-sonnet-5, and it scales with how much profile there is to reason
       // over — so the budget has to clear the reasoning before the student sees a word.
@@ -60,8 +91,8 @@ export async function generateAdvisorReply(params: {
       // before that experiment started. Re-tighten only
       // against a new benchmark showing thinking has grown, never by assumption.
       maxTokens: 4096,
-    }),
-  );
+    });
+  });
 
   return { text: result.text, degraded: result.model !== env.anthropic.model };
 }

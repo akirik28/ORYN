@@ -13,10 +13,14 @@ import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
  *
  * 2026-09-02, token-metering change: `getMonthlyQuota`/`isMonthlyQuotaExhausted` dropped
  * their `feature` parameter (one shared pool across `PER_STUDENT_AI_FEATURES` now, not a
- * per-feature message count) and `used` became a floored, cost-derived "AI uses" figure
- * (`usesConsumed`'s piecewise pre/post-degrade accounting) rather than a raw row count.
- * The mock below moved with it: `.select("estimated_cost")...in("feature", ...)` summed
- * in JS, not a `{ count: "exact", head: true }` query.
+ * per-feature message count). The mock below moved with it: `.select("estimated_cost")
+ * ...in("feature", ...)` summed in JS, not a `{ count: "exact", head: true }` query.
+ *
+ * 2026-09-02, second pass, same day: `used`/`limit`/`remaining` moved from a floored
+ * cost-derived "AI uses" figure to the same figure scaled by `TOKENS_PER_USE_REFERENCE`
+ * (4,723) — the founder rejected "uses" as a relabelled message count. The values below are
+ * the token-scaled ones; the underlying $ boundaries (the $0.50/$1.00 targets, which
+ * spend amounts cross the exhausted line) are unchanged from before this pass.
  */
 
 const createClient = vi.hoisted(() => vi.fn());
@@ -47,29 +51,31 @@ afterEach(() => {
 });
 
 describe("getMonthlyQuota", () => {
-  test("a successful read is marked known, and spend converts to uses via the reference cost", async () => {
-    // $0.06 at the pre-degrade $0.03/use reference is exactly 2 uses — a round number
-    // chosen so this test isn't itself asserting on a floor/rounding edge.
+  test("a successful read is marked known, and spend converts to tokens via the reference cost", async () => {
+    // $0.06 at the pre-degrade $0.03/use reference is exactly 2 reference uses, scaled to
+    // 2 × 4,723 = 9,446 tokens — a round underlying number chosen so this test isn't itself
+    // asserting on a floor/rounding edge.
     storeReturning({ rows: [{ estimated_cost: 0.03 }, { estimated_cost: 0.03 }] });
     const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
     const quota = await getMonthlyQuota("user-1");
 
     expect(quota.usedIsKnown).toBe(true);
-    expect(quota.used).toBe(2);
-    expect(quota.remaining).toBe(quota.limit - 2);
+    expect(quota.used).toBe(9446);
+    expect(quota.remaining).toBe(quota.limit - 9446);
   });
 
-  test("spend past the $0.50 target keeps accumulating uses, just at the cheaper post-degrade rate", async () => {
-    // $0.53 total: $0.50 pre-degrade capacity (~16.67 uses) plus $0.03 more at the
-    // post-degrade $0.01/use rate (3 more uses) = 19.67, floored to 19 — not the ~17.67
-    // a flat $0.03/use division would give, which is exactly the miscalibration
-    // `usesConsumed`'s own comment explains (it would understate real capacity and make
-    // 50 uses correspond to $1.50, not $1.00).
+  test("spend past the $0.50 target keeps accumulating, just at the cheaper post-degrade rate", async () => {
+    // $0.53 total: $0.50 pre-degrade capacity (~16.67 reference uses) plus $0.03 more at
+    // the post-degrade $0.01/use rate (3 more reference uses) = ~19.67, scaled to tokens
+    // and floored: 92,885 — not the ~83,000-token figure a flat $0.03/use division would
+    // give, which is exactly the miscalibration usesConsumed's own comment explains (it
+    // would understate real capacity and make the full allowance correspond to $1.50, not
+    // $1.00).
     storeReturning({ rows: [{ estimated_cost: 0.53 }] });
     const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
     const quota = await getMonthlyQuota("user-1");
 
-    expect(quota.used).toBe(19);
+    expect(quota.used).toBe(92885);
   });
 
   test("an unreadable count is marked unknown rather than reported as zero used", async () => {
@@ -104,12 +110,24 @@ describe("getMonthlyQuota", () => {
 
     expect(quota.usedIsKnown).toBe(false);
   });
+
+  test("the token limit is exactly 50 reference uses' worth, not a separately-chosen number", async () => {
+    storeReturning({ rows: [] });
+    const { getMonthlyQuota, TOKENS_PER_USE_REFERENCE, MONTHLY_AI_TOKEN_LIMIT } = await import("@/lib/ai/monthly-quota");
+    const quota = await getMonthlyQuota("user-1");
+
+    expect(TOKENS_PER_USE_REFERENCE).toBe(4723);
+    expect(MONTHLY_AI_TOKEN_LIMIT).toBe(50 * 4723);
+    expect(quota.limit).toBe(MONTHLY_AI_TOKEN_LIMIT);
+  });
 });
 
 describe("isMonthlyQuotaExhausted", () => {
-  test("blocks once real spend converts to at least the shared use limit", async () => {
-    // $1.00 converts to 66 floored uses (well past the 50 limit, with real margin — see
-    // MONTHLY_AI_USE_LIMIT's own comment on why 50 sits under $1.00, not at its edge).
+  test("blocks once real spend converts to at least the shared token limit", async () => {
+    // $1.00 converts to 314,866 floored tokens (well past the 236,150 limit, with real
+    // margin — see MONTHLY_AI_TOKEN_LIMIT's own comment on why the allowance sits under
+    // $1.00, not at its edge). The $-boundary is unchanged from the pre-token-display pass;
+    // only the number it's expressed in changed.
     storeReturning({ rows: [{ estimated_cost: 1.0 }] });
     const { isMonthlyQuotaExhausted } = await import("@/lib/ai/monthly-quota");
 
@@ -117,9 +135,9 @@ describe("isMonthlyQuotaExhausted", () => {
   });
 
   test("does not block a moment before the limit is genuinely reached", async () => {
-    // $0.80 converts to 46 floored uses — under the 50 limit, so still permitted. Pinned
-    // so a future change to the piecewise formula can't silently start blocking earlier
-    // than it should without a test noticing.
+    // $0.80 converts to 220,406 floored tokens — under the 236,150 limit, so still
+    // permitted. Pinned so a future change to the piecewise formula or the token reference
+    // can't silently start blocking earlier than it should without a test noticing.
     storeReturning({ rows: [{ estimated_cost: 0.8 }] });
     const { isMonthlyQuotaExhausted } = await import("@/lib/ai/monthly-quota");
 
