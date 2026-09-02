@@ -143,6 +143,21 @@ export function OnboardingWizard() {
     // Checked here rather than only on submit: the student is four steps from the end at
     // this point, and a Zod error surfacing on the final button would send them back
     // through the wizard for one number. The bounds match CompleteOnboardingSchema's.
+    //
+    // graduationYear had no client-side check at all until this one — the <Input
+    // min/max> attributes are advisory only (this button has an onClick handler, not a
+    // real form submit, so the browser's native constraint validation never runs), and
+    // finish()'s error handling doesn't navigate back to whichever step actually failed.
+    // An out-of-range value (an empty field left mid-edit, a typo) would sail through
+    // every step, get rejected only at the final "Finish" click, and land the student on
+    // step 4 staring at a graduation-year error with no graduation-year field in sight.
+    if (step === 1) {
+      const gradYear = Number(graduationYear);
+      if (!graduationYear.trim() || !Number.isInteger(gradYear) || gradYear < currentYear || gradYear > currentYear + 8) {
+        setError(t("graduationYearError"));
+        return;
+      }
+    }
     if (step === 1) {
       const year = Number(birthYear);
       if (!birthYear.trim() || !Number.isInteger(year) || year < currentYear - 100 || year > currentYear - 10) {
