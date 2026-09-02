@@ -1667,8 +1667,13 @@ export interface OpportunityMatch {
   match_score: number;
   reason_codes: unknown[];
   calculated_at: string;
+  /** One of lib/scoring/signal.ts'''s own EvidenceState values (reused verbatim via that
+   * file'''s evidenceStateFor(), never a second confidence vocabulary), or null when the
+   * match isn'''t built on a specific profile-dimension claim (relevance/interest/proximity
+   * only — see lib/opportunities/persist-matches.ts'''s own comment on this column). */
+  match_confidence: "not_assessed" | "limited_evidence" | "emerging" | "developing" | "strong" | null;
 }
-export type OpportunityMatchInsert = Insertable<OpportunityMatch, "id" | "calculated_at" | "eligible" | "reason_codes">;
+export type OpportunityMatchInsert = Insertable<OpportunityMatch, "id" | "calculated_at" | "eligible" | "reason_codes" | "match_confidence">;
 
 export interface SavedOpportunity {
   id: string;

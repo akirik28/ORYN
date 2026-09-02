@@ -158,7 +158,7 @@ describe("migration numbering", () => {
     // `notification_category` (checked via information_schema.columns), so the type-swap
     // recreate-the-enum pattern this migration uses has no data to lose and nothing else
     // to fan out to.
-    expect(Math.max(...numbers.map(Number))).toBe(85);
+    expect(Math.max(...numbers.map(Number))).toBe(86);
   });
 });
 

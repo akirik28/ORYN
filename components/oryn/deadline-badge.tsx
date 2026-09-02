@@ -10,7 +10,12 @@ function urgencyTone(daysUntil: number): StatusTone {
   return "neutral";
 }
 
-function urgencyLabel(daysUntil: number, locale: Locale): string {
+/** Exported 2026-09-02 (Phase 12's "deadline urgency" dimension): the opportunity detail
+ * page (app/(app)/opportunities/[id]/page.tsx) used to recompute this same string inline
+ * as its "urgency" fact, missing the 1-day-left singular case this function already
+ * handles correctly ("1 days left" vs "1 day left") -- reused now instead of drifting
+ * further from this file's own single-source-of-truth comment below. */
+export function urgencyLabel(daysUntil: number, locale: Locale): string {
   const tr = locale === "tr";
   if (daysUntil < 0) return tr ? "süresi geçti" : "Past due";
   if (daysUntil === 0) return tr ? "son gün bugün" : "Due today";

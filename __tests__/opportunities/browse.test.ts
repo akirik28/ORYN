@@ -81,6 +81,7 @@ function match(overrides: Partial<OpportunityMatch> = {}): OpportunityMatch {
     relevance_score: 50,
     profile_need_score: 50,
     effort_estimate: null,
+    match_confidence: null,
     match_score: 50,
     reason_codes: [],
     calculated_at: "2026-08-22T00:00:00Z",

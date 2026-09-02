@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { buildReasonCodes } from "@/lib/opportunities/persist-matches";
+import { buildReasonCodes, resolveMatchConfidence } from "@/lib/opportunities/persist-matches";
 import { computeOpportunityMatch } from "@/lib/opportunities/matching";
 import type { OpportunityForMatching, StudentMatchProfile } from "@/lib/opportunities/matching";
 
@@ -145,5 +145,31 @@ describe("buildReasonCodes", () => {
     const s = student({ interests: ["Economics"] });
     const codes = buildReasonCodes(computeOpportunityMatch(s, opp), s, opp);
     expect(codes).not.toContain("similar_to_dismissed");
+  });
+});
+
+describe("resolveMatchConfidence", () => {
+  test("null when the match targets no gap dimension -- nothing to qualify", () => {
+    expect(resolveMatchConfidence([], new Map([["research", "strong"]]))).toBeNull();
+  });
+
+  test("returns the targeted dimension's own EvidenceState", () => {
+    const byDimension = new Map([["research", "emerging"], ["leadership", "strong"]] as const);
+    expect(resolveMatchConfidence(["research"], byDimension)).toBe("emerging");
+  });
+
+  test("a dimension missing from the lookup defaults to not_assessed, not a crash", () => {
+    expect(resolveMatchConfidence(["research"], new Map())).toBe("not_assessed");
+  });
+
+  test("multiple matched dimensions: the more cautious (lower-ranked) state wins", () => {
+    const byDimension = new Map([["research", "strong"], ["leadership", "limited_evidence"]] as const);
+    // Order shouldn't matter -- try both.
+    expect(resolveMatchConfidence(["research", "leadership"], byDimension)).toBe("limited_evidence");
+    expect(resolveMatchConfidence(["leadership", "research"], byDimension)).toBe("limited_evidence");
+  });
+
+  test("a single not_assessed dimension is reported as such, not silently upgraded", () => {
+    expect(resolveMatchConfidence(["research"], new Map([["research", "not_assessed"]] as const))).toBe("not_assessed");
   });
 });

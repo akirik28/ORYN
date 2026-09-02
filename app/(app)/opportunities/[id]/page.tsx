@@ -27,6 +27,7 @@ import { NextMove } from "@/components/oryn/next-move";
 import { differenceInCalendarDays } from "date-fns";
 import { OpportunityActions } from "@/features/opportunities/opportunity-actions";
 import { formatMoney } from "@/lib/i18n/format";
+import { urgencyLabel } from "@/components/oryn/deadline-badge";
 import type { Locale } from "@/lib/i18n/config";
 import type { ConfidenceLevel } from "@/components/oryn/confidence-indicator";
 
@@ -247,13 +248,12 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
             ...(selectivityLabel(opportunity.selectivity_tier, locale)
               ? [{ term: t("selectivity"), value: selectivityLabel(opportunity.selectivity_tier, locale)! }]
               : []),
+            // urgencyLabel is the same shared function DeadlineBadge uses everywhere else
+            // this product shows a deadline (Phase 12's "deadline urgency" dimension) --
+            // this fact used to recompute an equivalent string inline, which was missing
+            // the 1-day-left singular case ("1 days left") that function already handles.
             ...(daysUntilDeadline !== null && daysUntilDeadline >= 0
-              ? [
-                  {
-                    term: t("urgency"),
-                    value: daysUntilDeadline === 0 ? t("closesToday") : t("daysLeft", { days: daysUntilDeadline }),
-                  },
-                ]
+              ? [{ term: t("urgency"), value: urgencyLabel(daysUntilDeadline, locale) }]
               : []),
           ]}
           footnote={
