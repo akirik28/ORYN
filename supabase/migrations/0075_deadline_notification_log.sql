@@ -57,6 +57,17 @@ alter table public.deadline_notification_log enable row level security;
 -- and not sensitive). No insert/update/delete policy for any non-admin role -- same
 -- reasoning lib/notifications/create.ts's own comment gives for `notifications` itself:
 -- always system-generated, never written by a student's own RLS-scoped session.
+-- Postgres has no `create policy if not exists`, so the drop is how this statement
+-- becomes re-runnable -- see the note at the end of this file.
+drop policy if exists "Users can view their own deadline notification log" on public.deadline_notification_log;
 create policy "Users can view their own deadline notification log"
   on public.deadline_notification_log for select
   using (auth.uid() = user_id);
+
+-- Re-run safe (added 2026-09-02). Every statement above is guarded, so applying this file
+-- twice is a no-op rather than an error. Not defensive habit -- docs/deployment.md 0.1
+-- records a real incident where two migrations shared version 0020, `supabase db push`
+-- stopped partway, and the database was left half-migrated *while appearing to have one*.
+-- Recovering from that means re-running the whole sequence, so any file that cannot survive
+-- a second run turns a recoverable stall into a manual repair. Five earlier migrations were
+-- already given these guards for the same reason; these were missed.

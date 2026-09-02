@@ -1208,8 +1208,22 @@ export interface UniversityDeadline {
    * same university_id+program_id with different, non-null scopes are two real dates for two
    * real populations — not a conflict (see conflict_group_id for that shape). */
   scope: string | null;
+  /** Migration 0074 — identical column, same enum, same meaning as
+   * university_requirements.data_status above. Added to the live schema 2026-08-31 but never
+   * added here until 2026-09-02 (lib/jobs/detect-stale-data.ts's Job E extension needed it to
+   * compile) — this file is hand-authored, not generated from the live schema, so a migration
+   * landing does not automatically update it; caught by a real typecheck failure, not a
+   * proactive audit. */
+  data_status: DataStatus;
+  /** Migration 0074 — NULL means never checked since ingestion, not a failure. Deliberately
+   * left unbackfilled for existing rows (a timestamp would assert a verification that never
+   * happened) — see that migration's own comment. */
+  last_checked_at: string | null;
 }
-export type UniversityDeadlineInsert = Insertable<UniversityDeadline, "id" | "created_at" | "updated_at" | "recurrence" | "verification_state">;
+export type UniversityDeadlineInsert = Insertable<
+  UniversityDeadline,
+  "id" | "created_at" | "updated_at" | "recurrence" | "verification_state" | "data_status" | "last_checked_at"
+>;
 
 export interface UniversitySource {
   id: string;

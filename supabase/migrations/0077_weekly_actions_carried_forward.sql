@@ -15,7 +15,15 @@
 -- across two numbering systems that were never meant to be compared -- see the discussion in
 -- lib/plan/persist.ts's own comment on the update-then-delete split.
 alter table public.weekly_actions
-  add column carried_forward boolean not null default false;
+  add column if not exists carried_forward boolean not null default false;
 
 comment on column public.weekly_actions.carried_forward is
   'True when this row survived at least one "Regenerate" click after being completed (or, once skipped/expired are ever actually produced -- no code path sets them today -- those too). Set explicitly by lib/plan/persist.ts at the moment a regeneration chooses not to delete a row, not inferred from status: a completed action from the plan''s current, still-fresh batch and one carried through from a previous batch both read status = completed, and this column is what tells them apart without comparing priority numbers across two unrelated numbering passes. Always false on insert (the column default) -- a freshly generated action has never survived a regeneration by definition.';
+
+-- Re-run safe (added 2026-09-02). Every statement above is guarded, so applying this file
+-- twice is a no-op rather than an error. Not defensive habit -- docs/deployment.md 0.1
+-- records a real incident where two migrations shared version 0020, `supabase db push`
+-- stopped partway, and the database was left half-migrated *while appearing to have one*.
+-- Recovering from that means re-running the whole sequence, so any file that cannot survive
+-- a second run turns a recoverable stall into a manual repair. Five earlier migrations were
+-- already given these guards for the same reason; these were missed.
