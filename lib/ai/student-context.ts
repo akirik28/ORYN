@@ -10,7 +10,7 @@ import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { dimensionLabel } from "@/lib/scoring/labels";
 import { DEFAULT_LOCALE, isLocale, type Locale } from "@/lib/i18n/config";
-import type { Database, EvidenceStatus, OutlookLabel, ProfileDimension } from "@/types/database";
+import type { CurriculumType, Database, DataConfidence, EvidenceStatus, OutlookLabel, ProfileDimension, TimeBudget } from "@/types/database";
 
 /**
  * Phase 65: nothing clears `profiles.busy_mode` automatically once `busy_mode_until`
@@ -36,8 +36,17 @@ export interface StudentAdvisorContext {
     country: string | null;
     schoolName: string | null;
     graduationYear: number | null;
-    curriculum: string | null;
-    weeklyTimeBudget: string | null;
+    // Both fields below were plain `string | null` until 2026-09-02's eval-fixture-shape
+    // sweep — that let lib/ai/eval/fixtures.ts carry display prose ("IB", "5-10 hours")
+    // where a real profile stores the closed enum key ("ib", "5_10h") and still typecheck.
+    // Tightened to the real DB types so that exact class of drift is a compile error next
+    // time, not a silent one only caught because a downstream guardrail happened to stop
+    // firing. Both assignments in buildStudentAdvisorContext below already pass a
+    // correctly-typed value (profile.curriculum/weekly_time_budget are already
+    // CurriculumType/TimeBudget) — this is a no-op for production, and only ever narrows
+    // what a hand-built context (a fixture, a test, a future mock) is allowed to claim.
+    curriculum: CurriculumType | null;
+    weeklyTimeBudget: TimeBudget | null;
     busyMode: boolean;
     busyModeUntil: string | null;
     /** Counselor Core eligibility (age gates on opportunities) — not used in prompt text today. */
@@ -52,7 +61,10 @@ export interface StudentAdvisorContext {
    * because the model reads this block and writes the prose they see: given a bare number
    * it will quote the number, and a dimension nobody has entered anything for scores 0.
    */
-  profileScores: { dimension: ProfileDimension; score: number; confidence: string; state: EvidenceState }[];
+  // confidence was plain `string` until the same sweep — a near-miss, not a live bug (both
+  // fixtures' values already happened to be real DataConfidence members), tightened anyway
+  // so it can't become one later. See the curriculum/weeklyTimeBudget comment above for why.
+  profileScores: { dimension: ProfileDimension; score: number; confidence: DataConfidence; state: EvidenceState }[];
   overallScore: number;
   completenessPercent: number;
   /**
