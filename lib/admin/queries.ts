@@ -7,6 +7,7 @@ import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import { JOB_DEFINITIONS } from "@/lib/jobs/schedule";
 import { summarizeJobHealth, EMPTY_STREAK_THRESHOLD, type JobHealthSummary } from "@/lib/jobs/job-health";
 import { resolveReportedContentPreview } from "@/lib/moderation/content-preview";
+import { MONTHLY_BUDGET_TARGET_USD, MONTHLY_BUDGET_CEILING_USD } from "@/lib/ai/limits/budget";
 
 /**
  * Every admin-panel read, one module (docs/admin-panel-architecture-2026-09-02.md, D1). Each
@@ -164,11 +165,19 @@ export async function getAdminUserList(admin: SupabaseClient<Database>): Promise
  * Founder-set budget guardrails (2026-09-02, relayed through oryn-a7): $0.50/student/month is
  * the target, $1.00 is the hard ceiling. The warning threshold is 80% of the CEILING — the
  * harder number, since the target is an aspiration and the ceiling is where real overage risk
- * starts. Kept here, not inline, because these are founder-set business figures that can
- * change independently of the code that reads them.
+ * starts.
+ *
+ * FIXED 2026-09-02 (docs/ai-spend-cap-2026-09-02.md): these two figures used to be redefined
+ * here, independently of lib/ai/limits/budget.ts's own `MONTHLY_BUDGET_TARGET_USD`/
+ * `MONTHLY_BUDGET_CEILING_USD` — the same founder-set numbers, typed twice, with nothing
+ * tying them together. That module is where the numbers actually do something (degrading a
+ * student to a cheaper model); this one only ever displayed them. Re-exported under this
+ * file's existing names rather than changing every admin component that already imports
+ * them — the display layer now reads the enforcement layer's own constant instead of a
+ * second copy of the founder's number that could silently drift from it.
  */
-export const PER_STUDENT_MONTHLY_TARGET_USD = 0.5;
-export const PER_STUDENT_MONTHLY_CEILING_USD = 1.0;
+export const PER_STUDENT_MONTHLY_TARGET_USD = MONTHLY_BUDGET_TARGET_USD;
+export const PER_STUDENT_MONTHLY_CEILING_USD = MONTHLY_BUDGET_CEILING_USD;
 export const BUDGET_WARNING_FRACTION = 0.8;
 export const BUDGET_WARNING_THRESHOLD_USD = PER_STUDENT_MONTHLY_CEILING_USD * BUDGET_WARNING_FRACTION;
 
@@ -251,7 +260,12 @@ export async function getSpendSummary(admin: SupabaseClient<Database>): Promise<
     admin.from("ai_usage").select("user_id, feature, model, estimated_cost"),
   ]);
 
-  const rows = allRes.data ?? [];
+  // Excludes fixture rows a test run wrote directly into the live table (model: "test-model",
+  // 3 rows, 2026-08-15, confirmed live 2026-09-02 during the per-student cap work) -- they
+  // carry `user_id: null`, so no per-student figure anywhere ever counted them, but this
+  // summary's own totals (allTimeCalls, byFeature/byModel) had no such filter and were
+  // counting them as if they were real background-job spend.
+  const rows = (allRes.data ?? []).filter((row) => row.model !== "test-model");
   const byFeature = new Map<string, SpendByKey>();
   const byModel = new Map<string, SpendByKey>();
   let unattributedCalls = 0;
