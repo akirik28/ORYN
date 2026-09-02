@@ -251,7 +251,23 @@ export function OpportunityCard({
         // of the earlier "contained signal" direction: this should be visible at a glance,
         // not something a student has to look for. References var(--tier-glow) directly so
         // it follows oryn-4e's token re-point without a code change here.
-        canClaimMatch && matchScore >= 80 ? "ring-brand-primary-border ultra:drop-shadow-[0_0_40px_var(--tier-glow)]" : "ring-border/70",
+        //
+        // Motion pass, same day: founder directive is "as much animation as possible" -- a
+        // static glow reads as an effect added on top, not something alive. animate-pulse is
+        // Tailwind's built-in breathing/alive utility, the established choice over inventing
+        // a custom keyframe (which would mean touching app/globals.css, oryn-4e's file this
+        // pass). This pulses the whole card's opacity, including its image and text, not
+        // just the glow -- filter/box-shadow have no isolated "just the shadow" animation
+        // primitive without a second layered element, and building one blind (no live
+        // render available) risked getting the shape/stacking wrong the same way box-shadow
+        // stacking did on the ring. Flagged for oryn-a7 as a real judgment call, not a
+        // settled design: worth a live look once someone can actually see it render.
+        // motion-safe: makes this a no-op under reduced motion -- the static glow above
+        // (ring + drop-shadow) is what remains, matching this component's own
+        // "static-but-present, not gone" posture from the reduced-motion standard.
+        canClaimMatch && matchScore >= 80
+          ? "ring-brand-primary-border ultra:drop-shadow-[0_0_40px_var(--tier-glow)] ultra:motion-safe:animate-pulse"
+          : "ring-border/70",
       )}
       style={{ background: "rgba(255,255,255,0.42)", backdropFilter: "blur(14px)" }}
     >

@@ -156,6 +156,34 @@ describe("NotificationBell — Ultra tier dot", () => {
   });
 });
 
+/**
+ * Motion pass, 2026-09-02 -- founder directive: "olabildiğince fazla animasyon" (as much
+ * animation as possible). The ping-ring is a second, decorative element alongside the solid
+ * dot (features/universities/world-map-explorer.tsx's selected-country marker is the
+ * established precedent for this exact two-layer shape), so it needs its own coverage
+ * distinct from the dot's own test above. Matches __tests__/universities/map-ultra-pins
+ * .test.ts's own convention of asserting the literal className string contains
+ * `motion-safe:animate-ping`, not simulating the animation itself (jsdom doesn't run CSS).
+ */
+describe("NotificationBell — Ultra tier ping-ring (motion)", () => {
+  test("an unread count renders the ping-ring, hidden by default, revealed only under ultra+motion-safe", async () => {
+    renderBell([notification()], 1);
+
+    const bellButton = screen.getByRole("button", { name: "Notifications" });
+    const ring = bellButton.querySelector('span[aria-hidden="true"].hidden');
+    expect(ring).toHaveClass("hidden");
+    expect(ring).toHaveClass("ultra:motion-safe:animate-ping");
+    expect(ring).toHaveClass("ultra:motion-safe:block");
+  });
+
+  test("zero unread renders no ping-ring either -- same 'never flatter an absence' rule as the dot itself", async () => {
+    renderBell([notification({ read_at: new Date().toISOString() })], 0);
+
+    const bellButton = screen.getByRole("button", { name: "Notifications" });
+    expect(bellButton.querySelector('span[aria-hidden="true"].hidden')).not.toBeInTheDocument();
+  });
+});
+
 describe("NotificationBell — failure path (docs/feat2-error-surfacing-audit-2026-08-22.md finding #3)", () => {
   test("a failed mark-read shows the real server error rather than nothing", async () => {
     vi.mocked(markNotificationRead).mockResolvedValue({ error: "Couldn't update notification." });
