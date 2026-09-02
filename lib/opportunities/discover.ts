@@ -17,6 +17,9 @@ export interface DiscoveryRunResult {
    *  uses this to skip the remaining queries in the batch rather than let each one waste a
    *  Tavily search only to hit the same budget check on its first candidate. */
   stoppedForBudget: boolean;
+  /** Candidates otherwise real and categorized, skipped because extraction could not identify
+   *  an organization — see the skip site below for why this must never fall through to insert. */
+  skippedMissingOrganization: number;
 }
 
 /**
@@ -33,7 +36,7 @@ export async function discoverOpportunitiesForQuery(query: string): Promise<Disc
   const searchResult = await tavilyProvider.search(query, { maxResults: 6 });
 
   if (!searchResult.success) {
-    return { query, candidatesFound: 0, opportunitiesStored: 0, errors: [searchResult.error.message], stoppedForBudget: false };
+    return { query, candidatesFound: 0, opportunitiesStored: 0, errors: [searchResult.error.message], stoppedForBudget: false, skippedMissingOrganization: 0 };
   }
 
   const supabase = createAdminClient();
@@ -43,6 +46,7 @@ export async function discoverOpportunitiesForQuery(query: string): Promise<Disc
 
   let stored = 0;
   let stoppedForBudget = false;
+  let skippedMissingOrganization = 0;
 
   for (const result of searchResult.data) {
     try {
@@ -50,6 +54,16 @@ export async function discoverOpportunitiesForQuery(query: string): Promise<Disc
       const { candidate } = await extractOpportunityFromContent({ sourceUrl: result.url, content });
 
       if (!candidate.isRealOpportunity || !candidate.category) continue;
+
+      // Same requirement decideIngestion() (lib/opportunities/ingest.ts) enforces on the
+      // batch-research path. A null organization is invisible to isDuplicateOpportunity()'s
+      // organization+title branch — the 2026-08-18 Drive-corpus import produced 197 such rows at
+      // once (docs/null-organization-dedup-defect-2026-09-02.md). Skipping here is what stops
+      // this pipeline from widening that same gap the first time it actually runs.
+      if (!candidate.organization?.trim()) {
+        skippedMissingOrganization += 1;
+        continue;
+      }
 
       const isDupe = (existingOpportunities ?? []).some((existing) =>
         isDuplicateOpportunity(
@@ -114,7 +128,7 @@ export async function discoverOpportunitiesForQuery(query: string): Promise<Disc
     }
   }
 
-  return { query, candidatesFound: searchResult.data.length, opportunitiesStored: stored, errors, stoppedForBudget };
+  return { query, candidatesFound: searchResult.data.length, opportunitiesStored: stored, errors, stoppedForBudget, skippedMissingOrganization };
 }
 
 function safeHostname(url: string): string | null {
