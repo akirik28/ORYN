@@ -1,7 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { COMPARE_MAX as MAX_COMPARE } from "@/lib/universities/compare-constants";
+import { resolveComparisonWidthCeiling } from "@/lib/comparison/limits";
+import type { PlanTier } from "@/types/database";
 
 const STORAGE_KEY = "oryn:compare-universities";
 
@@ -65,14 +66,24 @@ function getServerSnapshot(): CompareEntry[] {
   return EMPTY;
 }
 
-export function useCompare() {
+/**
+ * `planTier` defaults to "ultra" — today's unchanged ceiling — so a caller that doesn't
+ * pass one (a bar component that never reads `atLimit`) keeps working exactly as before.
+ * A caller that shows the disabled-state UI (UniversityCard, SavedUniversityRow) passes
+ * the student's real tier, resolved server-side and threaded down as a prop the same way
+ * every other tier-aware surface in this app already does — see
+ * lib/comparison/limits.ts's own header for why this ceiling isn't the real enforcement
+ * (the compare page's own server-side slice is): this only shapes the picker's UX.
+ */
+export function useCompare(planTier: PlanTier = "ultra") {
   const selected = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const ceiling = resolveComparisonWidthCeiling(planTier);
 
   function toggle(entry: CompareEntry) {
     const current = getSnapshot();
     if (current.some((e) => e.id === entry.id)) {
       writeStorage(current.filter((e) => e.id !== entry.id));
-    } else if (current.length < MAX_COMPARE) {
+    } else if (current.length < ceiling) {
       writeStorage([...current, entry]);
     }
   }
@@ -82,6 +93,6 @@ export function useCompare() {
     isSelected: (id: string) => selected.some((e) => e.id === id),
     toggle,
     clear: () => writeStorage([]),
-    atLimit: selected.length >= MAX_COMPARE,
+    atLimit: selected.length >= ceiling,
   };
 }

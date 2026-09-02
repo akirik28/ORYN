@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { OutlookBadge } from "@/features/universities/outlook-badge";
 import { SaveUniversityButton } from "@/features/universities/save-university-button";
 import { useCompare } from "@/features/universities/compare-context";
+import { resolveComparisonWidthCeiling } from "@/lib/comparison/limits";
 import type { TargetUniversityWithDetails } from "@/lib/universities/queries";
+import type { PlanTier } from "@/types/database";
 
 /**
  * One row on the Saved page's Universities section. Reuses SaveUniversityButton as-is for
@@ -16,9 +18,9 @@ import type { TargetUniversityWithDetails } from "@/lib/universities/queries";
  * compare-context.tsx's existing cross-page tray, so a university toggled here shows up in
  * the same CompareBar a student may have already populated from the explorer.
  */
-export function SavedUniversityRow({ target }: { target: TargetUniversityWithDetails }) {
+export function SavedUniversityRow({ target, planTier = "ultra" }: { target: TargetUniversityWithDetails; planTier?: PlanTier }) {
   const t = useTranslations("saved");
-  const compare = useCompare();
+  const compare = useCompare(planTier);
   const university = target.university;
   if (!university) return null;
   const isComparing = compare.isSelected(university.id);
@@ -40,7 +42,7 @@ export function SavedUniversityRow({ target }: { target: TargetUniversityWithDet
           size="sm"
           disabled={!isComparing && compare.atLimit}
           onClick={() => compare.toggle({ id: university.id, name: university.name })}
-          title={!isComparing && compare.atLimit ? t("compareLimitTooltip") : undefined}
+          title={!isComparing && compare.atLimit ? t("compareLimitTooltip", { max: resolveComparisonWidthCeiling(planTier) }) : undefined}
         >
           <Scale className="size-3.5" />
           {isComparing ? t("comparing") : t("compare")}

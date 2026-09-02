@@ -1,9 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { ArrowLeft } from "lucide-react";
-import { requireUser, requireProfile } from "@/lib/security/dal";
+import { ArrowLeft, Lock, Scale } from "lucide-react";
+import { requireProfile } from "@/lib/security/dal";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
+import { resolveComparisonWidthCeiling, isComparisonQuotaExhausted } from "@/lib/comparison/limits";
+import { getMonthlyComparisonUsage, logComparisonViewed } from "@/lib/comparison/usage";
 import { heroGradientStyle } from "@/components/oryn/hero-gradient";
 import { createClient } from "@/lib/supabase/server";
 import { resolveLocale } from "@/lib/i18n/locale";
@@ -11,8 +13,7 @@ import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/c
 import { PageHeader } from "@/components/oryn/page-header";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { SourceBadge } from "@/components/oryn/source-badge";
-import { Scale } from "lucide-react";
-import { COMPARE_MAX } from "@/lib/universities/compare-constants";
+import { Button } from "@/components/ui/button";
 import type { University } from "@/types/database";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -27,23 +28,35 @@ const NA = <span className="text-muted-foreground">—</span>;
  * that has no verified data reads "—", never a guessed or averaged figure (cost_of_attendance
  * coverage is US-only today; a university outside that set legitimately has nothing to show
  * here yet, and the table says so plainly rather than leaving the cell looking broken).
+ *
+ * Tier-gated (2026-09-02, founder directive relayed through oryn-a7): Standard is capped at
+ * `widthCeiling` items (2) and a shared 5-comparisons/month allowance with opportunities;
+ * Ultra is unchanged from before this pass. See lib/comparison/limits.ts's own header for
+ * the full design — width is enforced by the `.slice(0, widthCeiling)` below regardless of
+ * what the client-side picker already stopped the student from selecting, and frequency by
+ * the check right before the real table renders, which is also where logComparisonViewed
+ * fires. Same three-layer discipline features/advisor/response-mode-slider.tsx established:
+ * the picker shouldn't offer it, the render path re-checks server-side, and re-checks again
+ * at the exact point the differentiated behavior would happen — "even called directly."
  */
 export default async function CompareUniversitiesPage({ searchParams }: { searchParams: Promise<{ ids?: string }> }) {
   const { ids: idsParam } = await searchParams;
-  await requireUser();
-  const planTier = resolvePlanTier(await requireProfile());
+  const profile = await requireProfile();
+  const userId = profile.id;
+  const planTier = resolvePlanTier(profile);
+  const widthCeiling = resolveComparisonWidthCeiling(planTier);
   const supabase = await createClient();
   const supersessionMap = await loadSupersessionMap(supabase);
   const locale = await resolveLocale();
   const t = await getTranslations("universities.comparePage");
   const tSourceBadge = await getTranslations("sourceBadge");
 
-  const requestedIds = [...new Set((idsParam ?? "").split(",").map((id) => canonicalUniversityId(supersessionMap, id.trim())).filter(Boolean))].slice(0, COMPARE_MAX);
+  const requestedIds = [...new Set((idsParam ?? "").split(",").map((id) => canonicalUniversityId(supersessionMap, id.trim())).filter(Boolean))].slice(0, widthCeiling);
 
   if (requestedIds.length < 2) {
     return (
       <div className="space-y-8">
-        <PageHeader title={t("title")} description={t("description")} />
+        <PageHeader title={t("title")} description={t("description", { max: widthCeiling })} />
         <EmptyState icon={Scale} title={t("nothingYetTitle")} description={t("nothingYetDescription")} />
         <Link href="/universities" className="inline-flex items-center gap-1.5 text-sm text-brand-primary hover:underline">
           <ArrowLeft className="size-3.5" /> {t("backToExplorer")}
@@ -70,7 +83,7 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
         className="dark space-y-8 rounded-[28px] p-4 text-foreground md:p-8"
         style={heroGradientStyle(planTier)}
       >
-        <PageHeader title={t("title")} description={t("description")} />
+        <PageHeader title={t("title")} description={t("description", { max: widthCeiling })} />
         <EmptyState icon={Scale} title={t("notEnoughTitle")} description={t("notEnoughDescription")} />
         <Link href="/universities" className="inline-flex items-center gap-1.5 text-sm text-brand-primary hover:underline">
           <ArrowLeft className="size-3.5" /> {t("backToExplorer")}
@@ -78,6 +91,38 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
       </div>
     );
   }
+
+  if (planTier !== "ultra") {
+    const usage = await getMonthlyComparisonUsage(userId);
+    if (isComparisonQuotaExhausted(planTier, usage)) {
+      return (
+        <div
+          className="dark space-y-8 rounded-[28px] p-4 text-foreground md:p-8"
+          style={heroGradientStyle(planTier)}
+        >
+          <PageHeader title={t("title")} description={t("description", { max: widthCeiling })} />
+          <EmptyState
+            icon={Lock}
+            title={t("limitReachedTitle")}
+            description={t("limitReachedDescription", { limit: usage.limit })}
+            action={
+              <Button size="sm" render={<Link href="/settings/plan" />} nativeButton={false}>
+                {t("limitReachedCta")}
+              </Button>
+            }
+          />
+          <Link href="/universities" className="inline-flex items-center gap-1.5 text-sm text-brand-primary hover:underline">
+            <ArrowLeft className="size-3.5" /> {t("backToExplorer")}
+          </Link>
+        </div>
+      );
+    }
+  }
+  await logComparisonViewed(
+    userId,
+    "university",
+    ordered.map((u) => u.id)
+  );
 
   const statsByUniId = new Map((stats ?? []).map((s) => [s.university_id, s]));
   const rankByUniId = new Map((rankings ?? []).map((r) => [r.university_id, r.rank_display]));

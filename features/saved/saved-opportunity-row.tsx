@@ -7,19 +7,21 @@ import { Button } from "@/components/ui/button";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { OpportunityActions } from "@/features/opportunities/opportunity-actions";
 import { useOpportunityCompare } from "@/features/opportunities/opportunity-compare-context";
+import { resolveComparisonWidthCeiling } from "@/lib/comparison/limits";
 import { categoryLabel } from "@/lib/opportunities/labels";
 import type { Locale } from "@/lib/i18n/config";
 import type { SavedOpportunityWithDetails } from "@/lib/opportunities/saved";
+import type { PlanTier } from "@/types/database";
 
 /**
  * One row on the Saved page's Opportunities section. Reuses OpportunityActions as-is
  * (same save/mark-applied/not-interested control the detail page uses) rather than
  * building a second status-changing UI.
  */
-export function SavedOpportunityRow({ saved }: { saved: SavedOpportunityWithDetails }) {
+export function SavedOpportunityRow({ saved, planTier = "ultra" }: { saved: SavedOpportunityWithDetails; planTier?: PlanTier }) {
   const t = useTranslations("saved");
   const locale = useLocale() as Locale;
-  const compare = useOpportunityCompare();
+  const compare = useOpportunityCompare(planTier);
   const opportunity = saved.opportunity;
   if (!opportunity) return null;
   const isComparing = compare.isSelected(opportunity.id);
@@ -45,7 +47,7 @@ export function SavedOpportunityRow({ saved }: { saved: SavedOpportunityWithDeta
           size="sm"
           disabled={!isComparing && compare.atLimit}
           onClick={() => compare.toggle({ id: opportunity.id, title: opportunity.title })}
-          title={!isComparing && compare.atLimit ? t("compareLimitTooltip") : undefined}
+          title={!isComparing && compare.atLimit ? t("compareLimitTooltip", { max: resolveComparisonWidthCeiling(planTier) }) : undefined}
         >
           <Scale className="size-3.5" />
           {isComparing ? t("comparing") : t("compare")}

@@ -1,7 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { COMPARE_MAX } from "@/lib/universities/compare-constants";
+import { resolveComparisonWidthCeiling } from "@/lib/comparison/limits";
+import type { PlanTier } from "@/types/database";
 
 const STORAGE_KEY = "oryn:compare-opportunities";
 
@@ -17,9 +18,11 @@ export interface OpportunityCompareEntry {
  * a shared generic here would be one abstraction serving two call sites, the first of which
  * already existed as working, tested code. Mirroring the pattern beats forking it, but two
  * genuinely different trays (universities vs opportunities) aren't the same tray. Reuses
- * universities' COMPARE_MAX rather than defining a second constant with the same value, since
- * that one is already deliberately kept in its own directive-free module for exactly this
- * kind of cross-feature import (see that file's own header).
+ * resolveComparisonWidthCeiling (lib/comparison/limits.ts) rather than defining a second
+ * width rule with the same value, since that one is already deliberately kept in its own
+ * directive-free module for exactly this kind of cross-feature import (see that file's own
+ * header) — same reason this file used to reuse universities' COMPARE_MAX directly before
+ * the ceiling became tier-aware (2026-09-02).
  */
 type Listener = () => void;
 const listeners = new Set<Listener>();
@@ -60,14 +63,19 @@ function getServerSnapshot(): OpportunityCompareEntry[] {
   return EMPTY;
 }
 
-export function useOpportunityCompare() {
+/** `planTier` defaults to "ultra" — see features/universities/compare-context.tsx's own
+ *  useCompare for why: a caller that never reads `atLimit` (the bar) doesn't need to pass
+ *  one, and this only shapes the picker's UX — the compare page's own server-side slice is
+ *  the real enforcement regardless of what this ceiling permitted. */
+export function useOpportunityCompare(planTier: PlanTier = "ultra") {
   const selected = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const ceiling = resolveComparisonWidthCeiling(planTier);
 
   function toggle(entry: OpportunityCompareEntry) {
     const current = getSnapshot();
     if (current.some((e) => e.id === entry.id)) {
       writeStorage(current.filter((e) => e.id !== entry.id));
-    } else if (current.length < COMPARE_MAX) {
+    } else if (current.length < ceiling) {
       writeStorage([...current, entry]);
     }
   }
@@ -77,6 +85,6 @@ export function useOpportunityCompare() {
     isSelected: (id: string) => selected.some((e) => e.id === id),
     toggle,
     clear: () => writeStorage([]),
-    atLimit: selected.length >= COMPARE_MAX,
+    atLimit: selected.length >= ceiling,
   };
 }

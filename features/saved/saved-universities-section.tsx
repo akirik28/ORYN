@@ -6,7 +6,7 @@ import { Landmark } from "lucide-react";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { SavedUniversityRow } from "./saved-university-row";
 import type { TargetUniversityWithDetails } from "@/lib/universities/queries";
-import type { TargetStatus } from "@/types/database";
+import type { PlanTier, TargetStatus } from "@/types/database";
 
 const FILTER_VALUES: (TargetStatus | "all")[] = ["all", "exploring", "target", "applying", "applied", "accepted", "waitlisted", "rejected"];
 
@@ -19,7 +19,7 @@ const FILTER_VALUES: (TargetStatus | "all")[] = ["all", "exploring", "target", "
  * deliberately isn't reusing, and why: that page's filters (region, cost, size, ranking)
  * scope a catalogue query, not a small already-fetched list.
  */
-export function SavedUniversitiesSection({ targets }: { targets: TargetUniversityWithDetails[] }) {
+export function SavedUniversitiesSection({ targets, planTier }: { targets: TargetUniversityWithDetails[]; planTier?: PlanTier }) {
   const t = useTranslations("saved");
   const tStatus = useTranslations("universities.targetStatus");
   const [filter, setFilter] = useState<TargetStatus | "all">("all");
@@ -54,7 +54,7 @@ export function SavedUniversitiesSection({ targets }: { targets: TargetUniversit
       ) : (
         <ul>
           {filtered.map((target) => (
-            <SavedUniversityRow key={target.id} target={target} />
+            <SavedUniversityRow key={target.id} target={target} planTier={planTier} />
           ))}
         </ul>
       )}
