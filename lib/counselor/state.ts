@@ -115,7 +115,21 @@ export async function getCounselorState(userId: string, locale: Locale = DEFAULT
     : getProfileScores(userId).then((data) => ({ data }));
 
   const [advisor, facts, profileRes, scoresRes, skillsRes, featuredRes, contactRes, matchesRes] = await Promise.all([
-    buildStudentAdvisorContext(userId),
+    // 2026-09-02, session-less-client sweep: this was `buildStudentAdvisorContext(userId)` —
+    // no second argument — even though every OTHER read in this same Promise.all correctly
+    // uses `supabase` (the resolved client, session-scoped or the job's own admin one).
+    // buildStudentAdvisorContext already accepts an optional client (lib/ai/student-context.ts)
+    // and generateWeeklyPlan already threads it into ITS OWN direct call to the same
+    // function — this one, reached one level deeper via getCounselorRecommendations, was
+    // the one call site that fell through to its own internal createClient() instead. In
+    // the weekly-plan job's context that's an anonymous, no-cookie client: every RLS read
+    // inside it returns empty rather than throwing, so `advisor` here was silently a
+    // near-empty context (see student-context.ts and lib/supabase/server.ts's own comments
+    // for why "no session" degrades to empty results, not an error) — not a wasted AI call,
+    // since the actual billed call happens once, correctly, in generateWeeklyPlan itself,
+    // but a systematically degraded prompt (wrong/missing counselor grounding) for every
+    // job-generated plan specifically, never for a dashboard-visit-triggered one.
+    buildStudentAdvisorContext(userId, supabaseClient),
     assembleScoringFacts(supabase, userId),
     supabase.from("profiles").select("country, school_name, graduation_year, curriculum, headline, about").eq("id", userId).single(),
     scoresPromise,
