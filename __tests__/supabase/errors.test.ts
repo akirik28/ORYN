@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { isUndefinedColumnError } from "@/lib/supabase/errors";
+import { isUndefinedColumnError, isUniqueViolation } from "@/lib/supabase/errors";
 
 /**
  * Guards the degrade-and-retry path for a write naming a column whose migration hasn't
@@ -62,5 +62,44 @@ describe("isUndefinedColumnError", () => {
     expect(isUndefinedColumnError({ code: "23505", message: 'duplicate key value violates unique constraint "match_confidence_idx"' }, "match_confidence")).toBe(false);
     expect(isUndefinedColumnError(null, "match_confidence")).toBe(false);
     expect(isUndefinedColumnError({ message: "no code at all, mentions match_confidence" }, "match_confidence")).toBe(false);
+  });
+});
+
+/**
+ * Written for migration 0087 (lib/notifications/create.ts's dedup catch for
+ * notifications_new_opportunity_link_unique_idx) — the opposite direction from
+ * isUndefinedColumnError above: a real Postgres constraint violation, not a PostgREST
+ * schema-cache short-circuit, so a single SQLSTATE (23505) is the whole check rather than
+ * two inferred-spelling codes.
+ */
+describe("isUniqueViolation", () => {
+  test("matches the exact SQLSTATE and index name", () => {
+    expect(
+      isUniqueViolation(
+        { code: "23505", message: 'duplicate key value violates unique constraint "notifications_new_opportunity_link_unique_idx"' },
+        "notifications_new_opportunity_link_unique_idx",
+      ),
+    ).toBe(true);
+  });
+
+  test("does not match a different constraint on the same table", () => {
+    expect(isUniqueViolation({ code: "23505", message: 'duplicate key value violates unique constraint "notifications_pkey"' }, "notifications_new_opportunity_link_unique_idx")).toBe(false);
+  });
+
+  test("does not match the right message text under a different SQLSTATE", () => {
+    expect(
+      isUniqueViolation(
+        { code: "42703", message: 'duplicate key value violates unique constraint "notifications_new_opportunity_link_unique_idx"' },
+        "notifications_new_opportunity_link_unique_idx",
+      ),
+    ).toBe(false);
+  });
+
+  test("null error (no failure) is not a match", () => {
+    expect(isUniqueViolation(null, "notifications_new_opportunity_link_unique_idx")).toBe(false);
+  });
+
+  test("a 23505 with no message at all is not a match -- narrowing by name requires the name to actually be present", () => {
+    expect(isUniqueViolation({ code: "23505" }, "notifications_new_opportunity_link_unique_idx")).toBe(false);
   });
 });
