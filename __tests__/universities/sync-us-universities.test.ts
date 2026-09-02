@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { hasUniversityDataChanged, hasStatisticsChanged, isUndefinedColumnError } from "@/lib/universities/sync-us-universities";
+import { hasUniversityDataChanged, hasStatisticsChanged } from "@/lib/universities/sync-us-universities";
 
 /**
  * hasUniversityDataChanged is what stops syncOne from stamping last_changed_at on every
@@ -100,29 +100,4 @@ describe("hasStatisticsChanged", () => {
   });
 });
 
-/**
- * Guards the degrade-and-retry path for a write naming a column that migration 0080 hasn't
- * been applied to yet on this environment (syncOne's university_statistics upsert) — found
- * unchecked entirely on 2026-09-02 (oryn-3f's unapplied-migration sweep), which let that
- * write fail silently against a real column PostgREST rejects. Checks Postgres's SQLSTATE
- * (42703, undefined_column) rather than a string match on the whole message, and requires
- * the specific column name too, so a different missing column still surfaces as a real error
- * instead of being swallowed by this same guard.
- */
-describe("isUndefinedColumnError", () => {
-  test("matches the exact SQLSTATE and column name", () => {
-    expect(isUndefinedColumnError({ code: "42703", message: 'column "last_changed_at" of relation "university_statistics" does not exist' }, "last_changed_at")).toBe(true);
-  });
-
-  test("does not match a different missing column", () => {
-    expect(isUndefinedColumnError({ code: "42703", message: 'column "some_other_column" of relation "university_statistics" does not exist' }, "last_changed_at")).toBe(false);
-  });
-
-  test("does not match a different SQLSTATE even naming the right column", () => {
-    expect(isUndefinedColumnError({ code: "23505", message: 'duplicate key value violates unique constraint "last_changed_at_idx"' }, "last_changed_at")).toBe(false);
-  });
-
-  test("null error (no failure) is not a match", () => {
-    expect(isUndefinedColumnError(null, "last_changed_at")).toBe(false);
-  });
-});
+// isUndefinedColumnError moved to lib/supabase/errors.ts 2026-09-02 (see __tests__/supabase/errors.test.ts) -- it stopped being specific to this file the moment a second, unrelated domain needed the identical check.

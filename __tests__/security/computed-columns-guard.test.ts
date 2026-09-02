@@ -166,3 +166,43 @@ describe("the migration's header records its real applied status, not a stale on
     expect(MIGRATION).toContain("Requires migration 0062");
   });
 });
+
+describe("opportunity_matches_guard_computed_columns (extended by migration 0086)", () => {
+  // Same reasoning as the 0063 tests above (no live Postgres in this environment) --
+  // pins 0086's own re-declared CREATE OR REPLACE FUNCTION, which restates the full
+  // protected-column list rather than only the newly added one (see that migration's
+  // own header comment for why a bare recreation would risk silently narrowing what's
+  // guarded if this file were ever read in isolation from 0063).
+  const MIGRATION_0086 = readFileSync(
+    join(import.meta.dirname, "..", "..", "supabase", "migrations", "0086_opportunity_match_confidence.sql"),
+    "utf8"
+  );
+
+  function body0086(fnName: string, nextMarker: string): string {
+    const start = MIGRATION_0086.indexOf(`function public.${fnName}`);
+    const end = MIGRATION_0086.indexOf(nextMarker, start);
+    expect(start, `function public.${fnName} not found in 0086`).toBeGreaterThanOrEqual(0);
+    expect(end, `end marker "${nextMarker}" not found after public.${fnName} in 0086`).toBeGreaterThan(start);
+    return MIGRATION_0086.slice(start, end);
+  }
+
+  test("re-declares the guard to reset match_confidence alongside every pre-existing computed column", () => {
+    const guarded = body0086("opportunity_matches_guard_computed_columns", "drop trigger if exists opportunity_matches_00_guard_computed_columns");
+    for (const col of ["eligible", "eligibility_notes", "relevance_score", "profile_need_score", "match_score", "effort_estimate", "reason_codes", "calculated_at", "match_confidence"]) {
+      expect(guarded, `expected ${col} to be reset`).toContain(`new.${col} := old.${col};`);
+    }
+  });
+
+  test("the trigger's OF clause names match_confidence, not just the pre-existing columns", () => {
+    const flat0086 = MIGRATION_0086.replace(/\s+/g, " ");
+    expect(flat0086).toContain(
+      "before update of eligible, eligibility_notes, relevance_score, profile_need_score, match_score, effort_estimate, reason_codes, calculated_at, match_confidence on public.opportunity_matches"
+    );
+  });
+
+  test("match_confidence is constrained to the five real EvidenceState values or null", () => {
+    for (const state of ["not_assessed", "limited_evidence", "emerging", "developing", "strong"]) {
+      expect(MIGRATION_0086, `expected the check constraint to name ${state}`).toContain(state);
+    }
+  });
+});

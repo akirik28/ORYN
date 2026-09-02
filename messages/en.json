@@ -988,8 +988,6 @@
       "fit": "Fit",
       "selectivity": "Selectivity",
       "urgency": "Urgency",
-      "closesToday": "Closes today",
-      "daysLeft": "{days} days left",
       "deadlineLabel": "Deadline:",
       "financialAidAvailable": "Financial aid available",
       "financialAidAvailableSuffix": " · Financial aid available",

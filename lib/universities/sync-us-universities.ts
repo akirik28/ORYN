@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { collegeScorecardProvider } from "@/lib/providers/college-scorecard";
+import { isUndefinedColumnError } from "@/lib/supabase/errors";
 
 export interface SyncResult {
   schoolName: string;
@@ -19,19 +20,6 @@ function escapeLikePattern(value: string): string {
 
 function normalizeUrl(url: string): string {
   return /^https?:\/\//.test(url) ? url : `https://${url}`;
-}
-
-/**
- * migration 0080 added university_statistics.last_changed_at, but a written migration isn't
- * guaranteed applied everywhere this code runs (lib/plan/persist.ts's own note on
- * carried_forward/migration 0077 is the canonical statement of that rule for this codebase).
- * Confirmed live 2026-09-02: universities.last_changed_at already exists (migration 0078),
- * university_statistics.last_changed_at does not yet. Postgres validates a statement's target
- * columns before touching any row, so retrying the identical write with the column omitted is
- * safe -- nothing partial can have landed from the first attempt.
- */
-export function isUndefinedColumnError(error: { code?: string; message?: string } | null, columnName: string): boolean {
-  return error?.code === "42703" && !!error.message?.includes(columnName);
 }
 
 /** The fields this sync actually writes to `universities` (see universityPayload below) —

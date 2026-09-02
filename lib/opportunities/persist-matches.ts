@@ -9,6 +9,9 @@ import { getProfileScores } from "@/lib/security/dal";
 import { computeOpportunityMatch, computeAvoidSignals, isNearStudent } from "./matching";
 import type { StudentMatchProfile, OpportunityForMatching, DismissedOpportunitySignal } from "./matching";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
+import { evidenceStateFor, type EvidenceState } from "@/lib/scoring/signal";
+import { isUndefinedColumnError } from "@/lib/supabase/errors";
+import type { ProfileDimension } from "@/types/database";
 import { filterActionableOpportunities } from "./lifecycle";
 import { createNotification } from "@/lib/notifications/create";
 import { DEFAULT_LOCALE, toLocale, type Locale } from "@/lib/i18n/config";
@@ -151,6 +154,21 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
     .slice(0, 3)
     .map((g) => g.dimension);
 
+  // Phase 12's "confidence" dimension (spec's 7th, alongside relevance/profile-need):
+  // how confidently grounded is a "this addresses your gap" claim, given how much Oryn
+  // actually knows about the specific dimension it names. Built from the SAME
+  // profile_scores rows weakestDimensions above already reads -- one lookup, reused for
+  // every opportunity below, not a per-row refetch. evidenceStateFor is
+  // lib/scoring/signal.ts's own function, imported directly rather than reimplemented,
+  // per CEO's explicit instruction not to invent a second confidence vocabulary next to
+  // the one that already governs how the dashboard talks about evidence depth.
+  const evidenceStateByDimension = new Map<ProfileDimension, EvidenceState>(
+    (scoresRes.data ?? []).map((row) => [
+      row.dimension,
+      evidenceStateFor(row.score, row.confidence, Array.isArray(row.reason_codes) && row.reason_codes.length > 0),
+    ])
+  );
+
   const baseStudentProfile: StudentMatchProfile = {
     age,
     country: profileRes.data?.country ?? null,
@@ -218,6 +236,7 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
       locationMode: opportunity.location_mode,
     };
     const match = computeOpportunityMatch(studentProfile, forMatching, savedStatusByOpportunityId.get(opportunity.id) ?? null, locale);
+    const matchConfidence = resolveMatchConfidence(match.matchedGapDimensions, evidenceStateByDimension);
 
     return {
       user_id: userId,
@@ -228,14 +247,72 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
       profile_need_score: match.profileNeedScore,
       match_score: match.matchScore,
       effort_estimate: null,
+      match_confidence: matchConfidence,
       reason_codes: buildReasonCodes(match, studentProfile, forMatching),
       calculated_at: new Date().toISOString(),
     };
   });
 
-  await admin.from("opportunity_matches").upsert(rows, { onConflict: "user_id,opportunity_id" });
+  // Found live 2026-09-02, before this write ever reached a student: this call had no
+  // error/data destructure at all -- the exact unchecked-write shape
+  // lib/universities/sync-us-universities.ts's university_statistics upsert had (see that
+  // file's own history). Every row here always includes match_confidence now, so until
+  // migration 0086 is applied on a given environment, this upsert would otherwise reject
+  // OUTRIGHT (42703, undefined_column) on its very first call -- not a degraded partial
+  // write, a complete failure of opportunity matching for every user, on every page render
+  // that touches opportunities, with nothing anywhere reporting it. Degrade-and-retry
+  // without match_confidence when that specific column is the reason, same pattern and same
+  // reasoning as that file's own fix: the match itself (eligible, scores, reasons) is the
+  // thing that must never silently fail to persist; losing only the confidence value until
+  // the migration lands is the acceptable, honest degradation.
+  const { error: upsertError } = await admin.from("opportunity_matches").upsert(rows, { onConflict: "user_id,opportunity_id" });
+  if (upsertError && isUndefinedColumnError(upsertError, "match_confidence")) {
+    console.warn("[opportunity-matches] match_confidence column not yet live (migration 0086 unapplied) -- retrying without it", { userId });
+    const rowsWithoutConfidence = rows.map((row) => ({
+      user_id: row.user_id,
+      opportunity_id: row.opportunity_id,
+      eligible: row.eligible,
+      eligibility_notes: row.eligibility_notes,
+      relevance_score: row.relevance_score,
+      profile_need_score: row.profile_need_score,
+      match_score: row.match_score,
+      effort_estimate: row.effort_estimate,
+      reason_codes: row.reason_codes,
+      calculated_at: row.calculated_at,
+    }));
+    const { error: retryError } = await admin.from("opportunity_matches").upsert(rowsWithoutConfidence, { onConflict: "user_id,opportunity_id" });
+    if (retryError) {
+      console.error("[opportunity-matches] upsert failed even without match_confidence", { userId, error: retryError.message });
+    }
+  } else if (upsertError) {
+    console.error("[opportunity-matches] upsert failed", { userId, error: upsertError.message });
+  }
   await notifyNewlyEligibleMatches(supabase, userId, profileRes.data?.preferred_language, rows, opportunities, previousMatchesRes.data);
   return { refreshed: true };
+}
+
+/**
+ * Phase 12's "confidence" dimension: how confidently grounded a "this addresses your
+ * gap" claim is, given how much Oryn actually knows about the specific dimension(s) it
+ * names. Confidence only qualifies a claim Oryn is actually making -- a relevance/
+ * interest/proximity-only match isn't asserting anything about the student's own
+ * evidence depth, so it gets no confidence value at all (null) rather than a borrowed
+ * one. When a category maps to more than one of the student's own top-3 weakest
+ * dimensions, the more cautious (lower-ranked) EvidenceState wins -- not_assessed is
+ * the least confident of the five, strong the most, matching evidenceStateFor's own
+ * documented ordering (lib/scoring/signal.ts) -- so a well-evidenced dimension never
+ * silently papers over a thin one in the same match.
+ */
+const EVIDENCE_STATE_RANK: Record<EvidenceState, number> = { not_assessed: 0, limited_evidence: 1, emerging: 2, developing: 3, strong: 4 };
+
+export function resolveMatchConfidence(
+  matchedGapDimensions: ProfileDimension[],
+  evidenceStateByDimension: Map<ProfileDimension, EvidenceState>
+): EvidenceState | null {
+  if (matchedGapDimensions.length === 0) return null;
+  return matchedGapDimensions
+    .map((dimension) => evidenceStateByDimension.get(dimension) ?? "not_assessed")
+    .reduce((weakest, state) => (EVIDENCE_STATE_RANK[state] < EVIDENCE_STATE_RANK[weakest] ? state : weakest));
 }
 
 /**
