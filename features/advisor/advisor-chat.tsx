@@ -131,6 +131,14 @@ export function AdvisorChat({
   const [upgradePromptMessageId, setUpgradePromptMessageId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const localIdCounter = useRef(0);
+  // maybeShowUpgradePrompt reads this instead of the `input` state variable directly: it
+  // runs inside submit()'s async continuation, a closure fixed to the render where the user
+  // clicked Send -- `input` there is permanently whatever was in the box at that moment (the
+  // message they just sent, never ""), since setInput("") only schedules a future render and
+  // cannot change an already-captured closure's own binding. A ref has no such snapshot; it
+  // always holds whatever was most recently written to it, so it reflects the composer's
+  // real state at the moment the reply actually arrives, not the moment it was requested.
+  const inputRef = useRef("");
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -153,7 +161,7 @@ export function AdvisorChat({
   function maybeShowUpgradePrompt(messageId: string, degraded: boolean | undefined) {
     if (hasShownUpgradePromptThisSession()) return;
     const shouldShow = shouldShowUpgradePrompt(
-      { tier, degraded: degraded ?? false, isStreaming: false, hasUnsentComposerText: input.trim().length > 0, alreadyShownThisSession: false },
+      { tier, degraded: degraded ?? false, isStreaming: false, hasUnsentComposerText: inputRef.current.trim().length > 0, alreadyShownThisSession: false },
       upgradePromptDismissalState,
     );
     if (!shouldShow) return;
@@ -189,6 +197,7 @@ export function AdvisorChat({
     const thinkingMessage: LocalMessage = { id: "thinking", role: "assistant", content: "", pending: true };
     setMessages((prev) => [...prev, userMessage, thinkingMessage]);
     setInput("");
+    inputRef.current = "";
 
     startTransition(async () => {
       const result = await sendAdvisorMessage(convId, content);
@@ -369,7 +378,10 @@ export function AdvisorChat({
       >
         <Textarea
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => {
+            setInput(e.target.value);
+            inputRef.current = e.target.value;
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
