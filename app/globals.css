@@ -819,6 +819,19 @@
   }
 }
 
+/* Sidebar's "Upgrade your plan" CTA (features/app-shell/sidebar.tsx) — always rendered in
+   the DOM, hidden here rather than gated by a prop. Founder, verbatim: "zaten premiumken
+   yandan upgrade şeyi olmamalı" (when already on premium, the upgrade thing shouldn't be in
+   the sidebar) — seen after an earlier version gated visibility on the REAL database tier,
+   which kept showing the CTA while previewing Ultra. Hiding it off the same
+   [data-tier="ultra"] attribute every other rule here reads makes that specific
+   disagreement structurally impossible going forward: there is no second "which tier"
+   question anywhere in this file for the CTA to answer differently from the sidebar's own
+   background/text. */
+[data-tier="ultra"] .tier-upgrade-cta {
+  display: none;
+}
+
 /* Small reusable pieces built on the tokens above — gradient text/fill and a bounded
    small-element glow, matching what the prototype's own score/badge/chip use. Deliberately
    NOT a blur/halo utility; nothing in this file offers one.

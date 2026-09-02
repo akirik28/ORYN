@@ -147,13 +147,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         budgetDegraded={budgetDegraded}
       />
 
-      <Sidebar
-        displayName={displayName}
-        email={session.email}
-        signal={profileSignal}
-        isAdmin={profile.is_admin}
-        showUpgradeCta={realTier === "standard"}
-      />
+      <Sidebar displayName={displayName} email={session.email} signal={profileSignal} isAdmin={profile.is_admin} />
 
       <div className="relative flex min-w-0 flex-1 flex-col">
         {/* Hoisted here rather than wired into each individual page: position:fixed means
