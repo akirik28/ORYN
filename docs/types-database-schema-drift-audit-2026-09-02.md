@@ -80,3 +80,57 @@ anywhere else in the codebase.
 Only the 66 tables with `Table<...>` entries were diffed at the column level. Views/functions
 outside that mapping, RLS policies, and grants are out of scope for this pass — it answers
 "does the type match the columns," nothing about read/write permission on top of them.
+
+---
+
+## Update, same night: the 20 untyped tables, resolved
+
+CEO's decision on the adjacent finding above: type the tables actively queried through the
+typed client, leave the rest loose and **documented as a decision, not silent**.
+
+**Second near-miss in this same audit, worth recording with the same honesty as the first:**
+`public_profiles` was reported above as one of the 20 untyped tables. It wasn't. It has had a
+full, correct type — `PublicProfileRow`, 9 fields, matching live exactly — since before this
+audit started, wired into `Database["public"]["Tables"]` as `{ Row: Identity<PublicProfileRow>;
+Relationships: [] }` rather than through this file's own `Table<Row, Insert, Update>` helper.
+The extraction script only pattern-matched `Table<...>` type references, so it never saw this
+one entry using the alternate shape — confirmed by grepping for the alternate pattern
+directly afterward: exactly one match, `public_profiles` itself, nothing else hiding behind
+it. Caught before typing a duplicate `PublicProfile` interface alongside the real
+`PublicProfileRow` — would have shipped two names for one shape and no way to tell which one
+was current. Same lesson as the `extends` near-miss: verify what a tool didn't find before
+building on top of "not found."
+
+**Four tables actually typed this pass** (`EntityExternalId`, `EntityRelationship` — migration
+`0038`; `RequirementResearchQueue`, `DeadlineResearchQueue` — migration `0051`), each checked
+against that migration's literal `CREATE TABLE`/`CHECK` constraints rather than assumed from
+column names — two sibling tables in each pair turned out to have **different** allowed
+values for a same-named column (`entity_external_ids.verification_state` allows `inactive`,
+`entity_relationships.verification_state` doesn't; `requirement_research_queue.outcome`
+allows `superseded`, `deadline_research_queue.outcome` doesn't), so each got its own literal
+union rather than a shared type that would have silently over-permitted one side. Also
+checked real usage (`grep` across `lib`/`app`/`scripts`) before deciding Insert/Update shapes:
+all four are insert-only in this codebase today (research/entity ingestion scripts via the
+admin client, RLS disabled table-wide on the two queue tables) — `Update` is `never` on all
+four, not guessed.
+
+Typecheck was clean on the first run after wiring all four into the `Database` mapping — no
+existing call site needed a change, which is itself a real (if quiet) confirmation that the
+types match what the code already assumed.
+
+**The other fifteen — left untyped, and this paragraph is the record that it was decided, not
+missed:** `canonical_entity_merges`, `canonical_field_policies`,
+`current_university_student_counts`, `entity_evidence`, `entity_locations`,
+`entity_record_links`, `entity_verification_queue`, `global_university_discovery_queue`,
+`qs2027_import_staging`, `requirement_source_conflicts`, `school_credentials`,
+`school_outcome_metrics`, `school_profiles`, `school_university_outcomes`,
+`university_profile_verification_queue`. Every one confirmed **zero** references through
+`.from("<table>")` anywhere in `app`/`lib`/`features`/`scripts` as of this audit — untyped
+because nothing reads or writes it through the typed client, not an oversight. If that
+changes (a future feature starts querying one of these), the type should be added at that
+point, the same way this pass added the four that had already crossed that line.
+
+**Standing constraint, reaffirmed**: a type carrying a column from a migration that's
+genuinely still unapplied is correct, not drift (see `carried_forward`/`post_id` above) — and
+if typing surfaces a live column no migration file explains at all, that's oryn-bd's sweep,
+not this one's to absorb. No such column turned up while typing these four tables.
