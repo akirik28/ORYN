@@ -4,11 +4,19 @@
 read but not touched — oryn-f5's territory tonight. Every claim below is grounded in code
 read for this pass, not carried over from memory or inferred from a filename.
 
-**The premise, checked first:** grepped `plan_tier`/`ultra` (case-insensitive) across `app`,
-`features`, `lib`, `components`, `types`, `supabase` on `main` myself before writing anything
-— zero matches, confirming the CEO's own count. **There is no tier concept in the shipped
-product today.** Everything below is an inventory of what a tier *could* turn on, not a
-description of anything that currently branches on one.
+**The premise, checked first, then re-checked after it changed mid-investigation:** grepped
+`plan_tier`/`ultra` (case-insensitive) across `app`, `features`, `lib`, `components`, `types`,
+`supabase` on `main` at the start of this pass — zero matches, confirming the CEO's own count.
+**`lib/tier/plan-tier.ts` and migration `0089_profiles_plan_tier.sql` landed on `main` while
+this doc was being written** — caught by the routine pre-push overlap check, read rather than
+skipped past. Read both directly: `plan_tier` is exactly what its own migration header calls
+it — *"a label, not a subscription system: no payment, no upgrade flow, no billing table, per
+CEO's own explicit scope for this pass ('skin only')."* `resolvePlanTier()` is read-only,
+defaults to `"standard"`, and nothing writes the column anywhere in the codebase yet. **This
+changes nothing below.** It's the visual-skin flag oryn-4e's foundation needs, not a
+capability gate — the question this doc actually answers (what would a tier *buy*, in AI
+quota/limit/model terms) remains completely unaddressed by any code that exists today, which
+is exactly why this research was asked for.
 
 ## 1. What is metered today — the full census, not just the quota
 
@@ -108,7 +116,14 @@ say it buys, and nothing more:**
   plumbing beyond adding a tier-keyed number.
 - Faster response quality under load — raising the per-user spend ceiling before the model
   degrades to Haiku is a real, sellable difference, though it needs the small code change in
-  §2, not zero code.
+  §2, not zero code. **Worth being precise about which of the two Sonnet-vs-Haiku levers a
+  student actually hits first, found in `lib/ai/usage-state.ts`'s own comment while checking
+  what landed mid-pass:** the $0.50 spend target degrades a student to Haiku at roughly
+  **19 messages** at today's real per-message cost — nowhere near the 300-message quota. In
+  practice, for a normal user, **the spend ceiling is the binding constraint, not the quota**
+  — the 300 number is generous headroom that mostly doesn't bind, while the model-quality
+  degrade bites over an order of magnitude earlier. That makes the spend-ceiling raise the
+  more *noticeable* of the two real levers, not just the second one on a list.
 
 **What it would not honestly buy without more work than "flip a tier flag":** more of
 `weekly_plan`/`essay_story_bank`/`cv_extraction`/`achievement_refinement`/`research_generator`
