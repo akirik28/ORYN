@@ -882,6 +882,7 @@
       "costOfAttendance": "Öğrenim maliyeti",
       "costPerYear": "{value} / yıl",
       "admissionRate": "Kabul oranı",
+      "statisticsSource": "Veri kaynağı",
       "applicationSystem": "Başvuru sistemi",
       "researchStrengths": "Araştırma güçlü yönleri",
       "pageTitle": "Üniversite Karşılaştırma"

@@ -882,6 +882,7 @@
       "costOfAttendance": "Cost of attendance",
       "costPerYear": "{value} / year",
       "admissionRate": "Admission rate",
+      "statisticsSource": "Data source",
       "applicationSystem": "Application system",
       "researchStrengths": "Research strengths",
       "pageTitle": "Compare universities"
