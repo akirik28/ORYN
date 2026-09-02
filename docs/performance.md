@@ -48,6 +48,98 @@ needs to be able to tell whether something regressed.
 Five areas now (`/universities/[id]` added as its own section) — the original four
 in the order that first assignment ranked them, plus the new one.
 
+> ### Fixed 2026-09-02: `getProfileScores(userId)`, the top recommendation, built and
+> ### wired — with a measured after-number, not an assumed one, and one real
+> ### methodology surprise along the way.
+>
+> **Built** `lib/security/dal.ts`'s `getProfileScores(userId)`, `cache()`-wrapped,
+> mirroring `getCurrentProfile()`'s exact shape (constructs its own `createClient()`
+> internally rather than accepting one as a parameter — load-bearing, not style, per
+> this doc's own "What actually memoizing this needs" above). Wired into all seven
+> call sites that co-occur with each other in a real request: the layout (every page),
+> `app/(app)/dashboard/page.tsx`, `app/(app)/advisor/page.tsx`,
+> `app/(app)/universities/[id]/page.tsx`, `lib/counselor/state.ts`'s
+> `getCounselorState` (feeds both dashboard and advisor — a duplicate this document
+> hadn't separately named before this pass), `lib/opportunities/persist-matches.ts`'s
+> `refreshOpportunityMatches` (called twice per dashboard render on its own, already
+> documented above), and `lib/admissions/persist.ts`'s `refreshAdmissionOutlook`. The
+> last two keep a conditional fallback to a direct query when called with an explicit
+> admin/background-job client (`refreshAdmissionOutlook` from `scanStaleOutlooks`,
+> `getCounselorState` from the weekly-plan path) — that path has no request/cookies
+> for the memoized helper's own `createClient()` to read, so it isn't a fit there, and
+> forcing it through anyway would have been the same category of "helper that looks
+> like a fix and changes nothing" this doc already warned against, just via a
+> different mechanism than a mismatched `supabase` argument.
+>
+> **Not touched, on purpose**: `app/(app)/profile/page.tsx`, `lib/benchmarking/*`, and
+> `lib/scoring/monthly-review.ts` also read `profile_scores`, but none were part of the
+> chains this document measured and reported duplication for — `benchmarking/cohort.ts`
+> in particular reads *many* students' scores at once via the admin client, a
+> structurally different query this helper isn't shaped for at all. Extending the fix
+> there is a real, obvious follow-up, not a gap in this pass — flagged rather than
+> quietly done, per the instruction not to manufacture more work than what was measured.
+>
+> **The before number, precisely**: `profile_scores` had **three** independent reads
+> on a single `/dashboard` or `/advisor` render (the layout's, the page's own, and
+> `getCounselorState`'s), plus **two more** from `refreshOpportunityMatches` firing
+> twice in that same render (direct + inside `getCounselorState`) — five logical calls
+> to fetch identical rows, not the two or three this document had separately named
+> before tracing the fix precisely. `/universities/[id]` had three (layout, the page's
+> own, `refreshAdmissionOutlook`'s).
+>
+> **The after number — proved live, not assumed from reading the code.** Two things
+> made "just trust `cache()`" not good enough here: this codebase had never actually
+> tested that `cache()` dedupes (no existing test for `getCurrentProfile()`/
+> `verifySession()`'s own dedup either — its correctness has always rested on trusting
+> React's documented behavior plus production use, not a regression test), and a
+> direct probe proved that trust can't extend to every context blindly:
+>
+> - **A bare Vitest call of a `cache()`-wrapped function, called twice with the same
+>   argument, does NOT dedupe** — 2 real calls, not 1. No active Next.js
+>   request-render scope exists outside the real server runtime for `cache()` to
+>   attach to. Ruled out unit tests as a way to verify this fix at all.
+> - **A Next.js Route Handler does NOT dedupe either** — three calls to
+>   `getProfileScores(sameUserId)` from inside one `GET` handler fired **three** real
+>   queries, not one. Route Handlers are plain functions Next.js invokes directly;
+>   they are not part of the React Server Component render tree `cache()` actually
+>   scopes itself to. This is a genuinely new, generalizable finding, not specific to
+>   this fix — any future code assuming a `cache()`-wrapped helper dedupes inside an
+>   `/api/**/route.ts` handler (including every `/api/jobs/*` cron route) is wrong to
+>   assume that, and should verify the same way this entry did.
+> - **A real Server Component page render is where it actually works.** A temporary
+>   dev-only page (`/design-preview/verify-cache-dedup`, removed after this
+>   measurement — not part of this commit) called `getProfileScores(sameUserId)`
+>   three times in one render, instrumented with a real invocation counter on the
+>   underlying query: **3 logical calls → 1 real query fired**, confirmed on three
+>   independent requests (curl twice, a real browser render once), with a same-render
+>   sanity check that a *different* `userId` right after correctly did **not** share
+>   that cache entry (1 logical call → 1 real query) — ruling out "the counter is
+>   stuck at 1" as an alternative explanation for the first result.
+>
+> **So: five duplicate reads collapse to one, confirmed by direct measurement of the
+> actual mechanism this fix depends on, from the same kind of entry point
+> (`layout.tsx`/`page.tsx`) every real call site actually is** — not a Route Handler,
+> not a bare test, the one context that was actually load-bearing.
+>
+> **Does this close `/universities/[id]`'s remaining duplication? No — it closes one
+> of six.** `profile_scores` was one of the six duplicate-read categories section 5
+> names for that page. The other five — `universities` fetched 3×, `loadSupersessionMap`
+> 2×, `university_statistics` 2×, `university_requirements` 2×, and raw `profiles`
+> read outside `getCurrentProfile()` a second time inside `refreshAdmissionOutlook` —
+> are untouched by this fix, since none of them are `profile_scores`. Section 5's
+> `/universities/[id]` still has its own real duplication and, per this session's
+> earlier judgment, is a second package if it's worth pursuing — not something this
+> pass closed "for free."
+>
+> **Verification**: all 4 gates green (242 files / 3,416 tests). One existing test
+> (`__tests__/security/computed-writes-use-admin-client.test.ts`) needed updating —
+> it pinned the literal source text of the old inline `profile_scores` query in
+> `persist-matches.ts` as part of a real security regression check (reads must stay
+> RLS-scoped, writes must use the admin client); updated the assertion to check for
+> the new shared-helper call instead of the old inline query, preserving the same
+> underlying property it was protecting (`getProfileScores` also only ever uses
+> `createClient()`, never an admin client).
+
 ---
 
 ## 1. Client components — which ones need to be
@@ -378,25 +470,27 @@ round-tripping.
 
 ## Recommendations (not applied — for visibility, ranked by what they'd buy)
 
-1. **Memoize `createClient()` with `cache()` — the single enabling step, now
-   justified by two pages' worth of evidence, not one.** Same one-line pattern
-   `lib/security/dal.ts` already proves for `verifySession`/`getCurrentProfile`.
-   This alone fixes nothing by itself (see "What actually memoizing this
-   needs" in section 2 — a `cache()` wrapper around a function that still
-   takes a fresh `supabase` argument each time is a no-op dressed as a fix),
-   but it's the precondition every other fix below needs, and it's low-risk:
-   `createClient()`'s own body has no side effects beyond reading cookies and
-   constructing a client object.
-2. **Add a `getProfileScores(userId)` memoized helper, mirroring
-   `getCurrentProfile()`'s existing shape, and route the layout's new read
-   through it.** `profile_scores` is now the single most-duplicated table in
-   the product — read by the layout (every page), the dashboard, and
-   `refreshAdmissionOutlook` — and it's exactly the same shape
-   `getCurrentProfile()` already solved for `profiles`. This is the
-   highest-leverage single fix available: unlike `assembleScoringFacts` or
-   `getUpcomingDeadlines`, every one of these call sites wants the *same*
-   query (same columns, same filter), so memoizing it needs no call-site
-   reconciliation, just the wrapper plus item 1 above.
+1. ~~Memoize `createClient()` with `cache()` — the single enabling step.~~
+   **Done differently, 2026-09-02 — turned out not to be needed as its own
+   step.** `getProfileScores` (item 2) achieves the same effect the way
+   `getCurrentProfile()` always has: it's the *outer* function that's
+   `cache()`-wrapped, and it constructs its own `createClient()` internally
+   — since `cache()` memoizes the whole call including everything inside it,
+   an unmemoized `createClient()` never matters as long as nothing calls it
+   from *outside* an already-memoized wrapper. This was option 2 from this
+   item's own original text ("drop `supabase` from the memoized functions'
+   own signatures"), not option 1 (a standalone memoized `createClient()`) —
+   the standalone version was never built and isn't needed for this fix to
+   work; it would only matter for a *different* function that wanted to
+   accept a client as a parameter and still dedupe, which none of the
+   `profile_scores` call sites needed to.
+2. ~~Add a `getProfileScores(userId)` memoized helper...~~ **Built and
+   wired, 2026-09-02 — see the dated entry above this list for the full
+   before/after, including the proof that it actually dedupes (and where it
+   doesn't).** Five duplicate `profile_scores` reads per dashboard/advisor
+   render collapse to one, confirmed live. `/universities/[id]`'s other five
+   duplicate-read categories are untouched — this closed one of six, not the
+   whole page.
 3. **Reconcile section 2's `getUpcomingDeadlines` (limits 4/10/5) and thread
    the page's own `supabase` client into `refreshAdmissionOutlook`/
    `refreshRequirementEvaluations` on `/universities/[id]`** rather than

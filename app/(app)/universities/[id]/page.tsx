@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { MapPin, Users, DollarSign, GraduationCap, ExternalLink, Trophy, Target, TrendingUp } from "lucide-react";
 import { subjectLabel } from "@/lib/programs/subject-labels";
-import { requireUser, getCurrentProfile } from "@/lib/security/dal";
+import { requireUser, getCurrentProfile, getProfileScores } from "@/lib/security/dal";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
@@ -118,7 +118,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   const { data: university } = await supabase.from("universities").select("*").eq("id", id).single();
   if (!university) notFound();
 
-  const [programsRes, requirementsRes, deadlinesRes, statsRes, sourcesRes, targetRes, scoresRes, rankingsRes, metricsRes] = await Promise.all([
+  const [programsRes, requirementsRes, deadlinesRes, statsRes, sourcesRes, targetRes, scores, rankingsRes, metricsRes] = await Promise.all([
     supabase.from("university_programs").select("*").eq("university_id", id).eq("verification_state", "verified_current"),
     supabase.from("university_requirements").select("*").eq("university_id", id),
     supabase
@@ -130,7 +130,10 @@ export default async function UniversityDetailPage({ params }: { params: Promise
     supabase.from("university_statistics").select("*").eq("university_id", id).order("stat_year", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("university_sources").select("*").eq("university_id", id).order("retrieved_at", { ascending: false }),
     supabase.from("target_universities").select("*").eq("university_id", id).eq("user_id", session.userId!).maybeSingle(),
-    supabase.from("profile_scores").select("dimension, score, confidence").eq("user_id", session.userId!),
+    // Shared, cache()'d — docs/performance.md §2/§5. Also closes one of that section's own
+    // findings: refreshAdmissionOutlook below used to independently re-fetch this same
+    // table for this same student; now it shares this call too (see that function).
+    getProfileScores(session.userId!),
     supabase
       .from("university_rankings")
       .select("ranking_provider, ranking_edition, rank_display, source_url, verified_at, data_quality_flag")
@@ -218,7 +221,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
     .filter((d) => d.recurrence === "recurring_annual_undated" && d.recurrence_month != null && d.recurrence_day != null)
     .sort((a, b) => a.recurrence_month! - b.recurrence_month! || a.recurrence_day! - b.recurrence_day!);
 
-  const dimensionScores: DimensionScoreInput[] = (scoresRes.data ?? []).map((s) => ({
+  const dimensionScores: DimensionScoreInput[] = scores.map((s) => ({
     dimension: s.dimension,
     score: s.score,
     confidence: s.confidence,

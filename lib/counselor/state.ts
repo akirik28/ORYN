@@ -1,8 +1,9 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, Opportunity, OpportunityMatch } from "@/types/database";
+import type { Database, Opportunity, OpportunityMatch, ProfileScore } from "@/types/database";
 import { createClient } from "@/lib/supabase/server";
+import { getProfileScores } from "@/lib/security/dal";
 import { buildStudentAdvisorContext, type StudentAdvisorContext } from "@/lib/ai/student-context";
 import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
 import { getCompletenessChecklist } from "@/lib/scoring/completeness";
@@ -95,11 +96,19 @@ export async function getCounselorState(userId: string, locale: Locale = DEFAULT
   // Recompute-on-read, same convention as the Opportunities/Dashboard pages already use.
   await refreshOpportunityMatches(userId, locale);
 
+  // Shared, cache()'d getProfileScores(userId) (docs/performance.md §2) only when this call
+  // is request-scoped (no explicit supabaseClient) — the scheduled weekly-plan job
+  // (lib/ai/weekly-plan.ts) passes its own client with no request/cookies behind it, so it
+  // keeps its own direct query, unchanged.
+  const scoresPromise: PromiseLike<{ data: ProfileScore[] | null }> = supabaseClient
+    ? supabase.from("profile_scores").select("*").eq("user_id", userId)
+    : getProfileScores(userId).then((data) => ({ data }));
+
   const [advisor, facts, profileRes, scoresRes, skillsRes, featuredRes, contactRes, matchesRes] = await Promise.all([
     buildStudentAdvisorContext(userId),
     assembleScoringFacts(supabase, userId),
     supabase.from("profiles").select("country, school_name, graduation_year, curriculum, headline, about").eq("id", userId).single(),
-    supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId),
+    scoresPromise,
     supabase.from("skills").select("id", { count: "exact", head: true }).eq("user_id", userId),
     supabase.from("featured_items").select("id", { count: "exact", head: true }).eq("user_id", userId),
     // Legitimate completeness-only use of contact_info, same as lib/scoring/persist.ts's

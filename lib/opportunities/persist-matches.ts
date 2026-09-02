@@ -3,6 +3,7 @@ import "server-only";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { tryCreateAdminClient } from "@/lib/supabase/admin";
+import { getProfileScores } from "@/lib/security/dal";
 import { computeOpportunityMatch, isNearStudent } from "./matching";
 import type { StudentMatchProfile, OpportunityForMatching } from "./matching";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
@@ -75,7 +76,11 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
     // here to its fallback too -- confirmed live against this environment's DB. Same fix as
     // 08ddf0f applied to lib/ai/student-context.ts for the identical failure mode.
     supabase.from("profiles").select("*").eq("id", userId).single(),
-    supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId),
+    // Shared, cache()'d — docs/performance.md §2. Every real caller of this function (the
+    // opportunities pages, the dashboard, getCounselorState) runs inside a real user
+    // request, so unlike refreshAdmissionOutlook/getCounselorState there's no
+    // background-job client to special-case here.
+    getProfileScores(userId).then((data) => ({ data })),
     supabase.from("student_interests").select("label").eq("user_id", userId),
     // select("*") for the same reason as above -- eligible_citizenships is migration 0047.
     supabase

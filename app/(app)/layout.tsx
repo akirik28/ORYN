@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { requireProfile, verifySession } from "@/lib/security/dal";
+import { requireProfile, verifySession, getProfileScores } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/features/app-shell/sidebar";
 import { Topbar } from "@/features/app-shell/topbar";
@@ -49,9 +49,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const supabase = await createClient();
   // The account menu used to render `profiles.profile_strength_score` straight from the
   // row above. It now renders a qualitative read instead, which needs the per-dimension
-  // rows — at most nine, indexed on user_id, fetched alongside the notifications that were
-  // already being loaded here.
-  const [notificationsRes, unreadRes, scoresRes] = await Promise.all([
+  // rows — at most nine, indexed on user_id. Routed through the shared, cache()'d
+  // getProfileScores(userId) (docs/performance.md §2) rather than a raw query here: this
+  // layout wraps every authenticated page, so whichever page also needs profile_scores
+  // (dashboard, advisor, universities/[id], and the counselor/opportunity-matching chain
+  // underneath them) now shares this one read instead of each re-fetching it. Still
+  // launched in the same Promise.all as the notification queries — cache() memoizes the
+  // *result*, not the timing, so running it here in parallel still costs nothing extra
+  // on the first call each request, and is what makes this the read that populates the
+  // cache before any page-level code runs.
+  const [notificationsRes, unreadRes, scores] = await Promise.all([
     supabase
       .from("notifications")
       .select("*")
@@ -67,14 +74,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       .select("id", { count: "exact", head: true })
       .eq("user_id", session.userId!)
       .is("read_at", null),
-    supabase
-      .from("profile_scores")
-      .select("dimension, score, confidence, reason_codes")
-      .eq("user_id", session.userId!),
+    getProfileScores(session.userId!),
   ]);
   const notifications = notificationsRes.data;
   const unreadCount = unreadRes.count ?? 0;
-  const profileSignal = toProfileSignal(scoresRes.data ?? []);
+  const profileSignal = toProfileSignal(scores);
 
   return (
     // Literal source ambient background (App.tsx `App()`'s root container) — the ground

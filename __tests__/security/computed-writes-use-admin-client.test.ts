@@ -80,7 +80,16 @@ describe("lib/opportunities/persist-matches.ts", () => {
 
   test("every read (profiles, profile_scores, student_interests, opportunities, saved_opportunities, opportunity_matches) stays RLS-scoped", () => {
     expect(src).toContain('supabase.from("profiles").select(');
-    expect(src).toContain('supabase.from("profile_scores").select(');
+    // profile_scores moved to the shared getProfileScores(userId) helper 2026-09-02
+    // (docs/performance.md §2's fix) -- still RLS-scoped, just relocated: that helper
+    // (lib/security/dal.ts) constructs its own createClient(), never an admin client. The
+    // assertion below pins that it's the shared helper being called, not an inline query
+    // this file could silently widen to admin later; lib/security/dal.ts's own source is
+    // the actual guarantee, reviewed directly rather than re-pinned per call site.
+    expect(src).toContain('import { getProfileScores } from "@/lib/security/dal";');
+    expect(src).toContain("getProfileScores(userId)");
+    expect(src).not.toContain('supabase.from("profile_scores")');
+    expect(src).not.toContain('admin.from("profile_scores").select(');
     expect(src).toContain('supabase.from("student_interests").select(');
     expect(src).toContain('.from("opportunities")\n      .select(');
     expect(src).toContain('supabase.from("saved_opportunities").select(');
