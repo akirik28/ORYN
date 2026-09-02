@@ -47,7 +47,7 @@ export interface TavilySearchOptions {
 /**
  * Thin wrapper over Tavily's REST API (no SDK — the API is small enough that a typed
  * fetch wrapper is simpler than a dependency). Used for opportunity discovery and
- * fact-checking university requirement pages (Phase 9/11).
+ * fact-checking university requirement pages (AGENTS.md section 9 / Phase 11.2).
  */
 export class TavilySearchProvider {
   private get apiKey(): string | null {

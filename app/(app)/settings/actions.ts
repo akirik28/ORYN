@@ -178,7 +178,7 @@ export async function updateVisibility(isPublic: boolean, lookingFor: string | n
 }
 
 /**
- * Permanently deletes the student's account (Phase 12 minor-safe requirement).
+ * Permanently deletes the student's account (AGENTS.md section 12, minor-safe requirement).
  *
  * Order matters and is the whole design. Storage objects are removed FIRST, while the
  * database rows saying which file paths belonged to this student still exist — reversed,

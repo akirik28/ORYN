@@ -105,7 +105,7 @@ function normalize(raw: z.infer<typeof SchoolResultSchema>): NormalizedSchool {
 
 /**
  * U.S. Department of Education College Scorecard — the primary structured source for
- * U.S. institution data (Phase 7). A general institutional admission rate is never the
+ * U.S. institution data (AGENTS.md section 7). A general institutional admission rate is never the
  * same as an individual student's probability of admission; callers must not conflate
  * the two (see lib/admissions for how outlook is actually computed).
  */

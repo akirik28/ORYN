@@ -4,7 +4,7 @@
  * Spine) — Tavily-only, deterministic, no AI.
  *
  * ANTHROPIC_API_KEY is credit-blocked this session (billing: "insufficient credit balance",
- * not a missing key — see docs/handoffs/claude-a-university-spine.md). AGENTS.md Phase 9's
+ * not a missing key — see docs/handoffs/claude-a-university-spine.md). AGENTS.md section 9's
  * usual search-then-AI-extract workflow for the cost/policy layer isn't available, so this
  * takes the narrower path that needs no model call at all:
  *

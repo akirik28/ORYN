@@ -72,7 +72,7 @@ export const PRIMARY_NAV: NavItem[] = [
  * rows, so no user is affected by the removal).
  *
  * Why hidden: student-to-student messaging is named twice in AGENTS.md as out of scope for V1 —
- * once in Phase 54's "DO NOT BUILD YET" list, and once in Phase 12's minor-safe design section,
+ * once in Phase 54's "DO NOT BUILD YET" list, and once in the minor-safe design section (§12),
  * which matters more. ORYN's users are 14-18. Private messaging between minors carries
  * moderation, reporting and consent obligations that are not addressed yet; `message_reports`
  * exists but its flow has never been exercised.

@@ -1,4 +1,4 @@
--- Private storage buckets. Files are never publicly addressable by default (Phase 11).
+-- Private storage buckets. Files are never publicly addressable by default (AGENTS.md section 11).
 -- Convention: object path is always "{auth.uid()}/{filename}" so a single folder-prefix
 -- policy scopes every read/write to the owner. Signed URLs (created server-side with a
 -- short expiry) are the only way to hand a viewable link to the browser.

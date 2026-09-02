@@ -41,7 +41,7 @@ export default async function DocumentsPage() {
       <PageHeader title={t("title")} description={t("description")} action={<UploadEvidenceDialog items={linkableItems} />} />
 
       {/* Literal source banner (ProfileTools.tsx `DocumentsScreen`) — the same
-          self-reported/evidence-added/verified distinction AGENTS.md Phase 11 requires,
+          self-reported/evidence-added/verified distinction AGENTS.md Phase 21 requires,
           restated here since a student uploading a file is exactly the moment that
           distinction needs to be visible, not just documented elsewhere. */}
       <div className="rounded-xl px-4 py-3 text-sm text-[#6A6A7A]" style={{ background: "rgba(61,53,232,0.06)" }}>

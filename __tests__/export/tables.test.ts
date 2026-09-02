@@ -125,7 +125,7 @@ describe("participant-pair export filters — scoped to the current user only", 
 });
 
 describe("social layer export surface — defined now, wired at switch-on", () => {
-  // AGENTS.md Phase 12 requires data export, so the export shape for posts is decided
+  // AGENTS.md section 12 requires data export, so the export shape for posts is decided
   // here rather than left to whoever switches the feature on. It is deliberately NOT in
   // the two live lists yet: those drive real queries on a route every student can reach,
   // and migration 0058's tables do not exist in any applied migration. This asserts the

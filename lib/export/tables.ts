@@ -208,7 +208,7 @@ export const PROFILE_VIEWS_EXPORT_COLUMNS = ["id", "viewed_on", "created_at"] as
  * Social layer (migration 0058) — DEFINED, DELIBERATELY NOT WIRED INTO THE ROUTE YET.
  * ---------------------------------------------------------------------------
  *
- * AGENTS.md Phase 12 requires data export for a minor-audience product, so the export
+ * AGENTS.md section 12 requires data export for a minor-audience product, so the export
  * surface for posts and likes is decided here rather than left to whoever switches the
  * feature on. It is not added to EXPORT_TABLES / EXPORT_PARTICIPANT_TABLES while the
  * feature is off: those two lists drive live queries on a route every student can already
