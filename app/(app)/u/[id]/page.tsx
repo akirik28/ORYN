@@ -10,6 +10,7 @@ import { getFeaturedItems } from "@/lib/social/featured";
 import { getConnectionWith } from "@/lib/social/connections";
 import { canShowMessageButton } from "@/lib/social/public-profile-authorization";
 import { isMessagingEnabled } from "@/lib/messaging/messaging-feature-flag";
+import { isConnectionsEnabled } from "@/lib/social/connections-feature-flag";
 import { getFilteredContactInfo } from "@/lib/social/contact-info";
 import { getEndorsementsForSkills, type SkillEndorsementInfo } from "@/lib/social/endorsements";
 import { getRecommendationsFor } from "@/lib/social/recommendations-query";
@@ -175,7 +176,12 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
                 .filter(Boolean)
                 .join(" · ")}
             </p>
-            {mutual.count > 0 ? (
+            {/* Connections is switched off (lib/social/connections-feature-flag.ts) —
+                a "mutual connections" line asserts the connections graph is live, which
+                it isn't while this flag is off; today it's moot (mutual.count is always
+                0 with zero accepted connections in the database), but the check is what
+                keeps it moot on purpose rather than by accident. */}
+            {isConnectionsEnabled() && mutual.count > 0 ? (
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {t("mutualConnections", { count: mutual.count })}
                 {mutual.preview.length > 0
@@ -199,12 +205,19 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
                 <MessageCircle className="size-3.5" /> {t("message")}
               </Button>
             ) : null}
-            <ConnectButton
-              targetId={id}
-              initialStatus={connection?.status ?? null}
-              initialConnectionId={connection?.id ?? null}
-              isRecipient={connection?.recipient_id === session.userId}
-            />
+            {/* Same reasoning as the Message link above, now for Connections
+                (lib/social/connections-feature-flag.ts): must not render at all, not
+                render and then fail on click — sendConnectionRequest/
+                respondToConnectionRequest/removeConnection all 404-equivalent (throw)
+                while this flag is off. */}
+            {isConnectionsEnabled() ? (
+              <ConnectButton
+                targetId={id}
+                initialStatus={connection?.status ?? null}
+                initialConnectionId={connection?.id ?? null}
+                isRecipient={connection?.recipient_id === session.userId}
+              />
+            ) : null}
           </div>
         ) : null}
       </div>

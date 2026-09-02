@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { getConnections } from "@/lib/social/connections";
+import { requireConnectionsEnabled } from "@/lib/social/connections-feature-flag";
 import { getPeopleYouMayKnow } from "@/lib/social/people-you-may-know-query";
 import { PageHeader } from "@/components/oryn/page-header";
 import { SectionHeader } from "@/components/oryn/section-header";
@@ -17,6 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ConnectionsPage() {
+  requireConnectionsEnabled();
   const session = await requireUser();
   const supabase = await createClient();
   const [{ accepted, incomingPending, outgoingPending }, suggestions, t] = await Promise.all([

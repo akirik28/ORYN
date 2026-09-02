@@ -15,22 +15,22 @@ import { notFound } from "next/navigation";
  * decision: this module closes the gap the same way the social layer is already closed,
  * reusing that pattern rather than inventing a second one.
  *
- * Scope, decided explicitly rather than inferred wholesale from "Connections and Messages
- * are hidden" (nav-items.ts groups them, but they are not one feature underneath):
- *   - GATED: /messages, /messages/[userId], every export in
- *     app/(app)/messages/actions.ts, and the "Message" link on app/(app)/u/[id]/page.tsx
- *     (which points straight at /messages/[userId] and must not render at all when this
- *     flag is off — a visible dead link is worse than the button not existing).
- *   - NOT gated: sendConnectionRequest / respondToConnectionRequest / removeConnection,
- *     the /connections listing page, and /u/[id] itself. Connections is load-bearing for
- *     the already-shipped /u/[id] page (ConnectButton handles connect, accept and decline
- *     entirely inline, and Settings links to /u/[id] as a "share your public profile"
- *     feature) — a separate, intentional, live feature, not dormant like messaging. The
- *     connections listing page specifically is left live because gating it would strand a
- *     student mid-loop (accepting a request requires knowing whose profile to visit, and
- *     the listing page is how a student currently finds a pending incoming request); the
- *     asymmetry of getting this wrong favors leaving it reachable, matching today's
- *     behaviour, over gating a page on an inferred reading of intent.
+ * Scope, as of 2026-09-02: GATED here is /messages, /messages/[userId], every export in
+ * app/(app)/messages/actions.ts, and the "Message" link on app/(app)/u/[id]/page.tsx
+ * (which points straight at /messages/[userId] and must not render at all when this flag
+ * is off — a visible dead link is worse than the button not existing).
+ *
+ * Connections was deliberately left ungated in this file's first version — CEO's ruling at
+ * the time was that gating sendConnectionRequest/respondToConnectionRequest/removeConnection
+ * or the /connections listing page risked stranding a student mid-loop for a feature that
+ * looked like a different, separately-shipped thing from messaging. The founder overruled
+ * that the same night: posts, messaging, likes AND connections all stay hidden until after
+ * launch, as one bundle, to be switched on together later. See
+ * lib/social/connections-feature-flag.ts for that gate — a separate flag, same pattern,
+ * not folded into this one, because the two features can still plausibly be switched on at
+ * different times even though they're being kept off together today; this comment is kept
+ * accurate to what shipped, not rewritten to pretend the two decisions were always the same
+ * one.
  *
  * Every data-layer entry point in app/(app)/messages/actions.ts calls
  * assertMessagingEnabled() before touching the database; every page under app/(app)/messages
