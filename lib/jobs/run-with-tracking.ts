@@ -22,11 +22,17 @@ export async function runWithTracking<T>(
   fn: () => Promise<{ itemsProcessed: number; errorsEncountered: number; result: T }>
 ): Promise<T> {
   const supabase = createAdminClient();
-  const { data: job } = await supabase
+  const { data: job, error: insertError } = await supabase
     .from("external_sync_jobs")
     .insert({ job_name: jobName, status: "running" })
     .select()
     .single();
+  if (insertError) {
+    // Not thrown — same "a tracking write failing must never fail the job it's tracking"
+    // rule the rest of this function already follows. `job` stays null, and every branch
+    // below already guards on it, so the run proceeds untracked rather than blocked.
+    console.error("[jobs] failed to create tracking row — run proceeds untracked", { jobName, error: insertError.message });
+  }
 
   try {
     const { itemsProcessed, errorsEncountered, result } = await fn();
@@ -55,10 +61,11 @@ export async function runWithTracking<T>(
           jobName,
           errorsEncountered,
         });
-        await supabase
+        const { error: retryError } = await supabase
           .from("external_sync_jobs")
           .update({ status: "succeeded", finished_at: finishedAt, items_processed: itemsProcessed })
           .eq("id", job.id);
+        if (retryError) console.error("[jobs] failed to record job success on retry", { jobName, error: retryError.message });
       } else if (updateError) {
         console.error("[jobs] failed to record job success", { jobName, error: updateError.message });
       }
@@ -66,7 +73,10 @@ export async function runWithTracking<T>(
     return result;
   } catch (error) {
     if (job) {
-      await supabase
+      // Logged, never thrown from here -- the original `error` below is what this
+      // function must surface either way, and a failure recording that failure must not
+      // replace or swallow it.
+      const { error: failureRecordError } = await supabase
         .from("external_sync_jobs")
         .update({
           status: "failed",
@@ -74,6 +84,7 @@ export async function runWithTracking<T>(
           error: error instanceof Error ? error.message : "Unknown error",
         })
         .eq("id", job.id);
+      if (failureRecordError) console.error("[jobs] failed to record job failure", { jobName, error: failureRecordError.message });
     }
     throw error;
   }

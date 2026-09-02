@@ -35,7 +35,12 @@ function supabaseRateLimitStore(): RateLimitStore {
     },
     async record(userId, action) {
       const supabase = await createClient();
-      await supabase.from("rate_limit_events").insert({ user_id: userId, action });
+      // Logged, not thrown -- checkRateLimit's own fail-open decision already covers a
+      // rejected write's real consequence (countSince undercounts, so the limiter admits
+      // more than intended until it's fixed), but that consequence should be visible
+      // rather than silent.
+      const { error } = await supabase.from("rate_limit_events").insert({ user_id: userId, action });
+      if (error) console.error("[rate-limit] failed to record event — limiter may undercount until this is fixed", { action, error: error.message });
     },
   };
 }

@@ -189,7 +189,11 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
     console.warn("[plan] carried_forward column not yet live (migration 0077 unapplied) — completed actions still preserved, just not distinguishable from a fresh batch until it lands", { planId: plan.id });
   }
 
-  await supabase.from("weekly_actions").delete().eq("plan_id", plan.id).in("status", ["not_started", "in_progress"]);
+  // Logged, not thrown -- the fresh insert below still needs to run either way (a failed
+  // delete here just means a regeneration risks leaving stale not_started/in_progress rows
+  // alongside the new batch, not that generation itself should be blocked).
+  const { error: deleteStaleError } = await supabase.from("weekly_actions").delete().eq("plan_id", plan.id).in("status", ["not_started", "in_progress"]);
+  if (deleteStaleError) console.error("[plan] failed to clear stale actions before regenerating", { planId: plan.id, error: deleteStaleError.message });
 
   // priority is intentionally NOT renumbered around whatever a carried-forward action already
   // holds. A fresh batch's 1..N is this week's current ranking; a carried-forward action's
@@ -260,7 +264,7 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
         .limit(1)
         .maybeSingle();
       if (!existingRecommendation) {
-        await admin.from("ai_recommendations").insert({
+        const { error: recommendationError } = await admin.from("ai_recommendations").insert({
           user_id: userId,
           title: generation.avoidForNow.activity,
           reason: generation.avoidForNow.reason,
@@ -268,6 +272,10 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
           category: "weekly_plan",
           related_dimension: null,
         });
+        // Logged, not thrown -- this is an optional side-effect of plan generation (the
+        // dedup record for "don't repeat this"), not its purpose; the weekly plan itself
+        // already saved successfully above.
+        if (recommendationError) console.error("[plan] failed to record avoid-for-now recommendation", { userId, error: recommendationError.message });
       }
     } else {
       console.error("[plan] SUPABASE_SECRET_KEY not configured — skipping avoid-for-now recommendation write");

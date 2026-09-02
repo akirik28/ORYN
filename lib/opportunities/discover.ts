@@ -106,7 +106,11 @@ export async function discoverOpportunitiesForQuery(query: string): Promise<Disc
         continue;
       }
 
-      await supabase.from("opportunity_sources").insert({
+      // Logged, not pushed to `errors` — the opportunity row itself already saved
+      // successfully above; a source-attribution write is provenance metadata for that
+      // fact, not the fact itself, same reasoning as lib/universities/sync-us-
+      // universities.ts's own university_sources upsert.
+      const { error: sourceError } = await supabase.from("opportunity_sources").insert({
         opportunity_id: inserted.id,
         source_url: result.url,
         source_domain: safeHostname(result.url),
@@ -114,6 +118,7 @@ export async function discoverOpportunitiesForQuery(query: string): Promise<Disc
         confidence: "medium",
         raw_excerpt: result.content.slice(0, 500),
       });
+      if (sourceError) console.error("[opportunities] failed to record source attribution", { opportunityId: inserted.id, error: sourceError.message });
 
       stored += 1;
     } catch (error) {
