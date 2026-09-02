@@ -534,6 +534,20 @@ const REGISTRY: AdmissionSystemEntry[] = [
     ],
     sources: [DOC("canada.md")],
   },
+  {
+    countryNames: ["Sweden", "Sverige"],
+    domestic: {
+      shape: "academic_rank_competitive",
+      mechanism:
+        "Swedish admission runs on meritvärde — a merit rating computed through one of four parallel national selection groups (grades alone, grades plus supplementary courses, folk-high-school assessment, or the Högskoleprovet aptitude test, which alone fills at least a third of all places) — with antagning.se allocating places in strict rank order until each programme's fixed count runs out. No essay, no reference, and extracurriculars are not in the formula. A real but locally-set 'Alternativt Urval' exception exists at some programmes — check the specific institution's own page.",
+    },
+    international: {
+      shape: "academic_rank_competitive",
+      mechanism:
+        "Applicants requiring a visa apply through universityadmissions.se into the same meritvärde rank-order mechanism — some universities reserve a separate fee-paying selection pool, which changes who you compete against, not how the merit rating itself is computed. No essay, no reference, and extracurriculars are not in the formula.",
+    },
+    sources: [DOC("sweden.md")],
+  },
 ];
 
 // ---------------------------------------------------------------------------

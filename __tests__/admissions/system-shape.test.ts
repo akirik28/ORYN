@@ -47,7 +47,7 @@ describe("resolveAdmissionSystem — the three shapes the research actually foun
   });
 
   test("every resolved entry carries at least one traceable source document", () => {
-    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada"]) {
+    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden"]) {
       const result = resolveAdmissionSystem({ targetCountry: country, studentCountry: "Turkey" });
       expect(result.sources.length, country).toBeGreaterThan(0);
       expect(result.mechanism, country).not.toBeNull();
@@ -65,6 +65,7 @@ describe("resolveAdmissionSystem — country name forms actually present in the 
     ["Türkiye", "Turkey"],
     ["Hong Kong SAR", "Hong Kong"],
     ["UK", "United Kingdom"],
+    ["Sverige", "Sweden"],
   ])("%s resolves identically to %s", (alias, canonical) => {
     const aliased = resolveAdmissionSystem({ targetCountry: alias, studentCountry: "Turkey" });
     const canonicalResult = resolveAdmissionSystem({ targetCountry: canonical, studentCountry: "Turkey" });
@@ -207,6 +208,39 @@ describe("resolveAdmissionSystem — institution overrides (implementation-gap G
     const notUbc = resolveAdmissionSystem({ targetCountry: "Canada", studentCountry: "Turkey", targetUniversityName: "British Columbia Institute of Technology" });
     expect(notUbc.basis).not.toBe("institution");
     expect(notUbc.shape).toBe("unknown");
+  });
+});
+
+describe("resolveAdmissionSystem — Sweden (2026-09-03 single-country expansion pass)", () => {
+  // Sweden's meritvärde system has no essay/reference/activities channel (see
+  // docs/research/admissions-systems/sweden.md §"Essays / recommendations / extracurriculars")
+  // and a genuinely competitive, floating rank cutoff — the same reasoning that puts
+  // Spain/Australia/New Zealand in this shape rather than "holistic_review" or
+  // "academic_threshold".
+  test("Sweden is rank-competitive, both domestic and international, with no evidence review", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Sweden", studentCountry: "Sweden" });
+    const international = resolveAdmissionSystem({ targetCountry: "Sweden", studentCountry: "Turkey" });
+    expect(domestic.shape).toBe("academic_rank_competitive");
+    expect(international.shape).toBe("academic_rank_competitive");
+    expect(reviewsNonAcademicEvidence(domestic.shape)).toBe(false);
+  });
+
+  test("Sweden's mechanism names the real selection instruments, not a paraphrase", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Sweden", studentCountry: "Sweden" });
+    expect(domestic.mechanism).toContain("meritvärde");
+    expect(domestic.mechanism).toContain("Högskoleprovet");
+    expect(domestic.mechanism).toContain("antagning.se");
+  });
+
+  test("Sweden's international mechanism names universityadmissions.se, distinct from the domestic portal", () => {
+    const international = resolveAdmissionSystem({ targetCountry: "Sweden", studentCountry: "Turkey" });
+    expect(international.mechanism).toContain("universityadmissions.se");
+    expect(international.mechanism).not.toBe(resolveAdmissionSystem({ targetCountry: "Sweden", studentCountry: "Sweden" }).mechanism);
+  });
+
+  test("Sweden traces to its own research document, not an invented source", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Sweden", studentCountry: "Sweden" });
+    expect(result.sources).toContain("docs/research/admissions-systems/sweden.md");
   });
 });
 
