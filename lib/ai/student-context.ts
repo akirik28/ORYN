@@ -12,6 +12,22 @@ import { dimensionLabel } from "@/lib/scoring/labels";
 import { DEFAULT_LOCALE, isLocale, type Locale } from "@/lib/i18n/config";
 import type { Database, EvidenceStatus, OutlookLabel, ProfileDimension } from "@/types/database";
 
+/**
+ * Phase 65: nothing clears `profiles.busy_mode` automatically once `busy_mode_until`
+ * passes — it is a plain student-set checkbox with no scheduled job or write-time expiry
+ * behind it (confirmed 2026-09-02, docs/time-budget-busy-mode-audit-2026-09-02.md). A
+ * student who marks exam week in November and forgets to unmark it should not still read
+ * as busy in March, so the raw column is never trusted directly — computed here instead,
+ * same "don't trust a persisted flag past its date" discipline as
+ * lib/deadlines/lifecycle.ts's isDatedDeadlineUpcoming, and the same explicit-`today`-
+ * parameter shape for the same reason: testable without mocking the system clock.
+ * `busy_mode_until` is a plain `date` column (migration 0002) — `YYYY-MM-DD`, safe to
+ * compare lexicographically against `today` in the same format.
+ */
+export function isBusyModeActive(busyMode: boolean, busyModeUntil: string | null, today: string): boolean {
+  return busyMode && (busyModeUntil === null || busyModeUntil >= today);
+}
+
 export interface StudentAdvisorContext {
   student: {
     displayName: string;
@@ -233,7 +249,9 @@ export async function buildStudentAdvisorContext(userId: string, supabaseClient?
       graduationYear: profile?.graduation_year ?? null,
       curriculum: profile?.curriculum ?? null,
       weeklyTimeBudget: profile?.weekly_time_budget ?? null,
-      busyMode: profile?.busy_mode ?? false,
+      // Settings still shows the raw stored value unchanged (it's the student's own toggle
+      // to notice and clear) — isBusyModeActive only affects what the AI prompt is told.
+      busyMode: isBusyModeActive(profile?.busy_mode ?? false, profile?.busy_mode_until ?? null, new Date().toISOString().slice(0, 10)),
       busyModeUntil: profile?.busy_mode_until ?? null,
       birthYear: profile?.birth_year ?? null,
       citizenshipCountries: profile?.citizenship_countries ?? [],
