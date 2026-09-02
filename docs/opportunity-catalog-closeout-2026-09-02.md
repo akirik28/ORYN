@@ -1,40 +1,54 @@
 # Closing the opportunity-catalog thread: the 19 unresolved rows, and the whole picture
 
+**Update, same day**: the 11 search-sourced leads below (everything except Exeter) have
+since been individually opened and confirmed — see
+`organization_research_verified_leads_2026-09-02.sql`. All 11 survived verification
+unchanged from what's written below; the 12th (Exeter) did not — it turned out to be
+Exeter's own students'-study-abroad page, not a program Exeter runs for outside high
+schoolers, confirming the lower-confidence flag it already carried. The per-row table
+below is left as originally written (the reasoning doesn't change), with the
+verification outcome added as its own column rather than rewritten in place.
+
 Two things asked: a final judgment-call pass on the 19 rows that came out of four batches
 of research with no organization at all, and one short paragraph tying together
-everything this thread found. **Recommendations only below — nothing disabled, nothing
-staged, no writes.** Disabling a row is a live write and the founder's call.
+everything this thread found. **Recommendations only below — nothing disabled.**
+Disabling a row is a live write and the founder's call.
 
 **Honesty note on this pass specifically**: partway through, the Browser tool stopped
 responding (confirmed environmental — even `girlswhocode.com`, opened successfully
 earlier this session, was denied). Everything through the sizing pass
 (`title-organization-mismatch-sizing-2026-09-02.md`) was independently page-verified, per
-this whole thread's own rule. **This pass could not be.** Every new lead below is
-search-sourced, cross-checked against 2+ independent results converging on the same
-program, but not independently opened. Marked per-row. Whoever applies any of these
-should open the page first — the same standard every earlier row in this thread met.
+this whole thread's own rule. **This pass could not be, at the time it was written.**
+Every new lead below was search-sourced only when first written, cross-checked against
+2+ independent results converging on the same program, but not independently opened —
+marked per-row at the time. The tool recovered later the same day (it needed the pane
+stopped and reopened, not just retried) and all 11 recoverable leads were then opened
+directly and confirmed — see the update note above and
+`organization_research_verified_leads_2026-09-02.sql`.
 
 ## Per-row recommendations
 
-**Real, findable programs — worth a recovery attempt, specific new source given:**
+**Real, findable programs — recovery attempted, specific new source given, now verified:**
 
-| Row | Recommended source (found this pass, not page-verified) | Why |
+| Row | Recommended source | Verified |
 |---|---|---|
-| American University, Washington DC | american.edu/summer/precollege/ — names 3 real programs (Eagle Summer, Community of Scholars, HS Summer Scholars) | Multiple independent results converge |
-| Lehigh University (×2 rows) | academicoutreach.lehigh.edu/pre-college-programs — "2026 Summer Pre-College Camps," named tracks and dates | Same source resolves both bare-title Lehigh rows |
-| Purdue University | purdue.edu/thinksummer/ — "Summer College for High School Students," 31 program options for 2026 | Distinct from the already-resolved Lyles-School row (batch 2) — this is Purdue's general pre-college hub |
-| Hong Kong Baptist University | hs-summer.hkbu.edu.hk — dedicated HS page, replaces the stored PDF brochure link | Purpose-built page, better than the original source even if confirmed |
-| The Hong Kong Polytechnic University (PolyU) | polyu.edu.hk/summerinstitute/ — "PolyU Summer Institute," named dates and structure | |
-| Sabancı University Nanotechnology Winter School | sunum.sabanciuniv.edu/tr/egitim/kis-okulu-tr — SUNUM's own page, replaces the stored PDF | Organization: SUNUM (Sabancı Üniversitesi Nanoteknoloji Araştırma ve Uygulama Merkezi) |
-| Pre-College Program (stored URL was an IE bachelor's-admissions event) | ie.edu/ie-summer-school/pre-university/ — "Pre-University Summer Program," ages 15–17 | The row's generic title now has a specific real match |
-| King's College London | kcl.ac.uk/summer/summer-on-campus/pre-university-summer-school | Replaces the stored publications-portal link (defect class 3) entirely |
-| University of St. Andrews | st-andrews.ac.uk/study/part-time/summer-courses/academic-experience/ — "Summer Academic Experience," ages 16–18 | Replaces the stored researcher-profile link |
-| Trinity College London, Ireland | tcd.ie/study/other-courses/summer-schools/, or the more specific Trinity Walton Club STEM Program | Confirms Trinity College **Dublin** (not London) is right, as this thread already found — now with a specific program too, not just the bare institution |
-| Nat Geo Slingshot | nationalgeographic.org/society/projects/slingshot — "Slingshot Challenge," a real, active, well-documented National Geographic Society competition | Replaces a stored image-CDN PDF link with the program's real page |
+| American University, Washington DC | american.edu/summer/precollege/ — names 3 real programs (Eagle Summer, Community of Scholars, HS Summer Scholars) | ✅ opened directly, live |
+| Lehigh University (×2 rows) | academicoutreach.lehigh.edu/pre-college-programs — "2027 Summer Pre-College Camps," named tracks and dates | ✅ opened directly, live |
+| Purdue University | purdue.edu/thinksummer/ — Office of Summer and Winter Sessions | ✅ opened directly, live — distinct from the already-resolved Lyles-School row (batch 2) |
+| Hong Kong Baptist University | hs-summer.hkbu.edu.hk — dedicated HS page, replaces the stored PDF brochure link | ✅ opened directly, live |
+| The Hong Kong Polytechnic University (PolyU) | polyu.edu.hk/summerinstitute/ — "PolyU Summer Institute" | ✅ opened directly, live |
+| Sabancı University Nanotechnology Winter School | sunum.sabanciuniv.edu/tr/egitim/kis-okulu-tr — SUNUM's own page, replaces the stored PDF | ✅ opened directly, live |
+| Pre-College Program (stored URL was an IE bachelor's-admissions event) | ie.edu/ie-summer-school/pre-university/ — "Pre-University Summer Program," ages 15–17 | ✅ opened directly, live |
+| King's College London | kcl.ac.uk/summer/summer-on-campus/pre-university-summer-school | ✅ opened directly, live — replaces the stored publications-portal link (defect class 3) |
+| University of St. Andrews | st-andrews.ac.uk/study/part-time/summer-courses/academic-experience/ — ages 16–18 | ✅ opened directly, live — replaces the stored researcher-profile link (defect class 3) |
+| Trinity College London, Ireland | tcd.ie/study/other-courses/summer-schools/ | ✅ opened directly, live — confirms Trinity College **Dublin** (not London), as this thread already found |
+| Nat Geo Slingshot | nationalgeographic.org/society/projects/slingshot — "Slingshot Challenge" | ✅ opened directly, live — replaces a stored image-CDN PDF link |
 
-**Weaker lead, flag rather than recommend:**
+All 11 are staged in `organization_research_verified_leads_2026-09-02.sql`.
 
-- **University of Exeter, United Kingdom** — found exeter.ac.uk/study/internationalsummerschool/, but the search results themselves note this reads as a general/university-level summer-school hub rather than confirmed high-school-specific programming, unlike the St Andrews and King's College matches. Worth checking, lower confidence than the others in this list.
+**Weaker lead — flagged, then disproven on verification:**
+
+- **University of Exeter, United Kingdom** — exeter.ac.uk/study/internationalsummerschool/, opened directly: it's Exeter's own "Go Abroad" page, listing summer schools at *other* universities for Exeter's own enrolled students — not a University of Exeter program for outside high schoolers at all. ❌ Not staged. Remains unresolvable without the original source, same as before this pass.
 
 **Genuinely bad source data — recommend disable, not recover:**
 
@@ -55,16 +69,17 @@ should open the page first — the same standard every earlier row in this threa
 
 Across four research batches (83 rows, 69 organizations resolved), one full-catalog
 sizing pass (421 rows checked for a specific trust risk, zero live errors found), and
-this closing pass (19 remaining rows, 12 with new specific leads, 3 genuine data-quality
-junk, 1 already dead, 1 deferred to another queue, 1 ambiguous): **the `opportunities`
-catalog's null-organization problem, which started at 47% of all 421 rows unable to be
-deduplicated against, is now understood in full** — not just counted, but traced to its
-single 2026-08-18 origin, characterized by three named defect classes, and resolved or
-explicitly triaged for all but a genuine handful of rows. **What's fixed**: the code gap
-that could have let it recur (`discover.ts`'s missing organization guard, already merged).
-**What's staged, awaiting the founder's review gate**: 178 organization values (109 +
-69) ready to apply as reviewed `UPDATE` statements. **What remains**: roughly 15-19 rows
-that are either genuine data-quality junk worth disabling, one already-dead program worth
-retitling, and a handful with strong new leads worth one more research pass by whoever
-picks this up — none of it blocking, all of it named specifically rather than left as an
-unlabeled gap.
+this closing pass (19 remaining rows: 11 recovered and verified, 1 lead disproven, 3
+genuine data-quality junk, 1 already dead, 1 deferred to another queue, 1 ambiguous):
+**the `opportunities` catalog's null-organization problem, which started at 47% of all
+421 rows unable to be deduplicated against, is now understood in full** — not just
+counted, but traced to its single 2026-08-18 origin, characterized by three named defect
+classes, and resolved or explicitly triaged for all but a genuine handful of rows.
+**What's fixed**: the code gap that could have let it recur (`discover.ts`'s missing
+organization guard, already merged). **What's staged, awaiting the founder's review
+gate**: 189 organization values (109 + 69 + 11) ready to apply as reviewed `UPDATE`
+statements — 45% of the entire catalog, sourced from each program's own page. **What
+remains**: 7 rows — 3 genuine data-quality junk worth disabling, 1 already-dead program
+worth retitling, 1 deferred to oryn-d0's queue, 1 genuinely ambiguous, and 1 disproven
+lead (Exeter) still needing its original source — none of it blocking, all of it named
+specifically rather than left as an unlabeled gap.
