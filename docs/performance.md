@@ -1,12 +1,52 @@
-# Performance baseline — 2026-09-01
+# Performance baseline — 2026-09-01, re-measured 2026-09-02
 
-Phase 48 has never been measured. No document existed before this one. This is a
+Phase 48 has never been measured. No document existed before 2026-09-01. This is a
 measurement pass only — nothing in this doc was optimized; every number below is
 what the codebase does today, checked directly rather than assumed. Where something
 turned out fine, it's written down as fine, not omitted, because the next person
 needs to be able to tell whether something regressed.
 
-Four areas, in the order the assignment ranked them.
+> ### Re-measured 2026-09-02, ahead of the first deploy — roughly 50 packages merged
+> ### since the original pass. Confirmed what held, found two things that didn't exist
+> ### before, and covered `/universities/[id]` for the first time.
+>
+> **Section 2's core finding still holds, unchanged**: `createClient()` is still not
+> memoized (checked `lib/supabase/server.ts` directly), the dashboard/advisor
+> duplicate chain is structurally identical to what's described below (re-read
+> `app/(app)/dashboard/page.tsx` in full; same functions, same call sites, same
+> "known duplicate" comments still in place), and query counts in the chain's own
+> functions are unchanged (`assembleScoringFacts`: 13 reads, matching exactly).
+>
+> **New since 2026-09-01, and it makes section 2's finding worse, not just
+> unchanged**: `app/(app)/layout.tsx` — which wraps *every* authenticated page, not
+> just dashboard/advisor — now fetches `profile_scores` in its own `Promise.all`
+> (alongside two `notifications` queries for the bell/unread-count, the "changed
+> notification bell" work). Real, deliberate work with a clear reason in its own
+> comment (the account menu needs qualitative per-dimension data, not just the raw
+> `profile_strength_score` column), and it correctly batches into the *existing*
+> `Promise.all` rather than adding a separate round trip. But it's a fourth
+> `profile_scores` read stacking on the three already traced below
+> (dashboard's own, `getCounselorState`'s, `buildStudentAdvisorContext`'s) — through
+> its own fresh, unmemoized `createClient()` — since it's a layout, it now runs this
+> extra read on **every single page a student visits**, not just dashboard/advisor.
+>
+> **`/universities/[id]`, traced for the first time (section 5, new below)**: worse
+> than the dashboard/advisor chain, not comparable to it — six distinct duplicate-read
+> categories on one page, up to ~25 round trips for one full render, and the same
+> "raw `profiles` table, not routed through the memoized `getCurrentProfile()`"
+> pattern recurring in a second place.
+>
+> **Unchanged, re-checked directly**: client-component ratio (83 of 198 `.tsx` files
+> now vs. 80 of 179 — the ratio slightly *improved*, 41.9% vs. 44.7%, so tonight's ~19
+> new `.tsx` files skewed Server Component). No bundle analyzer installed. No
+> `unstable_cache` anywhere. Zero page renders call an external provider directly —
+> section 4's "clean" finding still holds exactly as measured. Bundle size grew from
+> 2.9MB to **3.4MB** total client JS (~17%, consistent with the merge volume); still
+> no per-route breakdown available from this Turbopack build (`app-build-manifest.json`
+> still doesn't exist) — same tooling gap, not re-investigated further this pass.
+
+Five areas now (`/universities/[id]` added as its own section) — the original four
+in the order that first assignment ranked them, plus the new one.
 
 ---
 
@@ -271,24 +311,105 @@ this area.
 
 ---
 
+## 5. `/universities/[id]` — traced for the first time, 2026-09-02
+
+Same method as section 2: read every function the page actually calls, in full, and
+count `.from(...)` calls directly rather than estimate. `app/(app)/universities/[id]/page.tsx`
+is 842 lines; the trace covers it plus `lib/admissions/persist.ts`
+(`refreshAdmissionOutlook`), `lib/requirements/persist.ts`
+(`refreshRequirementEvaluations`), and `lib/requirements/facts.ts`
+(`assembleRequirementFacts`), which it calls into.
+
+**Six distinct duplicate-read categories on one page — more than the dashboard/advisor
+chain, not a smaller version of it:**
+
+| Data | Fetched by | Times per render |
+|---|---|---|
+| `universities` row (this university) | `generateMetadata` (name only), the page itself (`select("*")`), `refreshAdmissionOutlook` (name + country) | **3** |
+| `loadSupersessionMap` (the 9-row supersession table) | `generateMetadata`, the page itself | **2** |
+| `profile_scores` (this student) | the page's own `Promise.all`, `refreshAdmissionOutlook` | **2** |
+| `university_statistics` (this university) | the page's own `Promise.all`, `refreshAdmissionOutlook` | **2** |
+| `university_requirements` (this university, full `select("*")`) | the page's own `Promise.all`, `refreshRequirementEvaluations` | **2**, identical query both times |
+| `profiles` (this student) | raw, direct in `refreshAdmissionOutlook` — **not** routed through the memoized `getCurrentProfile()`, even though the page itself calls `getCurrentProfile()` separately a few lines later | **≥2** distinct paths |
+
+That last row is the same shape section 2 already named for the dashboard chain
+("raw `profiles` table, not routed through `getCurrentProfile()`") — it isn't a new
+kind of problem, it's the same one recurring in a second place, which is itself worth
+knowing: the fix in Recommendation 1 below, if applied to `createClient()` and the
+memoized helpers generally, would close this instance too, not just the dashboard one.
+
+**Why this happens, structurally**: `generateMetadata` and the page component are two
+*separate* render passes (a documented Next.js App Router behavior, not a bug) — each
+builds its own `createClient()` and calls `loadSupersessionMap`/reads `universities`
+independently, with nothing shared between them. Inside the page itself,
+`refreshAdmissionOutlook` and `refreshRequirementEvaluations` are called with **no**
+`supabase` argument, so each constructs its own fourth and fifth `createClient()` — by
+design, per their own doc comments, both are meant to be safely callable from
+anywhere (a page render, a scheduled sweep), which is a real and reasonable design
+goal; the cost is that "callable from anywhere" also means "shares nothing with a
+render that already has the data" once the page's own `Promise.all` already fetched
+the same tables.
+
+**Total round trips for one full render** (a page with both a saved target and
+applicable requirements — the "everything renders" case, not an edge case for a
+student actively evaluating universities): 2 (`generateMetadata`) + 2
+(`loadSupersessionMap` + full `universities` row) + 9 (the page's own `Promise.all`:
+programs, requirements, deadlines, statistics, sources, target, profile_scores,
+rankings, metrics) + up to 6 (`refreshAdmissionOutlook`: target lookup + 4 parallel
+reads + 1 write) + up to 6 (`refreshRequirementEvaluations`: requirements + 4 parallel
+facts reads + 1 write) + 2 (`getCurrentProfile()` + `student_requirement_evaluations`)
+≈ **25–28 round trips for one page view.** No AI/model call anywhere in this chain
+(checked directly — `refreshAdmissionOutlook` and `refreshRequirementEvaluations` are
+both explicitly documented as deterministic, no-AI, and grepping both files plus
+`lib/requirements/evaluate.ts` for any AI-provider import confirms it), so this is a
+database-round-trip cost specifically, not an added AI-spend cost — worth being
+precise about, since the two are easy to conflate and only one of them is what this
+section measured.
+
+**What's already good practice here, stated as clearly as the problems**: within each
+individual function, the reads that *can* run in parallel already do (the page's own
+9-query `Promise.all`, `refreshAdmissionOutlook`'s 4-query `Promise.all`,
+`assembleRequirementFacts`' 4-query `Promise.all`) — nothing in this trace found a
+*sequential* chain of awaits that should have been one `Promise.all` within a single
+function. The waste here is entirely cross-function duplication, not serial
+round-tripping.
+
+---
+
 ## Recommendations (not applied — for visibility, ranked by what they'd buy)
 
-1. **Fix the duplicate-read chain in section 2 — three pieces, not one wrapper.**
-   A single `cache()` wrapper around the duplicated functions would pass every
-   gate and change nothing, because `createClient()` isn't itself memoized (see
-   "What actually memoizing this needs" above) — that's the failure mode this
-   whole codebase has spent real effort pulling out elsewhere, so it's worth
-   naming precisely here rather than recommending it by accident:
-   - Memoize `createClient()` with `cache()` (the enabling step — same
-     one-line pattern `lib/security/dal.ts` already proves), **or** drop
-     `supabase` from the memoized functions' own signatures so they fetch
-     their own (now-memoized) client and key only on `userId`.
-   - Separately, reconcile `getUpcomingDeadlines`'s three different `limit`
-     arguments (4, 10, 5) to one fetch per render.
-   Together these remove the real duplicate reads traced in section 2, on the
-   product's two busiest pages.
-2. **Install `@next/bundle-analyzer`.** Turns section 1's "71 non-leaf client
-   components, unranked" and section 3's "2.9MB total, no per-route number"
+1. **Memoize `createClient()` with `cache()` — the single enabling step, now
+   justified by two pages' worth of evidence, not one.** Same one-line pattern
+   `lib/security/dal.ts` already proves for `verifySession`/`getCurrentProfile`.
+   This alone fixes nothing by itself (see "What actually memoizing this
+   needs" in section 2 — a `cache()` wrapper around a function that still
+   takes a fresh `supabase` argument each time is a no-op dressed as a fix),
+   but it's the precondition every other fix below needs, and it's low-risk:
+   `createClient()`'s own body has no side effects beyond reading cookies and
+   constructing a client object.
+2. **Add a `getProfileScores(userId)` memoized helper, mirroring
+   `getCurrentProfile()`'s existing shape, and route the layout's new read
+   through it.** `profile_scores` is now the single most-duplicated table in
+   the product — read by the layout (every page), the dashboard, and
+   `refreshAdmissionOutlook` — and it's exactly the same shape
+   `getCurrentProfile()` already solved for `profiles`. This is the
+   highest-leverage single fix available: unlike `assembleScoringFacts` or
+   `getUpcomingDeadlines`, every one of these call sites wants the *same*
+   query (same columns, same filter), so memoizing it needs no call-site
+   reconciliation, just the wrapper plus item 1 above.
+3. **Reconcile section 2's `getUpcomingDeadlines` (limits 4/10/5) and thread
+   the page's own `supabase` client into `refreshAdmissionOutlook`/
+   `refreshRequirementEvaluations` on `/universities/[id]`** rather than
+   letting each construct its own. The former already accepts an optional
+   `client` parameter — the page just isn't passing it, a one-line change.
+   The latter would need the same parameter added. Neither removes the
+   *data* duplication (a shared client doesn't dedupe two different
+   `.from("profile_scores")` calls on its own — item 2's approach is what
+   does that for `profile_scores` specifically); this item removes the
+   *client-construction* overhead (cookie parsing + object init, 4–5 times
+   down to 1–2) and is safe to do independently of items 1–2.
+4. **Install `@next/bundle-analyzer`.** Turns section 1's "71 non-leaf client
+   components, unranked" and section 3's "3.4MB total, no per-route number"
    into one real, actionable, ranked list — which specific boundaries and
    which specific routes are actually worth touching. What it costs: an
    official Vercel/Next.js package (published in step with this project's own
@@ -298,12 +419,20 @@ this area.
    `next.config.ts` (wrapping the existing config export) plus running the
    build with an `ANALYZE=true` env var to get the report; no ongoing
    runtime cost.
-3. **Wrap global-data reads (`universities`, `opportunities` catalogue) in
+5. **Wrap global-data reads (`universities`, `opportunities` catalogue) in
    `unstable_cache`.** Closes the literal Phase 27 gap in section 4 without
    touching anything personalized.
 
-Nothing above was implemented in this pass. Each is scoped enough to be a
-follow-up someone can pick up directly from this document.
+Nothing above was implemented in this pass, 2026-09-01 or 2026-09-02 — each is
+scoped enough to be a follow-up someone can pick up directly from this
+document. Deliberately not implemented tonight either: this is the night
+before a first deploy, and speculatively touching the request-scoped client
+every authenticated page depends on, right before that deploy, trades a
+measured-but-unproven performance gain against a real regression risk with no
+time left to catch it. Recommendation 3's one-line client-threading is the
+exception worth reconsidering — it's additive (an optional parameter already
+exists on one of the two functions) and behavior-preserving by construction,
+not a restructuring.
 
 ## Method
 
@@ -322,6 +451,20 @@ follow-up someone can pick up directly from this document.
   found with `grep -rn "functionName(" --include="*.ts" --include="*.tsx" .`
   rather than assumed from the files already read, which is what caught the
   third `getUpcomingDeadlines` site on the first amendment to this document.
+- **2026-09-02 re-measurement**: re-read `app/(app)/dashboard/page.tsx` and
+  `lib/supabase/server.ts` in full to confirm section 2 unchanged, rather than
+  trusting the 2026-09-01 text. Read `app/(app)/layout.tsx` in full (not
+  covered by the original pass — a real gap in that pass's own file list,
+  since a shared layout's queries apply to every page it wraps) to find the
+  new `profile_scores` read. Traced `/universities/[id]` (section 5) with the
+  identical method: `app/(app)/universities/[id]/page.tsx`,
+  `lib/admissions/persist.ts`, `lib/requirements/persist.ts`, and
+  `lib/requirements/facts.ts` read in full, every `.from(...)` counted
+  directly, checked both for AI-provider calls (grep across all four files
+  plus `lib/requirements/evaluate.ts`, zero results) and for whether either
+  refresh function's read is already covered by data the page itself fetched.
+  Client-component and bundle-size numbers re-run with the exact commands
+  from the original pass, same tools, for a like-for-like comparison.
 - Bundle size: `npm run build` (Next.js 16.3.1, Turbopack) on this branch,
   then `du -sh .next/static/chunks` and an inspection of
   `.next/build-manifest.json`.
