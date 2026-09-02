@@ -2,8 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 import { getAIProvider } from "./index";
-import { logAIUsage } from "./usage";
-import { selectModelForUser } from "./limits/budget";
+import { withUsageLogging } from "./usage";
 import { withOutputLanguage } from "./output-language";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
@@ -33,6 +32,12 @@ Rules — these are absolute:
 - If the existing description is already specific and strong, set improvedDescription to null rather than
   padding it.`;
 
+/**
+ * Goes through withUsageLogging (added 2026-09-02) rather than a bare generateStructured +
+ * logAIUsage pair, for the same reason cv-extraction.ts's own comment gives: a
+ * retry-exhausted schema-validation failure is up to two real, billed calls that used to
+ * have no record in ai_usage at all.
+ */
 export async function refineAchievementDescription(params: {
   userId: string;
   /** The student's current UI language. Additive and optional — an un-migrated caller
@@ -44,25 +49,17 @@ export async function refineAchievementDescription(params: {
   description: string | null;
 }): Promise<AchievementRefinement> {
   const provider = getAIProvider();
-  const selection = await selectModelForUser(params.userId);
 
-  const result = await provider.generateStructured({
-    system: withOutputLanguage(SYSTEM_PROMPT, params.locale ?? DEFAULT_LOCALE),
-    prompt: `Achievement type: ${params.achievementType}\nTitle: ${params.title}\nOrganization: ${params.organization ?? "(not given)"}\nCurrent description: ${params.description ?? "(none)"}\n\nSuggest a tightened description (or null) and up to 4 clarifying questions.`,
-    schema: RefinementSchema,
-    schemaName: "record_refinement",
-    schemaDescription: "Records the suggested improved description and clarifying questions.",
-    maxTokens: 768,
-    model: selection.model,
-  });
-
-  await logAIUsage({
-    userId: params.userId,
-    feature: "achievement_refinement",
-    usage: result.usage,
-    model: result.model,
-    degraded: selection.degraded,
-    degradeReason: selection.degraded ? selection.reason : null,
-  });
+  const result = await withUsageLogging({ userId: params.userId, feature: "achievement_refinement" }, (model) =>
+    provider.generateStructured({
+      system: withOutputLanguage(SYSTEM_PROMPT, params.locale ?? DEFAULT_LOCALE),
+      prompt: `Achievement type: ${params.achievementType}\nTitle: ${params.title}\nOrganization: ${params.organization ?? "(not given)"}\nCurrent description: ${params.description ?? "(none)"}\n\nSuggest a tightened description (or null) and up to 4 clarifying questions.`,
+      schema: RefinementSchema,
+      schemaName: "record_refinement",
+      schemaDescription: "Records the suggested improved description and clarifying questions.",
+      maxTokens: 768,
+      model,
+    }),
+  );
   return result.data;
 }

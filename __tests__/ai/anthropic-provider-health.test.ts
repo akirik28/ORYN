@@ -35,6 +35,7 @@ vi.mock("@/lib/monitoring", () => ({
 }));
 
 import { AnthropicProvider } from "@/lib/ai/anthropic-provider";
+import { AIStructuredResponseFailedError } from "@/lib/ai/provider";
 import { z } from "zod";
 
 function textMessageFixture(text: string) {
@@ -131,6 +132,31 @@ describe("generateStructured — provider_health recording", () => {
     expect(createMock).toHaveBeenCalledTimes(2); // both retry attempts genuinely happened
     expect(recordFailureMock).toHaveBeenCalledTimes(1); // but recorded as one logical call, not two
     expect(recordSuccessMock).not.toHaveBeenCalled();
+  });
+
+  // Found live, 2026-09-02: cv_extraction and achievement_refinement both call
+  // generateStructured directly, only ever logged usage on the success path, and a
+  // retry-exhausted failure here carried NO usage at all before this — up to two real,
+  // billed calls (the retry's whole point) with no way for any caller to ever recover
+  // what was spent. AIResponseIncompleteError already solved this for generateText; this
+  // is the same fix for generateStructured's own failure shape.
+  test("a retry-exhausted failure carries the real, summed usage of both attempts, not zero", async () => {
+    createMock
+      .mockResolvedValueOnce({ content: [{ type: "tool_use", input: { wrong_field: "nope" } }], stop_reason: "tool_use", usage: { input_tokens: 100, output_tokens: 30 } })
+      .mockResolvedValueOnce({ content: [{ type: "tool_use", input: { wrong_field: "still nope" } }], stop_reason: "tool_use", usage: { input_tokens: 150, output_tokens: 40 } });
+
+    let caught: unknown;
+    try {
+      await new AnthropicProvider().generateStructured({ prompt: "hi", schema: TestSchema, schemaName: "record_test", schemaDescription: "test" });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(AIStructuredResponseFailedError);
+    const error = caught as AIStructuredResponseFailedError;
+    // Summed across both attempts (100+150, 30+40) -- not just the last one, and not zero.
+    expect(error.usage).toEqual({ inputTokens: 250, outputTokens: 70 });
+    expect(error.model).toBe("claude-sonnet-5");
   });
 
   test("a success on the second (retried) attempt records success, not failure", async () => {
