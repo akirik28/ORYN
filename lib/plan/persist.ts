@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { generateWeeklyPlan } from "@/lib/ai/weekly-plan";
+import { assertWithinAIRateLimit } from "@/lib/ai/rate-limit";
 import { createNotification } from "@/lib/notifications/create";
 import { toLocale } from "@/lib/i18n/config";
 import type { WeeklyAction, WeeklyPlan } from "@/types/database";
@@ -77,15 +78,36 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
 
   const supabase = opts?.supabaseClient ?? (await createClient());
   const weekStartDate = currentWeekStart();
-  const generation = await generateWeeklyPlan(userId, opts?.supabaseClient);
 
   // No request here (the manual Regenerate action has one, but the dashboard's lazy
   // first-generate and any future scheduled Job D don't), so the locale comes from the
   // student's own stored preference, same source student-context.ts already reads for the
   // AI output language -- not lib/i18n/locale.ts's resolveLocale(), which needs a cookie.
+  // Read before the rate-limit check below (moved earlier 2026-09-02, was after the AI
+  // call) purely so that check's own thrown message can be localized too -- same read,
+  // same value, just consulted a few lines sooner.
   const { data: profileForLocale } = await supabase.from("profiles").select("preferred_language").eq("id", userId).maybeSingle();
   const locale = toLocale(profileForLocale?.preferred_language);
   const t = await getTranslations({ locale, namespace: "notifications" });
+
+  // FIXED 2026-09-02: this used to live only in the Regenerate Server Action
+  // (app/(app)/plan/actions.ts), which is a fine place for a fast, friendly pre-check
+  // but not a real gate -- nothing stopped a caller from reaching this function directly,
+  // skipping the action entirely, and skipping the limit with it. That's not
+  // hypothetical: 98 real, billed weekly_plan calls landed for one account in 33 seconds
+  // on 2026-08-30, all with force:true, all after a plan already existed for that week
+  // (so the idempotency check above was also being bypassed by force:true, same as the
+  // rate limit was by not going through the guarded action) -- see
+  // docs/ai-spend-cap-2026-09-02.md for the full forensics. Checked here instead, right
+  // before the one billed call this function ever makes, so every caller gets it:
+  // the dashboard's lazy generate, the Regenerate action, the scheduled job
+  // (lib/plan/generate-for-active-students.ts, which calls this once per distinct
+  // student -- 5 calls/60min for the SAME (userId, feature) pair essentially never
+  // trips under that access pattern), and anything written later that calls this
+  // function without knowing today's one guarded caller existed.
+  await assertWithinAIRateLimit(userId, "weekly_plan", { maxCalls: 5, windowMinutes: 60 }, locale);
+
+  const generation = await generateWeeklyPlan(userId, opts?.supabaseClient);
 
   const { data: plan, error: planError } = await supabase
     .from("weekly_plans")

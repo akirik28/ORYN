@@ -3,10 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
-import { resolveLocale } from "@/lib/i18n/locale";
 import { getOrCreateWeeklyPlan } from "@/lib/plan/persist";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
-import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
+import { RateLimitExceededError } from "@/lib/ai/rate-limit";
 import { logEvent } from "@/lib/analytics/log";
 import { aiServiceFailureMessage } from "@/lib/ai/service-failure";
 import { buildActionStatusPatch, shouldLogCompletion } from "@/lib/plan/status-patch";
@@ -15,7 +14,11 @@ import type { ActionStatus, ReflectionOutcome } from "@/types/database";
 export async function regenerateWeeklyPlan(): Promise<{ error?: string }> {
   const session = await requireUser();
   try {
-    await assertWithinAIRateLimit(session.userId!, "weekly_plan", { maxCalls: 5, windowMinutes: 60 }, await resolveLocale());
+    // The rate limit itself now lives inside getOrCreateWeeklyPlan (lib/plan/persist.ts,
+    // 2026-09-02) so every caller gets it, not just this action -- removed the duplicate
+    // pre-check that used to live here rather than leave two gates on the same window:
+    // this action's own try/catch already handles RateLimitExceededError regardless of
+    // which layer throws it, so nothing here needed to change beyond the import.
     await getOrCreateWeeklyPlan(session.userId!, { force: true });
   } catch (error) {
     if (error instanceof RateLimitExceededError) {

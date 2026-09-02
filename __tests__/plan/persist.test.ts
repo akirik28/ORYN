@@ -37,6 +37,13 @@ vi.mock("@/lib/ai/weekly-plan", () => ({ generateWeeklyPlan: generateWeeklyPlanM
 vi.mock("@/lib/notifications/create", () => ({ createNotification: vi.fn(async () => {}) }));
 vi.mock("@/lib/supabase/admin", () => ({ tryCreateAdminClient: () => null }));
 vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
+// The rate limit added inside getOrCreateWeeklyPlan 2026-09-02 (docs/ai-spend-cap-2026-09-02.md)
+// is a real dependency of every test below now, not something any of them is testing —
+// __tests__/plan/rate-limit-coverage.test.ts owns that behavior directly, against the real
+// (unmocked) assertWithinAIRateLimit. A no-op here keeps this file's own tests scoped to what
+// they're actually named for (carried_forward preservation) instead of each one needing its
+// own ai_usage table mock just to get past a dependency it isn't exercising.
+vi.mock("@/lib/ai/rate-limit", () => ({ assertWithinAIRateLimit: vi.fn().mockResolvedValue(undefined), RateLimitExceededError: class RateLimitExceededError extends Error {} }));
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const PLAN_ID = "22222222-2222-4222-8222-222222222222";
