@@ -6,8 +6,8 @@ import type { Database } from "@/types/database";
 import { createClient } from "@/lib/supabase/server";
 import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { getProfileScores } from "@/lib/security/dal";
-import { computeOpportunityMatch, isNearStudent } from "./matching";
-import type { StudentMatchProfile, OpportunityForMatching } from "./matching";
+import { computeOpportunityMatch, computeAvoidSignals, isNearStudent } from "./matching";
+import type { StudentMatchProfile, OpportunityForMatching, DismissedOpportunitySignal } from "./matching";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 import { filterActionableOpportunities } from "./lifecycle";
 import { createNotification } from "@/lib/notifications/create";
@@ -107,8 +107,9 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
       .eq("status", "active"),
     // Counselor Core fix: an opportunity the student already applied to or explicitly
     // dismissed must never resurface as a fresh recommendation — see computeEligibility's
-    // savedStatus parameter (lib/opportunities/matching.ts).
-    supabase.from("saved_opportunities").select("opportunity_id, status").eq("user_id", userId),
+    // savedStatus parameter (lib/opportunities/matching.ts). not_interested_reason is read
+    // here too, feeding the avoid-signal computation below — see DismissalAvoidSignals.
+    supabase.from("saved_opportunities").select("opportunity_id, status, not_interested_reason").eq("user_id", userId),
     // Read before this call's own upsert overwrites it -- the only way to tell "newly
     // eligible this render" from "already eligible last render too." An empty result here
     // is itself meaningful: it means this student has never had matches computed before,
@@ -150,7 +151,7 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
     .slice(0, 3)
     .map((g) => g.dimension);
 
-  const studentProfile: StudentMatchProfile = {
+  const baseStudentProfile: StudentMatchProfile = {
     age,
     country: profileRes.data?.country ?? null,
     interests: (interestsRes.data ?? []).map((i) => i.label),
@@ -158,6 +159,41 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
     citizenshipCountries: profileRes.data?.citizenship_countries ?? [],
     graduationYear: profileRes.data?.graduation_year ?? null,
   };
+
+  // Section 12.1: "Use this signal in recommendations" — read but never acted on until this
+  // pass (docs/not-interested-reason-audit-2026-09-02.md has the full audit). A second,
+  // targeted query rather than folding into the `saved_opportunities` select above: only
+  // the small number of dismissed-with-a-reason rows need their opportunity's own
+  // fields/cost/location looked up, not every saved/applied row too.
+  const dismissedWithReason = (savedRes.data ?? []).filter(
+    (s): s is typeof s & { not_interested_reason: string } => s.status === "not_interested" && s.not_interested_reason !== null
+  );
+  let dismissedSignals;
+  if (dismissedWithReason.length > 0) {
+    const { data: dismissedOpportunities } = await supabase
+      .from("opportunities")
+      .select("id, fields, cost, location_mode, country")
+      .in(
+        "id",
+        dismissedWithReason.map((d) => d.opportunity_id)
+      );
+    const dismissedById = new Map((dismissedOpportunities ?? []).map((o) => [o.id, o]));
+    const signals: DismissedOpportunitySignal[] = dismissedWithReason.flatMap((d) => {
+      const dismissed = dismissedById.get(d.opportunity_id);
+      if (!dismissed) return [];
+      return [
+        {
+          reason: d.not_interested_reason,
+          fields: dismissed.fields ?? [],
+          cost: dismissed.cost,
+          isDistantInPerson: dismissed.location_mode === "in_person" && !isNearStudent(baseStudentProfile, { country: dismissed.country }),
+        },
+      ];
+    });
+    dismissedSignals = computeAvoidSignals(signals);
+  }
+
+  const studentProfile: StudentMatchProfile = { ...baseStudentProfile, dismissedSignals };
 
   const rows = opportunities.map((opportunity) => {
     const forMatching: OpportunityForMatching = {
@@ -178,6 +214,8 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
       residencyRestrictions: opportunity.residency_restrictions,
       fields: opportunity.fields,
       country: opportunity.country,
+      cost: opportunity.cost,
+      locationMode: opportunity.location_mode,
     };
     const match = computeOpportunityMatch(studentProfile, forMatching, savedStatusByOpportunityId.get(opportunity.id) ?? null, locale);
 
@@ -316,6 +354,11 @@ export function buildReasonCodes(
   if (match.profileNeedScore >= 70) codes.push("addresses_a_current_gap");
   if (isNearStudent(student, opportunity)) codes.push("near_you");
   if (match.relevanceScore < 70 && match.matchedInterests.length > 0) codes.push("shares_your_interest");
+  // Independent of the four checks above — section 62's explainability requirement applies
+  // to a penalty exactly as much as a boost, so this can appear alongside a positive code
+  // (still relevant on other grounds, just also similar to something dismissed) rather than
+  // only in the no-other-signal fallback below.
+  if (match.avoidReasons.length > 0) codes.push("similar_to_dismissed");
 
   // Fallback of last resort, reached only when none of the four checks above added
   // anything -- never crowds out a real reason when one exists. (eligible is already

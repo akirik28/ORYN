@@ -116,6 +116,9 @@ function takeSentences(reasonCodes: string[], locale: Locale): string[] {
     if (reasonCodes.includes("limited_profile_information")) {
       out.push("Profilinde kayıtlı ilgi alanı olmadığı için Oryn bunu henüz ilgi alanlarınla karşılaştıramıyor — birkaç tane eklersen daha net bir açıklama alabilirsin.");
     }
+    if (reasonCodes.includes("similar_to_dismissed")) {
+      out.push("Daha önce benzer bir fırsatı ilgilenmiyorum olarak işaretlediğin için bu eşleşme biraz daha düşük sıralandı — yine de listede, çünkü hâlâ senin kararın.");
+    }
     return out;
   }
   const out: string[] = [];
@@ -136,6 +139,9 @@ function takeSentences(reasonCodes: string[], locale: Locale): string[] {
   }
   if (reasonCodes.includes("limited_profile_information")) {
     out.push("Oryn can't yet compare this against your interests because your profile doesn't have any recorded — add a few for a more specific read.");
+  }
+  if (reasonCodes.includes("similar_to_dismissed")) {
+    out.push("This ranked a little lower because it resembles something you already marked not interested in — it's still on the list, since that's still your call to make.");
   }
   return out;
 }
