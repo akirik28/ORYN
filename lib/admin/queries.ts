@@ -1,7 +1,9 @@
 import "server-only";
 
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, ExternalSyncJob, MessageReportStatus } from "@/types/database";
+import type { Database, ExternalSyncJob, MessageReportStatus, Opportunity, OpportunityCategory, DataStatus } from "@/types/database";
 import { getTranslations } from "next-intl/server";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import { JOB_DEFINITIONS } from "@/lib/jobs/schedule";
@@ -12,6 +14,8 @@ import { MONTHLY_BUDGET_TARGET_USD, MONTHLY_BUDGET_CEILING_USD } from "@/lib/ai/
 import { PER_STUDENT_AI_FEATURES } from "@/lib/ai/monthly-quota";
 import { JOB_BUDGET_USD, checkJobBudget, type JobBudgetFeature, type JobBudgetReason } from "@/lib/ai/limits/job-budget";
 import type { SeriesPoint } from "@/components/oryn/charts/types";
+import { isOpportunityActionable, isOpportunitySufficientlyVerified, hasDeadlineCommitment, hasAnyVerificationRecord } from "@/lib/opportunities/lifecycle";
+import { isUndefinedColumnError } from "@/lib/supabase/errors";
 
 /**
  * Every admin-panel read, one module (docs/admin-panel-architecture-2026-09-02.md, D1). Each
@@ -981,4 +985,415 @@ export async function getCostTrend(admin: SupabaseClient<Database>, days = 30): 
   }
 
   return [...byDay.entries()].map(([date, { costUsd, calls }]) => ({ date, costUsd, calls })).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// Catalog tab (queries only — see docs/catalog-health-queries-2026-09-02.md for the full shape
+// report; the section component waits on 4e's chart kit, per CEO's own instruction). The
+// standing version of four one-off audits from tonight — this is instrumentation, not a new
+// investigation, so every predicate below is the exact one those audits already verified live:
+// docs/opportunity-verification-gate-tightening-impact-2026-09-02.md,
+// docs/migration-audit-applied-vs-written-2026-09-02.md,
+// docs/unwritten-columns-sweep-2026-09-02.md, docs/opportunity-catalog-student-risk-2026-09-02.md.
+//
+// Deliberately not a single "data quality score" (CEO's own instruction): every function below
+// returns a structured breakdown, never a collapsed number, because the distinctions those four
+// audits exist to draw — unverified is not closed, a lineage timestamp is not a confirmation, an
+// unreadable source is an absence of evidence rather than evidence of absence — are exactly what
+// a single score would hide. Where something can't be known, a field says so explicitly rather
+// than a confident zero standing in for it.
+// ---------------------------------------------------------------------------------------------
+
+const ACTIVE_OPPORTUNITY_FACTS_SELECT = "category, cycle_status, deadline, last_verified_at, verified_at, eligible_countries, citizenship_restrictions, status";
+
+type ActiveOpportunityFacts = Pick<
+  Opportunity,
+  "category" | "cycle_status" | "deadline" | "last_verified_at" | "verified_at" | "eligible_countries" | "citizenship_restrictions" | "status"
+>;
+
+/**
+ * "Passes the gate" means both of the live product's own checks, matching
+ * docs/opportunity-verification-gate-tightening-impact-2026-09-02.md's own definition exactly
+ * ("`isOpportunityActionable` and `isOpportunitySufficientlyVerified` both true") — caught live
+ * while verifying this file against real data: `isOpportunitySufficientlyVerified` alone passed
+ * all 283 active rows, because it says nothing about a closed cycle or a passed deadline, which
+ * `isOpportunityActionable` is the one that excludes. Naming this as its own function rather than
+ * inlining `a && b` at every call site is what made that gap visible in the first place, and what
+ * stops the two-checks-required rule from silently narrowing to one at some future call site. */
+function passesLiveVerificationGate(opportunity: ActiveOpportunityFacts): boolean {
+  return isOpportunityActionable(opportunity) && isOpportunitySufficientlyVerified(opportunity);
+}
+
+/**
+ * One shared fetch behind three of the functions below (verification reality, gate-tightening
+ * impact, deadline/eligibility coverage) rather than three separate round trips to the same
+ * table — `opportunities` is a bounded, low-hundreds-row table (283 active as of tonight's own
+ * measurement), not the unbounded-log shape D2/D3 of docs/admin-panel-architecture-2026-09-02.md
+ * reacted to (the "last 500 calls" `ai_usage` anti-pattern). The reason this stays a JS-side
+ * fetch rather than a SQL aggregate, deliberately, not an oversight: every number below depends
+ * on `isOpportunitySufficientlyVerified`/`hasDeadlineCommitment`/`hasAnyVerificationRecord`
+ * (lib/opportunities/lifecycle.ts) — the actual live gating rule. Re-deriving that logic a
+ * second time in raw SQL would create exactly the two-places-one-rule risk D8 warns against for
+ * enforcement; reusing the real function against real rows is the only way this panel's numbers
+ * can never silently drift from what the gate itself actually does. `getProductActivity` above
+ * already establishes this same bounded-fetch-then-aggregate shape in this file for the same
+ * reason (event names aren't a SQL-expressible aggregate either).
+ */
+async function getActiveOpportunityFacts(admin: SupabaseClient<Database>): Promise<ActiveOpportunityFacts[]> {
+  const { data } = await admin.from("opportunities").select(ACTIVE_OPPORTUNITY_FACTS_SELECT).eq("status", "active");
+  return data ?? [];
+}
+
+export interface VerificationReality {
+  activeTotal: number;
+  /** Both halves of the live gate — `isOpportunityActionable` AND `isOpportunitySufficientlyVerified`
+   *  — matching docs/opportunity-verification-gate-tightening-impact-2026-09-02.md's own
+   *  definition exactly. Caught live while verifying this file against real data, worth naming
+   *  precisely rather than quietly fixing: an earlier draft checked verification alone on the
+   *  (wrong) assumption that `status='active'` already implied actionability, and reported 283
+   *  of 283 passing — `isOpportunityActionable` is the check that actually excludes a closed
+   *  cycle or a passed deadline, and status alone says nothing about either. */
+  passingGateToday: number;
+  unverifiedCycleTotal: number;
+  /** Independent existence counts, NOT mutually exclusive — a row can carry both, and most of
+   *  the 75 measured 2026-09-02 did. Reported separately rather than partitioned because
+   *  collapsing them would hide exactly the "which pipeline generation" distinction the source
+   *  audit exists to surface — see this file's own section header. */
+  unverifiedCycleWithVerifiedAt: number;
+  unverifiedCycleWithLastVerifiedAt: number;
+  /** The verification half of the gate specifically, not the whole thing — deliberately narrower
+   *  than `passingGateToday` above. Answers "of the unverified-cycle rows, how many does
+   *  verification-sufficiency alone reject," which is the exact question
+   *  docs/opportunity-verification-gate-tightening-impact-2026-09-02.md's "0 of them are
+   *  correctly excluded" measured. A row here could still separately fail actionability (a
+   *  passed deadline) without this field moving — that is a real, different fact, not a bug in
+   *  this one, and is why passingGateToday exists as its own, whole-gate number above rather
+   *  than being inferred from this field. */
+  unverifiedCycleVerificationInsufficient: number;
+}
+
+export async function getVerificationReality(admin: SupabaseClient<Database>): Promise<VerificationReality> {
+  const rows = await getActiveOpportunityFacts(admin);
+  const unverified = rows.filter((r) => r.cycle_status === "unverified");
+
+  return {
+    activeTotal: rows.length,
+    passingGateToday: rows.filter((r) => passesLiveVerificationGate(r)).length,
+    unverifiedCycleTotal: unverified.length,
+    unverifiedCycleWithVerifiedAt: unverified.filter((r) => Boolean(r.verified_at)).length,
+    unverifiedCycleWithLastVerifiedAt: unverified.filter((r) => Boolean(r.last_verified_at)).length,
+    unverifiedCycleVerificationInsufficient: unverified.filter((r) => !isOpportunitySufficientlyVerified(r)).length,
+  };
+}
+
+/**
+ * MEASUREMENT ONLY. Never wired into real gating — lib/opportunities/lifecycle.ts's
+ * `isOpportunitySufficientlyVerified` remains the single live rule, per D8
+ * (docs/admin-panel-architecture-2026-09-02.md: "the panel reads and renders... the rule that
+ * stops a call is never split between a screen and a library"). Kept local to this file rather
+ * than exported from lifecycle.ts specifically so nothing outside this reporting path can ever
+ * import and accidentally apply it to a real recommendation.
+ *
+ * Encodes exactly the tightened rule docs/opportunity-verification-gate-tightening-impact-
+ * 2026-09-02.md measured and CEO decided against shipping: a bare pipeline-lineage timestamp no
+ * longer counts as sufficient on its own for cycle_status='unverified' specifically. A deadline
+ * commitment still passes regardless of cycle_status; a verification timestamp still passes for
+ * any OTHER cycle_status. Both the "narrow" and "broad" readings of that document converged on
+ * this same predicate (131 recommendable either way) — there was no third reading to encode.
+ */
+function wouldPassTightenedVerificationGate(opportunity: Pick<Opportunity, "cycle_status" | "deadline" | "last_verified_at" | "verified_at">): boolean {
+  if (hasDeadlineCommitment(opportunity)) return true;
+  if (opportunity.cycle_status === "unverified") return false;
+  return hasAnyVerificationRecord(opportunity);
+}
+
+export interface CategoryGateImpact {
+  category: OpportunityCategory;
+  totalActive: number;
+  recommendableToday: number;
+  ofWhichUnverifiedCycle: number;
+  /** Hypothetical, per wouldPassTightenedVerificationGate's own comment — not a preview of a
+   *  planned change. This is the exact number that stopped a change CEO had already
+   *  half-committed to (summer_program: 90 → 31) — the reason this whole category breakdown
+   *  exists as a standing figure rather than a one-off measurement. */
+  recommendableIfTightened: number;
+}
+
+/** Sorted by totalActive descending — the category that dominates the catalog (summer_program,
+ *  49% of everything active on 2026-09-02) belongs at the top of this list on its own, not
+ *  because of a separate ranking decision a caller has to make. */
+export async function getGateTighteningImpactByCategory(admin: SupabaseClient<Database>): Promise<CategoryGateImpact[]> {
+  const rows = await getActiveOpportunityFacts(admin);
+
+  const byCategory = new Map<OpportunityCategory, ActiveOpportunityFacts[]>();
+  for (const row of rows) {
+    const list = byCategory.get(row.category) ?? [];
+    list.push(row);
+    byCategory.set(row.category, list);
+  }
+
+  return [...byCategory.entries()]
+    .map(([category, categoryRows]) => ({
+      category,
+      totalActive: categoryRows.length,
+      recommendableToday: categoryRows.filter((r) => passesLiveVerificationGate(r)).length,
+      ofWhichUnverifiedCycle: categoryRows.filter((r) => r.cycle_status === "unverified" && passesLiveVerificationGate(r)).length,
+      // Tightening can only ever remove rows from today's recommendable set, never add one back
+      // — a row actionability already excludes stays excluded regardless of which verification
+      // rule is applied, so this still requires isOpportunityActionable, just with the tightened
+      // verification half swapped in for the live one.
+      recommendableIfTightened: categoryRows.filter((r) => isOpportunityActionable(r) && wouldPassTightenedVerificationGate(r)).length,
+    }))
+    .sort((a, b) => b.totalActive - a.totalActive);
+}
+
+/** Both country spellings the corpus actually uses were checked live before writing this —
+ *  "Türkiye" is the only one present (5 active rows), "Turkey" appears in zero rows. A future
+ *  research batch introducing the English spelling would silently split this predicate; this
+ *  checks both so that can't happen unnoticed. */
+const TURKEY_SPELLINGS = ["Türkiye", "Turkey"] as const;
+
+export interface DeadlineEligibilityCoverage {
+  /** cycle_status='open' (reads as actionable right now) with no deadline on file — not wrong,
+   *  but nothing for a student to plan around, and indistinguishable in the UI from a genuinely
+   *  dateless rolling admission. docs/opportunity-catalog-student-risk-2026-09-02.md's finding
+   *  #2, unchanged predicate. */
+  openWithNoDeadline: number;
+  /** A non-empty eligible_countries list that excludes Turkey (either spelling) with no
+   *  citizenship_restrictions text explaining why. Explicitly NOT a confirmed-defect count —
+   *  docs/opportunity-catalog-student-risk-2026-09-02.md's finding #3 flagged this as
+   *  "plausibly all legitimate... not claiming this is wrong, only that it's unverified," and
+   *  this function inherits that same honesty: it is a worth-a-spot-check count, not a defect
+   *  count, and a UI built on it must say so rather than rendering it as N confirmed problems. */
+  turkeyExcludedWithNoRestrictionText: number;
+}
+
+export async function getDeadlineEligibilityCoverage(admin: SupabaseClient<Database>): Promise<DeadlineEligibilityCoverage> {
+  const rows = await getActiveOpportunityFacts(admin);
+
+  return {
+    openWithNoDeadline: rows.filter((r) => r.cycle_status === "open" && !r.deadline).length,
+    turkeyExcludedWithNoRestrictionText: rows.filter(
+      (r) =>
+        r.eligible_countries.length > 0 &&
+        !TURKEY_SPELLINGS.some((spelling) => r.eligible_countries.includes(spelling)) &&
+        !r.citizenship_restrictions
+    ).length,
+  };
+}
+
+const DATA_STATUS_TABLES = ["universities", "university_requirements", "university_deadlines"] as const;
+const DATA_STATUSES: readonly DataStatus[] = ["fresh", "stale", "needs_review", "unavailable"];
+
+export interface DataStatusDistribution {
+  table: (typeof DATA_STATUS_TABLES)[number];
+  total: number;
+  byStatus: Record<DataStatus, number>;
+}
+
+/**
+ * `opportunities` has no `data_status`/`last_checked_at` columns — checked directly against
+ * types/database.ts before writing this, not assumed from the other three tables having them.
+ * Its own freshness signal is the verification timestamps `getVerificationReality` above already
+ * covers; this function is deliberately scoped to the three tables that actually carry Phase 29's
+ * `data_status` enum, not stretched to cover a fourth table that doesn't have the concept.
+ *
+ * Genuine SQL-side counts (D3) — one exact-count query per status per table (12 total), never a
+ * row fetch. Unlike the opportunity functions above, there's no shared business-rule predicate
+ * here to keep in one place; a plain GROUP BY-equivalent count is the correct shape, not a
+ * bounded-fetch exception.
+ */
+export async function getDataStatusDistribution(admin: SupabaseClient<Database>): Promise<DataStatusDistribution[]> {
+  return Promise.all(
+    DATA_STATUS_TABLES.map(async (table) => {
+      const counts = await Promise.all(
+        DATA_STATUSES.map((status) => admin.from(table).select("*", { count: "exact", head: true }).eq("data_status", status))
+      );
+      const byStatus = Object.fromEntries(DATA_STATUSES.map((status, i) => [status, counts[i].count ?? 0])) as Record<DataStatus, number>;
+      return { table, total: Object.values(byStatus).reduce((sum, n) => sum + n, 0), byStatus };
+    })
+  );
+}
+
+const MIGRATIONS_DIR = join(process.cwd(), "supabase", "migrations");
+/** Matches an `alter table [public.]<name>` statement opening a (possibly multi-line, comma-
+ *  separated) block of `add column` clauses. */
+const ALTER_TABLE_RE = /alter table(?:\s+if exists)?\s+(?:public\.)?(\w+)/gi;
+const ADD_COLUMN_RE = /add column(?:\s+if not exists)?\s+(\w+)/gi;
+
+interface MigrationColumnArtifact {
+  table: string;
+  column: string;
+}
+
+/**
+ * A light regex scan, explicitly not a SQL parser — extracts only `alter table ... add column`
+ * occurrences. **Deliberately does not attempt `create table` at all**, not just the harder
+ * shapes (indexes, constraints, triggers, functions, views, enums, policies, grants) — see this
+ * function's live-check counterpart below for why table-level existence isn't checkable through
+ * this app's actual database access path the way column existence is. A migration whose only
+ * statements are `create table` or one of the uncovered kinds — 0058's three tables, 0082's
+ * three indexes, most of the 0061-0067 RLS set — yields zero artifacts here and must be
+ * reported as "unchecked", never silently folded into "applied" or "unapplied". Column-adding
+ * migrations are most of what docs/migration-audit-applied-vs-written-2026-09-02.md actually
+ * found unapplied (0089-0092 among them), so this still covers the highest-value case.
+ *
+ * `alter table` block scope is tracked per statement, not per file — a migration doing `alter
+ * table profiles add column ...; alter table opportunities add column ...;` (0059's shape)
+ * attributes each `add column` to the nearest preceding `alter table`, re-scanned per statement
+ * boundary (`;`) rather than assuming one table per file.
+ */
+function extractMigrationColumnArtifacts(sql: string): MigrationColumnArtifact[] {
+  const artifacts: MigrationColumnArtifact[] = [];
+  for (const statement of sql.split(";")) {
+    const alterMatch = ALTER_TABLE_RE.exec(statement);
+    ALTER_TABLE_RE.lastIndex = 0;
+    if (!alterMatch) continue;
+    const table = alterMatch[1]!;
+    for (const m of statement.matchAll(ADD_COLUMN_RE)) artifacts.push({ table, column: m[1]! });
+  }
+  return artifacts;
+}
+
+/**
+ * Column existence, checked the same way every write-path degrade guard in this codebase
+ * already does — reusing `isUndefinedColumnError`, not inventing a second mechanism. This
+ * app's `admin` client talks to Postgres through PostgREST, which does not expose
+ * `information_schema`/`pg_catalog` for arbitrary introspection the way a direct Postgres
+ * connection (e.g. this session's own Supabase-MCP `execute_sql`, used to verify every number
+ * in docs/catalog-health-queries-2026-09-02.md) does — an earlier draft of this function tried
+ * exactly that and would have failed outright in the deployed app. A NAMED select of the column
+ * itself, head-only (no row data fetched), goes through PostgREST's own schema-cache validation
+ * before any SQL runs — the identical check `categoryIsEnabled()` (lib/notifications/create.ts)
+ * already relies on for a read. No error means the column is live; `isUndefinedColumnError`
+ * matching means it genuinely isn't; anything else (RLS, a transient failure, the table itself
+ * missing) is surfaced as `null` — "couldn't determine," never guessed at as either answer. This
+ * is also why `create table` artifacts aren't extracted above: there is no equivalent
+ * PostgREST-native "does this table exist" signal this function can rely on without guessing at
+ * an error shape that hasn't been observed against this project (the same discipline
+ * `isUndefinedColumnError`'s own comment applies to `PGRST204`'s spelling).
+ */
+async function columnExistsLive(admin: SupabaseClient<Database>, table: string, column: string): Promise<boolean | null> {
+  const { error } = await admin.from(table as never).select(column, { head: true });
+  if (!error) return true;
+  if (isUndefinedColumnError(error, column)) return false;
+  return null;
+}
+
+export type MigrationRealityStatus = "confirmed_live" | "confirmed_partially_live" | "confirmed_missing" | "unchecked" | "indeterminate";
+
+export interface MigrationRealityRow {
+  file: string;
+  columnArtifactsFound: number;
+  columnArtifactsConfirmedLive: number;
+  /** Artifacts `columnExistsLive` couldn't resolve either way — kept separate from "confirmed
+   *  live"/"confirmed missing" rather than silently defaulting into one of them. */
+  columnArtifactsIndeterminate: number;
+  status: MigrationRealityStatus;
+}
+
+/**
+ * The live, standing replacement for docs/migration-audit-applied-vs-written-2026-09-02.md's
+ * one-off sweep — narrower in scope than that audit (columns only, see the extractor's own
+ * comment), broader in the sense that it never goes stale the way a doc does. Reads
+ * `supabase/migrations/*.sql` from disk — a NEW pattern for `lib/` in this codebase (previously
+ * only test files did this, e.g. `__tests__/social/posts-schema.test.ts`); flagged explicitly
+ * rather than assumed safe, because a Next.js production deployment's file tracing does not
+ * automatically include files a route only reaches via a raw `fs` call outside static imports.
+ * Whoever wires this into the real admin route should confirm the migrations directory actually
+ * ships in the deployed function (Vercel's `outputFileTracingIncludes` in `next.config.ts` is
+ * the standard fix if it doesn't) before trusting this in production — noted here rather than
+ * discovered after a deploy shows every migration as "unchecked" for the wrong reason.
+ *
+ * Never reads `supabase_migrations.schema_migrations` — reference_list_migrations_unreliable_
+ * use_direct_probe's own finding (confirmed twice this session already, independently) is that
+ * the ledger undercounts what's actually live. Every answer here comes from asking the live
+ * schema directly, the same discipline that finding established.
+ */
+export async function getMigrationReality(admin: SupabaseClient<Database>): Promise<MigrationRealityRow[]> {
+  const files = readdirSync(MIGRATIONS_DIR)
+    .filter((f) => f.endsWith(".sql"))
+    .sort();
+
+  const rows: MigrationRealityRow[] = [];
+  for (const file of files) {
+    const sql = readFileSync(join(MIGRATIONS_DIR, file), "utf8");
+    const artifacts = extractMigrationColumnArtifacts(sql);
+
+    if (artifacts.length === 0) {
+      rows.push({ file, columnArtifactsFound: 0, columnArtifactsConfirmedLive: 0, columnArtifactsIndeterminate: 0, status: "unchecked" });
+      continue;
+    }
+
+    let confirmedLive = 0;
+    let indeterminate = 0;
+    for (const artifact of artifacts) {
+      const exists = await columnExistsLive(admin, artifact.table, artifact.column);
+      if (exists === true) confirmedLive++;
+      else if (exists === null) indeterminate++;
+    }
+
+    const status: MigrationRealityStatus =
+      indeterminate === artifacts.length
+        ? "indeterminate"
+        : confirmedLive === artifacts.length
+          ? "confirmed_live"
+          : confirmedLive === 0 && indeterminate === 0
+            ? "confirmed_missing"
+            : "confirmed_partially_live";
+
+    rows.push({ file, columnArtifactsFound: artifacts.length, columnArtifactsConfirmedLive: confirmedLive, columnArtifactsIndeterminate: indeterminate, status });
+  }
+  return rows;
+}
+
+/**
+ * The generalised version of tonight's two hand-found instances (ai_usage.degraded,
+ * university_requirements.is_exclusion) — a standing, extensible watchlist rather than a
+ * one-off grep. Deliberately NOT a scan of all ~180 defaulted columns
+ * docs/unwritten-columns-sweep-2026-09-02.md catalogued; that sweep's own §Method drew the line
+ * at columns whose default is a specific factual claim (a boolean/enum flag asserting something
+ * happened) versus an ordinary settings default, and chasing all 180 live on every admin-panel
+ * load is neither necessary nor cheap. This list is the mechanism that sweep's own conclusion
+ * asked for — add an entry here, and it becomes a permanent, live check instead of a claim that
+ * ages the moment the audit doc is written. Seeded with the two already-known instances (kept
+ * for standing regression coverage — is_exclusion should show a real non-100% figure now that
+ * lib/requirements/ingest.ts sets it) plus one already-confirmed-safe column, so the panel proves
+ * it can tell "still broken," "fixed," and "never broken" apart, not just find one shape.
+ */
+const NEVER_WRITTEN_COLUMN_WATCHLIST: { table: string; column: string; defaultDescription: string; defaultValue: unknown }[] = [
+  { table: "ai_usage", column: "degraded", defaultDescription: "false", defaultValue: false },
+  { table: "university_requirements", column: "is_exclusion", defaultDescription: "false", defaultValue: false },
+  { table: "opportunity_matches", column: "eligible", defaultDescription: "true", defaultValue: true },
+];
+
+export interface NeverWrittenColumnCheck {
+  table: string;
+  column: string;
+  defaultDescription: string;
+  totalRows: number;
+  rowsAtDefault: number;
+  /** null when totalRows is 0 — "100% at default" and "no data to judge" must never render the
+   *  same way; a table with zero rows says so rather than showing a hollow 0%. */
+  percentAtDefault: number | null;
+}
+
+export async function getNeverWrittenColumnChecks(admin: SupabaseClient<Database>): Promise<NeverWrittenColumnCheck[]> {
+  return Promise.all(
+    NEVER_WRITTEN_COLUMN_WATCHLIST.map(async ({ table, column, defaultDescription, defaultValue }) => {
+      const [totalRes, atDefaultRes] = await Promise.all([
+        admin.from(table as never).select("*", { count: "exact", head: true }),
+        admin.from(table as never).select("*", { count: "exact", head: true }).eq(column, defaultValue as never),
+      ]);
+      const totalRows = totalRes.count ?? 0;
+      const rowsAtDefault = atDefaultRes.count ?? 0;
+      return {
+        table,
+        column,
+        defaultDescription,
+        totalRows,
+        rowsAtDefault,
+        percentAtDefault: totalRows === 0 ? null : Math.round((rowsAtDefault / totalRows) * 1000) / 10,
+      };
+    })
+  );
 }
