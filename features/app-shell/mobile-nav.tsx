@@ -80,6 +80,25 @@ export function MobileNav({
           <NotificationBell notifications={notifications} unreadCount={unreadCount} />
           <UserMenu displayName={displayName} email={email} signal={signal} isAdmin={isAdmin} />
         </div>
+        {/* Ultra's mobile motion carrier, 2026-09-02. Below `lg` the sidebar — where the
+            animated flame gradient lives — never mounts at all (`hidden lg:flex`), so
+            "olabildiğince fazla animasyon" (as much animation as possible, founder
+            direction) had no phone-native surface until this. Not a shrunk copy of the
+            sidebar gradient: a 4-stop drifting fill that reads clearly in a 214px-tall
+            column is noise in a 3px strip, and the spec's own rule is that mobile gets a
+            genuinely different treatment, not a squashed desktop one (see
+            UniversityExplorerHero → List's precedent). tier-flow-bar (app/globals.css) is
+            exactly scaled for this instead: a thin horizontal strip, already built
+            (2026-08-30 or earlier) and unused until now — fixed to be baseline-inert
+            outside [data-tier="ultra"] as part of adopting it here, since its previous
+            unconditional `background` would have shown a static blue-toned bar under
+            Standard, on every screen this header renders on. Positioned to replace the
+            header's own bottom border visually, sitting on this sticky header so it stays
+            fixed with it. prefers-reduced-motion honoured by the class itself, not
+            re-checked here — this is a CSS animation, not a JS/RAF loop, so
+            lib/ui/use-prefers-reduced-motion.ts's dependency-array requirement (for RAF
+            loops specifically) doesn't apply. */}
+        <div aria-hidden="true" className="tier-flow-bar pointer-events-none absolute inset-x-0 bottom-0 h-[3px]" />
       </header>
 
       <nav

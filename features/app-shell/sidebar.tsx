@@ -149,12 +149,31 @@ export function Sidebar({
         <Link
           href="/settings/plan"
           className={cn(
-            "flex items-center gap-2 rounded-[10px] border border-white/15 bg-white/[0.08] px-3 py-2 text-[13px] font-medium text-white transition-colors",
+            "flex items-center gap-2.5 rounded-[10px] border border-white/15 bg-white/[0.08] px-3 py-2 transition-colors",
             "hover:bg-white/[0.13] focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:outline-none"
           )}
         >
           <Flame className="size-[16px] shrink-0 text-[var(--tier-grad-1)]" strokeWidth={1.8} />
-          {t("upgradePlan")}
+          {/* Price/trial fact added 2026-09-02, founder direction: state it everywhere
+              Ultra is offered. Second line, not appended to the label — "Upgrade your
+              plan — 399,99 TL/month · First week free" would wrap awkwardly at this
+              214px width, and a subtext line reads as a fact being disclosed rather than
+              a longer pitch. Deliberately no urgency language or countdown, per the
+              founder's own constraint — the two facts, stated once, nothing else.
+              white/90, not the label's full white: this backdrop is one step lighter
+              than the plain sidebar (the CTA's own bg-white/[0.08] pill sits on top of
+              the scrimmed flame gradient, brightening it slightly), and computed WCAG
+              contrast against that composited color — not assumed from the nav labels'
+              own numbers, which are a different backdrop — put the floor at 90%: 85%
+              measured 4.34:1 and failed, 90% measured 4.64:1 and cleared it. */}
+          <span className="flex min-w-0 flex-col">
+            <span className="text-[13px] font-medium text-white">{t("upgradePlan")}</span>
+            {/* No truncate: measured live at 168px needed vs 142px available at this
+                width, in English — "First week free" was getting cut to "First we…",
+                silently dropping the fact this line exists to state. Wraps to two lines
+                instead; both languages checked, neither runs past three. */}
+            <span className="text-[11px] leading-snug text-white/90">{t("upgradePlanPrice")}</span>
+          </span>
         </Link>
       </div>
 
