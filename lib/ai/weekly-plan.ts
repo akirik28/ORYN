@@ -11,6 +11,7 @@ import { formatRequirementsCaveat } from "./requirements-text";
 import { withOutputLanguage } from "./output-language";
 import { getCounselorRecommendations } from "@/lib/counselor";
 import type { CounselorRecommendation, RecommendationClass } from "@/lib/counselor/types";
+import type { TimeBudget } from "@/types/database";
 
 const WeeklyActionSchema = z.object({
   title: z.string(),
@@ -237,6 +238,85 @@ export function resolvePlanSelfContradiction(plan: WeeklyPlanGeneration, counsel
 }
 
 /**
+ * Upper bound per stated weekly-time-budget bucket, in minutes. Only the upper bound
+ * matters here — recommending fewer or shorter actions than a student's stated capacity
+ * is never the failure this guards against (Phase 2: "the goal is not maximum activity...
+ * maximum development per unit of student time"), only exceeding it is.
+ *
+ * `10h_plus` is deliberately absent: the spec's own bucket has no stated ceiling, and none
+ * is invented here — a student who said they have significant capacity isn't
+ * second-guessed with a number they never gave us. WeeklyActionSchema's existing
+ * per-action 1200-minute cap still applies to them; only the weekly-total check below
+ * doesn't.
+ */
+const BUDGET_UPPER_BOUND_MINUTES: Partial<Record<TimeBudget, number>> = {
+  under_2h: 120,
+  "2_5h": 300,
+  "5_10h": 600,
+};
+
+/**
+ * 20% headroom above the upper bound before anything gets trimmed. A self-reported
+ * "5-10 hours" is a fuzzy weekly estimate, not a precise contract, and Phase 64's own
+ * example is a 5x overshoot (15h recommended against a stated 3h free) — the rule exists
+ * to catch gross overcommitment, not to nitpick a plan that runs a few minutes long.
+ */
+const BUDGET_TOLERANCE = 1.2;
+
+function sumMinutes(actions: WeeklyPlanGeneration["actions"]): number {
+  return actions.reduce((total, action) => total + action.estimatedMinutes, 0);
+}
+
+/**
+ * Deterministic backstop for Phase 64's own rule ("do not recommend 15 hours of new
+ * commitments to a student who has 2 hours free") — currently enforced by
+ * ADVISOR_SYSTEM_PROMPT alone, confirmed working against real historical weekly_actions
+ * data (docs/time-budget-busy-mode-audit-2026-09-02.md) but never structurally
+ * guaranteed, and never yet exercised for the two tightest buckets (under_2h/2_5h) live.
+ * This does not replace that instruction — ADVISOR_SYSTEM_PROMPT is unchanged — it only
+ * ever trims a plan the prompt-based instruction failed to keep in bounds.
+ *
+ * Must degrade: a null/missing weeklyTimeBudget (2 of 8 live students) returns the plan
+ * unchanged rather than blocking generation — same "absent input, no confident output"
+ * discipline as everywhere else this codebase applies it.
+ *
+ * Drops the lowest-priority action(s) first — array order is the model's own priority
+ * (lib/plan/persist.ts writes `priority: index + 1` straight from this order), so trimming
+ * from the end preserves what the model ranked highest. Never drops to zero: a single
+ * over-budget action is a better outcome than an empty plan (`actions` already has a
+ * schema-level `.min(1)` floor `resolvePlanSelfContradiction` depends on too), so a plan
+ * whose top action alone exceeds the budget is logged, not further reduced.
+ */
+export function enforceTimeBudget(plan: WeeklyPlanGeneration, weeklyTimeBudget: string | null): WeeklyPlanGeneration {
+  // `StudentAdvisorContext.weeklyTimeBudget` is typed as a plain string (it only ever
+  // gets interpolated into prompt text elsewhere), not the DB's own TimeBudget enum — the
+  // `in` check below both narrows it safely and doubles as the 10h_plus / unrecognized-
+  // value guard, since neither is a key of BUDGET_UPPER_BOUND_MINUTES.
+  if (!weeklyTimeBudget || !(weeklyTimeBudget in BUDGET_UPPER_BOUND_MINUTES)) return plan;
+  const upperBound = BUDGET_UPPER_BOUND_MINUTES[weeklyTimeBudget as TimeBudget]!;
+
+  const threshold = Math.round(upperBound * BUDGET_TOLERANCE);
+  const originalTotal = sumMinutes(plan.actions);
+  if (originalTotal <= threshold) return plan;
+
+  const trimmed = [...plan.actions];
+  while (trimmed.length > 1 && sumMinutes(trimmed) > threshold) {
+    trimmed.pop();
+  }
+  const trimmedTotal = sumMinutes(trimmed);
+  console.warn("[weekly-plan] generation exceeded the student's stated time budget — trimmed", {
+    weeklyTimeBudget,
+    thresholdMinutes: threshold,
+    originalTotalMinutes: originalTotal,
+    originalActionCount: plan.actions.length,
+    trimmedTotalMinutes: trimmedTotal,
+    trimmedActionCount: trimmed.length,
+    stillOverBudget: trimmedTotal > threshold,
+  });
+  return { ...plan, actions: trimmed };
+}
+
+/**
  * The static half of the weekly-plan user-turn prompt — the instruction sentence that
  * doesn't depend on any student data. Extracted (2026-09-02, the empty-slot-permission
  * package) so lib/ai/eval/harness.ts's buildWeeklyPlanPrompt can call this instead of
@@ -283,5 +363,10 @@ export async function generateWeeklyPlan(userId: string, supabaseClient?: Parame
     }),
   );
 
-  return resolvePlanSelfContradiction(result.data, recommendedTitles);
+  // Contradiction resolution first, on the model's full original output, then the time-
+  // budget trim on top — trimming first could remove the very action that made
+  // avoidForNow self-contradictory, and resolvePlanSelfContradiction should see everything
+  // the model actually said, not an already-shortened list.
+  const resolved = resolvePlanSelfContradiction(result.data, recommendedTitles);
+  return enforceTimeBudget(resolved, context.student.weeklyTimeBudget);
 }

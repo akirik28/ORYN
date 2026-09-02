@@ -57,7 +57,7 @@ vi.mock("@/lib/counselor", () => ({
   }),
 }));
 
-const { generateWeeklyPlan, formatCounselorGrounding, resolvePlanSelfContradiction } = await import("@/lib/ai/weekly-plan");
+const { generateWeeklyPlan, formatCounselorGrounding, resolvePlanSelfContradiction, enforceTimeBudget } = await import("@/lib/ai/weekly-plan");
 const { formatEligibilityCaveat } = await import("@/lib/ai/eligibility-text");
 
 function rec(overrides: Partial<CounselorRecommendation> = {}): CounselorRecommendation {
@@ -440,6 +440,81 @@ describe("resolvePlanSelfContradiction (pure)", () => {
 
   test("counselorRecommendedTitles defaults to empty — omitting it changes nothing for the original actions-only check", () => {
     expect(resolvePlanSelfContradiction(plan(["Start another entrepreneurship club"], "starting another entrepreneurship club")).avoidForNow).toBeNull();
+  });
+});
+
+describe("enforceTimeBudget (pure) — Phase 64's deterministic backstop", () => {
+  function planWithMinutes(minutesList: number[]) {
+    return {
+      summary: "s",
+      actions: minutesList.map((estimatedMinutes, i) => ({
+        title: `Action ${i + 1}`,
+        description: "d",
+        reason: "r",
+        category: "c",
+        estimatedMinutes,
+        impact: "high" as const,
+      })),
+      avoidForNow: null,
+    };
+  }
+
+  test("null budget (2 of 8 live students) never blocks generation — plan returned unchanged", () => {
+    const plan = planWithMinutes([500, 500, 500]);
+    expect(enforceTimeBudget(plan, null)).toBe(plan);
+  });
+
+  test("an unrecognized value degrades the same way null does, rather than throwing", () => {
+    const plan = planWithMinutes([500, 500, 500]);
+    expect(enforceTimeBudget(plan, "not_a_real_bucket")).toBe(plan);
+  });
+
+  test("10h_plus has no stated ceiling — a very large total is never trimmed", () => {
+    const plan = planWithMinutes([600, 600, 600]);
+    expect(enforceTimeBudget(plan, "10h_plus")).toBe(plan);
+  });
+
+  test("under the bucket's upper bound — untouched", () => {
+    const plan = planWithMinutes([100, 100, 100]); // 300 min, well under 5_10h's 600 cap
+    expect(enforceTimeBudget(plan, "5_10h")).toBe(plan);
+  });
+
+  test("over the upper bound but within the 20% tolerance — untouched, a self-reported estimate isn't a precise contract", () => {
+    const plan = planWithMinutes([350, 350]); // 700 min; 5_10h's threshold is 600*1.2=720
+    expect(enforceTimeBudget(plan, "5_10h")).toBe(plan);
+  });
+
+  test("past the tolerance — trims from the end (lowest priority) until it fits", () => {
+    const plan = planWithMinutes([300, 300, 300]); // 900 min, well past 5_10h's 720 threshold
+    const result = enforceTimeBudget(plan, "5_10h");
+    expect(result.actions.map((a) => a.title)).toEqual(["Action 1", "Action 2"]);
+    expect(result.actions.reduce((sum, a) => sum + a.estimatedMinutes, 0)).toBe(600);
+  });
+
+  test("never drops to zero — a single over-budget action beats an empty plan", () => {
+    const plan = planWithMinutes([1000]); // one action alone exceeds under_2h's 144min threshold
+    const result = enforceTimeBudget(plan, "under_2h");
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].estimatedMinutes).toBe(1000);
+  });
+
+  test("the spec's own example: a low budget with a grossly over-budget plan is trimmed substantially", () => {
+    // "Do not recommend 15 hours of extracurricular work to a student with 3 free hours."
+    // Trims from 3 actions/900min down to the 1-action floor/300min — a real, substantial
+    // reduction (15h to 5h) even though under_2h's 144min threshold is tight enough that
+    // even the single remaining action alone still exceeds it; see "never drops to zero"
+    // above for why that floor exists rather than being pushed further.
+    const plan = planWithMinutes([300, 300, 300]);
+    const result = enforceTimeBudget(plan, "under_2h");
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].estimatedMinutes).toBe(300);
+  });
+
+  test("avoidForNow and summary survive trimming untouched", () => {
+    const plan = { ...planWithMinutes([300, 300, 300]), avoidForNow: { activity: "X", reason: "Y" }, summary: "original summary" };
+    const result = enforceTimeBudget(plan, "5_10h");
+    expect(result.avoidForNow).toEqual({ activity: "X", reason: "Y" });
+    expect(result.summary).toBe("original summary");
   });
 });
 
