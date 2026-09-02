@@ -466,6 +466,78 @@ individual function, the reads that *can* run in parallel already do (the page's
 function. The waste here is entirely cross-function duplication, not serial
 round-tripping.
 
+### Fixed 2026-09-02: the other five categories, and the open question measured rather than assumed
+
+`profile_scores` (category 1 of 6, above) was already closed by the `getProfileScores`
+helper before this pass started. The remaining five — `universities` (3x),
+`loadSupersessionMap` (2x), `university_statistics` (2x), `university_requirements` (2x,
+identical query both times), and raw `profiles` bypassing `getCurrentProfile()` — are
+closed the same way: four new `cache()`-wrapped helpers in
+`lib/universities/detail-reads.ts` (`getUniversity`, `getUniversityStatistics`,
+`getUniversityRequirements`, `getSupersessionMap`), each constructing its own
+`createClient()` internally for the identical reason `getProfileScores` does (see that
+function's own comment) — plus routing `refreshAdmissionOutlook`'s one raw `profiles` read
+through `getCurrentProfile()` on the request-scoped path, mirroring the `scoresPromise`
+conditional-fallback shape it already used for `profile_scores` (background-sweep callers
+that pass an explicit admin `client` keep their own direct queries; there is no
+request/cookie for the memoized helpers to read there).
+
+**This section's own open question — whether `cache()` actually spans `generateMetadata`
+and the page component, two separate Next.js render passes — was measured, not assumed,**
+the same way the `getProfileScores` package proved its own dedup. A bare Vitest call or a
+Route Handler can't answer this (§2 already established neither gives `cache()` a real
+render scope to key on), and the real `/universities/[id]` route can't be exercised
+end-to-end here either: it requires an authenticated session, this environment has no
+usable test-account credentials, and creating one would be a live write this project's own
+standing rule refuses ("no writes to shared live DB, not even a self-cleaned test"). So the
+measurement used a temporary, dev-only diagnostic route instead
+(`app/(dev-preview)/design-preview/cache-measure/`, deleted before this commit, alongside
+temporary `console.log` instrumentation in `detail-reads.ts`, also reverted) — it needs no
+auth at all, calls the same shared helpers `generateMetadata` and the page body call, for a
+real `universities` row (LSE). Three findings, each confirmed against the real dev server,
+not inferred:
+
+- **`cache()` does span `generateMetadata` and the page component.** `getSupersessionMap()`
+  and `getUniversity(id)`, each called once from a `generateMetadata`-equivalent and once
+  from the page body, produced exactly **one** `[MEASURE] ... MISS` log line each per
+  request, not two — confirmed by grepping the dev server's own stdout after each hit.
+- **No cross-request leakage.** A second, independent request produced its own fresh set of
+  misses (the counts reset), not zero — `cache()` is correctly per-request, never reusing a
+  prior visitor's result.
+- **Different arguments are correctly not conflated.** Calling `getUniversity` a second
+  time in the same request with a different (fake) id produced a genuine second miss for
+  that id, not a spurious hit against the real one already cached.
+
+**What this changes for the round-trip count** (same "everything renders" scenario as the
+25-28 figure above — a target saved and requirements applicable, computed from the code
+post-fix, the same read-every-function-in-full method as the rest of this section, not a
+live trace of an authenticated request):
+
+| Stage | Before | After | Why |
+|---|---|---|---|
+| `generateMetadata` | 2 | 2 | Unchanged — still the first access, still 2 real reads, but now the *only* two for `universities`/supersession in the whole render. |
+| Page's own supersession + full `universities` row | 2 | 0 | Both now cache hits against `generateMetadata`'s reads. |
+| Page's own `Promise.all` (9 entries) | 9 | 9 | Same count — `university_requirements`/`university_statistics` are now cache-wrapped calls, but this is still their first access, so each is still one real read here. The saving shows up downstream, not here. |
+| `refreshAdmissionOutlook` (target lookup, profile, scores, stats, university, program, write) | up to 6 | up to 4 | `profiles` (now `getCurrentProfile()`), `profile_scores`, `university_statistics`, and `universities` are all cache hits by this point; target lookup, the conditional program read, and the write are unchanged. |
+| `refreshRequirementEvaluations` (requirements, 4 facts reads, write) | up to 6 | up to 5 | `university_requirements` is now a cache hit; the 4 student-fact reads and the write are unchanged and out of this section's scope. |
+| Final `Promise.all` (`getCurrentProfile()` + `student_requirement_evaluations`) | 2 | 1 | `getCurrentProfile()` is now a cache hit (whichever of `refreshAdmissionOutlook` or this call runs first pays for it once). |
+| **Total** | **~25-28** | **~19-21** | **6 round trips removed** — matches summing each category's own before/after independently (universities 3→1, supersession 2→1, statistics 2→1, requirements 2→1, profiles 2→1 — five savings of one each, plus the shared-first-access counting above). |
+
+Not closed by this pass, named precisely rather than left implicit: `university_programs`
+fetched 3x is real (page's `Promise.all`, `refreshAdmissionOutlook`'s conditional
+`programRes`, and `assembleRequirementFacts`' course-level reads are three genuinely
+different queries, not the same row — no dedup opportunity here, only three distinct
+questions), and `target_universities` is read with two different filters
+(`eq("university_id", id)` in the page, `eq("id", targetUniversityId)` in
+`refreshAdmissionOutlook`) that resolve to the same row when the caller is this page —
+worth a look, but outside the six categories this document named, so not fixed
+speculatively here.
+
+Gate: lint/typecheck/3484 tests (one updated — `computed-writes-use-admin-client.test.ts`'s
+`university_requirements` source-text pin, same shape as the `profile_scores` update the
+prior package made, checking for the new shared-helper call rather than the old inline
+query, preserving the same underlying RLS-vs-admin-client property)/build, all pass.
+
 ---
 
 ## Recommendations (not applied — for visibility, ranked by what they'd buy)

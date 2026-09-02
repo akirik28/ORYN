@@ -25,7 +25,8 @@ import { RequirementGroup } from "@/features/universities/requirement-group";
 import { AdminRequirementForm } from "@/features/universities/admin-requirement-form";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { StatusBadge } from "@/components/oryn/status-badge";
-import { canonicalUniversityId, isSupersededUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
+import { canonicalUniversityId, isSupersededUniversityId } from "@/lib/universities/canonical";
+import { getSupersessionMap, getUniversity, getUniversityRequirements, getUniversityStatistics } from "@/lib/universities/detail-reads";
 import { formatTuition, tuitionQualifier } from "@/lib/universities/tuition-format";
 import { formatNumber, formatCurrency } from "@/lib/i18n/format";
 import { formatAbsoluteDate } from "@/lib/i18n/date";
@@ -81,13 +82,13 @@ const CONFIDENCE_LABEL_TR: Record<"high" | "medium" | "low", string> = {
 // refactor than this fix calls for.
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const supabase = await createClient();
-  const supersessionMap = await loadSupersessionMap(supabase);
-  const { data: university } = await supabase
-    .from("universities")
-    .select("name")
-    .eq("id", canonicalUniversityId(supersessionMap, id))
-    .single();
+  // docs/performance.md §5: generateMetadata used to independently re-fetch both the
+  // supersession map and this university's row, on top of the page component doing the
+  // exact same two reads moments later. Shared, cache()'d helpers now
+  // (lib/universities/detail-reads.ts) -- see that file's own doc comment for why dedup
+  // needs its own createClient() internally rather than a passed client.
+  const supersessionMap = await getSupersessionMap();
+  const university = await getUniversity(canonicalUniversityId(supersessionMap, id));
   return { title: university?.name ?? "University" };
 }
 
@@ -109,24 +110,30 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   // let a student land on it as if it were the canonical result: redirect to the winner instead
   // of rendering. Catches every path here, not just the now-fixed browse/search — an old
   // bookmark, a program search result, a saved deep link. See lib/universities/canonical.ts.
-  const supersessionMap = await loadSupersessionMap(supabase);
+  const supersessionMap = await getSupersessionMap();
   if (isSupersededUniversityId(supersessionMap, id)) {
     redirect(`/universities/${canonicalUniversityId(supersessionMap, id)}`);
   }
 
-  const { data: university } = await supabase.from("universities").select("*").eq("id", id).single();
+  const university = await getUniversity(id);
   if (!university) notFound();
 
-  const [programsRes, requirementsRes, deadlinesRes, statsRes, sourcesRes, targetRes, scores, rankingsRes, metricsRes] = await Promise.all([
+  const [programsRes, allRequirements, deadlinesRes, stats, sourcesRes, targetRes, scores, rankingsRes, metricsRes] = await Promise.all([
     supabase.from("university_programs").select("*").eq("university_id", id).eq("verification_state", "verified_current"),
-    supabase.from("university_requirements").select("*").eq("university_id", id),
+    // Shared, cache()'d — docs/performance.md §5. Was queried identically (select("*"),
+    // same filter) again inside refreshRequirementEvaluations below; that function now
+    // shares this same call instead of re-fetching it.
+    getUniversityRequirements(id),
     supabase
       .from("university_deadlines")
       .select(
         "id, program_id, deadline_type, deadline_date, recurrence, recurrence_month, recurrence_day, cycle_label, verification_state, deadline_text_verbatim, source_url, binding_policy"
       )
       .eq("university_id", id),
-    supabase.from("university_statistics").select("*").eq("university_id", id).order("stat_year", { ascending: false }).limit(1).maybeSingle(),
+    // Shared, cache()'d — docs/performance.md §5. refreshAdmissionOutlook below used to
+    // independently re-fetch this same table (a narrower column list) for this same
+    // university; now shares this call too.
+    getUniversityStatistics(id),
     supabase.from("university_sources").select("*").eq("university_id", id).order("retrieved_at", { ascending: false }),
     supabase.from("target_universities").select("*").eq("university_id", id).eq("user_id", session.userId!).maybeSingle(),
     // Shared, cache()'d — docs/performance.md §2/§5. Also closes one of that section's own
@@ -164,13 +171,13 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   // A row a research pass has since confirmed closed (verified_historical) or unresolved
   // (conflicting) is real, correctly-sourced data worth keeping in the table — never worth
   // showing as though it still applies. Mirrors actionableDeadlines below, same reasoning.
-  const requirements = (requirementsRes.data ?? []).filter((r) => !NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES.has(r.verification_state));
+  const requirements = allRequirements.filter((r) => !NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES.has(r.verification_state));
   // Only rows explicitly tagged calendar_bound_fact_class — NOT every verified_historical
   // row. The other historical rows for this university (an ordinary stale fact, not a
   // calendar-bound one) stay excluded from `requirements` above and are not shown here
   // either; this list and that filter are deliberately disjoint, not a broader "show all
   // historical facts" toggle.
-  const calendarBoundFacts = (requirementsRes.data ?? [])
+  const calendarBoundFacts = allRequirements
     .filter((r) => r.calendar_bound_fact_class === "cao_points_ie")
     .map((r) => toCalendarBoundFactDisplay(r, CAO_POINTS_IE, new Date(), locale));
   if (requirements.length > 0) {
@@ -256,8 +263,6 @@ export default async function UniversityDetailPage({ params }: { params: Promise
     explanation.profileNotAnInput &&
     outlook?.notApplicableKind !== "field_not_offered_at_undergraduate" &&
     explanation.unknowns.length > 0;
-  const stats = statsRes.data;
-
   const metricByCode = new Map((metricsRes.data ?? []).map((m) => [m.metric_code, m]));
   const researchTopicsMetric = metricByCode.get("research_topics_top5");
   const researchTopics = researchTopicsMetric?.value_text ? researchTopicsMetric.value_text.split(" | ").filter(Boolean) : [];

@@ -1,9 +1,10 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, ProfileScore } from "@/types/database";
+import type { Database, Profile, ProfileScore, University, UniversityStatistic } from "@/types/database";
 import { createClient } from "@/lib/supabase/server";
-import { getProfileScores } from "@/lib/security/dal";
+import { getCurrentProfile, getProfileScores } from "@/lib/security/dal";
+import { getUniversity, getUniversityStatistics } from "@/lib/universities/detail-reads";
 import { checkUndergraduateFieldAvailability } from "./field-availability";
 import { computeAdmissionOutlook, dataConfidenceForCompleteness, type AdmissionOutlookResult } from "./outlook";
 import { resolveAdmissionSystem } from "./system-shape";
@@ -61,31 +62,49 @@ export async function refreshAdmissionOutlook(
     .single();
   if (!target) return null;
 
-  // Shared, cache()'d getProfileScores(userId) (docs/performance.md §2/§5) only on the
-  // normal, request-scoped path — it constructs its own createClient() internally, which
-  // reads cookies via next/headers, so it isn't meaningful for the background-sweep path
-  // (an explicit `client` was passed, meaning there's no request/session to read cookies
-  // from). That path keeps its own direct query via the passed admin client, unchanged.
+  // Shared, cache()'d helpers (docs/performance.md §2/§5) only on the normal,
+  // request-scoped path — each constructs its own createClient() internally, which reads
+  // cookies via next/headers, so none are meaningful for the background-sweep path (an
+  // explicit `client` was passed, meaning there's no request/session to read cookies from).
+  // That path keeps its own direct queries via the passed admin client, unchanged.
+  //
+  // getCurrentProfile() is session-implicit (no userId argument — always "whoever this
+  // request is logged in as"), unlike getProfileScores(userId)/getUniversity(id) below,
+  // which take an explicit key. Safe here specifically because every request-scoped caller
+  // of this function passes its own session's userId (the university detail page calls
+  // this with session.userId!, per this function's own doc comment above) — the two are
+  // guaranteed to agree on that path, not merely expected to. A future caller must keep
+  // that guarantee (or pass an explicit `client` instead, which skips this branch entirely)
+  // rather than call this function with a request-scoped client and a different user's id.
+  const profilePromise: PromiseLike<{ data: Pick<Profile, "profile_strength_score" | "completeness_percent" | "country"> | null }> = client
+    ? supabase.from("profiles").select("profile_strength_score, completeness_percent, country").eq("id", userId).single()
+    : getCurrentProfile().then((data) => ({ data }));
   const scoresPromise: PromiseLike<{ data: ProfileScore[] | null }> = client
     ? supabase.from("profile_scores").select("*").eq("user_id", userId)
     : getProfileScores(userId).then((data) => ({ data }));
+  const statsPromise: PromiseLike<{ data: Pick<UniversityStatistic, "admission_rate" | "data_confidence"> | null }> = client
+    ? supabase
+        .from("university_statistics")
+        .select("admission_rate, data_confidence")
+        .eq("university_id", target.university_id)
+        .order("stat_year", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    : getUniversityStatistics(target.university_id).then((data) => ({ data }));
+  const universityPromise: PromiseLike<{ data: Pick<University, "name" | "country"> | null }> = client
+    ? supabase.from("universities").select("name, country").eq("id", target.university_id).maybeSingle()
+    : getUniversity(target.university_id).then((data) => ({ data }));
 
   const [profileRes, scoresRes, statsRes, universityRes, programRes] = await Promise.all([
     // `country` is residence/school location, which is the correct signal for every pathway
     // split in the researched set — never citizenship. See lib/admissions/system-shape.ts's
     // ApplicantPathway doc for the rules that establish this.
-    supabase.from("profiles").select("profile_strength_score, completeness_percent, country").eq("id", userId).single(),
+    profilePromise,
     // Same source and same shape the dashboard hero reads (app/(app)/dashboard/page.tsx) —
     // needed for hasConfidentSignal below, not for profileStrength itself.
     scoresPromise,
-    supabase
-      .from("university_statistics")
-      .select("admission_rate, data_confidence")
-      .eq("university_id", target.university_id)
-      .order("stat_year", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase.from("universities").select("name, country").eq("id", target.university_id).maybeSingle(),
+    statsPromise,
+    universityPromise,
     // Only an explicitly targeted programme counts as a stated field. An interest label is
     // deliberately not used here: suppressing a real, holistically-reviewed undergraduate
     // application because the student once typed "Medicine" as an interest would be a new
