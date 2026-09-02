@@ -23,10 +23,20 @@ import type { PlanTier } from "@/types/database";
  *    sees no call to action at all: they have nothing to register interest in.
  * 2. **No invented capabilities.** The comparison table is driven entirely by
  *    `TIER_COMPARISON_ROWS` (lib/tier/comparison.ts) plus matching catalog entries —
- *    this component has no hardcoded row content, and a `sameByDesign` row (the weekly
- *    plan's deliberate 3-action cap) renders as one shared value rather than two
- *    coincidentally-matching ones, so "kept equal on purpose" reads as a decision, not an
- *    unfinished row.
+ *    this component has no hardcoded row content, and each `sameByDesign` row (currently
+ *    two: the weekly plan's 3-action cap, the research generator's 3-idea cap) renders as
+ *    one shared value rather than two coincidentally-matching ones, so "kept equal on
+ *    purpose" reads as a decision, not an unfinished row.
+ *
+ * **2026-09-02, price added.** The founder set 399.99 TL/month with a first-week-free
+ * trial; both facts live in `interestDescription` itself, right beside the existing "not
+ * available to buy yet" disclosure — not a separate price element, and no code change here.
+ * A concrete price next to a button that can't take money is the fake-button case unless
+ * the state is said plainly in the same breath, which the existing copy already did; this
+ * pass extends that one string rather than adding a second voice next to it, same
+ * discipline as the essay-outline note earlier the same night. No urgency language on the
+ * trial (no countdown, no "limited time") — the sameByDesign rows below aren't the only
+ * place this product deliberately stays calm instead of pushing.
  *
  * Every real account is standard-tier right now (migration 0089 unapplied — confirmed live
  * against `information_schema.columns`, not assumed from the migration file) and there is
