@@ -89,3 +89,39 @@ export async function updateRequirementStatus(requirementId: string, status: Req
   revalidatePath("/applications", "layout");
   return {};
 }
+
+// Both notes fields (Phase 22) below trim to null rather than storing an empty string, so
+// "no note" stays a single, consistent representation rather than two ("" and null) a
+// future read would have to treat as equivalent everywhere it checks for absence.
+
+export async function updateApplicationNotes(applicationId: string, notes: string): Promise<{ error?: string }> {
+  const session = await requireUser();
+  const supabase = await createClient();
+  const trimmed = notes.trim();
+
+  const { error } = await supabase
+    .from("applications")
+    .update({ notes: trimmed || null })
+    .eq("id", applicationId)
+    .eq("user_id", session.userId!);
+
+  if (error) return { error: "Couldn't save your note." };
+  revalidatePath(`/applications/${applicationId}`);
+  return {};
+}
+
+export async function updateRequirementNotes(requirementId: string, notes: string): Promise<{ error?: string }> {
+  const session = await requireUser();
+  const supabase = await createClient();
+  const trimmed = notes.trim();
+
+  const { error } = await supabase
+    .from("application_requirements")
+    .update({ notes: trimmed || null })
+    .eq("id", requirementId)
+    .eq("user_id", session.userId!);
+
+  if (error) return { error: "Couldn't save your note." };
+  revalidatePath("/applications", "layout");
+  return {};
+}

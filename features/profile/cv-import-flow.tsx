@@ -2,11 +2,12 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { FileUp, Loader2, Check, AlertCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eyebrow } from "@/components/oryn/eyebrow";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,19 @@ import { cn } from "@/lib/utils";
 import { uploadAndExtractCV } from "@/app/(onboarding)/onboarding/actions";
 import { importReviewedCvItems } from "@/app/(app)/profile/import/actions";
 import { EntityCombobox } from "@/features/entities/entity-combobox";
-import { CV_IMPORT_CATEGORY_TO_ORGANIZATION_SCOPE, type CvImportCategory, type CvImportItem } from "@/lib/profile/cv-import";
+import {
+  CV_IMPORT_CATEGORY_TO_ORGANIZATION_SCOPE,
+  flattenCvSkills,
+  flattenCvLanguages,
+  skillCategoryLabel,
+  type CvImportCategory,
+  type CvImportItem,
+  type CvImportReviewSkill,
+  type CvImportReviewLanguage,
+} from "@/lib/profile/cv-import";
+import { SKILL_CATEGORY_OPTIONS } from "@/features/profile/field-config";
+import { LANGUAGE_PROFICIENCY_OPTIONS, languageProficiencyLabel } from "@/lib/vocabularies/languages";
+import type { Locale } from "@/lib/i18n/config";
 import type { CVExtractionResult } from "@/lib/ai/cv-extraction";
 
 const CATEGORY_LABEL_KEYS = {
@@ -90,9 +103,12 @@ export function CvImportFlow({ country }: { country: string | null }) {
   const tImport = useTranslations("profile.cvImport");
   const tOnboardingImport = useTranslations("onboarding.import");
   const tCommon = useTranslations("common");
+  const locale = useLocale() as Locale;
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<ReviewItem[] | null>(null);
+  const [skills, setSkills] = useState<CvImportReviewSkill[]>([]);
+  const [languages, setLanguages] = useState<CvImportReviewLanguage[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -113,11 +129,15 @@ export function CvImportFlow({ country }: { country: string | null }) {
         return;
       }
       const flat = flatten(result.extraction);
-      if (flat.length === 0) {
+      const flatSkills = flattenCvSkills(result.extraction);
+      const flatLanguages = flattenCvLanguages(result.extraction);
+      if (flat.length === 0 && flatSkills.length === 0 && flatLanguages.length === 0) {
         setError(tImport("noItemsFoundError"));
         return;
       }
       setItems(flat);
+      setSkills(flatSkills);
+      setLanguages(flatLanguages);
     });
   }
 
@@ -129,17 +149,35 @@ export function CvImportFlow({ country }: { country: string | null }) {
     setItems((prev) => prev && prev.filter((item) => item.id !== id));
   }
 
+  function updateSkill(id: string, patch: Partial<CvImportReviewSkill>) {
+    setSkills((prev) => prev.map((skill) => (skill.id === id ? { ...skill, ...patch } : skill)));
+  }
+
+  function removeSkill(id: string) {
+    setSkills((prev) => prev.filter((skill) => skill.id !== id));
+  }
+
+  function updateLanguage(id: string, patch: Partial<CvImportReviewLanguage>) {
+    setLanguages((prev) => prev.map((language) => (language.id === id ? { ...language, ...patch } : language)));
+  }
+
+  function removeLanguage(id: string) {
+    setLanguages((prev) => prev.filter((language) => language.id !== id));
+  }
+
   function save() {
     if (!items) return;
-    const selected = items.filter((i) => i.included);
-    if (selected.length === 0) {
+    const selectedItems = items.filter((i) => i.included);
+    const selectedSkills = skills.filter((s) => s.included);
+    const selectedLanguages = languages.filter((l) => l.included);
+    if (selectedItems.length === 0 && selectedSkills.length === 0 && selectedLanguages.length === 0) {
       setError(tImport("selectAtLeastOneError"));
       return;
     }
     setError(null);
     startSave(async () => {
       const result = await importReviewedCvItems(
-        selected.map(({ category, title, organization, organizationEntityId, description, startDate, endDate }) => ({
+        selectedItems.map(({ category, title, organization, organizationEntityId, description, startDate, endDate }) => ({
           category,
           title,
           organization,
@@ -148,12 +186,16 @@ export function CvImportFlow({ country }: { country: string | null }) {
           startDate,
           endDate,
         })),
+        selectedSkills.map(({ name, category }) => ({ name, category, proficiency: null })),
+        selectedLanguages.map(({ name, proficiency }) => ({ name, proficiency })),
       );
       if (result.error) {
         setError(result.error);
         if (!result.inserted) return;
       }
       setItems(null);
+      setSkills([]);
+      setLanguages([]);
       setFileName(null);
       setNotice(tImport("addedNotice", { count: result.inserted ?? 0 }));
       router.refresh();
@@ -161,16 +203,18 @@ export function CvImportFlow({ country }: { country: string | null }) {
   }
 
   if (items) {
-    const selectedCount = items.filter((i) => i.included).length;
+    const selectedCount =
+      items.filter((i) => i.included).length + skills.filter((s) => s.included).length + languages.filter((l) => l.included).length;
     return (
       <div className="space-y-6">
         <div>
           <Eyebrow tone="brand">{tImport("reviewBeforeAdding")}</Eyebrow>
           <p className="mt-3 max-w-2xl leading-relaxed text-ink-2">
-            {tImport("foundItems", { count: items.length, fileName: fileName ?? "" })}
+            {tImport("foundItems", { count: items.length + skills.length + languages.length, fileName: fileName ?? "" })}
           </p>
         </div>
 
+        {items.length > 0 ? (
         <ul className="border-t border-border">
           {items.map((item) => (
             <li key={item.id} className="flex items-start gap-3 border-b border-border/60 py-3.5">
@@ -219,6 +263,105 @@ export function CvImportFlow({ country }: { country: string | null }) {
             </li>
           ))}
         </ul>
+        ) : null}
+
+        {skills.length > 0 ? (
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-ink-1">{tOnboardingImport("skillsSectionTitle")}</p>
+            <ul className="border-t border-border">
+              {skills.map((skill) => (
+                <li key={skill.id} className="flex items-center gap-3 border-b border-border/60 py-2.5">
+                  <Checkbox
+                    checked={skill.included}
+                    onCheckedChange={(checked) => updateSkill(skill.id, { included: checked === true })}
+                  />
+                  <Input
+                    value={skill.name}
+                    onChange={(e) => updateSkill(skill.id, { name: e.target.value })}
+                    className="h-8 flex-1"
+                    disabled={!skill.included}
+                  />
+                  <Select value={skill.category} onValueChange={(v) => updateSkill(skill.id, { category: v as CvImportReviewSkill["category"] })}>
+                    <SelectTrigger className="h-8 w-36 shrink-0" disabled={!skill.included}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SKILL_CATEGORY_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {skillCategoryLabel(option.value as CvImportReviewSkill["category"], locale)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => removeSkill(skill.id)}
+                    className="shrink-0 text-ink-3 hover:text-destructive"
+                    aria-label={tOnboardingImport("removeItemAriaLabel")}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
+        {languages.length > 0 ? (
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-ink-1">{tOnboardingImport("languagesSectionTitle")}</p>
+            <ul className="border-t border-border">
+              {languages.map((language) => (
+                <li key={language.id} className="flex items-center gap-3 border-b border-border/60 py-2.5">
+                  <Checkbox
+                    checked={language.included}
+                    onCheckedChange={(checked) => updateLanguage(language.id, { included: checked === true })}
+                  />
+                  <div className="flex-1 space-y-0.5">
+                    <Input
+                      value={language.name}
+                      onChange={(e) => updateLanguage(language.id, { name: e.target.value })}
+                      className="h-8"
+                      disabled={!language.included}
+                    />
+                    {/* Never written to the `proficiency` column — a hint from the document
+                        only. See lib/ai/cv-extraction.ts's schema comment. */}
+                    {language.statedLevel ? (
+                      <p className="px-1 text-xs text-ink-3">{tOnboardingImport("cvSaid", { level: language.statedLevel })}</p>
+                    ) : null}
+                  </div>
+                  <Select
+                    value={language.proficiency ?? undefined}
+                    onValueChange={(v) => updateLanguage(language.id, { proficiency: v as CvImportReviewLanguage["proficiency"] })}
+                  >
+                    <SelectTrigger className="h-8 w-44 shrink-0" disabled={!language.included}>
+                      <SelectValue placeholder={tOnboardingImport("proficiencyPlaceholder")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LANGUAGE_PROFICIENCY_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {languageProficiencyLabel(option.value, locale)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => removeLanguage(language.id)}
+                    className="shrink-0 text-ink-3 hover:text-destructive"
+                    aria-label={tOnboardingImport("removeItemAriaLabel")}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         {error ? (
           <p className="flex items-start gap-2 text-sm text-error">
@@ -232,7 +375,17 @@ export function CvImportFlow({ country }: { country: string | null }) {
             {isSaving ? <Loader2 className="size-4 animate-spin" /> : null}
             {tImport("addItemsToProfile", { count: selectedCount })}
           </Button>
-          <Button variant="outline" disabled={isSaving} onClick={() => { setItems(null); setFileName(null); setError(null); }}>
+          <Button
+            variant="outline"
+            disabled={isSaving}
+            onClick={() => {
+              setItems(null);
+              setSkills([]);
+              setLanguages([]);
+              setFileName(null);
+              setError(null);
+            }}
+          >
             {tCommon("cancel")}
           </Button>
         </div>

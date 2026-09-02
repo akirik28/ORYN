@@ -138,7 +138,7 @@ describe("migration numbering", () => {
     // unapplied-column degradation pattern 0077/persist.ts already proved out, for the
     // same reason: an UPDATE naming a column that doesn't exist throws on every call, not
     // just the ones that would have matched a row.
-    expect(Math.max(...numbers.map(Number))).toBe(83);
+    expect(Math.max(...numbers.map(Number))).toBe(84);
   });
 });
 

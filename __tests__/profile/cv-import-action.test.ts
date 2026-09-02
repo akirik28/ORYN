@@ -13,6 +13,8 @@ import { describe, test, expect, vi, beforeEach } from "vitest";
  */
 
 const insertCvImportItems = vi.hoisted(() => vi.fn());
+const insertCvImportSkills = vi.hoisted(() => vi.fn());
+const insertCvImportLanguages = vi.hoisted(() => vi.fn());
 const recomputeCareerProfile = vi.hoisted(() => vi.fn());
 const logEvent = vi.hoisted(() => vi.fn());
 
@@ -20,17 +22,24 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/security/dal", () => ({ requireUser: vi.fn(async () => ({ userId: "user-1" })) }));
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn(async () => ({})) }));
 vi.mock("@/lib/scoring/persist", () => ({ recomputeCareerProfile }));
-vi.mock("@/lib/profile/cv-import", () => ({ insertCvImportItems }));
+vi.mock("@/lib/profile/cv-import", () => ({ insertCvImportItems, insertCvImportSkills, insertCvImportLanguages }));
 vi.mock("@/lib/analytics/log", () => ({ logEvent }));
 
 import { importReviewedCvItems } from "@/app/(app)/profile/import/actions";
-import type { CvImportItem } from "@/lib/profile/cv-import";
+import type { CvImportItem, CvImportSkillCandidate, CvImportLanguageCandidate } from "@/lib/profile/cv-import";
 
 const item = { category: "awards", title: "Regional Science Fair" } as unknown as CvImportItem;
+const skill = { name: "Python", category: "technical", proficiency: null } satisfies CvImportSkillCandidate;
+const language = { name: "French", proficiency: null } satisfies CvImportLanguageCandidate;
 
 beforeEach(() => {
   vi.clearAllMocks();
   recomputeCareerProfile.mockResolvedValue(undefined);
+  // 2026-09-02: skills/languages now insert alongside achievements on every call — a
+  // no-op default here keeps every pre-existing achievement-only test's math unchanged
+  // (0 contributed to the combined total) without every one of them having to know that.
+  insertCvImportSkills.mockResolvedValue({ inserted: 0, skippedDuplicate: 0, skippedCap: 0 });
+  insertCvImportLanguages.mockResolvedValue({ inserted: 0, skippedDuplicate: 0 });
 });
 
 describe("importReviewedCvItems", () => {
@@ -92,5 +101,63 @@ describe("importReviewedCvItems", () => {
     const result = await importReviewedCvItems([item]);
 
     expect(result.error).toMatch(/saved 1 item,/i);
+  });
+});
+
+describe("importReviewedCvItems — skills and languages (2026-09-02)", () => {
+  test("skills and languages selected with zero achievement items still save, not rejected as 'nothing selected'", async () => {
+    insertCvImportSkills.mockResolvedValue({ inserted: 1, skippedDuplicate: 0, skippedCap: 0 });
+    insertCvImportLanguages.mockResolvedValue({ inserted: 1, skippedDuplicate: 0 });
+
+    const result = await importReviewedCvItems([], [skill], [language]);
+
+    expect(insertCvImportItems).not.toHaveBeenCalled();
+    expect(insertCvImportSkills).toHaveBeenCalledWith({}, "user-1", [skill]);
+    expect(insertCvImportLanguages).toHaveBeenCalledWith({}, "user-1", [language]);
+    expect(result).toEqual({ inserted: 2 });
+  });
+
+  test("the combined total spans all three kinds, not just achievements", async () => {
+    insertCvImportItems.mockResolvedValue({ inserted: 3, failedCategories: [] });
+    insertCvImportSkills.mockResolvedValue({ inserted: 2, skippedDuplicate: 0, skippedCap: 0 });
+    insertCvImportLanguages.mockResolvedValue({ inserted: 1, skippedDuplicate: 0 });
+
+    const result = await importReviewedCvItems([item, item, item], [skill, skill], [language]);
+
+    expect(result).toEqual({ inserted: 6 });
+    expect(logEvent).toHaveBeenCalledWith("user-1", "cv_imported", { itemCount: 6, source: "post_onboarding" });
+  });
+
+  test("a skill skipped for the 15-cap is named honestly, not silently dropped", async () => {
+    insertCvImportItems.mockResolvedValue({ inserted: 0, failedCategories: [] });
+    insertCvImportSkills.mockResolvedValue({ inserted: 1, skippedDuplicate: 0, skippedCap: 2 });
+    insertCvImportLanguages.mockResolvedValue({ inserted: 0, skippedDuplicate: 0 });
+
+    const result = await importReviewedCvItems([], [skill], []);
+
+    expect(result.inserted).toBe(1);
+    expect(result.error).toMatch(/2 skills skipped \(15 max\)/i);
+  });
+
+  test("a duplicate name (skill or language) is reported, distinct from a cap skip", async () => {
+    insertCvImportItems.mockResolvedValue({ inserted: 0, failedCategories: [] });
+    insertCvImportSkills.mockResolvedValue({ inserted: 0, skippedDuplicate: 1, skippedCap: 0 });
+    insertCvImportLanguages.mockResolvedValue({ inserted: 1, skippedDuplicate: 1 });
+
+    const result = await importReviewedCvItems([], [skill], [language, language]);
+
+    expect(result.inserted).toBe(1);
+    expect(result.error).toMatch(/2 already on your profile/i);
+    expect(result.error).not.toMatch(/max/i);
+  });
+
+  test("a fully successful skills+languages import (no cap/duplicate skips) reports plain success, no notes", async () => {
+    insertCvImportItems.mockResolvedValue({ inserted: 0, failedCategories: [] });
+    insertCvImportSkills.mockResolvedValue({ inserted: 1, skippedDuplicate: 0, skippedCap: 0 });
+    insertCvImportLanguages.mockResolvedValue({ inserted: 1, skippedDuplicate: 0 });
+
+    const result = await importReviewedCvItems([], [skill], [language]);
+
+    expect(result).toEqual({ inserted: 2 });
   });
 });

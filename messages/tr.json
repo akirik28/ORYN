@@ -685,6 +685,10 @@
       "schoolPlaceholder": "Okul",
       "organizationPlaceholder": "Kurum",
       "removeItemAriaLabel": "Öğeyi kaldır",
+      "skillsSectionTitle": "Beceriler",
+      "languagesSectionTitle": "Diller",
+      "cvSaid": "CV'inde: {level}",
+      "proficiencyPlaceholder": "Düzey seç",
       "startOver": "Baştan başla"
     }
   },
@@ -878,6 +882,7 @@
       "costOfAttendance": "Öğrenim maliyeti",
       "costPerYear": "{value} / yıl",
       "admissionRate": "Kabul oranı",
+      "statisticsSource": "Veri kaynağı",
       "applicationSystem": "Başvuru sistemi",
       "researchStrengths": "Araştırma güçlü yönleri",
       "pageTitle": "Üniversite Karşılaştırma"
@@ -1157,7 +1162,12 @@
         "portfolio": "Portfolyo",
         "interview": "Mülakat",
         "financial_aid": "Mali yardım"
-      }
+      },
+      "notesPlaceholder": "Bu gereksinimle ilgili bir not ekleyin...",
+      "saveNote": "Notu kaydet",
+      "noteSaved": "Not kaydedildi",
+      "noteSaveError": "Notunuz kaydedilemedi.",
+      "noteToggle": "Not"
     },
     "statusControl": {
       "status": "Durum",
@@ -1170,7 +1180,16 @@
       "notTracked": "Başvurunuzu gönderdikten sonra hazırlık takibi durur. Bunun kararınızla bir ilgisi yoktur — aşağıdaki kontrol listesi yalnızca kendi referansınız için kalır.",
       "unmeasured": "Bu başvuru için şu anda takip edilen bir gereksinim yok."
     },
-    "singularLabel": "Başvuru"
+    "singularLabel": "Başvuru",
+    "notes": {
+      "label": "Notlar",
+      "placeholder": "Bu başvuruyla ilgili bir not ekleyin — aradığınız bir tarih, takip edilecek biri..."
+    },
+    "notesField": {
+      "save": "Notu kaydet",
+      "saved": "Not kaydedildi",
+      "error": "Notunuz kaydedilemedi."
+    }
   },
   "documents": {
     "title": "Belgeler",
@@ -1221,7 +1240,8 @@
       "searchFailed": "Arama şu anda kullanılamıyor. Lütfen tekrar dene.",
       "keepTyping": "Yazmaya devam et — en az 2 karakter.",
       "emptyPrompt": "Üniversitelerde, fırsatlarda, başvurularda ve profilindeki her şeyde ara.",
-      "noResultsFor": "\"{query}\" için sonuç yok."
+      "noResultsFor": "\"{query}\" için sonuç yok.",
+      "viewAllResults": "\"{query}\" için tüm sonuçları gör"
     }
   },
   "auth": {

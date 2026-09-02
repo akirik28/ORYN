@@ -264,16 +264,30 @@ export function buildReasonCodes(
   student: StudentMatchProfile,
   opportunity: OpportunityForMatching
 ): string[] {
+  // An ineligible match's relevance/profile-need/proximity signals are still fully computed
+  // above (computeOpportunityMatch never skips them for an ineligible student), but they
+  // must never be *stored* alongside "ineligible". Confirmed 2026-09-02: both current
+  // readers of this column (opportunity-card.tsx's canClaimMatch, [id]/page.tsx's
+  // canGiveTake) already gate the positive text out at render time, so this exact
+  // combination doesn't reach a student today -- but that's two call sites independently
+  // getting it right, not a guarantee a third one will. Short-circuiting here means the
+  // *data* carries the honesty invariant, not just its current readers: nothing that ever
+  // reads reason_codes at face value can show "it matches your interests" beside a verdict
+  // that says the opposite. `eligible` is only false for a confirmed exclusion (unknown
+  // eligibility stays `eligible: true` with a note, per computeEligibility), so this never
+  // suppresses a merely-uncertain case, only a definite one.
+  if (!match.eligible) return ["ineligible"];
+
   const codes: string[] = [];
-  if (!match.eligible) codes.push("ineligible");
   if (match.relevanceScore >= 70) codes.push("matches_your_interests");
   if (match.profileNeedScore >= 70) codes.push("addresses_a_current_gap");
   if (isNearStudent(student, opportunity)) codes.push("near_you");
   if (match.relevanceScore < 70 && match.matchedInterests.length > 0) codes.push("shares_your_interest");
 
-  // Fallback of last resort, reached only when none of the five checks above added
-  // anything -- never crowds out a real reason when one exists.
-  if (match.eligible && codes.length === 0) {
+  // Fallback of last resort, reached only when none of the four checks above added
+  // anything -- never crowds out a real reason when one exists. (eligible is already
+  // guaranteed true here -- the early return above handles the false case entirely.)
+  if (codes.length === 0) {
     if (match.relevanceBasis === "opportunity_fields_missing") {
       codes.push("limited_opportunity_information");
     } else if (match.relevanceBasis === "student_interests_missing") {

@@ -144,6 +144,8 @@ describe("CvImportFlow — review matches import-step.tsx's edit/delete affordan
 
     expect(importReviewedCvItems).toHaveBeenCalledWith(
       expect.arrayContaining([expect.objectContaining({ title: "Robotics Club — Regional Director" })]),
+      [],
+      [],
     );
   });
 
@@ -158,6 +160,8 @@ describe("CvImportFlow — review matches import-step.tsx's edit/delete affordan
       expect.arrayContaining([
         expect.objectContaining({ organization: "Springfield High School", organizationEntityId: null }),
       ]),
+      [],
+      [],
     );
   });
 
@@ -170,6 +174,8 @@ describe("CvImportFlow — review matches import-step.tsx's edit/delete affordan
 
     expect(importReviewedCvItems).toHaveBeenCalledWith(
       expect.not.arrayContaining([expect.objectContaining({ title: "Robotics Club" })]),
+      [],
+      [],
     );
   });
 
@@ -183,6 +189,75 @@ describe("CvImportFlow — review matches import-step.tsx's edit/delete affordan
     fireEvent.click(screen.getByRole("button", { name: /Add.*items? to my profile/ }));
     expect(importReviewedCvItems).toHaveBeenCalledWith(
       expect.not.arrayContaining([expect.objectContaining({ title: "Robotics Club" })]),
+      [],
+      [],
     );
+  });
+});
+
+// Separate fixture from EXTRACTION above: skills/languages render as their own <li> rows
+// too (same shared list markup, __tests__/onboarding/import-step-skills-languages.test.tsx
+// covers that surface's row rendering in more depth), which would have changed
+// findAllByRole("listitem")'s count for every achievement-only test above had they shared
+// one fixture — kept apart on purpose, not an oversight.
+const SKILLS_LANGUAGES_EXTRACTION: CVExtractionResult = {
+  education: [],
+  activities: [],
+  awards: [],
+  projects: [],
+  research: [],
+  workExperience: [],
+  skills: [{ name: "Python", category: "technical" }],
+  languages: [{ name: "Spanish", statedLevel: "conversational" }],
+  unclassified: [],
+};
+
+async function uploadSkillsAndLanguages() {
+  renderFlow();
+  uploadAndExtractCV.mockResolvedValue({ success: true, extraction: SKILLS_LANGUAGES_EXTRACTION, filePath: "u/1-cv.pdf" });
+  const file = new File(["cv content"], "cv.pdf", { type: "application/pdf" });
+  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+  fireEvent.change(input, { target: { files: [file] } });
+  return await screen.findByDisplayValue("Python");
+}
+
+describe("CvImportFlow — skills and languages (2026-09-02)", () => {
+  test("a skill and a language both render, with the language's stated-level hint shown", async () => {
+    await uploadSkillsAndLanguages();
+    expect(screen.getByDisplayValue("Python")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Spanish")).toBeInTheDocument();
+    expect(screen.getByText("Your CV said: conversational")).toBeInTheDocument();
+  });
+
+  test("editing a skill's name and saving sends the edit, alongside the (unedited) language", async () => {
+    await uploadSkillsAndLanguages();
+    fireEvent.change(screen.getByDisplayValue("Python"), { target: { value: "Python (advanced)" } });
+
+    fireEvent.click(screen.getByRole("button", { name: /Add.*items? to my profile/ }));
+
+    expect(importReviewedCvItems).toHaveBeenCalledWith(
+      [],
+      [{ name: "Python (advanced)", category: "technical", proficiency: null }],
+      [{ name: "Spanish", proficiency: null }],
+    );
+  });
+
+  test("deleting the skill leaves the language untouched and out of the save payload once removed itself", async () => {
+    await uploadSkillsAndLanguages();
+    // Two "Remove item" buttons: skill first, language second (render order).
+    const removeButtons = screen.getAllByRole("button", { name: "Remove item" });
+    fireEvent.click(removeButtons[0]);
+
+    expect(screen.queryByDisplayValue("Python")).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue("Spanish")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Add.*items? to my profile/ }));
+    expect(importReviewedCvItems).toHaveBeenCalledWith([], [], [{ name: "Spanish", proficiency: null }]);
+  });
+
+  test("the save button's count and the 'found' count both span skills and languages, with zero achievement items", async () => {
+    await uploadSkillsAndLanguages();
+    expect(screen.getByText(/Oryn found 2 items/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add 2 items to my profile" })).toBeInTheDocument();
   });
 });

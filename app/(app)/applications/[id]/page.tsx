@@ -3,12 +3,25 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { computeReadiness } from "@/lib/applications/readiness";
+import { refreshRequirementEvaluations } from "@/lib/requirements/persist";
+import { NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES } from "@/lib/requirements/ingest";
 import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
 import { RequirementChecklist } from "@/features/applications/requirement-checklist";
+import { RequirementGroup } from "@/features/universities/requirement-group";
 import { ApplicationStatusControl } from "@/features/applications/status-control";
+import { NotesField } from "@/features/applications/notes-field";
+import { updateApplicationNotes } from "@/app/(app)/applications/actions";
 import { PageHeader } from "@/components/oryn/page-header";
+import { SectionHeader } from "@/components/oryn/section-header";
 import { Progress } from "@/components/ui/progress";
+import type { RequirementEvaluationStatus } from "@/types/database";
+
+/** Same TS2589 ("type instantiation excessively deep") workaround as
+ * universities/[id]/page.tsx's own Translator — RequirementGroup's `t` prop needs this
+ * narrower shape, not the full generic next-intl translator type. */
+type Translator = (key: string, values?: Record<string, string | number>) => string;
 
 // Every application detail page shared the layout's generic default title before this —
 // no way to tell one open tab/history entry from another. Entirely owner-scoped data
@@ -45,20 +58,53 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   const { id } = await params;
   const session = await requireUser();
   const supabase = await createClient();
+  const locale = await resolveLocale();
   const t = await getTranslations("applications");
+  // Requirement check reuses universities/[id]'s own section — same catalog namespace, not
+  // a second copy of "Optional" / "Source" / the section heading that could drift from it.
+  const tUni = (await getTranslations("universities.detail")) as Translator;
 
   const { data: application } = await supabase.from("applications").select("*").eq("id", id).eq("user_id", session.userId!).single();
   if (!application) notFound();
 
   const [targetRes, requirementsRes] = await Promise.all([
-    supabase.from("target_universities").select("university_id").eq("id", application.target_university_id).single(),
+    supabase.from("target_universities").select("university_id, program_id").eq("id", application.target_university_id).single(),
     supabase.from("application_requirements").select("*").eq("application_id", id).order("requirement_type"),
   ]);
 
   const supersessionMap = await loadSupersessionMap(supabase);
-  const { data: university } = targetRes.data
-    ? await supabase.from("universities").select("name").eq("id", canonicalUniversityId(supersessionMap, targetRes.data.university_id)).single()
-    : { data: null };
+  const universityId = targetRes.data ? canonicalUniversityId(supersessionMap, targetRes.data.university_id) : null;
+  const programId = targetRes.data?.program_id ?? null;
+
+  const [{ data: university }, universityRequirementsRes, programRes] = await Promise.all([
+    universityId ? supabase.from("universities").select("name").eq("id", universityId).single() : Promise.resolve({ data: null }),
+    universityId ? supabase.from("university_requirements").select("*").eq("university_id", universityId) : Promise.resolve({ data: null }),
+    programId ? supabase.from("university_programs").select("name").eq("id", programId).maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+
+  // Same non-actionable filter as universities/[id] — a row a research pass has since
+  // confirmed closed or unresolved is real, correctly-sourced data, never worth evaluating
+  // a student against as though it still applies.
+  const universityRequirements = (universityRequirementsRes.data ?? []).filter((r) => !NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES.has(r.verification_state));
+  const universityWideRequirements = universityRequirements.filter((r) => r.program_id === null);
+  // Scoped to the ONE program this application actually targets — unlike universities/[id],
+  // which shows every program since a student browsing that page hasn't committed to one
+  // yet. An application already has, so every other program's requirements would just be
+  // noise here.
+  const thisProgramRequirements = programId ? universityRequirements.filter((r) => r.program_id === programId) : [];
+
+  if (universityId && universityRequirements.length > 0) {
+    await refreshRequirementEvaluations(universityId, session.userId!, programId, locale);
+  }
+  const relevantRequirementIds = [...universityWideRequirements, ...thisProgramRequirements].map((r) => r.id);
+  const { data: evaluations } = relevantRequirementIds.length > 0
+    ? await supabase
+        .from("student_requirement_evaluations")
+        .select("requirement_id, status, reasoning")
+        .eq("user_id", session.userId!)
+        .in("requirement_id", relevantRequirementIds)
+    : { data: [] as { requirement_id: string; status: RequirementEvaluationStatus; reasoning: string }[] };
+  const evaluationByRequirement = new Map((evaluations ?? []).map((e) => [e.requirement_id, e]));
 
   const requirements = requirementsRes.data ?? [];
   const readiness = computeReadiness(application.status, requirements);
@@ -73,6 +119,18 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
       />
 
       <ApplicationStatusControl applicationId={application.id} initialStatus={application.status} universityName={universityName} />
+
+      <div className="space-y-1.5">
+        <span className="text-sm font-medium">{t("notes.label")}</span>
+        <NotesField
+          initialValue={application.notes}
+          placeholder={t("notes.placeholder")}
+          saveLabel={t("notesField.save")}
+          savedLabel={t("notesField.saved")}
+          errorFallback={t("notesField.error")}
+          onSave={(notes) => updateApplicationNotes(application.id, notes)}
+        />
+      </div>
 
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-sm">
@@ -92,6 +150,35 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
       </div>
 
       <RequirementChecklist requirements={requirements} />
+
+      {universityWideRequirements.length > 0 || thisProgramRequirements.length > 0 ? (
+        <section className="space-y-4">
+          <SectionHeader title={tUni("requirementCheckTitle")} description={tUni("requirementCheckDescription")} />
+          {thisProgramRequirements.length > 0 ? (
+            <RequirementGroup
+              title={programRes.data?.name ?? tUni("programFallback")}
+              items={thisProgramRequirements}
+              evaluationByRequirement={evaluationByRequirement}
+              locale={locale}
+              t={tUni}
+            />
+          ) : null}
+          {universityWideRequirements.length > 0 ? (
+            <RequirementGroup
+              title={locale === "tr" ? "Program kaydedilmemiş" : "Program not recorded"}
+              description={
+                locale === "tr"
+                  ? "Üniversitenin kendi sayfalarından alındı — Oryn bunların her birinin hangi programa ait olduğunu kaydetmedi."
+                  : "Sourced from the university's own pages — Oryn hasn't recorded which specific program each of these belongs to."
+              }
+              items={universityWideRequirements}
+              evaluationByRequirement={evaluationByRequirement}
+              locale={locale}
+              t={tUni}
+            />
+          ) : null}
+        </section>
+      ) : null}
     </div>
   );
 }

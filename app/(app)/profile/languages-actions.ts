@@ -6,26 +6,15 @@ import { createClient } from "@/lib/supabase/server";
 import { recomputeCareerProfile } from "@/lib/scoring/persist";
 import { toFriendlyDbErrorMessage } from "@/lib/errors/friendly-db-error";
 import { LanguageSchema, type LanguageFormInput } from "@/lib/validation/achievements";
+import { isDuplicateLanguage } from "@/lib/social/languages";
 
 type ActionResult = { error?: string };
 
 /**
- * Languages CRUD.
- *
- * Mirrors `skills-actions.ts` deliberately, including the case-insensitive duplicate
- * check: a student who records "english" and later "English" has one language, not two,
- * and the profile should say so before the row lands.
- *
- * There is no DB unique index on `languages(user_id, name)` the way migration 0034 added
- * one for skills, so unlike skills this check is the *only* thing preventing duplicates.
- * If that ever changes, this stays useful for the friendly message but stops being the
- * backstop.
+ * Languages CRUD. Mirrors `skills-actions.ts` deliberately, including the case-insensitive
+ * duplicate check (lib/social/languages.ts — pulled out to a shared module 2026-09-02 so
+ * the CV-import path can reuse the exact same rule rather than a second copy).
  */
-function isDuplicateLanguage(existing: string[], candidate: string): boolean {
-  const normalized = candidate.trim().toLowerCase();
-  return existing.some((name) => name.trim().toLowerCase() === normalized);
-}
-
 async function afterLanguagesWrite(userId: string) {
   // Languages feed intellectual curiosity's breadth signal indirectly via the profile's
   // completeness, so the recompute is kept for parity with skills — a failure here must

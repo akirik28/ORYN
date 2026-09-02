@@ -44,19 +44,34 @@ describe("buildReasonCodes", () => {
     expect(codes).toEqual(["ineligible"]);
   });
 
-  // Pre-existing behavior, unchanged by this package: eligibility and relevance are
-  // computed independently, so an ineligible match whose interests genuinely overlap still
-  // carries matches_your_interests alongside ineligible. Neither sentence-builder renders
-  // anything for the "ineligible" code itself (that's a separate badge), so in practice this
-  // means an ineligible opportunity can still show "it matches your interests" reason text —
-  // arguably worth its own look, but out of scope for the empty-reason-array fix this
-  // package addresses.
-  test("ineligible does not suppress a genuinely overlapping relevance code", () => {
+  // FIXED 2026-09-02 (was a documented-but-unfixed finding in this file until now): storing
+  // "ineligible" alongside a positive code like matches_your_interests let reason_codes claim
+  // two contradictory things about the same opportunity. Confirmed neither current render
+  // site (opportunity-card.tsx's canClaimMatch, [id]/page.tsx's canGiveTake) actually shows
+  // this combination to a student -- both already gate the positive text behind eligibility
+  // -- but the stored data shouldn't rely on every future reader rediscovering that gate.
+  // relevanceScore is 100 here (a full match) specifically to prove the short-circuit wins
+  // even against the strongest possible positive signal, not just a marginal one.
+  test("a confirmed-ineligible match never carries a positive code, even with a perfect relevance score", () => {
     const opp = opportunity({ minimumAge: 18, fields: ["Economics"] });
     const s = student({ age: 14, interests: ["Economics"] });
-    const codes = buildReasonCodes(computeOpportunityMatch(s, opp), s, opp);
-    expect(codes).toContain("ineligible");
+    const match = computeOpportunityMatch(s, opp);
+    expect(match.relevanceScore).toBe(100);
+    const codes = buildReasonCodes(match, s, opp);
+    expect(codes).toEqual(["ineligible"]);
+  });
+
+  // Eligibility "unknown" (a restriction Oryn can't confirm either way) is never the same
+  // state as a confirmed exclusion -- computeEligibility keeps `eligible: true` for it, so
+  // the short-circuit above must not fire and a genuine positive reason still comes through.
+  test("eligibility-unknown (still eligible: true) does not trigger the ineligible short-circuit", () => {
+    const opp = opportunity({ eligibleCountries: ["United States"], fields: ["Economics"] });
+    const s = student({ country: null, interests: ["Economics"] });
+    const match = computeOpportunityMatch(s, opp);
+    expect(match.eligible).toBe(true);
+    const codes = buildReasonCodes(match, s, opp);
     expect(codes).toContain("matches_your_interests");
+    expect(codes).not.toContain("ineligible");
   });
 
   test("a strong interest match still gets matches_your_interests, not the weaker shares_your_interest", () => {

@@ -685,6 +685,10 @@
       "schoolPlaceholder": "School",
       "organizationPlaceholder": "Organization",
       "removeItemAriaLabel": "Remove item",
+      "skillsSectionTitle": "Skills",
+      "languagesSectionTitle": "Languages",
+      "cvSaid": "Your CV said: {level}",
+      "proficiencyPlaceholder": "Set proficiency",
       "startOver": "Start over"
     }
   },
@@ -878,6 +882,7 @@
       "costOfAttendance": "Cost of attendance",
       "costPerYear": "{value} / year",
       "admissionRate": "Admission rate",
+      "statisticsSource": "Data source",
       "applicationSystem": "Application system",
       "researchStrengths": "Research strengths",
       "pageTitle": "Compare universities"
@@ -1157,7 +1162,12 @@
         "portfolio": "Portfolio",
         "interview": "Interview",
         "financial_aid": "Financial aid"
-      }
+      },
+      "notesPlaceholder": "Add a note about this requirement...",
+      "saveNote": "Save note",
+      "noteSaved": "Note saved",
+      "noteSaveError": "Couldn't save your note.",
+      "noteToggle": "Note"
     },
     "statusControl": {
       "status": "Status",
@@ -1170,7 +1180,16 @@
       "notTracked": "Readiness stops being tracked once you submit. It has no bearing on your decision — the checklist below stays here for your own reference.",
       "unmeasured": "No requirements are currently tracked for this application."
     },
-    "singularLabel": "Application"
+    "singularLabel": "Application",
+    "notes": {
+      "label": "Notes",
+      "placeholder": "Add a note about this application — a date you called, who to follow up with..."
+    },
+    "notesField": {
+      "save": "Save note",
+      "saved": "Note saved",
+      "error": "Couldn't save your note."
+    }
   },
   "documents": {
     "title": "Documents",
@@ -1221,7 +1240,8 @@
       "searchFailed": "Search isn't available right now. Please try again.",
       "keepTyping": "Keep typing — at least 2 characters.",
       "emptyPrompt": "Search universities, opportunities, applications, and everything in your profile.",
-      "noResultsFor": "No results for \"{query}\"."
+      "noResultsFor": "No results for \"{query}\".",
+      "viewAllResults": "View all results for \"{query}\""
     }
   },
   "auth": {
