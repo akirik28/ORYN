@@ -25,9 +25,12 @@ import type { WeeklyAction, WeeklyPlan } from "@/types/database";
  * keep each test's module graph from bleeding into the next.
  */
 
-const { generateWeeklyPlanMock, actionsRef } = vi.hoisted(() => ({
+const { generateWeeklyPlanMock, actionsRef, updateErrorRef } = vi.hoisted(() => ({
   generateWeeklyPlanMock: vi.fn(),
   actionsRef: { current: [] as WeeklyAction[] },
+  // Backs the "carried_forward marking step hits an unapplied migration 0077" SEV — lets a
+  // test simulate the exact PostgREST error shape without needing a real unapplied column.
+  updateErrorRef: { current: null as { code: string; message: string } | null },
 }));
 
 vi.mock("@/lib/ai/weekly-plan", () => ({ generateWeeklyPlan: generateWeeklyPlanMock }));
@@ -44,6 +47,7 @@ vi.mock("@/lib/supabase/server", () => {
     update: (patch: Partial<WeeklyAction>) => ({
       eq: () => ({
         in: (_column: string, statuses: WeeklyAction["status"][]) => {
+          if (updateErrorRef.current) return Promise.resolve({ error: updateErrorRef.current });
           actionsRef.current = actionsRef.current.map((row) => (statuses.includes(row.status) ? { ...row, ...patch } : row));
           return Promise.resolve({ error: null });
         },
@@ -163,6 +167,7 @@ beforeEach(() => {
   generateWeeklyPlanMock.mockReset();
   generateWeeklyPlanMock.mockResolvedValue(freshGeneration(3));
   actionsRef.current = [];
+  updateErrorRef.current = null;
 });
 
 describe("getOrCreateWeeklyPlan(force: true) — preserving completed work (migration 0077)", () => {
@@ -246,5 +251,55 @@ describe("getOrCreateWeeklyPlan(force: true) — preserving completed work (migr
 
     expect(result.actions).toHaveLength(3);
     expect(actionsRef.current.every((a) => !a.carried_forward)).toBe(true);
+  });
+});
+
+/**
+ * SEV, 2026-09-02: migration 0077 (the carried_forward column) is written but not applied
+ * live, and the marking UPDATE above used to run unconditionally — Postgres validates a
+ * statement's SET clause before WHERE, so it threw on every call, matched rows or not,
+ * breaking weekly plan generation for most of the cohort (only 1 of 8 live plans was for the
+ * current week; everyone else fell through generation into this throw). These pin the fix:
+ * the specific "column really is missing" error (42703, undefined_column, naming
+ * carried_forward) must not throw and must not stop the rest of the function — the delete
+ * below is what actually preserves completed work and needs no new column at all. Any OTHER
+ * error from the same statement must still throw; this is a narrow, specific tolerance, not
+ * a blanket catch.
+ */
+describe("getOrCreateWeeklyPlan(force: true) — degrades when migration 0077 is unapplied (SEV 2026-09-02)", () => {
+  test("a 42703 naming carried_forward does not throw — pending actions are still deleted and the fresh batch still lands", async () => {
+    actionsRef.current = [existingAction({ id: "done-1", status: "completed" }), existingAction({ id: "pending-1", status: "not_started" })];
+    updateErrorRef.current = { code: "42703", message: 'column "carried_forward" of relation "weekly_actions" does not exist' };
+
+    const result = await getOrCreateWeeklyPlan(USER_ID, { force: true });
+
+    expect(result.actions).toHaveLength(3); // the fresh batch still landed
+    expect(actionsRef.current.find((a) => a.id === "pending-1")).toBeUndefined(); // still deleted — needs only `status`
+  });
+
+  test("a 42703 naming carried_forward preserves the completed action, just not marked carried_forward", async () => {
+    actionsRef.current = [existingAction({ id: "done-1", status: "completed", reflection_note: "Went well." })];
+    updateErrorRef.current = { code: "42703", message: 'column "carried_forward" of relation "weekly_actions" does not exist' };
+
+    await getOrCreateWeeklyPlan(USER_ID, { force: true });
+
+    const survivor = actionsRef.current.find((a) => a.id === "done-1");
+    expect(survivor).toBeDefined(); // the row — and its reflection — was never at risk
+    expect(survivor?.reflection_note).toBe("Went well.");
+    expect(survivor?.carried_forward).toBe(false); // honest: the marking step never ran, so it never became true
+  });
+
+  test("a 42703 that does NOT name carried_forward still throws — the tolerance is narrow, not a blanket catch on the error code", async () => {
+    actionsRef.current = [existingAction({ id: "done-1", status: "completed" })];
+    updateErrorRef.current = { code: "42703", message: 'column "some_other_column" of relation "weekly_actions" does not exist' };
+
+    await expect(getOrCreateWeeklyPlan(USER_ID, { force: true })).rejects.toThrow(/Failed to preserve/);
+  });
+
+  test("a completely different error from the marking step still throws", async () => {
+    actionsRef.current = [existingAction({ id: "done-1", status: "completed" })];
+    updateErrorRef.current = { code: "42501", message: "permission denied for table weekly_actions" };
+
+    await expect(getOrCreateWeeklyPlan(USER_ID, { force: true })).rejects.toThrow(/Failed to preserve/);
   });
 });

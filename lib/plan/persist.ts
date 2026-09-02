@@ -83,25 +83,63 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
   // an unconditional delete, which erased every reflection written this week along with it
   // (lib/ai/student-context.ts reads reflection_outcome/reflection_note into the advisor's
   // prompt -- the deletion didn't just lose history, it made the advisor forget). Only rows
-  // the student never acted on are cleared now.
+  // the student never acted on are cleared now. `.in(...)` on the delete below is
+  // deliberately the full ActionStatus list minus {not_started, in_progress} rather than
+  // just "completed" -- skipped/expired carry a reflection the same way completed does (no
+  // code path produces them today, but the rule should already be correct the day one does,
+  // not need a second edit). THE DELETE ITSELF IS WHAT PRESERVES COMPLETED WORK, and it
+  // needs no column beyond `status`, which has always existed.
   //
-  // Two steps, not one, and in this order: mark survivors carried_forward BEFORE deleting
-  // the rest, not after. If the delete step below ever fails and throws, a completed row
-  // that's already marked is still correct (idempotent -- re-running this on the next
-  // regenerate attempt marks the same rows the same way); the reverse order would risk
-  // deleting the pending rows and then throwing before the survivors were ever marked,
-  // leaving completed rows silently indistinguishable from a fresh batch until the next
-  // successful regenerate. `.in(...)` here is deliberately the full ActionStatus list minus
-  // {not_started, in_progress} rather than just "completed" -- skipped/expired carry a
-  // reflection the same way completed does (no code path produces them today, but the rule
-  // should already be correct the day one does, not need a second edit).
+  // SEV, 2026-09-02, same day this shipped: `carried_forward` (migration 0077) is written
+  // but NOT applied live -- this project's standing discipline is "write migrations, leave
+  // them unapplied," which makes "unapplied" the NORMAL state for a migration here, not a
+  // temporary gap to code around once. The UPDATE below used to run unconditionally before
+  // the delete, and Postgres validates a statement's SET clause before it ever looks at
+  // WHERE -- so it threw on every call, matched rows or not, the moment `carried_forward`
+  // didn't exist. Only 1 of 8 live plans was for the current week, so almost every student
+  // fell through getCurrentWeeklyPlan -> null -> generation -> this throw: weekly plan
+  // generation, one of the MVP's sixteen required capabilities, was functionally down for
+  // most of the cohort, and the net effect was worse than the bug this package fixed (before,
+  // generation worked and just didn't preserve completed rows on regenerate; after, it didn't
+  // run at all for most students). CEO caught it, verified independently via
+  // information_schema.columns and EXPLAIN before reporting it.
+  //
+  // THE PRINCIPLE FOR THE NEXT PERSON WHO HITS THIS: code paired with an unapplied migration
+  // must degrade, because unapplied is the normal state in this codebase, not a temporary
+  // one -- an UPDATE (or any statement naming a not-yet-live column in a way PostgREST must
+  // validate before running) needs its own defensive handling; `select("*")` already handles
+  // this for reads (see lib/opportunities/persist-matches.ts / lib/ai/student-context.ts's
+  // own comments on the identical shape) because a wildcard only ever returns columns that
+  // actually exist, but there is no equivalent trick for a write -- a write has to name what
+  // it's setting. No live way to check column existence ahead of time either:
+  // information_schema isn't exposed over the PostgREST API this client uses, so a real
+  // presence check would need its own RPC function, new infrastructure this fix doesn't
+  // need. Attempting the write and checking the specific error code is what's actually
+  // available: 42703 is Postgres's own SQLSTATE for undefined_column, not a string match on
+  // a message that could drift, and CEO's own EXPLAIN confirmed the WHERE-independent
+  // failure mode means this is always caught before any row could be touched -- there is no
+  // partial write to reason about.
   const { error: preserveError } = await supabase
     .from("weekly_actions")
     .update({ carried_forward: true })
     .eq("plan_id", plan.id)
     .in("status", ["completed", "skipped", "expired"]);
-  if (preserveError) {
+  const carriedForwardColumnMissing = preserveError?.code === "42703" && preserveError.message?.includes("carried_forward");
+  if (preserveError && !carriedForwardColumnMissing) {
     throw new Error(`Failed to preserve this week's completed actions: ${preserveError.message}`);
+  }
+  if (carriedForwardColumnMissing) {
+    // Not an error -- an expected, degraded-but-working state. Completed actions and their
+    // reflections are still fully preserved by the delete below; they just aren't flagged
+    // carried_forward yet, so features/dashboard/weekly-focus.tsx's `!action.carried_forward`
+    // filter reads every row (including genuinely carried-forward ones) as active/fresh --
+    // a deliberate choice, not an oversight: it means a completed action stays visible and
+    // interactive in the normal list rather than disappearing into a "Completed this week"
+    // section that can't exist yet, which is strictly better than the alternative (hiding it
+    // entirely) and needs no special-case code in that component, since `undefined` is
+    // already falsy. Once 0077 is applied, this branch stops firing and every row starts
+    // reporting its real carried_forward value with no code change required on either side.
+    console.warn("[plan] carried_forward column not yet live (migration 0077 unapplied) — completed actions still preserved, just not distinguishable from a fresh batch until it lands", { planId: plan.id });
   }
 
   await supabase.from("weekly_actions").delete().eq("plan_id", plan.id).in("status", ["not_started", "in_progress"]);
