@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { searchEntities } from "@/lib/entities/search";
-import { createCustomEntity, type CreateCustomEntityResult } from "@/lib/entities/resolve";
+import { createCustomEntity, resolveEntity, type CreateCustomEntityResult, type ResolvedEntity } from "@/lib/entities/resolve";
 import { ENTITY_SCOPES, isEntityScope, type EntityScope } from "@/lib/entities/field-policy";
 import type { EntitySearchResult } from "@/lib/entities/types";
 import { assertWithinRateLimit, RateLimitExceededError } from "@/lib/security/rate-limit";
@@ -26,6 +26,19 @@ export async function searchEntitiesAction(
   if (!isEntityScope(scope)) return [];
   const supabase = await createClient();
   return searchEntities(supabase, scope, query, context);
+}
+
+/**
+ * What `EntityCombobox` calls to learn whether its *currently linked* entity is verified
+ * or a student-submitted one still awaiting a check — the id alone (its only prop about
+ * the link) can't tell it that. Same read-only reasoning as searchEntitiesAction above, no
+ * rate limit: fires once per `entityId` change, not per keystroke.
+ */
+export async function resolveEntityAction(scope: EntityScope, id: string): Promise<ResolvedEntity | null> {
+  await requireUser();
+  if (!isEntityScope(scope)) return null;
+  const supabase = await createClient();
+  return resolveEntity(supabase, scope, id);
 }
 
 export async function createCustomEntityAction(

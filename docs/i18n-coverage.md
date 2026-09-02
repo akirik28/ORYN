@@ -518,6 +518,66 @@ variance of nearly 2x on its own — this machine runs several parallel sessions
 so isolated timing is the only number attributable to this file specifically; full-suite
 wall time on a shared, busy machine isn't a clean measurement of one file's cost.
 
+## A ninth instance of the trust-label gap, and this one has no mechanism
+
+The eight instances above (`extreme_reach`, `career_exploration`, and the six-item table)
+all share a shape: a value the *product itself* recorded reaching a person raw, unlabeled.
+This one is the same family — a label a student reads that doesn't match the real
+underlying state — but inverted. `entity-combobox.tsx`'s "Linked to a verified entry."
+rendered for *any* linked entity at all, including one the student had self-added seconds
+earlier through "Can't find your school?" — whose own dialog honestly discloses the
+opposite (`unverifiedNotice`: *"Oryn will add this as unverified until someone checks it
+against an official source"*). The component contradicted the flow that fed it, on the same
+screen — found on the onboarding wizard, the only door into the product, by the lane
+auditing it.
+
+**Fixed**: `lib/entities/resolve.ts` already queried `verification_state` to filter out
+merged/inactive rows, then discarded it before returning — the state existed, nothing read
+it. `ResolvedEntity` now carries `isCustom` (mirroring `EntitySearchResult.isCustom`'s
+identical, already-correct computation for search results — `verification_state ===
+"user_submitted"`), a new `resolveEntityAction` Server Action lets the component ask for its
+*currently linked* entity's real state (its only previous signal was a bare id), and the
+label now reads one of three honest states — verified, self-added and not yet verified, or
+nothing linked — never the two-state version that couldn't distinguish the middle one.
+Checked all four consumers (profile forms, onboarding, both CV-import surfaces): none
+customize this wording today, and the new copy is scope-agnostic like its sibling string
+(`linkedToVerified`), so no per-field override was needed anywhere.
+
+**Asked directly: does this class have a mechanism, the way the other three built tonight
+do? No — and this is a structurally different question, not merely a harder version of the
+same one.**
+
+The other three guards all answer a question with a definite, checkable fact behind it:
+does a Server Component pass a closure to a Client prop (syntax), does a template-literal
+substitution's type match a tracked enum (types), is a write's result destructured
+(syntax). This bug has no such fact to check. `entityId ? <p>{t("linkedToVerified")}</p> :
+null` is, to a compiler, a perfectly ordinary conditional render — nothing about the
+*string* `"linkedToVerified"` or its catalog value `"Linked to a verified entry."`
+distinguishes it from any other string. The defect only exists at the level of **what the
+English words claim** versus **what boolean actually gates them appearing** — and knowing
+that "verified" is a claim requiring backing evidence, while "you added" is not, requires
+reading and understanding the sentence, not its type or its syntax tree. `ts.createSourceFile`
+and a full `ts.Program`/`TypeChecker` are both the wrong shape of tool for this by
+construction, not merely under-powered for it.
+
+This is the identical limit `locale.test.ts`'s own section above already names for a
+different question (whether a Turkish value that differs from English is *correct* Turkish,
+not just non-identical to it): *"not a scope gap to widen — it's the edge of what comparing
+two strings can prove at all; closing it needs a bilingual reviewer or a semantic (LLM-based)
+check, a different kind of tool than this file."* Same answer here, restated for a sibling
+problem: closing this class needs a human reading each conditionally-rendered trust-bearing
+string against the real condition gating it, or a genuinely semantic (LLM-based) reviewer
+built and scoped as its own project — not a fourth entry in tonight's run of TypeScript-API
+checkers, which would report false confidence that the class was handled.
+
+**What a human sweep would look for, named so the next person doing one doesn't start
+from nothing**: any conditionally-rendered string whose English wording asserts a
+*state-carrying* claim — "verified," "official," "confirmed," "matches," "on file" — paired
+with a condition that only tests *presence* (an id, a non-null field, a non-empty array)
+rather than the specific state the words claim. `entity-combobox.tsx` was exactly this
+shape; nothing rules out a second instance elsewhere in `app/`+`features/` tonight didn't
+have time to look for by hand.
+
 ## What this means for a launch date
 
 A Turkish student switching to Turkish today gets a translated shell, translated legal

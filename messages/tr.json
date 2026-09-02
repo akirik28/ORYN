@@ -1580,6 +1580,7 @@
   },
   "entities": {
     "linkedToVerified": "Doğrulanmış bir kayda bağlı.",
+    "linkedToUnverified": "Senin eklediğin, henüz doğrulanmamış bir kayda bağlı.",
     "searchFailed": "Arama şu anda çalışmıyor — biraz sonra tekrar dene.",
     "noMatches": "Eşleşme bulunamadı.",
     "unverifiedTag": "(doğrulanmamış)",

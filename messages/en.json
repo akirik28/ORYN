@@ -1580,6 +1580,7 @@
   },
   "entities": {
     "linkedToVerified": "Linked to a verified entry.",
+    "linkedToUnverified": "Linked to an entry you added, not yet verified.",
     "searchFailed": "Search isn't working right now — try again in a moment.",
     "noMatches": "No matches found.",
     "unverifiedTag": "(unverified)",
