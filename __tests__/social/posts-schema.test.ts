@@ -96,8 +96,16 @@ describe("migration numbering", () => {
     // assumed from the migration files. Checked every remote branch (git ls-tree across
     // refs/remotes/origin/*) and every local worktree's filesystem before claiming this
     // number, not just this worktree's own listing — the check this comment has been
-    // telling people to run. All still unapplied.
-    expect(Math.max(...numbers.map(Number))).toBe(79);
+    // telling people to run. It landed on main while a second, independent 0079 draft
+    // (statistics_last_changed_and_notification_sources — university_statistics gets the
+    // same last_changed_at universities already had, and 0078's source check widens from
+    // two values to four, 'deadline'/'statistics' added; university_deadlines itself is
+    // deliberately untouched — every write there is a plain insert, nothing ever updates a
+    // row in place, so there is no last_changed_at-style column any writer could advance,
+    // a genuinely larger gap than a missing column) was still sitting in a branch — found
+    // by running that same every-remote-branch check before pushing, and renumbered to
+    // 0080 before anyone else collided with it either. All still unapplied.
+    expect(Math.max(...numbers.map(Number))).toBe(80);
   });
 });
 

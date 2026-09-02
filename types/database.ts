@@ -1122,10 +1122,17 @@ export interface UniversityStatistic {
   source: string | null;
   data_confidence: DataConfidence;
   retrieved_at: string | null;
+  /** Migration 0080. Same role as universities.last_changed_at (migration 0006) and the
+   * same discipline lib/universities/sync-us-universities.ts's hasStatisticsChanged
+   * applies: only advances when a number genuinely differs from what this exact
+   * (university_id, stat_year) row already held, never on every scheduled re-sync
+   * regardless of outcome. Null until the first change is observed after this column
+   * existed — see migration 0080's own comment for why it is not backfilled. */
+  last_changed_at: string | null;
   created_at: string;
   updated_at: string;
 }
-export type UniversityStatisticInsert = Insertable<UniversityStatistic, "id" | "created_at" | "updated_at" | "data_confidence">;
+export type UniversityStatisticInsert = Insertable<UniversityStatistic, "id" | "created_at" | "updated_at" | "data_confidence" | "last_changed_at">;
 
 /** One row per (programme, admission cycle, scholarship/fee tier, faculty) — migration 0055,
  * revised against the live YOK Atlas API before first application. Never overwritten by the
@@ -1731,10 +1738,15 @@ export interface DeadlineNotificationLog {
 export type DeadlineNotificationLogInsert = Insertable<DeadlineNotificationLog, "id" | "notified_at">;
 
 /** 'university' (universities.last_changed_at, a core fact differed) | 'requirement'
- * (university_requirements.created_at, a brand-new row appeared) — see migration 0078's
- * own comment for why both exist and why an existing requirement's wording changing is
- * deliberately NOT a third value. */
-export type UniversityNotificationSource = "university" | "requirement";
+ * (university_requirements.created_at, a brand-new row appeared) | 'deadline'
+ * (university_deadlines.created_at, a brand-new deadline row appeared -- NOT an existing
+ * one changing, see lib/universities/data-change-scan.ts's own top comment for the
+ * architectural reason that half is deliberately unbuilt) | 'statistics'
+ * (university_statistics.last_changed_at, an admission number genuinely differed) — see
+ * migration 0078's own comment for 'university'/'requirement', migration 0080's for the
+ * two added there, and why an existing requirement's wording changing is deliberately NOT
+ * a value at all. */
+export type UniversityNotificationSource = "university" | "requirement" | "deadline" | "statistics";
 
 /** Dedupe log for the university_data_changed notification (migration 0078) — mirrors
  * DeadlineNotificationLog's role and shape; see lib/universities/data-change-scan.ts. */

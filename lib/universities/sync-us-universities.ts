@@ -57,6 +57,38 @@ export function hasUniversityDataChanged(existing: ComparableUniversityFields, i
   );
 }
 
+/** The fields this sync actually writes to `university_statistics` — same "shared type so
+ * the comparator and the payload can never silently drift apart" reasoning as
+ * ComparableUniversityFields above. */
+interface ComparableStatisticsFields {
+  admission_rate: number | null;
+  sat_range_low: number | null;
+  sat_range_high: number | null;
+  act_range_low: number | null;
+  act_range_high: number | null;
+  graduation_rate: number | null;
+  cost_of_attendance: number | null;
+}
+
+/**
+ * Same role as hasUniversityDataChanged, for university_statistics (migration 0079 gives
+ * that table its own last_changed_at). `cost_currency`/`source`/`data_confidence` are
+ * deliberately not compared: they are this sync's own fixed constants for every US row
+ * ("USD"/"College Scorecard"/"high"), never a fact that varies between reads, so including
+ * them could only ever produce a spurious "changed" reading against itself.
+ */
+export function hasStatisticsChanged(existing: ComparableStatisticsFields, incoming: ComparableStatisticsFields): boolean {
+  return (
+    existing.admission_rate !== incoming.admission_rate ||
+    existing.sat_range_low !== incoming.sat_range_low ||
+    existing.sat_range_high !== incoming.sat_range_high ||
+    existing.act_range_low !== incoming.act_range_low ||
+    existing.act_range_high !== incoming.act_range_high ||
+    existing.graduation_rate !== incoming.graduation_rate ||
+    existing.cost_of_attendance !== incoming.cost_of_attendance
+  );
+}
+
 /**
  * Upserts one U.S. university from College Scorecard into universities +
  * university_statistics + university_sources (Phase 30 Job C: university data
@@ -137,26 +169,39 @@ async function syncOne(schoolName: string): Promise<SyncResult> {
   // Upsert, not insert: migration 0032 added a (university_id, stat_year) unique index
   // specifically because a bare insert here duplicated a new statistics row on every
   // re-sync of the same school in the same year instead of updating it in place.
-  await supabase
+  const statYear = new Date().getFullYear();
+  const incomingStats: ComparableStatisticsFields = {
+    admission_rate: school.admissionRate,
+    sat_range_low: school.satMathRange && school.satReadingRange ? school.satMathRange[0] + school.satReadingRange[0] : null,
+    sat_range_high: school.satMathRange && school.satReadingRange ? school.satMathRange[1] + school.satReadingRange[1] : null,
+    act_range_low: school.actRange?.[0] ?? null,
+    act_range_high: school.actRange?.[1] ?? null,
+    graduation_rate: school.graduationRate,
+    cost_of_attendance: school.costOfAttendance,
+  };
+  const { data: existingStats } = await supabase
     .from("university_statistics")
-    .upsert(
-      {
-        university_id: universityId,
-        stat_year: new Date().getFullYear(),
-        admission_rate: school.admissionRate,
-        sat_range_low: school.satMathRange && school.satReadingRange ? school.satMathRange[0] + school.satReadingRange[0] : null,
-        sat_range_high: school.satMathRange && school.satReadingRange ? school.satMathRange[1] + school.satReadingRange[1] : null,
-        act_range_low: school.actRange?.[0] ?? null,
-        act_range_high: school.actRange?.[1] ?? null,
-        graduation_rate: school.graduationRate,
-        cost_of_attendance: school.costOfAttendance,
-        cost_currency: "USD",
-        source: "College Scorecard",
-        data_confidence: "high",
-        retrieved_at: now,
-      },
-      { onConflict: "university_id,stat_year" }
-    );
+    .select("admission_rate, sat_range_low, sat_range_high, act_range_low, act_range_high, graduation_rate, cost_of_attendance")
+    .eq("university_id", universityId)
+    .eq("stat_year", statYear)
+    .maybeSingle();
+  // Same last_changed_at discipline as universities above: only advance it when a number
+  // actually differs from what this exact (university, stat_year) row already holds, not
+  // on every scheduled re-sync regardless of outcome.
+  const statsChanged = !existingStats || hasStatisticsChanged(existingStats, incomingStats);
+  await supabase.from("university_statistics").upsert(
+    {
+      university_id: universityId,
+      stat_year: statYear,
+      ...incomingStats,
+      cost_currency: "USD",
+      source: "College Scorecard",
+      data_confidence: "high",
+      retrieved_at: now,
+      ...(statsChanged ? { last_changed_at: now } : {}),
+    },
+    { onConflict: "university_id,stat_year" }
+  );
 
   // Same reasoning: migration 0032 added a (university_id, source_url) unique index so
   // this doesn't accumulate a duplicate source row on every re-sync.
