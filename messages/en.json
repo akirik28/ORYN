@@ -1196,6 +1196,11 @@
       "upload": "Upload"
     }
   },
+  "evidenceStatus": {
+    "evidenceAdded": "Evidence added",
+    "verified": "Verified",
+    "notConfirmed": "Not confirmed"
+  },
   "search": {
     "view": {
       "title": "Search",

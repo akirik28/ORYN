@@ -35,7 +35,12 @@ interface TestItem {
 // the same real-catalog provider wrap as featured-manager.test.tsx, for the same reason:
 // an empty messages object would throw, not just render blank, and these assertions query
 // rendered English text by role/name ("Delete").
-function renderSection(overrides: { onDelete?: (id: string) => Promise<{ error?: string }> } = {}) {
+function renderSection(
+  overrides: {
+    onDelete?: (id: string) => Promise<{ error?: string }>;
+    evidenceStatus?: "self_reported" | "evidence_added" | "verified" | "verification_rejected";
+  } = {}
+) {
   const onCreate = vi.fn().mockResolvedValue({});
   const onUpdate = vi.fn().mockResolvedValue({});
   const onDelete = overrides.onDelete ?? vi.fn().mockResolvedValue({});
@@ -45,7 +50,7 @@ function renderSection(overrides: { onDelete?: (id: string) => Promise<{ error?:
       <AchievementSection<TestItem>
         title="Activities"
         items={[{ id: "item-1", title: "Regional Science Fair" }]}
-        summaries={{ "item-1": { title: "Regional Science Fair" } }}
+        summaries={{ "item-1": { title: "Regional Science Fair", evidenceStatus: overrides.evidenceStatus } }}
         fields={[{ type: "text", name: "title", label: "Title" }]}
         defaultValues={{ title: "" }}
         onCreate={onCreate}
@@ -125,6 +130,41 @@ describe("AchievementSection — pinned success-path behavior", () => {
     clickDeleteThenConfirm();
     await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
     expect(screen.getByRole("button", { name: "Delete Regional Science Fair" })).not.toBeDisabled();
+  });
+});
+
+describe("AchievementSection — evidence status (Phase 21: visible, and never overclaimed)", () => {
+  test("self_reported — the default nearly every item carries — shows no badge at all", () => {
+    renderSection({ evidenceStatus: "self_reported" });
+    expect(screen.queryByText("Evidence added")).not.toBeInTheDocument();
+    expect(screen.queryByText("Verified")).not.toBeInTheDocument();
+    expect(screen.queryByText("Not confirmed")).not.toBeInTheDocument();
+  });
+
+  test("no evidenceStatus at all (sections with no evidence concept, e.g. Goals) shows no badge either", () => {
+    renderSection({});
+    expect(screen.queryByText("Evidence added")).not.toBeInTheDocument();
+  });
+
+  test("evidence_added shows its own badge", () => {
+    renderSection({ evidenceStatus: "evidence_added" });
+    expect(screen.getByText("Evidence added")).toBeInTheDocument();
+  });
+
+  test("evidence_added never renders as or alongside 'Verified' — a file existing is not verification", () => {
+    renderSection({ evidenceStatus: "evidence_added" });
+    expect(screen.queryByText("Verified")).not.toBeInTheDocument();
+  });
+
+  test("verified shows its own, differently-labeled badge", () => {
+    renderSection({ evidenceStatus: "verified" });
+    expect(screen.getByText("Verified")).toBeInTheDocument();
+    expect(screen.queryByText("Evidence added")).not.toBeInTheDocument();
+  });
+
+  test("verification_rejected shows a calm, factual label — not an alarming or punitive one", () => {
+    renderSection({ evidenceStatus: "verification_rejected" });
+    expect(screen.getByText("Not confirmed")).toBeInTheDocument();
   });
 });
 
