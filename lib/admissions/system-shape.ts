@@ -586,6 +586,20 @@ const REGISTRY: AdmissionSystemEntry[] = [
     },
     sources: [DOC("portugal.md")],
   },
+  {
+    countryNames: ["Greece", "Ελλάδα", "Hellas"],
+    domestic: {
+      shape: "academic_rank_competitive",
+      mechanism:
+        "The Panhellenic exams score four subjects against each faculty's own published weighting factors into a 0–20,000 point total. Each faculty separately sets a minimum admission grade that only qualifies you to list it as a preference — final placement is strict descending-score order on the computerized preference form. No essay, interview, or reference letter.",
+    },
+    international: {
+      shape: "academic_rank_competitive",
+      mechanism:
+        "Foreign-national applicants skip the Panhellenic exams entirely — the Technical University of Crete's own admissions page states the criterion is simply the applicant's existing secondary-school graduation grade, placed through the same computerized preference form into a reserved quota. No essay, interview, or reference letter; Greek B2 language proficiency is required to enrol once admitted, not to be admitted.",
+    },
+    sources: [DOC("greece.md")],
+  },
 ];
 
 // ---------------------------------------------------------------------------

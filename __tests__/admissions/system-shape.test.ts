@@ -47,7 +47,7 @@ describe("resolveAdmissionSystem — the three shapes the research actually foun
   });
 
   test("every resolved entry carries at least one traceable source document", () => {
-    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal"]) {
+    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece"]) {
       const result = resolveAdmissionSystem({ targetCountry: country, studentCountry: "Turkey" });
       expect(result.sources.length, country).toBeGreaterThan(0);
       expect(result.mechanism, country).not.toBeNull();
@@ -317,6 +317,41 @@ describe("resolveAdmissionSystem — Portugal (2026-09-03, a third independently
   test("Portugal traces to its own research document, not an invented source", () => {
     const result = resolveAdmissionSystem({ targetCountry: "Portugal", studentCountry: "Portugal" });
     expect(result.sources).toContain("docs/research/admissions-systems/portugal.md");
+  });
+});
+
+describe("resolveAdmissionSystem — Greece (2026-09-03, same shape both sides, different input)", () => {
+  // Primary-sourced from the National Exams Organization's own English summary PDF
+  // (docs/research/admissions-systems/greece.md §B): a precisely quantified weighted-formula
+  // rank mechanism, not an approximation.
+  test("Greece's domestic track is rank-competitive via the Panhellenic exam formula", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Greece", studentCountry: "Greece" });
+    expect(domestic.shape).toBe("academic_rank_competitive");
+    expect(reviewsNonAcademicEvidence(domestic.shape)).toBe(false);
+    expect(domestic.mechanism).toContain("Panhellenic");
+    expect(domestic.mechanism).toContain("weighting factors");
+  });
+
+  // Confirmed via the Technical University of Crete's own page (greece.md §C): no exam at all
+  // for this population, but the same shape as domestic — a genuinely different mechanism
+  // sentence, not a copy-pasted one, matching how Australia/Spain/New Zealand already
+  // distinguish their two pathways' wording without flipping shape.
+  test("Greece's foreign-national track shares the shape but not the mechanism text", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Greece", studentCountry: "Greece" });
+    const international = resolveAdmissionSystem({ targetCountry: "Greece", studentCountry: "Turkey" });
+    expect(international.shape).toBe("academic_rank_competitive");
+    expect(international.mechanism).toContain("graduation grade");
+    expect(international.mechanism).not.toBe(domestic.mechanism);
+  });
+
+  test("Greece's language requirement is scoped to enrollment, not admission, in the mechanism text", () => {
+    const international = resolveAdmissionSystem({ targetCountry: "Greece", studentCountry: "Turkey" });
+    expect(international.mechanism).toContain("enrol once admitted, not to be admitted");
+  });
+
+  test("Greece traces to its own research document, not an invented source", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Greece", studentCountry: "Greece" });
+    expect(result.sources).toContain("docs/research/admissions-systems/greece.md");
   });
 });
 
