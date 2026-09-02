@@ -87,8 +87,17 @@ describe("migration numbering", () => {
     // independently real events about one university must not collide into one dedupe
     // slot) was still sitting in a branch — found by running that same every-remote-branch
     // check before pushing rather than after a rejected push forced it, and renumbered to
-    // 0078 before anyone else collided with it. All still unapplied.
-    expect(Math.max(...numbers.map(Number))).toBe(78);
+    // 0078 before anyone else collided with it. 0079 (education_test_score_evidence_status)
+    // closes a real gap found auditing the evidence-upload path: education_records and
+    // test_scores were both in EVIDENCE_LINKABLE_TABLES without the evidence_status column
+    // every other evidence-linkable table has had since migration 0004, so
+    // uploadEvidence()'s status-mirroring update always failed for those two, silently
+    // (the write's error was never checked) — confirmed live against oryn-qa-scratch, not
+    // assumed from the migration files. Checked every remote branch (git ls-tree across
+    // refs/remotes/origin/*) and every local worktree's filesystem before claiming this
+    // number, not just this worktree's own listing — the check this comment has been
+    // telling people to run. All still unapplied.
+    expect(Math.max(...numbers.map(Number))).toBe(79);
   });
 });
 
