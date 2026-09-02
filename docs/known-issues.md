@@ -133,12 +133,17 @@ here is exactly why:**
   and that migration's own header says "NOT APPLIED, founder-gated." Checked directly rather
   than trusting the header — this is exactly the class of claim the 0062/0063 entry below
   shows can be wrong: queried `information_schema.columns` for `weekly_actions.carried_forward`
-  and got zero rows. Unlike 0062/0063, this one genuinely is unapplied; the header is
-  accurate. What that means for live behavior right now wasn't determined by this pass — the
-  code path that would write `carried_forward` on a live "Regenerate" click has no column to
-  write to today, and whether that surfaces as an error, a silent no-op, or something else
-  wasn't traced. **Could not fully determine**; flagging precisely rather than calling this
-  either fixed or still-broken.
+  and got zero rows (**re-checked 2026-09-02, staleness pass — still zero rows, `0077` is still
+  genuinely unapplied**). Unlike 0062/0063, this one genuinely is unapplied; the header is
+  accurate. **What that means for live behavior, previously undetermined, is now answered**:
+  read `lib/plan/persist.ts` directly and the write path catches the specific Postgres
+  `42703` (undefined column) error for `carried_forward` by name and degrades to a
+  `console.warn` — "completed actions still preserved, just not distinguishable from a fresh
+  batch until it lands" — rather than throwing or silently losing data. A live "Regenerate"
+  click today neither errors nor silently drops the reflection data the original bug lost; it
+  just can't yet mark a carried-forward action as such. **Verified fixed** for the part that
+  matters (no data loss, no crash); still blocked on the founder applying `0077` for the
+  cosmetic distinction it was meant to add.
 
 ## ORYN has never been deployed — no scheduled job has ever run
 
