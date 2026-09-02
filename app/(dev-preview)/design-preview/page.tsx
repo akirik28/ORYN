@@ -81,7 +81,7 @@ export default async function DesignPreviewPage({ searchParams }: { searchParams
   const tier = tierParam === "ultra" ? "ultra" : "standard";
 
   return (
-    <PreviewShell signal={FIXTURE_PROFILE_SIGNAL}>
+    <PreviewShell signal={FIXTURE_PROFILE_SIGNAL} tier={tier}>
       <div className="mb-16 space-y-4 rounded-2xl border bg-card p-6">
         <div className="space-y-1.5">
           <h1 className="text-lg font-semibold">Preview every surface</h1>

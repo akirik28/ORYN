@@ -7,7 +7,7 @@ import { MobileNav } from "@/features/app-shell/mobile-nav";
 import { RouteAmbientBlobs } from "@/features/app-shell/route-ambient-blobs";
 import { PreviewToolbar } from "./preview-toolbar";
 import type { DimensionSignal } from "@/lib/scoring/signal";
-import type { Notification } from "@/types/database";
+import type { Notification, PlanTier } from "@/types/database";
 import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
 
 // Real generated output from buildDigestNotification()/buildProfileUpdateNotification()
@@ -94,7 +94,22 @@ const PREVIEW_QUOTA: MonthlyQuota = { used: 94460, limit: 236150, remaining: 141
 // its own data-tier stamping instead, see app/(dev-preview)/layout.tsx), so anything Ultra
 // needs visible in this harness has to come from a token or a component this shell actually
 // renders — never from that page-level effect.
-export function PreviewShell({ children, signal }: { children: ReactNode; signal: DimensionSignal[] }) {
+// `tier` came out of this signature when the upgrade CTA's gating moved to a pure
+// [data-tier="ultra"] CSS rule, and came back when the usage bar gained a canvas flame:
+// Topbar/MobileNav now pass it to UsageIndicator, and a canvas cannot read an attribute
+// off <html> the way a CSS rule can. That is the same split this codebase hit four times
+// tonight -- CSS-variable tiering and JS-resolved tiering are two delivery paths, and a
+// surface can legitimately need one without the other. Optional with a "standard" default
+// so the preview routes that don't compute a tier keep working unchanged.
+export function PreviewShell({
+  children,
+  signal,
+  tier = "standard",
+}: {
+  children: ReactNode;
+  signal: DimensionSignal[];
+  tier?: PlanTier;
+}) {
   return (
     <div
       className="flex min-h-svh flex-col lg:flex-row"

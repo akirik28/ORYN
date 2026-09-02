@@ -33,7 +33,7 @@ export default async function MapPreviewPage({ searchParams }: { searchParams: P
   const tier = tierParam === "ultra" ? "ultra" : "standard";
 
   return (
-    <PreviewShell signal={FIXTURE_PROFILE_SIGNAL}>
+    <PreviewShell signal={FIXTURE_PROFILE_SIGNAL} tier={tier}>
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
           Map harness. Append <code>?country=United Kingdom</code> to the URL to see the fly-in and pins,

@@ -10,7 +10,7 @@ export default async function FeaturesPreviewPage({ searchParams }: { searchPara
   const tier = tierParam === "ultra" ? "ultra" : "standard";
 
   return (
-    <PreviewShell signal={FIXTURE_PROFILE_SIGNAL}>
+    <PreviewShell signal={FIXTURE_PROFILE_SIGNAL} tier={tier}>
       <FeaturesView userId="fixture-user" tier={tier} />
     </PreviewShell>
   );
