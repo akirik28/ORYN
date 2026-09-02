@@ -32,7 +32,13 @@ export const REGRESSION_CONTEXT: StudentAdvisorContext = {
     country: "Turkey",
     schoolName: "Istanbul International School",
     graduationYear: 2028,
-    curriculum: "IB",
+    // The real CurriculumType enum key ("ib"), not the onboarding UI's display label
+    // ("IB", lib/validation/onboarding.ts's CURRICULUM_OPTIONS). Same class of drift as
+    // weeklyTimeBudget below, found in the same 2026-09-02 shape-drift sweep — confirmed
+    // against live data too: every real profile with a curriculum set stores it lowercase
+    // ("ap"/"ib"). formatContextForPrompt interpolates this raw, so the old value showed
+    // the model prompt text ("...IB, Turkey.") no real student's profile ever produces.
+    curriculum: "ib",
     // The real TimeBudget enum key (types/database.ts), not display prose — a production
     // prompt shows exactly this raw string (formatContextForPrompt never translates it),
     // so this fixture previously showed the model prompt text no real student's profile
@@ -85,7 +91,7 @@ export const BASELINE_CONTEXT: StudentAdvisorContext = {
     country: "United States",
     schoolName: "Lincoln High School",
     graduationYear: 2027,
-    curriculum: "AP",
+    curriculum: "ap", // see REGRESSION_CONTEXT's comment above — real enum key, not the display label
     weeklyTimeBudget: "2_5h", // see REGRESSION_CONTEXT's comment above — real enum key, not prose
     busyMode: true,
     busyModeUntil: inDays(14),

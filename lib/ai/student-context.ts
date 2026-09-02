@@ -10,7 +10,7 @@ import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { dimensionLabel } from "@/lib/scoring/labels";
 import { DEFAULT_LOCALE, isLocale, type Locale } from "@/lib/i18n/config";
-import type { Database, EvidenceStatus, OutlookLabel, ProfileDimension } from "@/types/database";
+import type { ActionStatus, CurriculumType, Database, DataConfidence, EvidenceStatus, OutlookLabel, ProfileDimension, TargetStatus, TimeBudget } from "@/types/database";
 
 /**
  * Phase 65: nothing clears `profiles.busy_mode` automatically once `busy_mode_until`
@@ -36,8 +36,17 @@ export interface StudentAdvisorContext {
     country: string | null;
     schoolName: string | null;
     graduationYear: number | null;
-    curriculum: string | null;
-    weeklyTimeBudget: string | null;
+    // Both fields below were plain `string | null` until 2026-09-02's eval-fixture-shape
+    // sweep — that let lib/ai/eval/fixtures.ts carry display prose ("IB", "5-10 hours")
+    // where a real profile stores the closed enum key ("ib", "5_10h") and still typecheck.
+    // Tightened to the real DB types so that exact class of drift is a compile error next
+    // time, not a silent one only caught because a downstream guardrail happened to stop
+    // firing. Both assignments in buildStudentAdvisorContext below already pass a
+    // correctly-typed value (profile.curriculum/weekly_time_budget are already
+    // CurriculumType/TimeBudget) — this is a no-op for production, and only ever narrows
+    // what a hand-built context (a fixture, a test, a future mock) is allowed to claim.
+    curriculum: CurriculumType | null;
+    weeklyTimeBudget: TimeBudget | null;
     busyMode: boolean;
     busyModeUntil: string | null;
     /** Counselor Core eligibility (age gates on opportunities) — not used in prompt text today. */
@@ -52,7 +61,10 @@ export interface StudentAdvisorContext {
    * because the model reads this block and writes the prose they see: given a bare number
    * it will quote the number, and a dimension nobody has entered anything for scores 0.
    */
-  profileScores: { dimension: ProfileDimension; score: number; confidence: string; state: EvidenceState }[];
+  // confidence was plain `string` until the same sweep — a near-miss, not a live bug (both
+  // fixtures' values already happened to be real DataConfidence members), tightened anyway
+  // so it can't become one later. See the curriculum/weeklyTimeBudget comment above for why.
+  profileScores: { dimension: ProfileDimension; score: number; confidence: DataConfidence; state: EvidenceState }[];
   overallScore: number;
   completenessPercent: number;
   /**
@@ -79,16 +91,22 @@ export interface StudentAdvisorContext {
    * existing use of this table) — not included in formatContextForPrompt today. */
   interests: string[];
   /** `outlook` is the persisted enum, not a free string — typing it loosely is what let the
-   *  raw `extreme_reach` reach the prompt and then a student. */
-  targetUniversities: { id: string; universityId: string; programId: string | null; name: string; status: string; outlook: OutlookLabel | null }[];
+   *  raw `extreme_reach` reach the prompt and then a student. `status` tightened alongside
+   *  it in the same 2026-09-02 sweep that caught curriculum/weeklyTimeBudget/confidence —
+   *  this exact lesson (a loosely-typed field next to a correctly-typed one on the same
+   *  line) had already been learned once for `outlook` and hadn't propagated to its
+   *  neighbor; both real assignments already pass a TargetStatus-typed value regardless. */
+  targetUniversities: { id: string; universityId: string; programId: string | null; name: string; status: TargetStatus; outlook: OutlookLabel | null }[];
   upcomingDeadlines: { title: string; date: string; source: string }[];
   recentRecommendationTitles: string[];
   /** Phase 10/62/63 — what actually happened after past advice, so the advisor learns from
    * outcomes instead of only avoiding repeated titles. Sourced from weekly_actions (status +
    * the reflection captured when a student marks one done), not ai_recommendations — that
    * table only ever logs "avoid_for_now" suggestions (see recentRecommendationTitles), never
-   * the do/consider actions that make up the bulk of what's actually recommended. */
-  recentActionOutcomes: { title: string; status: string; reflectionOutcome: string | null; reflectionNote: string | null }[];
+   * the do/consider actions that make up the bulk of what's actually recommended.
+   * `status` tightened from `string` to the real ActionStatus in the same 2026-09-02
+   * sweep as targetUniversities' own status field above. */
+  recentActionOutcomes: { title: string; status: ActionStatus; reflectionOutcome: string | null; reflectionNote: string | null }[];
   /** Phase 22/62 — unfinished application checklist items (essay, recommendation, ...),
    * so the advisor can point at a concrete near-term task instead of only reasoning at the
    * profile-dimension level. */
@@ -147,7 +165,7 @@ async function getTargetUniversitiesForContext(
   supabase: SupabaseClient<Database>,
   userId: string,
   supersessionMap: SupersessionMap
-): Promise<{ id: string; universityId: string; programId: string | null; name: string; status: string; outlook: OutlookLabel | null }[]> {
+): Promise<{ id: string; universityId: string; programId: string | null; name: string; status: TargetStatus; outlook: OutlookLabel | null }[]> {
   const { data: targets } = await supabase.from("target_universities").select("id, status, outlook, university_id, program_id").eq("user_id", userId);
   if (!targets || targets.length === 0) return [];
 
