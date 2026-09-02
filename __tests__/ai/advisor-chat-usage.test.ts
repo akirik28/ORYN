@@ -135,3 +135,39 @@ describe("generateAdvisorReply — usage recording", () => {
     expect(usageInserts()).toHaveLength(0);
   });
 });
+
+describe("generateAdvisorReply — the degraded decision actually reaches the row, not just the caller", () => {
+  // Gap this closes (2026-09-02): logAIUsage computed selection.degraded/reason correctly
+  // the whole time and handed them to every caller — reply.degraded above has been correct
+  // throughout — but never included them in the ai_usage insert itself, so the column
+  // silently carried its `not null default false` regardless of the real decision. No test
+  // anywhere asserted the row's own degraded/degrade_reason fields, only the two things
+  // this file already checked above: token counts, and the value handed back to the
+  // caller. This describe block is that missing assertion, added once the write path was
+  // fixed rather than only inferred to be fixed from the code reading correctly.
+
+  test("under target: the row says degraded false, not merely omits the field", async () => {
+    monthToDateRowsRef.current = [{ estimated_cost: 0.1 }];
+    providerRef.current!.queueText("Leadership is already strong.");
+
+    await generateAdvisorReply({ userId: USER_ID, history: [], newMessage: "What next?" });
+
+    const recorded = usageInserts();
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0]?.row).toMatchObject({ degraded: false, degrade_reason: null });
+  });
+
+  test("at or over target: the row says degraded true with the real reason, not the column default", async () => {
+    // Same shape lib/ai/limits/budget.ts's own hasUnknownCostRows guard reads — several
+    // known-cost rows summing past MONTHLY_BUDGET_TARGET_USD ($0.50).
+    monthToDateRowsRef.current = [{ estimated_cost: 0.3 }, { estimated_cost: 0.25 }];
+    providerRef.current!.queueText("Shorter answer, still real.");
+
+    const reply = await generateAdvisorReply({ userId: USER_ID, history: [], newMessage: "What next?" });
+
+    expect(reply.degraded).toBe(true);
+    const recorded = usageInserts();
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0]?.row).toMatchObject({ degraded: true, degrade_reason: "at_or_over_target" });
+  });
+});
