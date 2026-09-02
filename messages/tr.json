@@ -1196,6 +1196,11 @@
       "upload": "Yükle"
     }
   },
+  "evidenceStatus": {
+    "evidenceAdded": "Kanıt eklendi",
+    "verified": "Doğrulandı",
+    "notConfirmed": "Doğrulanamadı"
+  },
   "search": {
     "view": {
       "title": "Arama",

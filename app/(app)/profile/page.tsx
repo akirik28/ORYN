@@ -104,7 +104,7 @@ import { createSkill, updateSkill, deleteSkill } from "./skills-actions";
 import { createLanguage, updateLanguage, deleteLanguage } from "./languages-actions";
 import { languageProficiencyLabel } from "@/lib/vocabularies/languages";
 import type { FormValues } from "@/features/profile/dynamic-form-fields";
-import type { ProfileDimension } from "@/types/database";
+import type { ProfileDimension, EvidenceStatus } from "@/types/database";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tMeta = await getTranslations("nav");
@@ -263,8 +263,10 @@ export default async function ProfilePage() {
   // `renderSummary={(item) => ({...})}` can't cross the Server->Client boundary (only a
   // "use server" Action can) — computed here instead, server-side, into a plain
   // id-keyed data map. See achievement-section.tsx's own comment for the full story.
-  const summaryMap = <T extends { id: string }>(items: T[], summarize: (item: T) => { title: string; subtitle?: string }) =>
-    Object.fromEntries(items.map((item) => [item.id, summarize(item)]));
+  const summaryMap = <T extends { id: string }>(
+    items: T[],
+    summarize: (item: T) => { title: string; subtitle?: string; evidenceStatus?: EvidenceStatus }
+  ) => Object.fromEntries(items.map((item) => [item.id, summarize(item)]));
 
   // Shared with QuickAddEntry below, so the picker's "meaningful fields only" defaults and
   // the full Edit dialog's defaults can never quietly drift apart into two answers for
@@ -446,6 +448,11 @@ export default async function ProfilePage() {
             title={t("page.sections.education.title")}
             description={t("page.sections.education.description")}
             items={educationRes.data ?? []}
+            // No evidenceStatus yet: education_records only gets the column via migration
+            // 0079 (docs/evidence-flow-audit-2026-09-02.md), which is written but not
+            // applied — types/database.ts has no evidence_status field for this table
+            // until it lands. Add it here the same way activities/awards/etc. do below,
+            // once the migration is applied and types are regenerated.
             summaries={summaryMap(educationRes.data ?? [], (item) => ({ title: item.school_name, subtitle: item.country ?? undefined }))}
             fields={EDUCATION_FIELDS}
             defaultValues={educationDefaults}
@@ -479,6 +486,8 @@ export default async function ProfilePage() {
             title={t("page.sections.testScores.title")}
             description={t("page.sections.testScores.description")}
             items={testScoresRes.data ?? []}
+            // No evidenceStatus yet — same reason as education_records above: migration
+            // 0079 adds the column but isn't applied, so it isn't in the generated types.
             summaries={summaryMap(testScoresRes.data ?? [], (item) => ({ title: item.test_name, subtitle: item.score }))}
             fields={TEST_SCORE_FIELDS}
             defaultValues={testScoreDefaults}
@@ -495,7 +504,7 @@ export default async function ProfilePage() {
             title={t("page.sections.activities.title")}
             description={t("page.sections.activities.description")}
             items={activities}
-            summaries={summaryMap(activities, (item) => ({ title: item.title, subtitle: item.organization ?? undefined }))}
+            summaries={summaryMap(activities, (item) => ({ title: item.title, subtitle: item.organization ?? undefined, evidenceStatus: item.evidence_status }))}
             fields={ACTIVITY_FIELDS}
             defaultValues={activityDefaults}
             onCreate={createActivity as (v: FormValues) => Promise<{ error?: string }>}
@@ -526,7 +535,7 @@ export default async function ProfilePage() {
             title={t("page.sections.projects.title")}
             description={t("page.sections.projects.description")}
             items={projectsRes.data ?? []}
-            summaries={summaryMap(projectsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.outcome_summary ?? item.organization ?? undefined }))}
+            summaries={summaryMap(projectsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.outcome_summary ?? item.organization ?? undefined, evidenceStatus: item.evidence_status }))}
             fields={PROJECT_FIELDS}
             defaultValues={projectDefaults}
             onCreate={createProject as (v: FormValues) => Promise<{ error?: string }>}
@@ -543,7 +552,7 @@ export default async function ProfilePage() {
             title={t("page.sections.research.title")}
             description={t("page.sections.research.description")}
             items={researchRes.data ?? []}
-            summaries={summaryMap(researchRes.data ?? [], (item) => ({ title: item.title, subtitle: item.field ?? undefined }))}
+            summaries={summaryMap(researchRes.data ?? [], (item) => ({ title: item.title, subtitle: item.field ?? undefined, evidenceStatus: item.evidence_status }))}
             fields={RESEARCH_FIELDS}
             defaultValues={researchDefaults}
             onCreate={createResearchExperience as (v: FormValues) => Promise<{ error?: string }>}
@@ -557,7 +566,7 @@ export default async function ProfilePage() {
             title={t("page.sections.workExperience.title")}
             description={t("page.sections.workExperience.description")}
             items={workRes.data ?? []}
-            summaries={summaryMap(workRes.data ?? [], (item) => ({ title: item.title, subtitle: item.organization }))}
+            summaries={summaryMap(workRes.data ?? [], (item) => ({ title: item.title, subtitle: item.organization, evidenceStatus: item.evidence_status }))}
             fields={WORK_EXPERIENCE_FIELDS}
             defaultValues={workDefaults}
             onCreate={createWorkExperience as (v: FormValues) => Promise<{ error?: string }>}
@@ -571,7 +580,7 @@ export default async function ProfilePage() {
             title={t("page.sections.volunteering.title")}
             description={t("page.sections.volunteering.description")}
             items={volunteeringRes.data ?? []}
-            summaries={summaryMap(volunteeringRes.data ?? [], (item) => ({ title: item.title, subtitle: item.cause_area ?? undefined }))}
+            summaries={summaryMap(volunteeringRes.data ?? [], (item) => ({ title: item.title, subtitle: item.cause_area ?? undefined, evidenceStatus: item.evidence_status }))}
             fields={VOLUNTEERING_FIELDS}
             defaultValues={volunteeringDefaults}
             onCreate={createVolunteering as (v: FormValues) => Promise<{ error?: string }>}
@@ -587,7 +596,7 @@ export default async function ProfilePage() {
             title={t("page.sections.awards.title")}
             description={t("page.sections.awards.description")}
             items={awardsRes.data ?? []}
-            summaries={summaryMap(awardsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.level ?? undefined }))}
+            summaries={summaryMap(awardsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.level ?? undefined, evidenceStatus: item.evidence_status }))}
             fields={AWARD_FIELDS}
             defaultValues={awardDefaults}
             onCreate={createAward as (v: FormValues) => Promise<{ error?: string }>}
@@ -601,7 +610,7 @@ export default async function ProfilePage() {
             title={t("page.sections.certifications.title")}
             description={t("page.sections.certifications.description")}
             items={certificationsRes.data ?? []}
-            summaries={summaryMap(certificationsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.organization ?? undefined }))}
+            summaries={summaryMap(certificationsRes.data ?? [], (item) => ({ title: item.title, subtitle: item.organization ?? undefined, evidenceStatus: item.evidence_status }))}
             fields={CERTIFICATION_FIELDS}
             defaultValues={certificationDefaults}
             onCreate={createCertification as (v: FormValues) => Promise<{ error?: string }>}
