@@ -81,7 +81,7 @@ select
 
 -- ---------------------------------------------------------------------------
 -- 5. Cleanup — cascades through profiles/connections via `on delete cascade`, which is
---    itself worth confirming didn't silently stop working (Phase 12's account-deletion
+--    itself worth confirming didn't silently stop working (AGENTS.md section 12's account-deletion
 --    requirement depends on the same cascade chain).
 -- ---------------------------------------------------------------------------
 delete from auth.users where id in (

@@ -3,7 +3,7 @@
  * (scripts/acquire-admissions-facts.ts — spec Phase 4, University Intelligence Spine).
  *
  * ANTHROPIC_API_KEY is credit-blocked this session (billing, not a missing key), so the
- * usual Tavily-search-then-AI-extract workflow AGENTS.md Phase 9 describes for the
+ * usual Tavily-search-then-AI-extract workflow AGENTS.md section 9 describes for the
  * cost/policy layer isn't available. Both facts this module supports are reachable without
  * AI, on a narrower but zero-fabrication-risk basis:
  *

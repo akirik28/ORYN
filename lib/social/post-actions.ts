@@ -216,7 +216,7 @@ export async function editPost(postId: string, input: { body?: string; visibilit
 
 /**
  * A hard delete. Not a soft-delete flag, and the difference is the product commitment:
- * AGENTS.md Phase 12 requires deletion for a minor-audience product, and a `deleted_at`
+ * AGENTS.md section 12 requires deletion for a minor-audience product, and a `deleted_at`
  * column is retention with extra steps.
  *
  * Migration 0058's foreign keys make one DELETE remove everything the post produced:

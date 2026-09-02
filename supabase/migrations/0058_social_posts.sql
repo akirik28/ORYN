@@ -37,8 +37,10 @@
 
 -- Who can see a post. Note there is NO `world` / anonymous tier: the widest value,
 -- `oryn_public`, means "any signed-in Oryn user", never an unauthenticated visitor and
--- never a search-engine-indexable page, following AGENTS.md Phase 12's "avoid
--- public-by-default profiles". EDITED 2026-08-22 (BUG-1 RLS verification package): this
+-- never a search-engine-indexable page, following AGENTS.md section 12's "avoid
+-- public-by-default profiles" (the plain-numbered minor-safe section near the top of the
+-- file, not the later Phase-numbered build track — that Phase 12 is Opportunity Matching).
+-- EDITED 2026-08-22 (BUG-1 RLS verification package): this
 -- comment previously cited migration 0023's `public_profiles` grant
 -- (`GRANT ... TO authenticated`, not `anon`) as precedent for that guarantee. Verified
 -- live that grant does NOT create the exclusivity it looks like it does: this project's
@@ -86,7 +88,7 @@ create table public.posts (
   -- (null out the reference, keep the reposter's commentary as an orphan) was rejected:
   -- a repost's entire visible payload IS the original's body and attachment, so an
   -- orphaned repost is a tombstone pointing at content a minor has explicitly asked to
-  -- remove. "Provide deletion" (AGENTS.md Phase 12) has to mean the content stops being
+  -- remove. "Provide deletion" (AGENTS.md section 12) has to mean the content stops being
   -- displayed everywhere, not just at its first location. The cost is real and accepted:
   -- a reposter's own commentary is destroyed along with it.
   --
@@ -487,7 +489,7 @@ alter table public.post_likes enable row level security;
 -- the post sees via posts.like_count. Identities are readable by exactly two parties:
 -- the liker (so the UI can render their own like state) and the post's author. A viewer
 -- cannot enumerate which of their peers liked a given post — that is a social graph
--- inference this product has no reason to hand out, and AGENTS.md Phase 12's "minimize
+-- inference this product has no reason to hand out, and AGENTS.md section 12's "minimize
 -- data collection" cuts against it.
 create policy "select own likes" on public.post_likes
   for select using (user_id = auth.uid());

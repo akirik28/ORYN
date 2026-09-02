@@ -26,7 +26,7 @@ export interface ResearchWork {
 }
 
 /**
- * OpenAlex — free, no API key required (Phase 10). Used to ground the research-project
+ * OpenAlex — free, no API key required (AGENTS.md section 10). Used to ground the research-project
  * generator in real current research themes rather than the AI inventing topics from
  * nothing. `mailto` opts into OpenAlex's faster "polite pool" if configured, but works
  * fine without it.

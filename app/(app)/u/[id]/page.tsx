@@ -74,7 +74,7 @@ function SkillList({
 
 // Mirrors the page body's own visibility gating exactly (public row, or self viewing their
 // own private profile) rather than a lighter/wider query — this page is privacy-sensitive
-// (Phase 12), so a non-owner requesting a private profile must see the same generic title
+// (AGENTS.md section 12), so a non-owner requesting a private profile must see the same generic title
 // the notFound() page below would give them, never the real name leaking through the tab
 // or browser history.
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
