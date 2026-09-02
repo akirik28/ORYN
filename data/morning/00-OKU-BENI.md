@@ -34,7 +34,18 @@ diye gösterecek, ama iş görmeyecek.
 `02-veri-doldurma-2026-09-03.sql` — 254 satır düzeltme. En görünür etkisi: **kurum adı
 boş olan 190 kayıt dolacak.**
 
-Şu an: 394 kayıttan 172'sinde kurum adı yok, 314'ünde son tarih yok, 330'unda görsel yok.
+Şu anki durum (2026-09-03 02:40, canlı ölçüm — **kapsam yazılı, çünkü kapsamsız sayı
+karşılaştırılamıyor**):
+
+| Kapsam | Kayıt | Kurum adı yok | Son tarih yok | Görsel yok |
+|---|---|---|---|---|
+| Hepsi | 421 | 197 | 339 | 356 |
+| Sadece `active` | 282 | 66 | 205 | 218 |
+| `active` + `under_review` | 394 | 172 | 314 | 330 |
+
+Paket **190** kaydın kurum adını dolduruyor (hepsi hâlâ boş, tek tek doğrulandı). Toplamda
+197 boş var — yani **7 kayıt hiçbir araştırma paketinde yok.** Küçük ama gerçek bir boşluk,
+kimse üstünde çalışmıyor.
 
 ## 4. /admin adresine gir
 
