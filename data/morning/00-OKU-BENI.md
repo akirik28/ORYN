@@ -54,6 +54,14 @@ yazılı). Biri de kapanmış bir marka: Duke TIP artık Duke Pre-College, canl�
 Ayrıntı: `docs/yedi-kapsanmayan-kayit-2026-09-03.md`. **SQL hazırlamadım** — kurum adı
 doldurmak dördü için de yanlış düzeltme olurdu. Duke'un kimliğini değiştirmek senin kararın.
 
+**Güncelleme (2026-09-03 ~02:50, oryn-a7 üçünü oryn-d0'a bıraktı):** `03-firsat-kayit-
+duzeltmeleri-2026-09-03.sql` iki gerçek düzeltme içeriyor — Google CSSI'nin adresi (canlı
+doğrulanmış, g.co/cssi Google'ın kendi kısa linki oraya yönleniyor) ve Maastricht'in
+kapatılması (status=active, en acili). Exeter'in kaydın açıklamasındaki adresi de canlı
+kontrol edildi ve 404 çıktı — beklenenin aksine basit bir düzeltme değildi, dosyanın
+sonunda yorum satırı olarak bırakıldı, çalıştırıp çalıştırmamak sana kalıyor. Duke TIP hâlâ
+dokunulmadı.
+
 ## 4. /admin adresine gir
 
 Ondört bölüm bugüne kadar hiç gerçek admin hesabıyla açılmadı. İlk açan sen olacaksın.
