@@ -1,7 +1,7 @@
 import "server-only";
 
 import { JOB_BUDGET_USD } from "@/lib/ai/limits/job-budget";
-import { PER_STUDENT_MONTHLY_CEILING_USD } from "@/lib/admin/queries";
+import { MONTHLY_BUDGET_CEILING_USD } from "@/lib/ai/limits/budget";
 
 /**
  * Unit-economics calculation for the admin finance dashboard (CEO's assignment, 2026-09-02;
@@ -16,9 +16,11 @@ import { PER_STUDENT_MONTHLY_CEILING_USD } from "@/lib/admin/queries";
  * failure mode this avoids (found and fixed once already tonight, `queries.ts`'s own
  * `PER_STUDENT_MONTHLY_TARGET_USD` comment): a display-layer number redefined independently
  * of the enforcement layer's constant drifts silently the moment the founder changes the
- * real one. `WORST_CASE_AI_COST_PER_ACTIVE_USER_USD` reads `PER_STUDENT_MONTHLY_CEILING_USD`
- * (queries.ts's own re-export of `lib/ai/limits/budget.ts`'s `MONTHLY_BUDGET_CEILING_USD`),
- * not a hardcoded $0.99 — $0.99 is the cost doc's own message-level derivation (18 Sonnet +
+ * real one. `WORST_CASE_AI_COST_PER_ACTIVE_USER_USD` reads `MONTHLY_BUDGET_CEILING_USD`
+ * directly from `lib/ai/limits/budget.ts` (not through `queries.ts`'s own re-export of the
+ * same constant — that indirection would make this file depend on `queries.ts`, which now
+ * depends back on this file for `ULTRA_PRICE_TRY`, a real circular import caught while
+ * wiring the settings table read path), not a hardcoded $0.99 — $0.99 is the cost doc's own message-level derivation (18 Sonnet +
  * 55 Haiku messages land just under the $1.00 ceiling with real per-message granularity),
  * genuinely a few cents more precise than the flat ceiling, but deriving it exactly would
  * mean re-implementing `lib/ai/monthly-quota.ts`'s own two-phase `usesConsumed` accounting a
@@ -55,7 +57,7 @@ export const SYSTEM_JOB_COSTS_USD = JOB_BUDGET_USD.opportunity_extraction + JOB_
 
 /** The absolute per-active-user ceiling — see this file's own header comment for why this
  *  reads the enforcement constant rather than a derived literal. */
-export const WORST_CASE_AI_COST_PER_ACTIVE_USER_USD = PER_STUDENT_MONTHLY_CEILING_USD;
+export const WORST_CASE_AI_COST_PER_ACTIVE_USER_USD = MONTHLY_BUDGET_CEILING_USD;
 
 /** The founder's own price, set 2026-09-02 (relayed through oryn-a7, verbatim: "399,99 TL
  *  olarak düşün, öyle yaz her yere"). Duplicated in messages/en.json and messages/tr.json as
@@ -96,6 +98,20 @@ export function convertTryToUsd(amountTry: number, rateTryPerUsd: number): numbe
   return amountTry / rateTryPerUsd;
 }
 
+/** A rate of 0 or negative would make `convertTryToUsd` divide by zero or invert the
+ *  conversion — reused by both the settings write path (app/(app)/admin/actions.ts) and
+ *  anywhere else that needs to validate a rate before trusting it, so the one definition of
+ *  "a sane rate" can't drift between the two. */
+export function isValidExchangeRate(rateTryPerUsd: number): boolean {
+  return Number.isFinite(rateTryPerUsd) && rateTryPerUsd > 0;
+}
+
+/** A price of 0 or negative isn't a real price; not otherwise bounded (no upper limit) since
+ *  this is the founder's own figure to set, not a range this codebase has an opinion on. */
+export function isValidPrice(priceTry: number): boolean {
+  return Number.isFinite(priceTry) && priceTry > 0;
+}
+
 // -------------------------------------------------------------------------------------------
 // Revenue: real vs. projected, kept structurally distinct so the two can never be confused
 // -------------------------------------------------------------------------------------------
@@ -127,10 +143,19 @@ export function getRealRevenueThisMonthUsd(): RevenueFigure {
 
 /** A hypothetical: if `payingUsers` were on Ultra this month, revenue would be this —
  *  labelled `projected` unconditionally, regardless of how plausible `payingUsers` is,
- *  because there is no code path today that makes any paying-user count real. */
-export function projectRevenueUsd(payingUsers: number, rateTryPerUsd: number): RevenueFigure {
-  const usd = convertTryToUsd(payingUsers * ULTRA_PRICE_TRY, rateTryPerUsd);
-  return { kind: "projected", usd, basis: `${payingUsers} hypothetical Ultra user${payingUsers === 1 ? "" : "s"} at ${ULTRA_PRICE_TRY} TL/month` };
+ *  because there is no code path today that makes any paying-user count real.
+ *
+ *  `priceTry` is a parameter, not a read of `ULTRA_PRICE_TRY` internally — the price became
+ *  admin-editable (migration 0094, `admin_finance_settings.ultra_price_try`) after this
+ *  function was first written, and a caller passing the live, current, possibly-just-edited
+ *  price is what makes editing it in the settings UI actually change what this computes.
+ *  `ULTRA_PRICE_TRY` stays as the parameter's default so existing callers/tests that don't
+ *  have a live settings value keep working unchanged, and as the table's own DEFAULT for a
+ *  row that's never been edited — not as a silent internal source of truth callers can't
+ *  override. */
+export function projectRevenueUsd(payingUsers: number, rateTryPerUsd: number, priceTry: number = ULTRA_PRICE_TRY): RevenueFigure {
+  const usd = convertTryToUsd(payingUsers * priceTry, rateTryPerUsd);
+  return { kind: "projected", usd, basis: `${payingUsers} hypothetical Ultra user${payingUsers === 1 ? "" : "s"} at ${priceTry} TL/month` };
 }
 
 // -------------------------------------------------------------------------------------------
@@ -236,13 +261,16 @@ export interface BreakEvenResult {
 }
 
 /** How many of `input.totalUsers` would need to be paying Ultra users to cover
- *  `computeUnitEconomics(input)`'s total monthly cost, at the founder's own price. Requires
- *  the exchange rate (the price is in TRY, the cost model is in USD) — `unavailable()` if
- *  the rate isn't configured, never a number computed against a guessed rate. */
-export function computeBreakEven(input: UnitEconomicsInput, rateTryPerUsd: number | null): RateDependent<BreakEvenResult> {
+ *  `computeUnitEconomics(input)`'s total monthly cost, at `priceTry` (defaults to
+ *  `ULTRA_PRICE_TRY`, override with the live settings-table value — see
+ *  `projectRevenueUsd`'s own comment on why this is a parameter, not an internal read).
+ *  Requires the exchange rate (the price is in TRY, the cost model is in USD) —
+ *  `unavailable()` if the rate isn't configured, never a number computed against a guessed
+ *  rate. */
+export function computeBreakEven(input: UnitEconomicsInput, rateTryPerUsd: number | null, priceTry: number = ULTRA_PRICE_TRY): RateDependent<BreakEvenResult> {
   if (rateTryPerUsd === null) return unavailable();
   const economics = computeUnitEconomics(input);
-  const priceUsd = convertTryToUsd(ULTRA_PRICE_TRY, rateTryPerUsd);
+  const priceUsd = convertTryToUsd(priceTry, rateTryPerUsd);
   return {
     available: true,
     value: {
@@ -261,8 +289,8 @@ export function computeBreakEven(input: UnitEconomicsInput, rateTryPerUsd: numbe
  *  a mid-scale scenario; the worst-case single active user) rather than picking whichever
  *  scenario produces the biggest number is how a caller keeps that honest — this function
  *  computes one multiple, the caller decides which scenarios to show side by side. */
-export function computeMarginMultiple(unitEconomics: UnitEconomicsResult, rateTryPerUsd: number | null): RateDependent<number> {
+export function computeMarginMultiple(unitEconomics: UnitEconomicsResult, rateTryPerUsd: number | null, priceTry: number = ULTRA_PRICE_TRY): RateDependent<number> {
   if (rateTryPerUsd === null) return unavailable();
-  const priceUsd = convertTryToUsd(ULTRA_PRICE_TRY, rateTryPerUsd);
+  const priceUsd = convertTryToUsd(priceTry, rateTryPerUsd);
   return { available: true, value: priceUsd / unitEconomics.totalCostPerUserUsd };
 }

@@ -4,6 +4,8 @@ import {
   computeBreakEven,
   computeMarginMultiple,
   convertTryToUsd,
+  isValidExchangeRate,
+  isValidPrice,
   getRealRevenueThisMonthUsd,
   projectRevenueUsd,
   COST_DOC_SCALE_SCENARIOS,
@@ -190,5 +192,57 @@ describe("Revenue — real vs. projected are structurally distinct", () => {
       expect(revenue.basis).toContain("1 hypothetical Ultra user ");
       expect(revenue.basis).not.toContain("1 hypothetical Ultra users");
     }
+  });
+});
+
+describe("isValidExchangeRate / isValidPrice — the admin_finance_settings write-path guards", () => {
+  test.each([0, -1, -40, NaN, Infinity, -Infinity])("rejects %s as a rate", (bad) => {
+    expect(isValidExchangeRate(bad)).toBe(false);
+  });
+  test.each([40, 0.01, 1000])("accepts %s as a rate", (good) => {
+    expect(isValidExchangeRate(good)).toBe(true);
+  });
+
+  test.each([0, -1, -399.99, NaN, Infinity])("rejects %s as a price", (bad) => {
+    expect(isValidPrice(bad)).toBe(false);
+  });
+  test.each([399.99, 0.01, 10000])("accepts %s as a price", (good) => {
+    expect(isValidPrice(good)).toBe(true);
+  });
+});
+
+describe("Price is a parameter, not a silent internal read — editing the settings value must change the result", () => {
+  // The whole reason projectRevenueUsd/computeBreakEven/computeMarginMultiple gained a
+  // priceTry parameter this pass: before this, all three read ULTRA_PRICE_TRY internally,
+  // so an admin editing the price in the settings UI would have had zero effect on any of
+  // these calculations. Asserting the default still matches ULTRA_PRICE_TRY (backward
+  // compatible for callers/tests that don't pass one) AND that a different price genuinely
+  // changes the output (the actual bug this refactor fixes) -- either alone would miss half
+  // of what matters here.
+  test("projectRevenueUsd: default matches ULTRA_PRICE_TRY, an explicit price overrides it", () => {
+    const atDefault = projectRevenueUsd(10, 40);
+    const atDefaultExplicit = projectRevenueUsd(10, 40, ULTRA_PRICE_TRY);
+    expect(atDefault.usd).toBeCloseTo(atDefaultExplicit.usd, 10);
+
+    const atDouble = projectRevenueUsd(10, 40, ULTRA_PRICE_TRY * 2);
+    expect(atDouble.usd).toBeCloseTo(atDefault.usd * 2, 10);
+  });
+
+  test("computeBreakEven: a higher price needs fewer paying users to break even", () => {
+    const input = { totalUsers: 1_000, activeRatio: 0.4 };
+    const atDefault = computeBreakEven(input, 40);
+    const atDoublePrice = computeBreakEven(input, 40, ULTRA_PRICE_TRY * 2);
+    expect(atDefault.available && atDoublePrice.available).toBe(true);
+    if (!atDefault.available || !atDoublePrice.available) return;
+    expect(atDoublePrice.value.requiredPayingUsers).toBeLessThan(atDefault.value.requiredPayingUsers);
+  });
+
+  test("computeMarginMultiple: a higher price produces a proportionally higher multiple", () => {
+    const economics = computeUnitEconomics({ totalUsers: 1_000, activeRatio: 0.4 });
+    const atDefault = computeMarginMultiple(economics, 40);
+    const atDoublePrice = computeMarginMultiple(economics, 40, ULTRA_PRICE_TRY * 2);
+    expect(atDefault.available && atDoublePrice.available).toBe(true);
+    if (!atDefault.available || !atDoublePrice.available) return;
+    expect(atDoublePrice.value).toBeCloseTo(atDefault.value * 2, 10);
   });
 });

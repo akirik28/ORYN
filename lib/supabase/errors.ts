@@ -108,3 +108,33 @@ export function isUndefinedColumnError(error: { code?: string; message?: string 
 export function isUniqueViolation(error: { code?: string; message?: string } | null, indexOrConstraintName: string): boolean {
   return error?.code === "23505" && !!error.message?.includes(indexOrConstraintName);
 }
+
+/**
+ * A missing TABLE, not a missing column -- every case above this one is a migration adding a
+ * column to a table that already exists; `lib/admin/queries.ts`'s `admin_finance_settings`
+ * (migration 0094) is the first one this codebase has needed where the whole table might not
+ * exist yet. Same two-code shape as `isUndefinedColumnError` for the same reason: PostgREST
+ * validates a query's target *table* against its own schema cache before any SQL runs, for
+ * both reads and writes alike (there is no read/write asymmetry here the way there is for a
+ * missing column, since a table-level schema-cache miss happens before PostgREST even gets to
+ * deciding whether the request names columns explicitly) -- so a check keyed only on
+ * Postgres's own `42P01` (`undefined_table`) risks being exactly as inert as a
+ * `42703`-only check was for writes, if PostgREST's own schema-cache error intercepts first.
+ *
+ * **Not captured live against this database** -- unlike `isUndefinedColumnError`'s `PGRST204`
+ * (found from a real dev-server log), `PGRST205` (`Could not find the table '<name>' in the
+ * schema cache`) is PostgREST's own documented spelling for a table-level cache miss, inferred
+ * by the same reasoning that produced `PGRST204`, not observed. Both codes are accepted for
+ * the identical reason both were accepted there: under either spelling the guard fires, and if
+ * `42P01` turns out to be the one that actually surfaces, nothing regresses by also checking
+ * for `PGRST205`.
+ *
+ * Narrowed by table name, matching every other function in this file's own narrowing
+ * discipline -- a different missing table should still fail loudly, not be silently treated
+ * as this one being merely unapplied.
+ */
+const UNDEFINED_TABLE_CODES = new Set(["42P01", "PGRST205"]);
+
+export function isUndefinedTableError(error: { code?: string; message?: string } | null, tableName: string): boolean {
+  return !!error?.code && UNDEFINED_TABLE_CODES.has(error.code) && !!error.message?.includes(tableName);
+}

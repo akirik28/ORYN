@@ -1875,6 +1875,18 @@ export interface ProviderHealth {
   updated_at: string;
 }
 
+/** Migration 0094, singleton row at ADMIN_FINANCE_SETTINGS_ID (lib/admin/queries.ts) --
+ *  see that migration's own header comment for why this is a typed table, not a KV store. */
+export interface AdminFinanceSettings {
+  id: string;
+  usd_try_rate: number | null;
+  usd_try_rate_updated_at: string | null;
+  ultra_price_try: number;
+  ultra_price_try_updated_at: string;
+  updated_by: string | null;
+  updated_at: string;
+}
+
 export interface ExternalSyncJob {
   id: string;
   job_name: string;
@@ -2099,6 +2111,7 @@ export interface Database {
       provider_health: Table<ProviderHealth, Partial<ProviderHealth>, Partial<ProviderHealth>>;
       external_sync_jobs: Table<ExternalSyncJob, Partial<ExternalSyncJob>, Partial<ExternalSyncJob>>;
       ai_usage: Table<AiUsage, AiUsageInsert, Partial<AiUsageInsert>>;
+      admin_finance_settings: Table<AdminFinanceSettings, Partial<AdminFinanceSettings>, Partial<AdminFinanceSettings>>;
       rate_limit_events: Table<RateLimitEvent, RateLimitEventInsert, Partial<RateLimitEventInsert>>;
       product_events: Table<ProductEvent, ProductEventInsert, Partial<ProductEventInsert>>;
       birth_year_changes: Table<BirthYearChange, never, never>;
