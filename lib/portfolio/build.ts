@@ -2,7 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
-import type { PortfolioItem } from "./types";
+import type { PortfolioItem, PortfolioSkill } from "./types";
 
 /** Read-only aggregation across every achievement table into one common shape (Phase 20).
  * "Leadership" is presented as its own section here even though it's stored as
@@ -35,6 +35,8 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       ongoing: record.is_current,
       meta: record.overall_gpa && record.gpa_scale ? `GPA ${record.overall_gpa}/${record.gpa_scale}` : null,
       createdAt: record.created_at,
+      // education_records has no evidence_status column — see PortfolioItem's own comment.
+      evidenceStatus: null,
     });
   }
 
@@ -50,6 +52,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       ongoing: record.ongoing,
       meta: record.people_led ? `Led ${record.people_led} people` : null,
       createdAt: record.created_at,
+      evidenceStatus: record.evidence_status,
     });
   }
 
@@ -67,6 +70,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
         .filter(Boolean)
         .join(" · ") || null,
       createdAt: record.created_at,
+      evidenceStatus: record.evidence_status,
     });
   }
 
@@ -82,6 +86,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       ongoing: record.ongoing,
       meta: record.field,
       createdAt: record.created_at,
+      evidenceStatus: record.evidence_status,
     });
   }
 
@@ -97,6 +102,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       ongoing: record.ongoing,
       meta: record.role,
       createdAt: record.created_at,
+      evidenceStatus: record.evidence_status,
     });
   }
 
@@ -112,6 +118,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       ongoing: false,
       meta: record.level,
       createdAt: record.created_at,
+      evidenceStatus: record.evidence_status,
     });
   }
 
@@ -127,6 +134,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       ongoing: false,
       meta: null,
       createdAt: record.created_at,
+      evidenceStatus: record.evidence_status,
     });
   }
 
@@ -142,6 +150,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       ongoing: record.ongoing,
       meta: record.cause_area,
       createdAt: record.created_at,
+      evidenceStatus: record.evidence_status,
     });
   }
 
@@ -157,8 +166,20 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
       ongoing: record.ongoing,
       meta: record.employment_type.replace(/_/g, " "),
       createdAt: record.created_at,
+      evidenceStatus: record.evidence_status,
     });
   }
 
   return items.sort((a, b) => (b.startDate ?? "0").localeCompare(a.startDate ?? "0"));
+}
+
+/** Skills have no start/end date (see the `skills` table) — deliberately not forced into
+ * PortfolioItem's date-sorted shape, which would either invent a fake date or cluster every
+ * skill at the bottom of the timeline via the null-date fallback. Rendered as its own
+ * section instead (Phase 20 names Skills as a portfolio category; nothing was reading this
+ * table on this page before). Sorted by category then name for a stable, scannable order —
+ * matches how the live data actually groups (technical/analytical/communication/leadership). */
+export async function getPortfolioSkills(supabase: SupabaseClient<Database>, userId: string): Promise<PortfolioSkill[]> {
+  const { data } = await supabase.from("skills").select("id, name, category").eq("user_id", userId);
+  return (data ?? []).slice().sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
 }

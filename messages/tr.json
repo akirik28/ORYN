@@ -433,7 +433,8 @@
       "emptyDescription": "Yolculuk sayfandan aktivite, proje, ödül veya diğer başarılarını ekle — zaman çizelgesine veya kategoriye göre düzenlenmiş halde otomatik olarak burada görünecekler.",
       "emptyAction": "Yolculuğa git",
       "timeline": "Zaman çizelgesi",
-      "byCategory": "Kategoriye göre"
+      "byCategory": "Kategoriye göre",
+      "skills": "Beceriler"
     },
     "cvBuilder": {
       "emptyTitle": "Önce profiline başarı ekle",

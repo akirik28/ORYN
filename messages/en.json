@@ -433,7 +433,8 @@
       "emptyDescription": "Add activities, projects, awards, or other achievements on your Journey page — they'll show up here automatically, organized by timeline or category.",
       "emptyAction": "Go to Journey",
       "timeline": "Timeline",
-      "byCategory": "By category"
+      "byCategory": "By category",
+      "skills": "Skills"
     },
     "cvBuilder": {
       "emptyTitle": "Add achievements to your profile first",
