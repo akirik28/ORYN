@@ -188,6 +188,12 @@ export function classifyRequirementShapes(record: ResearchRequirementRecord): Sh
       shape: "eligibility_by_absence",
       evidenceKind: "structured_field",
       evidence: "is_exclusion=true",
+      // STATUS, corrected 2026-09-02 (docs/unwritten-columns-sweep-2026-09-02.md): the claim
+      // below was true when written and is not true of the code today. AcceptedRequirementRow
+      // now requires is_exclusion (lib/requirements/ingest.ts's own type) and the accepted-row
+      // builder sets it explicitly (`is_exclusion: record.is_exclusion === true`, ingest.ts's
+      // own comment there documents the fix in full). Left as historical record of the shape
+      // this classifier exists to catch, not as a claim about current ingestion behavior.
       lossIfWritten:
         "university_requirements.is_exclusion exists (migration 0052) but AcceptedRequirementRow never sets it, so decideRequirementIngestion blocks the record as not_ingestible and the clause is dropped entirely. Ankara's 'programmes EXCLUDING the above-listed' heading is the whole eligibility rule for Medicine/Dentistry/Computer Eng/AI/Software/Law/Veterinary/Pharmacy; dropping it leaves the general SAT row matching an applicant who is not eligible at all.",
     });
