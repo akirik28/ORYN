@@ -115,7 +115,7 @@ export function buildAdvisorChatPrompt(evalCase: EvalCase): { system: string; pr
 }
 
 export function buildWeeklyPlanPrompt(evalCase: EvalCase): { system: string; prompt: string; maxTokens: number } {
-  const grounding = formatCounselorGrounding(counselorResultFor(evalCase.fixture.id).recommendations);
+  const grounding = formatCounselorGrounding(counselorResultFor(evalCase.fixture.id).recommendations, evalCase.locale);
   const system = withOutputLanguage(ADVISOR_SYSTEM_PROMPT, evalCase.locale);
   const prompt = `Here is the student's current context:\n\n${formatContextForPrompt(localizedContext(evalCase.fixture.id, evalCase.locale), evalCase.locale)}${grounding}\n\n${buildWeeklyPlanInstruction()}`;
   return { system, prompt, maxTokens: 2048 };
@@ -123,7 +123,7 @@ export function buildWeeklyPlanPrompt(evalCase: EvalCase): { system: string; pro
 
 export function buildCounselorExplainPrompt(evalCase: EvalCase): { system: string; prompt: string; maxTokens: number } {
   const system = withOutputLanguage(COUNSELOR_EXPLANATION_SYSTEM_PROMPT, evalCase.locale);
-  const prompt = buildCounselorExplanationPrompt(counselorResultFor(evalCase.fixture.id));
+  const prompt = buildCounselorExplanationPrompt(counselorResultFor(evalCase.fixture.id), evalCase.locale);
   return { system, prompt, maxTokens: 1024 };
 }
 

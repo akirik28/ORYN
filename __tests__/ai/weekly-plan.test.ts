@@ -359,12 +359,15 @@ describe("output guard — actions and avoidForNow must never name the same thin
 
 describe("formatCounselorGrounding (pure)", () => {
   test("keeps Counselor Core's own score order inside each section — grouping must never re-rank", () => {
-    const text = formatCounselorGrounding([
-      rec({ id: "a", recommendationClass: "do", title: "First do" }),
-      rec({ id: "b", recommendationClass: "deprioritize", title: "First ruled out" }),
-      rec({ id: "c", recommendationClass: "consider", title: "Second recommended" }),
-      rec({ id: "d", recommendationClass: "avoid_for_now", title: "Second ruled out" }),
-    ]);
+    const text = formatCounselorGrounding(
+      [
+        rec({ id: "a", recommendationClass: "do", title: "First do" }),
+        rec({ id: "b", recommendationClass: "deprioritize", title: "First ruled out" }),
+        rec({ id: "c", recommendationClass: "consider", title: "Second recommended" }),
+        rec({ id: "d", recommendationClass: "avoid_for_now", title: "Second ruled out" }),
+      ],
+      "en",
+    );
 
     expect(text.indexOf("First do")).toBeLessThan(text.indexOf("Second recommended"));
     expect(text.indexOf("First ruled out")).toBeLessThan(text.indexOf("Second ruled out"));
@@ -372,21 +375,26 @@ describe("formatCounselorGrounding (pure)", () => {
   });
 
   test("caps each section independently so a flood of ruled-out items cannot crowd out the recommendations", () => {
-    const text = formatCounselorGrounding([
-      ...Array.from({ length: 12 }, (_, i) => rec({ id: `do-${i}`, recommendationClass: "do", title: `Recommended ${i}` })),
-      ...Array.from({ length: 12 }, (_, i) => rec({ id: `dep-${i}`, recommendationClass: "deprioritize", title: `Ruled out ${i}` })),
-    ]);
+    const text = formatCounselorGrounding(
+      [
+        ...Array.from({ length: 12 }, (_, i) => rec({ id: `do-${i}`, recommendationClass: "do", title: `Recommended ${i}` })),
+        ...Array.from({ length: 12 }, (_, i) => rec({ id: `dep-${i}`, recommendationClass: "deprioritize", title: `Ruled out ${i}` })),
+      ],
+      "en",
+    );
 
-    expect(text.split("\n").filter((l) => l.startsWith("- [do]"))).toHaveLength(8);
-    expect(text.split("\n").filter((l) => l.startsWith("- [deprioritize]"))).toHaveLength(4);
+    // Tag text is recommendationClassLabel's output (2026-09-02 raw-enum-leak sweep), not
+    // the raw "do"/"deprioritize" enum values anymore — see lib/counselor/copy.ts.
+    expect(text.split("\n").filter((l) => l.startsWith("- [recommended]"))).toHaveLength(8);
+    expect(text.split("\n").filter((l) => l.startsWith("- [lower priority]"))).toHaveLength(4);
   });
 
   test("returns an empty string, not a bare heading, when there is nothing to ground on", () => {
-    expect(formatCounselorGrounding([])).toBe("");
+    expect(formatCounselorGrounding([], "en")).toBe("");
   });
 
   test("a list containing only ruled-out candidates still produces the ruled-out section", () => {
-    const text = formatCounselorGrounding([rec({ recommendationClass: "avoid_for_now", title: "Start another club" })]);
+    const text = formatCounselorGrounding([rec({ recommendationClass: "avoid_for_now", title: "Start another club" })], "en");
     expect(text).toContain("Start another club");
     expect(text).not.toContain("prefer these");
   });

@@ -1,7 +1,7 @@
 import type { Locale } from "@/lib/i18n/config";
 import { dimensionLabel } from "@/lib/scoring/labels";
 import { REQUIREMENT_CATEGORY_LABELS } from "@/lib/requirements/types";
-import type { ProfileDimension, RequirementCategory } from "@/types/database";
+import type { ProfileDimension, RecommendationClass, RequirementCategory } from "@/types/database";
 import type { GapSeverity } from "./types";
 
 /**
@@ -102,6 +102,50 @@ const REQUIREMENT_CATEGORY_LABEL_TR: Record<RequirementCategory, string> = {
 
 export function requirementCategoryLabel(category: RequirementCategory, locale: Locale): string {
   return locale === "tr" ? REQUIREMENT_CATEGORY_LABEL_TR[category] : REQUIREMENT_CATEGORY_LABELS[category];
+}
+
+// ---------------------------------------------------------------------------
+// recommendationClass — same class of gap this file already closed once for
+// requirementCategoryLabel above (its own comment: a counselor card used to render the
+// raw enum, "Address: standardized_test (MIT)"). This instance reached further: the raw
+// value was going into the weekly-plan/advisor/counselor-explain AI prompts
+// (lib/ai/weekly-plan.ts's formatOne, lib/ai/counselor-explain.ts), and Phase 39's own
+// live incident shows what an LLM does with an unlabeled identifier it's handed — it
+// doesn't fail to parse "extreme_reach" or "avoid_for_now" (snake_case English isn't
+// opaque to a model), it reproduces the identifier verbatim in the reply a student then
+// reads. So the risk here is echo, not comprehension, and the design bar is "what would
+// be fine for a student to see if the model quotes this back verbatim" — not merely
+// "legible". Kept deliberately short: these labels sit inline in the two AI surfaces that
+// carry roughly 90% of this product's spend (lib/ai/weekly-plan.ts's own cost comment),
+// once per recommendation per call.
+//
+// `avoid_for_now` got the most attention — it's Phase 39's differentiating feature, the
+// least legible of the four raw values, and the one most likely to be echoed back
+// (`ADVISOR_SYSTEM_PROMPT` explicitly asks the model to name and explain what to avoid).
+// "avoid for now" / "şimdilik önerilmiyor" ("not recommended for now") deliberately
+// mirrors "do" → "recommended" / "önerilen" as a negation, so a four-item ladder
+// (recommended > consider > lower priority > avoid for now) reads coherently as one
+// scale in either language rather than four unrelated words. "lower priority" for
+// `deprioritize` reuses AGENTS.md's own Phase 39 example wording ("currently a
+// low-priority activity") rather than inventing new vocabulary for the same idea.
+// ---------------------------------------------------------------------------
+
+const RECOMMENDATION_CLASS_LABEL_EN: Record<RecommendationClass, string> = {
+  do: "recommended",
+  consider: "consider",
+  deprioritize: "lower priority",
+  avoid_for_now: "avoid for now",
+};
+
+const RECOMMENDATION_CLASS_LABEL_TR: Record<RecommendationClass, string> = {
+  do: "önerilen",
+  consider: "değerlendirilebilir",
+  deprioritize: "düşük öncelik",
+  avoid_for_now: "şimdilik önerilmiyor",
+};
+
+export function recommendationClassLabel(value: RecommendationClass, locale: Locale): string {
+  return locale === "tr" ? RECOMMENDATION_CLASS_LABEL_TR[value] : RECOMMENDATION_CLASS_LABEL_EN[value];
 }
 
 /** candidates.ts's two requirement-action title templates. `label` is already resolved
