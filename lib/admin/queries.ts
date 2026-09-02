@@ -157,6 +157,96 @@ export async function getAdminUserList(admin: SupabaseClient<Database>): Promise
   }));
 }
 
+/** The two literal event_name strings logged when a saved birth year reveals a signup below
+ *  the minimum age (app/(confirm-age)/confirm-age/actions.ts,
+ *  app/(app)/settings/actions.ts) -- exhaustively grepped from every logEvent(...) call site
+ *  2026-09-02, not a substring/LIKE guess. Both contain "below_minimum_age" but neither is
+ *  that string alone, and there is no third variant. Exported so
+ *  __tests__/admin/below-minimum-age-event-names.test.ts can pin this list against the real
+ *  call sites rather than letting the two silently drift apart. */
+export const BELOW_MINIMUM_AGE_EVENT_NAMES = ["birth_year_backfill_below_minimum_age", "birth_year_settings_update_below_minimum_age"] as const;
+
+// product_events has no natural bound (an append-only analytics log, Phase 52) unlike this
+// file's other People-tab tables. None of its ten known event names are high-frequency --
+// one row per meaningful student action, not per click -- so at today's real volume (56 rows
+// fleet-wide) this is a wide margin, not an active limit; it exists so a future, much larger
+// table can't make this section's single fetch unbounded.
+const PRODUCT_EVENTS_FETCH_LIMIT = 500;
+const RECENT_EVENTS_DISPLAY_LIMIT = 20;
+
+export interface AdminProductEventRow {
+  id: string;
+  userId: string;
+  displayName: string | null;
+  eventName: string;
+  createdAt: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface AdminProductActivity {
+  /** Every distinct event_name in the fetched window with its raw count, sorted desc. Not a
+   *  funnel or a conversion percentage: Phase 19's minimum-cohort discipline (written for
+   *  peer benchmarking, n >= 100) applies here too, and today's real n is 56 rows across ten
+   *  names -- a derived "62% of imports reach onboarding" figure from a sample that size
+   *  would be noise dressed as a statistic. Raw counts don't make that claim. */
+  eventCounts: { eventName: string; count: number }[];
+  /** The RECENT_EVENTS_DISPLAY_LIMIT most recent events fleet-wide, newest first -- a feed
+   *  for one founder with eleven accounts, not a queryable log; no filters, no pagination. */
+  recentEvents: AdminProductEventRow[];
+  /** Every below-minimum-age event in the fetched window, deliberately NOT limited to
+   *  RECENT_EVENTS_DISPLAY_LIMIT -- the one category that exists specifically for a human to
+   *  see (see BELOW_MINIMUM_AGE_EVENT_NAMES) can't be allowed to scroll out of view just
+   *  because other, routine events happened more recently. */
+  belowMinimumAgeEvents: AdminProductEventRow[];
+}
+
+/**
+ * product_events (lib/analytics/log.ts) had no reader anywhere in the app before this
+ * function -- not a screen, not a job, not a report (found during the 2026-09-02 session-
+ * client sweep: "no screen, no admin section, no job, no report"). Two of its ten event
+ * names exist specifically so a human can see them (BELOW_MINIMUM_AGE_EVENT_NAMES): the
+ * confirm-age and settings flows both save a below-minimum-age birth year unconditionally
+ * rather than blocking it, on the premise in docs/age-gate-design-2026-09-02.md that GDPR
+ * Art. 8(2)'s "reasonable efforts to verify" duty is satisfied by a human follow-up instead
+ * -- a premise this function is what makes true, since nothing else reads this table.
+ *
+ * Read-only (no writes, no new columns, no migration) -- one fetch, three views: counts per
+ * event name, a recent-activity feed, and the below-minimum-age events, pulled out unbounded
+ * by the feed's own display cap. See AdminProductActivity's own field comments for why.
+ */
+export async function getProductActivity(admin: SupabaseClient<Database>): Promise<AdminProductActivity> {
+  const { data: events } = await admin
+    .from("product_events")
+    .select("id, user_id, event_name, metadata, created_at")
+    .order("created_at", { ascending: false })
+    .limit(PRODUCT_EVENTS_FETCH_LIMIT);
+  const rows = events ?? [];
+
+  const userIds = [...new Set(rows.map((r) => r.user_id))];
+  const { data: profiles } = userIds.length > 0 ? await admin.from("profiles").select("id, display_name").in("id", userIds) : { data: [] };
+  const nameById = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+
+  const toRow = (r: (typeof rows)[number]): AdminProductEventRow => ({
+    id: r.id,
+    userId: r.user_id,
+    displayName: nameById.get(r.user_id) ?? null,
+    eventName: r.event_name,
+    createdAt: r.created_at,
+    metadata: r.metadata,
+  });
+
+  const countByName = new Map<string, number>();
+  for (const r of rows) countByName.set(r.event_name, (countByName.get(r.event_name) ?? 0) + 1);
+  const eventCounts = [...countByName.entries()].map(([eventName, count]) => ({ eventName, count })).sort((a, b) => b.count - a.count);
+
+  const belowMinimumAgeNames: readonly string[] = BELOW_MINIMUM_AGE_EVENT_NAMES;
+  return {
+    eventCounts,
+    recentEvents: rows.slice(0, RECENT_EVENTS_DISPLAY_LIMIT).map(toRow),
+    belowMinimumAgeEvents: rows.filter((r) => belowMinimumAgeNames.includes(r.event_name)).map(toRow),
+  };
+}
+
 // ---------------------------------------------------------------------------------------------
 // Spend tab: summary, per-user, remaining credit, budget warnings
 // ---------------------------------------------------------------------------------------------
