@@ -89,6 +89,23 @@ describe("summarizeJobHealth — status derivation", () => {
   });
 });
 
+describe("summarizeJobHealth — recentRuns (2026-09-02, admin ops-health timeline)", () => {
+  it("a job that has never run carries an empty recentRuns, not undefined", () => {
+    expect(summarizeJobHealth(DEF, [], NOW).recentRuns).toEqual([]);
+  });
+
+  it("carries every passed-in run through, trimmed to the fields a timeline needs, same order as input", () => {
+    const runs = [
+      makeRun({ status: "failed", items_processed: 0, errors_encountered: 2, error: "Tavily rate limit exceeded." }),
+      makeRun({ status: "succeeded", items_processed: 5, errors_encountered: 0 }),
+    ];
+    expect(summarizeJobHealth(DEF, runs, NOW).recentRuns).toEqual([
+      { startedAt: NOW.toISOString(), finishedAt: NOW.toISOString(), status: "failed", itemsProcessed: 0, errorsEncountered: 2, error: "Tavily rate limit exceeded." },
+      { startedAt: NOW.toISOString(), finishedAt: NOW.toISOString(), status: "succeeded", itemsProcessed: 5, errorsEncountered: 0, error: null },
+    ]);
+  });
+});
+
 describe("summarizeJobHealth — emptyStreak (a row is not evidence the job did anything)", () => {
   it("no runs at all means no streak", () => {
     expect(summarizeJobHealth(DEF, [], NOW).emptyStreak).toBe(0);

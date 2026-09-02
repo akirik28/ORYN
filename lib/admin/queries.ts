@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import { JOB_DEFINITIONS } from "@/lib/jobs/schedule";
 import { summarizeJobHealth, EMPTY_STREAK_THRESHOLD, type JobHealthSummary } from "@/lib/jobs/job-health";
+import { PROVIDER_DEFINITIONS, summarizeProviderHealth, type ProviderHealthSummary } from "@/lib/admin/provider-health";
 import { resolveReportedContentPreview } from "@/lib/moderation/content-preview";
 import { MONTHLY_BUDGET_TARGET_USD, MONTHLY_BUDGET_CEILING_USD } from "@/lib/ai/limits/budget";
 
@@ -26,6 +27,21 @@ export async function getProviderHealth(admin: SupabaseClient<Database>) {
   return data ?? [];
 }
 
+/**
+ * The expected-set-driven counterpart to `getProviderHealth` above — same relationship
+ * `getJobHealth` already has to `JOB_DEFINITIONS`. Additive, not a replacement:
+ * `getProviderHealth`'s existing row-shaped return still backs the current section
+ * unchanged; this is the richer shape (`ProviderHealthSummary[]`, one entry per
+ * *expected* provider, staleness-classified) the operational-health timeline view builds
+ * from once it exists. See lib/admin/provider-health.ts for why a provider with zero rows
+ * reads as `unknown`/`never_called` rather than being silently absent.
+ */
+export async function getProviderHealthSummaries(admin: SupabaseClient<Database>): Promise<ProviderHealthSummary[]> {
+  const { data } = await admin.from("provider_health").select("*");
+  const rowByProvider = new Map((data ?? []).map((row) => [row.provider, row]));
+  return PROVIDER_DEFINITIONS.map((def) => summarizeProviderHealth(def, rowByProvider.get(def.provider) ?? null));
+}
+
 export async function getJobHealth(admin: SupabaseClient<Database>): Promise<JobHealthSummary[]> {
   // One query per known job, not one shared `limit(N)` across every job name, so an
   // infrequently-run job can't be crowded out of view by another job's activity — the exact
@@ -34,6 +50,111 @@ export async function getJobHealth(admin: SupabaseClient<Database>): Promise<Job
     JOB_DEFINITIONS.map((def) => admin.from("external_sync_jobs").select("*").eq("job_name", def.jobName).order("started_at", { ascending: false }).limit(EMPTY_STREAK_THRESHOLD))
   );
   return JOB_DEFINITIONS.map((def, i) => summarizeJobHealth(def, (jobRunsByDefinition[i].data as ExternalSyncJob[] | null) ?? []));
+}
+
+const RELIABILITY_TREND_DAYS = 30;
+
+/** UTC calendar date from a PostgREST-returned ISO timestamp string — matches the
+ *  `.toISOString().slice(0, 10)` convention used throughout lib/ (e.g.
+ *  lib/social/profile-views.ts's own local `isoDate`), applied directly to the string
+ *  PostgREST already returns rather than round-tripping through a new Date(). */
+function isoDateOf(isoTimestamp: string): string {
+  return isoTimestamp.slice(0, 10);
+}
+
+export interface AIReliabilityDay {
+  /** UTC calendar date, YYYY-MM-DD. */
+  date: string;
+  totalCalls: number;
+  degradedCalls: number;
+}
+
+export interface AIReliabilityTrend {
+  /** Oldest first — a chart's natural left-to-right reading order. Only dates with at
+   *  least one call are present; a caller rendering a fixed 30-day axis fills the gaps. */
+  days: AIReliabilityDay[];
+  /**
+   * A call that throws after tokens are already spent (AIResponseIncompleteError /
+   * AIStructuredResponseFailedError — see lib/ai/usage.ts's withUsageLogging) is logged to
+   * `ai_usage` with the exact same shape as a successful call: same feature, model, token
+   * counts, cost. There is no column recording whether the call actually produced a usable
+   * result, so this trend can show *degraded* calls (a real signal — a student got a
+   * cheaper model under the spend cap) but cannot show *failed* calls at all. Always
+   * `false`, kept as an explicit field rather than omitted, so a reader sees "not
+   * measurable yet" instead of reading an absent failure count as "zero failures happened."
+   * Closing this for real needs a migration (an outcome/success column on `ai_usage`) —
+   * out of scope for a read-only pass; named here so it isn't lost.
+   */
+  hardFailureTrackingAvailable: false;
+}
+
+/** Pure aggregation step, split out from `getAIReliabilityTrend` so the bucketing logic is
+ *  unit-testable without a database — same reasoning as `summarizeJobHealth`/
+ *  `summarizeProviderHealth` staying DB-free. Excludes the same test-fixture rows
+ *  (model: "test-model") `getSpendSummary` already filters out, for the same reason: real
+ *  traffic, not a test run's leftovers in the live table. */
+export function bucketAIReliabilityByDay(rows: readonly { created_at: string; degraded: boolean; model: string }[]): AIReliabilityDay[] {
+  const filtered = rows.filter((row) => row.model !== "test-model");
+  const byDate = new Map<string, { totalCalls: number; degradedCalls: number }>();
+  for (const row of filtered) {
+    const date = isoDateOf(row.created_at);
+    const entry = byDate.get(date) ?? { totalCalls: 0, degradedCalls: 0 };
+    entry.totalCalls += 1;
+    if (row.degraded) entry.degradedCalls += 1;
+    byDate.set(date, entry);
+  }
+  return [...byDate.entries()].map(([date, counts]) => ({ date, ...counts })).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
+ * Daily degraded-call rate over the last `RELIABILITY_TREND_DAYS` — the "what's failing for
+ * real students" question, scoped to what `ai_usage` can actually answer today (see
+ * `hardFailureTrackingAvailable`'s own doc comment for the sharper question it can't).
+ * Aggregated in memory for the same reason `getSpendSummary` is (PostgREST aggregates
+ * aren't enabled on this project without a migration) — bounded by an explicit, honestly
+ * labeled window, never by an arbitrary row count.
+ */
+export async function getAIReliabilityTrend(admin: SupabaseClient<Database>): Promise<AIReliabilityTrend> {
+  const { data } = await admin.from("ai_usage").select("created_at, degraded, model").gte("created_at", daysAgoIso(RELIABILITY_TREND_DAYS));
+  return { days: bucketAIReliabilityByDay(data ?? []), hardFailureTrackingAvailable: false };
+}
+
+export interface RateLimitDay {
+  date: string;
+  totalEvents: number;
+  byAction: { action: string; count: number }[];
+}
+
+/** Pure aggregation step, split out for the same testability reason as
+ *  `bucketAIReliabilityByDay`. */
+export function bucketRateLimitEventsByDay(rows: readonly { action: string; created_at: string }[]): RateLimitDay[] {
+  const byDate = new Map<string, Map<string, number>>();
+  for (const row of rows) {
+    const date = isoDateOf(row.created_at);
+    const actions = byDate.get(date) ?? new Map<string, number>();
+    actions.set(row.action, (actions.get(row.action) ?? 0) + 1);
+    byDate.set(date, actions);
+  }
+
+  return [...byDate.entries()]
+    .map(([date, actions]) => ({
+      date,
+      totalEvents: [...actions.values()].reduce((sum, n) => sum + n, 0),
+      byAction: [...actions.entries()].map(([action, count]) => ({ action, count })).sort((a, b) => b.count - a.count),
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
+ * Daily rate-limit hits over the last `RELIABILITY_TREND_DAYS` — a genuinely real "something
+ * didn't work for a student" signal (a throttled request), distinct from and complementary
+ * to the AI-reliability trend above (a rate limit can fire on a feature that never calls
+ * the AI provider at all). Real volume today is small (6 rows, 2 distinct actions, live
+ * 2026-09-02) — this is meant to be ready for real traffic, not calibrated against it.
+ */
+export async function getRateLimitTrend(admin: SupabaseClient<Database>): Promise<RateLimitDay[]> {
+  const { data } = await admin.from("rate_limit_events").select("action, created_at").gte("created_at", daysAgoIso(RELIABILITY_TREND_DAYS));
+  return bucketRateLimitEventsByDay(data ?? []);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -118,6 +239,30 @@ export async function getReports(admin: SupabaseClient<Database>, locale: Locale
     postIsRemoved: r.post_id ? removedPostIds.has(r.post_id) : false,
     postStillExists: r.post_id ? postById.has(r.post_id) : false,
   }));
+}
+
+export interface ReportsBacklog {
+  openCount: number;
+  oldestOpenAt: string | null;
+  oldestOpenAgeMs: number | null;
+}
+
+/**
+ * Age and backlog size, not just a row list — "a queue nobody has looked at is an
+ * operational fact" (oryn-a7's framing). Pure, computed from `getReports`'s own already-
+ * fetched rows rather than a second query, so the two can never disagree about what "open"
+ * means. Inherits `getReports`'s own 100-row cap: with message_reports genuinely empty
+ * today (confirmed live, 2026-09-02 — the social layer that generates reports is switched
+ * off) this bound doesn't matter yet, but if it ever fills past 100 rows, "oldest open"
+ * here means oldest among the 100 most recent, not oldest ever — the same window-honesty
+ * discipline as the AI-usage trends above.
+ */
+export function summarizeReportsBacklog(reports: readonly AdminReportRow[], now: Date = new Date()): ReportsBacklog {
+  const open = reports.filter((r) => r.status === "open");
+  if (open.length === 0) return { openCount: 0, oldestOpenAt: null, oldestOpenAgeMs: null };
+
+  const oldest = open.reduce((a, b) => (new Date(a.createdAt).getTime() < new Date(b.createdAt).getTime() ? a : b));
+  return { openCount: open.length, oldestOpenAt: oldest.createdAt, oldestOpenAgeMs: now.getTime() - new Date(oldest.createdAt).getTime() };
 }
 
 export interface AdminUserRow {

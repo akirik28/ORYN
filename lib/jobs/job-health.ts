@@ -35,6 +35,27 @@ export interface JobHealthSummary {
    * *isn't* otherwise visible.
    */
   readonly emptyStreak: number;
+  /**
+   * The recent runs this summary was computed from, oldest last (same order as the
+   * caller's query) — exposed so a timeline/sparkline can render each individual run's
+   * outcome, not only the latest one. A job that ran and failed five times this week reads
+   * completely differently from one that's only ever run once, even though both would
+   * otherwise summarize to the same `latestRun`-derived status; this field is what lets a
+   * caller tell those apart. Capped at whatever `recentRuns` the caller passed in (typically
+   * `EMPTY_STREAK_THRESHOLD` rows) — never re-fetched here, this module stays DB-free.
+   */
+  readonly recentRuns: readonly RecentJobRun[];
+}
+
+/** The subset of an ExternalSyncJob row a timeline needs — trimmed rather than the raw row
+ *  so a caller rendering history doesn't have to know which of the row's own fields matter. */
+export interface RecentJobRun {
+  readonly startedAt: string;
+  readonly finishedAt: string | null;
+  readonly status: string;
+  readonly itemsProcessed: number;
+  readonly errorsEncountered: number;
+  readonly error: string | null;
 }
 
 function computeEmptyStreak(recentRuns: readonly ExternalSyncJob[]): number {
@@ -58,10 +79,21 @@ function computeEmptyStreak(recentRuns: readonly ExternalSyncJob[]): number {
  * `EMPTY_STREAK_THRESHOLD` rows for that to be meaningful; fewer still works, it just
  * can't report a streak longer than what was fetched.
  */
+function toRecentJobRun(run: ExternalSyncJob): RecentJobRun {
+  return {
+    startedAt: run.started_at,
+    finishedAt: run.finished_at,
+    status: run.status,
+    itemsProcessed: run.items_processed,
+    errorsEncountered: run.errors_encountered,
+    error: run.error,
+  };
+}
+
 export function summarizeJobHealth(def: JobDefinition, recentRuns: readonly ExternalSyncJob[], now: Date = new Date()): JobHealthSummary {
   const latestRun = recentRuns[0] ?? null;
   if (latestRun === null) {
-    return { jobName: def.jobName, label: def.label, status: "never_run", lastStartedAt: null, lastFinishedAt: null, durationMs: null, itemsProcessed: null, error: null, emptyStreak: 0 };
+    return { jobName: def.jobName, label: def.label, status: "never_run", lastStartedAt: null, lastFinishedAt: null, durationMs: null, itemsProcessed: null, error: null, emptyStreak: 0, recentRuns: [] };
   }
 
   const startedAt = new Date(latestRun.started_at);
@@ -91,6 +123,7 @@ export function summarizeJobHealth(def: JobDefinition, recentRuns: readonly Exte
     itemsProcessed: latestRun.items_processed,
     error: latestRun.error,
     emptyStreak: computeEmptyStreak(recentRuns),
+    recentRuns: recentRuns.map(toRecentJobRun),
   };
 }
 
