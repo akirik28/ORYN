@@ -31,7 +31,13 @@ export async function createApplication(params: {
 
   if (error || !application) return { error: "Couldn't create application." };
 
-  await supabase.from("application_requirements").insert(
+  // Best-effort, same posture as onboarding's secondary writes: the application row above
+  // is the record that matters and is already saved, so a failure here logs and continues
+  // rather than discarding a successfully created application over its default checklist.
+  // Safe to degrade this way — computeReadiness (lib/applications/readiness.ts) already
+  // treats zero requirements as "unmeasured", not zero-percent, so a student who hits this
+  // just sees an application with nothing tracked yet instead of a crash.
+  const { error: requirementsError } = await supabase.from("application_requirements").insert(
     DEFAULT_REQUIREMENTS.map((requirement_type) => ({
       application_id: application.id,
       user_id: session.userId!,
@@ -41,6 +47,12 @@ export async function createApplication(params: {
       notes: null,
     }))
   );
+  if (requirementsError) {
+    console.error("[applications] application created, but default checklist failed to save", {
+      applicationId: application.id,
+      error: requirementsError.message,
+    });
+  }
 
   revalidatePath("/applications");
   return { applicationId: application.id };
