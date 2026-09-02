@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { readOr } from "@/lib/supabase/safe-read";
 import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
 import { computeCareerProfile } from "@/lib/scoring";
 import { outlookLabel } from "@/lib/admissions/outlook";
@@ -241,33 +242,41 @@ export interface StudentAdvisorContext {
  * same batch-fetch-and-zip pattern used elsewhere (e.g. lib/deadlines/upcoming.ts) rather
  * than a nested PostgREST embed (see the Identity<T> note in types/database.ts for why).
  * Capped tightly — this is context for a prompt, not a full application-tracker view.
+ *
+ * Exported 2026-09-03 (previously module-private) so its own readOr-wrapped reads can be
+ * tested directly with a fake client, rather than only indirectly through
+ * buildStudentAdvisorContext's much larger dependency graph. No behavior change.
  */
-async function getPendingApplicationRequirements(
+export async function getPendingApplicationRequirements(
   supabase: SupabaseClient<Database>,
   userId: string,
   supersessionMap: SupersessionMap
 ): Promise<{ applicationTitle: string; requirementTitle: string | null; requirementType: string }[]> {
-  const { data: pending } = await supabase
+  const pendingRes = await supabase
     .from("application_requirements")
     .select("title, requirement_type, application_id")
     .eq("user_id", userId)
     .in("status", ["not_started", "in_progress"])
     .limit(15);
-  if (!pending || pending.length === 0) return [];
+  const pending = readOr("pendingApplicationRequirements", pendingRes, [], { userId });
+  if (pending.length === 0) return [];
 
   const applicationIds = [...new Set(pending.map((p) => p.application_id))];
-  const { data: applications } = await supabase.from("applications").select("id, target_university_id").in("id", applicationIds);
-  const targetIdByApplication = new Map((applications ?? []).map((a) => [a.id, a.target_university_id]));
+  const applicationsRes = await supabase.from("applications").select("id, target_university_id").in("id", applicationIds);
+  const applications = readOr("pendingApplicationRequirements.applications", applicationsRes, [], { userId });
+  const targetIdByApplication = new Map(applications.map((a) => [a.id, a.target_university_id]));
 
   const targetIds = [...new Set([...targetIdByApplication.values()])];
-  const { data: targets } = targetIds.length > 0 ? await supabase.from("target_universities").select("id, university_id").in("id", targetIds) : { data: [] };
+  const targetsRes = targetIds.length > 0 ? await supabase.from("target_universities").select("id, university_id").in("id", targetIds) : { data: [] };
+  const targets = readOr("pendingApplicationRequirements.targets", targetsRes, [], { userId });
   // Canonicalized — see lib/universities/canonical.ts.
-  const universityIdByTarget = new Map((targets ?? []).map((t) => [t.id, canonicalUniversityId(supersessionMap, t.university_id)]));
+  const universityIdByTarget = new Map(targets.map((t) => [t.id, canonicalUniversityId(supersessionMap, t.university_id)]));
 
   const universityIds = [...new Set([...universityIdByTarget.values()])];
-  const { data: universities } =
+  const universitiesRes =
     universityIds.length > 0 ? await supabase.from("universities").select("id, name").in("id", universityIds) : { data: [] };
-  const universityNameById = new Map((universities ?? []).map((u) => [u.id, u.name]));
+  const universities = readOr("pendingApplicationRequirements.universities", universitiesRes, [], { userId });
+  const universityNameById = new Map(universities.map((u) => [u.id, u.name]));
 
   return pending.map((p) => {
     const targetId = targetIdByApplication.get(p.application_id);
@@ -284,17 +293,19 @@ async function getPendingApplicationRequirements(
  * post-process it through canonicalUniversityId() — a target referencing a known-duplicate
  * loser row would silently hand the advisor the loser's name. See lib/universities/canonical.ts.
  */
-async function getTargetUniversitiesForContext(
+export async function getTargetUniversitiesForContext(
   supabase: SupabaseClient<Database>,
   userId: string,
   supersessionMap: SupersessionMap
 ): Promise<{ id: string; universityId: string; programId: string | null; name: string; status: TargetStatus; outlook: OutlookLabel | null }[]> {
-  const { data: targets } = await supabase.from("target_universities").select("id, status, outlook, university_id, program_id").eq("user_id", userId);
-  if (!targets || targets.length === 0) return [];
+  const targetsRes = await supabase.from("target_universities").select("id, status, outlook, university_id, program_id").eq("user_id", userId);
+  const targets = readOr("targetUniversities", targetsRes, [], { userId });
+  if (targets.length === 0) return [];
 
   const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(supersessionMap, t.university_id)))];
-  const { data: universities } = await supabase.from("universities").select("id, name").in("id", universityIds);
-  const universityNameById = new Map((universities ?? []).map((u) => [u.id, u.name]));
+  const universitiesRes = await supabase.from("universities").select("id, name").in("id", universityIds);
+  const universities = readOr("targetUniversities.universities", universitiesRes, [], { userId });
+  const universityNameById = new Map(universities.map((u) => [u.id, u.name]));
 
   return targets.map((t) => {
     const canonicalId = canonicalUniversityId(supersessionMap, t.university_id);
@@ -373,7 +384,7 @@ export async function buildStudentAdvisorContext(userId: string, supabaseClient?
     supabase.from("student_interests").select("label").eq("user_id", userId),
   ]);
 
-  const profile = profileRes.data;
+  const profile = readOr("profile", profileRes, null, { userId });
 
   return {
     student: {
@@ -427,8 +438,8 @@ export async function buildStudentAdvisorContext(userId: string, supabaseClient?
     })),
     awards: facts.awards.map((a) => ({ title: a.title, level: a.level, evidenceStatus: a.evidence_status })),
     goals: facts.goals.map((g) => ({ title: g.title, category: g.category })),
-    interests: (interestsRes.data ?? []).map((i) => i.label),
-    sports: (sportsRes.data ?? []).map((s) => ({
+    interests: readOr("interests", interestsRes, [], { userId }).map((i) => i.label),
+    sports: readOr("sports", sportsRes, [], { userId }).map((s) => ({
       sport: s.sport,
       level: s.level,
       isCaptain: s.is_captain,
@@ -438,8 +449,8 @@ export async function buildStudentAdvisorContext(userId: string, supabaseClient?
     })),
     targetUniversities,
     upcomingDeadlines: upcomingDeadlines.map((d) => ({ title: d.title, date: d.date, source: d.source })),
-    recentRecommendationTitles: (recentRecsRes.data ?? []).map((r) => r.title),
-    recentActionOutcomes: (recentActionsRes.data ?? []).map((a) => ({
+    recentRecommendationTitles: readOr("recentRecommendationTitles", recentRecsRes, [], { userId }).map((r) => r.title),
+    recentActionOutcomes: readOr("recentActionOutcomes", recentActionsRes, [], { userId }).map((a) => ({
       title: a.title,
       status: a.status,
       reflectionOutcome: a.reflection_outcome,
