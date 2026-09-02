@@ -1,9 +1,6 @@
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { DashboardView } from "@/features/dashboard/dashboard-view";
 import { UltraAmbient } from "@/features/app-shell/ultra-ambient";
-import { DevTierPreviewToggle } from "@/features/app-shell/dev-tier-preview-toggle";
-import { DEV_TIER_PREVIEW_COOKIE, resolveDevTierPreviewOverride } from "@/lib/tier/dev-preview";
 import { PreviewShell } from "../preview-shell";
 import {
   FIXTURE_STUDENT,
@@ -24,20 +21,28 @@ import {
 // specifically so Dashboard can be checked at a normal, unscaled viewport, no scrolling
 // past unrelated sections required.
 //
-// UltraAmbient + the tier toggle, 2026-09-02: this whole route is already prod-gated
-// (notFound() below), so this is the one place the Ultra skin can actually be looked at
-// without a real authenticated session — migration 0089 is unapplied, so no live account
-// can reach data-tier="ultra" any other way right now. Reuses lib/tier/dev-preview.ts's
-// own cookie unchanged; this page does not invent a second override mechanism.
-export default async function DashboardPreviewPage() {
+// UltraAmbient, 2026-09-02: this whole route is already prod-gated (notFound() below), so
+// this is the one place the Ultra skin can be looked at without a real authenticated session
+// — migration 0089 is unapplied, so no live account can reach data-tier="ultra" any other way
+// right now. Reads ?tier= rather than lib/tier/dev-preview.ts's cookie deliberately: this
+// page sits under app/(dev-preview)/layout.tsx, which mounts DevPreviewTierStamp for the
+// whole route group — a cookie-driven tier here would fight that component's own
+// effect over who sets `data-tier` (both run useEffect on mount; child-before-parent
+// ordering means the layout's effect would win, silently reverting a cookie-driven "ultra"
+// back to absent). Reading the same ?tier= param removes the race entirely: both compute the
+// same value from the same source, so it no longer matters which effect runs last. UltraAmbient
+// still earns its place here rather than being redundant with DevPreviewTierStamp — that
+// component deliberately stamps the attribute only, no ambient glow/ember canvas, since a
+// component harness (e.g. the map preview) doesn't want it; a full-page Dashboard preview does.
+export default async function DashboardPreviewPage({ searchParams }: { searchParams: Promise<{ tier?: string }> }) {
   if (process.env.NODE_ENV === "production") notFound();
 
-  const tier = resolveDevTierPreviewOverride((await cookies()).get(DEV_TIER_PREVIEW_COOKIE)?.value) ?? "standard";
+  const { tier: tierParam } = await searchParams;
+  const tier = tierParam === "ultra" ? "ultra" : "standard";
 
   return (
     <>
       <UltraAmbient tier={tier} />
-      <DevTierPreviewToggle realTier="standard" effectiveTier={tier} />
       <PreviewShell signal={FIXTURE_PROFILE_SIGNAL}>
         <DashboardView
           displayName={FIXTURE_STUDENT.displayName}
