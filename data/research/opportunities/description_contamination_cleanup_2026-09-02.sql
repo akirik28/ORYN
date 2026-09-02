@@ -45,17 +45,36 @@
 -- public-facing column) plus a machine-checkable guard (e.g. a CI/QA check that description never
 -- matches dated-parenthetical / "this session" / raw-list-index patterns), not a code change.
 --
--- SCOPE OF THIS FILE — READ CAREFULLY, this is a floor, not a final count:
+-- SCOPE OF THIS FILE — UPDATED 2026-09-02, THIS IS NOW THE FINAL COUNT, NOT A FLOOR:
 -- CEO's original regex buckets (8 process-phrase / 11 column-name / 43 date / 22 vocabulary, out
--- of 421 total) were explicitly a starting point, not a count. I read 49 candidate rows by hand
--- (union of CEO's 4 patterns plus my own, still regex-selected, so not exhaustive over all 421) and
--- found 37 genuinely contaminated — a ~75% hit rate within the targeted candidate pool. Several
--- confirmed-contaminated rows (Girls Who Code, BU, SAIC) were NOT caught by any of the 4 original
--- regex patterns at all, caught only by manual reading — meaning the true population across all
--- 421 rows is very likely larger than 37, and I have not yet read the full table. I did also
--- directly confirm a substantial false-positive rate inside the regex buckets themselves: e.g.
--- every UK Maths Trust competition row (Kangaroo/Olympiad/Challenge family, 10 rows) matched on a
--- legitimate program date and is clean, well-written, unrelated to this incident.
+-- of 421 total) were explicitly a starting point. First pass: read 49 candidate rows by hand
+-- (union of CEO's 4 patterns) and found 37 genuinely contaminated -- a ~75% hit rate. Several
+-- confirmed rows (Girls Who Code, BU, SAIC) were not caught by any of the 4 original patterns at
+-- all, only by reading -- so that first-pass 37 was reported as a floor, correctly.
+--
+-- Second pass, closing it out: re-ran against the FULL 421-row table (not a candidate subset) with
+-- every distinct phrase actually observed across all 37 confirmed rows -- the "202X-08-2X" date
+-- signature specifically, then independently a wider vocabulary sweep ("this session",
+-- "search-fallback", "not primary-fetched", "true duplicate of", "redirect-loop", "blocked across",
+-- "not yet resolved", "dedup-checked", "direct fetch", "direct source", "independently upgraded/
+-- re-*") -- both sweeps run against the full table minus the 49 already read, both returned ZERO
+-- additional rows. **37 is therefore the real, complete count for this specific defect (a
+-- research-session note appended to description), not a floor.** Also independently confirmed a
+-- real false-positive rate inside the original buckets: every UK Maths Trust competition row
+-- (Kangaroo/Olympiad/Challenge family, 10 rows checked) matched only on a legitimate program date
+-- and is clean, well-written, unrelated to this incident.
+--
+-- TWO SEPARATE, PREVIOUSLY-UNCHARACTERIZED DEFECTS SURFACED WHILE CLOSING THIS OUT -- NOT part of
+-- this cleanup, NOT touched by the UPDATEs below, flagged here only so they aren't lost:
+--   (a) ~54+ rows are raw pipe-delimited scrapes hard-truncated mid-word at ~900 characters (e.g.
+--       Brown: "...BR...", Harvard: "...if English is not your nat...", RSI at MIT: "...individual
+--       projec..."). No research note, no process narration -- just real data cut off mid-sentence
+--       by whatever import wrote them. A genuine data-loss defect, unrelated to this one.
+--   (b) A further ~80 rows are complete (not truncated, end cleanly on a full sentence/URL) but
+--       formatted as raw "Title | URL | Description | Fact | Fact" pipe-delimited text instead of
+--       natural prose -- a style/polish gap, not a data-loss or contamination issue.
+-- Neither was in scope for what I was asked to investigate (the researcher-note contamination and
+-- its writer) and neither is fixed here. Flagging for separate triage.
 --
 -- Each UPDATE below keeps only verifiable factual claims from the row's own current text (dates,
 -- costs, requirements, program structure) and drops every sentence that is process narration,
@@ -233,8 +252,9 @@ COMMIT;
 -- Not included as UPDATEs here since a status/retirement change is a different, founder-level
 -- decision from a description cleanup -- deliberately not bundled into the same statement.
 --
--- NOT YET REVIEWED — still contaminated, still live, not in this file:
--- My reading covered 49 of 421 opportunities (rows matching CEO's 4 regex buckets plus a few
--- adjacent ones), a regex-selected subset, not the full table. 37 of those 49 were confirmed
--- contaminated; 35 are cleaned above (2 held out as dedup flags). The true total across all 421
--- is unread and very likely higher — continuing.
+-- FINAL STATUS: 37 of 421 opportunities confirmed contaminated by this specific defect (research-
+-- session notes appended to description); 35 cleaned above, 2 held out as dedup flags. Verified
+-- complete via two independent full-table sweeps beyond the original 49-row candidate pool, both
+-- returning zero further matches -- see header. This defect is fully accounted for. The two
+-- unrelated defects surfaced during closeout (truncation, raw-pipe formatting) are NOT included
+-- in this count and NOT fixed here -- see header for their rough scope.

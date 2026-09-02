@@ -60,17 +60,40 @@ is a raw, unedited `"5. Girls Who Code | ... | https://..."` tuple that matches
 `import-opportunity-corpus.ts` copies `description` through with zero transformation by design;
 this is the seed row being bad, not a script bug.
 
-### Real scope — larger than the original floor
+### Real scope — closed, not a floor
 
 CEO's original regex buckets (8 process-phrase / 11 column-name / 43 date / 22 vocabulary, out of
-421 total) were an explicit floor, not a count. I read 49 candidate rows by hand (union of those 4
-patterns plus adjacent checks) and found **37 genuinely contaminated — a ~75% hit rate** within an
-already-targeted pool. Several confirmed rows (Girls Who Code, the two "Retired... true duplicate
-of" rows) were not caught by any of the 4 original regex patterns at all — found only by reading.
-**The true population across all 421 rows is very likely larger than 37; I have not read the full
-table.** Also confirmed a real false-positive rate inside the buckets themselves: every UK Maths
-Trust competition row (Kangaroo/Olympiad/Challenge family — 10 rows checked) matched on a
-legitimate program date and is clean, unrelated writing.
+421 total) were an explicit floor, not a count. First pass: read 49 candidate rows by hand (union
+of those 4 patterns) and found 37 genuinely contaminated — a ~75% hit rate. Several confirmed rows
+(Girls Who Code, two "Retired... true duplicate of" rows) weren't caught by any of the 4 original
+patterns at all — found only by reading — so that 37 was reported as a floor.
+
+Closing it out: re-ran two independent sweeps against the **full 421-row table**, not a candidate
+subset — the exact `"202X-08-2X"` date signature every confirmed row shares, then a broader
+vocabulary sweep (`"this session"`, `"search-fallback"`, `"not primary-fetched"`, `"true duplicate
+of"`, `"redirect-loop"`, `"blocked across"`, `"not yet resolved"`, `"dedup-checked"`, `"direct
+fetch"`, `"direct source"`, `"independently upgraded/re-*"`) — both against the full table minus
+the 49 already read. **Both returned zero additional rows. 37 is the real, complete count for this
+specific defect, not a floor.** Also confirmed a real false-positive rate inside the original
+buckets: every UK Maths Trust competition row (Kangaroo/Olympiad/Challenge family — 10 rows
+checked) matched only on a legitimate program date and is clean, unrelated writing.
+
+### Two more defects surfaced while closing this out — separate, NOT fixed here
+
+While sweeping the full table I pulled every row with 2+ raw `" | "` field-delimiters (134 rows,
+zero overlap with the 37 above). None had the contamination signature, but two unrelated, real
+defects showed up at real scale:
+
+- **~54+ rows are raw pipe-delimited scrapes hard-truncated mid-word at ~900 characters.** E.g.
+  Brown: `"...BR…"`, Harvard: `"...if English is not your nat…"`, RSI at MIT: `"...individual
+  projec…"`. No research note, no process narration — real content cut off mid-sentence by
+  whatever import wrote it. Genuine data loss, unrelated to the contamination above.
+- **~80 more rows are complete (end cleanly on a full sentence/URL) but formatted as raw `"Title |
+  URL | Description | Fact | Fact"` pipe-delimited text** instead of natural prose. A style/polish
+  gap, not data loss or contamination.
+
+Neither was in scope for the writer investigation I was assigned, and neither is touched by the
+staged SQL below. Flagging so they aren't lost — CEO should triage separately.
 
 ### Staged cleanup — NOT applied
 
@@ -88,10 +111,12 @@ legitimate program date and is clean, unrelated writing.
 
 ### Explicitly not done yet
 
-- The remaining ~372 unread rows (49 of 421 read). The real total is unknown, only lower-bounded.
 - No independent re-verification of the *facts themselves* (costs/dates/requirements) — this pass
   fixes the writing problem (process notes in a public column), not the underlying research.
-- The systemic guard (a check that would have caught this automatically) is recommended, not built.
+- The systemic guard (a check that would have caught this automatically) is recommended, not built
+  — already assigned to oryn-4e per CEO.
+- The two newly-surfaced defects above (truncation, raw-pipe formatting) — not investigated beyond
+  the rough scope numbers here; no cause, no writer, no fix attempted.
 
 ## Gates
 
