@@ -2,6 +2,7 @@ import { sourceAuthority, domainOf } from "@/lib/acquisition/source-authority";
 import { judgeRetrievalEvidence, looksPageConfirmed } from "@/lib/acquisition/retrieval-method";
 import { isDuplicateOpportunity, normalizeTitle, type DedupCandidate } from "./dedup";
 import { inspectDescription, type DescriptionQualityFinding } from "./description-quality";
+import { inspectCycleLabel, type CycleLabelFinding } from "./cycle-label-quality";
 
 /** Re-exported for existing consumers/tests — the single implementation now lives in
  * lib/acquisition/retrieval-method.ts, shared with the programs pipeline. */
@@ -128,6 +129,12 @@ export interface IngestDecision {
    * outcome, by design (see that module's fail-loud-not-closed rule). A caller that wants
    * to surface these for human review reads this; nothing currently requires reading it. */
   warnings: DescriptionQualityFinding[];
+  /** Non-blocking copy findings for `current_cycle_label` (lib/opportunities/cycle-label-quality.ts).
+   * Kept separate from `warnings` rather than merged into it: those two modules have
+   * genuinely different severity ladders — a description finding can be `reject`, a label
+   * finding never can — and a single array would imply a uniformity that does not exist.
+   * Like `warnings`, only ever populated on `outcome: "accepted"`. */
+  labelWarnings: CycleLabelFinding[];
 }
 
 /** Pure decision function — no I/O, fully unit-testable, mirrors lib/programs/ingest.ts's
@@ -140,15 +147,15 @@ export function decideIngestion(
   existing: readonly (DedupCandidate & { id: string })[]
 ): IngestDecision {
   if (!record.title?.trim() || !record.organization?.trim() || !record.official_url?.trim()) {
-    return { outcome: "rejected", detail: "Missing title, organization, or official_url.", row: null, matchedExistingId: null, warnings: [] };
+    return { outcome: "rejected", detail: "Missing title, organization, or official_url.", row: null, matchedExistingId: null, warnings: [], labelWarnings: [] };
   }
 
   if (!VALID_CATEGORIES.has(record.category)) {
-    return { outcome: "malformed_field", detail: `category "${record.category}" is not a recognized opportunity_category value.`, row: null, matchedExistingId: null, warnings: [] };
+    return { outcome: "malformed_field", detail: `category "${record.category}" is not a recognized opportunity_category value.`, row: null, matchedExistingId: null, warnings: [], labelWarnings: [] };
   }
 
   if (!record.source_url?.trim()) {
-    return { outcome: "insufficient_evidence", detail: "Missing source_url.", row: null, matchedExistingId: null, warnings: [] };
+    return { outcome: "insufficient_evidence", detail: "Missing source_url.", row: null, matchedExistingId: null, warnings: [], labelWarnings: [] };
   }
 
   // Self-referential officialDomains hint: unlike universities, arbitrary organizers
@@ -166,6 +173,7 @@ export function decideIngestion(
       row: null,
       matchedExistingId: null,
       warnings: [],
+      labelWarnings: [],
     };
   }
 
@@ -180,6 +188,7 @@ export function decideIngestion(
       row: null,
       matchedExistingId: null,
       warnings: [],
+      labelWarnings: [],
     };
   }
 
@@ -191,6 +200,7 @@ export function decideIngestion(
       row: null,
       matchedExistingId: null,
       warnings: [],
+      labelWarnings: [],
     };
   }
 
@@ -200,7 +210,7 @@ export function decideIngestion(
   const candidate: DedupCandidate = { title: record.title, organization: record.organization, officialUrl: record.official_url };
   const dup = existing.find((e) => isDuplicateOpportunity(candidate, e));
   if (dup) {
-    return { outcome: "duplicate", detail: `Matches existing opportunity "${dup.title}".`, row: null, matchedExistingId: dup.id, warnings: [] };
+    return { outcome: "duplicate", detail: `Matches existing opportunity "${dup.title}".`, row: null, matchedExistingId: dup.id, warnings: [], labelWarnings: [] };
   }
 
   // Description-quality gate (lib/opportunities/description-quality.ts) — see that module's
@@ -209,15 +219,25 @@ export function decideIngestion(
   const descriptionFindings = inspectDescription(record.title, record.description);
   const blockingFinding = descriptionFindings.find((f) => f.severity === "reject");
   if (blockingFinding) {
-    return { outcome: "description_defect", detail: blockingFinding.detail, row: null, matchedExistingId: null, warnings: [] };
+    return { outcome: "description_defect", detail: blockingFinding.detail, row: null, matchedExistingId: null, warnings: [], labelWarnings: [] };
   }
   const descriptionWarnings = descriptionFindings.filter((f) => f.severity === "flag");
+
+  // Cycle-label copy gate (lib/opportunities/cycle-label-quality.ts). Purely advisory and
+  // deliberately incapable of anything else -- it cannot reject the record and cannot drop
+  // the label, because the live examples are real facts wrapped in internal framing and a
+  // regex is not entitled to decide which half of a sentence survives. See that module's
+  // header. Its findings do not enter `detail`, which reports on the outcome; a label
+  // finding never changes the outcome, so putting it there would misreport why a record
+  // was accepted.
+  const labelWarnings = inspectCycleLabel(record.current_cycle_label);
 
   return {
     outcome: "accepted",
     detail: descriptionWarnings.length > 0 ? `Accepted with ${descriptionWarnings.length} description-quality flag(s): ${descriptionWarnings.map((f) => f.defect).join(", ")}.` : null,
     matchedExistingId: null,
     warnings: descriptionWarnings,
+    labelWarnings,
     row: {
       title: record.title,
       normalized_title: normalizeTitle(record.title),
