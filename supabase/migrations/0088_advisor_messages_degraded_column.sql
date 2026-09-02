@@ -1,7 +1,12 @@
 -- Adds one nullable-in-spirit, not-null-in-practice column so a degraded advisor reply's
--- disclosure survives a page reload. Written, NOT applied -- house pattern (0076, 0086):
--- lib/supabase/errors.ts's isUndefinedColumnError degrades every write that names this
--- column until it lands, so the app is correct with or without this migration applied.
+-- disclosure survives a page reload. Written as 0087, NOT applied -- house pattern (0076,
+-- 0086); renumbered to 0088 during merge, a real collision with oryn-d0's own 0087
+-- (notifications_new_opportunity_dedupe), and applied to this database 2026-09-02, among 13
+-- migrations the founder ran while the fleet was paused. lib/supabase/errors.ts's
+-- isUndefinedColumnError degrades every write that names this column until it lands, so the
+-- app was correct before this ran here and stays correct on any environment where it hasn't
+-- run yet -- a fresh Supabase project replays every migration in order, and there is a real
+-- window where this one specifically isn't there yet.
 --
 -- Why this is a real column and not derived from ai_usage.degraded (0076, also unapplied):
 -- there is no correlation key between an advisor_messages row and the ai_usage row its own

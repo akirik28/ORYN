@@ -61,9 +61,10 @@ export function AdvisorChat({
       content: m.content ?? "",
       failed: m.status === "failed",
       errorMessage: m.error_message ?? undefined,
-      // Migration 0087 (unapplied-safe): `m.degraded` is `undefined` when the column doesn't
-      // exist yet, `false` for any row written before it did — both correctly render no note,
-      // same as a real "not degraded" `false` does. See that migration's own comment for why
+      // Migration 0088 (live here 2026-09-02, still unapplied-safe for any environment that
+      // hasn't run it yet): `m.degraded` is `undefined` when the column doesn't exist,
+      // `false` for any row written before it did — both correctly render no note, same as
+      // a real "not degraded" `false` does. See that migration's own comment for why
       // a plain `false` default is honest here rather than a guess.
       degraded: m.degraded ?? false,
     }))

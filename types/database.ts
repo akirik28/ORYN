@@ -1794,8 +1794,9 @@ export interface AdvisorMessage {
   /** Safe, user-facing text only (see lib/ai/advisor-failure.ts) — never the raw caught error. */
   error_message: string | null;
   created_at: string;
-  /** Migration 0087, unapplied — see that file's own comment. Written via
-   * isUndefinedColumnError's degrade-and-retry, so this is optional on every Insert/Update
+  /** Migration 0088 — live as of 2026-09-02 (renumbered from 0087 during merge, a real
+   * collision with oryn-d0's own 0087; see that migration file for the full story). Written
+   * via isUndefinedColumnError's degrade-and-retry, so this is optional on every Insert/Update
    * shape below regardless of live schema state. */
   degraded: boolean;
 }
