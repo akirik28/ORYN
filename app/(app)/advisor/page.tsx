@@ -109,7 +109,17 @@ export default async function AdvisorPage() {
         <SectionHeader title={t("talkItThrough")} description={t("talkItThroughDescription")} />
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <div className="glass-card flex min-h-[34rem] flex-col rounded-2xl border border-white/65 bg-white/45 p-6 backdrop-blur-2xl md:p-7">
-            <AdvisorChat conversationId={conversation?.id ?? null} initialMessages={messages} aiConfigured={isAIConfigured()} />
+            <AdvisorChat
+              conversationId={conversation?.id ?? null}
+              initialMessages={messages}
+              aiConfigured={isAIConfigured()}
+              // The composer and the sidebar meter must agree — same read (`quota` above),
+              // not a second one that could drift. `usedIsKnown` guards this exactly like
+              // isMonthlyQuotaExhausted does server-side: an unreadable count is never
+              // reported as exhausted, only a genuinely confirmed zero is.
+              quotaExhausted={quota.usedIsKnown && quota.remaining <= 0}
+              quotaResetsAt={quota.resetsAt}
+            />
           </div>
           <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
             <MonthlyUsageMeter quota={quota} budgetDegraded={budgetDegraded} />

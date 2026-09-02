@@ -1054,10 +1054,15 @@
       "tryAgain": "Tekrar dene",
       "placeholderReady": "Oryn'a sor…",
       "placeholderNotConfigured": "Yapay zeka danışmanı henüz yapılandırılmadı",
+      "placeholderExhausted": "Bu ayki mesaj hakkın bitti",
       "sendAriaLabel": "Mesajı gönder",
       "degradeNote": {
         "label": "Kısa yanıt",
         "detail": "Bu yanıt kısa tutuldu — sonucu yine alıyorsun, sadece uzun gerekçeyi değil."
+      },
+      "exhausted": {
+        "title": "Bu ayki hakkın doldu",
+        "detail": "Sohbet {date} tarihinde yenilenir. Oryn'in geri kalanı — planın, fırsatların, üniversitelerin — her zamanki gibi açık."
       }
     },
     "usageMeter": {
