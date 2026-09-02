@@ -19,6 +19,8 @@ import { UserListSection } from "@/features/admin/sections/user-list-section";
 import { OpportunitiesSection } from "@/features/admin/sections/opportunities-section";
 import { ActivitySection } from "@/features/admin/sections/activity-section";
 import { AgeGateFlagsSection } from "@/features/admin/sections/age-gate-flags-section";
+import { AdminActivitySection } from "@/features/admin/sections/admin-activity-section";
+import { DescriptionCleanupSection } from "@/features/admin/sections/description-cleanup-section";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("admin");
@@ -29,9 +31,14 @@ export async function generateMetadata(): Promise<Metadata> {
  * Auth + composition only (docs/admin-panel-architecture-2026-09-02.md, D1). Every section
  * fetches its own data and is wrapped in Suspense, so a slow section degrades its own card
  * instead of the page, and any one section can be read, moved or deleted without touching the
- * other seven. Three tabs, money first (D2) — the founder's own framing was "from the credit
+ * other seven. Four tabs, money first (D2) — the founder's own framing was "from the credit
  * onward", and reports moved out of the first slot it used to occupy by default rather than
  * by design (the social layer that generates them is switched off, so it was always empty).
+ *
+ * Catalog, added 2026-09-02 (the "control panel, not a report" course correction): the first
+ * write-capable, non-Spend/System/People action group. AdminActivitySection sits first in it
+ * on purpose — a founder about to press a button that rewrites 35 descriptions should see the
+ * accountability trail for what "pressing a button" already does before pressing another one.
  */
 export default async function AdminPage() {
   await requireAdmin();
@@ -46,6 +53,7 @@ export default async function AdminPage() {
           <TabsTrigger value="spend">{t("tabs.spend")}</TabsTrigger>
           <TabsTrigger value="system">{t("tabs.system")}</TabsTrigger>
           <TabsTrigger value="people">{t("tabs.people")}</TabsTrigger>
+          <TabsTrigger value="catalog">{t("tabs.catalog")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="spend" className="space-y-10 pt-2">
@@ -96,6 +104,15 @@ export default async function AdminPage() {
           </Suspense>
           <Suspense fallback={<SectionSkeleton rows={2} />}>
             <AgeGateFlagsSection />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="catalog" className="space-y-10 pt-2">
+          <Suspense fallback={<SectionSkeleton rows={4} />}>
+            <AdminActivitySection />
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton rows={3} />}>
+            <DescriptionCleanupSection />
           </Suspense>
         </TabsContent>
       </Tabs>

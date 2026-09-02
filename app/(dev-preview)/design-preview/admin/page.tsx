@@ -12,6 +12,8 @@ import { ProviderHealthSection } from "@/features/admin/sections/provider-health
 import { ScheduledJobsSection } from "@/features/admin/sections/scheduled-jobs-section";
 import { ReportsSection } from "@/features/admin/sections/reports-section";
 import { UserListSection } from "@/features/admin/sections/user-list-section";
+import { AdminActivitySection } from "@/features/admin/sections/admin-activity-section";
+import { DescriptionCleanupSection } from "@/features/admin/sections/description-cleanup-section";
 import { PreviewToolbar } from "../preview-toolbar";
 
 /**
@@ -44,6 +46,7 @@ export default async function AdminDesignPreviewPage() {
           <TabsTrigger value="spend">{t("tabs.spend")}</TabsTrigger>
           <TabsTrigger value="system">{t("tabs.system")}</TabsTrigger>
           <TabsTrigger value="people">{t("tabs.people")}</TabsTrigger>
+          <TabsTrigger value="catalog">{t("tabs.catalog")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="spend" className="space-y-10 pt-2">
@@ -76,6 +79,15 @@ export default async function AdminDesignPreviewPage() {
           </Suspense>
           <Suspense fallback={<SectionSkeleton />}>
             <ReportsSection />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="catalog" className="space-y-10 pt-2">
+          <Suspense fallback={<SectionSkeleton rows={4} />}>
+            <AdminActivitySection />
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton rows={3} />}>
+            <DescriptionCleanupSection />
           </Suspense>
         </TabsContent>
       </Tabs>

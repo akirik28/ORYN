@@ -1,0 +1,519 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Oryn Kumanda Merkezi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --ground:#e8f1e4; --rail:#132a1c; --rail-2:#1b3a27; --rail-ink:#dcecdf; --rail-ink-2:#8fb69d;
+    --panel:#ffffff; --panel-2:#f3f8f1; --line:#d3e2ce; --line-soft:#e4eee1;
+    --ink:#12211a; --ink-2:#465449; --ink-3:#6c7d70;
+    --accent:#1f7a4d; --accent-soft:#dcefe2; --accent-line:#8fc7a6;
+    --alarm:#a33526; --alarm-soft:#fae7e3;
+    --warn:#8a5a12; --warn-soft:#f8eeda;
+    --shadow:0 1px 2px rgba(18,33,26,.05),0 10px 30px -20px rgba(18,33,26,.4);
+  }
+  @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ground:#0b120d; --rail:#0f1a13; --rail-2:#16261c; --rail-ink:#dcecdf; --rail-ink-2:#7fa78d;
+    --panel:#131c16; --panel-2:#18231b; --line:#27362c; --line-soft:#1f2c23;
+    --ink:#e7f0e9; --ink-2:#a4b3a8; --ink-3:#7a8a7e;
+    --accent:#54c087; --accent-soft:#13291e; --accent-line:#2c6647;
+    --alarm:#e8806e; --alarm-soft:#2c1712; --warn:#d9a548; --warn-soft:#2a2214;
+    --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 34px -22px #000;
+  }}
+  :root[data-theme="dark"]{
+    --ground:#0b120d; --rail:#0f1a13; --rail-2:#16261c; --rail-ink:#dcecdf; --rail-ink-2:#7fa78d;
+    --panel:#131c16; --panel-2:#18231b; --line:#27362c; --line-soft:#1f2c23;
+    --ink:#e7f0e9; --ink-2:#a4b3a8; --ink-3:#7a8a7e;
+    --accent:#54c087; --accent-soft:#13291e; --accent-line:#2c6647;
+    --alarm:#e8806e; --alarm-soft:#2c1712; --warn:#d9a548; --warn-soft:#2a2214;
+    --shadow:0 1px 2px rgba(0,0,0,.5),0 12px 34px -22px #000;
+  }
+
+  body{background:var(--ground);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  .app{display:flex;min-height:100svh;align-items:stretch;}
+
+  /* ══ SOL RAY ══ */
+  .rail{flex:none;width:246px;background:var(--rail);color:var(--rail-ink);
+        display:flex;flex-direction:column;gap:2px;padding:18px 12px 14px;}
+  .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 16px;}
+  .brand .dot{width:28px;height:28px;border-radius:8px;flex:none;
+       background:conic-gradient(from 210deg,#54c087,#1f7a4d,#2f8f5c,#54c087);}
+  .brand b{font-family:Archivo,sans-serif;font-size:14.5px;letter-spacing:-.01em;display:block;line-height:1.15;}
+  .brand span{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.13em;
+              text-transform:uppercase;color:var(--rail-ink-2);}
+  .rail-h{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;
+          color:var(--rail-ink-2);padding:14px 8px 6px;}
+  .nav{display:flex;flex-direction:column;gap:2px;}
+  .nav button{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:11px;width:100%;
+        padding:8px 9px;border-radius:9px;cursor:pointer;font-size:13.5px;color:var(--rail-ink);}
+  .nav button:hover{background:var(--rail-2);}
+  .nav button[aria-current="true"]{background:var(--rail-2);box-shadow:inset 2px 0 0 var(--accent);}
+  .nav button:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+  .thumb{width:30px;height:30px;border-radius:7px;flex:none;overflow:hidden;
+         border:1px solid rgba(255,255,255,.09);}
+  .nav .n{flex:1;min-width:0;}
+  .nav .badge{font-family:"IBM Plex Mono",monospace;font-size:10.5px;padding:1px 6px;border-radius:20px;
+        background:var(--alarm);color:#fff;font-weight:600;}
+  .nav .badge.q{background:var(--rail-2);color:var(--rail-ink-2);}
+  .rail-foot{margin-top:auto;padding:12px 9px 0;border-top:1px solid rgba(255,255,255,.07);
+       font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--rail-ink-2);line-height:1.7;}
+
+  /* ══ ANA ALAN ══ */
+  .main{flex:1;min-width:0;padding:clamp(18px,3.2vw,34px) clamp(16px,3.2vw,36px) 70px;}
+  .top{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:baseline;justify-content:space-between;margin-bottom:22px;}
+  h1{font-family:Archivo,sans-serif;font-weight:700;font-size:clamp(21px,3.4vw,27px);letter-spacing:-.02em;margin:0;}
+  .sub{color:var(--ink-2);font-size:13.5px;margin-top:3px;}
+  .stamp{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);}
+  .pane[hidden]{display:none;}
+
+  /* dikkat şeridi */
+  .attn{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);
+        border-radius:13px;overflow:hidden;margin-bottom:24px;}
+  .attn div{background:var(--panel);padding:12px 15px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+  .tag{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+       padding:2px 8px;border-radius:5px;flex:none;font-weight:600;}
+  .tag.a{background:var(--alarm-soft);color:var(--alarm);}
+  .tag.w{background:var(--warn-soft);color:var(--warn);}
+  .tag.o{background:var(--accent-soft);color:var(--accent);}
+  .attn p{margin:0;font-size:13.5px;flex:1;min-width:210px;}
+  .act{all:unset;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--accent);
+       border:1px solid var(--accent-line);border-radius:7px;padding:4px 11px;background:var(--accent-soft);}
+  .act:hover{background:var(--accent);color:var(--panel);}
+  .act:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  /* kartlar */
+  .cards{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+        box-shadow:var(--shadow);display:flex;flex-direction:column;}
+  .art{height:82px;position:relative;border-bottom:1px solid var(--line-soft);}
+  .card-b{padding:13px 15px 15px;display:flex;flex-direction:column;gap:3px;flex:1;}
+  .card h3{font-family:Archivo,sans-serif;font-size:14.5px;margin:0;letter-spacing:-.01em;}
+  .card p{margin:0;font-size:12.5px;color:var(--ink-2);}
+  .stat{margin-top:9px;display:flex;align-items:baseline;gap:7px;font-family:"IBM Plex Mono",monospace;}
+  .stat b{font-family:Archivo,sans-serif;font-size:21px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
+  .stat span{font-size:11px;color:var(--ink-3);}
+
+  /* tablo */
+  .tbl{background:var(--panel);border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:var(--shadow);}
+  .tbl-h{padding:13px 16px;border-bottom:1px solid var(--line-soft);display:flex;justify-content:space-between;
+         align-items:center;gap:12px;flex-wrap:wrap;}
+  .tbl-h h3{font-family:Archivo,sans-serif;font-size:14.5px;margin:0;}
+  .tbl-h em{font-style:normal;font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);}
+  .scroll{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:520px;}
+  th{text-align:left;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.09em;text-transform:uppercase;
+     color:var(--ink-3);font-weight:500;padding:9px 16px;background:var(--panel-2);}
+  td{padding:10px 16px;border-top:1px solid var(--line-soft);vertical-align:middle;}
+  td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;}
+  .pill{font-size:11px;font-family:"IBM Plex Mono",monospace;padding:2px 8px;border-radius:20px;
+        border:1px solid var(--line);background:var(--panel-2);color:var(--ink-2);}
+  .pill.u{background:linear-gradient(100deg,#e8342c,#ff7a1a);color:#fff;border-color:transparent;font-weight:600;}
+  .pill.s{background:#e6edf7;color:#2c4a7c;border-color:#c3d4ea;}
+  :root[data-theme="dark"] .pill.s,
+  :root:not([data-theme="light"]) .pill.s{background:#182233;color:#9dbbe4;border-color:#28394f;}
+  .mini{all:unset;cursor:pointer;font-size:11.5px;font-weight:600;color:var(--accent);border:1px solid var(--accent-line);
+        border-radius:6px;padding:3px 9px;}
+  .mini:hover{background:var(--accent-soft);}
+  .mini:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .mini.d{color:var(--alarm);border-color:var(--alarm);}
+  .mini.d:hover{background:var(--alarm-soft);}
+
+  .calc{display:flex;flex-wrap:wrap;gap:14px;background:var(--panel);border:1px solid var(--line);
+        border-radius:13px;padding:15px 17px;box-shadow:var(--shadow);margin-bottom:16px;}
+  .ctrl{display:flex;flex-direction:column;gap:5px;flex:1;min-width:210px;}
+  .ctrl label{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.09em;
+              text-transform:uppercase;color:var(--ink-3);}
+  .ctrl input[type=range]{width:100%;accent-color:var(--accent);}
+  .ctrl input[type=number]{font-family:"IBM Plex Mono",monospace;font-size:15px;padding:6px 9px;
+       border:1px solid var(--line);border-radius:7px;background:var(--panel-2);color:var(--ink);width:110px;}
+  .ctrl output{font-family:Archivo,sans-serif;font-size:19px;font-variant-numeric:tabular-nums;}
+  .ctrl .hint{font-size:11.5px;color:var(--ink-3);}
+  .pl{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+  .pl div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 15px;
+          box-shadow:var(--shadow);}
+  .pl h4{margin:0;font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.09em;
+         text-transform:uppercase;color:var(--ink-3);font-weight:500;}
+  .pl b{display:block;font-family:Archivo,sans-serif;font-size:clamp(21px,3.4vw,27px);letter-spacing:-.02em;
+        font-variant-numeric:tabular-nums;margin-top:5px;}
+  .pl small{font-size:11.5px;color:var(--ink-3);}
+  .pl div.hero{border-color:var(--accent-line);background:var(--accent-soft);}
+  .pl div.hero b{color:var(--accent);}
+  .pl div.loss{border-color:var(--alarm);background:var(--alarm-soft);}
+  .pl div.loss b{color:var(--alarm);}
+  code{font-family:"IBM Plex Mono",monospace;font-size:.92em;background:var(--panel-2);
+       border:1px solid var(--line-soft);border-radius:4px;padding:1px 5px;}
+  .strip{display:flex;flex-wrap:wrap;gap:8px 22px;background:var(--panel);border:1px solid var(--line);
+         border-radius:11px;padding:11px 15px;margin-bottom:16px;font-size:13px;color:var(--ink-2);box-shadow:var(--shadow);}
+  .strip b{font-family:"IBM Plex Mono",monospace;color:var(--ink);font-size:14px;}
+  .acts{display:flex;flex-wrap:wrap;gap:6px;}
+  td.alarm{color:var(--alarm);font-weight:600;}
+  .pill.ok{background:var(--accent-soft);color:var(--accent);border-color:var(--accent-line);}
+  .mini.gift{border-color:transparent;color:#fff;font-weight:600;background:linear-gradient(100deg,#e8342c,#ff7a1a);}
+  .mini.gift:hover{filter:brightness(1.08);}
+  .mini:disabled{opacity:.6;cursor:default;background:var(--panel-2);color:var(--ink-3);border-color:var(--line);filter:none;}
+  .ico{display:block;}
+  .ico .l{fill:none;stroke:currentColor;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;opacity:.6;}
+  .ico .f{fill:currentColor;stroke:none;opacity:.95;}
+  .thumb{color:#7fd7a6;background:#16281d;display:grid;place-items:center;padding:5px;}
+  .nav button[aria-current="true"] .thumb{color:#a8ecc6;background:#1d3a29;}
+  .art{color:var(--accent);background:var(--accent-soft);display:grid;place-items:center;padding:15px;}
+  .np{border:1px dashed var(--line);border-radius:12px;padding:26px 20px;text-align:center;color:var(--ink-3);
+      font-size:13px;background:var(--panel-2);}
+  .foot-note{margin-top:22px;font-size:12.5px;color:var(--ink-3);border-top:1px solid var(--line-soft);padding-top:14px;}
+
+  @media(max-width:860px){
+    .app{flex-direction:column;}
+    .rail{width:auto;flex-direction:row;overflow-x:auto;gap:6px;padding:10px;align-items:center;}
+    .brand,.rail-h,.rail-foot{display:none;}
+    .nav{flex-direction:row;gap:6px;}
+    .nav button{width:auto;white-space:nowrap;}
+    .thumb{width:22px;height:22px;}
+  }
+</style>
+
+<div class="app">
+  <!-- ═══ SOL RAY ═══ -->
+  <nav class="rail" aria-label="Kumanda merkezi">
+    <div class="brand">
+      <div class="dot"></div>
+      <div><b>Oryn</b><span>Kumanda</span></div>
+    </div>
+
+    <div class="rail-h">Günlük</div>
+    <div class="nav">
+      <button aria-current="true" data-p="ov"><span class="thumb" data-ico="ov"></span><span class="n">Genel Bakış</span><span class="badge">3</span></button>
+      <button data-p="kz"><span class="thumb" data-ico="kz"></span><span class="n">Kâr &amp; Zarar</span></button>
+      <button data-p="tr"><span class="thumb" data-ico="tr"></span><span class="n">Trafik</span><span class="badge q">0</span></button>
+      <button data-p="og"><span class="thumb" data-ico="og"></span><span class="n">Öğrenciler</span><span class="badge q">11</span></button>
+      <button data-p="pa"><span class="thumb" data-ico="pa"></span><span class="n">Harcama</span></button>
+    </div>
+
+    <div class="rail-h">İçerik</div>
+    <div class="nav">
+      <button data-p="ka"><span class="thumb" data-ico="ka"></span><span class="n">Katalog</span><span class="badge q">282</span></button>
+      <button data-p="ar"><span class="thumb" data-ico="ar"></span><span class="n">Araştırma</span></button>
+      <button data-p="to"><span class="thumb" data-ico="to"></span><span class="n">Topluluk</span><span class="badge q">yakında</span></button>
+      <button data-p="mo"><span class="thumb" data-ico="mo"></span><span class="n">Moderasyon</span></button>
+    </div>
+
+    <div class="rail-h">Altyapı</div>
+    <div class="nav">
+      <button data-p="si"><span class="thumb" data-ico="si"></span><span class="n">Sistem</span><span class="badge">1</span></button>
+      <button data-p="de"><span class="thumb" data-ico="de"></span><span class="n">Defter</span></button>
+      <button data-p="ay"><span class="thumb" data-ico="ay"></span><span class="n">Ayarlar</span></button>
+    </div>
+
+    <div class="rail-foot">main · 62c157a4<br>5041 test · yeşil</div>
+  </nav>
+
+  <!-- ═══ ANA ═══ -->
+  <main class="main">
+
+    <!-- GENEL BAKIŞ -->
+    <div class="pane" id="ov">
+      <div class="top">
+        <div><h1>Bugün neye bakman gerekiyor</h1>
+          <div class="sub">Her şeyi göstermiyor. Sadece bir karar bekleyenleri.</div></div>
+        <div class="stamp">3 Eyl 2026 · 01:40</div>
+      </div>
+
+      <div class="attn">
+        <div><span class="tag a">Acil</span><p>189 fırsatın yaş sınırı kayıtlı değil — motor hepsini "uygun" sayıyor</p><button class="act">İncele</button></div>
+        <div><span class="tag w">Bütçe</span><p>Bir öğrenci aylık tavanının %304'ünde</p><button class="act">Aç</button></div>
+        <div><span class="tag o">Onay</span><p>35 satırlık açıklama düzeltmesi uygulanmayı bekliyor</p><button class="act">Önizle</button></div>
+      </div>
+
+      <div class="cards">
+        <article class="card"><div class="art" data-ico="kz"></div><div class="card-b">
+          <h3>Kâr &amp; Zarar</h3><p>Başabaş noktası</p>
+          <div class="stat"><b>10</b><span>abone gerekiyor</span></div></div></article>
+
+        <article class="card"><div class="art" data-ico="og"></div><div class="card-b">
+          <h3>Öğrenciler</h3><p>Kayıtlı hesap</p>
+          <div class="stat"><b>11</b><span>1 Ultra</span></div></div></article>
+
+        <article class="card"><div class="art" data-ico="ka"></div><div class="card-b">
+          <h3>Katalog</h3><p>Aktif fırsat</p>
+          <div class="stat"><b>282</b><span>64'ünde görsel</span></div></div></article>
+
+        <article class="card"><div class="art" data-ico="si"></div><div class="card-b">
+          <h3>Sistem</h3><p>Zamanlanmış iş</p>
+          <div class="stat"><b>8</b><span>1 uyarı</span></div></div></article>
+      </div>
+
+      <p class="foot-note">Bu ekran bilerek kısa. Ondört bölümü üst üste yığmak yerine, karar bekleyen üç şey
+      yukarıda — gerisi soldaki raydan, kendi sayfasında.</p>
+    </div>
+
+    <!-- ÖĞRENCİLER -->
+    <div class="pane" id="og" hidden>
+      <div class="top">
+        <div><h1>Öğrenciler</h1><div class="sub">Plan değiştir, kota sıfırla, harcamayı gör.</div></div>
+        <div class="stamp">11 hesap</div>
+      </div>
+      <div class="tbl">
+        <div class="tbl-h"><h3>Hesaplar</h3><em>bu ay harcama · takvim ayı</em></div>
+        <div class="scroll"><table>
+          <thead><tr><th>Hesap</th><th>Plan</th><th>Bu ay</th><th>Kota</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>akirik28@my.uaa.k12.tr</td><td><span class="pill u">Ultra</span></td>
+                <td class="num">$3.0389</td><td class="num alarm">%304</td>
+                <td class="acts"><button class="mini">Standart yap</button><button class="mini">Kotayı sıfırla</button></td></tr>
+            <tr><td>oryn.qa.a@example.com</td><td><span class="pill s">Standart</span></td>
+                <td class="num">$0.1140</td><td class="num">%11</td>
+                <td class="acts"><button class="mini">Ultra yap</button><button class="mini gift" data-gift="oryn.qa.a@example.com">1 hafta hediye et</button></td></tr>
+            <tr><td>test@oryn.dev</td><td><span class="pill s">Standart</span></td>
+                <td class="num">$0.0000</td><td class="num">%0</td>
+                <td class="acts"><button class="mini">Ultra yap</button><button class="mini gift" data-gift="test@oryn.dev">1 hafta hediye et</button></td></tr>
+            <tr><td>oryn.qa.b@example.com</td><td><span class="pill s">Standart</span></td>
+                <td class="num">$0.0000</td><td class="num">%0</td>
+                <td class="acts"><button class="mini">Ultra yap</button><button class="mini gift" data-gift="oryn.qa.b@example.com">1 hafta hediye et</button></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="tbl" style="margin-top:18px">
+        <div class="tbl-h"><h3>Verilen hediyeler</h3><em>kişi başı bir kez · 7 gün Ultra</em></div>
+        <div class="scroll"><table>
+          <thead><tr><th>Kime</th><th>Ne zaman</th><th>Biteceği gün</th><th>Ne verildi</th></tr></thead>
+          <tbody id="giftlog">
+            <tr id="giftempty"><td colspan="4" style="color:var(--ink-3)">Henüz kimseye hediye verilmedi. Yukarıdan birine bas.</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <p class="foot-note">Hediye butonuna bastığın an 7 gün Ultra veriyor, bitiş gününü hesaplayıp buraya
+      yazıyor, ve butonu kapatıyor — aynı kişiye ikinci kez verilmesin diye.</p>
+    </div>
+
+    <!-- ARAŞTIRMA -->
+    <div class="pane" id="ar" hidden>
+      <div class="top">
+        <div><h1>Araştırma</h1><div class="sub">İş kuyruğu. Çalıştıran Claude Code, uygulama değil.</div></div>
+        <div class="stamp">API'ye para gitmiyor</div>
+      </div>
+      <div class="attn">
+        <div><span class="tag o">Mimari</span><p>Araştırma uygulamanın içinden API çağırmıyor — burada iş tanımlanır, Claude Code çalıştırır, sonuç buraya döner</p></div>
+      </div>
+      <div class="tbl">
+        <div class="tbl-h"><h3>Kuyruk</h3><em>sen onaylamadan hiçbir kayıt canlıya girmez</em></div>
+        <div class="scroll"><table>
+          <thead><tr><th>İş</th><th>Bölge</th><th>Durum</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>Yaş/uygunluk kapsamı</td><td class="num">282 kayıt</td><td>Devam ediyor</td><td><button class="mini">Aç</button></td></tr>
+            <tr><td>Doğrulanmamış fırsatlar</td><td class="num">75 kayıt</td><td>Sahipsiz</td><td><button class="mini">Ata</button></td></tr>
+            <tr><td>İnce kategoriler</td><td class="num">2 aday</td><td>Onay bekliyor</td><td><button class="mini">İncele</button> <button class="mini d">Reddet</button></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <p class="foot-note">Bu bölüm bugün yok — senin az önceki talimatın üzerine tasarlandı.</p>
+    </div>
+
+    <!-- KÂR & ZARAR -->
+    <div class="pane" id="kz" hidden>
+      <div class="top">
+        <div><h1>Kâr &amp; Zarar</h1><div class="sub">Kaç aboneden sonra para kazanmaya başlıyorsun.</div></div>
+        <div class="stamp">399,99 TL / ay · ilk hafta bedava</div>
+      </div>
+
+      <div class="calc">
+        <div class="ctrl">
+          <label for="uc">Ödeyen abone</label>
+          <input type="range" id="uc" min="0" max="500" value="40" step="1">
+          <output id="uco">40</output>
+        </div>
+        <div class="ctrl">
+          <label for="price">Aylık fiyat (TL)</label>
+          <input type="number" id="price" value="399.99" min="0" max="5000" step="10">
+          <span class="hint">Öğrencinin ödediği tutar. Değiştir, aşağısı anında güncellenir.</span>
+        </div>
+        <div class="ctrl">
+          <label for="rate">USD/TRY kuru</label>
+          <input type="number" id="rate" value="41" min="1" max="200" step="0.5">
+          <span class="hint">Bu kuru sen giriyorsun — Oryn uydurmuyor.</span>
+        </div>
+      </div>
+
+      <div class="strip">
+        <span>Öğrenci ödüyor: <b id="ptl">—</b></span>
+        <span>Sana kalıyor: <b id="pusd">—</b></span>
+        <span>İlk hafta bedava · kişi başı bir kez</span>
+      </div>
+
+      <div class="pl" id="pl"></div>
+
+      <div class="tbl" style="margin-top:18px">
+        <div class="tbl-h"><h3>Maliyet kalemleri</h3><em>aylık</em></div>
+        <div class="scroll"><table>
+          <thead><tr><th>Kalem</th><th>Tip</th><th>Tutar</th><th>Not</th></tr></thead>
+          <tbody>
+            <tr><td>Supabase Pro</td><td>Sabit</td><td class="num">$25</td><td>Abone sayısıyla artmaz</td></tr>
+            <tr><td>Vercel Pro</td><td>Sabit</td><td class="num">$20</td><td>Abone sayısıyla artmaz</td></tr>
+            <tr><td>Alan adı</td><td>Sabit</td><td class="num">$1</td><td>Yıllığın aylık payı</td></tr>
+            <tr><td>Sistem işleri (AI)</td><td>Sabit</td><td class="num">$40</td><td>Öğrenciye bağlı değil — katalog taraması</td></tr>
+            <tr><td>Öğrenci başı AI</td><td>Değişken</td><td class="num">≤ $0.99</td><td><b>Kodda tavan</b> — tahmin değil, sınır</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <p class="foot-note">$0.99 bir tahmin değil, kodun uyguladığı sert tavan. Bir öğrenci onu geçemez —
+      geçmeden ucuz modele düşer. Yani en kötü senaryo hesaplanabilir, bu tabloda olan da o.</p>
+    </div>
+
+    <!-- TRAFİK -->
+    <div class="pane" id="tr" hidden>
+      <div class="top">
+        <div><h1>Trafik</h1><div class="sub">Kaç kişi girdi, ne yaptı, nerede bıraktı.</div></div>
+        <div class="stamp">yayında değil</div>
+      </div>
+      <div class="attn">
+        <div><span class="tag a">Ölçüm yok</span><p>Sayfa görüntüleme takibi hiç kurulmadı, ve uygulama henüz yayına alınmadı — bu ekran deploy'a kadar sıfır gösterecek</p><button class="act">Nasıl kurulur</button></div>
+      </div>
+      <div class="cards">
+        <article class="card"><div class="card-b"><h3>Ziyaretçi</h3><p>Tekil, 30 gün</p>
+          <div class="stat"><b>—</b><span>ölçülmüyor</span></div></div></article>
+        <article class="card"><div class="card-b"><h3>Kayıt olan</h3><p>Toplam hesap</p>
+          <div class="stat"><b>11</b><span>hepsi test</span></div></div></article>
+        <article class="card"><div class="card-b"><h3>Ürün olayı</h3><p>product_events</p>
+          <div class="stat"><b>62</b><span>4 hesaptan</span></div></div></article>
+        <article class="card"><div class="card-b"><h3>Profil görüntüleme</h3><p>profile_views</p>
+          <div class="stat"><b>1</b><span>22 Ağu'dan beri</span></div></div></article>
+      </div>
+      <p class="foot-note">Buradaki "—" bilerek sıfır değil. Sıfır yazmak "kimse gelmedi" demek olurdu;
+      gerçek şu ki henüz kimseyi sayan bir şey yok. İkisi farklı, ve karıştırılırsa yanlış karar verdirir.</p>
+    </div>
+
+    <!-- TOPLULUK -->
+    <div class="pane" id="to" hidden>
+      <div class="top">
+        <div><h1>Topluluk</h1><div class="sub">Mesajlar ve gönderiler — özellik açıldığında burası dolacak.</div></div>
+        <div class="stamp">tablolar hazır</div>
+      </div>
+      <div class="attn">
+        <div><span class="tag o">Hazır</span><p><code>messages</code> ve <code>message_reports</code> tabloları veritabanında mevcut; mesaj sayısı bugün 0 çünkü özellik navigasyondan kapalı</p></div>
+      </div>
+      <div class="cards">
+        <article class="card"><div class="card-b"><h3>Mesaj</h3><p>Gönderilen</p><div class="stat"><b>0</b><span>özellik kapalı</span></div></div></article>
+        <article class="card"><div class="card-b"><h3>Gönderi</h3><p>Paylaşılan</p><div class="stat"><b>0</b><span>özellik kapalı</span></div></div></article>
+        <article class="card"><div class="card-b"><h3>Şikâyet</h3><p>Açık</p><div class="stat"><b>0</b><span>—</span></div></div></article>
+        <article class="card"><div class="card-b"><h3>Bağlantı</h3><p>Takip</p><div class="stat"><b>0</b><span>0058 uygulanmadı</span></div></div></article>
+      </div>
+      <p class="foot-note">Bu bölüm boş görünüyor ama boşuna değil: sosyal özellikler açıldığında panelin
+      yeniden tasarlanması gerekmesin diye yeri şimdiden ayrıldı. Senin istediğin "uyum sağlayabilmeli" bu.</p>
+    </div>
+
+    <div class="pane" id="pa" hidden><div class="top"><div><h1>Harcama</h1><div class="sub">AI harcaması, bütçe tavanları, model fiyatları.</div></div></div><div class="np">Harcama tabloları, iş bütçeleri, fiyat tablosu — hepsi burada, tek sayfada değil.</div></div>
+    <div class="pane" id="ka" hidden><div class="top"><div><h1>Katalog</h1><div class="sub">Fırsat ara, kapat, düzelt.</div></div></div><div class="np">Arama, kapatma/açma, 35 satırlık temizliğin önizlemesi.</div></div>
+    <div class="pane" id="mo" hidden><div class="top"><div><h1>Moderasyon</h1><div class="sub">Şikâyet edilen içerik.</div></div></div><div class="np">Açık şikâyet yok.</div></div>
+    <div class="pane" id="si" hidden><div class="top"><div><h1>Sistem</h1><div class="sub">Sağlayıcılar ve zamanlanmış işler.</div></div></div><div class="np">Sağlayıcı sağlığı, iş tetikleme, durdurma, yeniden kontrol.</div></div>
+    <div class="pane" id="ay" hidden>
+      <div class="top"><div><h1>Ayarlar</h1><div class="sub">Uygulamanın açma-kapama düğmeleri. Her satır tek bir şey yapar.</div></div></div>
+      <div class="tbl">
+        <div class="tbl-h"><h3>Anahtarlar</h3><em>ne olacağı yanında yazıyor</em></div>
+        <div class="scroll"><table>
+          <thead><tr><th>Ayar</th><th>Şu an</th><th>Kapatırsan / açarsan ne olur</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>Yeni kayıt</td><td><span class="pill ok">Açık</span></td>
+                <td>Kapatırsan yeni kimse hesap açamaz. Mevcut öğrenciler etkilenmez.</td>
+                <td class="acts"><button class="mini d">Kapat</button></td></tr>
+            <tr><td>Bakım modu</td><td><span class="pill">Kapalı</span></td>
+                <td>Açarsan herkes "kısa süre sonra döneceğiz" ekranı görür.</td>
+                <td class="acts"><button class="mini">Aç</button></td></tr>
+            <tr><td>Ücretsiz deneme</td><td class="num">7 gün</td>
+                <td>Kart veren herkese, kişi başı bir kez.</td>
+                <td class="acts"><button class="mini">Değiştir</button></td></tr>
+            <tr><td>Aylık AI tavanı</td><td class="num">236.150 token</td>
+                <td>Standart hesabın aylık payı. Bitince ucuz modele düşer, kapanmaz.</td>
+                <td class="acts"><button class="mini">Değiştir</button></td></tr>
+            <tr><td>Ultra fiyatı</td><td class="num">399,99 TL</td>
+                <td>Kâr &amp; Zarar ekranındaki hesabı da bu besler.</td>
+                <td class="acts"><button class="mini">Değiştir</button></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <div class="pane" id="de" hidden><div class="top"><div><h1>Defter</h1><div class="sub">Kim, neyi, ne zaman.</div></div></div><div class="np">Yönetici işlemlerinin kaydı.</div></div>
+  </main>
+</div>
+
+<script>
+(function(){
+  /* Her bolume kendi isini anlatan cizim. Rastgele desen degil: para grafik,
+     ogrenci figur, katalog kart. Tek renk ailesi (yesil), tek cizgi kalinligi. */
+  var ICON = {
+    ov:'<circle cx="32" cy="32" r="17" class="l"/><circle cx="32" cy="32" r="8" class="l"/><path d="M32 15V8M32 56v-7M15 32H8M56 32h-7" class="l"/><circle cx="43" cy="21" r="4" class="f"/>',
+    kz:'<path d="M12 46h8v10h-8zM26 34h8v22h-8zM40 24h8v32h-8z" class="f"/><path d="M10 30 24 20l12 8 18-14" class="l"/><circle cx="54" cy="14" r="4" class="f"/>',
+    tr:'<path d="M9 50 22 36l10 9 12-16 11 9" class="l"/><path d="M9 56h46" class="l"/><circle cx="22" cy="36" r="3.5" class="f"/><circle cx="44" cy="29" r="3.5" class="f"/>',
+    og:'<circle cx="22" cy="24" r="8" class="l"/><path d="M8 50c0-8 6-13 14-13s14 5 14 13" class="l"/><circle cx="44" cy="27" r="6" class="f"/><path d="M34 48c0-6 4-10 10-10s10 4 10 10" class="f"/>',
+    pa:'<ellipse cx="32" cy="18" rx="18" ry="6" class="l"/><path d="M14 18v12c0 3.3 8 6 18 6s18-2.7 18-6V18" class="l"/><path d="M14 32v12c0 3.3 8 6 18 6s18-2.7 18-6V32" class="l"/><circle cx="32" cy="24" r="3" class="f"/>',
+    ka:'<rect x="10" y="14" width="30" height="20" rx="3" class="l"/><rect x="18" y="24" width="30" height="20" rx="3" class="l"/><rect x="26" y="34" width="28" height="18" rx="3" class="f"/>',
+    ar:'<circle cx="27" cy="27" r="14" class="l"/><path d="M38 38 54 54" class="l"/><path d="M21 27h12M27 21v12" class="f"/>',
+    to:'<path d="M8 16h30v20H20l-8 8V36H8z" class="l"/><path d="M28 26h28v18H44l-6 7v-7h-4" class="f"/>',
+    mo:'<path d="M32 8 54 16v16c0 12-9 20-22 24C19 52 10 44 10 32V16z" class="l"/><path d="M23 32l6 6 13-13" class="f"/>',
+    si:'<circle cx="32" cy="32" r="9" class="l"/><path d="M32 6v9M32 49v9M6 32h9M49 32h9M14 14l6 6M44 44l6 6M50 14l-6 6M20 44l-6 6" class="l"/><circle cx="32" cy="32" r="3" class="f"/>',
+    de:'<rect x="12" y="8" width="40" height="48" rx="4" class="l"/><path d="M22 22h20M22 32h20M22 42h12" class="l"/><circle cx="12" cy="22" r="2.5" class="f"/><circle cx="12" cy="32" r="2.5" class="f"/>',
+    ay:'<path d="M26 10h12l1.6 8.2 7.4 3.1 6.8-4.7 8.5 8.5-4.7 6.8 3.1 7.4 8.2 1.6v12l-8.2 1.6" class="l" transform="scale(.78) translate(6 6)"/><circle cx="32" cy="32" r="10" class="l"/><circle cx="32" cy="32" r="4" class="f"/>'
+  };
+  function paint(el, key, tall){
+    if(!el) return;
+    el.innerHTML='<svg viewBox="0 0 64 64" width="100%" height="100%" aria-hidden="true" '+
+      'preserveAspectRatio="'+(tall?'xMidYMid slice':'xMidYMid meet')+'" class="ico">'+
+      (ICON[key]||ICON.ov)+'</svg>';
+  }
+  [].forEach.call(document.querySelectorAll('[data-ico]'),function(el){
+    paint(el, el.getAttribute('data-ico'), el.classList.contains('art'));
+  });
+
+  /* ---- Kar & Zarar ---- */
+  var FIXED=86, PER_USER=0.99;
+  var uc=document.getElementById('uc'), uco=document.getElementById('uco'),
+      rate=document.getElementById('rate'), price=document.getElementById('price'),
+      pl=document.getElementById('pl');
+  function money(v){ return (v<0?'-':'')+'$'+Math.abs(v).toFixed(2); }
+  function tl(v){ return v.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' TL'; }
+  function calc(){
+    if(!pl) return;
+    var n=+uc.value, r=Math.max(1,+rate.value||1), pTry=Math.max(0,+price.value||0);
+    var priceUsd=pTry/r, revenue=n*priceUsd, cost=FIXED+n*PER_USER, profit=revenue-cost;
+    var margin=priceUsd-PER_USER, be = margin>0 ? Math.ceil(FIXED/margin) : null;
+    uco.textContent=n;
+    document.getElementById('ptl').textContent=tl(pTry);
+    document.getElementById('pusd').textContent=money(priceUsd);
+    pl.innerHTML=
+      '<div><h4>Aylik gelir</h4><b>'+money(revenue)+'</b><small>'+n+' abone × '+money(priceUsd)+'</small></div>'+
+      '<div><h4>Aylik maliyet</h4><b>'+money(cost)+'</b><small>$'+FIXED+' sabit + '+n+' × $'+PER_USER.toFixed(2)+'</small></div>'+
+      '<div class="'+(profit>=0?'hero':'loss')+'"><h4>'+(profit>=0?'Kar':'Zarar')+'</h4><b>'+money(profit)+
+        '</b><small>'+(profit>=0?'her ay cebinde kalan':'her ay cebinden cikan')+'</small></div>'+
+      '<div><h4>Basabas noktasi</h4><b>'+(be===null?'—':be)+'</b><small>'+
+        (be===null?'bu fiyat maliyeti karsilamiyor':'aboneden sonra kar baslar')+'</small></div>';
+  }
+  if(uc){ [uc,rate,price].forEach(function(e){e.addEventListener('input',calc);}); calc(); }
+
+  /* ---- 1 haftalik Ultra hediyesi ---- */
+  var giftLog=document.getElementById('giftlog');
+  [].forEach.call(document.querySelectorAll('[data-gift]'),function(b){
+    b.addEventListener('click',function(){
+      if(b.disabled) return;
+      var who=b.getAttribute('data-gift');
+      b.disabled=true; b.textContent='Hediye edildi';
+      var d=new Date(Date.now()+7*864e5).toLocaleDateString('tr-TR');
+      var row=document.createElement('tr');
+      row.innerHTML='<td>'+who+'</td><td class="num">bugun</td><td class="num">'+d+'</td>'+
+                    '<td><span class="pill u">Ultra · 7 gun</span></td>';
+      giftLog.prepend(row);
+      var e=document.getElementById('giftempty'); if(e) e.remove();
+    });
+  });
+
+  /* ---- Bolum gecisi ---- */
+  var btns=[].slice.call(document.querySelectorAll('.nav button'));
+  btns.forEach(function(b){
+    b.addEventListener('click',function(){
+      btns.forEach(function(x){x.removeAttribute('aria-current');});
+      b.setAttribute('aria-current','true');
+      [].forEach.call(document.querySelectorAll('.pane'),function(p){p.hidden=p.id!==b.dataset.p;});
+      window.scrollTo(0,0);
+    });
+  });
+})();
+</script>
+</body></html>

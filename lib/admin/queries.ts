@@ -18,6 +18,7 @@ import { isOpportunityActionable, isOpportunitySufficientlyVerified, hasDeadline
 import { isUndefinedColumnError, isUndefinedTableError } from "@/lib/supabase/errors";
 import { ULTRA_PRICE_TRY } from "@/lib/admin/finance";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
+import { CONTAMINATION_CLEANUP_2026_09_02 } from "@/lib/opportunities/contamination-cleanup-2026-09-02";
 
 /**
  * Every admin-panel read, one module (docs/admin-panel-architecture-2026-09-02.md, D1). Each
@@ -1544,4 +1545,170 @@ export async function getNeverWrittenColumnChecks(admin: SupabaseClient<Database
       };
     })
   );
+}
+
+// ---------------------------------------------------------------------------------------------
+// Catalog tab, write-capable actions (course correction, 2026-09-02 — see
+// docs/catalog-health-actions-design-2026-09-02.md). Preview only below; the actual mutation
+// (applyContaminationCleanup) lives in app/(app)/admin/actions.ts alongside every other
+// admin Server Action, per this file's own D1 scope ("every admin-panel READ, one module") —
+// queries.ts reads, actions.ts writes, the same split this file already draws for
+// removeReportedPost/restoreReportedPost.
+// ---------------------------------------------------------------------------------------------
+
+export interface ContaminationCleanupPreviewRow {
+  id: string;
+  title: string;
+  currentDescription: string | null;
+  newDescription: string;
+  /** Whether `.like(description, guardPrefix + "%")` would currently match this row — computed
+   *  the same way the apply action itself checks, so a preview showing "will apply" can never
+   *  disagree with what actually happens a moment later on the same data. `null` means the row
+   *  itself could not be found (deleted or the id is stale) — a third state, not folded into
+   *  `false`, because "guard failed" and "row is gone" call for different messages to an admin
+   *  reading this before clicking apply. */
+  guardWouldPass: boolean | null;
+}
+
+/**
+ * Read-only. Fetches the current live description for all 35 rows in
+ * CONTAMINATION_CLEANUP_2026_09_02 and checks each guard against it — the exact preview CEO
+ * asked for ("old value, new value, per row, before the button that commits anything is even
+ * enabled"). Never writes; the apply action re-checks the identical guard at commit time rather
+ * than trusting this preview's own read, since the two calls are not atomic with each other and
+ * a row could change in between.
+ */
+export async function getContaminationCleanupPreview(admin: SupabaseClient<Database>): Promise<ContaminationCleanupPreviewRow[]> {
+  const ids = CONTAMINATION_CLEANUP_2026_09_02.map((e) => e.id);
+  const { data } = await admin.from("opportunities").select("id, description").in("id", ids);
+  const currentById = new Map((data ?? []).map((r) => [r.id, r.description]));
+
+  return CONTAMINATION_CLEANUP_2026_09_02.map((entry) => {
+    const current = currentById.get(entry.id);
+    return {
+      id: entry.id,
+      title: entry.title,
+      currentDescription: current ?? null,
+      newDescription: entry.newDescription,
+      guardWouldPass: current == null ? null : current.startsWith(entry.guardPrefix),
+    };
+  });
+}
+
+/**
+ * Migration 0098 is written, not applied — confirmed directly against live, not assumed.
+ * `applyContaminationCleanup` (app/(app)/admin/actions.ts) fails closed when the
+ * `admin_actions` audit write fails, deliberately (see that function's own comment) — which
+ * means running it before 0098 lands would report all 35 rows as "not applied" with an audit
+ * failure reason, even though the description rewrite itself is completely correct. That
+ * result is accurate but genuinely confusing to read cold, so the UI checks this upfront and
+ * says plainly "not set up yet" instead of a founder discovering it via a 0-of-35 run.
+ *
+ * Deliberately NOT `{ head: true }`, confirmed live rather than assumed safe: a HEAD request
+ * against a genuinely missing table returns `{ error: null, status: 204 }` — PostgREST/
+ * Supabase-js masks the PGRST205 "table not found" error specifically on HEAD requests,
+ * confirmed by comparing both shapes against this exact table live (`head:true` → false
+ * success; a plain `.select().limit(1)` → the real PGRST205 error). This is a genuinely
+ * different failure mode from the missing-*column* case `columnExistsLive`
+ * (getMigrationReality, above) checks — that one already uses `head:true` and is unaffected,
+ * confirmed separately by that function's own live-verified results matching known ground
+ * truth exactly. `getFinanceSettings` above never used `head:true` for its own table-missing
+ * check either, which is why it was never exposed to this — not by design, but the safer
+ * shape happened to be the one already in use there. `.limit(1)` keeps this cheap without
+ * reintroducing the trap: real data may come back, but at most one row, and nothing here
+ * reads it.
+ */
+export async function isAdminActionsTableLive(admin: SupabaseClient<Database>): Promise<boolean> {
+  const { error } = await admin.from("admin_actions").select("id").limit(1);
+  if (!error) return true;
+  // Any error — the expected missing-table case or a genuinely unexpected one — means this
+  // is not confirmed usable. An apply button about to perform 35 real writes should default
+  // to "not ready" on an unknown failure, not "ready" — the one place in this pass where
+  // treating an unrecognized error as the safe case would be the wrong direction to fail in.
+  if (!isUndefinedTableError(error, "admin_actions")) {
+    console.error("[admin] unexpected error checking admin_actions", error);
+  }
+  return false;
+}
+
+export interface AdminActivityEntry {
+  id: string;
+  createdAt: string;
+  adminLabel: string;
+  action: string;
+  targetLabel: string | null;
+  detail: Record<string, unknown>;
+  /** Which table this row actually lives in — kept, not hidden, so a reader who needs the
+   *  real row (to correct an audit entry, say) knows where to look. The point of merging is
+   *  that a founder browsing the timeline never has to think about this; it not existing at
+   *  all would be a worse trade, not a better one. */
+  source: "admin_actions" | "admin_action_log";
+}
+
+const ADMIN_ACTIVITY_FETCH_LIMIT = 50;
+
+/**
+ * CEO's ruling, 2026-09-02: two audit tables stay two tables (different schemas for
+ * different stakes — see admin_actions'/admin_action_log's own comments) but "what happened
+ * recently" reads as one honest chronological list, not two a founder has to know to check
+ * separately. The schema split is an implementation detail this function exists specifically
+ * to hide.
+ *
+ * Bounded fetch (D3) from each table, not unbounded — same discipline `getProductActivity`
+ * above already established for a single-table version of this exact shape.
+ *
+ * `admin_actions` has no label snapshot the way `admin_action_log` deliberately does (that
+ * table's own migration explains why: survives the admin/target account later being deleted).
+ * A real, smaller gap in this pass rather than one worth blocking the UI on: resolves the
+ * admin's display name with one batched read-time lookup instead, which is honest today (no
+ * account here has been deleted yet) and degrades to the raw id if the profile is ever gone
+ * — never throws, never hides the row. `target_id`/`target_table` stand in for a target label
+ * (no per-action title lookup here on purpose — that would mean this function knowing about
+ * every future action's own data shape, exactly the coupling `admin_actions`' generic columns
+ * exist to avoid).
+ */
+export async function getAdminActivityTimeline(admin: SupabaseClient<Database>): Promise<AdminActivityEntry[]> {
+  const [catalogRes, opsRes] = await Promise.all([
+    admin.from("admin_actions").select("*").order("created_at", { ascending: false }).limit(ADMIN_ACTIVITY_FETCH_LIMIT),
+    admin.from("admin_action_log").select("*").order("created_at", { ascending: false }).limit(ADMIN_ACTIVITY_FETCH_LIMIT),
+  ]);
+  // Both migrations (0097, 0098) are written but not applied as of this pass — confirmed
+  // directly against live, not assumed. `isUndefinedTableError` distinguishes that expected
+  // case (silent — an empty timeline is the honest state either way, "not set up" and "set up
+  // but nothing happened yet" degrade to the same list) from a genuinely unexpected read
+  // failure (logged), matching getFinanceSettings' own established shape in this file rather
+  // than inventing a second one.
+  if (catalogRes.error && !isUndefinedTableError(catalogRes.error, "admin_actions")) {
+    console.error("[admin] failed to read admin_actions", catalogRes.error);
+  }
+  if (opsRes.error && !isUndefinedTableError(opsRes.error, "admin_action_log")) {
+    console.error("[admin] failed to read admin_action_log", opsRes.error);
+  }
+  const catalogRows = catalogRes.data ?? [];
+  const opsRows = opsRes.data ?? [];
+
+  const adminIds = [...new Set(catalogRows.map((r) => r.admin_user_id))];
+  const { data: profiles } = adminIds.length > 0 ? await admin.from("profiles").select("id, display_name").in("id", adminIds) : { data: [] };
+  const nameById = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+
+  const fromCatalog: AdminActivityEntry[] = catalogRows.map((r) => ({
+    id: r.id,
+    createdAt: r.created_at,
+    adminLabel: nameById.get(r.admin_user_id) ?? r.admin_user_id,
+    action: r.action,
+    targetLabel: `${r.target_table}:${r.target_id}`,
+    detail: { reason: r.reason, before: r.before_value, after: r.after_value },
+    source: "admin_actions" as const,
+  }));
+  const fromOps: AdminActivityEntry[] = opsRows.map((r) => ({
+    id: r.id,
+    createdAt: r.created_at,
+    adminLabel: r.admin_label,
+    action: r.action,
+    targetLabel: r.target_label,
+    detail: (r.detail as Record<string, unknown>) ?? {},
+    source: "admin_action_log" as const,
+  }));
+
+  return [...fromCatalog, ...fromOps].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, ADMIN_ACTIVITY_FETCH_LIMIT);
 }

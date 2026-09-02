@@ -302,9 +302,11 @@ describe("migration numbering", () => {
     // 0094-0099 block (five lanes working the same night, assigned up front specifically so
     // nobody kept independently reaching for "the next free number" against different
     // snapshots of main -- the exact shape of tonight's two earlier collisions, 0020 then
-    // 0069). 0098 (oryn-31's catalog audit) is not present in this branch, which is
-    // expected -- this guard only checks for duplicates and the true maximum on disk, never
-    // contiguity, so a gap is fine.
+    // 0069). 0098 (oryn-31's catalog audit) was absent when this paragraph was first
+    // written and landed in the same merge that joined these two narratives -- corrected
+    // here rather than left standing, since a stale "not present" reads as a claim about
+    // today. This guard only checks for duplicates and the true maximum on disk, never
+    // contiguity, so a gap would have been fine either way.
     //
     // 0096 (quota_grants) is an append-only admin top-up/reset ledger for a student's shared
     // monthly AI allowance, never an edit to ai_usage itself -- "a student who legitimately
@@ -339,6 +341,24 @@ describe("migration numbering", () => {
     // fails toward the last successfully-fetched rates on any read failure, never toward an
     // empty table -- the same "unknown or unavailable must never look like healthy/default"
     // discipline this whole narrative has repeated for every fail-open path added tonight.
+    //
+    // 0098 (admin_actions) is the field-level audit trail the admin panel's course
+    // correction (2026-09-02: founder wants a control panel, not a report) surfaced a live
+    // need for -- two real writes already happened that night with zero record of who or
+    // why (AI Scholars disabled, per oryn-a7's own account). One append-only table shared by
+    // every write-capable catalog-health action rather than one per action -- see
+    // docs/catalog-health-actions-design-2026-09-02.md. Deliberately a second table alongside
+    // 0097's admin_action_log rather than merged into it -- checked directly rather than
+    // assumed compatible: admin_action_log's schema (target_user_id, a human-readable label +
+    // freeform detail) doesn't fit a non-user target without misusing target_user_id for an
+    // opportunity id. CEO's own ruling, once flagged rather than decided unilaterally: keep
+    // both tables, unify them at the read layer instead (getAdminActivityTimeline, lib/admin/
+    // queries.ts) -- the schema split stays real underneath, a founder reading "recent
+    // activity" never has to know it exists. Still unapplied.
+    //
+    // Ceiling is 100, not 98: 0098 and 0100 were written by two lanes in parallel and
+    // merged together, and this guard pins the true maximum on disk rather than the highest
+    // number any one branch knew about.
     expect(Math.max(...numbers.map(Number))).toBe(100);
   });
 });
