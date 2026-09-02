@@ -260,4 +260,24 @@ describe("CvImportFlow — skills and languages (2026-09-02)", () => {
     expect(screen.getByText(/Oryn found 2 items/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add 2 items to my profile" })).toBeInTheDocument();
   });
+
+  // The achievement-level uncheck test above (line ~182) doesn't exercise this: skills and
+  // languages go through their own separate filter/map in save() (selectedSkills/
+  // selectedLanguages), a second place the same "renders unchecked but saves anyway" bug
+  // could exist independently of the achievement-item path.
+  test("unchecking the skill excludes it from save while the untouched language is still sent", async () => {
+    await uploadSkillsAndLanguages();
+    fireEvent.click(screen.getAllByRole("checkbox")[0]); // skill's checkbox: skill row renders before language row
+
+    fireEvent.click(screen.getByRole("button", { name: /Add.*items? to my profile/ }));
+    expect(importReviewedCvItems).toHaveBeenCalledWith([], [], [{ name: "Spanish", proficiency: null }]);
+  });
+
+  test("unchecking the language excludes it from save while the untouched skill is still sent", async () => {
+    await uploadSkillsAndLanguages();
+    fireEvent.click(screen.getAllByRole("checkbox")[1]); // language's checkbox
+
+    fireEvent.click(screen.getByRole("button", { name: /Add.*items? to my profile/ }));
+    expect(importReviewedCvItems).toHaveBeenCalledWith([], [{ name: "Python", category: "technical", proficiency: null }], []);
+  });
 });
