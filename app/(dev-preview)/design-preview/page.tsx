@@ -90,6 +90,16 @@ export default async function DesignPreviewPage({ searchParams }: { searchParams
             in the database). The toggle at the bottom of the screen switches Standard/Ultra and follows you between
             pages, so you can walk through the same screen both ways.
           </p>
+          {/* 2026-09-02: the Ultra visual work is mid-flight, not finished — most of the app
+              (sidebar, page background, the hero gradients) is still hardcoded inline styles
+              no [data-tier="ultra"] rule can reach yet (docs/hardcoded-color-sweep-2026-09-02.md),
+              so toggling Ultra there does nothing visible today. Said here directly rather than
+              letting that read as this page being broken. */}
+          <p className="text-sm text-muted-foreground">
+            Only some surfaces show a difference yet: the university map, the opportunity card&apos;s Ultra halo, and
+            the notification bell dot. The sidebar, page background and card gradients are still being converted and
+            will look the same on both for now — that&apos;s expected, not a bug in this page.
+          </p>
         </div>
         <ul className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
           {OTHER_PREVIEW_ROUTES.map((route) => (
