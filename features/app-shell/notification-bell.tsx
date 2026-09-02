@@ -53,15 +53,21 @@ export function NotificationBell({ notifications, unreadCount }: { notifications
         <span className="relative">
           <Bell className="size-[17px]" strokeWidth={1.6} />
           {unreadCount > 0 ? (
-            // Ultra: local glow only, not tier-grad-fill -- an 8px dot is too small for a
-            // gradient to read as one (this session's own inventory found this, checked
-            // against the real element). No existing box-shadow/ring utility on this span,
-            // so tier-glow-sm's box-shadow has nothing to collide with. Only ever renders
-            // alongside a real unread count -- never decorates an empty state.
+            // Ultra, 2026-09-02 revision: founder reversed the "contained signal" direction
+            // (three lanes' own independent convergence on it turned out to be evidence for
+            // engineering restraint, not for what the founder wants the product to feel like
+            // -- oryn-a7's own correction). This dot now grows under Ultra, not just glows --
+            // a same-size glow read as too subtle to be "unmissable... from across a room".
+            // Bigger, single box-shadow replaces tier-glow-sm entirely rather than adding a
+            // second box-shadow rule alongside it (the same collision this session already
+            // found on the card ring -- two box-shadow declarations don't layer). References
+            // var(--tier-glow) directly, not a hardcoded color, so this follows oryn-4e's
+            // token re-point automatically. Only ever renders alongside a real unread count
+            // -- never decorates an empty state, unchanged from before.
             <span
               aria-hidden="true"
               style={{ background: "#3D35E8", borderColor: "white" }}
-              className="tier-glow-sm absolute -right-1 -top-1 size-2 rounded-full border-[1.5px]"
+              className="ultra:size-3.5 ultra:shadow-[0_0_32px_8px_var(--tier-glow)] absolute -right-1 -top-1 size-2 rounded-full border-[1.5px]"
             />
           ) : null}
           <span className="sr-only">{unreadCount > 0 ? t("unreadCount", { count: unreadCount }) : t("noUnread")}</span>
