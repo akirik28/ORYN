@@ -26,14 +26,22 @@ export interface WeeklyPlanJobResult {
  * One student's failure (a malformed profile, a transient AI/DB error) must never abort
  * the run for everyone after them -- same discipline as sync-us-universities.ts's syncOne,
  * caught and recorded per item rather than thrown.
+ *
+ * `supabase` is this job's own admin client (created once in generateWeeklyPlansForActiveStudents
+ * below), threaded into both persist.ts calls explicitly. Before this parameter existed,
+ * getCurrentWeeklyPlan/getOrCreateWeeklyPlan each defaulted to the session-scoped client --
+ * correct for their two other, user-session callers, silently wrong here: this job has no
+ * session, so every read/write RLS-filtered to nothing, and a real, billed AI call happened
+ * anyway before the write failed. See persist.ts's own comment on getOrCreateWeeklyPlan for
+ * the confirmed-live evidence.
  */
-async function generateForStudent(userId: string): Promise<WeeklyPlanJobResult> {
+async function generateForStudent(userId: string, supabase: ReturnType<typeof createAdminClient>): Promise<WeeklyPlanJobResult> {
   try {
-    const existing = await getCurrentWeeklyPlan(userId);
+    const existing = await getCurrentWeeklyPlan(userId, supabase);
     if (existing) {
       return { userId, status: "already_current" };
     }
-    await getOrCreateWeeklyPlan(userId);
+    await getOrCreateWeeklyPlan(userId, { supabaseClient: supabase });
     return { userId, status: "generated" };
   } catch (error) {
     const detail = error instanceof Error ? error.message : "Unknown error";
@@ -59,7 +67,7 @@ export async function generateWeeklyPlansForActiveStudents(): Promise<WeeklyPlan
 
   const results: WeeklyPlanJobResult[] = [];
   for (const student of students ?? []) {
-    results.push(await generateForStudent(student.id));
+    results.push(await generateForStudent(student.id, supabase));
   }
   return results;
 }

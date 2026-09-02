@@ -127,9 +127,12 @@ export function formatCounselorGrounding(recommendations: CounselorRecommendatio
  * mode this function already had: no grounding means no cross-check either, not a blocked
  * plan.
  */
-async function buildCounselorGrounding(userId: string): Promise<{ text: string; recommendedTitles: string[] }> {
+async function buildCounselorGrounding(
+  userId: string,
+  supabaseClient?: Parameters<typeof getCounselorRecommendations>[2],
+): Promise<{ text: string; recommendedTitles: string[] }> {
   try {
-    const counselorResult = await getCounselorRecommendations(userId);
+    const counselorResult = await getCounselorRecommendations(userId, undefined, supabaseClient);
     const text = formatCounselorGrounding(counselorResult.recommendations);
     const recommendedTitles = counselorResult.recommendations.filter((r) => RECOMMENDED_CLASSES.includes(r.recommendationClass)).map((r) => r.title);
     return { text, recommendedTitles };
@@ -234,9 +237,16 @@ export function resolvePlanSelfContradiction(plan: WeeklyPlanGeneration, counsel
   return { ...plan, avoidForNow: null };
 }
 
-export async function generateWeeklyPlan(userId: string): Promise<WeeklyPlanGeneration> {
-  const context = await buildStudentAdvisorContext(userId);
-  const { text: counselorGrounding, recommendedTitles } = await buildCounselorGrounding(userId);
+// `supabaseClient` defaults to the session-scoped client via buildStudentAdvisorContext's
+// and buildCounselorGrounding's own defaults. lib/plan/generate-for-active-students.ts (the
+// scheduled Job D) is the only session-less caller, and passes its admin client through this
+// exact chain -- before this parameter existed, every job-triggered call silently built its
+// prompt from an empty student profile (RLS-filtered reads under a null auth.uid()) while
+// still spending real tokens on a real Anthropic call, logged via ai_usage regardless
+// (lib/ai/usage.ts already uses the admin client, independent of this fix).
+export async function generateWeeklyPlan(userId: string, supabaseClient?: Parameters<typeof buildStudentAdvisorContext>[1]): Promise<WeeklyPlanGeneration> {
+  const context = await buildStudentAdvisorContext(userId, supabaseClient);
+  const { text: counselorGrounding, recommendedTitles } = await buildCounselorGrounding(userId, supabaseClient);
   const provider = getAIProvider();
   // Checked here, not just in principle: this is the exact feature the founder's own
   // measured incident came from (2026-09-02) -- one student regenerating this plan 102
