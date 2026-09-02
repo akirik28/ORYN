@@ -78,7 +78,7 @@ describe("lib/opportunities/persist-matches.ts", () => {
     expect(src).not.toMatch(/supabase\.from\("opportunity_matches"\)\.(upsert|insert|update|delete)\(/);
   });
 
-  test("every read (profiles, profile_scores, student_interests, opportunities, saved_opportunities, opportunity_matches) stays RLS-scoped", () => {
+  test("every read (profiles, profile_scores, student_interests, opportunities, saved_opportunities, opportunity_matches) stays on `supabase` -- RLS-scoped for every real page-render caller, or an explicitly passed client for the one caller with no session -- never the module's own `admin`", () => {
     expect(src).toContain('supabase.from("profiles").select(');
     // profile_scores moved to the shared getProfileScores(userId) helper 2026-09-02
     // (docs/performance.md §2's fix) -- still RLS-scoped, just relocated: that helper
@@ -88,7 +88,17 @@ describe("lib/opportunities/persist-matches.ts", () => {
     // the actual guarantee, reviewed directly rather than re-pinned per call site.
     expect(src).toContain('import { getProfileScores } from "@/lib/security/dal";');
     expect(src).toContain("getProfileScores(userId)");
-    expect(src).not.toContain('supabase.from("profile_scores")');
+    // A second, conditional profile_scores read reappeared 2026-09-02 -- not a regression
+    // of the line above, the fix for the client-threading bug this file's own header
+    // doesn't yet mention (docs/performance.md §2, "getCounselorState calls
+    // refreshOpportunityMatches with no client override"). getProfileScores can't serve
+    // the no-session path (it builds its own session-cookie client internally too), so
+    // that path falls back to a query on `supabase` -- this function's OWN resolved
+    // client (`client ?? await createClient()`), same variable as every other read here,
+    // never a second, separate admin client of its own. The exact conditional this
+    // pins -- present only when guarded by `client ?`, never bare -- is what makes this a
+    // widened *fallback*, not a widened *default*.
+    expect(src).toContain('client ? supabase.from("profile_scores")');
     expect(src).not.toContain('admin.from("profile_scores").select(');
     expect(src).toContain('supabase.from("student_interests").select(');
     expect(src).toContain('.from("opportunities")\n      .select(');
