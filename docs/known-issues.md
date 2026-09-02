@@ -551,7 +551,7 @@ verified as intentional); the dashboard's own purpose-built `DashboardSkeleton` 
 the codebase held to that higher bar, and it holds up. Named as a minor, low-severity
 polish item, not fixed.
 
-## ~~CV-imported skills/languages were extracted and silently discarded~~ — now saves, verified against live data
+## ~~CV-imported skills/languages were extracted and silently discarded~~ — FIXED, proven live end to end
 
 **2026-09-02, after the founder applied migrations 0075–0088 (all but 0087) during tonight's
 pause.** `skills.source`/`languages.source` are now live (`information_schema` confirms
@@ -573,9 +573,11 @@ stored data — named as a real, honest limit rather than guessed past.
 **Traced the fix mechanism directly.** Both insert functions already try the insert *with*
 `source: "cv_import"` first and only fall back to omitting it on a confirmed missing-column
 error (`isUndefinedColumnError`, itself corrected for the PGRST204-vs-42703 gap earlier
-tonight) — so now that the column exists, the fallback branch is dead code here, and every
-future CV-imported skill/language gets the correct, distinguishing `source` value on the
-first attempt, not the `'manual'` default.
+tonight) — so now that the column exists, the fallback branch resolves on the first attempt
+in this database. **Correction to an earlier framing of this same finding**: that fallback
+is not "dead code" in any general sense — it's exactly what keeps CV import working on a
+*fresh* deploy, where 0084 hasn't run yet, and it's live infrastructure for the deploy the
+founder is planning, not a leftover to clean up.
 
 **Checked Non-Negotiable #10 before anything else, per the assignment**: skills and
 languages were never at risk of saving invisibly, because they were already fully rendered
@@ -586,17 +588,35 @@ both files directly, not carried forward from an earlier pass's claim. The revie
 always honest; only the final save silently dropped what the student had already reviewed
 and kept.
 
-**A live end-to-end upload was attempted and not completed — stated precisely, not
-smoothed over.** Injected a real test `.txt` file into the profile-page import form's file
-input via `DataTransfer` (the standard technique for driving a file input without an OS
-picker) and dispatched `input`/`change`; the file was accepted momentarily but the input's
-`files` reset to empty before the component's handler ran, on three separate attempts —
-consistent with a Fast Refresh/HMR remount on the shared dev server (multiple sessions were
-actively pushing to `main` throughout), not with anything in the product code, and no
-Server Action request ever reached the network log, so no AI spend happened from the
-attempts. Relied instead on the source trace above (both insert functions, both review
-surfaces, the corrected shared error-classifier) plus the live schema/history check — strong
-evidence the fix is real, short of a fully driven browser upload.
+**Update, same night: proven live end to end, on a dedicated isolated dev server.** The
+first attempt (shared server, documented above) left the fallback-vs-Fast-Refresh question
+open. Repeated it on a fresh `next dev` on a scratch port in its own worktree, with no other
+lane able to touch it — the file genuinely persisted on the input this time (ruling out a
+remount), but the component's `onChange` still never fired from a synthetic `DataTransfer`
+injection. **Concluded this is a browser-automation limitation, not a product defect**:
+`handleFile` (which sets `status: "uploading"` first, confirmed via source) was never
+invoked, and no amount of injected-event variation changed that — consistent with the
+well-known gap between a scripted `.files` assignment and a real, browser-trusted file-picker
+event, which React's delegated listener for `<input type="file">` doesn't reliably treat the
+same way.
+
+Rather than keep fighting the browser, verified the **save path itself** directly: a small,
+disposable script (never committed) imported the real, unmodified `extractCVData` and
+`insertCvImportSkills`/`insertCvImportLanguages` from `lib/` and ran them against real
+Anthropic and real Supabase, on a confirmed-clean QA account. **Result**: a real extraction
+returned 3 skills and 2 languages; the insert succeeded; every resulting row read back with
+`source: 'cv_import'` — confirmed directly against the database, the first time this has
+ever happened in the product's history. `ai_usage` logged the real call correctly
+(3629/467 tokens, `claude-sonnet-5`). Test rows deleted immediately after, both tables back
+to 0 for that account, verified.
+
+**What remains unverified by this session specifically**: the literal browser click →
+file-picker → `onChange` trigger chain, end to end in a real browser. Not exercised by
+either attempt here, for the tooling reason above — but two real historical
+`cv_extraction` rows in `ai_usage` (both predating the `source` column) are independent
+proof that real students' real file-picker interactions already reach `handleFile` and the
+server correctly today; the thing that was broken was never that trigger, only the
+provenance column downstream of it.
 
 ## ORYN has never been deployed — no scheduled job has ever run
 

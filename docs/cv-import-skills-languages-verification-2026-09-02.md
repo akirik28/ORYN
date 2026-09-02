@@ -122,16 +122,88 @@ plus the live schema and history checks, the mechanism is verified with strong,
 multi-angle evidence — short of a fully driven browser upload, which this pass's tooling
 couldn't complete tonight.
 
+## Update, same night — proven live end to end on an isolated dev server
+
+oryn-a7 asked for exactly the gap this doc left open: a real, driven CV upload. Repeated
+the browser attempt on a dedicated `next dev` on a scratch port (3100), in this branch's own
+worktree, with no other lane able to touch it — removing the Fast Refresh/shared-server
+variable named as the likely cause above.
+
+**The file input's `files` genuinely persisted this time** (checked directly,
+`input.files.length === 1` well after the injection) — ruling out a remount. **But the
+component's `onChange` still never fired.** Confirmed via source, not inference:
+`handleFile` sets `status: "uploading"` first thing, and that state was never observed
+(`document.querySelector('main').innerText` stayed at the idle-state copy throughout, no
+Server Action request ever reached the network log). Concluded this is a genuine
+browser-automation limitation — a scripted `.files` assignment plus a synthetic `Event`
+dispatch, however constructed, does not reliably produce the browser-trusted event React's
+delegated listener expects for a native `<input type="file">`. This is well short of a
+"CV upload is broken" finding: it explains why *this session's own scripted attempts*
+couldn't drive it, and says nothing about a real click.
+
+**Rather than keep fighting the browser, verified the save path directly**, bypassing the
+client entirely. A small script (`scripts/_verify-cv-skills-languages-2026-09-02.ts`,
+deleted immediately after this run, never committed) imported `./load-dotenv` first (the
+established pattern from `scripts/run-ai-eval.ts`), then the real, unmodified
+`extractCVData` (`lib/ai/cv-extraction.ts`) and `insertCvImportSkills`/
+`insertCvImportLanguages` (`lib/profile/cv-import.ts`), and ran them in sequence against
+real Anthropic and a real Supabase admin client, on `oryn.qa.b`
+(`e9eba798-195d-4859-960c-4b8968df7819` — confirmed clean, zero prior skills/languages).
+One environment note: standalone `tsx` execution can't resolve `lib/ai/cv-extraction.ts`'s
+own `import "server-only"` (Next.js's bundler special-cases that package; plain Node does
+not, and it isn't a real npm dependency in this repo) — worked around with a minimal local
+stub package pointed to via `NODE_PATH`, isolated to this one run, never touching the real
+`node_modules`.
+
+**Result — real, live, verified against the database:**
+
+```
+Extraction — skills:    Python (programming), Public Speaking, Adobe Photoshop
+Extraction — languages: Spanish (Conversational), Mandarin Chinese (Beginner)
+Insert — skills:        { inserted: 3, skippedDuplicate: 0, skippedCap: 0 }
+Insert — languages:     { inserted: 2, skippedDuplicate: 0 }
+Live skills rows:        all 3 read source: "cv_import"
+Live languages rows:     both read source: "cv_import"
+```
+
+Every row landed with the correct, distinguishing provenance value — **the first time this
+has ever happened in the product's history**, confirmed directly, not inferred from the
+migration or the source trace alone. `ai_usage` logged the real call correctly (3629 input /
+467 output tokens, `claude-sonnet-5`, `feature: cv_extraction`), closing the loop on
+[[project_oryn_structured_output_failure_audit]]'s own billing-correctness work from
+earlier tonight. Test rows deleted immediately after (`DELETE ... WHERE user_id = ...` on
+both tables); re-queried and confirmed 0 rows remain for that account — no trace left on
+shared QA infrastructure.
+
+**One thing worth naming precisely, not smoothed over**: `languages.proficiency` came back
+`null` on both rows in this test, because the script's own quick mapping used the wrong
+field name (`l.proficiency`, which doesn't exist on the raw extraction — the real field is
+`statedLevel`). Checked whether this was a script bug or the real behavior before reporting
+either way: `lib/profile/cv-import.ts`'s own `flattenCvLanguages` (the function the real UI
+actually calls) hard-codes `proficiency: null` unconditionally too, keeping `statedLevel`
+as a separate field — proficiency is deliberately left for the student to choose from a
+fixed dropdown in the review step, not guessed from the model's free-text level. The
+script's shortcut produced the same result as the real path, for the same underlying
+reason, not by coincidence worth doubting.
+
+**What remains genuinely unverified by this session**: the literal browser click →
+file-picker → `onChange` chain, driven live. Not a gap left open by choice — a tooling
+limit reached and reported honestly, distinct from the save-path question this update
+closes. The two real historical `cv_extraction` rows in `ai_usage` (both predating the
+`source` column, cited above) are the closest available evidence that this specific step
+already works for real students today.
+
+**Correction to this doc's own earlier framing**, per oryn-a7: calling the missing-column
+fallback "dead code" understated what it is now — it's live infrastructure for the fresh
+deploy the founder is planning (where `0084` won't have run yet), not a vestige. See
+`docs/known-issues.md`'s own correction alongside this update.
+
 ## What this deliberately did not do
 
-- No code change — the fix was entirely the migration; the application code was already
-  written correctly (and already correctly classified its own degrade condition, per an
-  earlier fix tonight) months before this column existed.
-- No retry of the live upload via a different mechanism (e.g., a disposable Node script
-  calling the Server Action directly, bypassing the browser) — considered, not attempted,
-  since the source-level evidence was already strong enough and the founder's own "no
-  deadline, take the time to do this properly" framing didn't require forcing a workaround
-  under time pressure.
+- No permanent code change — the fix was entirely the migration; the application code was
+  already written correctly (and already correctly classified its own degrade condition,
+  per an earlier fix tonight) months before this column existed. The one-off verification
+  script was deleted immediately after this run, never committed.
 - No broader audit of what else migrations 0075–0088 unblocked — oryn-a7's own message
   named `carried_forward`/`university_notification_log`/`last_changed_at`/`match_confidence`/
   `advisor_messages.degraded` as also newly live; each is presumably its own verification
@@ -144,5 +216,5 @@ typecheck   clean
 lint        clean
 ```
 
-No test or build impact — no source file was touched, only `docs/known-issues.md` and this
-handoff doc.
+No test or build impact — no permanent source file was touched (the verification script was
+deleted after the run), only `docs/known-issues.md` and this handoff doc.
