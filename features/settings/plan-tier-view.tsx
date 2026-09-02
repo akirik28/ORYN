@@ -50,13 +50,27 @@ import type { PlanTier } from "@/types/database";
  * omits the field rather than erroring, so an unapplied migration is indistinguishable
  * from a genuine standard-tier row, by design — there is no third state to build a UI for.
  *
- * `.tier-grad-text`/`.tier-glow-sm` (app/globals.css's Ultra section) are applied to the
- * "Ultra" labels unconditionally — they only render as anything but plain text once
- * `[data-tier="ultra"]` is set on `<html>`, which `features/app-shell/ultra-ambient.tsx`
- * already does for the current student's own real tier. A standard-tier student sees plain
- * text; an ultra-tier student sees their own tier rendered with the same premium treatment
- * the rest of the app already gives them — no per-page tier check needed for the CSS to be
- * correct.
+ * `tier-glow-sm` (app/globals.css's Ultra section) is applied to the current-plan badge
+ * unconditionally — it only renders as anything but a no-op once `[data-tier="ultra"]` is
+ * set on `<html>`, which `features/app-shell/ultra-ambient.tsx` already does for the
+ * current student's own real tier. No per-page tier check needed for the CSS to be correct.
+ *
+ * **2026-09-02, urgent fix, live on the founder's own screen: `tier-grad-text` removed from
+ * both "Ultra" labels (the current-plan `CardTitle` and the table's own column header).**
+ * That class paints the flame gradient (amber → orange → red) through transparent glyphs —
+ * fine choice when this page's background was lavender, unreadable once the Ultra page
+ * ground itself turned amber (`docs/hardcoded-color-sweep-2026-09-02.md`'s page-ground
+ * work, landed after this file was first written): amber text on an amber ground. The
+ * column header is worse than the card title — a 2xl heading has enough mass to half-survive,
+ * a table header does not, and "ultra yazısı gözükmüyor" was reported against exactly that
+ * cell. Both are now plain text, matching `standardName`'s own already-safe treatment
+ * exactly, rather than a new custom color computed against one specific ground — the
+ * general lesson (oryn-60's original warning, oryn-4e's contrast method): a gradient tuned
+ * against one background doesn't stay safe once the background it sits on changes
+ * underneath it, and the safe pattern is flame on decoration, never on the thing carrying
+ * meaning — a plan name and a column header are both meaning. The Ultra *badge* two lines
+ * below (`tier-glow-sm` on a plain `variant="secondary"` background, not gradient-filled
+ * text) is unaffected and stays as the page's one remaining Ultra-tier visual cue here.
  */
 export function PlanTierView({ tier }: { tier: PlanTier }) {
   const t = useTranslations("settings.plan");
@@ -83,9 +97,7 @@ export function PlanTierView({ tier }: { tier: PlanTier }) {
       <Card>
         <CardHeader>
           <CardDescription>{t("currentPlanLabel")}</CardDescription>
-          <CardTitle className={tier === "ultra" ? "tier-grad-text text-2xl" : "text-2xl"}>
-            {tier === "ultra" ? t("ultraName") : t("standardName")}
-          </CardTitle>
+          <CardTitle className="text-2xl">{tier === "ultra" ? t("ultraName") : t("standardName")}</CardTitle>
         </CardHeader>
         {tier === "ultra" ? (
           <CardContent>
@@ -98,28 +110,33 @@ export function PlanTierView({ tier }: { tier: PlanTier }) {
 
       <div className="space-y-3">
         <h2 className="font-semibold">{t("comparisonTitle")}</h2>
+        {/* whitespace-normal on every cell, overriding Table's own shadcn default
+            (whitespace-nowrap, meant for short data values): this table's standard/ultra
+            columns hold full sentences, and nowrap forced them onto one line each, clipped
+            at the card's own max-w-xl edge rather than wrapped -- reported live alongside
+            the tier-grad-text bug above, same urgent pass. */}
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t("comparisonFeatureColumn")}</TableHead>
-              <TableHead>{t("standardName")}</TableHead>
-              <TableHead className="tier-grad-text">{t("ultraName")}</TableHead>
+              <TableHead className="whitespace-normal">{t("comparisonFeatureColumn")}</TableHead>
+              <TableHead className="whitespace-normal">{t("standardName")}</TableHead>
+              <TableHead className="whitespace-normal">{t("ultraName")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {TIER_COMPARISON_ROWS.map((row) =>
               row.kind === "sameByDesign" ? (
                 <TableRow key={row.id}>
-                  <TableCell className="font-medium">{t(`comparison.${row.id}.label`)}</TableCell>
-                  <TableCell colSpan={2} className="text-muted-foreground italic">
+                  <TableCell className="whitespace-normal font-medium">{t(`comparison.${row.id}.label`)}</TableCell>
+                  <TableCell colSpan={2} className="whitespace-normal text-muted-foreground italic">
                     {t(`comparison.${row.id}.same`)}
                   </TableCell>
                 </TableRow>
               ) : (
                 <TableRow key={row.id}>
-                  <TableCell className="font-medium">{t(`comparison.${row.id}.label`)}</TableCell>
-                  <TableCell className="text-muted-foreground">{t(`comparison.${row.id}.standard`)}</TableCell>
-                  <TableCell>{t(`comparison.${row.id}.ultra`)}</TableCell>
+                  <TableCell className="whitespace-normal font-medium">{t(`comparison.${row.id}.label`)}</TableCell>
+                  <TableCell className="whitespace-normal text-muted-foreground">{t(`comparison.${row.id}.standard`)}</TableCell>
+                  <TableCell className="whitespace-normal">{t(`comparison.${row.id}.ultra`)}</TableCell>
                 </TableRow>
               ),
             )}

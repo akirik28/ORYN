@@ -128,3 +128,33 @@ describe("PlanTierView — comparison table is data-driven, not hardcoded", () =
     }
   });
 });
+
+describe("PlanTierView — Ultra text stays legible against a warm ground", () => {
+  test("neither the current-plan title nor the comparison table's Ultra header uses gradient-clipped text", () => {
+    // Live regression, 2026-09-02: tier-grad-text (transparent glyphs, flame gradient
+    // painted through via background-clip) read fine when this page's background was
+    // lavender and became unreadable -- amber text on the amber Ultra page ground -- the
+    // moment the ground itself turned warm. Reported directly by the founder against the
+    // table header specifically ("ultra yazısı gözükmüyor"). Both labels are now plain
+    // text, matching standardName's own already-safe treatment, so this asserts the fix
+    // holds rather than merely that the word renders (it always rendered -- in the DOM,
+    // just invisible, which a plain toBeInTheDocument check would never have caught).
+    renderView("ultra");
+    const cardTitle = screen.getByText("Ultra", { selector: "[class*='text-2xl']" });
+    expect(cardTitle.className).not.toMatch(/tier-grad-text/);
+    const columnHeader = screen.getByRole("columnheader", { name: "Ultra" });
+    expect(columnHeader.className).not.toMatch(/tier-grad-text/);
+  });
+
+  test("comparison table cells wrap long values instead of clipping them", () => {
+    // Live regression, same report: Table's own shadcn default is whitespace-nowrap, sized
+    // for short data values -- this table's standard/ultra columns hold full sentences,
+    // and nowrap clipped them at the card's max-w-xl edge instead of wrapping. Every cell
+    // must override it, not just the ones that happened to overflow first.
+    renderView("standard");
+    for (const cell of [...screen.getAllByRole("cell"), ...screen.getAllByRole("columnheader")]) {
+      expect(cell.className).toMatch(/whitespace-normal/);
+      expect(cell.className).not.toMatch(/whitespace-nowrap/);
+    }
+  });
+});
