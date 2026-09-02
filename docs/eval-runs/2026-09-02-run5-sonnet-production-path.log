@@ -1,0 +1,186 @@
+
+> oryn@0.1.0 eval:ai
+> tsx --tsconfig tsconfig.eval-cli.json scripts/run-ai-eval.ts --live --confirm-spend --judge
+
+
+Cost projection — model: claude-sonnet-5 (assumed input/output pricing from lib/ai/pricing.ts)
+12 cases (2 fixtures x 3 targets x 2 locales).
+
+target          locale  fixture      input~tok  output~tok(assumed)  cost
+advisor_chat    en      regression        1799                 2000  $0.0354
+advisor_chat    tr      regression        1929                 2000  $0.0358
+weekly_plan     en      regression        2231                  600  $0.0157
+weekly_plan     tr      regression        2363                  600  $0.0161
+counselor_explain en      regression         491                  400  $0.0075
+counselor_explain tr      regression         627                  400  $0.0079
+advisor_chat    en      baseline          1876                 2000  $0.0356
+advisor_chat    tr      baseline          2014                 2000  $0.0360
+weekly_plan     en      baseline          2215                  600  $0.0156
+weekly_plan     tr      baseline          2351                  600  $0.0161
+counselor_explain en      baseline           418                  400  $0.0073
+counselor_explain tr      baseline           552                  400  $0.0077
+
+Target calls only:        $0.2366
+Target + judge calls:     $0.3112
+
+Output-token counts are documented assumptions, not measurements — see cost-estimate.ts's own header for what each is sourced from. Input-token counts are real, from the actual assembled prompts.
+
+Running live against the real API (target + judge calls)...
+
+[ai_usage] insert rejected {
+  feature: 'counselor_explanation',
+  error: 'insert or update on table "ai_usage" violates foreign key constraint "ai_usage_user_id_fkey"'
+}
+[ai_usage] insert rejected {
+  feature: 'counselor_explanation',
+  error: 'insert or update on table "ai_usage" violates foreign key constraint "ai_usage_user_id_fkey"'
+}
+[ai_usage] insert rejected {
+  feature: 'counselor_explanation',
+  error: 'insert or update on table "ai_usage" violates foreign key constraint "ai_usage_user_id_fkey"'
+}
+[ai_usage] insert rejected {
+  feature: 'counselor_explanation',
+  error: 'insert or update on table "ai_usage" violates foreign key constraint "ai_usage_user_id_fkey"'
+}
+[ok]   advisor_chat/en/regression — no deterministic findings
+       rubric: specific=5 concise=4 analytical=5 calm=5 evidenceAware=5 actionOriented=5 discourage=said_dont_do_this
+       judge notes: Explicitly names the scores (88, 82), the unassessed Research gap, and ties it to why Execution/Curiosity are 'developing' — grounded in evidence rather than assertion. Ends with a direct, calm 'Don't start the club' plus a concrete tradeoff between two real options; only minor padding ('Separately:' transition) keeps concise from a 5."
+       response:
+       ---
+No. Leadership and entrepreneurship are already your strongest dimensions (88 and 82). A second club adds nothing new there — it's more of what you don't need, and it costs hours you don't have to spare.
+
+Your real gap is Research: unassessed, no evidence at all. For LSE Economics, that's a bigger liability than a third leadership title. It's also the exact reason your Execution/Project Depth and Intellectual Curiosity scores are only "developing" — you have activities, but no evidence of independent analytical work.
+
+Concretely: the Youth Economics Research Fellowship (deadline Oct 1, 2026) fits this directly. It's economics-specific, matches your stated goal, and would be your first real research signal. With your 5–10 hr/week budget, that's a better use of time than founding another club you'd have to build from scratch.
+
+Separately: your peer tutoring marketplace is already running. If you want depth over breadth, extending that with some real usage data or a small write-up would strengthen Execution/Project Depth without adding a new commitment. That's probably higher-value than the fellowship if you have to pick one, since it's already in motion.
+
+Pick one. Don't start the club.
+       ---
+[ok]   advisor_chat/tr/regression — no deterministic findings
+       rubric: specific=5 concise=4 analytical=5 calm=5 evidenceAware=5 actionOriented=5 discourage=said_dont_do_this
+       judge notes: Explicitly says 'Hayır' and explains why via evidence (Leadership 88, Entrepreneurship 82 already strong, Research unassessed), then redirects to a concrete named fellowship with deadline and a secondary option (deepen existing project). Grounded in actual scores, no filler or praise, clear ranked recommendation."
+       response:
+       ---
+Hayır. Liderlik (88/100) ve Girişimcilik (82/100) zaten güçlü — bunlar profilinin en sağlam yanları. İkinci bir girişimcilik kulübü bu iki boyutu daha da öne çıkarır ama zaten yüksek olan bir şeyi biraz daha yükseltmiş olursun; başvuruda fark yaratmaz.
+
+Gerçek zayıf nokta Araştırma — hiç kanıt yok, hiç değerlendirilmemiş. LSE gibi bir hedef için ekonomi alanında araştırma kanıtı olmaması, güçlü liderlik profiliyle dengesiz duruyor.
+
+Somut öneri: **Youth Economics Research Fellowship** (son başvuru 2026-10-01). Bu doğrudan değerlendirilmemiş boyutunu karşılıyor. Haftalık 5-10 saatlik bütçenle yeni bir kulüp kurmak yerine, bu başvuruya hazırlanmaya zaman ayırman daha yüksek getiri sağlar.
+
+Ayrıca elindeki Peer tutoring marketplace projesi var — bu da "Uygulama/Proje Derinliği" boyutunu besliyor. Yeni bir şey başlatmak yerine bu projeyi derinleştirmek (örneğin ölçülebilir bir sonuç, veri, kullanıcı sayısı eklemek) ikinci öncelik olabilir. Yeni bir kulüp değil, bu ikisinden biri.
+       ---
+[ok]   weekly_plan/en/regression — no deterministic findings
+       rubric: specific=5 concise=4 analytical=5 calm=5 evidenceAware=5 actionOriented=5 discourage=said_dont_do_this
+       judge notes: Explicitly names the avoid case ("Avoid for now — Starting a second entrepreneurship club") with reasoning tied to scores (88, 82) and gap analysis (research, project depth). Distinguishes self-reported/unassessed status from evidenced scores throughout. Slightly dense phrasing keeps concise from a 5, but no filler or praise inflation."
+       response:
+       ---
+Leadership and entrepreneurship are already strong — no new action needed there. Research is the clearest unaddressed gap, and your peer tutoring marketplace has enough traction to deepen rather than expand.
+Apply to Youth Economics Research Fellowship: Research is currently unassessed in your profile — the least-evidenced dimension you have. This fellowship is the most direct way to generate real evidence there, and it fits your Economics goal.
+Deepen the peer tutoring marketplace with a measurable outcome: Execution/Project Depth is a 'good next area to strengthen' (60/100). You already have this project running — deepening it with measurable results is higher-value than starting something new, and it's self-reported right now with no evidence attached.
+Avoid for now — Starting a second entrepreneurship club: Leadership and entrepreneurship are already strong (88 and 82). A second club adds volume, not depth, and doesn't touch your real gaps: research and project depth.
+       ---
+[ok]   weekly_plan/tr/regression — no deterministic findings
+       rubric: specific=5 concise=4 analytical=5 calm=5 evidenceAware=5 actionOriented=5 discourage=said_dont_do_this
+       judge notes: Explicitly names 'İkinci bir girişimcilik kulübü kurmak' as 'Avoid for now' with reasoning tied to already-strong Liderlik/Girişimcilik scores, the real gap (Araştırma, Entelektüel Merak), and limited time budget. Flags self-reported vs verifiable evidence gap on the tutoring project. Dense but clear, numbers-grounded, no filler or praise language.
+       response:
+       ---
+Bu hafta öncelik Araştırma boşluğunu kapatmak ve var olan projeyi derinleştirmek — yeni aktivite başlatmak değil. Liderlik ve Girişimcilik zaten güçlü; enerji Araştırma, Proje Derinliği ve LSE başvurusuna hazırlığa gitmeli.
+Youth Economics Research Fellowship başvurusu: Araştırma boyutunda hiç kanıt yok; bu, profildeki en büyük boşluk. Counselor Core bu programı özellikle bu boşluk için önerdi.
+Peer tutoring marketplace projesini derinleştir: Uygulama/Proje Derinliği alanı 60/100 ile 'güçlendirilecek iyi bir sonraki alan' — yeni bir proje başlatmak yerine var olanı derinleştirmek daha yüksek değerli, çünkü zaten başlamış ve self-reported durumda, doğrulanabilir kanıt eksik.
+LSE personal statement için erken taslak ve okuma listesi: Entelektüel Merak 55/100 ile en zayıf değerlendirilmiş boyut; LSE başvurusu 2026-09-22'de ve bu, hem o boşluğu hem de yaklaşan başvuru sürecini aynı anda besliyor.
+Avoid for now — İkinci bir girişimcilik kulübü kurmak: Liderlik (88/100) ve Girişimcilik (82/100) zaten güçlü. Bu, gerçek boşluğu (Araştırma, Entelektüel Merak) hiç adreslemez — zaman bütçesi haftada 5-10 saatle sınırlıyken bu tür bir genişleme kaynak israfı olur.
+       ---
+[ok]   counselor_explain/en/regression — no deterministic findings
+       rubric: specific=4 concise=4 analytical=3 calm=4 evidenceAware=3 actionOriented=3 discourage=said_dont_do_this
+       judge notes: Explicitly names the avoid case ("starting a second club here would add little new signal and isn't a priority right now") with a reason grounded in the profile. But it doesn't flag that Research is unassessed (no evidence yet) vs. self-reported/verified — it treats 'unassessed' and 'least-evidenced' loosely without distinguishing what that means for confidence. Action-oriented but vague: 'decide early' on the fellowship isn't a concrete next step (apply? research it? by when exactly beyond the deadline?).
+       response:
+       ---
+Deniz's profile (74% complete) already shows solid leadership and entrepreneurship, so the main opportunity for growth this week is Research, which remains unassessed.
+Research is currently your least-evidenced dimension, so this fellowship is a high-impact way to build that up — it's high-effort and has a firm October 1, 2026 deadline, so it's worth deciding on early.
+You've already demonstrated leadership and entrepreneurship strongly, so starting a second club here would add little new signal and isn't a priority right now.
+       ---
+[ok]   counselor_explain/tr/regression — no deterministic findings
+       rubric: specific=4 concise=4 analytical=4 calm=4 evidenceAware=4 actionOriented=4 discourage=said_dont_do_this
+       judge notes: Names the specific gap (Research, %74 completeness), ties the recommended fellowship and deadline to that gap, and explicitly says not to start a second entrepreneurship club because it doesn't close the real gap. Reasoning from evidence (unassessed dimension, existing strengths) rather than assertion; sentences are a bit long/run-on but content stays concrete and action-oriented, no filler or empty praise.
+       response:
+       ---
+Deniz'in profili liderlik ve girişimcilik alanlarında güçlü görünüyor, ancak Research boyutu şu an değerlendirilmemiş durumda ve profil eksiksizliği %74 seviyesinde; bu nedenle bu hafta odak, mevcut güçlü alanları tekrar pekiştirmek değil, değerlendirilmemiş boyutu kapatmak olmalı.
+Youth Economics Research Fellowship, profildeki en az kanıtlanmış boyut olan Research'ü doğrudan hedeflediği için önerilenler arasında; son başvuru tarihi 2026-10-01 olduğundan yüksek etki ve orta aciliyet dengesiyle şimdiden planlanmalı.
+İkinci bir girişimcilik kulübü kurmak şu an önerilmiyor, çünkü liderlik ve girişimcilik zaten güçlü alanlar ve bu adım profildeki gerçek boşluğu, yani Research eksikliğini, kapatmıyor.
+       ---
+[ok]   advisor_chat/en/baseline — no deterministic findings
+       rubric: specific=5 concise=4 analytical=5 calm=5 evidenceAware=4 actionOriented=5 discourage=said_dont_do_this
+       judge notes: Grounded in concrete details (deadlines, hour budgets, score 20/100, exam dates) and gives a clear prioritized action. It does tell the student not to start the Science Fair or new activities yet, with reasoning (overcommitment risk, no deadline pressure) — though the fixture says nothing here should be discouraged, the reply still frames a 'don't do X' with solid rationale rather than arbitrarily; slightly reduces evidenceAware since 'developing' confidence level is treated as given without flagging it as self-reported. Mostly concise but has some repetition of structure across three paragraphs before the summary.</notes>
+</invoke>
+
+       response:
+       ---
+**This week's focus: the Economics Challenge application, not a new activity.**
+
+Deadline is 2026-09-07 — inside your exam period, so it needs to happen now or not at all. It also directly extends your OECD youth-unemployment research, which you already have live and just finished cleaning up. That's the efficient move: no new project, just packaging existing work into a submission. It also hits your weakest dimension — Awards & Distinction (20/100) — which nothing else in your profile currently touches.
+
+**Don't start the Regional Science Fair yet.** Its deadline (2026-10-01) is after your exams end on 9/15. Research is "developing" with only medium confidence, and the Fair is a real way to firm that up — but starting it now, on top of exams plus the Econ Challenge, is exactly the kind of overcommitment your 2-5 hr/week budget can't absorb. Revisit it the week exams finish.
+
+**Leave Leadership, Entrepreneurship, and Community Impact alone this week.** They're all genuinely weak, but none has a deadline or a natural extension of current work right now — adding something there this week would be motion without depth, on top of a busy period. That's a next-month conversation, not a this-week one.
+
+So: exams first, Econ Challenge application second (1-2 hrs is likely enough since the dataset work is already done), nothing else new until 9/15.
+       ---
+[ok]   advisor_chat/tr/baseline — no deterministic findings
+       rubric: specific=5 concise=4 analytical=4 calm=4 evidenceAware=3 actionOriented=5 discourage=said_dont_do_this
+       judge notes: Grounded in concrete numbers (2-5 hour budget, 6 hours swimming, 7 Sept deadline, category scores 20/100 and 40/100) and gives one clear action with explicit rationale. It does actively tell the student not to start Science Fair, entrepreneurship/leadership, or extend the OECD project this week — but the fixture says there's nothing genuine to discourage here, so this reads as manufactured caution/overreach rather than a real occasion, slightly hurting evidence-awareness (treats 'exam week is busy' as license to block several unrelated things) and calm (heavy imperative repetition 'Şu an gündemine alma', 'zorlama'). Concise but with some repetition of the same point three times.</notes>
+</invoke>
+
+       response:
+       ---
+Bu hafta gerçek kapasiten çok sınırlı: 2-5 saatlik bütçenden yüzmenin ~6 saati zaten düşülmüş durumda — yani yeni bir şeye ayıracak vaktin pratikte yok. Sınav dönemindesin, 15 Eylül'e kadar. Bu hafta tek öncelik olmalı:
+
+**Economics Challenge başvurusu (7 Eylül deadline).** Bu çok yakın, kaçırırsan bir daha fırsat yok. Başvuru yapmak genelde büyük zaman istemez — birkaç saat. Ödüller (20/100) ve Kariyer Keşfi (40/100) senin en zayıf iki alanın; bu tek başvuru ikisine de dokunuyor, düşük maliyetle. Sınav döneminde bile bunu ihmal etme.
+
+Bunun dışında yeni bir şey başlatmanı önermiyorum:
+
+- **Regional Science Fair (1 Ekim)** — Araştırma boyutun için doğru fırsat, ama şu an sınav haftalarında yeni bir başvuru süreci açmak mantıklı değil. Bunu 15 Eylül sonrasına, sınavlar bitince değerlendir. Şu an gündemine alma.
+- OECD veri seti projen bitti, bu iyi — uzattığın zaman değil, bir sonraki adımı (bulguları yazıya dökmek) sınav sonrasına bırak. Şu an üstüne yeni efor koyma, tamamlanmış haliyle dursun.
+- Girişimcilik ve Liderlik gerçekten zayıf ama bu hafta bunlara dokunacak vaktin yok — zorlama, sınavdan sonra konuşuruz.
+
+Özet: Bu hafta tek iş Economics Challenge başvurusu. Gerisi 15 Eylül'den sonra.
+       ---
+[ok]   weekly_plan/en/baseline — no deterministic findings
+       rubric: specific=5 concise=4 analytical=5 calm=5 evidenceAware=5 actionOriented=5 discourage=n/a
+       judge notes: Grounded in concrete specifics (2-5hrs after swimming, 9/7 deadline, 20/100 Awards score, OECD dataset) and reasons from evidence rather than asserting. Explicitly flags Regional Science Fair eligibility as unconfirmed rather than assuming it. Two clear actions with rationale, no filler or praise language; slightly dense sentences keep concise from a 5.
+       response:
+       ---
+Time is tight (2-5 hrs after swimming, plus exams until 9/15), so this week is about advancing what's already moving, not starting anything new. The Economics Challenge deadline (9/7) is the one time-sensitive item worth a short push.
+Submit Economics Challenge application: This is a real deadline landing squarely in your busy period. Awards & Distinction is your weakest dimension (20/100) and you have zero awards currently — this is a concrete, low-time-cost shot at changing that, and it connects directly to your existing OECD research rather than requiring new work.
+Turn cleaned OECD dataset into a preliminary finding or write-up: You completed the cleanup last week; the natural next step is turning that effort into a visible research output, not letting it sit. Research is 'Developing' at medium confidence — a concrete write-up is what would move it toward 'Strong' and give you something to eventually submit or show. This also directly sets up the Regional Science Fair option Counselor Core flagged, without committing to it yet since eligibility for that isn't confirmed for you.
+       ---
+[ok]   weekly_plan/tr/baseline — no deterministic findings
+       rubric: specific=5 concise=3 analytical=4 calm=5 evidenceAware=5 actionOriented=4 discourage=n/a
+       judge notes: Grounded in concrete numbers (Ödüller 20/100, Araştırma 62/100, dataset cleanup done) and explicit uncertainty flags ('uygunluğu teyit edilmedi', 'self-reported'), which is strong evidence-awareness and specificity. Not concise though — sentences run long with repeated justification clauses; some redundancy between the intro paragraph and the two bullet items restating the same rationale. Action items are clear (finish Economics Challenge application, complete a concrete research step) but the reasoning is spelled out at length rather than terse."}
+       response:
+       ---
+Sınav dönemindesin ve haftalık bütçen zaten yüzme (haftada ~6 saat) tarafından büyük ölçüde dolu, bu yüzden bu hafta yeni bir taahhüt yerine mevcut iki iş kolunu ilerletmeye odaklan: Economics Challenge başvurusu (yaklaşan tarih + zayıf Ödüller boyutu) ve araştırma projende küçük, somut bir ilerleme. Regional Science Fair, Araştırma boyutunu güçlendirebilecek önerilen bir seçenek ama bu haftaki sınırlı zamanla ve yaklaşan Economics Challenge tarihiyle çakışıyor — uygunluğu teyit edilmedi, bu yüzden şimdilik ikinci sıraya bırakıyorum, önceliği başvuru tarihine veriyorum."
+Economics Challenge başvurusunu tamamla: Ödüller ve Başarılar boyutu şu an en zayıf alanlardan biri (20/100) ve hiç kayıtlı ödül yok. Bu fırsat hem yaklaşan bir teslim tarihi hem de mevcut araştırma çalışmanla doğrudan örtüşüyor — sıfırdan bir şey başlatmana gerek yok.
+Youth unemployment araştırmasında somut bir sonraki adımı tamamla: Araştırma boyutu 'Gelişiyor' (62/100) ama hâlâ self-reported ve tek proje üzerinden ilerliyor. Derinlik, yeni bir şey başlatmaktan daha değerli — dataset temizliği tamamlandığına göre momentum var, onu kaybetme.
+       ---
+[ok]   counselor_explain/en/baseline — no deterministic findings
+       rubric: specific=4 concise=4 analytical=4 calm=5 evidenceAware=5 actionOriented=4 discourage=n/a
+       judge notes: Grounded in concrete facts (68% complete, Research gap, Oct 1 2026 deadline) with no praise inflation. Slightly long single sentences dent concision, and the action is clear (target the fair) but doesn't spell out a next step beyond 'plan ahead.' Nothing to discourage here, consistent with fixture.
+       response:
+       ---
+Ada's profile is 68% complete, and Research stands out as the one dimension with no evidence behind it yet — this week's single recommendation targets exactly that gap.
+The Regional Science Fair is flagged as a strong fit because it directly builds evidence in Research, currently the least-documented part of Ada's profile, though it's a high-effort commitment worth planning for ahead of the October 1, 2026 deadline.
+       ---
+[ok]   counselor_explain/tr/baseline — no deterministic findings
+       rubric: specific=4 concise=4 analytical=3 calm=4 evidenceAware=4 actionOriented=3 discourage=n/a
+       judge notes: Grounded in concrete figures (68% complete, Research unevaluated, deadline 2026-10-01) and calm, non-inflated language. Action-orientation is weakened by passive phrasing ('dikkat edilmeli' — 'should be noted') rather than a direct instruction to act; analytical reasoning is present but thin, mostly asserting the gap rather than tracing evidence to conclusion.
+       response:
+       ---
+Ada'nın profili şu an %68 tamamlanmış durumda ve mevcut kanıtlar Research (Araştırma) boyutunun henüz değerlendirilmemiş olduğunu, bu yüzden profilin en az kanıtlanmış tarafını oluşturduğunu gösteriyor.
+Regional Science Fair, Research boyutunda henüz hiç kanıt bulunmadığı için önerilen bir adım olarak öne çıkıyor; yüksek etki ve yüksek çaba gerektiren bu fırsatın 2026-10-01 son başvuru tarihine dikkat edilmeli.
+       ---
+
+0 of 12 completed cases had a deterministic finding.
+0 of 12 completed cases needed weekly-plan post-processing to correct the raw model output (0 is expected most runs; a rising count across runs is the "is a guardrail masking a prompt regression" signal).
+Actual usage this run: 58637 input tokens, 14207 output tokens.
