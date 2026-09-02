@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils";
-import { requireUser } from "@/lib/security/dal";
+import { requireUser, requireProfile } from "@/lib/security/dal";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { Landmark, Search } from "lucide-react";
@@ -110,6 +111,10 @@ export default async function UniversitiesPage({
   const detailedOnly = detailedParam === "1";
   const session = await requireUser();
   const supabase = await createClient();
+  // cache()-wrapped (lib/security/dal.ts) — app/(app)/layout.tsx already calls this for the
+  // same request, so this is a memoized hit, not a second query. See that file's own header
+  // comment for why the memoization is real inside a Server Component render specifically.
+  const planTier = resolvePlanTier(await requireProfile());
 
   // A text search goes through the canonical registry so aliases and accents resolve
   // ("MIT" -> Massachusetts Institute of Technology, "uskudar" -> "Üsküdar ..."), which
@@ -466,6 +471,7 @@ export default async function UniversitiesPage({
                   mapPins={mapPins}
                   selected={country ?? null}
                   selectedRegion={region?.id ?? null}
+                  tier={planTier}
                 />
               </div>
               {/* Cards beside the map, not a text list (founder request): a university is

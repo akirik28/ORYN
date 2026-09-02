@@ -7,6 +7,7 @@ import { RegionGridExplorer } from "./region-grid-explorer";
 import { WORLD_REGION, regionById } from "@/lib/data/regions";
 import type { CountryCount } from "./world-map-explorer";
 import type { UniversityMapPin } from "@/lib/universities/map-pins";
+import type { PlanTier } from "@/types/database";
 
 // Code-split: @vnedyalk0v/react19-simple-maps + the world topology (~110KB) never ship to a mobile
 // visitor, since the map is never mounted below the md breakpoint (see useIsDesktop below).
@@ -48,6 +49,7 @@ export function UniversityExplorerHero({
   mapPins = [],
   selected,
   selectedRegion,
+  tier = "standard",
 }: {
   countryCounts: CountryCount[];
   /** Individual universities to plot, already scoped to the selected country server-side.
@@ -55,6 +57,9 @@ export function UniversityExplorerHero({
   mapPins?: UniversityMapPin[];
   selected: string | null;
   selectedRegion: string | null;
+  /** Passed straight through to WorldMapExplorer — see that component's own doc comment
+   *  for why the default matches resolvePlanTier's "absent means standard" convention. */
+  tier?: PlanTier;
 }) {
   const showMap = useIsDesktop();
   // A region with no drill-down `projection` (North America, Asia today) narrows the
@@ -68,7 +73,7 @@ export function UniversityExplorerHero({
     <div className="space-y-4">
       {showMap ? (
         <div aria-hidden="true">
-          <WorldMapExplorer countryCounts={countryCounts} region={mapRegion} pins={mapPins} />
+          <WorldMapExplorer countryCounts={countryCounts} region={mapRegion} pins={mapPins} tier={tier} />
         </div>
       ) : null}
       <RegionGridExplorer countryCounts={countryCounts} selected={selected} selectedRegion={selectedRegion} />
