@@ -86,8 +86,12 @@ All 77 migration files, by whether the object they define is live — not by the
 | 0074 deadline_freshness | yes | `university_deadlines.last_checked_at`/`data_status` present, correct default |
 | 0075 deadline_notification_log | **no** | founder-gated, written 2026-09-02, table absent |
 | 0076 ai_usage_degrade_columns | **no** | founder-gated, written 2026-09-02, `ai_usage.degraded`/`degrade_reason` absent |
-| 0077 weekly_actions_carried_forward | **no** | founder-gated, written 2026-09-02, `weekly_actions.carried_forward` absent |
-| 0078 global_university_discovery_indexes | **no** | written 2026-09-02 specifically to capture three indexes found live with no prior migration — see "the three untraced indexes" below |
+| 0077 weekly_actions_carried_forward | **no — shipped a live outage** | founder-gated, written 2026-09-02, `weekly_actions.carried_forward` absent; `getOrCreateWeeklyPlan`'s unconditional `.update({carried_forward: true})` throws regardless of matching rows (Postgres validates SET before WHERE), taking weekly-plan generation down for most students. Being fixed separately. |
+| 0078 university_notification_log | **no** | founder-gated, written 2026-09-02, table absent |
+| 0079 education_test_score_evidence_status | **no** | founder-gated, written 2026-09-02, `education_records`/`test_scores.evidence_status` absent |
+| 0080 statistics_last_changed_and_notification_sources | **no** | founder-gated, written 2026-09-02 |
+| 0081 canonical_entity_merges_merged_by_set_null | **no** | founder-gated, written 2026-09-02 — see "object live, no migration anywhere" below for what this migration is the *first* to create, not merely amend |
+| 0082 global_university_discovery_indexes | **no** | written 2026-09-02 specifically to capture three indexes found live with no prior migration — see "object live, no migration anywhere" below |
 
 Twenty-three migrations the ledger has no row for are nonetheless fully live. **One,
 0048, is not — and unlike 0057/0059, this one is a real, currently-live gap, not a
@@ -148,19 +152,56 @@ question ("resolve by deciding which version is correct and making both agree") 
 wide, three-column guard is correct and is what's live; 0062 and 0063's corrected headers
 are that resolution.
 
-## The three untraced indexes
+## Object live, no migration anywhere — a sharper sibling of the ledger problem
 
-Three indexes exist live with zero trace in `supabase/migrations/`:
-`idx_global_university_discovery_order`, `idx_global_university_discovery_queue_state`
-(both on `global_university_discovery_queue`), `idx_university_profile_queue_state_priority`
-(on `university_profile_verification_queue`) — both tables from migration 0038, indexes
-added directly to live afterward without a migration ever capturing them. Low stakes
-(performance only, no correctness or security implication) but real, and exactly the
-"live ahead of the repo" direction that's easy to stop checking for once "is anything
-missing" comes back clean. Migration 0078 captures them, `if not exists`, written and not
-applied.
+Everything in the **State** table above is a *ledger-vs-object* mismatch: a real migration
+file exists, `supabase_migrations.schema_migrations` just has no row for it, and a replay
+reproduces it regardless. This section is a different, worse category: **objects live on
+`oryn-qa-scratch` that no migration file — tracked or not — has ever created.** A replay
+cannot produce these no matter how complete the migration set is, because nothing
+describes them. Four known members, found by two independent passes the same night:
+
+- **Three indexes**, found by this audit: `idx_global_university_discovery_order`,
+  `idx_global_university_discovery_queue_state` (both on
+  `global_university_discovery_queue`), `idx_university_profile_queue_state_priority` (on
+  `university_profile_verification_queue`) — both tables from migration 0038, indexes
+  added directly to live afterward. Performance only, no correctness or security
+  implication. Migration 0082 captures them, `if not exists`, written and not applied.
+- **One foreign key**, found separately the same night by oryn-bd auditing an unrelated
+  fix (`docs/constraint-provenance-sweep-2026-09-02.md`, full writeup there — not
+  duplicated here): `canonical_entity_merges.merged_by → auth.users`. Migration 0038
+  declares the column as a bare `uuid`, no `references` clause, ever — the constraint was
+  added straight against live, outside migration history entirely, so a fresh install
+  replaying only tracked migrations would have this column **completely unconstrained**.
+  A sharper instance than the three indexes: an index is a performance artefact, a missing
+  FK is a data-integrity rule. Migration 0081 is the first migration to *create* this FK,
+  not merely amend it, written and not applied.
+
+oryn-bd's own sweep (124 FK, 79 PK, 66 check, 25 unique — 294 constraints total, checked
+both directions: live-to-migration and migration-to-live for every `ALTER`-added
+constraint specifically, since that's where partial application is actually possible)
+found this FK as the *only* gap of its kind. Worth stating plainly since it's easy to read
+"the ledger is unreliable" and reach only for `information_schema`/`pg_policies`: that
+finds every migration in this section's **State** table, and none of these four. They're
+not missing *rows*, they're missing *files* — the only way to find one is to already
+suspect it and check the specific object, the same method this whole document uses
+throughout, applied here to constraints and indexes rather than tables/columns/triggers.
 
 ## What each remaining gap actually costs
+
+**0077 — confirmed to have shipped a live outage, found and largely fixed the same
+night.** The reflection-loop fix (`docs/founder-blocked-backlog.md` item 39) has
+`getOrCreateWeeklyPlan` write `.update({ carried_forward: true })` unconditionally.
+Postgres validates a statement's `SET` clause before evaluating `WHERE`, so this throws
+regardless of whether any row matches — not a 500 (both call sites catch it), but "receive
+this week's prioritized actions," one of the sixteen MVP items, was functionally down for
+most students (8 plans across 5 accounts live, only 1 for the current week — the rest fall
+through to generation and hit the missing column every time). This is the strongest
+evidence this document has for its own reason to exist: "write migrations, leave them
+unapplied" is correct and stays the rule, but it has a consequence nobody had been
+enforcing — code merged alongside a migration that's genuinely, routinely unapplied must
+degrade without it, not break. `0077` is the first instance to actually bite here, not
+the only code written in that position; a sweep of the rest is in progress separately.
 
 **0048 — real, see above. Not "costs nothing."**
 

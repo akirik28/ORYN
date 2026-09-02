@@ -4,15 +4,14 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Bell, CheckCheck } from "lucide-react";
-import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { markNotificationRead, markAllNotificationsRead } from "@/app/(app)/notifications/actions";
+import { markReadIfUnread, markAllRead } from "@/features/notifications/mark-read";
 import { formatRelativeTime } from "@/lib/i18n/date";
 import { toLocale } from "@/lib/i18n/config";
 import type { Notification } from "@/types/database";
 
-export function NotificationBell({ notifications }: { notifications: Notification[] }) {
+export function NotificationBell({ notifications, unreadCount }: { notifications: Notification[]; unreadCount: number }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const t = useTranslations("notifications");
@@ -20,7 +19,10 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
   // lib/i18n/app-config.d.ts, but it resolves at runtime from provider state — `toLocale`
   // keeps a stale or unexpected value rendering English rather than throwing on an index.
   const locale = toLocale(useLocale());
-  const unreadCount = notifications.filter((n) => !n.read_at).length;
+  // A real total from the caller, not derived from `notifications` — that list is capped
+  // (app/(app)/layout.tsx fetches the most recent 20) so filtering it silently under-counts
+  // once a student has more than 20 unread. See that layout's own comment for the incident
+  // this was found from.
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -62,12 +64,7 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
               className="flex items-center gap-1 text-[11px] font-semibold hover:opacity-80"
               style={{ color: "#3D35E8" }}
               disabled={isPending}
-              onClick={() =>
-                startTransition(async () => {
-                  const result = await markAllNotificationsRead();
-                  if (result.error) toast.error(result.error);
-                })
-              }
+              onClick={() => markAllRead(startTransition)}
             >
               <CheckCheck className="size-3.5" /> {t("markAllRead")}
             </button>
@@ -92,7 +89,7 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
                   <span className="min-w-0 flex-1">
                     <span className="block text-[13px] leading-snug font-semibold" style={{ color: "#111118" }}>{notification.title}</span>
                     {notification.body ? (
-                      <span className="mt-0.5 line-clamp-2 block text-xs leading-[1.45]" style={{ color: "#7A7A8A" }}>{notification.body}</span>
+                      <span className="mt-0.5 line-clamp-2 text-xs leading-[1.45]" style={{ color: "#7A7A8A" }}>{notification.body}</span>
                     ) : null}
                     <span className="mt-1 block text-[11px]" style={{ color: "#AAAABC" }}>
                       {formatRelativeTime(notification.created_at, locale)}
@@ -102,12 +99,7 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
               );
               const onActivate = () => {
                 setOpen(false);
-                if (!notification.read_at) {
-                  startTransition(async () => {
-                    const result = await markNotificationRead(notification.id);
-                    if (result.error) toast.error(result.error);
-                  });
-                }
+                markReadIfUnread(notification, startTransition);
               };
 
               // A notification with no `link` previously still rendered as a Link, falling
@@ -126,6 +118,15 @@ export function NotificationBell({ notifications }: { notifications: Notificatio
               );
             })
           )}
+        </div>
+        {/* Always shown, even when the visible 20 are all read — the popover only ever
+            shows the most recent 20 (app/(app)/layout.tsx), so there can be more history
+            than fits here regardless of what's currently unread. This is the "see
+            everything" escape hatch the popover itself deliberately doesn't try to be. */}
+        <div className="border-t px-4 py-2.5 text-center" style={{ borderColor: "#F4F4F8" }}>
+          <Link href="/notifications" onClick={() => setOpen(false)} className="text-[11px] font-semibold hover:opacity-80" style={{ color: "#3D35E8" }}>
+            {t("viewAll")}
+          </Link>
         </div>
       </PopoverContent>
     </Popover>

@@ -10,12 +10,12 @@ import { detectStaleData } from "@/lib/jobs/detect-stale-data";
  * everything when it's unset). Run manually or on whatever cadence is chosen:
  *   curl -X POST /api/jobs/detect-stale-data -H "Authorization: Bearer $CRON_SECRET"
  *
- * Stored-data-only: recomputes `data_status` on universities and university_requirements
- * from existing timestamps, no source re-fetch. Does not cover opportunities (no
- * data_status column there; see docs/opportunity-reverification-job-design-2026-08-23.md
- * for that table's own, larger, unbuilt job) or university_deadlines (migration 0074 adds
- * the columns but is not yet applied live). Full reasoning, including what this job
- * structurally cannot detect, is in lib/jobs/detect-stale-data.ts's own top comment.
+ * Stored-data-only: recomputes `data_status` on universities, university_requirements and
+ * university_deadlines from existing timestamps, no source re-fetch. Does not cover
+ * opportunities (no data_status column there; see
+ * docs/opportunity-reverification-job-design-2026-08-23.md for that table's own, larger,
+ * unbuilt job). Full reasoning, including what this job structurally cannot detect, is in
+ * lib/jobs/detect-stale-data.ts's own top comment.
  */
 export async function POST(request: NextRequest) {
   if (!verifyCronRequest(request)) {

@@ -8,29 +8,19 @@ integration checkpoint — history lives in `docs/handoffs/*` and `git log`, not
 it's not itself stale before trusting an ownership claim), and `docs/MASTER-EXECUTION-STRATEGY.md`
 for the enduring product/build direction.**
 
-## ⚠️ `origin/main` is frozen — read this before checking anything against it (2026-09-01 ~15:40 onward)
+## The `origin/main` freeze is over (resolved 2026-09-02 ~00:20)
 
-**`git push origin main` is being refused by the local permission classifier in the integrating
-session.** Not GitHub, not the token, not branch protection (`gh api …/branches/main/protection`
-returns "Branch not protected"), and not a hold — branch pushes work normally throughout. Only
-`main` is refused, and a denied action is not to be routed around.
+The section that used to lead this file warned that `git push origin main` was being refused
+locally, that `origin/main` had been stuck at `cf3efcf9` since 2026-09-01 ~15:40, and that any
+tool reading the remote would confidently report the night had stopped. **That is no longer
+true.** The founder added the permission rule, and `main` has been pushed many times since —
+`origin/main` and local `main` have been level all night.
 
-**Consequence, and it has now misled multiple separate sessions independently:** `origin/main` has
-been stuck at `cf3efcf9` since about 15:40. Local `main` has since accumulated **41 commits** it
-doesn't have. Anything that reads the remote — `git log origin/main`, `merge-base --is-ancestor …
-origin/main`, a fleet monitor polling GitHub — reports that the night stopped, and reports it
-confidently. **Check the local ref**: `git -C <checkout> log --oneline -1 main`, and
-`git rev-list --count origin/main..main` for the current size of the gap.
-
-Two knock-on rules while this holds. **Cut new branches from local `main`, not `origin/main`** —
-the latter is missing every merge since 15:40, including possibly your own. And **`git diff
-origin/main <branch>` is meaningless** for a branch cut before the freeze: two-dot diffs render
-`main`'s own progress as if it were the branch's content (this made one branch look like it
-shipped 1,669 lines of code it does not contain). Use `main...branch` (three dots) or
-`git merge-tree --write-tree main <branch>`.
-
-Only the founder can clear this — by pushing `main` themselves or widening the permission. It is
-item 0-bis on the launch plan.
+Kept as a short note rather than deleted, because the warning misled several separate sessions
+independently while it held, and the two rules it produced are still generally good practice
+here: cut branches from a ref you have actually just fetched, and prefer `main...branch`
+(three dots) or `git merge-tree` over a two-dot diff, which renders `main`'s own progress as
+if it were the branch's content.
 
 ## Measurement provenance (read this before trusting any number below)
 
@@ -41,21 +31,22 @@ item 0-bis on the launch plan.
   project (`qtcvcflzxbuagvvwahhu`) via the Supabase MCP connector. Re-measure before trusting it
   for anything more than a same-day approximation — every count below was queried fresh for this
   checkpoint, none carried forward from the prior one.
-- **Deployment state is not measured here at all.** Whether the app is actually deployed, whether
-  the Vercel cron schedules below are actually firing, whether the founder's own `.env.local`
-  holds real credentials — none of that is visible from a git checkout or from this session's
-  Supabase MCP access, which is a separate credential path from the app's own runtime env vars.
-  Flagged explicitly wherever it matters below rather than assumed either way.
+- **Deployment state IS measured, as of 2026-09-02.** It previously said it wasn't. It is now,
+  and the answer changed the shape of several other findings: **ORYN has never been deployed.**
+  The Vercel account holds zero projects, so no cron has ever fired — see
+  `docs/nothing-scheduled-has-ever-run-2026-09-02.md`. Build and integration readiness were
+  also measured directly (`npm run build` exits 0; Tavily and College Scorecard report missing
+  credentials).
 
 | What | Value |
 |---|---|
-| Code measured against | local `main` @ `0cefab01` (`origin/main` frozen at `cf3efcf9` — see warning above; 41 commits behind) |
-| Code measurement timestamp | **2026-09-01 ~17:55** |
-| Prior checkpoint | `9ca9371d`, 2026-09-01 evening — **44 commits / 14 merges since**, not individually reconstructed here; see `git log 9ca9371d..main` for the full record |
-| Gate on this checkpoint's commit | lint clean · typecheck clean · **211 files / 3,086 tests** · production build compiles |
-| Live DB measured against | `oryn-qa-scratch` (`qtcvcflzxbuagvvwahhu`), via Supabase MCP, 2026-09-01, this checkpoint |
-| Which migrations are actually live | **See `docs/migration-state.md`, not the Migrations section below** — that section's own "not applied" list was wrong by 2026-09-02 for four of five entries (re-probed directly); `migration-state.md` is the current, corrected table and also names a real live gap (`0048`) this checkpoint missed entirely |
-| RLS re-verified live | 2026-09-01, this checkpoint: 78/78 `public` tables have RLS enabled, unchanged from prior checkpoint |
+| Code measured against | `main` @ `4a3f3573`, **pushed** — `origin/main` level |
+| Code measurement timestamp | **2026-09-02 ~02:10** |
+| Prior checkpoint | `0cefab01`, 2026-09-01 ~17:55 — **12 packages merged since**, see `git log 0cefab01..main` |
+| Gate on this checkpoint's commit | lint clean · typecheck clean · **3,243 tests** · production build compiles |
+| Live DB measured against | `oryn-qa-scratch` (`qtcvcflzxbuagvvwahhu`), via Supabase MCP, 2026-09-02 |
+| Which migrations are actually live | **`docs/migration-state.md` is the current, authoritative table** — every migration replayed against empty Postgres and diffed object-by-object against live; also names a real, live gap (`0048`) no prior checkpoint had found, and (added this pass) four live objects — three indexes plus a foreign key — with no migration file anywhere, which a replay cannot reproduce regardless of ledger state. |
+| Deployment | **Never deployed.** Vercel account holds zero projects; no scheduled job has ever run. |
 
 If this file and a handoff doc disagree, this file is newer and wins *for the date stamped
 above*. If this file and a fresh live measurement disagree, the live measurement wins — this
@@ -239,50 +230,56 @@ still enforce the same guarantee structurally, independent of when the live quer
 
 ## Migrations
 
-**Superseded 2026-09-02 — see `docs/migration-state.md` for the current, authoritative
-table.** The paragraph below is kept for its own history (it's what motivated the
-2026-09-02 full re-check, which found this checkpoint's own "not applied" list for
-`0057`/`0059`/`0072`/`0073`/`0074` was already wrong the day it was written), not as a
-current source. Read `migration-state.md` first — it also names a *new* live gap (`0048`)
-this checkpoint never checked for, and corrects `0062`/`0063`'s own file headers, which
-claimed unapplied while being fully live.
+**Superseded, and corrected.** The prior checkpoint probed migrations `0057`–`0074`
+individually against live objects and published an "Applied / Not applied" split. That split
+was **wrong for five files**. On 2026-09-02 all **76** migrations were replayed against an
+empty Postgres and the result diffed object-by-object against live —
+`docs/would-a-fresh-deploy-match-live-2026-09-02.md`. Trust that, not the earlier list.
 
-**Latest applied live, as of this now-superseded checkpoint**: `0071`
-(`calendar_bound_fact_class`). Every migration from `0057` through `0074` was individually
-probed against live schema objects this checkpoint (columns, function grants, indexes,
-table existence, column comments — not the ledger, which has no row for several of the
-ones below that are, in fact, live).
+**A fresh deploy reproduces live almost exactly, with two distinct kinds of exception.**
+Zero replay errors. The live `profiles` guard trigger is `0062` + `0063` applied together,
+reproduced byte-for-byte via `pg_get_functiondef` rather than by paraphrase — both files'
+own headers, which claimed "WRITTEN BUT NOT APPLIED" while being fully live, are corrected
+in place as of the same day. Separately: four live objects (three research-queue indexes,
+one foreign key on `canonical_entity_merges.merged_by`) exist with **no migration file at
+all**, found by this audit and a follow-up constraint sweep — a replay cannot reproduce
+these regardless of ledger state, unlike the ledger-silent-but-tracked migrations below.
 
-**Applied, as of this checkpoint**: `0060` (`opportunity_country_eligibility_confirmed_open`),
-the Security Gate 1 set `0061`–`0065` (admin self-grant guard, `message_reports` forgery guard,
-and related — see `docs/known-issues.md`, which corrects an earlier framing of these as
-founder-gated/unapplied; they are live), `0066` (opportunity language + image columns), `0067`
-(revokes `anon` EXECUTE on `is_blocked_between` — confirmed by privilege check, no ledger row),
-`0068` (target-university null-program dedup index — confirmed by index presence, no ledger
-row), `0070` (documentation-only column comment), `0071`.
+**Genuinely unapplied — five, not the six previously claimed:**
+- `0058` (`social_posts`) — see the warning below.
+- `0048` (`profile_view_visibility_guard`) — a **real, live gap**: any authenticated
+  account can insert a `profile_views` row against an arbitrary profile UUID right now.
+  Found the same day as the rest of this correction. Full detail in `migration-state.md`.
+- `0075` (`deadline_notification_log`), `0076` (`ai_usage` degrade columns), `0077`
+  (`weekly_actions.carried_forward`), all written the same night, all founder-gated as
+  intended. **`0077` is confirmed to have shipped a live outage** (weekly plan generation
+  broke for most students — `getOrCreateWeeklyPlan` writes a column that doesn't exist;
+  being fixed separately) — the sharpest evidence yet that "write migrations, leave them
+  unapplied" needs a second rule: code merged alongside one must degrade, not break,
+  without it.
 
-**Recorded "not applied" here — wrong by the next checkpoint (2026-09-02), re-probed
-directly, all four now confirmed live**: `0057` (YÖK Atlas `kilavuz_kodu` column), `0059`
-(`ucas_code` and three sibling columns, plus two widened CHECK vocabularies — confirmed via
-`pg_get_constraintdef`, not just column presence), `0072` (birth-year change audit trail),
-`0073` (`product_events` RLS policy). `0074` was also re-confirmed live (unchanged
-conclusion, this time via `pg_get_constraintdef`/column default rather than assumed).
-**`0058` is the one that was correctly "not applied" here and still is** — deliberately
-withheld, the social-posts kill switch; still the founder's call, not resettled by any of
-this. **`0048` was not on this checkpoint's list at all and is a real, live gap** — see
-`docs/migration-state.md`. A same-checkpoint commit
-(`fix(migrations): make the five unapplied migrations safe to re-run`) added `if not exists` /
-`drop ... if exists` guards to `0057`, `0072`, and `0073` (`0059` and `0074` already had them)
-— harmless now that all four are confirmed live, and still correct practice for whatever's
-genuinely unapplied as of 2026-09-02 (`0048`, `0075`, `0076`, `0077`, `0078`).
+`0057`, `0059`, `0072`, `0073` and `0074` were listed as "not applied" at the prior
+checkpoint. **All are live.** `0072` in particular was asserted unapplied in two separate
+places (`docs/migration-state.md` and `lib/export/tables.ts`) as of 2026-09-01; it went live
+within the following 24 hours and both were corrected on 2026-09-02.
 
-**One live-state finding that contradicts a currently-open backlog item**: `0069`
-(`drop_ad_hoc_backup_tables`) targets nine specific `_backup_*`/staging tables. None of the
-nine — and no `_backup_*` table of any name — exist in the live database. Combined with `0067`
-and `0068` showing the identical pattern (effect live, no ledger row), the most likely reading
-is that `0069` was applied the same way. `docs/founder-blocked-backlog.md` item 33 still frames
-this as an open decision ("drop them, or move them out") — flagged here, not edited there; see
-**Founder actions required** below.
+> **⚠️ `0058` is a deploy-blocking decision, not a note.** It is entirely absent from live —
+> no tables, triggers, policies or enums. A fresh deployment replays every migration, so it
+> **would create the social-posts feature**, and **AGENTS.md Phase 54 lists social feed and
+> likes as explicitly out of V1 scope.** The first production deploy would therefore switch
+> on a spec-excluded feature as a side effect, with nobody having decided it. Nobody has
+> touched it; the founder decides before deploying.
+
+**The ledger cannot answer "what is applied."** `supabase_migrations.schema_migrations` has
+no row for **26 of the 76** files — and **23 of those 26 are fully live**, applied outside
+the CLI's ledger path. This is not a bounded incident around one block; it spans `0048`–`0059`
+and `0072`–`0076`. Check the objects, never the ledger. Two migration files
+(`0062`, `0063`) still carry a "WRITTEN BUT NOT APPLIED — founder-gated" header while being
+fully applied, so the files describing the live security posture currently assert its
+opposite; a correction pass is in flight.
+
+Also: three indexes exist live with no migration trace at all, on two research-queue tables,
+apparently tuned directly.
 
 ## External service status
 
@@ -322,28 +319,35 @@ with no direct student-facing exposure. RLS coverage: 78/78 `public` tables have
 
 ## Founder actions required
 
-Full detail: `docs/founder-blocked-backlog.md` (39 items, four resolved/struck as of this
-checkpoint). Re-read directly rather than trusting a summary — but three concrete, evidence-
-backed updates from this checkpoint:
+Full detail: `docs/founder-blocked-backlog.md`. Re-read it directly rather than trusting a
+summary — the prior checkpoint found three of the four items it actually checked were stale
+in the file, so "unlikely to have drifted" is a weak assumption here.
 
-1. **Items 30 and 36 are resolved.** Both verified live and struck by a peer session this same
-   day (commit `5c6c740f`): the admin self-grant gap (36) and the `public_profiles` anonymous-
-   read gap (30) are fixed and confirmed, not merely written. The file's own header blockquote
-   still names them as the two highest-priority items — that line is now stale and should be
-   re-ranked by whoever owns the file; not edited here.
-2. **Item 29 (apply migration `0060`) also appears resolved**, per the live column check in
-   **Migrations** above — `0060` is applied. The backlog entry has no strikethrough.
-3. **Item 33 (nine `_backup_*`/staging tables) also appears resolved** — see the `0069` finding
-   in **Migrations** above. Slightly less certain than item 29 (inferred from absence-of-table
-   plus the `0067`/`0068` pattern, not a direct "this migration ran" record), but strong enough
-   to flag rather than sit on.
-4. The remaining 35 items were not individually re-verified this checkpoint. Given three of the
-   four items actually checked turned out to be stale-in-the-file, "unlikely to have drifted"
-   is a weaker assumption here than it would otherwise be — a dedicated pass through that file
-   specifically, the same method used for `docs/known-issues.md`, is the honest way to close
-   this gap, not this document.
-5. Confirm email still off (Supabase dashboard) remains unverifiable from git/MCP — deployment/
-   dashboard state, not a code fact.
+**Three concrete items from 2026-09-02, in priority order. All need the founder; none can be
+done by an agent.**
+
+1. **The founder is not an admin.** Across eleven profiles, exactly one account has
+   `is_admin` — `oryn.qa.a@example.com`, a QA throwaway last used 2026-08-24. The founder's
+   real, active account is on their **school** address, and `requireAdmin()` turns it away.
+   Every spend and credit screen built for them is invisible to them. They cannot fix it
+   in-app either: the column is trigger-guarded, so it needs a service-role SQL run. The
+   statement is in `docs/admin-access-and-0062-divergence-2026-09-02.md`. Secondary question
+   in the same place: whether a fake-email test account should keep the only admin role into
+   a pilot.
+2. **Decide `0058` before deploying** — see the warning under **Migrations**. Deploying
+   replays it and switches on a feature the spec excludes from V1.
+3. **Deploy.** It is the gate four subsystems sit behind, and until now it was one line on
+   the backlog next to a domain and SMTP. Readiness was measured, not assumed: the production
+   build exits 0, and `check:integrations` reports Supabase, Anthropic and OpenAlex healthy
+   with **Tavily and College Scorecard missing** — declared in `.env.local` as empty values,
+   and precisely the dependencies of the two jobs that have never run. `CRON_SECRET` is
+   fail-closed: unset rejects every cron request including Vercel's own, producing a symptom
+   indistinguishable from not having deployed. Full checklist in
+   `docs/nothing-scheduled-has-ever-run-2026-09-02.md`.
+
+Still open from the prior checkpoint and not re-verified here: confirm-email state (Supabase
+dashboard, not visible from git or MCP), and a dedicated pass through
+`founder-blocked-backlog.md` to re-rank it now that several of its top items are done.
 
 ## Next phase
 

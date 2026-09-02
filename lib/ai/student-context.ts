@@ -156,9 +156,17 @@ async function getTargetUniversitiesForContext(
  * Compact, structured context for the AI Advisor and weekly-plan generator (spec 8.1) —
  * deliberately NOT the whole database. Reuses assembleScoringFacts so this and the
  * scoring engine never drift out of sync on what "the student's data" means.
+ *
+ * `supabaseClient` defaults to the session-scoped client (correct for every real request
+ * this is called from). The scheduled weekly-plan job (lib/plan/generate-for-active-
+ * students.ts) is the one caller with no session to scope to — it passes its own admin
+ * client through here instead. Before this parameter existed, that job silently built
+ * every student's context from nothing (RLS filters a session-less read down to zero rows,
+ * not an error), so it paid for real AI calls that generated plans grounded in an empty
+ * profile rather than the student's actual one.
  */
-export async function buildStudentAdvisorContext(userId: string): Promise<StudentAdvisorContext> {
-  const supabase = await createClient();
+export async function buildStudentAdvisorContext(userId: string, supabaseClient?: Awaited<ReturnType<typeof createClient>>): Promise<StudentAdvisorContext> {
+  const supabase = supabaseClient ?? (await createClient());
   const facts = await assembleScoringFacts(supabase, userId);
   const { dimensions, overallScore } = computeCareerProfile(facts);
   // Loaded once and threaded into the two helpers below that need it, rather than each loading

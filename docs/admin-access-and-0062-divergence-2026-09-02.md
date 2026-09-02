@@ -25,12 +25,51 @@ them. Seeing their own cost data would mean signing in as a test account.
 They also **cannot fix this themselves through the app**: finding 2 below means the column
 is trigger-guarded against exactly that. It needs a service-role SQL run.
 
-**The fix, to run in the Supabase SQL editor:**
+**The fix — and the plain version of it does not work.** This was nearly handed over as a
+one-liner. It would have reported `UPDATE 1` and changed nothing.
+
+The guard trigger reverts `is_admin` whenever `current_user <> 'service_role'`. Measured in
+this project's SQL editor: **`current_user` is `postgres`**, not `service_role`. So the
+obvious command silently no-ops — no error, a success message, and the flag still false.
 
 ```sql
+-- Run all three together, in one go.
+set role service_role;
+
 update profiles set is_admin = true
 where id = (select id from auth.users where email = 'akirik28@my.uaa.k12.tr');
+
+reset role;
 ```
+
+**Then verify, and do not skip this** — the whole point is that this operation can fail
+without saying so:
+
+```sql
+select u.email, p.is_admin
+from profiles p join auth.users u on u.id = p.id
+where u.email = 'akirik28@my.uaa.k12.tr';
+```
+
+Expect `is_admin = true`. **If it still shows `false`, the role switch didn't take** — the
+trigger won, exactly as it did for the plain version. In that case the documented fallback
+is to disable the guard for the duration:
+
+```sql
+alter table profiles disable trigger profiles_00_guard_protected_columns;
+update profiles set is_admin = true
+where id = (select id from auth.users where email = 'akirik28@my.uaa.k12.tr');
+alter table profiles enable trigger profiles_00_guard_protected_columns;
+```
+
+**Re-enabling is not optional.** That trigger is the only thing standing between an ordinary
+student and self-granting admin — the RLS policies are row-scoped with no column
+restriction, and `authenticated` genuinely holds `UPDATE` on `is_admin`. Leaving it disabled
+turns a closed hole into an open one. Run the verification query afterwards either way.
+
+Pre-checked before writing this, so the statement is known to affect exactly one row:
+`auth.users` has **exactly one** match for that address, it has **exactly one** matching
+profile, and its `is_admin` is currently **false**.
 
 And, separately worth deciding rather than leaving: whether `oryn.qa.a` should keep admin.
 A test account with a fake email holding the only admin role is not a posture to carry into

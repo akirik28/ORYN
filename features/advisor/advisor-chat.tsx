@@ -20,6 +20,13 @@ interface LocalMessage {
    * affordance, sourced from the DB on load, not only from transient submit-time state. */
   failed?: boolean;
   errorMessage?: string;
+  /** True when this specific reply was served by the degraded (cheaper) model —
+   * lib/ai/advisor-chat.ts's AdvisorReply.degraded, threaded straight through. Live-session
+   * only: not persisted on the advisor_messages row, so a reply loaded from
+   * `initialMessages` on a fresh page load is never marked degraded even if it originally
+   * was — see docs/upgrade-prompt-design-spec-2026-09-02.md's punch list, item 1, on why
+   * that's a deliberate scope line and not an oversight. */
+  degraded?: boolean;
 }
 
 export function AdvisorChat({
@@ -104,7 +111,11 @@ export function AdvisorChat({
       // this exact path — the server had already persisted and returned the reply while
       // the chat kept showing nothing).
       setMessages((prev) =>
-        prev.map((m) => (m.id === "thinking" ? { id: result.assistantMessageId ?? "thinking", role: "assistant", content: result.content ?? "" } : m))
+        prev.map((m) =>
+          m.id === "thinking"
+            ? { id: result.assistantMessageId ?? "thinking", role: "assistant", content: result.content ?? "", degraded: result.degraded }
+            : m,
+        )
       );
     });
   }
@@ -121,7 +132,9 @@ export function AdvisorChat({
         setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, pending: false, failed: true, errorMessage: result.error } : m)));
         return;
       }
-      setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, pending: false, failed: false, content: result.content ?? "" } : m)));
+      setMessages((prev) =>
+        prev.map((m) => (m.id === messageId ? { ...m, pending: false, failed: false, content: result.content ?? "", degraded: result.degraded } : m)),
+      );
     });
   }
 
@@ -177,7 +190,7 @@ export function AdvisorChat({
                 </p>
               </AdvisorMessage>
             ) : (
-              <AdvisorMessage key={message.id}>
+              <AdvisorMessage key={message.id} meta={message.degraded ? t("degradeNote.label") : undefined}>
                 {/* Server-authored prose. Split on blank lines so multi-paragraph counsel
                     gets real paragraph rhythm instead of one wall behind `whitespace-pre-wrap`. */}
                 {message.content
@@ -188,6 +201,15 @@ export function AdvisorChat({
                       {para}
                     </p>
                   ))}
+                {/* Same copy for every degraded reply, regardless of this student's own usage
+                    pattern — a system-state disclosure, not a personalized pitch (design
+                    spec §2). No "Upgrade"/pricing language: there is no premium tier to sell
+                    yet, only the fact of what happened to this specific reply. */}
+                {message.degraded ? (
+                  <p className="mt-4 border-t border-border pt-3 text-sm text-ink-3">
+                    {t("degradeNote.detail")}
+                  </p>
+                ) : null}
               </AdvisorMessage>
             ),
           )

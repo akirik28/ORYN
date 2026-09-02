@@ -39,6 +39,185 @@ claims category (b) had marked unverifiable, live-data-quality findings in the
 opportunities entry, and one confirmed-merged branch — see the inline **Update, 2026-09-01
 (staleness pass)** / **(second pass)** notes throughout.
 
+**Third staleness pass, 2026-09-02: fourteen packages merged overnight, checked against live
+objects, not against each other's own handoff docs or `supabase_migrations.schema_migrations`
+— the second pass's own lesson, applied deliberately.** That ledger has no row for 26 of 76
+migrations, 23 of which are fully live (`docs/would-a-fresh-deploy-match-live-2026-09-02.md`);
+it cannot answer "is this applied" at all, so nothing below leans on it. Every claim below was
+checked one of two ways: a direct query against `oryn-qa-scratch` for anything that's a fact
+about data or schema, or a direct read of the current file/line in this checkout for anything
+that's a fact about code — never a handoff doc's own summary of either, though several
+handoffs (cited per item) turned out to already contain exactly this kind of direct evidence
+and are trusted on that basis, not on authorship. Three outcomes were used deliberately, per
+instruction: **verified fixed**, **verified still open**, and **could not fully determine —
+here is what was checked**. Nothing below was forced into the first two just to close it out.
+
+**Fixed tonight, verified live or by direct code read — not taken from summary:**
+
+- **The applications page's create button was invisible-disabled, not just missing a CTA.**
+  `NewApplicationDialog`'s no-targets branch rendered a disabled button with the reason as a
+  hover-only `title` tooltip — invisible on any touch device, which is this product's entire
+  audience. **Verified fixed**: read `features/applications/new-application-dialog.tsx`
+  directly — the no-targets branch is now a real `<Link href="/universities">` with the reason
+  as visible text. Same fix also closed the header's "+ Add university" button (shared
+  component) and added an explicit empty-state CTA. Separately, `/applications` had no
+  `mobilePrimary` flag, so mobile users found it two taps deep in a "More" sheet next to
+  Settings, for a page with hard deadlines — **verified fixed**: `nav-items.ts` now carries
+  `mobilePrimary: true` for it, confirmed by direct read. Full detail, including the
+  measured (not assumed) label-truncation check on the resulting 7-column mobile bar:
+  `docs/handoffs/applications-page-rebuild-2026-09-02.md`.
+- **A double-click race inflated `weekly_action_completed` to exactly 2× per real
+  completion** — both Server Action calls from one "complete + reflect" click carried
+  `status: "completed"`, and the analytics event fired on both. **Verified fixed** by direct
+  read of `app/(app)/plan/actions.ts` and `lib/plan/status-patch.ts`: the handler now reads
+  the prior status before writing and only logs on a genuine transition
+  (`shouldLogCompletion`: `next === "completed" && previous !== "completed"`) — a clean,
+  correct fix, confirmed in the code itself, not inferred from a commit message.
+- **`--accent` failed WCAG-AA 3:1 contrast in both themes**, not just one — the dark theme
+  had never been measured and shared the exact same defective value as light. **Verified
+  fixed**: `app/globals.css` now sets the identical corrected `oklch(0.65 0.02 294.5)` in both
+  the light and `.dark` blocks, confirmed by direct read of both.
+- **The AI eval's own leak-detection check had a false positive**, found in the process of
+  actually running it: `findUnassessedDimensionScored`'s sentence-boundary split assumed
+  prose, so a Haiku reply formatted as a markdown bullet list (no `.!?` anywhere) collapsed
+  into one scope and misattributed a score to an unassessed dimension that was never
+  mentioned. **Verified fixed**: `lib/ai/eval/deterministic-checks.ts`'s `CLAIM_BOUNDARY`
+  regex now also splits on blank lines and markdown list markers, confirmed by direct read,
+  with a regression test pinning the exact Haiku output that triggered it. One thing to flag
+  precisely rather than round up to a second, fully independent class: fixing this surfaced a
+  second, narrower defect in the *same* function — an explicit "this change can only remove
+  false positives, never introduce a false negative" safety claim in that file's own comment
+  was itself wrong (a pre-existing test in the same file disproved it) — a caught
+  self-correction during the fix, not a second bug found in the original eval run. Full
+  account: `docs/ai-quality-eval-2026-09-02.md`.
+- **The eval CLI couldn't load `.env.local`** before its own env-reading imports executed,
+  so a real eval run had no credentials regardless of what was in the file. **Verified
+  fixed** by the merge itself landing on main
+  (`oryn/ai-eval-env-load-2026-09-02` → `291e4583`) and by `docs/ai-quality-eval-2026-09-02.md`
+  existing at all — a real 12-case, two-model, two-locale run with real per-call costs, which
+  could not have happened against the unfixed CLI.
+- **The last data-rights export gap and a genuinely-already-closed storage-cleanup item.**
+  `product_events` had no SELECT RLS policy, so it would have exported as permanently empty
+  while reporting success. **Verified fixed**, independently, not just via the fix's own
+  commit: queried `pg_policies` directly — `product_events` carries a live `select own
+  product_events` policy today. That closes all six gaps `DATA_RIGHTS_AUDIT.md` originally
+  named. The storage-cleanup-on-deletion item in that same audit was already fixed and merged
+  before tonight (`4409b65d`) — this pass's real contribution there was correcting the
+  audit doc itself, which still described it as open.
+
+**Checked and genuinely uncertain — real code, no live evidence of it actually firing, and
+here is exactly why:**
+
+- **`deadline` and `profile_update` notification categories now have real, tested writer
+  code** — `lib/deadlines/scan.ts` was substantially rebuilt tonight from a per-threshold
+  notifier into an aggregated digest (`oryn/deadline-notifications-2026-09-02` →
+  `26b7aed3`), and `lib/scoring/persist.ts` gained a `profile_update` notification on a
+  meaningful score movement, excluding a student's very first-ever score
+  (`oryn/profile-update-notifications-2026-09-02` → `c3f025ab`). **But queried the live
+  `notifications` table directly and found zero rows of either category** — only
+  `weekly_plan` (110) and `new_opportunity` (3) exist. This is not a sign either fix is
+  broken. `deadline`'s mechanism is a scheduled job, and — see the new entry below —
+  **no scheduled job has ever run in this environment**; the only two `deadline_reminders`
+  runs on record are from the admin panel's manual trigger button, both on 2026-08-22, both
+  processing zero items. `profile_update` fires on a real user score-crossing action, which
+  requires someone running the app locally against this database at the moment a qualifying
+  edit happens — plausible that hasn't coincided since the code landed tonight, not evidence
+  of a defect. Recorded as **could not fully determine** rather than "verified fixed": the
+  code is real and unit-tested, but nothing here confirms it has ever actually written a
+  notification a student would see.
+- **"Regenerate" no longer deletes completed actions and their reflections — in code that is
+  not yet live.** `lib/plan/persist.ts` now only deletes `not_started`/`in_progress` rows on
+  regeneration and marks everything else `carried_forward` instead (`e55a86f7`) — a real fix
+  for a real, previously-confirmed-live bug (4 completed actions, zero surviving reflections,
+  across two accounts). **But it depends on `supabase/migrations/0077_weekly_actions_carried_forward.sql`**,
+  and that migration's own header says "NOT APPLIED, founder-gated." Checked directly rather
+  than trusting the header — this is exactly the class of claim the 0062/0063 entry below
+  shows can be wrong: queried `information_schema.columns` for `weekly_actions.carried_forward`
+  and got zero rows. Unlike 0062/0063, this one genuinely is unapplied; the header is
+  accurate. What that means for live behavior right now wasn't determined by this pass — the
+  code path that would write `carried_forward` on a live "Regenerate" click has no column to
+  write to today, and whether that surfaces as an error, a silent no-op, or something else
+  wasn't traced. **Could not fully determine**; flagging precisely rather than calling this
+  either fixed or still-broken.
+
+## ORYN has never been deployed — no scheduled job has ever run
+
+**2026-09-02, verified independently against both the Vercel account and `external_sync_jobs`
+directly, not inferred from any one symptom.** The Vercel account holds zero projects; there is
+no production deployment. Per `docs/deployment.md` §6.2, Vercel Cron only fires against
+production, never previews — so this single missing step is the entire explanation for four
+separately-reported "doesn't work" findings: `deadline_reminders` has exactly 2 runs, both
+2026-08-22, both `items_processed: 0`, almost certainly the admin panel's manual trigger button
+rather than cron; `discover_opportunities`, `discover_requirements`, and
+`sync_us_universities` have **zero runs, ever** — confirmed directly against
+`external_sync_jobs`. None of this is a code defect; every one of these four jobs is correctly
+built and correctly scheduled in `vercel.json`, and none of them has ever had the chance to run.
+The admin panel's job-health section (`app/(app)/admin`) will correctly show all four as
+`never_run`/`stale` until this changes — that is the true state, not a bug in that section.
+
+Deploy readiness was checked, not assumed: `npm run build` passes cleanly, and
+`npm run check:integrations` shows Supabase/Anthropic/OpenAlex configured, with Tavily and
+College Scorecard both present as **empty values** in `.env.local` — declared, never filled.
+Deploying today would start all four crons, but `discover_opportunities` (needs Tavily) and
+`sync_us_universities` (needs College Scorecard) would each run green and process nothing,
+indistinguishable from working correctly except via the empty-streak warning the admin panel
+already has for exactly this case. `CRON_SECRET` is fail-closed — unset, every cron request
+including Vercel's own is rejected, which would look identical to not being deployed at all.
+Full detail and the three-part deploy checklist: `docs/nothing-scheduled-has-ever-run-2026-09-02.md`.
+
+## The founder is not an admin — the only admin account is a QA throwaway
+
+**2026-09-02, verified directly against `profiles`/`auth.users`.** Exactly one account has
+`is_admin = true` across eleven profiles: `oryn.qa.a@example.com`, last signed in 2026-08-24 —
+nine days stale as of this check. The founder's real, active account
+(`akirik28@my.uaa.k12.tr`, signed in 2026-09-01) has `is_admin = false`. Every admin surface
+built tonight — including the spend/credit screens built specifically because the founder
+asked to see cost "krediden tut her detaya bakabiliyim" — is invisible to the founder's own
+account; seeing it means signing in as a test account. The founder also cannot fix this
+themselves through the app, since the fix is exactly the column the guard trigger in the entry
+below protects — it needs a service-role SQL run:
+
+```sql
+update profiles set is_admin = true
+where id = (select id from auth.users where email = 'akirik28@my.uaa.k12.tr');
+```
+
+Worth a separate, explicit decision rather than leaving implicit: whether `oryn.qa.a` should
+keep admin once the founder has it — a test account on a fake domain holding the only admin
+role is not a posture to carry into a pilot. Full account:
+`docs/admin-access-and-0062-divergence-2026-09-02.md`.
+
+## Migrations 0062/0063's own comments describe a narrower guard than what's actually live
+
+**2026-09-02, verified directly against `pg_trigger`, re-checked against the current
+migration file at the moment of writing — still true, not yet corrected.**
+`supabase/migrations/0062_profiles_guard_protected_columns.sql` states explicitly, twice —
+once in its header, once inline — "PROTECTED COLUMNS: `is_admin` only. NOT forgotten —
+deliberately narrowed," and its own SQL only guards `is_admin`. The trigger actually running
+in `oryn-qa-scratch` today is the *earlier*, wider version the file's own comment describes
+rejecting: `BEFORE UPDATE OF is_admin, profile_strength_score, completeness_percent`,
+confirmed via `pg_get_triggerdef` directly, not assumed from the file. This is the same
+"the file and the live database disagree" shape the second staleness pass found four times
+over with 0061/0064/0065 and the RLS `public_profiles`/admin-self-grant entries above — except
+those cases were the file describing a fix that was live and the doc failing to say so; this
+one is closer to the opposite risk in shape, though not in current effect: the file describes
+the *narrower*, presumably-intended version, and the *wider* version is what's actually
+enforcing.
+
+**Not currently breaking anything** — checked empirically, not reasoned from the code alone:
+both `profile_strength_score` and `completeness_percent` hold varied, plausible values across
+every active account, and the founder's own profile recalculated 2026-08-31, meaning the
+legitimate writer (`recomputeCareerProfile`, moved to the admin client in migration 0063,
+which the guard trigger exempts) is working correctly under the wider guard too. **What it is
+instead is a trap with no warning sign**: a future change that moves either score write back
+onto an ordinary authenticated client — a reasonable-looking refactor — would get a silent
+revert with no error, and the migration file a developer would read to understand why says the
+opposite of what's actually running. Resolve by making the file and the live trigger agree, in
+whichever direction is judged correct, not by picking a side here. Full account, including how
+this was nearly reported as a live privilege-escalation hole before the trigger (a third
+mechanism neither the RLS policies nor the column grants alone reveal) was found:
+`docs/admin-access-and-0062-divergence-2026-09-02.md`.
+
 ## Needs founder decision — raw dimension identifiers still live in three stored-content tables
 
 **2026-09-01.** A prompt bug let raw `ProfileDimension` values (`career_exploration`,

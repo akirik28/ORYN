@@ -2,6 +2,7 @@ import "server-only";
 
 import { tavilyProvider } from "@/lib/providers/tavily";
 import { extractOpportunityFromContent } from "@/lib/ai/opportunity-extraction";
+import { JobBudgetExceededError } from "@/lib/ai/limits/job-budget";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizeTitle, isDuplicateOpportunity } from "./dedup";
 
@@ -10,6 +11,12 @@ export interface DiscoveryRunResult {
   candidatesFound: number;
   opportunitiesStored: number;
   errors: string[];
+  /** True when this run stopped processing candidates early because
+   *  opportunity_extraction hit its monthly AI budget (lib/ai/limits/job-budget.ts) — a
+   *  clean, expected stop, not a failure. The caller (the discover-opportunities route)
+   *  uses this to skip the remaining queries in the batch rather than let each one waste a
+   *  Tavily search only to hit the same budget check on its first candidate. */
+  stoppedForBudget: boolean;
 }
 
 /**
@@ -26,7 +33,7 @@ export async function discoverOpportunitiesForQuery(query: string): Promise<Disc
   const searchResult = await tavilyProvider.search(query, { maxResults: 6 });
 
   if (!searchResult.success) {
-    return { query, candidatesFound: 0, opportunitiesStored: 0, errors: [searchResult.error.message] };
+    return { query, candidatesFound: 0, opportunitiesStored: 0, errors: [searchResult.error.message], stoppedForBudget: false };
   }
 
   const supabase = createAdminClient();
@@ -35,6 +42,7 @@ export async function discoverOpportunitiesForQuery(query: string): Promise<Disc
     .select("title, organization, official_url");
 
   let stored = 0;
+  let stoppedForBudget = false;
 
   for (const result of searchResult.data) {
     try {
@@ -95,11 +103,18 @@ export async function discoverOpportunitiesForQuery(query: string): Promise<Disc
 
       stored += 1;
     } catch (error) {
+      if (error instanceof JobBudgetExceededError) {
+        // A clean stop, not a failure — see JobBudgetExceededError's own doc comment. Break
+        // rather than continue: every remaining candidate this query would hit the exact
+        // same check, so there's nothing to gain from trying them.
+        stoppedForBudget = true;
+        break;
+      }
       errors.push(error instanceof Error ? error.message : "Unknown error during extraction");
     }
   }
 
-  return { query, candidatesFound: searchResult.data.length, opportunitiesStored: stored, errors };
+  return { query, candidatesFound: searchResult.data.length, opportunitiesStored: stored, errors, stoppedForBudget };
 }
 
 function safeHostname(url: string): string | null {

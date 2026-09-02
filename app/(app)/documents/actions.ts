@@ -77,7 +77,21 @@ export async function uploadEvidence(formData: FormData): Promise<{ error?: stri
   });
   if (insertError) return { error: `Couldn't save evidence record: ${insertError.message}` };
 
-  await supabase.from(linkedTable).update({ evidence_status: "evidence_added" }).eq("id", linkedId).eq("user_id", userId);
+  // Best-effort mirror onto the achievement item itself, same "log rather than fail the
+  // whole action" posture as completeOnboarding()'s secondary writes: the evidence_files
+  // row above is the record that matters, and is already saved. Logged rather than
+  // silently swallowed (as this call was until migration 0079) so a real gap — a table
+  // in EVIDENCE_LINKABLE_TABLES missing this column, as education_records/test_scores
+  // both were — surfaces somewhere instead of nowhere.
+  const { error: statusUpdateError } = await supabase.from(linkedTable).update({ evidence_status: "evidence_added" }).eq("id", linkedId).eq("user_id", userId);
+  if (statusUpdateError) {
+    console.error("[evidence] evidence_files row saved, but updating the linked item's own evidence_status failed", {
+      linkedTable,
+      linkedId,
+      code: statusUpdateError.code,
+      message: statusUpdateError.message,
+    });
+  }
 
   revalidatePath("/documents");
   revalidatePath("/profile");

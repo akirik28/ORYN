@@ -90,6 +90,14 @@
     "notConfiguredTitle": "Supabase henüz yapılandırılmadı",
     "notConfiguredDescription": "Hesapları ve verileri etkinleştirmek için .env.local dosyasında NEXT_PUBLIC_SUPABASE_URL ve NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY değerlerini ayarla. Adım adım talimatlar için API_SETUP.md dosyasına bak."
   },
+  "confirmAge": {
+    "title": "Bir şey daha",
+    "subtitle": "Devam etmeden önce doğduğun yıla ihtiyacımız var — Oryn bunu programlardaki yaş sınırlarını kontrol etmek için kullanıyor ve hesabında eksikti.",
+    "fieldLabel": "Doğduğun yıl",
+    "fieldWhy": "Yıl yeterli — Oryn tam doğum tarihini asla sormaz.",
+    "submit": "Devam et",
+    "invalidYear": "Doğduğun yılı gir."
+  },
   "settings": {
     "view": {
       "description": "Hesabını ve tercihlerini yönet.",
@@ -632,7 +640,9 @@
       "finish": "Bitir",
       "settingUp": "Profilin hazırlanıyor…",
       "schoolStepError": "Devam etmek için ülkeni, okulunu ve müfredatını doldur.",
+      "graduationYearError": "Geçerli bir mezuniyet yılı gir.",
       "birthYearError": "Doğduğun yılı gir — Oryn, programlardaki yaş sınırlarını kontrol etmek için buna ihtiyaç duyar.",
+      "birthYearTooYoung": "Oryn henüz bu yaşın altındaki hesaplara hizmet veremiyor.",
       "pageTitle": "Profilini kur"
     },
     "interests": {
@@ -1034,7 +1044,11 @@
       "tryAgain": "Tekrar dene",
       "placeholderReady": "Oryn'a sor…",
       "placeholderNotConfigured": "Yapay zeka danışmanı henüz yapılandırılmadı",
-      "sendAriaLabel": "Mesajı gönder"
+      "sendAriaLabel": "Mesajı gönder",
+      "degradeNote": {
+        "label": "Daha hafif model",
+        "detail": "Bu yanıt daha hafif bir modelle üretildi — bu ayın danışman bütçesi kullanımda."
+      }
     },
     "usageMeter": {
       "thisMonth": "Bu ay",
@@ -1043,6 +1057,7 @@
       "unknown": "Kaç mesaj kullandığını yükleyemedik. {limit} mesajlık hakkın yine de geçerli ve {date} tarihinde yenilenir.",
       "exhausted": "{limit} mesajın tamamı kullanıldı. {date} tarihinde yenilenir.",
       "low": "Sadece {remaining} mesaj kaldı. {date} tarihinde yenilenir.",
+      "degraded": "Yanıtlar bu ay daha hafif bir modelle üretiliyor. {date} tarihinde yenilenir.",
       "normal": "{remaining} danışman mesajı kaldı. {date} tarihinde yenilenir."
     },
     "strategyPanel": {
@@ -1181,6 +1196,11 @@
       "statusNotice": "Bir dosya yüklemek bu öğeyi \"Kanıt eklendi\" olarak işaretler — bağımsız olarak doğrulanana kadar kendi beyanın sayılır ve yalnızca sana görünür.",
       "upload": "Yükle"
     }
+  },
+  "evidenceStatus": {
+    "evidenceAdded": "Kanıt eklendi",
+    "verified": "Doğrulandı",
+    "notConfirmed": "Doğrulanamadı"
   },
   "search": {
     "view": {
@@ -1396,7 +1416,32 @@
     "profileUpdateTitle": "Profil puanın değişti",
     "profileUpdateItem": "{name} {delta}",
     "completenessMilestoneReached": "Profilin artık %{percent} tamamlandı",
-    "newOpportunityMatch": "Yeni eşleşme: {name}"
+    "newOpportunityMatch": "Yeni eşleşme: {name}",
+    "universityDataChangedTitle": "{name} — bilgiler güncellendi",
+    "universityDataChangedDigestTitle": "{count} üniversite güncellendi",
+    "viewAll": "Tümünü gör",
+    "markAsRead": "Okundu işaretle",
+    "categories": {
+      "all": "Tümü",
+      "deadline": "Son tarihler",
+      "new_opportunity": "Fırsatlar",
+      "weekly_plan": "Haftalık plan",
+      "profile_update": "Profil",
+      "university_data_changed": "Üniversite güncellemeleri",
+      "connection": "Bağlantılar",
+      "message": "Mesajlar"
+    },
+    "page": {
+      "description": "Son tarihler, eşleşmeler ve profilindeki güncellemeler, tek bir yerde.",
+      "emptyAllTitle": "Henüz bir şey yok",
+      "emptyAllDescription": "Son tarihler, yeni fırsatlar ve profil değişiklikleri gerçekleştikçe burada görünecek.",
+      "emptyFilteredTitle": "Bu kategoride bir şey yok",
+      "emptyFilteredDescription": "Farklı bir filtre dene ya da her şeyi görüntüle.",
+      "pagination": "Sayfalama",
+      "previous": "Önceki",
+      "next": "Sonraki",
+      "pageOf": "Sayfa {page} / {total}"
+    }
   },
   "plan": {
     "title": "Bu haftanın planı",
@@ -1573,6 +1618,39 @@
       "sectionTitle": "Bütçe uyarıları",
       "message": "{name}: son 30 günde {amount} (aylık {ceiling} tavanının %{percent}'i)",
       "none": "Hiçbir öğrenci aylık tavanın %80'ini aşmadı."
+    },
+    "reports": {
+      "sectionTitle": "Bildirimler",
+      "openCount": "{count} açık",
+      "reportedBy": "Bildiren: <bold>{reporter}</bold> · Bildirilen: <bold>{reported}</bold>",
+      "unnamedReporter": "Bir öğrenci",
+      "unnamedReported": "bir öğrenci",
+      "noReports": "Henüz bildirim yapılmadı.",
+      "repostNoComment": "(yorum eklenmemiş repost)",
+      "messageMissing": "(bildirilen mesaj artık mevcut değil)",
+      "recommendationMissing": "(bildirilen öneri artık mevcut değil)"
+    },
+    "providers": {
+      "sectionTitle": "Sağlayıcı durumu",
+      "lastOk": "Son başarılı: {time}",
+      "neverSucceeded": "Hiç başarılı olmadı",
+      "lastFailure": "Son hata: {time}",
+      "neverFailed": "Hiç hata vermedi",
+      "noProviders": "Henüz kaydedilmiş sağlayıcı çağrısı yok."
+    },
+    "jobs": {
+      "sectionTitle": "Zamanlanmış görevler",
+      "subtitle": "Her görev kendi satırında — yakın zamanda çalışmamış bir görev, başka bir görevin etkinliğinin arkasına gizlenemez",
+      "notDeployedNote": "ORYN henüz canlıya alınmadı. Zamanlanmış görevler yalnızca canlı bir dağıtıma karşı çalışır, bu yüzden aşağıdaki her görev “Hiç çalıştırılmadı” ya da “Güncel değil” gösteriyor — bu bir altyapı gerçeği, hiçbirinde sorun olduğu anlamına gelmiyor.",
+      "triggerOpportunityDiscovery": "Fırsat taramasını çalıştır",
+      "triggerUniversitySync": "Üniversite senkronizasyonunu çalıştır",
+      "triggerDeadlineScan": "Son tarih taramasını çalıştır",
+      "triggerRequirementDiscovery": "Gereksinim taramasını çalıştır",
+      "itemsProcessed": "{count} işlendi",
+      "ranDuration": "{duration} sürdü",
+      "stillRunning": "hâlâ çalışıyor",
+      "never": "hiç",
+      "emptyStreakWarning": "Son {count} ardışık çalıştırmada 0 öğe işlendi — başarılı sayılıyor ama hiçbir şey yapmıyor. Gerekli bir kimlik bilgisinin eksik olup olmadığını kontrol etmekte fayda var."
     }
   },
   "saved": {

@@ -245,4 +245,27 @@ describe("WeeklyFocus — carried-forward completed actions (migration 0077)", (
     renderWeeklyFocus([action({ status: "completed", carried_forward: true })], tr);
     expect(screen.getByText("Bu hafta tamamlananlar")).toBeInTheDocument();
   });
+
+  /**
+   * SEV, 2026-09-02: migration 0077 is written but not applied live, so a real row from
+   * Supabase during this window comes back with `carried_forward` simply absent from the
+   * object — `undefined`, not `false`. lib/plan/persist.ts's own comment names this as the
+   * chosen degraded behavior: visible-and-interactive beats hidden. Pinned here so nobody
+   * "fixes" this component to guard against undefined and accidentally changes what actually
+   * ships while the migration is unapplied — see that file's SEV comment for the reasoning
+   * this test exists to protect.
+   */
+  test("a row with carried_forward genuinely undefined (migration 0077 unapplied) renders in the active, interactive list — not hidden, not a crash", () => {
+    const completedButUnflagged = { ...action({ id: "done-1", status: "completed", title: "Completed before 0077 landed" }) };
+    // @ts-expect-error — simulating exactly what Supabase returns when the column doesn't
+    // exist: the key is absent, not `false`. Deleting it (rather than typing the object as
+    // `Partial<WeeklyAction>`) keeps every other field honestly required, matching a real row.
+    delete completedButUnflagged.carried_forward;
+
+    renderWeeklyFocus([completedButUnflagged]);
+
+    expect(screen.getByText("Completed before 0077 landed")).toBeInTheDocument();
+    expect(screen.queryByText("Completed this week")).not.toBeInTheDocument(); // not miscategorized into a section that can't exist yet
+    expect(screen.getByRole("button", { name: "Mark as not started" })).toBeInTheDocument(); // still interactive, not read-only
+  });
 });

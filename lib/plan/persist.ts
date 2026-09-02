@@ -18,9 +18,20 @@ export interface WeeklyPlanWithActions {
   actions: WeeklyAction[];
 }
 
-/** Reads this week's plan without generating one. Used by the dashboard — generation only happens through getOrCreateWeeklyPlan / an explicit "regenerate" action, never as a side effect of a page view. */
-export async function getCurrentWeeklyPlan(userId: string): Promise<WeeklyPlanWithActions | null> {
-  const supabase = await createClient();
+/**
+ * Reads this week's plan without generating one. Used by the dashboard — generation only
+ * happens through getOrCreateWeeklyPlan / an explicit "regenerate" action, never as a side
+ * effect of a page view.
+ *
+ * `supabaseClient` defaults to the session-scoped client (every real user-facing caller).
+ * lib/plan/generate-for-active-students.ts (Job D) is the one caller with no session of its
+ * own — without an explicit admin client passed here, this silently reads back zero rows
+ * for every student (RLS filters everything out when auth.uid() is null; it doesn't error),
+ * which made the job think no student ever had a plan yet, on top of the separate
+ * persistence failure getOrCreateWeeklyPlan below has the same fix for.
+ */
+export async function getCurrentWeeklyPlan(userId: string, supabaseClient?: Awaited<ReturnType<typeof createClient>>): Promise<WeeklyPlanWithActions | null> {
+  const supabase = supabaseClient ?? (await createClient());
   const weekStartDate = currentWeekStart();
 
   const { data: plan } = await supabase
@@ -45,16 +56,28 @@ export async function getCurrentWeeklyPlan(userId: string): Promise<WeeklyPlanWi
  * Generates (or regenerates, with force:true) this week's AI plan and persists it —
  * Phase 9. Idempotent per ISO week: calling it twice in the same week without force
  * returns the existing plan rather than burning another AI call.
+ *
+ * `opts.supabaseClient` is the same session-vs-admin choice as getCurrentWeeklyPlan above,
+ * and matters more here: this function calls generateWeeklyPlan (a real, billed Anthropic
+ * call) *before* ever touching `weekly_plans`. Under the job's session-less default, that
+ * call would still succeed and still get logged to ai_usage (lib/ai/usage.ts already uses
+ * its own admin client, independent of this), then the `weekly_plans` upsert below would
+ * fail RLS's `user_id = auth.uid()` check (auth.uid() is null) and throw — real money spent,
+ * nothing saved, every single run. Confirmed live: one gate2-persona account
+ * (96f3274c-f486-4b96-b28d-97d8be50bc3b) has a real, dated weekly_plan ai_usage row from a
+ * manual test of this exact job and zero rows in weekly_plans. Threading the admin client
+ * through fixes both the AI call's context (generateWeeklyPlan -> buildStudentAdvisorContext
+ * -> the same param) and this function's own writes.
  */
-export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boolean }): Promise<WeeklyPlanWithActions> {
+export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boolean; supabaseClient?: Awaited<ReturnType<typeof createClient>> }): Promise<WeeklyPlanWithActions> {
   if (!opts?.force) {
-    const existing = await getCurrentWeeklyPlan(userId);
+    const existing = await getCurrentWeeklyPlan(userId, opts?.supabaseClient);
     if (existing) return existing;
   }
 
-  const supabase = await createClient();
+  const supabase = opts?.supabaseClient ?? (await createClient());
   const weekStartDate = currentWeekStart();
-  const generation = await generateWeeklyPlan(userId);
+  const generation = await generateWeeklyPlan(userId, opts?.supabaseClient);
 
   // No request here (the manual Regenerate action has one, but the dashboard's lazy
   // first-generate and any future scheduled Job D don't), so the locale comes from the
@@ -83,25 +106,63 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
   // an unconditional delete, which erased every reflection written this week along with it
   // (lib/ai/student-context.ts reads reflection_outcome/reflection_note into the advisor's
   // prompt -- the deletion didn't just lose history, it made the advisor forget). Only rows
-  // the student never acted on are cleared now.
+  // the student never acted on are cleared now. `.in(...)` on the delete below is
+  // deliberately the full ActionStatus list minus {not_started, in_progress} rather than
+  // just "completed" -- skipped/expired carry a reflection the same way completed does (no
+  // code path produces them today, but the rule should already be correct the day one does,
+  // not need a second edit). THE DELETE ITSELF IS WHAT PRESERVES COMPLETED WORK, and it
+  // needs no column beyond `status`, which has always existed.
   //
-  // Two steps, not one, and in this order: mark survivors carried_forward BEFORE deleting
-  // the rest, not after. If the delete step below ever fails and throws, a completed row
-  // that's already marked is still correct (idempotent -- re-running this on the next
-  // regenerate attempt marks the same rows the same way); the reverse order would risk
-  // deleting the pending rows and then throwing before the survivors were ever marked,
-  // leaving completed rows silently indistinguishable from a fresh batch until the next
-  // successful regenerate. `.in(...)` here is deliberately the full ActionStatus list minus
-  // {not_started, in_progress} rather than just "completed" -- skipped/expired carry a
-  // reflection the same way completed does (no code path produces them today, but the rule
-  // should already be correct the day one does, not need a second edit).
+  // SEV, 2026-09-02, same day this shipped: `carried_forward` (migration 0077) is written
+  // but NOT applied live -- this project's standing discipline is "write migrations, leave
+  // them unapplied," which makes "unapplied" the NORMAL state for a migration here, not a
+  // temporary gap to code around once. The UPDATE below used to run unconditionally before
+  // the delete, and Postgres validates a statement's SET clause before it ever looks at
+  // WHERE -- so it threw on every call, matched rows or not, the moment `carried_forward`
+  // didn't exist. Only 1 of 8 live plans was for the current week, so almost every student
+  // fell through getCurrentWeeklyPlan -> null -> generation -> this throw: weekly plan
+  // generation, one of the MVP's sixteen required capabilities, was functionally down for
+  // most of the cohort, and the net effect was worse than the bug this package fixed (before,
+  // generation worked and just didn't preserve completed rows on regenerate; after, it didn't
+  // run at all for most students). CEO caught it, verified independently via
+  // information_schema.columns and EXPLAIN before reporting it.
+  //
+  // THE PRINCIPLE FOR THE NEXT PERSON WHO HITS THIS: code paired with an unapplied migration
+  // must degrade, because unapplied is the normal state in this codebase, not a temporary
+  // one -- an UPDATE (or any statement naming a not-yet-live column in a way PostgREST must
+  // validate before running) needs its own defensive handling; `select("*")` already handles
+  // this for reads (see lib/opportunities/persist-matches.ts / lib/ai/student-context.ts's
+  // own comments on the identical shape) because a wildcard only ever returns columns that
+  // actually exist, but there is no equivalent trick for a write -- a write has to name what
+  // it's setting. No live way to check column existence ahead of time either:
+  // information_schema isn't exposed over the PostgREST API this client uses, so a real
+  // presence check would need its own RPC function, new infrastructure this fix doesn't
+  // need. Attempting the write and checking the specific error code is what's actually
+  // available: 42703 is Postgres's own SQLSTATE for undefined_column, not a string match on
+  // a message that could drift, and CEO's own EXPLAIN confirmed the WHERE-independent
+  // failure mode means this is always caught before any row could be touched -- there is no
+  // partial write to reason about.
   const { error: preserveError } = await supabase
     .from("weekly_actions")
     .update({ carried_forward: true })
     .eq("plan_id", plan.id)
     .in("status", ["completed", "skipped", "expired"]);
-  if (preserveError) {
+  const carriedForwardColumnMissing = preserveError?.code === "42703" && preserveError.message?.includes("carried_forward");
+  if (preserveError && !carriedForwardColumnMissing) {
     throw new Error(`Failed to preserve this week's completed actions: ${preserveError.message}`);
+  }
+  if (carriedForwardColumnMissing) {
+    // Not an error -- an expected, degraded-but-working state. Completed actions and their
+    // reflections are still fully preserved by the delete below; they just aren't flagged
+    // carried_forward yet, so features/dashboard/weekly-focus.tsx's `!action.carried_forward`
+    // filter reads every row (including genuinely carried-forward ones) as active/fresh --
+    // a deliberate choice, not an oversight: it means a completed action stays visible and
+    // interactive in the normal list rather than disappearing into a "Completed this week"
+    // section that can't exist yet, which is strictly better than the alternative (hiding it
+    // entirely) and needs no special-case code in that component, since `undefined` is
+    // already falsy. Once 0077 is applied, this branch stops firing and every row starts
+    // reporting its real carried_forward value with no code change required on either side.
+    console.warn("[plan] carried_forward column not yet live (migration 0077 unapplied) — completed actions still preserved, just not distinguishable from a fresh batch until it lands", { planId: plan.id });
   }
 
   await supabase.from("weekly_actions").delete().eq("plan_id", plan.id).in("status", ["not_started", "in_progress"]);
@@ -147,9 +208,11 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
     const admin = tryCreateAdminClient();
     if (admin) {
       // Dedup, same shape as lib/deadlines/scan.ts's notifyIfThresholdCrossed: getOrCreateWeeklyPlan
-      // has exactly two callers (this action's own regenerate, and the dashboard's lazy
-      // first-generate-of-the-week) and neither is a scheduled job a student could be away
-      // from -- so every regeneration re-proposed the identical avoid-for-now title with no
+      // originally had exactly two callers (this action's own regenerate, and the dashboard's
+      // lazy first-generate-of-the-week), neither a scheduled job a student could be away
+      // from -- lib/plan/generate-for-active-students.ts (Job D) is now a third and is
+      // exactly that, but the same per-ISO-week scoping below still holds for it: without
+      // this check, every regeneration re-proposed the identical avoid-for-now title with no
       // check, and student-context.ts's own prompt-assembly reads the 15 most recent
       // unconditionally. Live before this: one student had the same title written 99 times,
       // crowding 14 of 15 "don't repeat this" slots the advisor's prompt is supposed to hold

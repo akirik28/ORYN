@@ -90,6 +90,14 @@
     "notConfiguredTitle": "Supabase isn't configured yet",
     "notConfiguredDescription": "Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env.local to enable accounts and data. See API_SETUP.md for step-by-step instructions."
   },
+  "confirmAge": {
+    "title": "One more thing",
+    "subtitle": "We need your birth year before you can continue — it's how Oryn checks age limits on programs, and it was missing from your account.",
+    "fieldLabel": "Year you were born",
+    "fieldWhy": "The year is enough — Oryn never asks for your full birthday.",
+    "submit": "Continue",
+    "invalidYear": "Enter the year you were born."
+  },
   "settings": {
     "view": {
       "description": "Manage your account and preferences.",
@@ -632,7 +640,9 @@
       "finish": "Finish",
       "settingUp": "Setting up your profile…",
       "schoolStepError": "Fill in your country, school, and curriculum to continue.",
+      "graduationYearError": "Pick a graduation year in the future.",
       "birthYearError": "Enter the year you were born — Oryn needs it to check age limits on programs.",
+      "birthYearTooYoung": "Oryn isn't able to offer accounts below this age yet.",
       "pageTitle": "Set up your profile"
     },
     "interests": {
@@ -1034,7 +1044,11 @@
       "tryAgain": "Try again",
       "placeholderReady": "Ask Oryn…",
       "placeholderNotConfigured": "The AI counselor isn't configured yet",
-      "sendAriaLabel": "Send message"
+      "sendAriaLabel": "Send message",
+      "degradeNote": {
+        "label": "Lighter model",
+        "detail": "This reply used a lighter model — this month's advisor budget is in use."
+      }
     },
     "usageMeter": {
       "thisMonth": "This month",
@@ -1043,6 +1057,7 @@
       "unknown": "We couldn't load how many messages you've used. Your {limit}-message allowance still applies and resets {date}.",
       "exhausted": "All {limit} messages used. Resets {date}.",
       "low": "Only {remaining} left. Resets {date}.",
+      "degraded": "Replies are using a lighter model this month. Resets {date}.",
       "normal": "{remaining} counselor messages left. Resets {date}."
     },
     "strategyPanel": {
@@ -1181,6 +1196,11 @@
       "statusNotice": "Uploading a file marks this item \"Evidence added\" — it's self-reported until independently verified, and only visible to you.",
       "upload": "Upload"
     }
+  },
+  "evidenceStatus": {
+    "evidenceAdded": "Evidence added",
+    "verified": "Verified",
+    "notConfirmed": "Not confirmed"
   },
   "search": {
     "view": {
@@ -1396,7 +1416,32 @@
     "profileUpdateTitle": "Your profile score changed",
     "profileUpdateItem": "{name} {delta}",
     "completenessMilestoneReached": "Your profile is now {percent}% complete",
-    "newOpportunityMatch": "New match: {name}"
+    "newOpportunityMatch": "New match: {name}",
+    "universityDataChangedTitle": "{name} — information updated",
+    "universityDataChangedDigestTitle": "{count} universities updated",
+    "viewAll": "View all",
+    "markAsRead": "Mark read",
+    "categories": {
+      "all": "All",
+      "deadline": "Deadlines",
+      "new_opportunity": "Opportunities",
+      "weekly_plan": "Weekly plan",
+      "profile_update": "Profile",
+      "university_data_changed": "University updates",
+      "connection": "Connections",
+      "message": "Messages"
+    },
+    "page": {
+      "description": "Deadlines, matches, and updates on your profile, in one place.",
+      "emptyAllTitle": "Nothing here yet",
+      "emptyAllDescription": "Deadlines, new opportunities, and profile changes will show up here as they happen.",
+      "emptyFilteredTitle": "Nothing in this category",
+      "emptyFilteredDescription": "Try a different filter, or view everything.",
+      "pagination": "Pagination",
+      "previous": "Previous",
+      "next": "Next",
+      "pageOf": "Page {page} of {total}"
+    }
   },
   "plan": {
     "title": "This week's plan",
@@ -1573,6 +1618,39 @@
       "sectionTitle": "Budget warnings",
       "message": "{name}: {amount} in the last 30 days ({percent}% of the {ceiling} monthly ceiling)",
       "none": "No student is over 80% of the monthly ceiling."
+    },
+    "reports": {
+      "sectionTitle": "Reports",
+      "openCount": "{count} open",
+      "reportedBy": "<bold>{reporter}</bold> reported <bold>{reported}</bold>",
+      "unnamedReporter": "A student",
+      "unnamedReported": "a student",
+      "noReports": "No reports filed yet.",
+      "repostNoComment": "(repost with no added comment)",
+      "messageMissing": "(reported message no longer available)",
+      "recommendationMissing": "(reported recommendation no longer available)"
+    },
+    "providers": {
+      "sectionTitle": "Provider health",
+      "lastOk": "Last OK {time}",
+      "neverSucceeded": "Never succeeded",
+      "lastFailure": "Last failure {time}",
+      "neverFailed": "Never failed",
+      "noProviders": "No provider calls recorded yet."
+    },
+    "jobs": {
+      "sectionTitle": "Scheduled jobs",
+      "subtitle": "One row per job — a job that hasn't run recently can't hide behind another job's activity",
+      "notDeployedNote": "ORYN has not been deployed yet. Scheduled jobs only run against a live deployment, so every job below reads “Never run” or “Stale” — that's an infrastructure fact, not a defect in any of them.",
+      "triggerOpportunityDiscovery": "Run opportunity discovery",
+      "triggerUniversitySync": "Run university sync",
+      "triggerDeadlineScan": "Run deadline scan",
+      "triggerRequirementDiscovery": "Run requirement discovery",
+      "itemsProcessed": "{count} processed",
+      "ranDuration": "ran {duration}",
+      "stillRunning": "still running",
+      "never": "never",
+      "emptyStreakWarning": "0 items processed on the last {count} consecutive runs — succeeding, but not doing anything. Worth checking whether a required credential is missing."
     }
   },
   "saved": {

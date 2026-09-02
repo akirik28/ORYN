@@ -178,6 +178,15 @@ export function WeeklyFocus({ actions }: { actions: WeeklyAction[] }) {
   // active three for the same slots. Active keeps the exact rendering (and index/priority
   // meaning) this component always had; nothing here changes for a week that's never been
   // regenerated, since carried_forward only ever becomes true partway through one.
+  //
+  // Deliberately no null/undefined guard on `action.carried_forward` here, even though
+  // migration 0077 (the column itself) is written but not applied live as of 2026-09-02 --
+  // see lib/plan/persist.ts's own SEV comment. While it's unapplied, every row comes back
+  // with carried_forward simply absent, `!action.carried_forward` is true for all of them,
+  // and every action -- including a genuinely carried-forward one -- lands in `active`, the
+  // normal interactive list, rather than in a "Completed this week" section that can't exist
+  // yet. That's the chosen degraded behavior (visible and interactive beats hidden), and it
+  // falls out of plain JS truthiness with no special-case code required; don't add one.
   const active = actions.filter((action) => !action.carried_forward);
   const carriedForward = actions.filter((action) => action.carried_forward);
 

@@ -35,6 +35,7 @@ describe("scoreAcademics", () => {
             user_id: "u1",
             school_name: "Lincoln High",
             school_entity_id: null,
+            country_entity_id: null,
             country: "US",
             stage: "high_school",
             curriculum: "ap",
@@ -137,14 +138,14 @@ describe("scoreAcademics", () => {
       const withGpaOnly = scoreAcademics(
         facts({
           educationRecords: [
-            { id: "e1", user_id: "u1", school_name: "S", school_entity_id: null, country: "US", stage: "high_school", curriculum: "ap", start_date: null, end_date: null, is_current: true, overall_gpa: 3.5, gpa_scale: 4.0, notes: null, created_at: "", updated_at: "" },
+            { id: "e1", user_id: "u1", school_name: "S", school_entity_id: null, country_entity_id: null, country: "US", stage: "high_school", curriculum: "ap", start_date: null, end_date: null, is_current: true, overall_gpa: 3.5, gpa_scale: 4.0, notes: null, created_at: "", updated_at: "" },
           ],
         })
       );
       const withGpaAndGradedCourses = scoreAcademics(
         facts({
           educationRecords: [
-            { id: "e1", user_id: "u1", school_name: "S", school_entity_id: null, country: "US", stage: "high_school", curriculum: "ap", start_date: null, end_date: null, is_current: true, overall_gpa: 3.5, gpa_scale: 4.0, notes: null, created_at: "", updated_at: "" },
+            { id: "e1", user_id: "u1", school_name: "S", school_entity_id: null, country_entity_id: null, country: "US", stage: "high_school", curriculum: "ap", start_date: null, end_date: null, is_current: true, overall_gpa: 3.5, gpa_scale: 4.0, notes: null, created_at: "", updated_at: "" },
           ],
           courses: [gradedCourse("1", "A*"), gradedCourse("2", "A")],
         })

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getAIProvider } from "./index";
 import { logAIUsage } from "./usage";
 import { selectModelForUser } from "./limits/budget";
+import { assertWithinJobBudget } from "./limits/job-budget";
 
 export const OpportunityCandidateSchema = z.object({
   isRealOpportunity: z
@@ -64,6 +65,15 @@ export async function extractOpportunityFromContent(params: {
   sourceUrl: string;
   content: string;
 }): Promise<{ candidate: OpportunityCandidate; usage: { inputTokens: number; outputTokens: number } }> {
+  // Checked before the AI call, not after: a background job has no per-student cap watching
+  // it (selectModelForUser(null) always returns the ceiling model — correct, there's no
+  // student to protect, but it also means nothing else stops this from running unbounded).
+  // Throws JobBudgetExceededError once this feature is over its monthly figure — see
+  // lib/ai/limits/job-budget.ts for why a job stops rather than degrades, and
+  // lib/opportunities/discover.ts for where this is caught and turned into a clean early
+  // stop rather than a run failure.
+  await assertWithinJobBudget("opportunity_extraction");
+
   const provider = getAIProvider();
   // userId is always null here (a catalog-maintenance background job, not a student's own
   // usage) -- still goes through selectModelForUser rather than assuming env.anthropic.model

@@ -8,9 +8,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * Phase 30 Job E — stale data detection.
  *
  * Recomputes `data_status` (Phase 29: fresh | stale | needs_review | unavailable) for
- * `universities` and `university_requirements` from how long it has been since each row
- * was last substantiated, against a per-table refresh interval (Phase 29: "Deadlines and
- * active opportunities need more frequent refreshes than static institution details").
+ * `universities`, `university_requirements` and `university_deadlines` from how long it has
+ * been since each row was last substantiated, against a per-table refresh interval (Phase
+ * 29: "Deadlines and active opportunities need more frequent refreshes than static
+ * institution details" — `university_deadlines` carries the shortest threshold of the three
+ * for exactly that reason).
  *
  * WHAT THIS JOB IS: a pure, stored-data-only recompute. It reads timestamps already on the
  * row, decides whether the age crosses this table's threshold, and writes `data_status`.
@@ -50,17 +52,18 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * alone — would silently misrepresent exactly the guarantee that design doc exists to make
  * honestly instead.
  *
- * `university_deadlines` is also not in scope, for a narrower reason: migration 0074 gives
- * it the identical `data_status`/`last_checked_at` columns as `university_requirements`
- * ("same enum, same meanings... a reader who knows one table now knows the other") but that
- * migration is written and committed, NOT yet applied to the live project (confirmed via
- * `list_migrations` against qtcvcflzxbuagvvwahhu, 2026-09-01 — the applied list ends at
- * 0071/calendar_bound_fact_class; 0072-0074 are all unapplied). Extending this job to
- * `university_deadlines` is a small, mechanical addition once that migration lands — the
- * same detectStaleRows shape below would cover it — but writing that code against a column
- * that does not exist live yet would either fail at runtime or require speculative branching
- * this file would then have to carry for however long 0074 stays unapplied. Left for
- * whoever applies 0074 (or a follow-up once it has).
+ * `university_deadlines` IS in scope (added 2026-09-02) — migration 0074 gives it the
+ * identical `data_status`/`last_checked_at` columns as `university_requirements` ("same
+ * enum, same meanings... a reader who knows one table now knows the other"), and that
+ * migration turned out to already be live (an earlier version of this comment said it
+ * wasn't, going by `list_migrations`; that tool is unreliable relative to the live
+ * schema — direct-probed and confirmed applied before writing this extension, not trusted
+ * on the earlier report). This job's own scope here is narrow on purpose, the same way it's
+ * narrow for the other two tables: deciding a deadline record is old enough to need
+ * rechecking. It says nothing about whether a specific deadline's VALUE has actually
+ * changed since it was last checked — that is a genuinely different question (an ingest-time
+ * comparator's job, not an age-based sweep's), answered elsewhere in this codebase, not
+ * duplicated here.
  *
  * WHAT THE RECOMPUTE ITSELF DOES AND DOES NOT DO
  *
@@ -71,7 +74,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * split is about something other than age, most likely completeness/confidence at creation
  * — so recomputing `needs_review` rows by age alone would overwrite a real signal with a
  * wrong one). A row already `needs_review` or `unavailable` is read (it counts toward
- * `checked`) but never written.
+ * `checked`) but never written. `university_deadlines` currently has no rows in either state
+ * (measured live, 2026-09-02: all 470 rows are `fresh`) — the protection still applies going
+ * forward, it just has nothing to protect yet.
  *
  * The age reference is the best real timestamp available, in order: `last_checked_at` (set
  * by Job C for US universities on every sync, and by the couple of pipelines that stamp it
@@ -80,22 +85,37 @@ import { createAdminClient } from "@/lib/supabase/admin";
  * this date" field — real provenance, just not this column's usual name for it; the two
  * ingest pipelines behind most of tonight's requirement rows, lib/requirements/ingest.ts and
  * its deadlines sibling, write `retrieved_at` and deliberately do not write
- * `last_checked_at` at all); else `created_at`, which every row has by construction. Never
- * invented, never backfilled — this job writes `data_status` only, and only when the
+ * `last_checked_at` at all); else `created_at`, which every row has by construction.
+ * `university_deadlines` has no `retrieved_at`-equivalent column (migration 0074 added only
+ * `last_checked_at`/`data_status`), so its own fallback is the two-level
+ * `last_checked_at ?? created_at` chain, same as `universities`. Never invented, never
+ * backfilled — this job writes `data_status` only, and only when the
  * recomputed value differs from what is already stored.
  */
 
 // Reasoned starting policy, not a validated one — deliberately shorter than universities'
 // threshold (an admissions requirement changes more often than an institution's name,
-// country or type) and not as short as a deadline would deserve (out of scope here; see
-// above). Adjust freely; nothing else in this codebase depends on these exact numbers.
+// country or type). Adjust freely; nothing else in this codebase depends on these exact
+// numbers.
 export const UNIVERSITY_STALE_AFTER_DAYS = 90;
 export const UNIVERSITY_REQUIREMENT_STALE_AFTER_DAYS = 60;
+
+// Shorter again than requirements — a deadline is the field that goes stale fastest and
+// hurts most when it does (migration 0074's own comment: "Eight UK medicine/dentistry/
+// veterinary targets showed students 13 January when the real date was 15 October"). Picked
+// deliberately, not backed into: live data (2026-09-02) shows all 470 rows created within
+// the last 16 days and zero older than 30, so this number happens to flag nothing on this
+// job's very first run — that's confirmation a 30-day cadence is sane for a batch this
+// recent, not the reason 30 was chosen. A 7-day threshold would have flagged 438 of 470
+// rows simultaneously on day one, which is honest (every one of them genuinely has never
+// been checked) but not a useful first signal — nothing new is learned by flagging a batch
+// for being exactly as unchecked as it always was the moment it was loaded.
+export const UNIVERSITY_DEADLINE_STALE_AFTER_DAYS = 30;
 
 const PAGE_SIZE = 1000;
 
 export interface StaleDataChange {
-  table: "universities" | "university_requirements";
+  table: "universities" | "university_requirements" | "university_deadlines";
   id: string;
   from: DataStatus;
   to: DataStatus;
@@ -195,8 +215,50 @@ export async function detectStaleUniversityRequirements(supabase: SupabaseClient
   return { changes, checked };
 }
 
+interface DeadlineFreshnessRow {
+  id: string;
+  data_status: DataStatus;
+  last_checked_at: string | null;
+  created_at: string;
+}
+
 /**
- * Entry point for the job route. Runs both table scans and returns the shape
+ * Same shape as detectStaleUniversities exactly — two-level fallback
+ * (`last_checked_at ?? created_at`), no `retrieved_at`-equivalent column exists on this
+ * table. 470 rows live as of 2026-09-02, well under the pagination threshold that made
+ * pagination load-bearing for the other two scanners — kept paginated anyway for the same
+ * reason those two are: consistency with an already-correct pattern costs nothing and this
+ * table has already grown once (85 rows added in one batch, 2026-08-31) and will again.
+ */
+export async function detectStaleUniversityDeadlines(supabase: SupabaseClient<Database>, now: Date = new Date()): Promise<{ changes: StaleDataChange[]; checked: number }> {
+  const changes: StaleDataChange[] = [];
+  let checked = 0;
+
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("university_deadlines")
+      .select("id, data_status, last_checked_at, created_at")
+      .order("id", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw new Error(`detectStaleUniversityDeadlines: read failed at offset ${from}: ${error.message}`);
+    const page = (data ?? []) as DeadlineFreshnessRow[];
+    checked += page.length;
+
+    for (const row of page) {
+      const ageReference = row.last_checked_at ?? row.created_at;
+      const next = recomputeDataStatus(row.data_status, ageReference, UNIVERSITY_DEADLINE_STALE_AFTER_DAYS, now);
+      if (next === null) continue;
+      const { error: updateError } = await supabase.from("university_deadlines").update({ data_status: next }).eq("id", row.id);
+      if (updateError) throw new Error(`detectStaleUniversityDeadlines: update failed for ${row.id}: ${updateError.message}`);
+      changes.push({ table: "university_deadlines", id: row.id, from: row.data_status, to: next });
+    }
+    if (page.length < PAGE_SIZE) break;
+  }
+  return { changes, checked };
+}
+
+/**
+ * Entry point for the job route. Runs all three table scans and returns the shape
  * lib/jobs/run-with-tracking.ts expects: `itemsProcessed` is the count that belongs in
  * `external_sync_jobs.items_processed` (rows actually changed — the meaningful outcome,
  * matching deadline-reminders' own `itemsProcessed: notified` rather than a raw scan count),
@@ -204,10 +266,14 @@ export async function detectStaleUniversityRequirements(supabase: SupabaseClient
  */
 export async function detectStaleData(now: Date = new Date()): Promise<{ itemsProcessed: number; result: { changed: number; checked: number; byTable: Record<string, { changed: number; checked: number }> } }> {
   const supabase = createAdminClient();
-  const [universities, requirements] = await Promise.all([detectStaleUniversities(supabase, now), detectStaleUniversityRequirements(supabase, now)]);
+  const [universities, requirements, deadlines] = await Promise.all([
+    detectStaleUniversities(supabase, now),
+    detectStaleUniversityRequirements(supabase, now),
+    detectStaleUniversityDeadlines(supabase, now),
+  ]);
 
-  const changed = universities.changes.length + requirements.changes.length;
-  const checked = universities.checked + requirements.checked;
+  const changed = universities.changes.length + requirements.changes.length + deadlines.changes.length;
+  const checked = universities.checked + requirements.checked + deadlines.checked;
 
   return {
     itemsProcessed: changed,
@@ -217,6 +283,7 @@ export async function detectStaleData(now: Date = new Date()): Promise<{ itemsPr
       byTable: {
         universities: { changed: universities.changes.length, checked: universities.checked },
         university_requirements: { changed: requirements.changes.length, checked: requirements.checked },
+        university_deadlines: { changed: deadlines.changes.length, checked: deadlines.checked },
       },
     },
   };

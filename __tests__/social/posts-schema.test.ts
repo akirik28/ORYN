@@ -80,15 +80,55 @@ describe("migration numbering", () => {
     // earlier than the guard itself would have caught it. 0077
     // (weekly_actions_carried_forward) is the "Regenerate destroys completed actions and
     // their reflections" fix — docs/founder-blocked-backlog.md item 39 — adding the column
-    // that tells a preserved-through-regeneration action apart from a fresh one. 0078
-    // (global_university_discovery_indexes) captures three indexes that were live on
-    // oryn-qa-scratch with no migration anywhere — found by the 2026-09-02 full replay
-    // audit (docs/would-a-fresh-deploy-match-live-2026-09-02.md), which is also why this
-    // comment can say precisely which of 0057-0078 are genuinely unapplied for the first
-    // time: 0048, 0058, 0075, 0076, 0077, and this one — see docs/migration-state.md,
-    // rewritten the same day, rather than trusting any range this comment names as still
-    // current by the time you're reading it.
-    expect(Math.max(...numbers.map(Number))).toBe(78);
+    // that tells a preserved-through-regeneration action apart from a fresh one. It landed
+    // on main while a second, independent 0077 draft (university_notification_log, the
+    // dedupe table university_data_changed's aggregation needs — mirrors
+    // deadline_notification_log's own shape one field wider, a `source` column, since two
+    // independently real events about one university must not collide into one dedupe
+    // slot) was still sitting in a branch — found by running that same every-remote-branch
+    // check before pushing rather than after a rejected push forced it, and renumbered to
+    // 0078 before anyone else collided with it. 0079 (education_test_score_evidence_status)
+    // closes a real gap found auditing the evidence-upload path: education_records and
+    // test_scores were both in EVIDENCE_LINKABLE_TABLES without the evidence_status column
+    // every other evidence-linkable table has had since migration 0004, so
+    // uploadEvidence()'s status-mirroring update always failed for those two, silently
+    // (the write's error was never checked) — confirmed live against oryn-qa-scratch, not
+    // assumed from the migration files. Checked every remote branch (git ls-tree across
+    // refs/remotes/origin/*) and every local worktree's filesystem before claiming this
+    // number, not just this worktree's own listing — the check this comment has been
+    // telling people to run. It landed on main while a second, independent 0079 draft
+    // (statistics_last_changed_and_notification_sources — university_statistics gets the
+    // same last_changed_at universities already had, and 0078's source check widens from
+    // two values to four, 'deadline'/'statistics' added; university_deadlines itself is
+    // deliberately untouched — every write there is a plain insert, nothing ever updates a
+    // row in place, so there is no last_changed_at-style column any writer could advance,
+    // a genuinely larger gap than a missing column) was still sitting in a branch — found
+    // by running that same every-remote-branch check before pushing, and renumbered to
+    // 0080 before anyone else collided with it either.
+    //
+    // 0081 (canonical_entity_merges_merged_by_set_null) is the account-deletion audit's
+    // second finding, and it is a different KIND of gap from every collision above: the
+    // ON DELETE NO ACTION foreign key it re-declares was **never created by any migration
+    // at all**. 0038 declares merged_by as a bare uuid with no `references` clause; the
+    // constraint was added straight against the live database, outside migration history.
+    // A fresh install replaying only tracked migrations would have that column entirely
+    // unconstrained. So 0081 is the first migration that CREATES this FK, not merely the
+    // first to set its delete rule — and it is the fourth known live object with no
+    // migration provenance, after the three untraced research-queue indexes
+    // docs/would-a-fresh-deploy-match-live-2026-09-02.md names. All still unapplied.
+    //
+    // 0082 (global_university_discovery_indexes) is the migration for those three
+    // untraced indexes themselves — global_university_discovery_queue's and
+    // university_profile_verification_queue's own, first drafted as 0078, then 0079, then
+    // 0080, then 0081, each time colliding with another lane's migration landing on `main`
+    // faster than this one could push. Renumbered four times on one branch, not because
+    // anything about the migration itself was wrong — see
+    // docs/migration-state.md's own new "object live, no migration anywhere" category,
+    // which groups these three indexes with 0081's FK finding above as the sharper
+    // sibling of the ledger-silence problem the rest of this comment documents: a replay
+    // reproduces a ledger-silent-but-tracked migration; it cannot reproduce an object with
+    // no migration file at all, for either reason. Still unapplied.
+    expect(Math.max(...numbers.map(Number))).toBe(82);
   });
 });
 

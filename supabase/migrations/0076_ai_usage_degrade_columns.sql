@@ -23,15 +23,15 @@
 -- taxonomy has settled from real usage.
 
 alter table public.ai_usage
-  add column degraded boolean not null default false,
-  add column degrade_reason text;
+  add column if not exists degraded boolean not null default false,
+  add column if not exists degrade_reason text;
 
 comment on column public.ai_usage.degraded is
   'True when this call used a cheaper model than ANTHROPIC_MODEL because the user was at or over their monthly budget target (lib/ai/limits/budget.ts). Default false, not backfilled for pre-migration rows -- see this file''s own header for why that default is honest here rather than a guess.';
 comment on column public.ai_usage.degrade_reason is
   'lib/ai/limits/budget.ts''s ModelSelectionReason for this call, verbatim, only when degraded=true. Plain text, not an enum -- see this file''s own header.';
 
-create index ai_usage_degraded_idx on public.ai_usage(user_id, created_at desc) where degraded;
+create index if not exists ai_usage_degraded_idx on public.ai_usage(user_id, created_at desc) where degraded;
 
 -- Makes user_id's contract explicit rather than leaving it to be re-derived from the FK
 -- definition alone -- see docs/handoffs/ai-usage-attribution-audit-2026-09-02.md for the
@@ -46,3 +46,11 @@ create index ai_usage_degraded_idx on public.ai_usage(user_id, created_at desc) 
 -- not by a check this code has to remember to add.
 comment on column public.ai_usage.user_id is
   'NULL means either (a) a background/catalog job with no attributable student -- e.g. opportunity_extraction, requirement_extraction, both by design -- or (b) the referenced profile was deleted (on delete set null). Never means "attribution was lost for a real student call" -- every student-facing feature requires a non-null userId at the type level (lib/ai/*.ts). A per-user budget query is unaffected by NULL rows either way: `user_id = $1` never matches NULL.';
+
+-- Re-run safe (added 2026-09-02). Every statement above is guarded, so applying this file
+-- twice is a no-op rather than an error. Not defensive habit -- docs/deployment.md 0.1
+-- records a real incident where two migrations shared version 0020, `supabase db push`
+-- stopped partway, and the database was left half-migrated *while appearing to have one*.
+-- Recovering from that means re-running the whole sequence, so any file that cannot survive
+-- a second run turns a recoverable stall into a manual repair. Five earlier migrations were
+-- already given these guards for the same reason; these were missed.

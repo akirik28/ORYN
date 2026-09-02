@@ -16,7 +16,9 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { cn } from "@/lib/utils";
 import { Eyebrow } from "@/components/oryn/eyebrow";
 import { EmptyState } from "@/components/oryn/empty-state";
+import { StatusBadge } from "@/components/oryn/status-badge";
 import { groupJourneyByYear, type JourneyEntry, type JourneyKind } from "@/lib/profile/journey";
+import { evidenceStatusPresentation } from "@/lib/profile/evidence-status-presentation";
 import type { Locale } from "@/lib/i18n/config";
 
 const KIND_ICON: Record<JourneyKind, LucideIcon> = {
@@ -51,8 +53,18 @@ const KIND_ICON: Record<JourneyKind, LucideIcon> = {
  */
 export async function JourneyTimeline({ entries }: { entries: JourneyEntry[] }) {
   const t = await getTranslations("profile.journeyTimeline");
+  const tEvidence = await getTranslations("evidenceStatus");
   const locale = await getLocale();
   const groups = groupJourneyByYear(entries);
+
+  /** Resolves the pure presentation mapping's labelKey against this component's own
+   * `tEvidence` — kept here rather than inside evidence-status-presentation.ts because
+   * that function has to stay callable from a Client Component too (AchievementSection),
+   * which resolves translations a different way (useTranslations, not getTranslations). */
+  function resolveEvidenceLabel(status: JourneyEntry["evidenceStatus"]) {
+    const presentation = evidenceStatusPresentation(status);
+    return presentation ? { ...presentation, label: tEvidence(presentation.labelKey) } : null;
+  }
 
   if (groups.length === 0) {
     return <EmptyState icon={Sparkles} title={t("emptyTitle")} description={t("emptyDescription")} />;
@@ -73,7 +85,13 @@ export async function JourneyTimeline({ entries }: { entries: JourneyEntry[] }) 
           {/* One rail per year, so differently-weighted records still read as one spine. */}
           <ul className="mt-6 space-y-0 border-l border-border">
             {group.entries.map((entry) => (
-              <JourneyRow key={entry.id} entry={entry} kindLabel={t(`kindLabels.${entry.kind}`)} locale={locale} />
+              <JourneyRow
+                key={entry.id}
+                entry={entry}
+                kindLabel={t(`kindLabels.${entry.kind}`)}
+                locale={locale}
+                evidenceLabel={resolveEvidenceLabel(entry.evidenceStatus)}
+              />
             ))}
           </ul>
         </section>
@@ -82,7 +100,19 @@ export async function JourneyTimeline({ entries }: { entries: JourneyEntry[] }) 
   );
 }
 
-function JourneyRow({ entry, kindLabel, locale }: { entry: JourneyEntry; kindLabel: string; locale: Locale }) {
+function JourneyRow({
+  entry,
+  kindLabel,
+  locale,
+  evidenceLabel,
+}: {
+  entry: JourneyEntry;
+  kindLabel: string;
+  locale: Locale;
+  /** Pre-resolved (icon/tone/translated label) or null for self_reported — see
+   * lib/profile/evidence-status-presentation.ts for why self_reported renders nothing. */
+  evidenceLabel: { tone: import("@/components/oryn/status-badge").StatusTone; icon: LucideIcon; label: string } | null;
+}) {
   const Icon = KIND_ICON[entry.kind];
   const isStory = entry.weight === "story";
   const isCompact = entry.weight === "compact";
@@ -140,6 +170,10 @@ function JourneyRow({ entry, kindLabel, locale }: { entry: JourneyEntry; kindLab
             {!isStory && !isCompact ? (
               <span className="text-ink-3">· {kindLabel}</span>
             ) : null}
+            {/* self_reported (the default, nearly every item) renders nothing here — see
+                evidence-status-presentation.ts. Only a non-default status ever adds to
+                this line, so a dense year of compact rows doesn't gain a repeated pill. */}
+            {evidenceLabel ? <StatusBadge label={evidenceLabel.label} tone={evidenceLabel.tone} icon={evidenceLabel.icon} /> : null}
           </p>
 
           {/* Only stories carry their description. Everything else stays scannable; the

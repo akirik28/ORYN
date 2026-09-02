@@ -1,9 +1,46 @@
 # Job E — stale data detection (Phase 30)
 
-**Status:** built, gated, not scheduled (deliberately — see below).
+**Status:** built, gated, not scheduled (deliberately — see below). Extended to a third
+table 2026-09-02 — see the update section right below before reading "Scope: 2 tables, not
+3" as current; it describes 2026-09-01's state and is kept for the reasoning, not as today's
+scope.
 **Date:** 2026-09-01. **Files:** `lib/jobs/detect-stale-data.ts`, `app/api/jobs/detect-stale-data/route.ts`,
 `__tests__/jobs/detect-stale-data.test.ts`, plus a one-comment fix to
 `app/api/jobs/deadline-reminders/route.ts` (below).
+
+## Update, 2026-09-02: `university_deadlines` is now a third table, not a deferred one
+
+The "out of scope" reasoning below for `university_deadlines` rested on `list_migrations`
+reporting `0074_deadline_freshness.sql` as unapplied. That tool turned out to be unreliable
+relative to the live schema — confirmed independently twice the same night (this table, and
+migration 0072 during a different package) — see `reference_list_migrations_unreliable_use_direct_probe`
+in memory. Direct-probed before writing the extension: `university_deadlines` genuinely has
+`data_status`/`last_checked_at` live, and has since before this doc's original "not yet
+applied" claim was written.
+
+`detectStaleUniversityDeadlines` now exists, same shape as `detectStaleUniversities`
+(two-level `last_checked_at ?? created_at` fallback — this table has no `retrieved_at`-
+equivalent column). New threshold `UNIVERSITY_DEADLINE_STALE_AFTER_DAYS = 30`, shorter than
+both other tables, reasoned the same way they were: checked live data before picking a
+number rather than guessing. As of 2026-09-02: 470 rows, all `data_status = 'fresh'`, all
+`last_checked_at IS NULL` (migration 0074 deliberately left it unbackfilled — a timestamp
+would assert a check that never happened), `created_at` ranging 2026-08-16 to 2026-08-31 (0
+rows older than 30 days, 7 older than 14, 438 older than 7) — 30 days was picked as a
+reasoned cadence for a field that "goes stale fastest and hurts most when it does" (migration
+0074's own words), not because it happens to flag nothing on this batch; a 7-day threshold
+would have flagged 438 of 470 rows simultaneously on this job's very first run, which is
+honest but not a useful first signal.
+
+**Coordinated directly with the session extending `university_deadlines`' ingest comparator
+in parallel** (detecting when a deadline's *value* changes, distinct from this job's "is it
+old enough to recheck") before writing any code: confirmed this extension needs no new
+column and creates no migration conflict — the two features answer genuinely different
+questions about the same table and don't share any write path.
+
+Everything below this point is the 2026-09-01 original, kept for the scope reasoning that's
+still correct (why `opportunities` stays out, why age-only recomputes can't detect a
+same-timestamp value change) even though its `university_deadlines` section is now
+superseded by the update above.
 
 ## What it does
 

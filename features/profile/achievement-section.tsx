@@ -27,6 +27,9 @@ import { refineAchievement } from "@/app/(app)/profile/actions";
 import type { AchievementRefinement } from "@/lib/ai/refine-achievement";
 import { SectionHeader } from "@/components/oryn/section-header";
 import { EmptyState } from "@/components/oryn/empty-state";
+import { StatusBadge } from "@/components/oryn/status-badge";
+import { evidenceStatusPresentation } from "@/lib/profile/evidence-status-presentation";
+import type { EvidenceStatus } from "@/types/database";
 import { cn } from "@/lib/utils";
 
 interface AchievementSectionProps<T extends { id: string }> {
@@ -42,7 +45,12 @@ interface AchievementSectionProps<T extends { id: string }> {
   // force-dynamic, so build-time prerendering never actually executes the render path
   // either) — found by live-testing an authenticated page load, the first time this
   // codebase has had a real backend to do that against.
-  summaries: Record<string, { title: string; subtitle?: string }>;
+  // evidenceStatus is only present for the 9 tables lib/validation/evidence.ts's
+  // EVIDENCE_LINKABLE_TABLES lists (see app/(app)/profile/page.tsx's summaryMap calls) —
+  // omitted entirely for section types with no evidence concept (Goals, Skills,
+  // Languages, ...). Undefined and "self_reported" render identically (nothing): see
+  // lib/profile/evidence-status-presentation.ts.
+  summaries: Record<string, { title: string; subtitle?: string; evidenceStatus?: EvidenceStatus }>;
   fields: FieldConfig[];
   defaultValues: FormValues;
   onCreate: (values: FormValues) => Promise<{ error?: string }>;
@@ -73,6 +81,7 @@ export function AchievementSection<T extends { id: string }>({
 }: AchievementSectionProps<T>) {
   const t = useTranslations("common");
   const tSection = useTranslations("profile.achievementSection");
+  const tEvidence = useTranslations("evidenceStatus");
   const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -187,10 +196,18 @@ export function AchievementSection<T extends { id: string }>({
         <ul className="divide-y divide-white/45 overflow-hidden rounded-xl border border-white/50 bg-white/35">
           {items.map((item) => {
             const summary = summaries[item.id] ?? { title: tSection("untitled") };
+            const evidence = evidenceStatusPresentation(summary.evidenceStatus);
             return (
               <li key={item.id} className="flex items-center justify-between gap-3 px-4 py-3">
                 <div className="min-w-0">
-                  <p className="truncate font-medium">{summary.title}</p>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <p className="truncate font-medium">{summary.title}</p>
+                    {/* self_reported (nearly every item) shows nothing here — a status
+                        the student sees on every single row stops being information, and
+                        risks reading as "here's what's missing" rather than the neutral
+                        default it actually is. See evidence-status-presentation.ts. */}
+                    {evidence ? <StatusBadge label={tEvidence(evidence.labelKey)} tone={evidence.tone} icon={evidence.icon} /> : null}
+                  </div>
                   {summary.subtitle ? <p className="truncate text-sm text-muted-foreground">{summary.subtitle}</p> : null}
                 </div>
                 <div className="flex shrink-0 items-center gap-1">

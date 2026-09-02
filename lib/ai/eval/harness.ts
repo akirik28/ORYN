@@ -2,7 +2,7 @@ import type { AIProvider } from "@/lib/ai/provider";
 import { ADVISOR_SYSTEM_PROMPT } from "@/lib/ai/advisor-prompt";
 import { formatContextForPrompt } from "@/lib/ai/student-context";
 import { formatOpportunityContext } from "@/lib/ai/opportunity-context";
-import { formatCounselorGrounding, WeeklyPlanSchema, type WeeklyPlanGeneration } from "@/lib/ai/weekly-plan";
+import { formatCounselorGrounding, buildWeeklyPlanInstruction, WeeklyPlanSchema, type WeeklyPlanGeneration } from "@/lib/ai/weekly-plan";
 import { withOutputLanguage } from "@/lib/ai/output-language";
 import { explainCounselorRecommendations, buildCounselorExplanationPrompt, COUNSELOR_EXPLANATION_SYSTEM_PROMPT } from "@/lib/ai/counselor-explain";
 import { dimensionLabel, DIMENSION_ORDER } from "@/lib/scoring/labels";
@@ -18,7 +18,7 @@ import {
   REGRESSION_UNASSESSED_LABELS_EN,
   REGRESSION_UNASSESSED_LABELS_TR,
 } from "./fixtures";
-import type { EvalCase, EvalCaseResult, EvalReport } from "./types";
+import type { EvalCase, EvalCaseFailure, EvalCaseResult, EvalReport } from "./types";
 
 /**
  * Orchestrates one (fixture x target x locale) case: builds the exact prompt the real
@@ -26,22 +26,29 @@ import type { EvalCase, EvalCaseResult, EvalReport } from "./types";
  * calls generateAdvisorReply/generateWeeklyPlan directly), sends it through the given
  * provider, runs the deterministic checks, and optionally the judge.
  *
- * IMPORTANT LIMITATION, stated once here rather than left implicit: buildAdvisorChatPrompt
- * and buildWeeklyPlanPrompt below are a *faithful reconstruction* of what
- * generateAdvisorReply/generateWeeklyPlan currently do, built from the same exported pure
- * pieces those two functions call — not a call into the production functions themselves
- * (which isn't possible without a database; see fixtures.ts). That means this harness can
- * silently drift from the product: if either function's own prompt assembly changes and
- * this file's two builders aren't updated to match, the harness keeps grading a request
- * that no student ever actually receives, and would report a clean pass on production code
- * it is no longer actually exercising. Nothing catches that automatically today. The
- * closest available tripwire is __tests__/ai/weekly-plan.test.ts and the advisor-chat
- * equivalent, which assert on the real functions' own prompt content — a change there with
- * no matching change here is the signal to go re-diff buildWeeklyPlanPrompt/
- * buildAdvisorChatPrompt against the real thing by hand. counselor_explain doesn't have
- * this problem: buildCounselorExplainPrompt below calls the real, exported
- * buildCounselorExplanationPrompt directly, and runCounselorExplain calls
- * explainCounselorRecommendations itself — there is nothing to drift.
+ * IMPORTANT LIMITATION, narrower than it used to be: buildAdvisorChatPrompt below is still
+ * a *faithful reconstruction* of what generateAdvisorReply currently does, built from the
+ * same exported pure pieces that function calls — not a call into the production function
+ * itself (which isn't possible without a database; see fixtures.ts). That means this
+ * harness can silently drift from the product for advisor_chat specifically: if
+ * generateAdvisorReply's own prompt assembly changes and buildAdvisorChatPrompt isn't
+ * updated to match, the harness keeps grading a request that no student ever actually
+ * receives, and would report a clean pass on production code it is no longer actually
+ * exercising. Nothing catches that automatically today — checked while closing the
+ * weekly_plan gap below: __tests__/ai/advisor-chat-usage.test.ts (the only advisor_chat
+ * test file) asserts on token budget and the usage/degraded-flag return shape, not on
+ * ADVISOR_SYSTEM_PROMPT's or generateAdvisorReply's actual prompt text — there is no
+ * tripwire for this one today, not even the "re-diff by hand" kind weekly_plan had before
+ * this fix. A change to generateAdvisorReply's prompt assembly with no matching change to
+ * buildAdvisorChatPrompt below would currently pass every gate silently.
+ *
+ * weekly_plan closed this gap (2026-09-02): buildWeeklyPlanPrompt below now calls
+ * lib/ai/weekly-plan.ts's own exported buildWeeklyPlanInstruction() for the one part that
+ * used to be hand-copied (context/grounding formatting were already shared via
+ * formatContextForPrompt/formatCounselorGrounding) — there is nothing left to drift for
+ * this target. counselor_explain never had this problem: buildCounselorExplainPrompt below
+ * calls the real, exported buildCounselorExplanationPrompt directly, and runCounselorExplain
+ * calls explainCounselorRecommendations itself — there is nothing to drift.
  *
  * Never calls getAIProvider() itself — `provider` always comes from the caller, so a test
  * passes a MockAIProvider and the gated CLI script (scripts/run-ai-eval.ts, the only place
@@ -91,7 +98,7 @@ export function buildAdvisorChatPrompt(evalCase: EvalCase): { system: string; pr
 export function buildWeeklyPlanPrompt(evalCase: EvalCase): { system: string; prompt: string; maxTokens: number } {
   const grounding = formatCounselorGrounding(counselorResultFor(evalCase.fixture.id).recommendations);
   const system = withOutputLanguage(ADVISOR_SYSTEM_PROMPT, evalCase.locale);
-  const prompt = `Here is the student's current context:\n\n${formatContextForPrompt(localizedContext(evalCase.fixture.id, evalCase.locale), evalCase.locale)}${grounding}\n\nGenerate this week's plan: 1-3 highest-impact actions (fewer is fine if that's all that's genuinely high-impact), plus one thing to explicitly avoid prioritizing right now if something stands out. Ground every action in the student's actual gaps and existing work — don't propose generic tasks. Never name the same activity in both "actions" and "avoidForNow" — if you would recommend it, it does not belong in "avoidForNow", and if it belongs in "avoidForNow", do not recommend it.`;
+  const prompt = `Here is the student's current context:\n\n${formatContextForPrompt(localizedContext(evalCase.fixture.id, evalCase.locale), evalCase.locale)}${grounding}\n\n${buildWeeklyPlanInstruction()}`;
   return { system, prompt, maxTokens: 2048 };
 }
 
@@ -163,10 +170,30 @@ export async function runEvalCase(provider: AIProvider, evalCase: EvalCase, opti
   return { case: evalCase, responseText: text, deterministicFindings, judge, targetUsage, judgeUsage };
 }
 
+/**
+ * Runs every case, and **never lets one failure destroy the run.**
+ *
+ * Before 2026-09-02 this loop was a bare `results.push(await runEvalCase(...))`. A live run
+ * threw on a weekly_plan case — the model omitted a required field twice, which
+ * anthropic-provider.ts's own retry comment documents as a known, pre-existing model
+ * behaviour — and the exception took the whole report with it: every case that had already
+ * succeeded, every judge score already paid for, and the usage total. Roughly $0.20-0.30 of
+ * real spend produced nothing, and the operator could not even say how much precisely,
+ * because the totals are computed at the end.
+ *
+ * A failing case is now data. The run continues, the report carries what succeeded, and the
+ * caller decides whether a partial report is worth reading — which it usually is, since the
+ * expensive part already happened.
+ */
 export async function runEval(provider: AIProvider, cases: readonly EvalCase[], options: { includeJudge: boolean }): Promise<EvalReport> {
   const results: EvalCaseResult[] = [];
+  const failures: EvalCaseFailure[] = [];
   for (const evalCase of cases) {
-    results.push(await runEvalCase(provider, evalCase, options));
+    try {
+      results.push(await runEvalCase(provider, evalCase, options));
+    } catch (error) {
+      failures.push({ case: evalCase, message: error instanceof Error ? error.message : String(error) });
+    }
   }
   const totalUsage = results.reduce(
     (sum, r) => ({
@@ -177,6 +204,7 @@ export async function runEval(provider: AIProvider, cases: readonly EvalCase[], 
   );
   return {
     results,
+    failures,
     deterministicFailureCount: results.filter((r) => r.deterministicFindings.length > 0).length,
     totalUsage,
   };

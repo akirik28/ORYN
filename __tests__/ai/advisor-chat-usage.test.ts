@@ -93,7 +93,8 @@ describe("generateAdvisorReply — usage recording", () => {
 
     const reply = await generateAdvisorReply({ userId: USER_ID, history: [], newMessage: "What next?" });
 
-    expect(reply).toBe("Finish the economics dataset first.");
+    expect(reply.text).toBe("Finish the economics dataset first.");
+    expect(reply.degraded).toBe(false);
     const recorded = usageInserts();
     expect(recorded).toHaveLength(1);
     expect(recorded[0]?.row).toMatchObject({

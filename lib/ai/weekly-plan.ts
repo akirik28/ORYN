@@ -127,9 +127,12 @@ export function formatCounselorGrounding(recommendations: CounselorRecommendatio
  * mode this function already had: no grounding means no cross-check either, not a blocked
  * plan.
  */
-async function buildCounselorGrounding(userId: string): Promise<{ text: string; recommendedTitles: string[] }> {
+async function buildCounselorGrounding(
+  userId: string,
+  supabaseClient?: Parameters<typeof getCounselorRecommendations>[2],
+): Promise<{ text: string; recommendedTitles: string[] }> {
   try {
-    const counselorResult = await getCounselorRecommendations(userId);
+    const counselorResult = await getCounselorRecommendations(userId, undefined, supabaseClient);
     const text = formatCounselorGrounding(counselorResult.recommendations);
     const recommendedTitles = counselorResult.recommendations.filter((r) => RECOMMENDED_CLASSES.includes(r.recommendationClass)).map((r) => r.title);
     return { text, recommendedTitles };
@@ -234,9 +237,31 @@ export function resolvePlanSelfContradiction(plan: WeeklyPlanGeneration, counsel
   return { ...plan, avoidForNow: null };
 }
 
-export async function generateWeeklyPlan(userId: string): Promise<WeeklyPlanGeneration> {
-  const context = await buildStudentAdvisorContext(userId);
-  const { text: counselorGrounding, recommendedTitles } = await buildCounselorGrounding(userId);
+/**
+ * The static half of the weekly-plan user-turn prompt — the instruction sentence that
+ * doesn't depend on any student data. Extracted (2026-09-02, the empty-slot-permission
+ * package) so lib/ai/eval/harness.ts's buildWeeklyPlanPrompt can call this instead of
+ * hand-copying it — the drift risk that file's own header has documented since it was
+ * written: formatContextForPrompt and formatCounselorGrounding were already shared, this
+ * sentence was the one part that wasn't, and it had already silently drifted once (the
+ * harness's copy was missing the Counselor-Core-recommendation sentence below before this
+ * extraction). Pure and synchronous, same "exported so it can't drift" shape as
+ * formatCounselorGrounding above.
+ */
+export function buildWeeklyPlanInstruction(): string {
+  return `Generate this week's plan: 1-3 highest-impact actions (fewer is fine if that's all that's genuinely high-impact), plus, only when something genuinely stands out, one thing to explicitly avoid prioritizing right now. Leave "avoidForNow" null when nothing does — most weeks, for a well-rounded student, nothing will. Inventing a plausible-sounding candidate just to fill that field is worse than leaving it empty: a fabricated warning teaches the student to stop trusting the real ones. Ground every action in the student's actual gaps and existing work — don't propose generic tasks. Never name the same activity in both "actions" and "avoidForNow" — if you would recommend it, it does not belong in "avoidForNow", and if it belongs in "avoidForNow", do not recommend it. This also applies to anything Counselor Core already recommended above, even if you don't put it in "actions" yourself — a Counselor Core recommendation is never a valid answer for "avoidForNow".`;
+}
+
+// `supabaseClient` defaults to the session-scoped client via buildStudentAdvisorContext's
+// and buildCounselorGrounding's own defaults. lib/plan/generate-for-active-students.ts (the
+// scheduled Job D) is the only session-less caller, and passes its admin client through this
+// exact chain -- before this parameter existed, every job-triggered call silently built its
+// prompt from an empty student profile (RLS-filtered reads under a null auth.uid()) while
+// still spending real tokens on a real Anthropic call, logged via ai_usage regardless
+// (lib/ai/usage.ts already uses the admin client, independent of this fix).
+export async function generateWeeklyPlan(userId: string, supabaseClient?: Parameters<typeof buildStudentAdvisorContext>[1]): Promise<WeeklyPlanGeneration> {
+  const context = await buildStudentAdvisorContext(userId, supabaseClient);
+  const { text: counselorGrounding, recommendedTitles } = await buildCounselorGrounding(userId, supabaseClient);
   const provider = getAIProvider();
   // Checked here, not just in principle: this is the exact feature the founder's own
   // measured incident came from (2026-09-02) -- one student regenerating this plan 102
@@ -245,7 +270,7 @@ export async function generateWeeklyPlan(userId: string): Promise<WeeklyPlanGene
 
   const result = await provider.generateStructured({
     system: withOutputLanguage(ADVISOR_SYSTEM_PROMPT, context.student.preferredLanguage),
-    prompt: `Here is the student's current context:\n\n${formatContextForPrompt(context, context.student.preferredLanguage)}${counselorGrounding}\n\nGenerate this week's plan: 1-3 highest-impact actions (fewer is fine if that's all that's genuinely high-impact), plus one thing to explicitly avoid prioritizing right now if something stands out. Ground every action in the student's actual gaps and existing work — don't propose generic tasks. Never name the same activity in both "actions" and "avoidForNow" — if you would recommend it, it does not belong in "avoidForNow", and if it belongs in "avoidForNow", do not recommend it. This also applies to anything Counselor Core already recommended above, even if you don't put it in "actions" yourself — a Counselor Core recommendation is never a valid answer for "avoidForNow".`,
+    prompt: `Here is the student's current context:\n\n${formatContextForPrompt(context, context.student.preferredLanguage)}${counselorGrounding}\n\n${buildWeeklyPlanInstruction()}`,
     schema: WeeklyPlanSchema,
     schemaName: "record_weekly_plan",
     schemaDescription: "Records this week's prioritized action plan for the student.",

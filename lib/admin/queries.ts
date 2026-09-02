@@ -2,6 +2,8 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, ExternalSyncJob, MessageReportStatus } from "@/types/database";
+import { getTranslations } from "next-intl/server";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import { JOB_DEFINITIONS } from "@/lib/jobs/schedule";
 import { summarizeJobHealth, EMPTY_STREAK_THRESHOLD, type JobHealthSummary } from "@/lib/jobs/job-health";
 import { resolveReportedContentPreview } from "@/lib/moderation/content-preview";
@@ -66,8 +68,13 @@ export interface AdminReportRow {
  * Moved verbatim from the old page.tsx, including the "no nested PostgREST embed" reasoning:
  * message_reports has two FKs to profiles, so an embed needs constraint-name disambiguation —
  * fetch-then-zip instead, same convention as lib/universities/queries.ts.
+ *
+ * `locale` defaults to English, same reasoning as lib/admissions/persist.ts's
+ * refreshAdmissionOutlook — only affects the three "no longer available"/repost-placeholder
+ * fallback strings below, nothing persisted.
  */
-export async function getReports(admin: SupabaseClient<Database>): Promise<AdminReportRow[]> {
+export async function getReports(admin: SupabaseClient<Database>, locale: Locale = DEFAULT_LOCALE): Promise<AdminReportRow[]> {
+  const t = await getTranslations({ locale, namespace: "admin.reports" });
   const { data } = await admin.from("message_reports").select("*").order("created_at", { ascending: false }).limit(100);
   const reports = data ?? [];
 
@@ -90,7 +97,7 @@ export async function getReports(admin: SupabaseClient<Database>): Promise<Admin
   const recommendationById = new Map((recommendationsRes.data ?? []).map((r) => [r.id, r.body]));
   // A repost with no commentary has a null body — still reportable content (it rebroadcasts
   // the original), so it needs a preview label rather than the "no longer available" one.
-  const postById = new Map((postsRes.data ?? []).map((p) => [p.id, p.body ?? "(repost with no added comment)"]));
+  const postById = new Map((postsRes.data ?? []).map((p) => [p.id, p.body ?? t("repostNoComment")]));
   const removedPostIds = new Set((postsRes.data ?? []).filter((p) => p.removed_at !== null).map((p) => p.id));
 
   return reports.map((r) => ({
@@ -103,8 +110,8 @@ export async function getReports(admin: SupabaseClient<Database>): Promise<Admin
     status: r.status,
     createdAt: r.created_at,
     resolutionNote: r.resolution_note,
-    messagePreview: r.message_id ? resolveReportedContentPreview(r.message_id, messageById, "(reported message no longer available)") : null,
-    recommendationPreview: r.recommendation_id ? resolveReportedContentPreview(r.recommendation_id, recommendationById, "(reported recommendation no longer available)") : null,
+    messagePreview: r.message_id ? resolveReportedContentPreview(r.message_id, messageById, t("messageMissing")) : null,
+    recommendationPreview: r.recommendation_id ? resolveReportedContentPreview(r.recommendation_id, recommendationById, t("recommendationMissing")) : null,
     postBody: r.post_id ? (postById.get(r.post_id) ?? null) : null,
     postId: r.post_id,
     postIsRemoved: r.post_id ? removedPostIds.has(r.post_id) : false,

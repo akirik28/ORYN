@@ -20,6 +20,8 @@ import { toFriendlyDbErrorMessage } from "@/lib/errors/friendly-db-error";
 import { resolveEntity } from "@/lib/entities/resolve";
 import { CompleteOnboardingSchema, INTEREST_SUGGESTIONS, type CompleteOnboardingInput } from "@/lib/validation/onboarding";
 import { shouldRunOnboardingSecondaryWrites, writeStudentInterests } from "@/lib/onboarding/complete-onboarding";
+import { meetsMinimumSignupAge } from "@/lib/legal/age-policy";
+import { getTranslations } from "next-intl/server";
 
 const KNOWN_INTERESTS = new Set<string>(INTEREST_SUGGESTIONS);
 
@@ -91,6 +93,21 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
   }
 
   const data = parsed.data;
+
+  // Deliberately separate from the schema's own birthYear bounds above: those catch
+  // typos and implausible values (format), this is the actual minimum-age policy
+  // (lib/legal/age-policy.ts) — a product default pending legal review, not something
+  // to fold into the format check, so it can move on its own without touching that
+  // validator or its own test coverage (__tests__/onboarding/birth-year-collection.test.ts
+  // deliberately asserts the schema stays permissive down to 10 years for exactly this
+  // reason). Checked here, after the schema parse, rather than blocking the request
+  // earlier: everything else about the submission is still worth validating and telling
+  // the student about even when this specific check fails.
+  if (!meetsMinimumSignupAge(data.birthYear)) {
+    const t = await getTranslations("onboarding.wizard");
+    return { error: t("birthYearTooYoung") };
+  }
+
   const supabase = await createClient();
 
   // Idempotency guard: re-derived from the profile row actually on file, never from
