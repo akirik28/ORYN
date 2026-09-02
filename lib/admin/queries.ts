@@ -3,7 +3,7 @@ import "server-only";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, ExternalSyncJob, MessageReportStatus, Opportunity, OpportunityCategory, DataStatus, PlanTier, OpportunityStatus } from "@/types/database";
+import type { Database, ExternalSyncJob, MessageReportStatus, Opportunity, OpportunityCategory, DataStatus, PlanTier, OpportunityStatus, ActionStatus } from "@/types/database";
 import { getTranslations } from "next-intl/server";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import { JOB_DEFINITIONS } from "@/lib/jobs/schedule";
@@ -1545,6 +1545,228 @@ export async function getNeverWrittenColumnChecks(admin: SupabaseClient<Database
       };
     })
   );
+// ---------------------------------------------------------------------------------------------
+// Growth tab: signups, activation, feature census, loop closing, retention
+// (docs/admin-growth-panel-2026-09-02.md). Regenerate-plan and dead-feature-flag WRITES live
+// in app/(app)/admin/actions.ts, not here — this file is reads only (D8).
+// ---------------------------------------------------------------------------------------------
+
+export interface SignupDay {
+  /** UTC calendar day, YYYY-MM-DD — same convention as CostTrendPoint's `date` above. */
+  date: string;
+  count: number;
+}
+
+export interface SignupTimeline {
+  byDay: SignupDay[];
+  total: number;
+  firstSignupAt: string | null;
+  lastSignupAt: string | null;
+  /** Whole days between `lastSignupAt` and now, or null with zero signups. Computed here,
+   *  not in the section component: `Date.now()` inside a .tsx component's render body trips
+   *  this codebase's react-hooks/purity lint rule (a real catch, not a false positive — a
+   *  Server Component's render can be replayed), and a plain .ts query module isn't subject
+   *  to it. The *threshold* for "read this as a seed cohort" is still the section's call,
+   *  not baked in here — this is the raw day count, an objective fact, not a judgment. */
+  daysSinceLastSignup: number | null;
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Signups bucketed by UTC calendar day — deliberately a plain count per day, never a
+ * cumulative or smoothed line computed here. Real data checked live 2026-09-02: 11 signups,
+ * all inside 2026-08-20..08-24, none since — a seed cohort, not a growth curve. That reading
+ * is the section's caption to draw (from `daysSinceLastSignup`), not a boolean this function
+ * invents and could get wrong; the query stays an honest, un-opinionated count either way.
+ */
+export async function getSignupTimeline(admin: SupabaseClient<Database>): Promise<SignupTimeline> {
+  const { data } = await admin.from("profiles").select("created_at").order("created_at", { ascending: true });
+  const rows = data ?? [];
+
+  const byDay = new Map<string, number>();
+  for (const row of rows) {
+    const date = row.created_at.slice(0, 10); // YYYY-MM-DD, UTC — created_at is already UTC ISO
+    byDay.set(date, (byDay.get(date) ?? 0) + 1);
+  }
+
+  const lastSignupAt = rows.length > 0 ? rows[rows.length - 1].created_at : null;
+
+  return {
+    byDay: [...byDay.entries()].map(([date, count]) => ({ date, count })).sort((a, b) => a.date.localeCompare(b.date)),
+    total: rows.length,
+    firstSignupAt: rows[0]?.created_at ?? null,
+    lastSignupAt,
+    daysSinceLastSignup: lastSignupAt ? Math.floor((Date.now() - new Date(lastSignupAt).getTime()) / DAY_MS) : null,
+  };
+}
+
+export interface OnboardingFunnel {
+  signedUp: number;
+  completedOnboarding: number;
+  /** Distinct students with at least one `cv_imported` product_event — reached AI extraction
+   *  on the CV-upload path. Deliberately NOT labeled "completed CV import": the event fires
+   *  at extraction success, before the review/confirm step
+   *  (docs/admin-growth-panel-2026-09-02.md §2) — the actual save happens later, inside
+   *  completeOnboarding. The section must carry that caveat in its own copy, not just here. */
+  reachedCvExtraction: number;
+}
+
+/**
+ * The honest 2-stage (+1 sub-signal) onboarding funnel — not the 5-screen funnel a founder
+ * might expect. Confirmed by tracing every onboarding logEvent call site directly
+ * (2026-09-02): nothing saves to `profiles` incrementally per screen, so a non-completing
+ * profile can't be traced to which screen it stopped on. Building a 5-bar chart here would
+ * imply data that doesn't exist; this function returns only what's actually knowable.
+ */
+export async function getOnboardingFunnel(admin: SupabaseClient<Database>): Promise<OnboardingFunnel> {
+  const [{ data: profiles }, { data: cvEvents }] = await Promise.all([
+    admin.from("profiles").select("id, onboarding_completed"),
+    admin.from("product_events").select("user_id").eq("event_name", "cv_imported"),
+  ]);
+  const rows = profiles ?? [];
+
+  return {
+    signedUp: rows.length,
+    completedOnboarding: rows.filter((p) => p.onboarding_completed).length,
+    reachedCvExtraction: new Set((cvEvents ?? []).map((e) => e.user_id)).size,
+  };
+}
+
+/**
+ * Every event_name a `logEvent(...)` call site in this codebase can actually produce —
+ * exhaustively grepped 2026-09-02 (docs/admin-growth-panel-2026-09-02.md), same discipline as
+ * BELOW_MINIMUM_AGE_EVENT_NAMES above, not a remembered or substring-guessed list. A feature
+ * whose call site logs a name missing from this list would read as "0 events" in the census
+ * below rather than "unknown" — keep this current when a new logEvent call site ships, or
+ * getFeatureCensus's `unknownEventNames` field (below) is what catches the drift instead of
+ * the census silently going stale.
+ */
+export const KNOWN_PRODUCT_EVENT_NAMES = [
+  "advisor_message_sent",
+  "application_updated",
+  "cv_imported",
+  "onboarding_completed",
+  "opportunity_applied",
+  "opportunity_saved",
+  "profile_item_added",
+  "research_project_started",
+  "target_university_added",
+  "ultra_interest_registered",
+  "weekly_action_completed",
+  ...BELOW_MINIMUM_AGE_EVENT_NAMES,
+] as const;
+
+export interface FeatureCensusRow {
+  eventName: string;
+  count: number;
+  /** BELOW_MINIMUM_AGE_EVENT_NAMES exist so a human sees a rare safety event fire — zero is
+   *  the correct, good outcome for those two, not evidence of a dead feature. Every other
+   *  known name is a real product action, where zero is a genuine dead-feature candidate.
+   *  Conflating the two into one flat "unused" list would point someone at deleting a guard
+   *  (docs/admin-growth-panel-2026-09-02.md §3). */
+  category: "product" | "safety_net";
+  deadFlag: { markedBy: string | null; markedAt: string; note: string | null } | null;
+}
+
+export interface FeatureCensus {
+  rows: FeatureCensusRow[];
+  /** Names present in `product_events` this fetch but absent from KNOWN_PRODUCT_EVENT_NAMES
+   *  — a real drift signal (a new logEvent call site shipped and this list wasn't updated),
+   *  surfaced rather than silently dropped from the count. Expected empty; not an error if
+   *  populated, just a prompt to update the list above. */
+  unknownEventNames: string[];
+}
+
+export async function getFeatureCensus(admin: SupabaseClient<Database>): Promise<FeatureCensus> {
+  const [{ data: events }, { data: flags }] = await Promise.all([
+    admin.from("product_events").select("event_name"),
+    admin.from("admin_dead_feature_flags").select("*"),
+  ]);
+
+  const countByName = new Map<string, number>();
+  for (const row of events ?? []) countByName.set(row.event_name, (countByName.get(row.event_name) ?? 0) + 1);
+  const flagByName = new Map((flags ?? []).map((f) => [f.feature_key, f]));
+  const knownNames: readonly string[] = KNOWN_PRODUCT_EVENT_NAMES;
+  const safetyNetNames: readonly string[] = BELOW_MINIMUM_AGE_EVENT_NAMES;
+
+  const rows = KNOWN_PRODUCT_EVENT_NAMES.map(
+    (eventName): FeatureCensusRow => {
+      const flag = flagByName.get(eventName);
+      return {
+        eventName,
+        count: countByName.get(eventName) ?? 0,
+        category: safetyNetNames.includes(eventName) ? "safety_net" : "product",
+        deadFlag: flag ? { markedBy: flag.marked_by, markedAt: flag.marked_at, note: flag.note } : null,
+      };
+    }
+  ).sort((a, b) => b.count - a.count);
+
+  const unknownEventNames = [...countByName.keys()].filter((name) => !knownNames.includes(name));
+
+  return { rows, unknownEventNames };
+}
+
+export interface LoopClosingStats {
+  totalActions: number;
+  totalPlans: number;
+  byStatus: Record<ActionStatus, number>;
+}
+
+/**
+ * The completion count everything else in this panel is downstream of — see the section's
+ * own copy for why this is rendered as a raw fraction ("1 of 25"), never a percentage: at
+ * this n a percent sign claims a precision the sample doesn't support, and it invites "why
+ * is completion so low" when the honest question is "is there enough history to have an
+ * opinion yet."
+ */
+export async function getLoopClosingStats(admin: SupabaseClient<Database>): Promise<LoopClosingStats> {
+  const [{ data: actions }, { count: planCount }] = await Promise.all([
+    admin.from("weekly_actions").select("status"),
+    admin.from("weekly_plans").select("*", { count: "exact", head: true }),
+  ]);
+  const rows = actions ?? [];
+
+  const byStatus: Record<ActionStatus, number> = { not_started: 0, in_progress: 0, completed: 0, skipped: 0, expired: 0 };
+  for (const row of rows) byStatus[row.status] += 1;
+
+  return { totalActions: rows.length, totalPlans: planCount ?? 0, byStatus };
+}
+
+export interface RetentionBuckets {
+  activeToday: number;
+  activeThisWeek: number;
+  stale: number;
+  neverSignedIn: number;
+  total: number;
+}
+
+/**
+ * `auth.users.last_sign_in_at` is a single value, overwritten on every sign-in — not a visit
+ * log (confirmed live 2026-09-02, docs/admin-growth-panel-2026-09-02.md §5). This can bucket
+ * *staleness* (when someone was last seen), never true cohort retention (whether they keep
+ * coming back), which would need a visit history this schema doesn't record. Buckets, not a
+ * curve, on purpose — building a retention curve here would render confidence the data can't
+ * support.
+ */
+export async function getRetentionBuckets(admin: SupabaseClient<Database>): Promise<RetentionBuckets> {
+  const { data } = await admin.auth.admin.listUsers();
+  const users = data?.users ?? [];
+  const now = Date.now();
+
+  const buckets: RetentionBuckets = { activeToday: 0, activeThisWeek: 0, stale: 0, neverSignedIn: 0, total: users.length };
+  for (const user of users) {
+    if (!user.last_sign_in_at) {
+      buckets.neverSignedIn += 1;
+      continue;
+    }
+    const ageDays = (now - new Date(user.last_sign_in_at).getTime()) / DAY_MS;
+    if (ageDays < 1) buckets.activeToday += 1;
+    else if (ageDays < 7) buckets.activeThisWeek += 1;
+    else buckets.stale += 1;
+  }
+
+  return buckets;
 }
 
 // ---------------------------------------------------------------------------------------------

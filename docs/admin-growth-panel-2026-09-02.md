@@ -235,9 +235,11 @@ candidates critically, not accepting the list as-is:
   honest admin-side action isn't "re-run it for them," it's **"reset
   `onboarding_completed` to false so the student can walk through it again themselves"** —
   a real, much smaller action, and a different one from plan regeneration despite being
-  bundled with it in the brief. Worth building only if there's a real recovery scenario for
-  it (a profile stuck in a bad state from a partial/corrupted onboarding write) — no
-  evidence of that scenario existing yet, so not recommending it get built this pass.
+  bundled with it in the brief. Originally flagged as not worth building without a
+  concrete recovery scenario; oryn-a7 approved it explicitly ("take that") on the honest
+  smaller-action framing, so it's built (§ below), gated the same as every other action
+  here — not because a scenario surfaced, but because a low-cost, non-destructive, easily
+  reversible action doesn't need one the way a destructive one would.
 - **An admin-triggered one-off "nudge" notification to a stalled student.** Considered and
   actively rejected, not just omitted. A `notifications` row is cheap to write, but a
   message an admin hand-picks and sends to one specific minor student, based on that
@@ -261,10 +263,85 @@ panel specifically to avoid.
 
 ---
 
-## What's next, pending confirmation
+## Update — built, per oryn-a7's "go" on regenerate-plan, export-cohort, mark-feature-dead
 
-Not started: `lib/admin/queries.ts` additions, any `features/admin/sections/growth-*.tsx`
-component, any `page.tsx` change, any new schema (impersonation log, feature-dead flag).
-4e's chart kit (`99e19ea7`, `/design-preview/admin-charts`) is live and unblocks the visual
-layer, but per both briefs this report comes first. Waiting on oryn-a7 to confirm or
-correct the action list above before writing any of it.
+**oryn-a7 accepted all six calls above, including both rejections, and gave an explicit
+go-ahead for three of the four action candidates** — build regenerate-plan, export-cohort,
+and mark-feature-dead as record+display; impersonation deferred to a founder decision
+(requirements written up below, ready if they say yes).
+
+**Shipped this pass:**
+- Migration `0094_admin_dead_feature_flags.sql` — `admin_dead_feature_flags(feature_key pk,
+  marked_by, marked_at, note)`, RLS enabled with zero policies (service_role/admin client
+  only), same posture as `provider_health`/`external_sync_jobs`. Written, not applied to
+  live — migrations stay founder-gated regardless of who authorized the build
+  ([[project_oryn_fleet_runway_2026_09_02]]'s own recorded boundary).
+- `lib/admin/queries.ts`: `getSignupTimeline`, `getOnboardingFunnel`, `getFeatureCensus`
+  (+ `KNOWN_PRODUCT_EVENT_NAMES`, exhaustively grepped and pinned by
+  `__tests__/admin/known-product-event-names.test.ts` the same way
+  `BELOW_MINIMUM_AGE_EVENT_NAMES` already is), `getLoopClosingStats`, `getRetentionBuckets`.
+  All reads (D8); no mutation lives in this file.
+- `app/(app)/admin/actions.ts`: `regenerateStudentWeeklyPlan`, `resetStudentOnboarding`,
+  `markFeatureDead`, `unmarkFeatureDead`. The plan-regeneration action threads the admin
+  Supabase client through `getOrCreateWeeklyPlan`'s own `supabaseClient` option explicitly
+  — its doc comment documents a confirmed-live bug where the default session-scoped client
+  bills a real AI call and then fails to save under RLS with no session to satisfy it; an
+  admin action has exactly that shape by construction, so this isn't optional hardening.
+  Also confirmed live via `lib/plan/generate-for-active-students.ts`'s own comment: `force:
+  true` deletes the student's already-completed actions for the current week — the section
+  below confirms that in an AlertDialog before the button is clickable, not just in code.
+- `app/api/admin/export-cohort/route.ts` + `lib/admin/cohort-csv.ts` (RFC-4180-minimal
+  escaping, unit tested) — a CSV of `getAdminUserList`'s own data, `tier` column omitted
+  since it's always null today (noise, not data, until the minor-payment legal research
+  settles what a tier attaches to).
+- Six section components under `features/admin/sections/growth-*.tsx`, wired into a new
+  "Growth" tab in `page.tsx` (D1/D2), bilingual strings shipped in both `messages/en.json`
+  and `messages/tr.json` from this commit (D7). Signups render as `BarChart` (4e's kit) —
+  never a line — with a live-computed (not hardcoded) seed-cohort caption that stops
+  appearing the moment real signups resume. Loop-closing and the onboarding funnel render
+  as plain numbers/fractions, deliberately no chart implying a rate or a five-stage shape
+  the data doesn't support.
+- Tests: the event-name guard above, `buildCohortCsv`'s escaping (comma/quote/newline/null
+  fields), and the migration-numbering collision guard
+  (`__tests__/social/posts-schema.test.ts`) bumped 93 → 94 with a header note explaining
+  why, matching that test's own established convention.
+
+**Not built, deliberately:** anything that gates a code path on a dead-feature flag
+(record+display only, per D8 — see the scoping note above), impersonation itself (below).
+
+---
+
+## Impersonation requirements — written up, not built, pending a founder decision
+
+oryn-a7's own words: *"a lane landed in the founder's own authenticated session tonight
+through nothing more than a browser pane reopening, and correctly stopped... building a
+supported path into student sessions, on a product for minors, is a decision the founder
+should make explicitly."* Not scoped to Growth specifically — People tab is at least as
+natural an entry point — written here so the requirements exist in one place before anyone
+builds against them, on either tab.
+
+1. **A required reason field, logged, not just entered and discarded.** The UI must not
+   allow starting an impersonation session without text in this field — "a support request,
+   not curiosity" (oryn-a7's own line) has to be enforced, not just suggested by a label.
+2. **A new audit table** (`admin_impersonation_log` or similar): admin id, target student
+   id, reason, started-at, ended-at. Append-only; nothing about an impersonation session
+   should be editable or deletable after the fact, including by the admin who started it.
+3. **Excluded targets, enforced server-side, not just absent from a picker UI:** at minimum
+   the founder's own account and every other admin account. This is the direct fix for
+   tonight's near-incident, not a hypothetical hardening — a client-side-only exclusion
+   (hiding the founder from a dropdown) would not have prevented what actually happened
+   (`app/(app)/layout.tsx` reopening a browser pane already carrying the founder's real
+   session cookie has nothing to do with any picker).
+4. **Read-only for the duration of the session** — same word oryn-a7 used both times
+   ("read-only"). No write should be possible while impersonating, full stop; this is
+   stricter than the founder's own real session (which can, obviously, write), so the
+   mechanism cannot be "log in as them," it has to be a genuinely separate, write-disabled
+   view built on the `lib/tier/dev-preview.ts` pattern — an override applied at the edge,
+   after the real auth decision, never a second way to actually authenticate as someone.
+5. **A visible, persistent indicator for the duration** — the admin (and, ideally, anyone
+   who might screen-share or screenshot) should never be able to mistake an impersonated
+   view for the admin's own account. Not specified further here; a design decision for
+   whoever builds it, not a research question.
+
+Not estimating build size or committing to who owns it — that's oryn-a7's call once (if)
+the founder says yes, per their own framing.

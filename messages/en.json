@@ -1679,7 +1679,8 @@
       "spend": "Spend",
       "system": "System",
       "people": "People",
-      "catalog": "Catalog"
+      "catalog": "Catalog",
+      "growth": "Growth"
     },
     "activityLog": {
       "sectionTitle": "Recent activity",
@@ -1896,6 +1897,62 @@
       "inSettings": "{name} updated their birth year to {birthYear}",
       "unnamedStudent": "A student",
       "none": "No below-minimum-age signups logged."
+    },
+    "growth": {
+      "signups": {
+        "sectionTitle": "Signups",
+        "totalLabel": "{count} signups total",
+        "chartTitle": "Signups per day",
+        "chartDescription": "One bar per UTC calendar day — no trend line, since a line would imply a rate this data doesn't establish.",
+        "seedCohortNotice": "Every signup so far landed between {firstDate} and {lastDate}, with none since ({daysSinceLast} days ago) — read this as a seed cohort, not a growth trend."
+      },
+      "activation": {
+        "sectionTitle": "Activation",
+        "signedUp": "Signed up",
+        "completedOnboarding": "Completed onboarding",
+        "reachedCvExtraction": "Reached CV extraction",
+        "twoStageNotice": "Onboarding has two real checkpoints today, not five screens — nothing is saved per screen, so a student who didn't finish can't be traced to which screen they stopped on.",
+        "cvCaveat": "Measures AI extraction succeeding, not confirmed CV import — the actual save happens later, when onboarding is completed."
+      },
+      "featureCensus": {
+        "sectionTitle": "Feature usage",
+        "eventColumn": "Event",
+        "countColumn": "Count",
+        "categoryColumn": "Category",
+        "categoryProduct": "Product",
+        "categorySafetyNet": "Safety net — zero is correct",
+        "markDead": "Mark dead",
+        "unmark": "Unmark",
+        "deadBadge": "Confirmed dead",
+        "markedBy": "Marked {time}",
+        "notePlaceholder": "Why? (optional)",
+        "unknownWarning": "{count, plural, one {# event name} other {# event names}} appeared in the data but aren't in the known list — this census may be missing a recently added feature.",
+        "saveError": "Couldn't save that. Please try again."
+      },
+      "loopClosing": {
+        "sectionTitle": "Loop closing",
+        "fraction": "{completed} of {total} recommended actions ever completed",
+        "notEnoughData": "Not enough completed history yet to say whether the advice is working — this is a count, not a rate.",
+        "planCount": "Across {count, plural, one {{formatted} weekly plan} other {{formatted} weekly plans}}"
+      },
+      "retention": {
+        "sectionTitle": "Retention",
+        "activeToday": "Active today",
+        "activeThisWeek": "Active this week",
+        "stale": "Stale (7+ days)",
+        "neverSignedIn": "Never signed in",
+        "notACohortNotice": "This is when each student was last seen, not a return-visit history — true cohort retention isn't computable from what's currently recorded."
+      },
+      "studentActions": {
+        "sectionTitle": "Student actions",
+        "studentColumn": "Student",
+        "regeneratePlan": "Regenerate plan",
+        "regenerateConfirm": "This replaces {name}'s current-week plan, including any actions they've already marked completed. Continue?",
+        "resetOnboarding": "Reset onboarding",
+        "resetOnboardingConfirm": "{name} will see the onboarding wizard again next visit. Nothing they already entered is deleted. Continue?",
+        "exportCohort": "Export cohort (CSV)",
+        "actionError": "Couldn't do that. Please try again."
+      }
     }
   },
   "saved": {

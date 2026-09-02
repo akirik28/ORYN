@@ -356,10 +356,25 @@ describe("migration numbering", () => {
     // queries.ts) -- the schema split stays real underneath, a founder reading "recent
     // activity" never has to know it exists. Still unapplied.
     //
-    // Ceiling is 100, not 98: 0098 and 0100 were written by two lanes in parallel and
-    // merged together, and this guard pins the true maximum on disk rather than the highest
-    // number any one branch knew about.
-    expect(Math.max(...numbers.map(Number))).toBe(100);
+    // Ceiling was 100, not 98, before this branch's own addition below: 0098 and 0100 were
+    // written by two lanes in parallel and merged together, and this guard pins the true
+    // maximum on disk rather than the highest number any one branch knew about.
+    //
+    // admin_dead_feature_flags (record + display only for the growth panel's feature census,
+    // docs/admin-panel-architecture-2026-09-02.md's own D8 read/act boundary — RLS enabled,
+    // zero policies, same posture as provider_health/external_sync_jobs, migration 0014,
+    // since this is operational decision data, not a student's own data) first claimed 0094,
+    // colliding with admin_finance_settings above -- both lanes read main's own max (93) as
+    // the next free number, which is a lower bound on what's claimed, not the claim itself:
+    // 0094-0100 were all separately taken on other unmerged branches by the time this
+    // rebased (0098 admin_actions, 0099 job_budget_overrides, 0100 ai_model_pricing).
+    // Renumbered to 0101, the actual next-free number checked against every remote branch,
+    // not just main, at rebase time. Only this branch's own migration is present in THIS
+    // worktree, so the max on disk here is 101, not 94-100 (those files live on other
+    // branches, not this one) -- if a future session finds this assertion failing against a
+    // lower actual max, that's this branch merging behind others that claimed 94-100, not a
+    // bug in this test.
+    expect(Math.max(...numbers.map(Number))).toBe(101);
   });
 });
 
