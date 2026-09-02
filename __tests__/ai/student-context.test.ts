@@ -1,6 +1,31 @@
 import { describe, expect, test } from "vitest";
-import { formatContextForPrompt, type StudentAdvisorContext } from "@/lib/ai/student-context";
+import { formatContextForPrompt, isBusyModeActive, type StudentAdvisorContext } from "@/lib/ai/student-context";
 import type { EvidenceStatus } from "@/types/database";
+
+/** Phase 65: the exact "marked exam week in November, never unmarked, should not still
+ * read as busy in March" scenario CEO named — confirmed live nobody clears this
+ * automatically (docs/time-budget-busy-mode-audit-2026-09-02.md), fixed here. */
+describe("isBusyModeActive", () => {
+  test("false when busy_mode itself is false, regardless of the until date", () => {
+    expect(isBusyModeActive(false, "2099-01-01", "2026-09-02")).toBe(false);
+  });
+
+  test("true when busy_mode is set with no end date — an open-ended busy period", () => {
+    expect(isBusyModeActive(true, null, "2026-09-02")).toBe(true);
+  });
+
+  test("true when today is before the until date — still genuinely busy", () => {
+    expect(isBusyModeActive(true, "2026-09-10", "2026-09-02")).toBe(true);
+  });
+
+  test("true on the until date itself — the last day still counts", () => {
+    expect(isBusyModeActive(true, "2026-09-02", "2026-09-02")).toBe(true);
+  });
+
+  test("false once today is after the until date — the exact bug this closes: marked in November, never unmarked, must not still read as busy in March", () => {
+    expect(isBusyModeActive(true, "2026-11-15", "2027-03-01")).toBe(false);
+  });
+});
 
 function baseContext(overrides: Partial<StudentAdvisorContext> = {}): StudentAdvisorContext {
   return {
