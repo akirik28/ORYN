@@ -183,17 +183,19 @@ export async function updateVisibility(isPublic: boolean, lookingFor: string | n
  * Order matters and is the whole design. Storage objects are removed FIRST, while the
  * database rows saying which file paths belonged to this student still exist — reversed,
  * there is no way left to know which paths were theirs. Only once that succeeds does the
- * admin client delete the `auth.users` row; 41 of the 42 live tables with a `profiles(id)`
- * reference cascade via `on delete cascade` (independently verified table-by-table against
- * the live database in DATA_RIGHTS_AUDIT.md), so that one call removes the rest of the
- * student's *database* data — with one deliberate exception: `ai_usage.user_id` is
- * `on delete set null`, not cascade (migration 0013_ops.sql), so an `ai_usage` row survives
- * as an anonymized record (feature/provider/model/token counts/cost, no prompt content,
- * no user_id) rather than being removed. DATA_RIGHTS_AUDIT.md treats that as a legitimate
- * way to satisfy an erasure right, not a bug — but it is a real, deliberate divergence from
- * "every table cascades," not a rounding error, and whether anonymize-in-place is
- * sufficient (vs. requiring full deletion) is recorded as an open question in
- * `LAWYER_FLAGS` (lib/legal/content.ts) rather than settled here.
+ * admin client delete the `auth.users` row; 42 of the 43 live tables with a `profiles(id)`
+ * reference cascade via `on delete cascade` (independently re-verified live against
+ * `pg_constraint` in docs/account-deletion-audit-2026-09-02.md, superseding
+ * DATA_RIGHTS_AUDIT.md's original 41-of-42 count from before several later migrations
+ * added more owner tables), so that one call removes the rest of the student's *database*
+ * data — with one deliberate exception: `ai_usage.user_id` is `on delete set null`, not
+ * cascade (migration 0013_ops.sql), so an `ai_usage` row survives as an anonymized record
+ * (feature/provider/model/token counts/cost, no prompt content, no user_id) rather than
+ * being removed. DATA_RIGHTS_AUDIT.md treats that as a legitimate way to satisfy an
+ * erasure right, not a bug — but it is a real, deliberate divergence from "every table
+ * cascades," not a rounding error, and whether anonymize-in-place is sufficient (vs.
+ * requiring full deletion) is recorded as an open question in `LAWYER_FLAGS`
+ * (lib/legal/content.ts) rather than settled here.
  *
  * It does not touch Storage — Postgres FK cascades don't reach it, which is exactly the
  * gap DATA_RIGHTS_AUDIT.md found: this function used to delete the account and leave
@@ -203,6 +205,15 @@ export async function updateVisibility(isPublic: boolean, lookingFor: string | n
  * function must return an honest error and must NOT proceed to deleteUser() — a partial
  * cleanup reported to the student as a complete deletion is worse than a deletion that
  * visibly failed and can be retried.
+ *
+ * The two failure branches below are NOT interchangeable, and must not share a message.
+ * A storage failure means nothing happened — the account is untouched and a retry starts
+ * clean. A deleteUser() failure happens strictly after storage has already succeeded, so
+ * the student's uploaded files are already, irrecoverably gone even though their account
+ * (oddly) still exists — found and left unfixed as "the silent-loss gap" in
+ * docs/account-deletion-audit-2026-09-02.md, fixed here. Telling a 16-year-old
+ * "something went wrong" when their documents are already gone is not honest merely
+ * because it's vague; it has to say which thing actually happened.
  *
  * Irreversible once both steps succeed; the confirmation happens in the UI before this is
  * called.
@@ -227,7 +238,27 @@ export async function deleteMyAccount(): Promise<{ error?: string }> {
   }
 
   const { error } = await admin.auth.admin.deleteUser(session.userId!);
-  if (error) return { error: "Couldn't delete your account. Please try again or contact support." };
+  if (error) {
+    // Not the same failure as the storage branch above, and must not read as one:
+    // removeAllUserStorage() already succeeded by this point, so any uploaded evidence
+    // or CVs are genuinely, irrecoverably gone — while the account itself, oddly, still
+    // exists (docs/account-deletion-audit-2026-09-02.md's "silent-loss gap"). The
+    // ordering stays storage-first regardless — the alternative orphans files against a
+    // deleted account with no owner left to ever reclaim them — but a student reading
+    // "something went wrong" here would have no reason to suspect their files didn't
+    // survive. Retrying is expected to succeed: every bucket is already empty for this
+    // user, so removeAllUserStorage() is a no-op the second time (confirmed live: even a
+    // bucket that doesn't exist yet, like post-media, lists as 200/[] rather than
+    // erroring — see the audit doc), leaving only deleteUser() to actually complete.
+    console.error("[deleteMyAccount] storage cleanup succeeded but deleteUser failed; account was NOT deleted, files were", {
+      userId: session.userId,
+      error,
+    });
+    return {
+      error:
+        "Your uploaded files have already been removed and can't be recovered, but the rest of your account hasn't been deleted yet. Please try again, or contact support if this keeps happening.",
+    };
+  }
 
   const supabase = await createClient();
   await supabase.auth.signOut();

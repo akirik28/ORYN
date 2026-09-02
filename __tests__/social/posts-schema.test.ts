@@ -104,8 +104,19 @@ describe("migration numbering", () => {
     // row in place, so there is no last_changed_at-style column any writer could advance,
     // a genuinely larger gap than a missing column) was still sitting in a branch — found
     // by running that same every-remote-branch check before pushing, and renumbered to
-    // 0080 before anyone else collided with it either. All still unapplied.
-    expect(Math.max(...numbers.map(Number))).toBe(80);
+    // 0080 before anyone else collided with it either.
+    //
+    // 0081 (canonical_entity_merges_merged_by_set_null) is the account-deletion audit's
+    // second finding, and it is a different KIND of gap from every collision above: the
+    // ON DELETE NO ACTION foreign key it re-declares was **never created by any migration
+    // at all**. 0038 declares merged_by as a bare uuid with no `references` clause; the
+    // constraint was added straight against the live database, outside migration history.
+    // A fresh install replaying only tracked migrations would have that column entirely
+    // unconstrained. So 0081 is the first migration that CREATES this FK, not merely the
+    // first to set its delete rule — and it is the fourth known live object with no
+    // migration provenance, after the three untraced research-queue indexes
+    // docs/would-a-fresh-deploy-match-live-2026-09-02.md names. All still unapplied.
+    expect(Math.max(...numbers.map(Number))).toBe(81);
   });
 });
 
