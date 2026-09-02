@@ -259,6 +259,7 @@ describe("Persona F — Turkish/international student, MEB curriculum diploma la
     user_id: "user-1",
     school_name: "Robert College (Turkish/international curriculum)",
     school_entity_id: null,
+    country_entity_id: null,
     country: "Turkiye",
     stage: "high_school",
     curriculum: "turkish_curriculum",
