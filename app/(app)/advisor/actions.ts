@@ -23,12 +23,18 @@ import type { Locale } from "@/lib/i18n/config";
  * text didn't say when, and separately didn't mention that the rest of the product stays
  * open — both fixed here and in the client-side proactive notice AdvisorChat now renders
  * before a student can even reach this fallback path).
+ *
+ * "Oryn AI", not "counselor messages" (2026-09-02, token-metering change): the allowance
+ * this now reports against is shared across seven features, not just chat — a student can
+ * reach it from CV import and weekly-plan generation alone, having sent no chat messages
+ * at all, so a sentence naming "messages" specifically would be confidently wrong exactly
+ * the way this codebase keeps finding and fixing elsewhere.
  */
 function quotaExhaustedMessage(resetsAt: string, locale: Locale): string {
   const date = formatAbsoluteDate(resetsAt, locale, { month: "long", day: "numeric" });
   return locale === "tr"
-    ? `Bu ayki danışman mesajlarını kullandın. Sohbet ${date} tarihinde yenilenir. Oryn'in geri kalanı — planın, fırsatların, üniversitelerin — her zamanki gibi açık.`
-    : `You've used this month's counselor messages. Chat resets on ${date}. The rest of Oryn — your plan, opportunities, universities — stays open as always.`;
+    ? `Bu ay Oryn'in yapay zeka hakkını kullandın. Sohbet ${date} tarihinde yenilenir. Oryn'in geri kalanı — planın, fırsatların, üniversitelerin — her zamanki gibi açık.`
+    : `You've used up this month's Oryn AI allowance. Chat resets on ${date}. The rest of Oryn — your plan, opportunities, universities — stays open as always.`;
 }
 
 // Student-facing strings in this file are additive-locale-branched inline (`tr ?  : `),
@@ -89,14 +95,14 @@ export async function sendAdvisorMessage(
   // The monthly allowance the UI shows has to be the one actually enforced, or the bar is
   // decoration. Checked after the burst limiter because that one is the cheaper guard.
   //
-  // This is a fallback, not the primary way a student learns their messages are used up —
+  // This is a fallback, not the primary way a student learns their allowance is used up —
   // AdvisorChat now disables its own composer once features/advisor/monthly-usage-meter.tsx's
   // same `quota` read says exhausted, so in the ordinary case this branch is unreachable from
   // the UI. It stays a real, complete answer regardless (a Server Action is directly callable
   // with any argument, same discipline as every authorization check in this file) — someone
   // with a stale client state, a second tab, or JS genuinely disabled still gets the honest
   // message, not a lesser one.
-  const quota = await getMonthlyQuota(userId, "advisor_chat");
+  const quota = await getMonthlyQuota(userId);
   if (quota.usedIsKnown && quota.remaining <= 0) {
     return { conversationId: conversationId ?? "", error: quotaExhaustedMessage(quota.resetsAt, locale) };
   }
@@ -280,7 +286,7 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
   // sendAdvisorMessage's identical check above — AdvisorChat now disables the retry
   // button itself once exhausted, so this is the same defence-in-depth backstop, not the
   // usual path.
-  const quota = await getMonthlyQuota(userId, "advisor_chat");
+  const quota = await getMonthlyQuota(userId);
   if (quota.usedIsKnown && quota.remaining <= 0) {
     return { error: quotaExhaustedMessage(quota.resetsAt, locale) };
   }

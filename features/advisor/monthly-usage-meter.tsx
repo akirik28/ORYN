@@ -11,11 +11,14 @@ import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
 import { usageState } from "@/lib/ai/usage-state";
 
 /**
- * This month's counselor allowance, as a real balance rather than decoration — the number
- * shown is the same one app/(app)/advisor/actions.ts enforces, counted from `ai_usage`.
+ * This month's shared Oryn AI allowance, as a real balance rather than decoration — the
+ * number shown is the same one app/(app)/advisor/actions.ts enforces, derived from
+ * `ai_usage` spend across all seven student-facing AI features (lib/ai/monthly-quota.ts's
+ * `PER_STUDENT_AI_FEATURES`), not chat messages alone since the 2026-09-02 token-metering
+ * change.
  *
  * The bar shows what is LEFT, not what has been spent, because everything around it does:
- * the big figure is `remaining`, and the sentence underneath reads "300 messages left".
+ * the big figure is `remaining`, and the sentence underneath reads "30 AI uses left".
  * Drawing spent instead put the panel at odds with itself — at the start of a month it
  * said "300 messages left" above a completely empty bar, which reads as "you have none"
  * and was reported as the bar being missing (founder, 2026-08-31). Full at the start of
@@ -29,15 +32,15 @@ import { usageState } from "@/lib/ai/usage-state";
  * note.
  *
  * `budgetDegraded` is a second, independent signal from `quota` (2026-09-02, degrade-
- * disclosure package) — `quota` is the message-count backstop (50/month,
+ * disclosure package) — `quota` is the shared AI-use backstop (50/month,
  * lib/ai/monthly-quota.ts), but replies actually start using the cheaper model earlier,
- * once this month's spend crosses lib/ai/limits/budget.ts's $0.50 target (~19 messages at
- * today's real per-message cost). Before this, the bar could show a full indigo-violet
- * fill and "30 messages left" while the student's last several replies were already
- * degraded — true about the message count, misleading about what's actually happening to
- * their conversation. `budgetDegraded` takes priority over the message-count colour/copy
- * for exactly that reason: being degraded is the more urgent, more immediate fact once
- * it's true, regardless of how much of the message-count backstop remains. Optional and
+ * once this month's spend crosses lib/ai/limits/budget.ts's $0.50 target (~17 uses in, at
+ * the same reference cost the backstop is derived from). Before this, the bar could show a
+ * full indigo-violet fill and "30 AI uses left" while the student's last several replies
+ * were already degraded — true about the use count, misleading about what's actually
+ * happening to their conversation. `budgetDegraded` takes priority over the use-count
+ * colour/copy for exactly that reason: being degraded is the more urgent, more immediate
+ * fact once it's true, regardless of how much of the shared backstop remains. Optional and
  * defaults to `false` — a caller not yet passing it renders exactly as before, matching this
  * codebase's established "not yet wired up" convention (see lib/ai/usage.ts's `degraded?`
  * param doc).

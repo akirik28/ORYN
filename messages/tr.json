@@ -1091,7 +1091,7 @@
       "tryAgain": "Tekrar dene",
       "placeholderReady": "Oryn'a sor…",
       "placeholderNotConfigured": "Yapay zeka danışmanı henüz yapılandırılmadı",
-      "placeholderExhausted": "Bu ayki mesaj hakkın bitti",
+      "placeholderExhausted": "Bu ayki yapay zeka hakkın bitti",
       "sendAriaLabel": "Mesajı gönder",
       "degradeNote": {
         "label": "Kısa yanıt",
@@ -1104,13 +1104,13 @@
     },
     "usageMeter": {
       "thisMonth": "Bu ay",
-      "ariaUnknown": "Bu ay kalan danışman mesaj sayısı yüklenemedi. Aylık hakkın {limit}.",
-      "ariaKnown": "Bu ay {limit} danışman mesajından {remaining} tanesi kaldı",
-      "unknown": "Kaç mesaj kullandığını yükleyemedik. {limit} mesajlık hakkın yine de geçerli ve {date} tarihinde yenilenir.",
-      "exhausted": "{limit} mesajın tamamı kullanıldı. {date} tarihinde yenilenir.",
-      "low": "Sadece {remaining} mesaj kaldı. {date} tarihinde yenilenir.",
-      "degraded": "Bu ayın kalanında kısa yanıtlar. {date} tarihinde yenilenir.",
-      "normal": "{remaining} danışman mesajı kaldı. {date} tarihinde yenilenir."
+      "ariaUnknown": "Bu ay Oryn yapay zekasından ne kadar kaldığı yüklenemedi. Aylık hakkın {limit}.",
+      "ariaKnown": "Bu ay {limit} Oryn yapay zeka kullanımından {remaining} tanesi kaldı",
+      "unknown": "Ne kadar kullandığını yükleyemedik. {limit} kullanımlık aylık hakkın yine de geçerli ve {date} tarihinde yenilenir.",
+      "exhausted": "{limit} yapay zeka kullanımının tamamı bu ay için bitti. {date} tarihinde yenilenir.",
+      "low": "Sadece {remaining} kaldı. {date} tarihinde yenilenir.",
+      "degraded": "Bu ay Oryn'in yapay zekasını çok kullandın, bu yüzden yanıtlar şimdilik daha kısa. {date} tarihinde yenilenir.",
+      "normal": "{remaining} Oryn yapay zeka kullanımı kaldı. {date} tarihinde yenilenir."
     },
     "strategyPanel": {
       "ariaLabel": "Oryn'ın üzerinden çalıştığı bilgiler",

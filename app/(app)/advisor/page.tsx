@@ -38,8 +38,10 @@ export default async function AdvisorPage() {
     getUpcomingDeadlines(supabase, userId, 10),
   ]);
 
-  // The allowance the chat actually enforces (app/(app)/advisor/actions.ts).
-  const quota = await getMonthlyQuota(userId, "advisor_chat");
+  // The allowance the chat actually enforces (app/(app)/advisor/actions.ts) — shared
+  // across all seven student-facing AI features since the 2026-09-02 token-metering
+  // change, not chat messages alone (lib/ai/monthly-quota.ts's PER_STUDENT_AI_FEATURES).
+  const quota = await getMonthlyQuota(userId);
   // A second, independent read purely for display — selectModelForUser has no side
   // effects (it only reads ai_usage, same table getMonthlyQuota above already reads for
   // the same reason), so calling it here doesn't select a model for any real generation,

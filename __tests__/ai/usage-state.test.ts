@@ -28,7 +28,7 @@ describe("usageState", () => {
     expect(usageState(quota({ usedIsKnown: false, remaining: 0 }), true)).toBe("unknown");
   });
 
-  test("exhausted: the 300-message backstop is genuinely gone", () => {
+  test("exhausted: the shared AI-use backstop is genuinely gone", () => {
     expect(usageState(quota({ remaining: 0 }), false)).toBe("exhausted");
   });
 
