@@ -45,6 +45,42 @@ export async function assembleScoringFacts(
     supabase.from("target_universities").select("*").eq("user_id", userId),
   ]);
 
+  // 2026-09-03: every field below was `x.data ?? []` with no `.error` check — a failed read
+  // (RLS misconfig, a transient error, a table briefly unreachable mid-migration) was
+  // silently indistinguishable from "this student genuinely has zero rows here." Every
+  // dimension scorer downstream already produces confidence: "low" for a genuine zero
+  // (see lib/scoring/dimensions/research.ts), which is the right label for "not much to go
+  // on" — it is the wrong label for "we couldn't check," and this function is the only place
+  // that could tell the two apart. Contained fix: make a partial failure visible (this
+  // function's callers — the dashboard, lib/scoring/persist.ts's recompute job — are
+  // unaffected, same return shape, same behavior on success). Whether a degraded read should
+  // suppress the resulting score entirely, the way this same question was resolved for
+  // admission-rate-driven outlook labels (lib/admissions/explain.ts, 2026-09-03) and for
+  // age/grade-eligibility labels (lib/opportunities/matching.ts, same day), is a wider
+  // product decision — not made here.
+  const results = {
+    educationRecords,
+    courses,
+    testScores,
+    activities,
+    awards,
+    certifications,
+    projects,
+    researchExperiences,
+    volunteeringExperiences,
+    workExperiences,
+    interests,
+    goals,
+    targetUniversities,
+  };
+  const failed = Object.entries(results).filter(([, result]) => result.error);
+  if (failed.length > 0) {
+    console.error(
+      "[scoring] assembleScoringFacts: partial read failure -- these categories are scoring as empty, not as unknown",
+      { userId, failedCategories: failed.map(([name]) => name), errors: failed.map(([, result]) => result.error?.message) }
+    );
+  }
+
   return {
     educationRecords: educationRecords.data ?? [],
     courses: courses.data ?? [],
