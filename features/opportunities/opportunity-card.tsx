@@ -23,6 +23,7 @@ import { OpportunityStandingBadge } from "./standing-badge";
 import { setOpportunityStatus } from "@/app/(app)/opportunities/actions";
 import { selectivityLabel, cycleStatusLabel, CYCLE_STATUSES_WORTH_A_DESCRIPTOR } from "@/lib/opportunities/lifecycle";
 import { matchTierKey } from "@/lib/opportunities/matching";
+import { categoryGlyph } from "@/lib/opportunities/category-glyph";
 import type { Locale } from "@/lib/i18n/config";
 import type { Opportunity, SavedOpportunityStatus } from "@/types/database";
 
@@ -282,12 +283,26 @@ export function OpportunityCard({
         />
       ) : (
         /* Honest placeholder, not a stock photo — see the doc comment above. It says what
-           it is rather than impersonating an image that failed to load. */
+           it is rather than impersonating an image that failed to load.
+
+           Category glyph, 2026-09-03 (oryn-a7's B, docs/opportunity-image-licensing.md's
+           unresolved re-hosting question): the acquisition pipeline already ran once,
+           completely, to its honest ~23% ceiling — 128 organizer pages simply publish no
+           og:image at all, a fact about those sites this glyph doesn't try to paper over.
+           Large and low-opacity so it reads as a designed background texture, never as a
+           photograph of anything — the same "never let decoration masquerade as evidence"
+           rule MediaImage's own doc comment states for its logo/monogram fallback tier,
+           applied to a wider band instead of a square thumbnail. CATEGORY_GLYPH
+           (lib/opportunities/category-glyph.ts) is a curated map, not a hash: unlike the tint
+           below, which needs even, meaningless distribution, a competition must never land on
+           the same glyph as a summer programme by coincidence. text-ink-1, an existing token,
+           not a literal colour — themes and Ultra's flame palette both apply to this layer
+           exactly as they already do to the rest of the card, nothing new to keep in sync. */
         <div
           aria-hidden="true"
           data-tint={placeholderTint(opportunity.id)}
           className={cn(
-            "flex w-full items-center justify-center gap-2 border-b border-white/50 text-xs text-ink-4",
+            "@container relative flex w-full items-center justify-center gap-2 overflow-hidden border-b border-white/50 text-xs text-ink-4",
             // Each card starts from its own colour (app/globals.css's [data-tint] block).
             // Previously one fixed three-stop gradient, identical on every card, which made a
             // grid of un-imaged opportunities read as a single repeated non-thing.
@@ -295,8 +310,17 @@ export function OpportunityCard({
             featured ? "aspect-[21/8]" : "aspect-[16/7]",
           )}
         >
-          <Compass className="size-4" />
-          {t("noImageYet")}
+          {(() => {
+            const CategoryGlyph = categoryGlyph(opportunity.category);
+            // cqw, not cqh: Tailwind's `@container` sets `container-type: inline-size` only,
+            // so a height-based query unit has no valid container to resolve against and
+            // silently falls back to the initial containing block instead — confirmed live
+            // (computed to 446px, nearly the viewport height, not ~60% of the ~216px band)
+            // before this fix.
+            return <CategoryGlyph aria-hidden="true" strokeWidth={1} className="absolute inset-0 m-auto size-[28cqw] text-ink-1/[0.14]" />;
+          })()}
+          <Compass className="relative size-4" />
+          <span className="relative">{t("noImageYet")}</span>
         </div>
       )}
 
