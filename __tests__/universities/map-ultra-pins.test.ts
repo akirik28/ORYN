@@ -14,13 +14,18 @@ import { join } from "node:path";
  *
  * WHAT THIS FILE ACTUALLY PROVES: that the specific strings this fix depends on are present
  * in the source — the gradient def's id matches its `url(#...)` reference, the tier branch
- * exists on both the pin fill and the hover ring, and the un-touched Standard branch is
- * still exactly what it was before this pass. It cannot see whether the gradient actually
- * paints, whether the glow filter renders, or whether App Router threads a real `plan_tier`
- * value through three components correctly — those need a live render, which per the
- * fleet's active disk-pressure gate policy (2026-09-02) this pass did not run. Said
- * explicitly here rather than let a green run imply more than it does; see this package's
- * own doc for what a live check would need to confirm once a build is safe to run again.
+ * exists on the pin fill/hover ring/country dots/cluster badges/ocean background alike, and
+ * the un-touched Standard branch is still exactly what it was before either pass. It cannot
+ * see whether the gradient actually paints, whether the glow filter renders, or whether
+ * App Router threads a real `plan_tier` value through three components correctly — those
+ * need a live render. Said explicitly here rather than let a green run imply more than it
+ * does; see this package's own doc for the live measurements a real check needs.
+ *
+ * Extended 2026-09-02 (second pass): the founder reversed "contained signal" after seeing
+ * the pin fix live — reversal, not a rejection of the fix itself, see the CEO's own message.
+ * This pass widens Ultra to the rest of the map (ocean, country fills, world-scale dots) so
+ * the whole surface belongs to the same vivid world instead of pins alone looking themed
+ * against an otherwise-Standard map.
  */
 
 function src(relPath: string): string {
@@ -80,6 +85,50 @@ describe("WorldMapExplorer — Ultra pin treatment", () => {
 
   test("Standard's own hover halo is untouched — fill-primary/20, exact string", () => {
     expect(source).toContain('<circle r={9} className="fill-primary/20" />');
+  });
+
+  test("Ultra pins are bigger, not just recolored — 5/6.5 vs Standard's 3.5/5 (the founder's own \"grow, not just glow\" lesson)", () => {
+    expect(source).toContain("r={isPinHovered ? 6.5 : 5}");
+    // Standard's own radius is untouched — still exactly what it was before this pass.
+    expect(source).toContain("r={isPinHovered ? 5 : 3.5}");
+  });
+});
+
+describe("WorldMapExplorer — ocean background belongs to the same vivid world", () => {
+  const source = src("features/universities/world-map-explorer.tsx");
+
+  test("Ultra's ocean wash reads --tier-accent, far less diluted than Standard's --brand-primary wash", () => {
+    expect(source).toContain("color-mix(in oklch, var(--tier-accent), var(--card) 45%)");
+    // Standard's own background is untouched — still exactly what it was before this pass.
+    expect(source).toContain("color-mix(in oklch, var(--brand-primary), var(--card) 94%)");
+  });
+
+  test("both ocean variants still fade to var(--card) at the edge — a vivid core, not a flat fill that could clash with content painted on top", () => {
+    const ultraMatch = source.match(/tier === "ultra"\s*\?\s*"([^"]+)"/);
+    expect(ultraMatch).not.toBeNull();
+    expect(ultraMatch![1]).toMatch(/,\s*var\(--card\)\)$/);
+  });
+});
+
+describe("WorldMapExplorer — world-scale country dots reuse the same Ultra gradient, not a second one", () => {
+  const source = src("features/universities/world-map-explorer.tsx");
+
+  test("the country-dot circle references the identical gradient id the pins use", () => {
+    const fillCount = source.match(/fill="url\(#ultra-pin-gradient\)"/g)?.length ?? 0;
+    // Pins, the world-scale country dot, and the cluster badge each reference it once —
+    // three call sites, one shared def, not three defs.
+    expect(fillCount).toBeGreaterThanOrEqual(3);
+    // Only one <radialGradient> definition exists no matter how many circles reference it.
+    const defCount = source.match(/<radialGradient id=/g)?.length ?? 0;
+    expect(defCount).toBe(1);
+  });
+
+  test("the selected country dot grows under Ultra (radius * 1.15) — same grow-not-just-glow rule as pins", () => {
+    expect(source).toContain("r={isSelected ? radius * 1.15 : radius}");
+  });
+
+  test("which countries are supported is unaffected by tier — resolveCountryFillStyle is still called with the same isSupported input regardless", () => {
+    expect(source).toContain("resolveCountryFillStyle({ isSupported, isSelected: isThisSelected, isHovered: isThisHovered }, tier)");
   });
 });
 

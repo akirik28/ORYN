@@ -5,6 +5,8 @@
  * plain functions, every dependency passed in, no React, no DOM.
  */
 
+import type { PlanTier } from "@/types/database";
+
 export interface LabelableCountry {
   name: string;
 }
@@ -51,7 +53,37 @@ export interface CountryFillStyle {
  * the component's own comment for that half of the story), but this is the half a unit test
  * actually can guard.
  */
-export function resolveCountryFillStyle({ isSupported, isSelected, isHovered }: CountryFillState): CountryFillStyle {
+/**
+ * Ultra ladder, added 2026-09-02 after the founder reversed the "contained signal" direction
+ * (relayed: amber background, the whole sidebar turning red, vivid) — the map was scoped out
+ * of the earlier Ultra pass specifically pending that call (docs/ultra-map-investigation-
+ * 2026-09-02.md §3). Bolder than Standard's dilution at every step, not just re-tokened at
+ * the same strength: "vivid" was the founder's own word, and a same-dilution swap to warm
+ * tokens would have still read as timid next to a genuinely amber page. Kept short of full
+ * strength (never 0% background) for the same reason Standard's own ladder is diluted at
+ * all — this file's own history: an undiluted brand token read as near-black at map scale
+ * (the 2026-08-18 "selected country turned black" incident this ladder exists to prevent).
+ * Selected uses --tier-accent-strong/--tier-grad-3 (the red end), not --tier-accent, so
+ * "selected turns red" is literal, matching the founder's own language for the sidebar.
+ * Unsupported is deliberately untouched by tier: which countries have data is a fact, not a
+ * mood, and needs to read the same regardless of which surface a student is on — see the
+ * existing regression test asserting it never reaches for a brand/tier token at all.
+ */
+function resolveUltraCountryFillStyle({ isSupported, isSelected, isHovered }: CountryFillState): CountryFillStyle {
+  const fill = isSelected
+    ? `color-mix(in oklch, var(--tier-accent-strong), var(--background) ${isHovered ? 8 : 15}%)`
+    : isSupported
+      ? `color-mix(in oklch, var(--tier-accent), var(--background) ${isHovered ? 10 : 18}%)`
+      : "color-mix(in oklch, var(--muted), var(--foreground) 8%)";
+  return {
+    fill,
+    stroke: isSelected ? "var(--tier-accent-strong)" : "var(--card)",
+    strokeWidth: isSelected ? 2 : 0.75,
+  };
+}
+
+export function resolveCountryFillStyle({ isSupported, isSelected, isHovered }: CountryFillState, tier: PlanTier = "standard"): CountryFillStyle {
+  if (tier === "ultra") return resolveUltraCountryFillStyle({ isSupported, isSelected, isHovered });
   const fill = isSelected
     ? `color-mix(in oklch, var(--brand-primary), var(--background) ${isHovered ? 22 : 30}%)`
     : isSupported

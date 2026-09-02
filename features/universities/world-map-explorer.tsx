@@ -175,13 +175,26 @@ export function WorldMapExplorer({
   const hoveredRegion = hover ? countryByName.get(hover.name)?.region : undefined;
 
   return (
-    // Founder-locked black-blue system: theme-aware tokens throughout, never a hardcoded
-    // literal. A very light brand-tinted radial wash (not flat `bg-card`) stands in for
-    // "ocean" — subtle enough to stay light/airy, but enough tonal separation from the
-    // page background that the map reads as its own surface rather than a flat cutout.
+    // Standard: founder-locked black-blue system, theme-aware tokens throughout, never a
+    // hardcoded literal. A very light brand-tinted radial wash (not flat `bg-card`) stands
+    // in for "ocean" — subtle enough to stay light/airy, but enough tonal separation from
+    // the page background that the map reads as its own surface rather than a flat cutout.
+    //
+    // Ultra, 2026-09-02: the founder's own reversal of "contained signal" applies here as
+    // directly as anywhere on this map — an ocean this diluted would sit inside a genuinely
+    // amber page and read as "forgot to theme this," the exact "window into a different
+    // app" oryn-a7 named. Same --tier-accent token the pins/country fills below all read,
+    // far less diluted (45% vs Standard's 94%) so the wash itself is visibly amber, not a
+    // tint — still fades to --card at the edge rather than filling the whole card edge-to-
+    // edge, so the SVG's own land/pin colors stay legible against it.
     <div
       className="relative overflow-hidden rounded-2xl border bg-card"
-      style={{ backgroundImage: "radial-gradient(ellipse 100% 100% at 50% 20%, color-mix(in oklch, var(--brand-primary), var(--card) 94%), var(--card))" }}
+      style={{
+        backgroundImage:
+          tier === "ultra"
+            ? "radial-gradient(ellipse 100% 100% at 50% 20%, color-mix(in oklch, var(--tier-accent), var(--card) 45%), var(--card))"
+            : "radial-gradient(ellipse 100% 100% at 50% 20%, color-mix(in oklch, var(--brand-primary), var(--card) 94%), var(--card))",
+      }}
     >
       {!isWorld ? (
         <button
@@ -201,8 +214,10 @@ export function WorldMapExplorer({
         className="relative"
       >
         {tier === "ultra" ? (
-          // One shared def for every Ultra pin on this map, not one per pin — SVG gradients
-          // are referenced by id, so a single def already covers every <circle> below.
+          // One shared def for every Ultra circle marker on this map — pins, country dots,
+          // and cluster badges alike, 2026-09-02's "belong to the same world" pass — not one
+          // per marker: SVG gradients are referenced by id, so a single def already covers
+          // every <circle> below that asks for it.
           // Radial, not the linear ramp app/globals.css's .tier-grad-fill/.tier-grad-text use:
           // those are CSS `background`, which never applies to an SVG `fill` attribute at
           // all (a genuinely different property, not a browser quirk) — this is the SVG-
@@ -234,7 +249,7 @@ export function WorldMapExplorer({
               // tested there) — see that file for the full ladder rationale and the "selected
               // country turning black" incident it was tuned to fix.
               const resolvedStyle: React.CSSProperties = {
-                ...resolveCountryFillStyle({ isSupported, isSelected: isThisSelected, isHovered: isThisHovered }),
+                ...resolveCountryFillStyle({ isSupported, isSelected: isThisSelected, isHovered: isThisHovered }, tier),
                 outline: "none",
                 cursor: isSupported ? "pointer" : "default",
                 transition: "fill 150ms ease, stroke 150ms ease, opacity 300ms ease",
@@ -292,17 +307,36 @@ export function WorldMapExplorer({
               className="cursor-pointer outline-none"
             >
               {isSelected ? (
-                <>
-                  <circle r={radius + 9} className="fill-primary/10" />
-                  <circle r={radius + 6} className="fill-primary/25 motion-safe:animate-ping" />
-                </>
+                tier === "ultra" ? (
+                  <circle r={radius + 8} fill="var(--tier-glow)" className="motion-safe:animate-ping" />
+                ) : (
+                  <>
+                    <circle r={radius + 9} className="fill-primary/10" />
+                    <circle r={radius + 6} className="fill-primary/25 motion-safe:animate-ping" />
+                  </>
+                )
               ) : null}
-              <circle
-                r={radius}
-                className={isSelected ? "fill-primary" : "fill-primary/60 hover:fill-primary"}
-                stroke="var(--card)"
-                strokeWidth={1.5}
-              />
+              {/* Same "tier is the only input" rule as the pins below: which countries have
+                  data doesn't change under Ultra, only how the ones that do are painted.
+                  Grows, not just recolors — a same-size dot next to a genuinely bigger pin
+                  layer would read as an oversight, not a choice (the founder's own "bigger,
+                  not just glowier" lesson from the bell dot/card ring pass). */}
+              {tier === "ultra" ? (
+                <circle
+                  r={isSelected ? radius * 1.15 : radius}
+                  fill="url(#ultra-pin-gradient)"
+                  stroke="var(--card)"
+                  strokeWidth={1.5}
+                  style={{ filter: isSelected ? "drop-shadow(0 0 6px var(--tier-glow))" : undefined }}
+                />
+              ) : (
+                <circle
+                  r={radius}
+                  className={isSelected ? "fill-primary" : "fill-primary/60 hover:fill-primary"}
+                  stroke="var(--card)"
+                  strokeWidth={1.5}
+                />
+              )}
               {showLabel ? (
                 <text
                   textAnchor="middle"
@@ -337,8 +371,25 @@ export function WorldMapExplorer({
                     className="cursor-pointer outline-none"
                   >
                     <g className="pin-drop" style={{ animationDelay: `${Math.min(index, 20) * 22}ms` }}>
-                      <circle r={11} className="fill-primary/25" />
-                      <circle r={8.5} className="fill-primary" stroke="var(--card)" strokeWidth={1.4} />
+                      {tier === "ultra" ? (
+                        // Same grow-not-just-glow treatment as an individual pin, one step
+                        // up in size (this marker already reads as "more than one place").
+                        <>
+                          <circle r={12} fill="var(--tier-glow)" />
+                          <circle
+                            r={10}
+                            fill="url(#ultra-pin-gradient)"
+                            stroke="var(--card)"
+                            strokeWidth={1.4}
+                            style={{ filter: "drop-shadow(0 0 6px var(--tier-glow))" }}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <circle r={11} className="fill-primary/25" />
+                          <circle r={8.5} className="fill-primary" stroke="var(--card)" strokeWidth={1.4} />
+                        </>
+                      )}
                       <text
                         textAnchor="middle"
                         dominantBaseline="central"
@@ -416,12 +467,17 @@ export function WorldMapExplorer({
                       a data gap up as if it were an achievement, which is exactly the trap
                       named for this pass. Tier is the only input here, deliberately. */}
                   {tier === "ultra" ? (
+                    // Grows, not just recolors — a same-size gradient swap read as too
+                    // subtle to be "unmissable" (the same lesson the bell dot/card ring
+                    // pass already learned the founder wants literally applied, not just
+                    // referenced). 5/6.5 vs Standard's 3.5/5 — noticeably bigger at rest,
+                    // not only on hover.
                     <circle
-                      r={isPinHovered ? 5 : 3.5}
+                      r={isPinHovered ? 6.5 : 5}
                       fill="url(#ultra-pin-gradient)"
                       stroke="var(--card)"
                       strokeWidth={1.2}
-                      style={{ transition: "r 140ms ease", filter: "drop-shadow(0 0 5px var(--tier-glow))" }}
+                      style={{ transition: "r 140ms ease", filter: "drop-shadow(0 0 6px var(--tier-glow))" }}
                     />
                   ) : (
                     <circle
