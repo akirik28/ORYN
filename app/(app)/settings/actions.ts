@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isUndefinedColumnError } from "@/lib/supabase/errors";
 import { removeAllUserStorage, StorageCleanupError } from "@/lib/account/delete-storage";
 import { UpdatePasswordSchema } from "@/lib/validation/auth";
 import { meetsMinimumSignupAge } from "@/lib/legal/age-policy";
@@ -183,6 +184,20 @@ export async function updateVisibility(isPublic: boolean, lookingFor: string | n
  * notifications already sitting in a student's list, only whether a future one for a given
  * category gets created. All seven written in one call, matching updateVisibility's own
  * batched-fields shape above, rather than one Server Action per toggle.
+ *
+ * Fails loudly, deliberately, not silently — this is the one write in this file that
+ * degrades a promise rather than a display. 0090 unapplied means every save fails
+ * (confirmed live 2026-09-02: this shipped with no missing-column handling at all, so the
+ * generic error below fired on every single attempt, unconditionally, for a reason that had
+ * nothing to do with the student). The fix is not to make the write succeed silently — a
+ * student believing a preference saved when it didn't is worse than being told it failed —
+ * it's to tell them the TRUE, SPECIFIC reason rather than an opaque wall they'd reasonably
+ * read as "try again." isUndefinedColumnError narrows on the shared `notify_` prefix, same
+ * reasoning as lib/notifications/create.ts's read-side categoryIsEnabled: whichever of the
+ * seven Postgres/PostgREST names first, the rest are missing too (they land together). This
+ * is the write-side case lib/supabase/errors.ts's own corrected comment names directly — a
+ * named-column write, not `select('*')`, so `?? default` was never an option here the way it
+ * is for lib/tier/plan-tier.ts's read.
  */
 export async function updateNotificationPreferences(preferences: Record<NotificationCategory, boolean>): Promise<{ error?: string }> {
   const session = await requireUser();
@@ -203,7 +218,12 @@ export async function updateNotificationPreferences(preferences: Record<Notifica
       notify_message: preferences.message,
     })
     .eq("id", session.userId!);
-  if (error) return { error: "Couldn't update your notification settings." };
+  if (error) {
+    if (isUndefinedColumnError(error, "notify_")) {
+      return { error: "Notification preferences aren't available on your account yet, so nothing was saved. Retrying won't change that." };
+    }
+    return { error: "Couldn't update your notification settings." };
+  }
   revalidatePath("/settings");
   return {};
 }
