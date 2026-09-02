@@ -176,6 +176,11 @@ export const REGRESSION_COUNSELOR_RESULT: CounselorResult = {
     }),
   ],
   profileReadiness: { completenessPercent: 74, sufficientForJudgment: true },
+  // Matches REGRESSION_CONTEXT.student below — kept in sync by hand since the two fixtures
+  // model the same student through two different types (StudentAdvisorContext vs.
+  // CounselorResult's narrower studentIdentity) and there is no single shared source to
+  // derive both from.
+  studentIdentity: { displayName: "Deniz", country: "Turkey", graduationYear: 2028, curriculum: "ib" },
 };
 
 export const BASELINE_COUNSELOR_RESULT: CounselorResult = {
@@ -183,6 +188,8 @@ export const BASELINE_COUNSELOR_RESULT: CounselorResult = {
   gaps: [],
   recommendations: [rec({ id: "opportunity:fixture-2", title: "Regional Science Fair" })],
   profileReadiness: { completenessPercent: 68, sufficientForJudgment: true },
+  // Matches BASELINE_CONTEXT.student below.
+  studentIdentity: { displayName: "Ada", country: "United States", graduationYear: 2027, curriculum: "ap" },
 };
 
 /** Display labels for every REGRESSION_CONTEXT dimension `isAssessed()` treats as NOT

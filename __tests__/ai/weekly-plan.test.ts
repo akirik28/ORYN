@@ -53,6 +53,7 @@ vi.mock("@/lib/counselor", () => ({
       gaps: [],
       recommendations: h.recommendations,
       profileReadiness: { completenessPercent: 80, sufficientForJudgment: true },
+      studentIdentity: { displayName: "Test Student", country: null, graduationYear: null, curriculum: null },
     };
   }),
 }));

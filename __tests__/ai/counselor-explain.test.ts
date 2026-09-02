@@ -32,6 +32,7 @@ function result(overrides: Partial<CounselorResult> = {}): CounselorResult {
     gaps: [],
     recommendations: [recommendation()],
     profileReadiness: { completenessPercent: 80, sufficientForJudgment: true },
+    studentIdentity: { displayName: "Ada", country: "United States", graduationYear: 2027, curriculum: "ap" },
     ...overrides,
   };
 }
@@ -69,6 +70,22 @@ describe("buildCounselorExplanationPrompt", () => {
     const promptTr = buildCounselorExplanationPrompt(result({ recommendations: [recommendation({ recommendationClass: "avoid_for_now" })] }), "tr");
     expect(promptTr).toContain("class: şimdilik önerilmiyor");
     expect(promptTr).not.toContain("class: avoid_for_now");
+  });
+
+  // 2026-09-02 unused-features triage: this prompt used to carry zero student-identity
+  // facts, not even graduation year (the exact gap oryn-31's audit named) — CounselorResult
+  // now threads studentIdentity through from the pipeline specifically so this can't regress.
+  test("names the actual student, not a generic 'the student'", () => {
+    const prompt = buildCounselorExplanationPrompt(result({ studentIdentity: { displayName: "Deniz", country: "Turkey", graduationYear: 2028, curriculum: "ib" } }), "en");
+    expect(prompt).toContain("Deniz");
+    expect(prompt).toContain("2028");
+    expect(prompt).toContain("Turkey");
+  });
+
+  test("omits unknown identity fields cleanly rather than printing 'null'", () => {
+    const prompt = buildCounselorExplanationPrompt(result({ studentIdentity: { displayName: "Ada", country: null, graduationYear: null, curriculum: null } }), "en");
+    expect(prompt).toContain("Ada");
+    expect(prompt).not.toMatch(/null/i);
   });
 });
 
