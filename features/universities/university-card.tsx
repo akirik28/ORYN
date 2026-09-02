@@ -8,10 +8,11 @@ import { MapPin, Bookmark, BookmarkCheck, Landmark, Users, Trophy, DollarSign, S
 import { Button } from "@/components/ui/button";
 import { addTargetUniversity } from "@/app/(app)/universities/actions";
 import { useCompare } from "@/features/universities/compare-context";
+import { resolveComparisonWidthCeiling } from "@/lib/comparison/limits";
 import { formatNumber } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 import { MediaImage } from "@/components/oryn/media-image";
-import type { University } from "@/types/database";
+import type { PlanTier, University } from "@/types/database";
 
 // Larger, calmer card (founder direction: "fewer larger cards ... not a dense database
 // row") — a visual identity band up top instead of packing every field into a small row.
@@ -30,6 +31,7 @@ export function UniversityCard({
   hasResearchDepth,
   compact = false,
   countryHref,
+  planTier = "ultra",
 }: {
   university: University;
   isSaved: boolean;
@@ -64,12 +66,16 @@ export function UniversityCard({
    *  the country is already the active filter — this is the results→map half of the
    *  synchronisation, so dropping it would make the pairing one-directional. */
   countryHref?: string | null;
+  /** Defaults to "ultra" (today's unchanged behavior) so a caller that hasn't been updated
+   *  to thread the student's real tier through yet doesn't regress — see
+   *  features/universities/compare-context.tsx's useCompare for the same default and why. */
+  planTier?: PlanTier;
 }) {
   const t = useTranslations("universities.card");
   const tCommon = useTranslations("common");
   const [saved, setSaved] = useState(isSaved);
   const [isPending, startTransition] = useTransition();
-  const compare = useCompare();
+  const compare = useCompare(planTier);
   const isComparing = compare.isSelected(university.id);
 
   return (
@@ -187,7 +193,7 @@ export function UniversityCard({
             size="sm"
             disabled={!isComparing && compare.atLimit}
             onClick={() => compare.toggle({ id: university.id, name: university.name })}
-            title={!isComparing && compare.atLimit ? t("compareLimitTooltip") : undefined}
+            title={!isComparing && compare.atLimit ? t("compareLimitTooltip", { max: resolveComparisonWidthCeiling(planTier) }) : undefined}
           >
             <Scale className="size-3.5" />
             {isComparing ? t("comparing") : t("compare")}

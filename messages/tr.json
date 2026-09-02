@@ -799,7 +799,7 @@
       "researchFocus": "Araştırma odağı",
       "details": "Detaylar",
       "saved": "Kaydedildi",
-      "compareLimitTooltip": "Aynı anda en fazla 4 tane karşılaştır",
+      "compareLimitTooltip": "Aynı anda en fazla {max} tane karşılaştır",
       "comparing": "Karşılaştırılıyor",
       "compare": "Karşılaştır",
       "costOfAttendanceSuffix": "/ yıl, öğrenim maliyeti",
@@ -922,12 +922,15 @@
     },
     "comparePage": {
       "title": "Üniversiteleri karşılaştır",
-      "description": "Burada karşılaştırmak için keşfet sayfasından 2–4 üniversite seç.",
+      "description": "Burada karşılaştırmak için keşfet sayfasından 2–{max} üniversite seç.",
       "nothingYetTitle": "Henüz karşılaştırılacak bir şey yok",
       "nothingYetDescription": "Keşfet sayfasına dön, her kartta Karşılaştır düğmesiyle en az iki üniversite seç, sonra karşılaştırma çekmecesini aç.",
       "backToExplorer": "Keşfet sayfasına dön",
       "notEnoughTitle": "Bu üniversitelerden yeterince bulunamadı",
       "notEnoughDescription": "Seçilen üniversitelerden biri veya birkaçı artık mevcut olmayabilir.",
+      "limitReachedTitle": "Bu ayki karşılaştırma hakkını kullandın",
+      "limitReachedDescription": "Planın, üniversiteler ve fırsatlar arasında paylaşılan ayda {limit} karşılaştırma içeriyor. Ultra bu sınırı kaldırır.",
+      "limitReachedCta": "Planları gör",
       "sideBySide": "{count} üniversite yan yana — bilinmeyen alanlar “—” olarak gösterilir, asla tahmin edilmez.",
       "location": "Konum",
       "qsRanking": "QS sıralaması",
@@ -1059,12 +1062,15 @@
     "comparePage": {
       "pageTitle": "Fırsat Karşılaştırma",
       "title": "Fırsatları karşılaştır",
-      "description": "Karşılaştırmak için Kaydedilenler'den 2-4 fırsat seç.",
+      "description": "Karşılaştırmak için Kaydedilenler'den 2–{max} fırsat seç.",
       "nothingYetTitle": "Henüz karşılaştıracak bir şey yok",
       "nothingYetDescription": "Kaydedilenler'e dön, her birindeki Karşılaştır düğmesiyle en az iki fırsat seç, sonra karşılaştırma çubuğunu aç.",
       "backToSaved": "Kaydedilenler'e dön",
       "notEnoughTitle": "Bu fırsatların yeterince tanesi bulunamadı",
       "notEnoughDescription": "Seçilen fırsatlardan biri veya birkaçı artık mevcut olmayabilir.",
+      "limitReachedTitle": "Bu ayki karşılaştırma hakkını kullandın",
+      "limitReachedDescription": "Planın, üniversiteler ve fırsatlar arasında paylaşılan ayda {limit} karşılaştırma içeriyor. Ultra bu sınırı kaldırır.",
+      "limitReachedCta": "Planları gör",
       "sideBySide": "{count} fırsat yan yana — bilinmeyen alanlar tahmin edilmez, “—” olarak gösterilir.",
       "category": "Kategori",
       "location": "Konum",
@@ -1828,6 +1834,6 @@
     "allCategories": "Tümü",
     "compare": "Karşılaştır",
     "comparing": "Karşılaştırılıyor",
-    "compareLimitTooltip": "Aynı anda en fazla 4 tane karşılaştırabilirsin."
+    "compareLimitTooltip": "Aynı anda en fazla {max} tane karşılaştırabilirsin."
   }
 }

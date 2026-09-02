@@ -1,8 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { ArrowLeft, Scale } from "lucide-react";
-import { requireUser } from "@/lib/security/dal";
+import { ArrowLeft, Lock, Scale } from "lucide-react";
+import { requireProfile } from "@/lib/security/dal";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
+import { resolveComparisonWidthCeiling, isComparisonQuotaExhausted } from "@/lib/comparison/limits";
+import { getMonthlyComparisonUsage, logComparisonViewed } from "@/lib/comparison/usage";
 import { createClient } from "@/lib/supabase/server";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { categoryLabel } from "@/lib/opportunities/labels";
@@ -11,7 +14,7 @@ import { formatCurrency } from "@/lib/i18n/format";
 import { formatAbsoluteDate } from "@/lib/i18n/date";
 import { PageHeader } from "@/components/oryn/page-header";
 import { EmptyState } from "@/components/oryn/empty-state";
-import { COMPARE_MAX } from "@/lib/universities/compare-constants";
+import { Button } from "@/components/ui/button";
 import type { Opportunity } from "@/types/database";
 
 // `pageTitle`, not `title` (which is the on-page H1, phrased as an instruction —
@@ -30,22 +33,30 @@ const NA = <span className="text-muted-foreground">—</span>;
 /**
  * Opportunities' own compare table — same shape as app/(app)/universities/compare/page.tsx
  * (plain table, real data only, "—" for anything unverified, order preserved from however
- * the student selected them), reading `ids` from the query string the same way. Its only
- * caller is features/opportunities/opportunity-compare-bar.tsx.
+ * the student selected them, and — 2026-09-02 — the same tier gating: see
+ * lib/comparison/limits.ts's own header for the design), reading `ids` from the query
+ * string the same way. Its only caller is features/opportunities/opportunity-compare-bar.tsx.
+ *
+ * Deliberately NOT dark-wrapped/heroGradientStyle, unlike the universities page — this page
+ * never was before this pass either; staying plain here is preserving an existing,
+ * deliberate asymmetry between the two sections, not an oversight introduced now.
  */
 export default async function CompareOpportunitiesPage({ searchParams }: { searchParams: Promise<{ ids?: string }> }) {
   const { ids: idsParam } = await searchParams;
-  await requireUser();
+  const profile = await requireProfile();
+  const userId = profile.id;
+  const planTier = resolvePlanTier(profile);
+  const widthCeiling = resolveComparisonWidthCeiling(planTier);
   const supabase = await createClient();
   const locale = await resolveLocale();
   const t = await getTranslations("opportunities.comparePage");
 
-  const requestedIds = [...new Set((idsParam ?? "").split(",").map((id) => id.trim()).filter(Boolean))].slice(0, COMPARE_MAX);
+  const requestedIds = [...new Set((idsParam ?? "").split(",").map((id) => id.trim()).filter(Boolean))].slice(0, widthCeiling);
 
   if (requestedIds.length < 2) {
     return (
       <div className="space-y-8">
-        <PageHeader title={t("title")} description={t("description")} />
+        <PageHeader title={t("title")} description={t("description", { max: widthCeiling })} />
         <EmptyState icon={Scale} title={t("nothingYetTitle")} description={t("nothingYetDescription")} />
         <Link href="/saved" className="inline-flex items-center gap-1.5 text-sm text-brand-primary hover:underline">
           <ArrowLeft className="size-3.5" /> {t("backToSaved")}
@@ -61,7 +72,7 @@ export default async function CompareOpportunitiesPage({ searchParams }: { searc
   if (ordered.length < 2) {
     return (
       <div className="space-y-8">
-        <PageHeader title={t("title")} description={t("description")} />
+        <PageHeader title={t("title")} description={t("description", { max: widthCeiling })} />
         <EmptyState icon={Scale} title={t("notEnoughTitle")} description={t("notEnoughDescription")} />
         <Link href="/saved" className="inline-flex items-center gap-1.5 text-sm text-brand-primary hover:underline">
           <ArrowLeft className="size-3.5" /> {t("backToSaved")}
@@ -69,6 +80,35 @@ export default async function CompareOpportunitiesPage({ searchParams }: { searc
       </div>
     );
   }
+
+  if (planTier !== "ultra") {
+    const usage = await getMonthlyComparisonUsage(userId);
+    if (isComparisonQuotaExhausted(planTier, usage)) {
+      return (
+        <div className="space-y-8">
+          <PageHeader title={t("title")} description={t("description", { max: widthCeiling })} />
+          <EmptyState
+            icon={Lock}
+            title={t("limitReachedTitle")}
+            description={t("limitReachedDescription", { limit: usage.limit })}
+            action={
+              <Button size="sm" render={<Link href="/settings/plan" />} nativeButton={false}>
+                {t("limitReachedCta")}
+              </Button>
+            }
+          />
+          <Link href="/saved" className="inline-flex items-center gap-1.5 text-sm text-brand-primary hover:underline">
+            <ArrowLeft className="size-3.5" /> {t("backToSaved")}
+          </Link>
+        </div>
+      );
+    }
+  }
+  await logComparisonViewed(
+    userId,
+    "opportunity",
+    ordered.map((o) => o.id)
+  );
 
   const rows: { label: string; render: (o: Opportunity) => React.ReactNode }[] = [
     { label: t("category"), render: (o) => categoryLabel(o.category, locale) },

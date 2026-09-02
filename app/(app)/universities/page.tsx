@@ -460,6 +460,7 @@ export default async function UniversitiesPage({
               initialHasMore={hasMore}
               params={browseParams}
               buildCountryHref={countryHrefByName}
+              planTier={planTier}
             />
           ) : (
             // UI-V3 § 22: roughly 58/42. The map is sticky so it stays in view while the
@@ -494,6 +495,7 @@ export default async function UniversitiesPage({
                   params={browseParams}
                   compact
                   buildCountryHref={countryHrefByName}
+                  planTier={planTier}
                 />
               </div>
             </div>

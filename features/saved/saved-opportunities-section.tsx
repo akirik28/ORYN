@@ -8,13 +8,13 @@ import { SavedOpportunityRow } from "./saved-opportunity-row";
 import { categoryLabel } from "@/lib/opportunities/labels";
 import type { Locale } from "@/lib/i18n/config";
 import type { SavedOpportunityWithDetails } from "@/lib/opportunities/saved";
-import type { OpportunityCategory, SavedOpportunityStatus } from "@/types/database";
+import type { OpportunityCategory, PlanTier, SavedOpportunityStatus } from "@/types/database";
 
 /** Client-side filter — see saved-universities-section.tsx's own comment for why (same
  * reasoning, same scale of data). Category options are built from what's actually in this
  * student's own saved list, not the full 13-value enum — an empty-everywhere dropdown of
  * categories they've never saved would be filter theater, not a real filter. */
-export function SavedOpportunitiesSection({ saved }: { saved: SavedOpportunityWithDetails[] }) {
+export function SavedOpportunitiesSection({ saved, planTier }: { saved: SavedOpportunityWithDetails[]; planTier?: PlanTier }) {
   const t = useTranslations("saved");
   const tCard = useTranslations("opportunities.card");
   const locale = useLocale() as Locale;
@@ -84,7 +84,7 @@ export function SavedOpportunitiesSection({ saved }: { saved: SavedOpportunityWi
       ) : (
         <ul>
           {filtered.map((s) => (
-            <SavedOpportunityRow key={s.id} saved={s} />
+            <SavedOpportunityRow key={s.id} saved={s} planTier={planTier} />
           ))}
         </ul>
       )}

@@ -8,7 +8,7 @@ import { UniversityCard } from "./university-card";
 import { loadMoreUniversities } from "@/app/(app)/universities/actions";
 import { formatNumber } from "@/lib/i18n/format";
 import type { UniversityBrowseParams, UniversityCardMeta } from "@/lib/universities/browse-page";
-import type { University } from "@/types/database";
+import type { PlanTier, University } from "@/types/database";
 
 /**
  * Browse results that keep loading as you scroll, replacing the numbered pager.
@@ -32,6 +32,7 @@ export function UniversityBrowseGrid({
   params,
   compact = false,
   buildCountryHref,
+  planTier,
 }: {
   initialUniversities: University[];
   initialMeta: Record<string, UniversityCardMeta>;
@@ -42,6 +43,10 @@ export function UniversityBrowseGrid({
   /** Pre-resolved per-country hrefs — building them needs the page's own param state, which
    *  this component deliberately doesn't carry. */
   buildCountryHref?: Record<string, string>;
+  /** The student's own tier, resolved once server-side and passed straight through to every
+   *  card — including ones appended later by loadMore, since it's the same student's tier
+   *  regardless of which page of results a card came from. */
+  planTier?: PlanTier;
 }) {
   const t = useTranslations("universities.browseGrid");
   const [universities, setUniversities] = useState(initialUniversities);
@@ -113,6 +118,7 @@ export function UniversityBrowseGrid({
               hasResearchDepth={m.hasResearchDepth}
               compact={compact}
               countryHref={university.country ? (buildCountryHref?.[university.country] ?? null) : null}
+              planTier={planTier}
             />
           );
         })}

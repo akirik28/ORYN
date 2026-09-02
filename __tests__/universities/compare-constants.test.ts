@@ -15,6 +15,14 @@ import { COMPARE_MAX } from "@/lib/universities/compare-constants";
  * transform), so the only thing it CAN guard is the actual precondition: this file must never
  * grow a "use client" (or "use server") directive, and the compare page must keep importing
  * from here rather than from the client module.
+ *
+ * 2026-09-02, comparison tier-gating: the compare page stopped importing COMPARE_MAX
+ * directly — it now derives its width ceiling from resolveComparisonWidthCeiling
+ * (lib/comparison/limits.ts), which itself imports COMPARE_MAX from this file. The live bug
+ * this guards against is unchanged (a "use client" proxy silently coercing to NaN); only
+ * where the compare page's own import points moved, one level of indirection further. See
+ * __tests__/comparison/limits.test.ts for the same directive-free guard applied to that
+ * new module.
  */
 describe("compare constants stay in a plain, client/server-safe module", () => {
   test("COMPARE_MAX is a real number, not a client-reference proxy", () => {
@@ -28,9 +36,9 @@ describe("compare constants stay in a plain, client/server-safe module", () => {
     expect(source).not.toMatch(/^\s*["']use server["']/m);
   });
 
-  test("the server-rendered compare page imports COMPARE_MAX from the plain module, not the client one", () => {
+  test("the server-rendered compare page derives its width ceiling from the plain lib/comparison module, not a client one", () => {
     const source = readFileSync(join(__dirname, "..", "..", "app/(app)/universities/compare/page.tsx"), "utf8");
-    expect(source).toContain('from "@/lib/universities/compare-constants"');
-    expect(source).not.toContain('COMPARE_MAX } from "@/features/universities/compare-context"');
+    expect(source).toContain('from "@/lib/comparison/limits"');
+    expect(source).not.toContain('resolveComparisonWidthCeiling } from "@/features/universities/compare-context"');
   });
 });

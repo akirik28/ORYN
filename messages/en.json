@@ -799,7 +799,7 @@
       "researchFocus": "Research focus",
       "details": "Details",
       "saved": "Saved",
-      "compareLimitTooltip": "Compare up to 4 at a time",
+      "compareLimitTooltip": "Compare up to {max} at a time",
       "comparing": "Comparing",
       "compare": "Compare",
       "costOfAttendanceSuffix": "/ year, cost of attendance",
@@ -922,12 +922,15 @@
     },
     "comparePage": {
       "title": "Compare universities",
-      "description": "Select 2–4 universities from the explorer to compare them here.",
+      "description": "Select 2–{max} universities from the explorer to compare them here.",
       "nothingYetTitle": "Nothing to compare yet",
       "nothingYetDescription": "Go back to the explorer, select at least two universities with the Compare button on each card, then open the compare tray.",
       "backToExplorer": "Back to explorer",
       "notEnoughTitle": "Couldn't find enough of these universities",
       "notEnoughDescription": "One or more selected universities may no longer be available.",
+      "limitReachedTitle": "You've used this month's comparisons",
+      "limitReachedDescription": "Your plan includes {limit} comparisons a month, shared across universities and opportunities. Ultra removes this limit.",
+      "limitReachedCta": "See plans",
       "sideBySide": "{count} universities side by side — unknown fields are shown as “—”, never guessed.",
       "location": "Location",
       "qsRanking": "QS ranking",
@@ -1059,12 +1062,15 @@
     "comparePage": {
       "pageTitle": "Compare opportunities",
       "title": "Compare opportunities",
-      "description": "Select 2–4 opportunities from Saved to compare them here.",
+      "description": "Select 2–{max} opportunities from Saved to compare them here.",
       "nothingYetTitle": "Nothing to compare yet",
       "nothingYetDescription": "Go back to Saved, select at least two opportunities with the Compare button on each, then open the compare tray.",
       "backToSaved": "Back to Saved",
       "notEnoughTitle": "Couldn't find enough of these opportunities",
       "notEnoughDescription": "One or more selected opportunities may no longer be available.",
+      "limitReachedTitle": "You've used this month's comparisons",
+      "limitReachedDescription": "Your plan includes {limit} comparisons a month, shared across universities and opportunities. Ultra removes this limit.",
+      "limitReachedCta": "See plans",
       "sideBySide": "{count} opportunities side by side — unknown fields are shown as “—”, never guessed.",
       "category": "Category",
       "location": "Location",
@@ -1828,6 +1834,6 @@
     "allCategories": "All",
     "compare": "Compare",
     "comparing": "Comparing",
-    "compareLimitTooltip": "You can compare up to 4 at a time."
+    "compareLimitTooltip": "You can compare up to {max} at a time."
   }
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { requireUser } from "@/lib/security/dal";
+import { requireProfile } from "@/lib/security/dal";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { createClient } from "@/lib/supabase/server";
 import { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
 import { getSavedOpportunitiesWithDetails } from "@/lib/opportunities/saved";
@@ -40,8 +41,9 @@ export async function generateMetadata(): Promise<Metadata> {
  * the same as un-saving it.
  */
 export default async function SavedPage() {
-  const session = await requireUser();
-  const userId = session.userId!;
+  const profile = await requireProfile();
+  const userId = profile.id;
+  const planTier = resolvePlanTier(profile);
   const supabase = await createClient();
   const t = await getTranslations("saved");
 
@@ -56,12 +58,12 @@ export default async function SavedPage() {
 
       <section className="space-y-4">
         <SectionHeader title={t("universitiesSectionTitle")} />
-        <SavedUniversitiesSection targets={targets} />
+        <SavedUniversitiesSection targets={targets} planTier={planTier} />
       </section>
 
       <section className="space-y-4">
         <SectionHeader title={t("opportunitiesSectionTitle")} />
-        <SavedOpportunitiesSection saved={savedOpportunities} />
+        <SavedOpportunitiesSection saved={savedOpportunities} planTier={planTier} />
       </section>
 
       <CompareBar />
