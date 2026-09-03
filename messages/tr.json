@@ -803,6 +803,8 @@
       "comparing": "Karşılaştırılıyor",
       "compare": "Karşılaştır",
       "costOfAttendanceSuffix": "/ yıl, öğrenim maliyeti",
+      "internationalTuitionSuffix": "uluslararası öğrenim ücreti",
+      "domesticTuitionSuffix": "yerel öğrenim ücreti",
       "detailedProfile": "Detaylı profil"
     },
     "browseGrid": {
@@ -938,6 +940,7 @@
       "students": "Öğrenci sayısı",
       "costOfAttendance": "Öğrenim maliyeti",
       "costPerYear": "{value} / yıl",
+      "tuition": "Öğrenim ücreti",
       "admissionRate": "Kabul oranı",
       "statisticsSource": "Veri kaynağı",
       "applicationSystem": "Başvuru sistemi",

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
 import { logEvent } from "@/lib/analytics/log";
 import { canonicalUniversityId, loadSupersessionMap, getSupersededUniversityIds } from "@/lib/universities/canonical";
@@ -144,8 +145,9 @@ export async function loadMoreUniversities(
       { costMap: costMap ?? undefined, qsRankMap: qsRankMap ?? undefined, depthIds }
     );
 
+    const locale = await resolveLocale();
     const [meta, targetsRes] = await Promise.all([
-      getUniversityCardMeta(supabase, result.universities, categorizeAndDedupeResearchTopics, depthIds),
+      getUniversityCardMeta(supabase, result.universities, categorizeAndDedupeResearchTopics, depthIds, locale),
       supabase.from("target_universities").select("university_id").eq("user_id", session.userId!),
     ]);
 

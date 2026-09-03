@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   buildUniversityCounselingView,
+  deriveTuitionContext,
   type CounselingProgramInput,
   type CounselingRequirementEvaluationInput,
   type CounselingRequirementInput,
@@ -410,6 +411,46 @@ describe("buildUniversityCounselingView — tuition (US cost-of-attendance never
   test("no tuition data at all is honestly unavailable, never fabricated", () => {
     const view = buildUniversityCounselingView(baseInput());
     expect(view.tuition).toEqual({ kind: "unavailable", displayValue: null, caption: null });
+  });
+});
+
+describe("deriveTuitionContext — exported directly (2026-09-03), reused by the browse card and compare page", () => {
+  test("is the exact function buildUniversityCounselingView already calls internally, not a separate copy", () => {
+    // Same assertion shape as the "US cost_of_attendance takes priority" test above, but
+    // calling the exported function directly rather than through the view -- if this ever
+    // drifted from what buildUniversityCounselingView produces, the browse card and the
+    // outlook page could show two different tuition figures for the same university.
+    const input = { costOfAttendance: 65000, internationalTuition: { amount: 40000, unit: "GBP/year", precisionState: "exact" as const }, domesticTuition: null };
+    const view = buildUniversityCounselingView(baseInput({ tuition: input }));
+    expect(deriveTuitionContext(input)).toEqual(view.tuition);
+  });
+
+  test("defaults to English when no locale is given -- the pre-existing behavior every current caller relies on", () => {
+    const ctx = deriveTuitionContext({ costOfAttendance: null, internationalTuition: { amount: 9250, unit: "GBP/year", precisionState: "range" }, domesticTuition: null });
+    expect(ctx.displayValue).toMatch(/^From /);
+  });
+
+  test("a Turkish locale produces Turkish qualifier text -- the gap this export closes: buildUniversityCounselingView received a real locale and silently never passed it through", () => {
+    const ctx = deriveTuitionContext(
+      { costOfAttendance: null, internationalTuition: { amount: 9250, unit: "GBP/year", precisionState: "range" }, domesticTuition: null },
+      "tr"
+    );
+    expect(ctx.displayValue).toMatch(/^Başlangıç /);
+    expect(ctx.displayValue).not.toMatch(/^From /);
+  });
+
+  test("buildUniversityCounselingView itself now threads its own locale through to the tuition qualifier, not just the requirement copy", () => {
+    const view = buildUniversityCounselingView(
+      baseInput({ tuition: { costOfAttendance: null, internationalTuition: { amount: 9250, unit: "GBP/year", precisionState: "range" }, domesticTuition: null } }),
+      "tr"
+    );
+    expect(view.tuition.displayValue).toMatch(/^Başlangıç /);
+  });
+
+  test("locale has no effect on which branch is chosen, only on the qualifier wording -- the priority order itself is not locale-dependent", () => {
+    const input = { costOfAttendance: 65000, internationalTuition: null, domesticTuition: null };
+    expect(deriveTuitionContext(input, "en").kind).toBe("cost_of_attendance");
+    expect(deriveTuitionContext(input, "tr").kind).toBe("cost_of_attendance");
   });
 });
 

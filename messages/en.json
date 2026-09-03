@@ -803,6 +803,8 @@
       "comparing": "Comparing",
       "compare": "Compare",
       "costOfAttendanceSuffix": "/ year, cost of attendance",
+      "internationalTuitionSuffix": "international tuition",
+      "domesticTuitionSuffix": "domestic tuition",
       "detailedProfile": "Detailed profile"
     },
     "browseGrid": {
@@ -938,6 +940,7 @@
       "students": "Students",
       "costOfAttendance": "Cost of attendance",
       "costPerYear": "{value} / year",
+      "tuition": "Tuition",
       "admissionRate": "Admission rate",
       "statisticsSource": "Data source",
       "applicationSystem": "Application system",

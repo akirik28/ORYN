@@ -112,7 +112,7 @@ export function UniversityBrowseGrid({
               university={university}
               isSaved={savedIds.has(university.id)}
               qsRank={m.qsRank}
-              cost={m.cost}
+              tuition={m.tuition}
               researchTopics={m.researchTopics}
               imageUrl={m.imageUrl}
               hasResearchDepth={m.hasResearchDepth}
