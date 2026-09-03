@@ -193,6 +193,59 @@ right to admission, no competitive ranking. For numerus fixus programmes: genuin
 enter selection (qualitative, lottery, or hybrid per the 2023 framework), which then
 determines actual admission.
 
+## HBO-specific confirmation (2026-09-03 addendum)
+
+**Trigger:** CEO's applied-sciences follow-up, after Finland's genuine university/AMK divergence
+raised the question of whether the Netherlands' HBO (hoger beroepsonderwijs, university of
+applied sciences) sector needs the same treatment — a real question, not a rhetorical one, given
+everything above this section was researched against WO (research university) specifically and
+never explicitly confirmed for HBO.
+
+**Checked directly, via Nuffic's own "Higher education" page** (fetched 2026-09-03, primary
+confidence): no structural difference in the general admission mechanism between HBO and WO.
+Both are threshold-based on a diploma-level requirement — HBO: "HAVO diploma or MBO diploma
+level 4, sometimes extra requirements"; WO: "a VWO diploma or an HBO first-year certificate and
+sometimes extra requirements" — with the same numerus fixus exception mechanism layered on both:
+"numerus fixus applies to some study programmes in both higher professional education and
+university education." This is a genuine, checked convergence, not an assumption carried over
+from the WO research above — the same standard this research line has applied since Belgium's
+Community check. **No `subdivisions` entry was added for the Netherlands.**
+
+**One HBO-associated process was checked and ruled out as a hidden selection gate:** the
+*studiekeuzecheck* ("study choice check," sometimes "matching"), commonly associated with HBO
+enrolment. Confirmed **non-binding** — the institution's resulting advice does not gate
+admission even when negative — and applies to WO applicants too, not an HBO-exclusive step.
+Several 2026 sources (Hogeschool Rotterdam, De Haagse Hogeschool) show it moving from mandatory
+to institution-optional at some HBOs this cycle, reinforcing that it was never a genuine
+admission-mechanism component rather than an advisory add-on.
+
+**Why the Netherlands and Finland landed differently, structurally, not just by luck of the
+research:** Finland runs its two sectors under two separate governing Acts (yliopistolaki,
+ammattikorkeakoululaki), which is the root of its genuine mechanism divergence. The Netherlands
+runs HBO and WO under one shared framework — the WHW (Wet op het Hoger Onderwijs en
+Wetenschappelijk Onderzoek), one Studielink platform, and the same 2023 numerus-fixus
+selection-method law applying to capped programmes in both sectors. A shared governing framework
+doesn't guarantee convergence on its own, but it's a checkable reason the convergence found here
+is plausible rather than surprising.
+
+**What IS genuinely HBO-specific and worth stating, even without a shape difference:** a
+Turkish Lise Diploması's Nuffic-confirmed level — "at least a HAVO diploma" (re-fetched and
+re-confirmed 2026-09-03, matching this doc's original finding above) — **is HBO's own entry
+bar**. A Turkish MEB-only applicant who needs a supplementary qualification or a high Diploma
+Puanı to reach WO (the Tilburg/VU findings above) can often satisfy HBO's threshold on the Lise
+Diploması alone. This is an eligibility-bar fact, not a mechanism-shape fact, so it doesn't
+change `shape` in the registry — it's now folded into the `international` pathway's own
+mechanism sentence in `system-shape.ts` directly, since it's exactly the kind of concrete,
+favorable, sourced detail a Turkish applicant reading that sentence should see.
+
+**Not checked this pass:** whether HBO's own subject-prerequisite system (the HBO-equivalent of
+WO's profielen) differs in any material way from WO's; whether HBO numerus fixus programmes
+(Nursing and some Physiotherapy/Arts programmes are commonly cited) skew toward a different one
+of the three 2023-law selection methods than WO's capped programmes do; a live per-institution
+check across HBOs the way `docs/finland-amk-sector-2026-09-03.md` did for AMK identity (one HBO
+site, Hogeschool van Amsterdam, returned HTTP 403 on a direct fetch — not pursued further, since
+Nuffic's own system-level page already answered the shape question this pass needed).
+
 ## Safe inferences
 
 For the large majority of programmes, VWO-equivalent + subject prerequisites met =

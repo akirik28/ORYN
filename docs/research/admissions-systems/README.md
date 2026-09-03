@@ -100,6 +100,17 @@ actually support (see finland.md §B), and shipped Finland as the mechanism's fi
 registry entry, using the real 22-institution AMK name list 6e's institution research verified.
 See [`finland.md`](./finland.md) for the full account, including what's still unresolved.
 
+**Netherlands checked the same day — and did not need the mechanism.** HBO (applied sciences)
+was the natural next candidate given the same university/applied-sciences split, but a direct
+check of Nuffic's own "Higher education" page found no structural admission-mechanism difference
+from WO: numerus fixus applies to capped programmes in both sectors, and the *studiekeuzecheck*
+some HBOs run is confirmed non-binding advice, not a selection gate, for either sector. A
+genuine, checked convergence — not an assumption, and not a subdivision built reflexively just
+because Finland needed one. The existing Netherlands entry's `international` mechanism sentence
+was extended with the one real HBO-specific fact this pass found: a Turkish Lise Diploması
+("at least a HAVO diploma," Nuffic) clears HBO's own entry bar directly, unlike WO's higher
+VWO-equivalent one. See [`netherlands.md`](./netherlands.md)'s 2026-09-03 addendum.
+
 A side observation while writing `finland.md`'s first pass — every one of ORYN's 9 original
 Finnish institutions is a research university, none are UAS — turned into its own measurement:
 [`applied-sciences-sector-coverage.md`](./applied-sciences-sector-coverage.md) checks whether

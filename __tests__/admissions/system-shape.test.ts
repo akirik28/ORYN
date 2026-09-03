@@ -762,6 +762,55 @@ describe("resolveAdmissionSystem — Finland (2026-09-03, the subdivisions mecha
   });
 });
 
+// Netherlands is the negative case for the subdivisions mechanism -- checked (Nuffic's own
+// "Higher education" page) whether HBO needs the same treatment Finland's AMK sector did, and
+// confirmed it doesn't: a genuine convergence, not an assumption carried over from the WO
+// research this entry was originally built from. See netherlands.md's 2026-09-03 addendum.
+describe("resolveAdmissionSystem — Netherlands HBO (2026-09-03, checked and found to converge with WO, no subdivision)", () => {
+  test("a named HBO institution resolves through the plain country default, not a subdivision", () => {
+    const result = resolveAdmissionSystem({
+      targetCountry: "Netherlands",
+      studentCountry: "Turkey",
+      targetUniversityName: "Hogeschool van Amsterdam",
+    });
+    expect(result.basis).toBe("country_pathway");
+    expect(result.shape).toBe("academic_threshold");
+  });
+
+  test("the international mechanism names the HBO-specific HAVO/Lise Diplomasi finding", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Netherlands", studentCountry: "Turkey" });
+    expect(result.mechanism).toContain("HAVO");
+    expect(result.mechanism).toContain("HBO");
+  });
+
+  test("a WO institution resolves identically to an HBO one — the confirmed convergence, not two different answers", () => {
+    const hbo = resolveAdmissionSystem({
+      targetCountry: "Netherlands",
+      studentCountry: "Turkey",
+      targetUniversityName: "Hogeschool van Amsterdam",
+    });
+    const wo = resolveAdmissionSystem({
+      targetCountry: "Netherlands",
+      studentCountry: "Turkey",
+      targetUniversityName: "University of Amsterdam",
+    });
+    expect(hbo.shape).toBe(wo.shape);
+    expect(hbo.mechanism).toBe(wo.mechanism);
+    expect(hbo.basis).toBe(wo.basis);
+  });
+
+  test("Dutch Medicine numerus fixus still overrides for an HBO-named target the same as for WO — the field override outranks the (absent) subdivision either way", () => {
+    const result = resolveAdmissionSystem({
+      targetCountry: "Netherlands",
+      studentCountry: "Turkey",
+      targetUniversityName: "Hogeschool van Amsterdam",
+      targetField: "medicine",
+    });
+    expect(result.shape).toBe("holistic_review");
+    expect(result.basis).toBe("country_field");
+  });
+});
+
 describe("resolveAdmissionSystem — totality", () => {
   test("never throws and always returns a resolution, including for empty input", () => {
     expect(() => resolveAdmissionSystem({ targetCountry: null, studentCountry: null })).not.toThrow();
