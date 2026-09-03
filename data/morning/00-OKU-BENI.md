@@ -34,7 +34,7 @@ diye gösterecek, ama iş görmeyecek.
 
 ## 3. Bekleyen veriyi doldur
 
-`02-veri-doldurma-2026-09-03.sql` — **347 düzeltme ifadesi, 212 tekil kayıt.** En görünür
+`02-veri-doldurma-2026-09-03.sql` — **377 düzeltme ifadesi, 212 tekil kayıt.** En görünür
 etkisi: kurum adı boş olan **190 kayıt dolacak**, ve 84 kayıt tek tek doğrulanmış haliyle
 `under_review`'dan `active`'e geçecek — yani öğrencinin göreceği katalog büyüyecek.
 
