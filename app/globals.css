@@ -1082,6 +1082,75 @@
   }
 }
 
+/* Ultra plan-page marquee (2026-09-03, founder-directed /settings/plan redesign): a
+   slow-scrolling row of "what Ultra gives you" cards, shown to every viewer regardless of
+   their own real tier -- this is the one place on the product where the flame identity has
+   to render for a Standard student too, since the whole point is showing them what they'd
+   get. Wrapped in a local `data-tier="ultra"` scope (features/settings/ultra-feature-
+   marquee.tsx) rather than duplicating the --tier-grad-1/2/3 and --tier-glow tokens under a
+   new selector -- `[data-tier="ultra"] .foo` is a plain descendant selector, so it activates
+   correctly for any element under a matching ancestor, not only <html>, and this reuses
+   the exact founder-approved flame values instead of a second, hand-picked copy of them.
+
+   Pausable on hover/focus (WCAG 2.2.2), reduced motion respected via the same plain
+   @media (prefers-reduced-motion: reduce) gate every other animation in this file already
+   uses -- no JS hook needed, matching lib/ui/use-prefers-reduced-motion.ts's own guidance
+   to reach for that hook only when a CSS-only gate can't reach the animation (a canvas/RAF
+   loop; this is a plain transform animation, so it can). The doubled-card-row technique
+   (the component renders two copies of the same card list back to back and this scrolls
+   exactly -50%, for a seamless loop) needs the reduced-motion fallback to render only ONE
+   copy, not two static unmoving ones side by side -- handled in the component with
+   Tailwind's motion-reduce:hidden on the second copy, not here. */
+@keyframes plan-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    /* Exactly half the track's width: the track holds two back-to-back copies of the same
+       card list, so translating by half of it lands pixel-identical to the untranslated
+       start -- the loop point is invisible. */
+    transform: translateX(-50%);
+  }
+}
+
+.plan-marquee-track {
+  animation: plan-marquee-scroll 32s linear infinite;
+}
+
+.plan-marquee-viewport:hover .plan-marquee-track,
+.plan-marquee-viewport:focus-within .plan-marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plan-marquee-track {
+    animation: none;
+  }
+}
+
+/* A card's own flame treatment -- a top accent bar in the same flow gradient
+   .tier-flow-bar uses, plus the same small box-shadow glow .tier-glow-sm already uses on
+   the current-plan badge (small-element glow, not a second ambient light source -- see
+   that class's own precedent; the "one ambient glow layer for the whole app" rule above
+   is about page-level blurred conic gradients, a different scale of effect entirely).
+   Both only resolve to anything inside a data-tier="ultra" scope, so a card rendered
+   outside one costs nothing, same zero-footprint guarantee every other tier-* rule here
+   holds. */
+.plan-ultra-card {
+  position: relative;
+}
+[data-tier="ultra"] .plan-ultra-card {
+  box-shadow: 0 0 24px -6px var(--tier-glow);
+}
+[data-tier="ultra"] .plan-ultra-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--tier-grad-1), var(--tier-grad-2), var(--tier-grad-3));
+}
+
 /* CV Generator (features/profile/cv-builder.tsx): isolates .cv-print-area as the only
    visible content when printing / saving as PDF, regardless of the app shell around it. */
 @media print {

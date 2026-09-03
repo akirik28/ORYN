@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import { render, screen, within, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
@@ -17,13 +17,30 @@ vi.mock("@/app/(app)/settings/actions", () => ({
 
 import { registerUltraInterestAction } from "@/app/(app)/settings/actions";
 import { PlanTierView } from "@/features/settings/plan-tier-view";
+import { formatNumber, formatTokenCount } from "@/lib/i18n/format";
 
 const mockedRegister = vi.mocked(registerUltraInterestAction);
+
+// 2026-09-03, the founder-directed redesign: real current values, not arbitrary test
+// numbers — these are what app/(app)/settings/plan/page.tsx actually passes in production
+// (lib/ai/token-limits.ts's MONTHLY_AI_TOKEN_LIMIT, lib/ai/advisor-chat.ts's
+// ADVISOR_MAX_TOKENS_STANDARD/_ULTRA), so a rendering assertion against these numbers is
+// pinned to reality rather than to a fixture that happens to look plausible.
+const ULTRA_TOKEN_LIMIT = 472_300;
+const STANDARD_TOKEN_LIMIT = 236_150;
+const ULTRA_MAX_TOKENS = 8192;
+const STANDARD_MAX_TOKENS = 4096;
 
 function renderView(tier: "standard" | "ultra") {
   return render(
     <NextIntlClientProvider locale="en" messages={en}>
-      <PlanTierView tier={tier} />
+      <PlanTierView
+        tier={tier}
+        ultraTokenLimit={ULTRA_TOKEN_LIMIT}
+        standardTokenLimit={STANDARD_TOKEN_LIMIT}
+        ultraMaxTokens={ULTRA_MAX_TOKENS}
+        standardMaxTokens={STANDARD_MAX_TOKENS}
+      />
     </NextIntlClientProvider>,
   );
 }
@@ -41,7 +58,12 @@ describe("PlanTierView — no buy button", () => {
   test("a standard-tier student sees an honest interest button, never anything resembling checkout", () => {
     renderView("standard");
     expect(screen.getByText("Interested in Ultra?")).toBeInTheDocument();
-    expect(screen.getByText(/isn't available to buy yet/)).toBeInTheDocument();
+    // 2026-09-03: the exact wording moved ("isn't available to buy yet" -> "isn't open for
+    // signups yet") as part of relocating this disclosure out of the page's lead sentence
+    // and into this card (see PlanTierView's own header on why) -- the underlying fact this
+    // test actually cares about, that the page states plainly it can't be bought, is
+    // unchanged, just reworded.
+    expect(screen.getByText(/isn't open for signups yet/)).toBeInTheDocument();
     // The price sits next to the same honest disclosure, not in place of it -- a concrete
     // price beside a button that can't take money is the fake-button case unless the page
     // says plainly what the state is (CEO's own framing for this assignment).
@@ -93,7 +115,9 @@ describe("PlanTierView — current plan display", () => {
 describe("PlanTierView — comparison table is data-driven, not hardcoded", () => {
   test("renders exactly the rows TIER_COMPARISON_ROWS declares, each from its own catalog entry", () => {
     renderView("standard");
-    // The two "differs" rows.
+    // The four "differs" rows.
+    expect(screen.getByText("Monthly AI allowance")).toBeInTheDocument();
+    expect(screen.getByText("Reply length ceiling")).toBeInTheDocument();
     expect(screen.getByText("App appearance")).toBeInTheDocument();
     expect(screen.getByText("Standard theme")).toBeInTheDocument();
     expect(screen.getByText(/animated flame theme/)).toBeInTheDocument();
@@ -126,6 +150,84 @@ describe("PlanTierView — comparison table is data-driven, not hardcoded", () =
     for (const forbiddenUrgency of ["limited time", "hurry", "act now", "today only", "don't miss", "expires"]) {
       expect(screen.queryByText(new RegExp(forbiddenUrgency, "i"))).not.toBeInTheDocument();
     }
+  });
+});
+
+describe("PlanTierView — the two new rows' numbers are props, not hardcoded strings", () => {
+  // 2026-09-03: renders with numbers deliberately different from both the real production
+  // values and each other, then asserts the DIFFERENT numbers appear -- the failure mode
+  // this guards is a component that quietly ignores its own props and always shows one
+  // hand-typed figure regardless of what's actually enforced, which "renders exactly the
+  // rows" above (fixed real-looking numbers) could not catch on its own.
+  test("the allowance and reply-ceiling rows reflect whatever numbers are actually passed in", () => {
+    // Comfortably away from any compact-notation rounding boundary (e.g. 999_000 could
+    // legitimately format as "1M" rather than "999K") -- these need to round-trip through
+    // formatTokenCount exactly as written below, not just be "close enough".
+    const oddUltraLimit = 850_000;
+    const oddStandardLimit = 320_000;
+    const oddUltraMaxTokens = 12_345;
+    const oddStandardMaxTokens = 6_789;
+
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <PlanTierView
+          tier="standard"
+          ultraTokenLimit={oddUltraLimit}
+          standardTokenLimit={oddStandardLimit}
+          ultraMaxTokens={oddUltraMaxTokens}
+          standardMaxTokens={oddStandardMaxTokens}
+        />
+      </NextIntlClientProvider>,
+    );
+
+    // getAllByText, not getByText: each figure legitimately appears in more than one place
+    // (the marquee's own stat display, doubled by its seamless-loop copy since jsdom can't
+    // apply the real CSS that hides it — see the marquee describe block below — and again,
+    // interpolated into a full sentence, in the comparison table). This test cares that the
+    // number appears at all, correctly derived from the prop, not how many times.
+    expect(screen.getAllByText(new RegExp(formatTokenCount(oddUltraLimit))).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(new RegExp(formatTokenCount(oddStandardLimit))).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(new RegExp(formatNumber(oddUltraMaxTokens))).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(new RegExp(formatNumber(oddStandardMaxTokens))).length).toBeGreaterThan(0);
+    // And the real production values from the standard fixture must NOT leak in from
+    // somewhere else (a stray hardcoded fallback, a second unrelated source) -- the only
+    // numbers on the page should be the ones actually passed to this render.
+    expect(screen.queryByText(new RegExp(formatTokenCount(ULTRA_TOKEN_LIMIT)))).not.toBeInTheDocument();
+    expect(screen.queryByText(new RegExp(formatNumber(ULTRA_MAX_TOKENS)))).not.toBeInTheDocument();
+  });
+});
+
+describe("PlanTierView — the marquee shows only genuine advantages, never a sameByDesign row", () => {
+  // 2026-09-03: the explicit design decision documented in PlanTierView's own header --
+  // a row of "here's what's better" cards is the wrong vehicle for "deliberately
+  // identical," so the two sameByDesign facts (weekly plan / research idea caps) stay
+  // table-only. Pinned here so a future edit that widens the marquee's source list can't
+  // silently reintroduce them.
+  test("the marquee's region contains the four differs cards and neither sameByDesign fact", () => {
+    renderView("standard");
+    const marquee = screen.getByRole("region", { name: /what ultra gives you/i });
+    // getAllByText, not getByText: the component renders the card list twice (the visible
+    // copy plus the seamless-loop duplicate, hidden under real CSS via motion-reduce:hidden
+    // — see UltraFeatureMarquee's own header) and jsdom has no CSS engine to actually apply
+    // that hiding, so both copies genuinely exist in this test's DOM. Each card's text
+    // appearing at least once is what this test cares about; the exact count (1 in a real
+    // browser under reduced motion, 2 otherwise) isn't something jsdom can assert honestly.
+    expect(within(marquee).getAllByText("AI tokens every month").length).toBeGreaterThan(0);
+    expect(within(marquee).getAllByText("Room to finish the answer").length).toBeGreaterThan(0);
+    expect(within(marquee).getAllByText("A Thorough reply mode").length).toBeGreaterThan(0);
+    expect(within(marquee).getAllByText("A theme of its own").length).toBeGreaterThan(0);
+    expect(within(marquee).queryByText(/weekly plan/i)).not.toBeInTheDocument();
+    expect(within(marquee).queryByText(/research/i)).not.toBeInTheDocument();
+  });
+
+  // WCAG 2.2.2 (Pause, Stop, Hide) — the actual scroll animation can't be exercised in
+  // jsdom (no real CSS animation engine), so this asserts the affordance the pause
+  // mechanism depends on: a keyboard user must be able to reach the region at all before
+  // :focus-within (app/globals.css's .plan-marquee-viewport rule) can pause it for them.
+  test("the marquee region is keyboard-focusable and named, not a silent decorative div", () => {
+    renderView("standard");
+    const marquee = screen.getByRole("region", { name: /what ultra gives you/i });
+    expect(marquee).toHaveAttribute("tabindex", "0");
   });
 });
 
