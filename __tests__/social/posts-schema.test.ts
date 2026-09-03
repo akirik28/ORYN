@@ -515,7 +515,18 @@ describe("migration numbering", () => {
     // than a policy author's discipline. Migration number assigned by CEO directly, not
     // self-picked -- four collisions already happened tonight. Still unapplied; the founder
     // runs it in the morning.
-    expect(Math.max(...numbers.map(Number))).toBe(116);
+    //
+    // 0118 (parent_weekly_commentary) -- P5's schema half, one column:
+    // parent_links.last_commentary_sent_at. Deliberately per-link, not per-student like the
+    // digest's own last_digest_sent_at (migration 0114) -- a parent linked to more than one
+    // child needs an independent windowing clock for each, and a parent linked mid-week must
+    // not inherit another child's backlog as "new this week." Content assembly
+    // (lib/digest/parent-commentary.ts, a separate self-started lane, extended here with the
+    // parent_links-driven batch runner) is untouched by this migration; this is schema only.
+    // 0117 is a different lane's own migration (parent_email_prompt_* columns), not present on
+    // this branch -- CEO assigned 0117/0118 to avoid a fifth same-night collision, and both
+    // lanes checked correctly and were simply racing. Still unapplied.
+    expect(Math.max(...numbers.map(Number))).toBe(118);
   });
 });
 

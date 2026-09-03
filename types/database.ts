@@ -2290,22 +2290,34 @@ export interface ParentLink {
   /** Set only by lib/parent/links.ts's confirmParentLink, the moment §K3's double
    * confirmation completes and status moves 'pending' -> 'active'. Null until then. */
   confirmed_at: string | null;
+  /** Migration 0118 — P5's windowing cursor, per-link not per-student (see that migration's
+   * own header for why). Null means commentary about this student was never generated for
+   * this parent; never written on a dry run. Only ever written by lib/digest/parent-
+   * commentary.ts's batch runner, via the admin client — RLS's two UPDATE policies on this
+   * table both gate on `status`, neither authorizes this column, which is correct: a session-
+   * scoped write was never the intended path for it. */
+  last_commentary_sent_at: string | null;
   created_at: string;
   updated_at: string;
 }
 /** id/created_at/updated_at are DB-defaulted; status/invited_at are always supplied
  * explicitly by lib/parent/links.ts's createParentLink (always 'pending', always "now"),
  * never left to a column default, so there's nothing optional here beyond the three DB-owned
- * fields. confirmed_at has no place in an Insert at all — a link is never created already
- * confirmed. */
-export type ParentLinkInsert = Omit<ParentLink, "id" | "confirmed_at" | "created_at" | "updated_at">;
-/** Deliberately the narrowest of the two shapes proposed on 2026-09-04: only `status` and
- * `confirmed_at` are ever legitimately updated, so a wider Updatable<> that merely excluded
- * the keys nobody happens to write today is not the same guarantee. invited_email/invited_at
- * are immutable once the row exists (a re-invite creates a new row, it does not mutate this
- * one), and 44's own guard trigger additionally freezes confirmed_at unless the caller is the
- * student — so this type and that trigger agree rather than one covering for the other. */
-export type ParentLinkUpdate = Partial<Pick<ParentLink, "status" | "confirmed_at">>;
+ * fields. confirmed_at/last_commentary_sent_at have no place in an Insert at all — a link is
+ * never created already confirmed, and commentary windowing starts only once the link exists. */
+export type ParentLinkInsert = Omit<ParentLink, "id" | "confirmed_at" | "created_at" | "updated_at" | "last_commentary_sent_at">;
+/** `status`/`confirmed_at` are the session-scoped shape (2026-09-04): the two RLS UPDATE
+ * policies on this table both gate on `status`, and 44's own guard trigger additionally
+ * freezes confirmed_at unless the caller is the student — so this type and that trigger agree
+ * rather than one covering for the other. `last_commentary_sent_at` (migration 0118) widens
+ * this deliberately, not by oversight: it's the one field a DIFFERENT caller legitimately
+ * writes — the batch runner, via the admin client, which isn't subject to either RLS policy
+ * above at all. Both callers share one Update type rather than two only because TypeScript's
+ * own structural typing already makes an admin-client `.update({ status: ... })` call
+ * type-check against this same shape without needing a second, narrower type to enforce
+ * that the runner never touches status/confirmed_at itself — it doesn't, by its own code, not
+ * because this type stops it. */
+export type ParentLinkUpdate = Partial<Pick<ParentLink, "status" | "confirmed_at" | "last_commentary_sent_at">>;
 
 /** Migration 0116's three get_parent_child_* functions (§5, "curated read functions") — each
  * `returns table`'s own column list IS the whitelist that keeps advisor_instructions/notes off
