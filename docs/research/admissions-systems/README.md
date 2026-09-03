@@ -122,7 +122,12 @@ densest cluster of numeric claims on the page — names a source with no way to 
 (`university_statistics` has no `source_url` column at all), and a real, already-populated
 `source_url` sitting on the tuition figure's own row is never rendered, even though the identical
 field is already correctly wired one section down for a different metric on the same table.
-Measurement only; neither finding is a contained mislabel, so neither was fixed here.
+Measurement only; neither finding is a contained mislabel, so neither was fixed here. The tuition
+half — a real, always-present `source_url` sitting unused on the row already being rendered — was
+a contained code fix and has since been built (`oryn/tuition-source-url-fix-2026-09-03`); the
+`university_statistics` half needs a schema change first, so it's written up as its own decision
+item instead:
+[`implementation-gap/university-statistics-source-url-decision-2026-09-03.md`](./implementation-gap/university-statistics-source-url-decision-2026-09-03.md).
 
 Each doc follows the same structure: admissions architecture, qualification eligibility
 (with a **dedicated Türkiye-applicant section** in every country), academic evidence use,
