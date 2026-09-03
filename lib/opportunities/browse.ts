@@ -2,7 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Opportunity, OpportunityCategory } from "@/types/database";
-import { canonicalCountryKey, isSameCountry } from "./matching";
+import { canonicalCountryKey, isSameCountry, type EligibilityNote } from "./matching";
 import { INSUFFICIENT_VERIFICATION_REASON, isOpportunitySufficientlyVerified, resolveStoredEligibility } from "./lifecycle";
 
 export interface OpportunityBrowseFilters {
@@ -124,9 +124,15 @@ export async function browseOpportunities(
     //
     // Expressing both through resolveStoredEligibility keeps one lifecycle rule in this file
     // rather than two that can drift — the drift that caused this bug and #140's.
+    // Locale omitted -- resolveStoredEligibility's own English default, matching this file's
+    // established precedent (matching.ts's own header names browse.ts as deliberately outside
+    // an earlier i18n pass's scope). "Not yet computed" is now `not_yet_computed`, one of
+    // EligibilityNoteCode's own values (browse.ts's own fallback, not a real
+    // computeEligibility finding), rendered through the same pipeline as every stored code
+    // rather than a hand-typed string outside it.
     const stored = match
-      ? { eligible: match.eligible, notes: match.eligibility_notes }
-      : { eligible: true, notes: "Eligibility hasn't been checked for this opportunity yet." };
+      ? { eligible: match.eligible, notes: (match.eligibility_notes as EligibilityNote[] | null) ?? [] }
+      : { eligible: true, notes: [{ code: "not_yet_computed" }] as EligibilityNote[] };
     const { eligible, notes, notActionable } = resolveStoredEligibility(opportunity, stored);
 
     // The freshness gate DEMOTES here rather than excluding, unlike the counselor's ranked

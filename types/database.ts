@@ -1832,7 +1832,12 @@ export interface OpportunityMatch {
   user_id: string;
   opportunity_id: string;
   eligible: boolean;
-  eligibility_notes: string | null;
+  /** Codes + params, not rendered prose — see lib/opportunities/matching.ts's
+   * EligibilityNote for the shape and why (2026-09-03: a stored sentence froze whatever
+   * locale was active at compute time into the row; same jsonb-array-of-codes convention
+   * `reason_codes` below already established). `unknown[]` to match that field's own
+   * un-app-typed convention in this hand-authored file, not EligibilityNote[] directly. */
+  eligibility_notes: unknown[];
   relevance_score: number;
   profile_need_score: number;
   effort_estimate: string | null;
@@ -1845,7 +1850,7 @@ export interface OpportunityMatch {
    * only — see lib/opportunities/persist-matches.ts'''s own comment on this column). */
   match_confidence: "not_assessed" | "limited_evidence" | "emerging" | "developing" | "strong" | null;
 }
-export type OpportunityMatchInsert = Insertable<OpportunityMatch, "id" | "calculated_at" | "eligible" | "reason_codes" | "match_confidence">;
+export type OpportunityMatchInsert = Insertable<OpportunityMatch, "id" | "calculated_at" | "eligible" | "eligibility_notes" | "reason_codes" | "match_confidence">;
 
 export interface SavedOpportunity {
   id: string;

@@ -489,7 +489,20 @@ describe("migration numbering", () => {
     // sending infrastructure exists anywhere in this codebase, and İYS (Law 6563) requires
     // its own registered consent for a commercial message, separate from what this
     // migration's own two columns exist to gate. See docs/digest-email-design-2026-09-03.md.
-    expect(Math.max(...numbers.map(Number))).toBe(114);
+    //
+    // 0115 (eligibility_notes_codes) -- opportunity_matches.eligibility_notes: text -> jsonb,
+    // not null default '[]'. b9 found the live defect (69 English rows against Turkish-
+    // preference students, one QA account) and its own root cause: the column stored a
+    // rendered sentence, so whatever locale was active when refreshOpportunityMatches last
+    // ran for that student froze into the row. Follows reason_codes' own established shape on
+    // this same table -- codes stored, translated at render (lib/opportunities/matching.ts's
+    // EligibilityNote/renderEligibilityNotes) -- extended with per-code params since several
+    // findings, unlike any reason_code, name a specific country/citizenship-list/grade a bare
+    // code would lose. Existing values are prose and can't be parsed back into codes, so this
+    // migration discards them to '[]'::jsonb rather than guessing -- the next real page view
+    // recomputes them correctly, the same recompute-on-read mechanism this table already
+    // relies on for everything else. See docs/eligibility-notes-codes-2026-09-03.md.
+    expect(Math.max(...numbers.map(Number))).toBe(115);
   });
 });
 

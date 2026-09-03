@@ -33,7 +33,7 @@ function opportunity(id: string, overrides: Record<string, unknown> = {}) {
   };
 }
 
-function match(opportunityId: string, matchScore: number, eligibilityNotes: string | null = null) {
+function match(opportunityId: string, matchScore: number, eligibilityNotes: unknown[] | null = []) {
   return { opportunity_id: opportunityId, match_score: matchScore, eligibility_notes: eligibilityNotes };
 }
 
@@ -81,13 +81,21 @@ describe("selectHomeStripCandidates", () => {
     expect(selectHomeStripCandidates([], [])).toHaveLength(0);
   });
 
-  test("eligibility_notes passes through verbatim — both the confirmed (null) and unverified-caveat (string) shapes", () => {
-    const matches = [match("opp-1", 90, null), match("opp-2", 80, "Country eligibility not verified yet — check the official page for restrictions.")];
-    const opportunities = [opportunity("opp-1"), opportunity("opp-2")];
+  // 2026-09-03 (eligibility_notes -> codes): this surface never rendered the note's own
+  // text, only whether one exists (see HomeStripOpportunity's own comment) — the field is a
+  // presence flag now, not a pass-through, so this covers empty, non-empty, and the
+  // defensive not-an-array case (an unmigrated environment still returning the old text
+  // column) rather than the boolean collapsing every real shape to the same assertion.
+  test("eligibilityNotes is true only when the stored code array is genuinely non-empty", () => {
+    const matches = [
+      match("opp-1", 90, []),
+      match("opp-2", 80, [{ code: "country_eligibility_unverified" }]),
+      match("opp-3", 70, null),
+    ];
+    const opportunities = [opportunity("opp-1"), opportunity("opp-2"), opportunity("opp-3")];
     const result = selectHomeStripCandidates(matches, opportunities);
-    expect(result.find((r) => r.id === "opp-1")?.eligibilityNotes).toBeNull();
-    expect(result.find((r) => r.id === "opp-2")?.eligibilityNotes).toBe(
-      "Country eligibility not verified yet — check the official page for restrictions."
-    );
+    expect(result.find((r) => r.id === "opp-1")?.eligibilityNotes).toBe(false);
+    expect(result.find((r) => r.id === "opp-2")?.eligibilityNotes).toBe(true);
+    expect(result.find((r) => r.id === "opp-3")?.eligibilityNotes).toBe(false);
   });
 });

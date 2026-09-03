@@ -1,5 +1,6 @@
 import type { Opportunity } from "@/types/database";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+import { renderEligibilityNotes, type EligibilityNote } from "./matching";
 
 /**
  * `cycle_status` already carries the truth about whether an opportunity's current cycle is
@@ -141,10 +142,21 @@ export function nonActionableOpportunityReason(
 
 export interface StoredEligibility {
   eligible: boolean;
-  notes: string | null;
+  /** Codes + params, exactly what's read back from `opportunity_matches.eligibility_notes` —
+   * see lib/opportunities/matching.ts's EligibilityNote. Not yet rendered: that's
+   * resolveStoredEligibility's own job below, since it needs a locale StoredEligibility
+   * itself doesn't carry. */
+  notes: EligibilityNote[];
 }
 
-export interface ResolvedEligibility extends StoredEligibility {
+/**
+ * No longer `extends StoredEligibility` (2026-09-03, the eligibility_notes -> codes fix):
+ * `notes` diverges on purpose between the two — stored is codes, resolved is the rendered
+ * sentence a surface can actually display — so they can't share one field declaration anymore.
+ */
+export interface ResolvedEligibility {
+  eligible: boolean;
+  notes: string | null;
   /**
    * True when `eligible` is false *only* because the opportunity isn't actionable right now.
    * That's a fact about the opportunity's cycle, not about this student, and surfaces need to
@@ -171,16 +183,29 @@ export interface ResolvedEligibility extends StoredEligibility {
  * next-cycle date. Note this only ever *removes* an eligibility claim — an actionable
  * opportunity's stored verdict, in either direction, is passed through untouched, so a real
  * per-student mismatch is never overwritten with a cheerier answer.
+ *
+ * `locale` (2026-09-03, the eligibility_notes -> codes fix) is this function's own render
+ * boundary: both branches below produce a display string now — the actionable branch via
+ * renderEligibilityNotes on the stored codes, the non-actionable branch via
+ * nonActionableOpportunityReason, which already took a locale before this change (defaulting
+ * to English) and keeps doing so. Defaults to English so existing callers that don't pass one
+ * — lib/opportunities/browse.ts, this file's own header names it as deliberately outside an
+ * earlier i18n pass's scope — keep producing today's exact output unchanged. Added AFTER
+ * `referenceDate`, not before it, deliberately: `referenceDate` was already a positional
+ * parameter real callers (this file's own tests) pass directly, and inserting a new required-
+ * ish parameter ahead of an existing positional one silently reinterprets every such call
+ * rather than erroring — putting `locale` last keeps every 3-arg call exactly as it was.
  */
 export function resolveStoredEligibility(
   opportunity: Pick<Opportunity, "status" | "cycle_status" | "deadline">,
   stored: StoredEligibility,
-  referenceDate: Date = new Date()
+  referenceDate: Date = new Date(),
+  locale: Locale = DEFAULT_LOCALE
 ): ResolvedEligibility {
   if (isOpportunityActionable(opportunity, referenceDate)) {
-    return { ...stored, notActionable: false };
+    return { eligible: stored.eligible, notes: renderEligibilityNotes(stored.notes, locale), notActionable: false };
   }
-  return { eligible: false, notes: nonActionableOpportunityReason(opportunity), notActionable: true };
+  return { eligible: false, notes: nonActionableOpportunityReason(opportunity, locale), notActionable: true };
 }
 
 /**

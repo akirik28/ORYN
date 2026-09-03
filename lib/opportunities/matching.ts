@@ -65,9 +65,49 @@ export interface OpportunityForMatching {
   locationMode?: "online" | "in_person" | "hybrid" | null;
 }
 
+/**
+ * Every distinct eligibility finding computeEligibility can produce, stored as a code
+ * instead of rendered prose (2026-09-03 — the fix for a real bug: `eligibility_notes` used
+ * to store a rendered sentence, which froze whatever locale was active at compute time into
+ * the row. Follows `opportunity_matches.reason_codes`' own established shape — codes stored,
+ * translated at render — extended with `params` because several of these, unlike any
+ * reason_code, name specifics (a country, a citizenship list, a grade) that a bare code would
+ * lose. `not_yet_computed` is the one code computeEligibility itself never produces — it's
+ * lib/opportunities/browse.ts's own "no match row exists yet" fallback, included here so it
+ * flows through the same render pipeline as every real finding rather than needing a special
+ * case at each call site.
+ */
+export type EligibilityNoteCode =
+  | "already_applied"
+  | "already_not_interested"
+  | "age_below_minimum"
+  | "age_above_maximum"
+  | "age_unknown"
+  | "age_eligibility_unverified"
+  | "country_unknown"
+  | "country_not_eligible"
+  | "citizenship_unknown"
+  | "citizenship_not_eligible"
+  | "citizenship_restriction_on_file"
+  | "residency_restriction_on_file"
+  | "country_eligibility_unverified"
+  | "grade_unknown"
+  | "grade_not_eligible"
+  | "grade_eligibility_unverified"
+  | "not_yet_computed";
+
+export interface EligibilityNote {
+  code: EligibilityNoteCode;
+  /** Only the codes named in this file's own eligibilityMessages/renderEligibilityNote carry
+   * params — see either for which keys a given code actually reads. */
+  params?: Record<string, string | number>;
+}
+
 export interface EligibilityResult {
   eligible: boolean;
-  notes: string | null;
+  /** Empty, never null, when there's nothing to say — matches reason_codes' own
+   * NOT NULL DEFAULT '[]' convention rather than a third "no notes" representation. */
+  notes: EligibilityNote[];
 }
 
 /** A student's own typed country and an opportunity's `eligible_countries` can name the
@@ -153,6 +193,24 @@ export function isSameCountry(a: string, b: string): boolean {
  * effort's "sourced text stays as stored" rule.
  */
 export const eligibilityMessages = {
+  // The four hard-exclusion/dismissal sentences below lived inline in computeEligibility
+  // until 2026-09-03 (the eligibility_notes -> codes fix) — pulled in here alongside the rest
+  // so every sentence this file can produce has exactly one source, matching this object's
+  // own stated purpose. computeEligibility itself never called these by name before; only
+  // renderEligibilityNote does now.
+  alreadyApplied: (locale: Locale) => (locale === "tr" ? "Bu fırsata zaten başvurdun." : "You already applied to this."),
+
+  alreadyNotInterested: (locale: Locale) => (locale === "tr" ? "Bunu zaten ilgilenmiyorum olarak işaretledin." : "You already marked this not interested."),
+
+  ageBelowMinimum: (minimumAge: number, locale: Locale) => (locale === "tr" ? `Asgari ${minimumAge} yaş gerektiriyor.` : `Requires minimum age ${minimumAge}.`),
+
+  ageAboveMaximum: (maximumAge: number, locale: Locale) => (locale === "tr" ? `Azami ${maximumAge} yaş gerektiriyor.` : `Requires maximum age ${maximumAge}.`),
+
+  // lib/opportunities/browse.ts's own fallback when no opportunity_matches row exists yet —
+  // not a computeEligibility finding, but given the same code+params treatment (EligibilityNote-
+  // Code's own comment explains why) so it renders through the same pipeline as every real one.
+  notYetComputed: (locale: Locale) => (locale === "tr" ? "Bu fırsat için uygunluk henüz kontrol edilmedi." : "Eligibility hasn't been checked for this opportunity yet."),
+
   ageUnknown: (locale: Locale) => (locale === "tr" ? "Yaş şartı var — kontrol etmek için doğum yılını ekle." : "Has an age requirement — add your birth year to check."),
 
   countryUnknown: (locale: Locale) => (locale === "tr" ? "Ülkeye göre kısıtlı — kontrol etmek için ülkeni ekle." : "Restricted by country — add your country to check."),
@@ -209,32 +267,91 @@ export const eligibilityMessages = {
       : "Grade eligibility not verified yet — check the official page for restrictions.",
 };
 
+/**
+ * Renders a stored EligibilityNote[] back to a display sentence, in whatever locale the
+ * current viewer needs — the inverse of computeEligibility below, and the only place any of
+ * these codes turns into prose. `locale` defaults to English so a caller with no locale to
+ * thread through yet (lib/opportunities/browse.ts, matching this file's existing precedent
+ * for nonActionableOpportunityReason one file over) gets today's exact wording rather than a
+ * crash. Exhaustive over EligibilityNoteCode by construction — a switch with no default and
+ * an explicit `string` return type, so adding a code without adding its render case is a
+ * compile error, not a silent blank note in production.
+ */
+export function renderEligibilityNotes(notes: readonly EligibilityNote[], locale: Locale = DEFAULT_LOCALE): string | null {
+  if (notes.length === 0) return null;
+  return notes.map((note) => renderEligibilityNote(note, locale)).join(" ");
+}
+
+function renderEligibilityNote(note: EligibilityNote, locale: Locale): string {
+  const p = note.params ?? {};
+  switch (note.code) {
+    case "already_applied":
+      return eligibilityMessages.alreadyApplied(locale);
+    case "already_not_interested":
+      return eligibilityMessages.alreadyNotInterested(locale);
+    case "age_below_minimum":
+      return eligibilityMessages.ageBelowMinimum(Number(p.minimumAge), locale);
+    case "age_above_maximum":
+      return eligibilityMessages.ageAboveMaximum(Number(p.maximumAge), locale);
+    case "age_unknown":
+      return eligibilityMessages.ageUnknown(locale);
+    case "age_eligibility_unverified":
+      return eligibilityMessages.ageEligibilityUnverified(locale);
+    case "country_unknown":
+      return eligibilityMessages.countryUnknown(locale);
+    case "country_not_eligible":
+      return eligibilityMessages.countryNotEligible(String(p.studentCountry), locale);
+    case "citizenship_unknown":
+      return eligibilityMessages.citizenshipUnknown(locale);
+    case "citizenship_not_eligible":
+      return eligibilityMessages.citizenshipNotEligible(String(p.eligible), String(p.onFile), locale);
+    case "citizenship_restriction_on_file":
+      return eligibilityMessages.citizenshipRestrictionOnFile(String(p.restriction), locale);
+    case "residency_restriction_on_file":
+      return eligibilityMessages.residencyRestrictionOnFile(String(p.restriction), locale);
+    case "country_eligibility_unverified":
+      return eligibilityMessages.countryEligibilityUnverified(locale);
+    case "grade_unknown":
+      return eligibilityMessages.gradeUnknown(locale);
+    case "grade_not_eligible":
+      return eligibilityMessages.gradeNotEligible(String(p.eligibleGrades), Number(p.currentGrade), locale);
+    case "grade_eligibility_unverified":
+      return eligibilityMessages.gradeEligibilityUnverified(locale);
+    case "not_yet_computed":
+      return eligibilityMessages.notYetComputed(locale);
+  }
+}
+
+/**
+ * `locale` dropped 2026-09-03 (the eligibility_notes -> codes fix, docs/eligibility-notes-
+ * codes-2026-09-03.md): this function used to render sentences directly, which is exactly how
+ * a request's locale ended up frozen into a stored row read back by a student in a different
+ * locale later. It computes eligibility facts now, nothing else — a caller that wants prose
+ * calls renderEligibilityNotes above, at read time, in whatever locale is actually current.
+ */
 export function computeEligibility(
   student: StudentMatchProfile,
   opportunity: OpportunityForMatching,
-  savedStatus: SavedOpportunityStatus | null = null,
-  locale: Locale = DEFAULT_LOCALE
+  savedStatus: SavedOpportunityStatus | null = null
 ): EligibilityResult {
-  const tr = locale === "tr";
-
   if (savedStatus === "applied") {
-    return { eligible: false, notes: tr ? "Bu fırsata zaten başvurdun." : "You already applied to this." };
+    return { eligible: false, notes: [{ code: "already_applied" }] };
   }
   if (savedStatus === "not_interested") {
-    return { eligible: false, notes: tr ? "Bunu zaten ilgilenmiyorum olarak işaretledin." : "You already marked this not interested." };
+    return { eligible: false, notes: [{ code: "already_not_interested" }] };
   }
 
-  const unknownNotes: string[] = [];
+  const unknownNotes: EligibilityNote[] = [];
 
   const hasAgeRestriction = opportunity.minimumAge !== null || opportunity.maximumAge !== null;
   if (hasAgeRestriction && student.age === null) {
-    unknownNotes.push(eligibilityMessages.ageUnknown(locale));
+    unknownNotes.push({ code: "age_unknown" });
   } else if (hasAgeRestriction) {
     if (opportunity.minimumAge !== null && student.age !== null && student.age < opportunity.minimumAge) {
-      return { eligible: false, notes: tr ? `Asgari ${opportunity.minimumAge} yaş gerektiriyor.` : `Requires minimum age ${opportunity.minimumAge}.` };
+      return { eligible: false, notes: [{ code: "age_below_minimum", params: { minimumAge: opportunity.minimumAge } }] };
     }
     if (opportunity.maximumAge !== null && student.age !== null && student.age > opportunity.maximumAge) {
-      return { eligible: false, notes: tr ? `Azami ${opportunity.maximumAge} yaş gerektiriyor.` : `Requires maximum age ${opportunity.maximumAge}.` };
+      return { eligible: false, notes: [{ code: "age_above_maximum", params: { maximumAge: opportunity.maximumAge } }] };
     }
   } else {
     // No bound recorded at all — distinct from "recorded but the student's own age is
@@ -242,15 +359,15 @@ export function computeEligibility(
     // every age is welcome; it's just never having been researched. Same principle as
     // countryEligibilityUnverified below, applied to the field that had no equivalent
     // safeguard (2026-09-03 — the age/grade half of the same unknown-called-eligible gap).
-    unknownNotes.push(eligibilityMessages.ageEligibilityUnverified(locale));
+    unknownNotes.push({ code: "age_eligibility_unverified" });
   }
 
   const hasCountryRestriction = opportunity.eligibleCountries.length > 0;
   if (hasCountryRestriction) {
     if (!student.country) {
-      unknownNotes.push(eligibilityMessages.countryUnknown(locale));
+      unknownNotes.push({ code: "country_unknown" });
     } else if (!opportunity.eligibleCountries.some((eligible) => isSameCountry(eligible, student.country!))) {
-      return { eligible: false, notes: eligibilityMessages.countryNotEligible(student.country, locale) };
+      return { eligible: false, notes: [{ code: "country_not_eligible", params: { studentCountry: student.country } }] };
     }
   }
 
@@ -259,11 +376,11 @@ export function computeEligibility(
   if (hasCitizenshipRestriction) {
     const citizenshipCountries = student.citizenshipCountries ?? [];
     if (citizenshipCountries.length === 0) {
-      unknownNotes.push(eligibilityMessages.citizenshipUnknown(locale));
+      unknownNotes.push({ code: "citizenship_unknown" });
     } else if (!citizenshipCountries.some((c) => eligibleCitizenships.some((e) => isSameCountry(c, e)))) {
       return {
         eligible: false,
-        notes: eligibilityMessages.citizenshipNotEligible(eligibleCitizenships.join(", "), citizenshipCountries.join(", "), locale),
+        notes: [{ code: "citizenship_not_eligible", params: { eligible: eligibleCitizenships.join(", "), onFile: citizenshipCountries.join(", ") } }],
       };
     }
   }
@@ -278,10 +395,10 @@ export function computeEligibility(
   // this now surfaces that previously produced no note at all (verified against
   // oryn-qa-scratch, 2026-08-22).
   if (opportunity.citizenshipRestrictions && !hasCitizenshipRestriction) {
-    unknownNotes.push(eligibilityMessages.citizenshipRestrictionOnFile(opportunity.citizenshipRestrictions, locale));
+    unknownNotes.push({ code: "citizenship_restriction_on_file", params: { restriction: opportunity.citizenshipRestrictions } });
   }
   if (opportunity.residencyRestrictions && !hasCountryRestriction) {
-    unknownNotes.push(eligibilityMessages.residencyRestrictionOnFile(opportunity.residencyRestrictions, locale));
+    unknownNotes.push({ code: "residency_restriction_on_file", params: { restriction: opportunity.residencyRestrictions } });
   }
 
   // Empty eligibleCountries has two live meanings: research-confirmed open (deliberately
@@ -298,24 +415,24 @@ export function computeEligibility(
     !hasUnstructuredRestrictionEvidence &&
     !(opportunity.countryEligibilityConfirmedOpen ?? false)
   ) {
-    unknownNotes.push(eligibilityMessages.countryEligibilityUnverified(locale));
+    unknownNotes.push({ code: "country_eligibility_unverified" });
   }
 
   const eligibleGrades = opportunity.eligibleGrades ?? [];
   if (eligibleGrades.length > 0) {
     const grade = currentGradeLevel(student.graduationYear ?? null);
     if (grade === null) {
-      unknownNotes.push(eligibilityMessages.gradeUnknown(locale));
+      unknownNotes.push({ code: "grade_unknown" });
     } else if (!gradeMatchesEligibility(grade, eligibleGrades)) {
-      return { eligible: false, notes: eligibilityMessages.gradeNotEligible(eligibleGrades.join(", "), grade, locale) };
+      return { eligible: false, notes: [{ code: "grade_not_eligible", params: { eligibleGrades: eligibleGrades.join(", "), currentGrade: grade } }] };
     }
   } else {
     // Same principle as the age `else` branch above: no eligible_grades recorded at all is
     // not evidence every grade is welcome, just never researched.
-    unknownNotes.push(eligibilityMessages.gradeEligibilityUnverified(locale));
+    unknownNotes.push({ code: "grade_eligibility_unverified" });
   }
 
-  return { eligible: true, notes: unknownNotes.length > 0 ? unknownNotes.join(" ") : null };
+  return { eligible: true, notes: unknownNotes };
 }
 
 /** Which profile dimensions a category of opportunity primarily develops — used to compute
@@ -574,7 +691,7 @@ function computeProfileNeed(student: StudentMatchProfile, opportunity: Opportuni
 
 export interface OpportunityMatchResult {
   eligible: boolean;
-  eligibilityNotes: string | null;
+  eligibilityNotes: EligibilityNote[];
   relevanceScore: number;
   profileNeedScore: number;
   matchScore: number;
@@ -603,10 +720,9 @@ export interface OpportunityMatchResult {
 export function computeOpportunityMatch(
   student: StudentMatchProfile,
   opportunity: OpportunityForMatching,
-  savedStatus: SavedOpportunityStatus | null = null,
-  locale: Locale = DEFAULT_LOCALE
+  savedStatus: SavedOpportunityStatus | null = null
 ): OpportunityMatchResult {
-  const { eligible, notes } = computeEligibility(student, opportunity, savedStatus, locale);
+  const { eligible, notes } = computeEligibility(student, opportunity, savedStatus);
   const relevance = computeRelevance(student, opportunity);
   const profileNeed = computeProfileNeed(student, opportunity);
   const matchScore = eligible ? clampScore(relevance.score * 0.4 + profileNeed.score * 0.6) : 0;

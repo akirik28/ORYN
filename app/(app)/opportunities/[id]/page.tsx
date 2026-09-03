@@ -8,7 +8,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
-import { matchTierKey } from "@/lib/opportunities/matching";
+import { matchTierKey, type EligibilityNote } from "@/lib/opportunities/matching";
 import {
   insufficientVerificationReason,
   isOpportunitySufficientlyVerified,
@@ -178,7 +178,15 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
   // when the opportunity's cycle closes or its deadline passes, so trusting it verbatim badges
   // a long-closed opportunity as a live match. Reusing resolveStoredEligibility rather than
   // re-deriving the rule here keeps this page from becoming a third copy that can drift.
-  const eligibility = match ? resolveStoredEligibility(opportunity, { eligible: match.eligible, notes: match.eligibility_notes }) : null;
+  //
+  // `locale` passed explicitly (2026-09-03, the eligibility_notes -> codes fix) — this page
+  // already resolves a real one for takeSentences below; resolveStoredEligibility defaults to
+  // English only for callers with no locale to give it, and this one has always had one.
+  // `undefined` for referenceDate keeps its own default (now) — locale is the 4th positional
+  // arg, after referenceDate, so it can't be skipped any other way.
+  const eligibility = match
+    ? resolveStoredEligibility(opportunity, { eligible: match.eligible, notes: (match.eligibility_notes as EligibilityNote[] | null) ?? [] }, undefined, locale)
+    : null;
 
   // The third lifecycle gate. This page never hides an opportunity (it's reachable by id by
   // design), so the freshness rule only ever labels here — and only when the row is otherwise

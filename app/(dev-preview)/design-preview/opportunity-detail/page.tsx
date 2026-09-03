@@ -9,7 +9,7 @@ import {
   selectivityLabel,
   cycleStatusLabel,
 } from "@/lib/opportunities/lifecycle";
-import { matchTierKey } from "@/lib/opportunities/matching";
+import { matchTierKey, type EligibilityNote } from "@/lib/opportunities/matching";
 import { categoryLabel } from "@/lib/opportunities/labels";
 import { OpportunityStandingBadge } from "@/features/opportunities/standing-badge";
 import { PageHeader } from "@/components/proxola/page-header";
@@ -83,7 +83,12 @@ export default async function OpportunityDetailPreviewPage() {
   const opportunity = FIXTURE_OPPORTUNITY_DETAIL;
   const match = FIXTURE_OPPORTUNITY_MATCH;
 
-  const eligibility = resolveStoredEligibility(opportunity, { eligible: match.eligible, notes: match.eligibility_notes });
+  const eligibility = resolveStoredEligibility(
+    opportunity,
+    { eligible: match.eligible, notes: (match.eligibility_notes as EligibilityNote[] | null) ?? [] },
+    undefined,
+    locale
+  );
   const needsVerification = !isOpportunitySufficientlyVerified(opportunity) && (!eligibility || (eligibility.eligible && !eligibility.notActionable));
   const daysUntilDeadline = opportunity.deadline ? differenceInCalendarDays(new Date(opportunity.deadline), new Date()) : null;
   const takeReasons = (match.reason_codes as string[]).map((code) => TAKE_SENTENCES[code]).filter((s): s is string => Boolean(s));

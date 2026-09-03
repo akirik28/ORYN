@@ -94,7 +94,7 @@ function match(opportunityId: string, overrides: Partial<OpportunityMatch> = {})
     user_id: "user-1",
     opportunity_id: opportunityId,
     eligible: true,
-    eligibility_notes: null,
+    eligibility_notes: [],
     relevance_score: 50,
     profile_need_score: 50,
     effort_estimate: null,
@@ -418,7 +418,7 @@ describe("Persona F — Turkish/international student, MEB curriculum diploma la
   test("the same grade-11 student is correctly excluded by an opportunity restricted to grades 9-10", () => {
     const result = computeEligibility(grade11Student, toMatchProfile(gradeRestrictedProgram));
     expect(result.eligible).toBe(false);
-    expect(result.notes).toMatch(/grade/i);
+    expect(result.notes[0]?.code).toBe("grade_not_eligible");
   });
 
   const state: CounselorState = {

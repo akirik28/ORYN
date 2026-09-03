@@ -39,11 +39,14 @@ export interface HomeStripOpportunity {
   cycleStatus: Opportunity["cycle_status"];
   currentCycleLabel: string | null;
   selectivityTier: Opportunity["selectivity_tier"];
-  /** From opportunity_matches.eligibility_notes — see lib/opportunities/matching.ts's
-   * computeEligibility for what can populate this. The only caveat this surface can ever
-   * show; see getHomeOpportunityStrip's own comment on why needsVerification/notActionable
-   * are not part of this shape at all. */
-  eligibilityNotes: string | null;
+  /** Whether opportunity_matches.eligibility_notes is non-empty for this match — see
+   * lib/opportunities/matching.ts's computeEligibility for what can populate it. A presence
+   * flag, not the rendered text (2026-09-03: this surface only ever shows a generic warning
+   * badge on it, never the note's own content — see OpportunityStripCard's own render — so
+   * there's nothing here that needs rendering into a locale at all, unlike every other reader
+   * of this column). The only caveat this surface can ever show; see getHomeOpportunityStrip's
+   * own comment on why needsVerification/notActionable are not part of this shape at all. */
+  eligibilityNotes: boolean;
 }
 
 /** No `matchScore` here, deliberately -- docs/homepage-strip-top5-quality-2026-09-03.md
@@ -68,7 +71,7 @@ export interface HomeStripOpportunity {
  * truncating it (readable as an unfinished thought) or widening the card past what a
  * five-wide rotating strip can hold. */
 
-type CandidateMatch = { opportunity_id: string; match_score: number; eligibility_notes: string | null };
+type CandidateMatch = { opportunity_id: string; match_score: number; eligibility_notes: unknown[] | null };
 
 type CandidateOpportunity = Pick<
   Opportunity,
@@ -112,7 +115,11 @@ export function selectHomeStripCandidates(matches: CandidateMatch[], opportuniti
       cycleStatus: o.cycle_status,
       currentCycleLabel: o.current_cycle_label,
       selectivityTier: o.selectivity_tier,
-      eligibilityNotes: match.eligibility_notes,
+      // Array.isArray defensively -- an environment where the eligibility_notes-codes
+      // migration hasn't landed yet could still hand back the old text column; this reads as
+      // "no notes" rather than throwing, same defensive habit this codebase already applies
+      // to every other not-yet-applied-migration column.
+      eligibilityNotes: Array.isArray(match.eligibility_notes) && match.eligibility_notes.length > 0,
     });
     if (result.length >= HOME_STRIP_SIZE) break;
   }
