@@ -8,7 +8,17 @@ import { RouteAmbientBlobs } from "@/features/app-shell/route-ambient-blobs";
 import { PreviewToolbar } from "./preview-toolbar";
 import type { DimensionSignal } from "@/lib/scoring/signal";
 import type { Notification, PlanTier } from "@/types/database";
+// A pure `import type` (not a per-specifier `type` modifier on a value import): fully
+// erased at compile time, unlike `import { X, type Y } from "..."`, which still leaves a
+// runtime import of the module for X's sake. lib/ai/monthly-quota.ts starts with
+// `import "server-only"`, which throws if any REAL (non-type) import pulls that module into
+// a client bundle — this component is `"use client"`, so MonthlyQuota can only be borrowed
+// as a type here, never as a value. The value this file actually needs at runtime
+// (MONTHLY_AI_TOKEN_LIMIT) now lives in lib/ai/token-limits.ts instead, which has no such
+// import and is safe for a client component to pull in directly (see that file's own
+// header, added 2026-09-03 for exactly this).
 import type { MonthlyQuota } from "@/lib/ai/monthly-quota";
+import { MONTHLY_AI_TOKEN_LIMIT } from "@/lib/ai/token-limits";
 
 // Real generated output from buildDigestNotification()/buildProfileUpdateNotification()
 // (lib/deadlines/scan.ts, lib/scoring/profile-update-notification.ts) against realistic
@@ -68,13 +78,29 @@ const PREVIEW_UNREAD_COUNT = PREVIEW_NOTIFICATIONS.filter((n) => !n.read_at).len
 // case" spirit as PREVIEW_NOTIFICATIONS above. usage-indicator.tsx and monthly-usage-meter.tsx
 // each have their own dedicated preview surfaces for exercising exhausted/degraded/unknown.
 //
-// limit: 236,150 tokens, not 50 uses -- lib/ai/monthly-quota.ts's MONTHLY_AI_TOKEN_LIMIT is
-// the same allowance re-denominated a second time the same night (2026-09-02): the founder
-// rejected "50 AI uses" as the same message count relabelled and asked for the real token
-// figure. Same 40% used proportion this fixture already chose deliberately (not an edge
-// case) -- kept the ratio, moved the unit, so this stays the same illustrative mid-month
-// state it always was rather than a coincidentally-different one.
-const PREVIEW_QUOTA: MonthlyQuota = { used: 94460, limit: 236150, remaining: 141690, fraction: 94460 / 236150, resetsAt: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 1)).toISOString(), usedIsKnown: true };
+// limit: lib/ai/monthly-quota.ts's real MONTHLY_AI_TOKEN_LIMIT, not a second hardcoded copy
+// of it -- 236,150 tokens, not 50 uses, is the same allowance re-denominated a second time
+// the same night (2026-09-02): the founder rejected "50 AI uses" as the same message count
+// relabelled and asked for the real token figure. Became Record<PlanTier, number> on
+// 2026-09-03 (the Ultra tier-economics build) -- this fixture already took a `tier` prop for
+// other purposes (the flame effect, the upgrade-CTA gating below) but still showed
+// Standard's number under an Ultra-styled bar, the exact tier-blind-display defect that
+// build exists to close. Reading the constant directly (rather than hand-copying Ultra's
+// 472,300) means this can never drift from the real enforced number the way a second
+// literal could. Same 40% used proportion this fixture already chose deliberately (not an
+// edge case) -- kept the ratio for both tiers, not just Standard's.
+function buildPreviewQuota(tier: PlanTier): MonthlyQuota {
+  const limit = MONTHLY_AI_TOKEN_LIMIT[tier];
+  const used = Math.round(limit * 0.4);
+  return {
+    used,
+    limit,
+    remaining: limit - used,
+    fraction: used / limit,
+    resetsAt: new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + 1, 1)).toISOString(),
+    usedIsKnown: true,
+  };
+}
 
 // Mirrors app/(app)/layout.tsx's structure with fixture data — real shell components, no
 // auth/data-fetching. See app/(dev-preview)/design-preview/page.tsx.
@@ -110,6 +136,7 @@ export function PreviewShell({
   signal: DimensionSignal[];
   tier?: PlanTier;
 }) {
+  const quota = buildPreviewQuota(tier);
   return (
     <div
       className="flex min-h-svh flex-col lg:flex-row"
@@ -121,14 +148,14 @@ export function PreviewShell({
         email="ada@example.com"
         notifications={PREVIEW_NOTIFICATIONS}
         unreadCount={PREVIEW_UNREAD_COUNT}
-        quota={PREVIEW_QUOTA}
+        quota={quota}
         budgetDegraded={false}
         tier={tier}
       />
       <Sidebar displayName="Ada" email="ada@example.com" signal={signal} />
       <div className="relative flex min-w-0 flex-1 flex-col">
         <RouteAmbientBlobs />
-        <Topbar notifications={PREVIEW_NOTIFICATIONS} unreadCount={PREVIEW_UNREAD_COUNT} quota={PREVIEW_QUOTA} budgetDegraded={false} tier={tier} />
+        <Topbar notifications={PREVIEW_NOTIFICATIONS} unreadCount={PREVIEW_UNREAD_COUNT} quota={quota} budgetDegraded={false} tier={tier} />
         <main className="relative z-[1] min-w-0 flex-1 overflow-x-hidden">
           <div className="mx-auto w-full max-w-[1200px] px-4 pt-8 pb-24 md:px-8 md:pt-12 lg:pb-12">{children}</div>
         </main>

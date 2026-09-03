@@ -5,7 +5,7 @@ import { withUsageLogging } from "./usage";
 import { ADVISOR_SYSTEM_PROMPT } from "./advisor-prompt";
 import { buildStudentAdvisorContext, formatContextForPrompt } from "./student-context";
 import { buildOpportunityContextText } from "./opportunity-context";
-import { DEGRADE_MODEL } from "./limits/budget";
+import { DEGRADE_MODEL, selectModelForUser } from "./limits/budget";
 import type { AIMessage } from "./provider";
 import { withOutputLanguage } from "./output-language";
 import { env } from "@/lib/env";
@@ -26,14 +26,14 @@ export interface AdvisorReply {
 }
 
 /**
- * "Ultra" response-mode's one real behavioural difference from "Standard" — same model,
- * asked for more (features/advisor/response-mode-slider.tsx's own header has the full
- * reasoning for why this is a prompt instruction rather than a third model). Deliberately
- * NOT a maxTokens increase: the comment on that parameter below already documents, from a
- * real benchmark, that it is a thinking-budget ceiling, not a length lever, and there is no
- * benchmark yet for what a longer answer under this instruction actually needs — raising it
- * without one would be exactly the "re-tighten... never by assumption" mistake that
- * comment warns against, just in the other direction.
+ * "Thorough" response-mode's one real behavioural difference from the default — same
+ * model, asked for more (features/advisor/response-mode-slider.tsx's own header has the
+ * full reasoning for why this is a prompt instruction rather than a third model).
+ * Deliberately NOT what changes maxTokens: that's the plan-TIER branch below now (Standard
+ * vs Ultra, 2026-09-03), a standing property of the account, not a per-message toggle —
+ * this instruction still has no benchmark of its own for what a longer answer under it
+ * specifically needs, so it stays a text nudge within whatever ceiling the tier already
+ * set, not a second, unmeasured lever on top of it.
  */
 const THOROUGH_INSTRUCTION =
   "For this reply specifically, give a more thorough answer than usual — more supporting detail and reasoning — while staying exactly as specific and evidence-based as always. Do not pad it; every added sentence should carry real information.";
@@ -61,7 +61,12 @@ export async function generateAdvisorReply(params: {
     locale,
   );
 
-  const result = await withUsageLogging({ userId: params.userId, feature: "advisor_chat" }, (model) => {
+  // selectModel explicit, not the default: withUsageLogging's own default is
+  // selectModelForUser(userId) alone (tier "standard"), which would silently give an Ultra
+  // student Standard's $0.50 degrade point despite params.planTier already being known here
+  // -- the exact "two limits that disagree" shape this build exists to close, just at the
+  // per-call layer instead of the display layer.
+  const result = await withUsageLogging({ userId: params.userId, feature: "advisor_chat", selectModel: (uid) => selectModelForUser(uid, params.planTier) }, (model) => {
     // Spend-based degrade always wins over a student's own response-mode preference — the
     // precedence is one rule, not a case matrix. `model` here already reflects
     // selectModelForUser's decision (env.anthropic.model normally, DEGRADE_MODEL once
@@ -99,7 +104,16 @@ export async function generateAdvisorReply(params: {
       // change; it is the same floor this codebase already had independent evidence for
       // before that experiment started. Re-tighten only
       // against a new benchmark showing thinking has grown, never by assumption.
-      maxTokens: 4096,
+      //
+      // Ultra gets 8192, not a blind doubling of Standard's 4096: benchmarked live
+      // 2026-09-03 against the same class of demanding request (a real fixture profile, a
+      // "give me everything, not a summary" question). 4096 truncated (stop_reason
+      // "max_tokens", exactly reproducing the failure above); 8192 completed cleanly
+      // (stop_reason "end_turn", 5,927 output tokens, 2,265 tokens of headroom — ~28% of
+      // the ceiling, landing in the same headroom band 4096 was itself benchmarked against).
+      // A measured number with a stated method, same discipline as the paragraph above,
+      // applied in the direction of raising it rather than only ever tightening it.
+      maxTokens: params.planTier === "ultra" ? 8192 : 4096,
     });
   });
 

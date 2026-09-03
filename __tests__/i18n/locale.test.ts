@@ -165,6 +165,13 @@ describe("message catalogs", () => {
       // the button an admin uses to set a student's tier. "tierStandard" ("Standart"),
       // right next to this key in messages/*.json, correctly differs.
       "admin.users.tierUltra",
+      // Two more "Ultra" surfaces, same precedent as admin.users.tierUltra directly above —
+      // added 2026-09-03 (the Ultra tier-economics build) alongside the same-named tier
+      // labels on the settings page's now-per-tier AI cap section and the per-student spend
+      // list. Each one's own "tierStandard" ("Standart"), right next to it in
+      // messages/*.json, correctly differs.
+      "admin.control.settings.aiCap.tierUltra",
+      "admin.perUser.tierUltra",
       // Same "numeric template, not words" reasoning as opportunities.comparePage.ageRangeMin
       // above, at its simplest: the whole string is one bare interpolation, nothing else —
       // there is no word in either language to translate. Its sibling countOfTotal

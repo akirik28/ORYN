@@ -11,6 +11,7 @@ import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { dimensionLabel } from "@/lib/scoring/labels";
 import { curriculumLabel } from "@/lib/requirements/copy";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { DEFAULT_LOCALE, isLocale, type Locale } from "@/lib/i18n/config";
 import type {
   ActionStatus,
@@ -21,6 +22,7 @@ import type {
   EmploymentType,
   EvidenceStatus,
   OutlookLabel,
+  PlanTier,
   ProfileDimension,
   ReflectionOutcome,
   TargetStatus,
@@ -228,6 +230,13 @@ export interface StudentAdvisorContext {
      * inferred from `country` (residence/school location, a separate fact). Not used in
      * prompt text today, same as birthYear. */
     citizenshipCountries: string[];
+    /** 2026-09-03, the Ultra tier-economics build: `resolvePlanTier`'s own decision, computed
+     * from the same profile row this whole function already fetches — not a second query.
+     * The one real consumer so far is `weekly-plan.ts`, which needs it to pass the right
+     * tier into `selectModelForWeeklyPlan`/`selectModelForUser` without fetching a profile a
+     * second time. Not used in prompt text — a model has no business reasoning about which
+     * tier is paying for the call it's making. */
+    tier: PlanTier;
   };
   /**
    * `state` is what the student's own surfaces render (lib/scoring/signal.ts). It is here
@@ -496,6 +505,7 @@ export async function buildStudentAdvisorContext(userId: string, supabaseClient?
       busyModeUntil: profile?.busy_mode_until ?? null,
       birthYear: profile?.birth_year ?? null,
       citizenshipCountries: profile?.citizenship_countries ?? [],
+      tier: resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null }),
     },
     profileScores: buildProfileSignal(dimensions).map((d) => ({
       dimension: d.dimension,

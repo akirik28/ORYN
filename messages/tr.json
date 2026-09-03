@@ -1728,7 +1728,9 @@
     },
     "perUser": {
       "sectionTitle": "Öğrenci başına harcama",
-      "subtitle": "Hedef {target}/ay · Tavan {ceiling}/ay",
+      "subtitle": "{tier}: hedef {target}/ay · tavan {ceiling}/ay",
+      "tierStandard": "Standart",
+      "tierUltra": "Ultra",
       "thisMonth": "Bu ay",
       "last30d": "Son 30 gün",
       "lifetime": "Toplam",
@@ -1800,7 +1802,7 @@
     },
     "warnings": {
       "sectionTitle": "Bütçe uyarıları",
-      "message": "{name}: son 30 günde {amount} (aylık {ceiling} tavanının %{percent}'i)",
+      "message": "{name} ({tier}): son 30 günde {amount} (aylık {ceiling} tavanının %{percent}'i)",
       "none": "Hiçbir öğrenci aylık tavanın %80'ini aşmadı."
     },
     "weeklyPlanBudget": {
@@ -2043,7 +2045,9 @@
         },
         "aiCap": {
           "sectionTitle": "Yapay zekâ maliyet tavanı",
-          "sectionDescription": "Salt okunur — bunlar gerçek, koda gömülü sabitler (lib/ai/limits/budget.ts), buradan değiştirilecek bir ayar değil. Bunları değiştirmek bir kod değişikliğidir, form değil.",
+          "sectionDescription": "Salt okunur — bunlar gerçek, koda gömülü sabitler (lib/ai/limits/budget.ts, lib/ai/monthly-quota.ts), buradan değiştirilecek bir ayar değil. Bunları değiştirmek bir kod değişikliğidir, form değil.",
+          "tierStandard": "Standart",
+          "tierUltra": "Ultra",
           "degradePoint": "Haiku'ya düştüğü nokta",
           "hardCeiling": "Sert tavan",
           "tokenLimit": "Görünen token kotası"

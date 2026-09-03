@@ -480,23 +480,32 @@ export async function generateWeeklyPlan(userId: string, supabaseClient?: Parame
   // would be the largest single instance of the class the 2026-09-02 sweep found in
   // cv_extraction/achievement_refinement.
   //
-  // `selectModel: selectModelForWeeklyPlan` (2026-09-03, the aggregate spend ceiling
-  // package) layers a feature-wide, summed-across-every-student check on top of the
-  // per-student one every other caller of withUsageLogging still gets by default -- see
-  // lib/ai/limits/weekly-plan-budget.ts's own header for why this needs to be a separate
-  // mechanism rather than a change to selectModelForUser itself. This is the prerequisite
-  // generate-weekly-plans needed before it could be armed on a schedule
-  // (docs/job-scheduling-decision-2026-09-02.md, docs/weekly-plan-aggregate-budget-2026-09-02.md).
-  const result = await withUsageLogging({ userId, feature: "weekly_plan", selectModel: selectModelForWeeklyPlan }, (model) =>
-    provider.generateStructured({
-      system: withOutputLanguage(ADVISOR_SYSTEM_PROMPT, context.student.preferredLanguage),
-      prompt: `Here is the student's current context:\n\n${formatContextForPrompt(context, context.student.preferredLanguage)}${counselorGrounding}\n\n${buildWeeklyPlanInstruction()}`,
-      schema: WeeklyPlanSchema,
-      schemaName: "record_weekly_plan",
-      schemaDescription: "Records this week's prioritized action plan for the student.",
-      maxTokens: 2048,
-      model,
-    }),
+  // `selectModel` (2026-09-03, the aggregate spend ceiling package) layers a feature-wide,
+  // summed-across-every-student check on top of the per-student one every other caller of
+  // withUsageLogging still gets by default -- see lib/ai/limits/weekly-plan-budget.ts's own
+  // header for why this needs to be a separate mechanism rather than a change to
+  // selectModelForUser itself. This is the prerequisite generate-weekly-plans needed before
+  // it could be armed on a schedule (docs/job-scheduling-decision-2026-09-02.md,
+  // docs/weekly-plan-aggregate-budget-2026-09-02.md).
+  //
+  // Wrapped in a closure, not passed as a bare reference, since the Ultra tier-economics
+  // build (2026-09-03): selectModelForWeeklyPlan now needs the student's tier, which
+  // withUsageLogging's own selectModel? signature (a bare (userId) => ...) has no slot for
+  // -- context.student.tier is already resolved (from the same profile row
+  // buildStudentAdvisorContext already read, not a second query), so the closure just
+  // closes over it rather than this file threading tier through withUsageLogging itself.
+  const result = await withUsageLogging(
+    { userId, feature: "weekly_plan", selectModel: (uid) => selectModelForWeeklyPlan(uid, context.student.tier) },
+    (model) =>
+      provider.generateStructured({
+        system: withOutputLanguage(ADVISOR_SYSTEM_PROMPT, context.student.preferredLanguage),
+        prompt: `Here is the student's current context:\n\n${formatContextForPrompt(context, context.student.preferredLanguage)}${counselorGrounding}\n\n${buildWeeklyPlanInstruction()}`,
+        schema: WeeklyPlanSchema,
+        schemaName: "record_weekly_plan",
+        schemaDescription: "Records this week's prioritized action plan for the student.",
+        maxTokens: 2048,
+        model,
+      }),
   );
 
   // Contradiction resolution first, on the model's full original output — trimming or

@@ -3,6 +3,7 @@ import "server-only";
 import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { env } from "@/lib/env";
 import { getMonthlyGrantsUsd } from "./grants";
+import type { PlanTier } from "@/types/database";
 
 /**
  * Per-user monthly AI spend budget (founder, 2026-09-02): $0.50/month target, $1.00/month
@@ -28,9 +29,24 @@ import { getMonthlyGrantsUsd } from "./grants";
  * enforcement lives in monthly-quota.ts, calibrated against this number rather than
  * duplicating it — but it is no longer true to say nothing in this codebase enforces past
  * TARGET. A future reader should trust that sentence, not the one above it.
+ *
+ * **Tier-keyed, 2026-09-03 (founder: "hem kota artsın hem cevap uzunluğu" — quota and reply
+ * length both go up; the Max tier idea is dead, two tiers only).** Ultra's two figures are
+ * exactly 2x Standard's, not independently chosen — the same is true of
+ * `lib/ai/monthly-quota.ts`'s `HISTORICAL_USE_LIMIT`/`MONTHLY_AI_TOKEN_LIMIT`, which are
+ * *derived from* these two per tier, not a separate pair of magic numbers. Uniform 2x
+ * scaling of all four together is what makes this one multiplier to justify rather than
+ * four: `usesConsumed`'s own piecewise formula preserves the safety margin at exactly
+ * 16.67% under either tier's own ceiling — Standard reaches its 50-use limit at $0.8333 of
+ * real spend ($0.1667 under its $1.00 ceiling); Ultra reaches its 100-use limit at $1.6667
+ * ($0.3333 under its $2.00 ceiling) — algebraically identical proportions, confirmed by
+ * running the formula both ways, not assumed from the multiplier alone. Margin checked
+ * against the founder's own ~800 TL/month Ultra price at his own illustrative 40 TL/USD
+ * rate: $20.00 revenue against a $2.00 worst case is a 10x margin, comfortably above the 5x
+ * bar `docs/maliyet-ve-fiyatlandirma-2026-09-02.md` uses as its own healthy line.
  */
-export const MONTHLY_BUDGET_TARGET_USD = 0.5;
-export const MONTHLY_BUDGET_CEILING_USD = 1.0;
+export const MONTHLY_BUDGET_TARGET_USD: Record<PlanTier, number> = { standard: 0.5, ultra: 1.0 };
+export const MONTHLY_BUDGET_CEILING_USD: Record<PlanTier, number> = { standard: 1.0, ultra: 2.0 };
 
 /**
  * The model a degraded call uses. `ANTHROPIC_MODEL` (env.anthropic.model) stays the ceiling
@@ -107,8 +123,15 @@ function currentUtcMonthStartIso(): string {
  * Scoped to the **calendar month in UTC**, not a rolling 30 days — the founder's own
  * framing ("$0.50/month") reads as calendar-month, and it's simpler to reason about and to
  * show a student/admin ("this month" is unambiguous; "your last 30 days" is not).
+ *
+ * `tier` defaults to `"standard"` deliberately, not required — the three background-job
+ * callers (`opportunity_extraction`/`requirement_extraction`/`requirement_interpretation`)
+ * pass `userId: null` and return in the branch immediately below before `tier` is ever
+ * read, so a tier-less call from one of them stays exactly as correct as it always was.
+ * Real per-student callers (`advisor-chat.ts`, `weekly-plan-budget.ts`) pass their
+ * resolved `PlanTier` explicitly — see each one's own comment on where that tier comes from.
  */
-export async function selectModelForUser(userId: string | null): Promise<ModelSelection> {
+export async function selectModelForUser(userId: string | null, tier: PlanTier = "standard"): Promise<ModelSelection> {
   if (!userId) {
     return { model: env.anthropic.model, degraded: false, reason: "no_user", monthToDateSpendUsd: null };
   }
@@ -153,7 +176,7 @@ export async function selectModelForUser(userId: string | null): Promise<ModelSe
   if (hasUnknownCostRows) {
     return { model: DEGRADE_MODEL, degraded: true, reason: "unknown_cost_this_month", monthToDateSpendUsd: knownSpendUsd };
   }
-  if (effectiveSpendUsd >= MONTHLY_BUDGET_TARGET_USD) {
+  if (effectiveSpendUsd >= MONTHLY_BUDGET_TARGET_USD[tier]) {
     return { model: DEGRADE_MODEL, degraded: true, reason: "at_or_over_target", monthToDateSpendUsd: effectiveSpendUsd };
   }
   return { model: env.anthropic.model, degraded: false, reason: "under_target", monthToDateSpendUsd: effectiveSpendUsd };

@@ -50,6 +50,7 @@ function baseContext(overrides: Partial<StudentAdvisorContext> = {}): StudentAdv
       busyModeUntil: null,
       birthYear: null,
       citizenshipCountries: [],
+      tier: "standard",
     },
     profileScores: [],
     overallScore: 50,
