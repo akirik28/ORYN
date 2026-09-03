@@ -11,6 +11,7 @@ import { UpdatePasswordSchema } from "@/lib/validation/auth";
 import { meetsMinimumSignupAge } from "@/lib/legal/age-policy";
 import { logEvent } from "@/lib/analytics/log";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
+import { getTranslations } from "next-intl/server";
 import type { NotificationCategory, TimeBudget, ResponseMode } from "@/types/database";
 
 /**
@@ -31,7 +32,19 @@ export async function changePassword(password: string): Promise<{ error?: string
 
   const parsed = UpdatePasswordSchema.safeParse({ password });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "That password can't be used." };
+    // UpdatePasswordSchema's own messages are a static English fallback -- exact same
+    // schema app/(auth)/actions.ts's updatePassword() already validates against, so this
+    // reuses that function's own translated lookup table (auth.resetPassword) rather than
+    // a second, drifting copy. Found untranslated during 2026-09-03's student-facing i18n
+    // audit.
+    const t = await getTranslations("auth.resetPassword");
+    const translated: Record<string, string> = {
+      "Use at least 8 characters.": t("passwordMinLength"),
+      "Include at least one letter.": t("passwordNeedsLetter"),
+      "Include at least one number.": t("passwordNeedsNumber"),
+    };
+    const message = parsed.error.issues[0]?.message;
+    return { error: (message ? translated[message] : undefined) ?? t("passwordMinLength") };
   }
 
   const supabase = await createClient();

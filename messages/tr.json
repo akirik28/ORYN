@@ -720,6 +720,7 @@
       "finish": "Bitir",
       "settingUp": "Profilin hazırlanıyor…",
       "schoolStepError": "Devam etmek için ülkeni, okulunu ve müfredatını doldur.",
+      "genericFormError": "Lütfen formu kontrol edip tekrar dene.",
       "graduationYearError": "Geçerli bir mezuniyet yılı gir.",
       "birthYearError": "Doğduğun yılı gir — Oryn, programlardaki yaş sınırlarını kontrol etmek için buna ihtiyaç duyar.",
       "birthYearTooYoung": "Oryn henüz bu yaşın altındaki hesaplara hizmet veremiyor.",

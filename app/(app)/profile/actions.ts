@@ -129,10 +129,12 @@ async function afterWrite(userId: string) {
  * object-shaped export.
  */
 /** Logs the real Postgres error server-side, returns a friendly message for the client —
- * see lib/errors/friendly-db-error.ts for why this must never be `error.message` directly. */
-function friendlyDbError(action: CrudAction, table: string, error: { message: string; code?: string }): string {
+ * see lib/errors/friendly-db-error.ts for why this must never be `error.message` directly.
+ * Async only because toFriendlyDbErrorMessage now requires a real locale (2026-09-03,
+ * student-facing i18n audit) — every achievement type in this file routes through here. */
+async function friendlyDbError(action: CrudAction, table: string, error: { message: string; code?: string }): Promise<string> {
   console.error(`[profile] ${action} failed`, { table, code: error.code, message: error.message });
-  return toFriendlyDbErrorMessage(action);
+  return toFriendlyDbErrorMessage(action, await resolveLocale());
 }
 
 /**
@@ -156,7 +158,7 @@ async function crudCreate<T extends Record<string, unknown>>(table: string, sche
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table name varies per call site; the Zod schema above is the real type check.
   const { error } = await (supabase.from(table as any) as any).insert({ ...linked.data, ...extraFields, user_id: session.userId! });
-  if (error) return { error: friendlyDbError("save", table, error) };
+  if (error) return { error: await friendlyDbError("save", table, error) };
 
   await logEvent(session.userId!, "profile_item_added", { table });
   await afterWrite(session.userId!);
@@ -174,7 +176,7 @@ async function crudUpdate<T extends Record<string, unknown>>(table: string, sche
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error } = await (supabase.from(table as any) as any).update(linked.data).eq("id", id).eq("user_id", session.userId!);
-  if (error) return { error: friendlyDbError("save", table, error) };
+  if (error) return { error: await friendlyDbError("save", table, error) };
 
   await afterWrite(session.userId!);
   return {};
@@ -184,7 +186,7 @@ async function crudRemove(table: string, id: string): Promise<ActionResult> {
   const session = await requireUser();
   const supabase = await createClient();
   const { error } = await supabase.from(table as never).delete().eq("id", id).eq("user_id", session.userId!);
-  if (error) return { error: friendlyDbError("delete", table, error) };
+  if (error) return { error: await friendlyDbError("delete", table, error) };
 
   await afterWrite(session.userId!);
   return {};

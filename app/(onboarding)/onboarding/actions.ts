@@ -117,9 +117,25 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
   const session = await requireUser();
   const userId = session.userId!;
   const parsed = CompleteOnboardingSchema.safeParse(input);
+  const t = await getTranslations("onboarding.wizard");
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Please check the form and try again." };
+    // CompleteOnboardingSchema's own messages are a static English fallback -- same
+    // reasoning as app/(auth)/actions.ts's identical pattern for its own schemas, applied
+    // here during 2026-09-03's student-facing i18n audit: this branch only fires when the
+    // client-side wizard's own step validation was bypassed (JS disabled, a direct call,
+    // a race), so it's a defensive re-check, not the primary UX -- but the primary UX
+    // already has real Turkish copy for the same fields (onboarding.wizard's own
+    // schoolStepError/graduationYearError/birthYearError), reused here rather than
+    // duplicated. This is the first form every student submits.
+    const translated: Record<string, string> = {
+      "Select a country.": t("schoolStepError"),
+      "Enter your school.": t("schoolStepError"),
+      "Pick a graduation year in the future.": t("graduationYearError"),
+      "Enter the year you were born.": t("birthYearError"),
+    };
+    const message = parsed.error.issues[0]?.message;
+    return { error: (message ? translated[message] : undefined) ?? t("genericFormError") };
   }
 
   const data = parsed.data;
@@ -191,7 +207,7 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
 
   if (profileError) {
     console.error("[onboarding] failed to save profile", { code: profileError.code, message: profileError.message });
-    return { error: toFriendlyDbErrorMessage("save") };
+    return { error: toFriendlyDbErrorMessage("save", await resolveLocale()) };
   }
 
   // Best-effort: the student's core profile + onboarding_completed above is the critical

@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { toFriendlyDbErrorMessage } from "@/lib/errors/friendly-db-error";
 import { meetsMinimumSignupAge } from "@/lib/legal/age-policy";
 import { logEvent } from "@/lib/analytics/log";
+import { resolveLocale } from "@/lib/i18n/locale";
 
 /**
  * Backfills birth_year for an account that completed onboarding before that field was
@@ -29,6 +30,7 @@ export async function submitBirthYear(birthYearInput: string): Promise<{ error?:
   const session = await requireUser();
   const userId = session.userId!;
   const t = await getTranslations("confirmAge");
+  const locale = await resolveLocale();
 
   const trimmed = birthYearInput.trim();
   const year = Number(trimmed);
@@ -42,7 +44,7 @@ export async function submitBirthYear(birthYearInput: string): Promise<{ error?:
   const { error } = await supabase.from("profiles").update({ birth_year: year }).eq("id", userId);
   if (error) {
     console.error("[confirm-age] failed to save birth year", { code: error.code, message: error.message });
-    return { error: toFriendlyDbErrorMessage("save") };
+    return { error: toFriendlyDbErrorMessage("save", locale) };
   }
 
   if (!meetsMinimumSignupAge(year)) {

@@ -8,6 +8,7 @@ import { interpretRequirementText } from "@/lib/ai/interpret-requirement";
 import { categoryToRuleKind } from "@/lib/requirements/types";
 import { validateProgramOwnership } from "@/lib/requirements/program-ownership";
 import { toFriendlyDbErrorMessage } from "@/lib/errors/friendly-db-error";
+import { resolveLocale } from "@/lib/i18n/locale";
 import type { RequirementCategory } from "@/types/database";
 
 /**
@@ -54,7 +55,7 @@ export async function addUniversityRequirement(input: unknown): Promise<{ error?
       .maybeSingle();
     if (programLookupError) {
       console.error("[requirement-actions] failed to verify program ownership", { code: programLookupError.code, message: programLookupError.message });
-      return { error: toFriendlyDbErrorMessage("save") };
+      return { error: toFriendlyDbErrorMessage("save", await resolveLocale()) };
     }
     const ownership = validateProgramOwnership(data.programId, data.universityId, program?.university_id ?? null);
     if (!ownership.ok) {
@@ -77,7 +78,7 @@ export async function addUniversityRequirement(input: unknown): Promise<{ error?
 
   if (error) {
     console.error("[requirement-actions] failed to save requirement", { code: error.code, message: error.message });
-    return { error: toFriendlyDbErrorMessage("save") };
+    return { error: toFriendlyDbErrorMessage("save", await resolveLocale()) };
   }
   revalidatePath(`/universities/${data.universityId}`);
   return {};
@@ -89,7 +90,7 @@ export async function deleteUniversityRequirement(id: string, universityId: stri
   const { error } = await admin.from("university_requirements").delete().eq("id", id);
   if (error) {
     console.error("[requirement-actions] failed to delete requirement", { code: error.code, message: error.message });
-    return { error: toFriendlyDbErrorMessage("delete") };
+    return { error: toFriendlyDbErrorMessage("delete", await resolveLocale()) };
   }
   revalidatePath(`/universities/${universityId}`);
   return {};

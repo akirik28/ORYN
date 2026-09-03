@@ -7,6 +7,7 @@ import { recomputeCareerProfile } from "@/lib/scoring/persist";
 import { toFriendlyDbErrorMessage } from "@/lib/errors/friendly-db-error";
 import { LanguageSchema, type LanguageFormInput } from "@/lib/validation/achievements";
 import { isDuplicateLanguage } from "@/lib/social/languages";
+import { resolveLocale } from "@/lib/i18n/locale";
 
 type ActionResult = { error?: string };
 
@@ -43,7 +44,7 @@ export async function createLanguage(input: LanguageFormInput): Promise<ActionRe
   const { error } = await supabase.from("languages").insert({ ...parsed.data, user_id: session.userId! });
   if (error) {
     console.error("[profile] createLanguage failed", { code: error.code, message: error.message });
-    return { error: toFriendlyDbErrorMessage("save") };
+    return { error: toFriendlyDbErrorMessage("save", await resolveLocale()) };
   }
 
   await afterLanguagesWrite(session.userId!);
@@ -63,7 +64,7 @@ export async function updateLanguage(id: string, input: LanguageFormInput): Prom
   const { error } = await supabase.from("languages").update(parsed.data).eq("id", id).eq("user_id", session.userId!);
   if (error) {
     console.error("[profile] updateLanguage failed", { code: error.code, message: error.message });
-    return { error: toFriendlyDbErrorMessage("save") };
+    return { error: toFriendlyDbErrorMessage("save", await resolveLocale()) };
   }
 
   await afterLanguagesWrite(session.userId!);
@@ -76,7 +77,7 @@ export async function deleteLanguage(id: string): Promise<ActionResult> {
   const { error } = await supabase.from("languages").delete().eq("id", id).eq("user_id", session.userId!);
   if (error) {
     console.error("[profile] deleteLanguage failed", { code: error.code, message: error.message });
-    return { error: toFriendlyDbErrorMessage("delete") };
+    return { error: toFriendlyDbErrorMessage("delete", await resolveLocale()) };
   }
 
   await afterLanguagesWrite(session.userId!);

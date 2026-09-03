@@ -7,6 +7,7 @@ import { recomputeCareerProfile } from "@/lib/scoring/persist";
 import { toFriendlyDbErrorMessage } from "@/lib/errors/friendly-db-error";
 import { SkillSchema, type SkillFormInput } from "@/lib/validation/achievements";
 import { canAddAnotherSkill, isDuplicateSkillName } from "@/lib/social/skills";
+import { resolveLocale } from "@/lib/i18n/locale";
 
 type ActionResult = { error?: string };
 
@@ -43,7 +44,7 @@ export async function createSkill(input: SkillFormInput): Promise<ActionResult> 
   const { error } = await supabase.from("skills").insert({ ...parsed.data, user_id: session.userId! });
   if (error) {
     console.error("[profile] createSkill failed", { code: error.code, message: error.message });
-    return { error: toFriendlyDbErrorMessage("save") };
+    return { error: toFriendlyDbErrorMessage("save", await resolveLocale()) };
   }
 
   await afterSkillsWrite(session.userId!);
@@ -63,7 +64,7 @@ export async function updateSkill(id: string, input: SkillFormInput): Promise<Ac
   const { error } = await supabase.from("skills").update(parsed.data).eq("id", id).eq("user_id", session.userId!);
   if (error) {
     console.error("[profile] updateSkill failed", { code: error.code, message: error.message });
-    return { error: toFriendlyDbErrorMessage("save") };
+    return { error: toFriendlyDbErrorMessage("save", await resolveLocale()) };
   }
 
   await afterSkillsWrite(session.userId!);
@@ -76,7 +77,7 @@ export async function deleteSkill(id: string): Promise<ActionResult> {
   const { error } = await supabase.from("skills").delete().eq("id", id).eq("user_id", session.userId!);
   if (error) {
     console.error("[profile] deleteSkill failed", { code: error.code, message: error.message });
-    return { error: toFriendlyDbErrorMessage("delete") };
+    return { error: toFriendlyDbErrorMessage("delete", await resolveLocale()) };
   }
 
   await afterSkillsWrite(session.userId!);
