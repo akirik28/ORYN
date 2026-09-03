@@ -12,6 +12,7 @@ import type { StudentMatchProfile, OpportunityForMatching, DismissedOpportunityS
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 import { evidenceStateFor, type EvidenceState } from "@/lib/scoring/signal";
 import { isUndefinedColumnError } from "@/lib/supabase/errors";
+import { readOr } from "@/lib/supabase/safe-read";
 import type { ProfileDimension } from "@/types/database";
 import { filterActionableOpportunities } from "./lifecycle";
 import { createNotification } from "@/lib/notifications/create";
@@ -140,21 +141,27 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
     return { refreshed: false };
   }
 
-  const savedStatusByOpportunityId = new Map((savedRes.data ?? []).map((s) => [s.opportunity_id, s.status]));
+  const savedOpportunities = readOr("refreshOpportunityMatches.saved", savedRes, [], { userId });
+  const savedStatusByOpportunityId = new Map(savedOpportunities.map((s) => [s.opportunity_id, s.status]));
 
   // A cycle that has closed (or a deadline that has simply passed with no newer one on
   // file — see lifecycle.ts) must stop producing fresh matches, even though `status` stays
   // `active` for these rows (a real, correctly-sourced record, not a bad one). This does not
   // clean up matches computed before a cycle closed; see the defensive re-filter in every
   // surface that reads opportunity_matches back (ForYouView, dashboard preview).
-  const opportunities = filterActionableOpportunities(opportunitiesRes.data ?? []);
+  const opportunities = filterActionableOpportunities(readOr("refreshOpportunityMatches.opportunities", opportunitiesRes, [], { userId }));
   if (opportunities.length === 0) return { refreshed: true };
 
   const currentYear = new Date().getFullYear();
   const age = profileRes.data?.birth_year ? currentYear - profileRes.data.birth_year : null;
 
+  // Read once, used below both for weakestDimensions and evidenceStateByDimension -- was two
+  // separate `scoresRes.data ?? []` reads, which (harmlessly, but redundantly) would have
+  // logged the same underlying failure twice.
+  const scores = readOr("refreshOpportunityMatches.scores", scoresRes, [], { userId });
+
   // Counselor Core Phase D — see app/(app)/dashboard/page.tsx's identical usage.
-  const weakestDimensions = rankDimensionGaps(toDimensionScoreRows(scoresRes.data ?? []))
+  const weakestDimensions = rankDimensionGaps(toDimensionScoreRows(scores))
     .slice(0, 3)
     .map((g) => g.dimension);
 
@@ -167,7 +174,7 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
   // per CEO's explicit instruction not to invent a second confidence vocabulary next to
   // the one that already governs how the dashboard talks about evidence depth.
   const evidenceStateByDimension = new Map<ProfileDimension, EvidenceState>(
-    (scoresRes.data ?? []).map((row) => [
+    scores.map((row) => [
       row.dimension,
       evidenceStateFor(row.score, row.confidence, Array.isArray(row.reason_codes) && row.reason_codes.length > 0),
     ])
@@ -176,7 +183,7 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
   const baseStudentProfile: StudentMatchProfile = {
     age,
     country: profileRes.data?.country ?? null,
-    interests: (interestsRes.data ?? []).map((i) => i.label),
+    interests: readOr("refreshOpportunityMatches.interests", interestsRes, [], { userId }).map((i) => i.label),
     weakestDimensions,
     citizenshipCountries: profileRes.data?.citizenship_countries ?? [],
     graduationYear: profileRes.data?.graduation_year ?? null,
@@ -187,19 +194,20 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
   // targeted query rather than folding into the `saved_opportunities` select above: only
   // the small number of dismissed-with-a-reason rows need their opportunity's own
   // fields/cost/location looked up, not every saved/applied row too.
-  const dismissedWithReason = (savedRes.data ?? []).filter(
+  const dismissedWithReason = savedOpportunities.filter(
     (s): s is typeof s & { not_interested_reason: string } => s.status === "not_interested" && s.not_interested_reason !== null
   );
   let dismissedSignals;
   if (dismissedWithReason.length > 0) {
-    const { data: dismissedOpportunities } = await supabase
+    const dismissedOpportunitiesRes = await supabase
       .from("opportunities")
       .select("id, fields, cost, location_mode, country")
       .in(
         "id",
         dismissedWithReason.map((d) => d.opportunity_id)
       );
-    const dismissedById = new Map((dismissedOpportunities ?? []).map((o) => [o.id, o]));
+    const dismissedOpportunities = readOr("refreshOpportunityMatches.dismissedOpportunities", dismissedOpportunitiesRes, [], { userId });
+    const dismissedById = new Map(dismissedOpportunities.map((o) => [o.id, o]));
     const signals: DismissedOpportunitySignal[] = dismissedWithReason.flatMap((d) => {
       const dismissed = dismissedById.get(d.opportunity_id);
       if (!dismissed) return [];
@@ -375,7 +383,7 @@ export async function notifyNewlyEligibleMatches(
     // tonight: without it, a genuine race (two renders landing within the same request
     // window) can produce two matching rows, and an unbounded maybeSingle() turns that into
     // a permanent, self-perpetuating false negative rather than a one-time double-send.
-    const { data: existing } = await supabase
+    const existingRes = await supabase
       .from("notifications")
       .select("id")
       .eq("user_id", userId)
@@ -383,6 +391,11 @@ export async function notifyNewlyEligibleMatches(
       .eq("link", link)
       .limit(1)
       .maybeSingle();
+    // Fallback stays `null` -- unchanged from before, so a failed dedup check still sends
+    // (never silently swallows a real notification), same as always. This is visibility
+    // only: a failure here used to look identical to "genuinely no prior notification,"
+    // now it's at least logged, by name, if it ever fires.
+    const existing = readOr("notifyNewlyEligibleMatches.existingNotification", existingRes, null, { userId, opportunityId: match.opportunity_id });
     if (existing) continue;
 
     await createNotification({
