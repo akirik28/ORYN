@@ -14,8 +14,16 @@ Uyandığında sırayla bunlar. Yedi adım, tahminen 15 dakika — beşi kopyala
 | Tekrar eden öneri | 98 kopya silinir, gerçek olan kalır |
 | Kumanda merkezi | açılır ve kullanılabilir olur |
 
-Yarısında durursan kalan yarısı bozulmaz. Tek sıra kuralı var: **5. adım, 7. adımdan önce**
-(sebebi 5. adımda yazıyor). Gerisi istediğin sırada.
+Yarısında durursan kalan yarısı bozulmaz. İki sıra kuralı var:
+
+- **1 ve 2, 8'den önce.** Kumanda merkezinin bütün yazma tarafı — fiyat, kur, Ultra hediye,
+  katman değiştirme, iş kontrolleri, model fiyatlandırma, işlem defteri — henüz canlıda
+  **var olmayan** on tabloya yazıyor; hepsini 2. adımdaki migration'lar oluşturuyor. Önce
+  paneli açarsan ekranlar görünür ama her düğme ölüdür.
+- **5, 7'den önce** (sebebi 5. adımda yazıyor).
+
+Gerisi gerçekten istediğin sırada: 3, 4, 5, 6, 7 ve 7b'nin dokunduğu tabloların hepsi şu an
+canlıda mevcut — tek tek kontrol ettim, varsaymadım.
 
 ## 1. Kendini admin yap
 
