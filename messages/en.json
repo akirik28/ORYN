@@ -764,6 +764,7 @@
       "researchStrengthsDescription": "Topics this university publishes in most, from OpenAlex's open research index.",
       "requirementCheckTitle": "Requirement check",
       "requirementCheckDescription": "Oryn's read of your profile against each stated requirement — not an official admissions decision. See each source before relying on it.",
+      "requirementCheckEmptyMessage": "This university's admission requirements aren't in Oryn's records yet — that's a gap in our research, not a confirmation that none exist.",
       "programFallback": "Program",
       "programSpecific": "Program-specific",
       "optional": "Optional",

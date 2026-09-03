@@ -627,35 +627,51 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         </section>
       ) : null}
 
-      {requirements.length > 0 ? (
-        <section className="space-y-4">
-          <SectionHeader title={t("requirementCheckTitle")} description={t("requirementCheckDescription")} />
-          {universityWideRequirements.length > 0 ? (
-            <RequirementGroup
-              title={locale === "tr" ? "Program kaydedilmemiş" : "Program not recorded"}
-              description={
-                locale === "tr"
-                  ? "Üniversitenin kendi sayfalarından alındı — Oryn bunların her birinin hangi programa ait olduğunu kaydetmedi."
-                  : "Sourced from the university's own pages — Oryn hasn't recorded which specific program each of these belongs to."
-              }
-              items={universityWideRequirements}
-              evaluationByRequirement={evaluationByRequirement}
-              locale={locale}
-              t={t}
-            />
-          ) : null}
-          {[...requirementsByProgram.entries()].map(([programId, items]) => (
-            <RequirementGroup
-              key={programId}
-              title={programNameById.get(programId) ?? t("programFallback")}
-              items={items}
-              evaluationByRequirement={evaluationByRequirement}
-              locale={locale}
-              t={t}
-            />
-          ))}
-        </section>
-      ) : null}
+      {/* Was `{requirements.length > 0 ? <section>...</section> : null}` — for 89% of
+          universities (measured 2026-09-03) this section simply didn't exist, no
+          different from having scrolled past where it would be. The outlook section
+          above already tells a student when Oryn can't rate a target
+          (`notApplicableReason`); this section told them nothing. Same fix, same
+          register: the section always renders, and an empty result says so rather
+          than disappearing. Deliberately NOT `lacksResearchDepth`'s EmptyState
+          (lib/universities/data-depth.ts) — that fires only when stats, programs,
+          requirements AND sources are ALL empty, so it misses the common case of a
+          university with programs but zero requirements specifically. */}
+      <section className="space-y-4">
+        <SectionHeader title={t("requirementCheckTitle")} description={t("requirementCheckDescription")} />
+        {requirements.length > 0 ? (
+          <>
+            {universityWideRequirements.length > 0 ? (
+              <RequirementGroup
+                title={locale === "tr" ? "Program kaydedilmemiş" : "Program not recorded"}
+                description={
+                  locale === "tr"
+                    ? "Üniversitenin kendi sayfalarından alındı — Oryn bunların her birinin hangi programa ait olduğunu kaydetmedi."
+                    : "Sourced from the university's own pages — Oryn hasn't recorded which specific program each of these belongs to."
+                }
+                items={universityWideRequirements}
+                evaluationByRequirement={evaluationByRequirement}
+                locale={locale}
+                t={t}
+              />
+            ) : null}
+            {[...requirementsByProgram.entries()].map(([programId, items]) => (
+              <RequirementGroup
+                key={programId}
+                title={programNameById.get(programId) ?? t("programFallback")}
+                items={items}
+                evaluationByRequirement={evaluationByRequirement}
+                locale={locale}
+                t={t}
+              />
+            ))}
+          </>
+        ) : (
+          <p lang={locale} className="max-w-3xl text-sm text-muted-foreground">
+            {t("requirementCheckEmptyMessage")}
+          </p>
+        )}
+      </section>
 
       {calendarBoundFacts.length > 0 ? (
         <section className="space-y-4">

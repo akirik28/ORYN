@@ -764,6 +764,7 @@
       "researchStrengthsDescription": "OpenAlex'in açık araştırma dizininden, bu üniversitenin en çok yayın yaptığı konular.",
       "requirementCheckTitle": "Gereklilik kontrolü",
       "requirementCheckDescription": "Oryn'ın profilini her belirtilen gerekliliğe karşı okuması — resmi bir kabul kararı değildir. Güvenmeden önce her kaynağı kontrol edin.",
+      "requirementCheckEmptyMessage": "Bu üniversitenin kabul gereklilikleri henüz Oryn'ın kayıtlarında yok — bu, gereklilik olmadığının değil, araştırmamızdaki bir eksikliğin göstergesi.",
       "programFallback": "Program",
       "programSpecific": "Programa özel",
       "optional": "İsteğe bağlı",
