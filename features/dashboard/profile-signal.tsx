@@ -75,11 +75,11 @@ function Spectrum({ state }: { state: EvidenceState }) {
 
 const EMPTY_STATE_COPY: Record<Locale, { body: string; cta: string }> = {
   en: {
-    body: "Oryn hasn't read your profile yet. Add a few courses, activities or projects and this becomes a picture of where you actually stand.",
+    body: "Proxola hasn't read your profile yet. Add a few courses, activities or projects and this becomes a picture of where you actually stand.",
     cta: "Start your journey",
   },
   tr: {
-    body: "Oryn henüz profilini okumadı. Birkaç ders, aktivite veya proje ekle; bu, gerçekte nerede durduğunun bir resmine dönüşür.",
+    body: "Proxola henüz profilini okumadı. Birkaç ders, aktivite veya proje ekle; bu, gerçekte nerede durduğunun bir resmine dönüşür.",
     cta: "Yolculuğuna başla",
   },
 };

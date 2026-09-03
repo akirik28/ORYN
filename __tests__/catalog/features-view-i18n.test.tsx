@@ -79,7 +79,7 @@ describe("FeaturesView renders every tile's translated title", () => {
     const { FeaturesView } = await import("@/features/catalog/features-view");
     withLocale(tr, await FeaturesView({ userId: "u-1" }));
 
-    expect(screen.getByText("Oryn'ın yapabileceği her şey.")).toBeInTheDocument();
+    expect(screen.getByText("Proxola'nın yapabileceği her şey.")).toBeInTheDocument();
     expect(screen.getByText("Kaydın")).toBeInTheDocument();
     expect(screen.getByText("Planlama")).toBeInTheDocument();
     expect(screen.getByText("Keşif")).toBeInTheDocument();
@@ -93,7 +93,7 @@ describe("FeaturesView renders every tile's translated title", () => {
     const { FeaturesView } = await import("@/features/catalog/features-view");
     withLocale(en, await FeaturesView({ userId: "u-1" }));
 
-    expect(screen.getByText("Everything Oryn can do.")).toBeInTheDocument();
+    expect(screen.getByText("Everything Proxola can do.")).toBeInTheDocument();
     for (const title of EXPECTED_TILES_EN) {
       expect(screen.getByText(title), title).toBeInTheDocument();
     }

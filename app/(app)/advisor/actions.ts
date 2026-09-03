@@ -28,7 +28,7 @@ import type { Locale } from "@/lib/i18n/config";
  * open — both fixed here and in the client-side proactive notice AdvisorChat now renders
  * before a student can even reach this fallback path).
  *
- * "Oryn AI", not "counselor messages" (2026-09-02, token-metering change): the allowance
+ * "Proxola AI", not "counselor messages" (2026-09-02, token-metering change): the allowance
  * this now reports against is shared across seven features, not just chat — a student can
  * reach it from CV import and weekly-plan generation alone, having sent no chat messages
  * at all, so a sentence naming "messages" specifically would be confidently wrong exactly
@@ -37,8 +37,8 @@ import type { Locale } from "@/lib/i18n/config";
 function quotaExhaustedMessage(resetsAt: string, locale: Locale): string {
   const date = formatAbsoluteDate(resetsAt, locale, { month: "long", day: "numeric" });
   return locale === "tr"
-    ? `Bu ay Oryn'in yapay zeka hakkını kullandın. Sohbet ${date} tarihinde yenilenir. Oryn'in geri kalanı — planın, fırsatların, üniversitelerin — her zamanki gibi açık.`
-    : `You've used up this month's Oryn AI allowance. Chat resets on ${date}. The rest of Oryn — your plan, opportunities, universities — stays open as always.`;
+    ? `Bu ay Proxola'nın yapay zeka hakkını kullandın. Sohbet ${date} tarihinde yenilenir. Proxola'nın geri kalanı — planın, fırsatların, üniversitelerin — her zamanki gibi açık.`
+    : `You've used up this month's Proxola AI allowance. Chat resets on ${date}. The rest of Proxola — your plan, opportunities, universities — stays open as always.`;
 }
 
 /**

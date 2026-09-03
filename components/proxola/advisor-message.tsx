@@ -20,8 +20,8 @@ import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
  * question is the prompt for the counsel, not a peer utterance in a transcript.
  */
 const DEFAULT_ATTRIBUTION: Record<Locale, { oryn: string; student: string }> = {
-  en: { oryn: "Oryn", student: "You" },
-  tr: { oryn: "Oryn", student: "Sen" },
+  en: { oryn: "Proxola", student: "You" },
+  tr: { oryn: "Proxola", student: "Sen" },
 };
 
 export function AdvisorMessage({

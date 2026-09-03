@@ -5,8 +5,8 @@ import { EvidenceSignal } from "./evidence-signal";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 const EVIDENCE_ROW_LABEL: Record<Locale, string> = {
-  en: "What Oryn is reading",
-  tr: "Oryn'ın okuduğu veriler",
+  en: "What Proxola is reading",
+  tr: "Proxola'nın okuduğu veriler",
 };
 
 export interface NextMoveEvidence {
@@ -65,7 +65,7 @@ export function NextMove({
    * The actual language of `eyebrow`, `evidence[].label` and `facts[].term` — see
    * components/proxola/eyebrow.tsx's `locale` prop doc for why this can't just inherit the
    * page's `<html lang>`. Also selects the language of this component's own internal
-   * "What Oryn is reading" evidence-row label. A single value for the whole instance:
+   * "What Proxola is reading" evidence-row label. A single value for the whole instance:
    * if a future caller genuinely needs to mix languages within one NextMove (e.g.
    * translated `headline` but a deliberately-untranslated `eyebrow`), pass a custom
    * `eyebrow` ReactNode with its own `lang` span rather than fighting this prop.

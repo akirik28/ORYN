@@ -124,7 +124,7 @@ async function sendAndAwaitReply(degraded: boolean) {
     content: "A reply.",
     degraded,
   });
-  fireEvent.change(screen.getByPlaceholderText("Ask Oryn…"), { target: { value: "A question" } });
+  fireEvent.change(screen.getByPlaceholderText("Ask Proxola…"), { target: { value: "A question" } });
   fireEvent.click(screen.getByRole("button", { name: "Send message" }));
   await waitFor(() => expect(screen.getByText("A reply.")).toBeInTheDocument());
 }
@@ -190,7 +190,7 @@ describe("AdvisorChat — upgrade prompt overlay (founder-approved pop-up, frequ
       content: "A second reply.",
       degraded: true,
     });
-    fireEvent.change(screen.getByPlaceholderText("Ask Oryn…"), { target: { value: "Another question" } });
+    fireEvent.change(screen.getByPlaceholderText("Ask Proxola…"), { target: { value: "Another question" } });
     fireEvent.click(screen.getByRole("button", { name: "Send message" }));
     await waitFor(() => expect(screen.getByText("A second reply.")).toBeInTheDocument());
 

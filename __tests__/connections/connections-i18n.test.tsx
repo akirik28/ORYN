@@ -141,6 +141,6 @@ describe("PeopleYouMayKnowRow renders translated copy and correct casing locale"
 
   test("Turkish: no display name falls back to the translated default", () => {
     withLocale(tr, <PeopleYouMayKnowRow id="u-2" displayName={null} headline={null} reasons={[]} />);
-    expect(screen.getByText("Oryn öğrencisi")).toBeInTheDocument();
+    expect(screen.getByText("Proxola öğrencisi")).toBeInTheDocument();
   });
 });

@@ -257,7 +257,7 @@ describe("CvImportFlow — skills and languages (2026-09-02)", () => {
 
   test("the save button's count and the 'found' count both span skills and languages, with zero achievement items", async () => {
     await uploadSkillsAndLanguages();
-    expect(screen.getByText(/Oryn found 2 items/)).toBeInTheDocument();
+    expect(screen.getByText(/Proxola found 2 items/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add 2 items to my profile" })).toBeInTheDocument();
   });
 
