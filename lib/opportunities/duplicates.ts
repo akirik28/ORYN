@@ -10,6 +10,8 @@
  * Pure, network-free — the runner (scripts/audit-opportunity-duplicates.ts) does the DB read.
  */
 
+import { getDomain } from "tldts";
+
 export type DuplicateConfidence = "deterministic" | "probable" | "needs_review";
 
 export interface OpportunityForDuplicateCheck {
@@ -26,13 +28,20 @@ export interface DuplicateCandidate {
   confidence: DuplicateConfidence;
 }
 
+/**
+ * Registrable domain (eTLD+1), not exact hostname. Found by hand 2026-09-03
+ * (docs/opportunity-duplicate-pairs-2026-09-03.md): grouping by exact hostname meant two
+ * pages describing the same programme on different subdomains of one institution — a news
+ * office vs. the programme's own page, a continuing-studies portal vs. the main site, one
+ * school's subdomain vs. another's — were never even placed in the same comparison group,
+ * regardless of title similarity. `global.lehigh.edu` and `health.lehigh.edu` both reduce to
+ * `lehigh.edu`; `col.ed.ac.uk` and `study.ed.ac.uk` both reduce to `ed.ac.uk`. A hand-rolled
+ * "last two labels" heuristic breaks on multi-part TLDs (`.ac.uk`, `.edu.tr`, `.co.uk`), so
+ * this uses `tldts`, which ships an actual public-suffix list, rather than approximating one.
+ */
 function domainOf(url: string | null): string | null {
   if (!url) return null;
-  try {
-    return new URL(url).hostname.toLowerCase().replace(/^www\./, "");
-  } catch {
-    return null;
-  }
+  return getDomain(url);
 }
 
 /** Generic filler words stripped before comparing — "Program"/"Competition"/"Summer" appear
