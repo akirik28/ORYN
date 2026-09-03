@@ -47,7 +47,7 @@ describe("resolveAdmissionSystem — the three shapes the research actually foun
   });
 
   test("every resolved entry carries at least one traceable source document", () => {
-    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland", "Denmark", "Hungary", "Austria"]) {
+    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland", "Denmark", "Hungary", "Austria", "Czechia"]) {
       const result = resolveAdmissionSystem({ targetCountry: country, studentCountry: "Turkey" });
       expect(result.sources.length, country).toBeGreaterThan(0);
       expect(result.mechanism, country).not.toBeNull();
@@ -496,6 +496,34 @@ describe("resolveAdmissionSystem — Austria (2026-09-03, threshold by default, 
   test("Austria traces to its own research document, not an invented source", () => {
     const result = resolveAdmissionSystem({ targetCountry: "Austria", studentCountry: "Austria" });
     expect(result.sources).toContain("docs/research/admissions-systems/austria.md");
+  });
+});
+
+describe("resolveAdmissionSystem — Czechia (2026-09-03, confirmed divergence, not just decentralization)", () => {
+  // Charles University's own admissions page confirms mechanism varies by PROGRAMME within one
+  // institution (czechia.md §A) -- a finer grain of divergence than Canada's confirmed
+  // institution-level split. Recorded unknown for both pathways deliberately, same treatment
+  // Canada's country-level entry already gets, not a gap this pass failed to close.
+  test("Czechia is honestly unknown, both pathways, because the divergence is confirmed not just suspected", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Czechia", studentCountry: "Czechia" });
+    const international = resolveAdmissionSystem({ targetCountry: "Czechia", studentCountry: "Turkey" });
+    expect(domestic.shape).toBe("unknown");
+    expect(international.shape).toBe("unknown");
+    expect(reviewsNonAcademicEvidence(domestic.shape)).toBeNull();
+    expect(domestic.mechanism).toContain("programme");
+    expect(domestic.mechanism).not.toBeNull();
+  });
+
+  test("the Czech Republic spelling resolves identically to Czechia", () => {
+    const short = resolveAdmissionSystem({ targetCountry: "Czechia", studentCountry: "Turkey" });
+    const long = resolveAdmissionSystem({ targetCountry: "Czech Republic", studentCountry: "Turkey" });
+    expect(short.shape).toBe(long.shape);
+    expect(short.mechanism).toBe(long.mechanism);
+  });
+
+  test("Czechia traces to its own research document, not an invented source", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Czechia", studentCountry: "Czechia" });
+    expect(result.sources).toContain("docs/research/admissions-systems/czechia.md");
   });
 });
 
