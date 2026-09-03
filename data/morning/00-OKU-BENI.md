@@ -515,8 +515,19 @@ En sinsi ikisi: **`SUPABASE_SECRET_KEY` ve `CRON_SECRET`.** Bunlar eksikse iş r
 kayıt açmadan patlıyor — yani panelde o iş için **hiç satır görünmüyor.** "Hiç çalışmadı"
 ile "çalıştı ve patladı" ayırt edilemiyor. Tek görünür yer Vercel'in kendi logları.
 
-Tavily/College Scorecard anahtarları eksikse durum daha iyi: iş çalışıyor ve panel sarı bir
-uyarı gösteriyor. Bu gece düzeltildi.
+**Tavily ve College Scorecard anahtarlarını 3 Eylül sabahı sen girdin, ikisi de çalışıyor
+— altı entegrasyonun altısı da yeşil, gerçek çağrılarla doğrulandı.**
+
+Bunun bir geçmişi var ve bilmen gerekiyor: **Tavily anahtarı bütün gece boyunca boştu.**
+Eksik değil — dosyada duruyordu ama değeri boş string'di. Sonucu şuydu: gece boyunca
+yapılan bütün yeniden-doğrulama işi Tavily'nin **birinci basamağını hiç kullanmadan**,
+yedek yöntemlerle çalıştı. Ve `provider_health` tablosunda Tavily için hiç satır yoktu —
+yani bu hiçbir ekranda, hiçbir raporda görünmedi. b9 ancak üç kaydı tek tek elle kontrol
+ederken fark etti.
+
+Kredi bütçen: **ayda 1.000.** İşler haftalık çalışırsa toplam ~340 kredi, rahat. Yeniden
+doğrulamayı günlük çalıştırırsan tek başına ~750 eder ve keşifle birlikte sınıra dayanırsın.
+**Haftalık kal.**
 
 `npm run check:integrations` gerçek API çağrıları yapıyor, "OK" derse güvenilir. Ama **her
 satırı oku** — eksik anahtarı "hata" saymıyor, sona atlarsan kaçırırsın. Ve iş gövdesini hiç
