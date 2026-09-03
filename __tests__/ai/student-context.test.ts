@@ -222,9 +222,15 @@ describe("formatContextForPrompt — assessed dimensions are pre-sorted weakest 
     // The two weakest are adjacent at the top, not scattered among the stronger ones.
     expect(lines[0]).toContain("Awards & Distinction");
     expect(lines[1]).toContain("Entrepreneurship");
+    // docs/advisor-chat-ranking-fix-verification-2026-09-03.md (oryn-80): tagging only rank 1
+    // left this exact fixture naming Career Exploration in a live "two weakest" claim 3/3,
+    // because an untagged list position lost out to narrative fit. Entrepreneurship must carry
+    // its own inline tag now, and Career Exploration -- correctly third, not second -- must not.
+    expect(lines[1]).toContain("— second-weakest");
+    expect(lines.find((l) => l.includes("Career Exploration"))).not.toMatch(/weakest/);
   });
 
-  test("the sole minimum gets an explicit weakest tag", () => {
+  test("the sole minimum gets an explicit weakest tag, and the only other dimension gets second-weakest", () => {
     const context = baseContext({
       profileScores: [
         { dimension: "academics", score: 85, confidence: "high", state: "strong" },
@@ -234,6 +240,10 @@ describe("formatContextForPrompt — assessed dimensions are pre-sorted weakest 
     const text = formatContextForPrompt(context);
     expect(text).toContain("Awards & Distinction: A good next area to strengthen (20/100, confidence: medium) — weakest");
     expect(text).not.toContain("Academics: Strong (85/100, confidence: high) — weakest");
+    // With exactly two assessed dimensions, both are trivially "the two weakest" -- tagging
+    // the second one removes any ambiguity for that exact question rather than leaving it to
+    // an untagged position, same reasoning as the rank-1 tag.
+    expect(text).toContain("Academics: Strong (85/100, confidence: high) — second-weakest");
   });
 
   test("a tie at the minimum is named on both dimensions, not resolved into a false single weakest", () => {
@@ -248,6 +258,26 @@ describe("formatContextForPrompt — assessed dimensions are pre-sorted weakest 
     expect(text).toContain("Entrepreneurship: Developing (30/100, confidence: medium) — tied for weakest");
     expect(text).toContain("Leadership: Developing (30/100, confidence: medium) — tied for weakest");
     expect(text).not.toMatch(/Entrepreneurship:.*— weakest[^\n]*\n/); // never the unqualified singular tag under a tie
+    // Two dimensions already tied for weakest are already the answer to "two weakest
+    // dimensions" -- Academics must not additionally be called second-weakest, which would
+    // imply three dimensions share the bottom two slots.
+    expect(text).not.toContain("Academics: Strong (85/100, confidence: high) — second-weakest");
+  });
+
+  test("a tie at second place is named on both dimensions, when the true minimum is a clean, untied single weakest", () => {
+    const context = baseContext({
+      profileScores: [
+        { dimension: "awards_distinction", score: 10, confidence: "medium", state: "emerging" },
+        { dimension: "entrepreneurship", score: 30, confidence: "medium", state: "developing" },
+        { dimension: "leadership", score: 30, confidence: "medium", state: "developing" },
+        { dimension: "academics", score: 85, confidence: "high", state: "strong" },
+      ],
+    });
+    const text = formatContextForPrompt(context);
+    expect(text).toContain("Awards & Distinction: A good next area to strengthen (10/100, confidence: medium) — weakest");
+    expect(text).toContain("Entrepreneurship: Developing (30/100, confidence: medium) — tied for second-weakest");
+    expect(text).toContain("Leadership: Developing (30/100, confidence: medium) — tied for second-weakest");
+    expect(text).not.toContain("Academics: Strong (85/100, confidence: high) — second-weakest");
   });
 
   test("an unassessed dimension never enters the ranking or claims 'weakest', even if its hidden score would be the lowest", () => {
