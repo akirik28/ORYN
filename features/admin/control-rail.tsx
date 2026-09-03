@@ -28,6 +28,15 @@ import { cn } from "@/lib/utils";
  * `max-height`/`overflow-y` are load-bearing, not defensive: twelve items plus the footer
  * overflow an 860px viewport, and the prototype silently cut off its last entry before this
  * was added.
+ *
+ * Below `lg` the rail is a horizontal scrolling strip, not a column. The approved prototype
+ * did this and the behaviour was lost porting it to Tailwind, so until 2026-09-03 an admin
+ * on anything narrower than a laptop scrolled past all twelve entries at full natural height
+ * before reaching the first line of the page -- the sticky and max-height constraints were
+ * `lg:`-only, so nothing capped it. Found by rendering at 375px and 768px, not by reading:
+ * a column that works at one width says nothing about the others. The brand block and group
+ * headers hide below `lg` because a horizontal strip has no room for them and the icons
+ * already carry the distinction.
  */
 // The full translation key rides on each entry rather than being assembled at the call
 // site: next-intl types t() against the literal key set, so a `item.${string}` template
@@ -80,9 +89,9 @@ export function ControlRail() {
   return (
     <nav
       aria-label={t("navLabel")}
-      className="flex shrink-0 flex-col gap-0.5 overflow-y-auto bg-[#132a1c] px-3 py-4 text-[#dcecdf] lg:sticky lg:top-0 lg:max-h-svh lg:w-[246px]"
+      className="flex shrink-0 flex-row gap-1 overflow-x-auto bg-[#132a1c] px-2 py-2 text-[#dcecdf] lg:flex-col lg:gap-0.5 lg:overflow-x-visible lg:overflow-y-auto lg:px-3 lg:py-4 lg:sticky lg:top-0 lg:max-h-svh lg:w-[246px]"
     >
-      <div className="flex items-center gap-2.5 px-2 pb-3">
+      <div className="hidden items-center gap-2.5 px-2 pb-3 lg:flex">
         <span
           aria-hidden="true"
           className="size-7 shrink-0 rounded-lg"
@@ -98,7 +107,7 @@ export function ControlRail() {
 
       {GROUPS.map((group) => (
         <div key={group.key} className="contents">
-          <p className="px-2 pb-1 pt-3 text-[9.5px] uppercase tracking-[0.15em] text-[#8fb69d]">
+          <p className="hidden px-2 pb-1 pt-3 text-[9.5px] uppercase tracking-[0.15em] text-[#8fb69d] lg:block">
             {t(group.key)}
           </p>
           {group.items.map(({ href, key, icon: Icon }) => {
@@ -111,7 +120,7 @@ export function ControlRail() {
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-[9px] px-2 py-2 text-[13.5px] transition-colors",
+                  "flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-[9px] px-2 py-2 text-[13.5px] transition-colors",
                   "hover:bg-[#1b3a27] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#4fbb83]",
                   active && "bg-[#1b3a27] shadow-[inset_2px_0_0_#4fbb83]",
                 )}
