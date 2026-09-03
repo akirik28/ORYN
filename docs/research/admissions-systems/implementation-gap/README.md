@@ -136,6 +136,14 @@ minimum France, Hong Kong, and Ireland need this; Turkey needs the mirror case
 location, not nationality) for a Turkish citizen schooled abroad targeting a Turkish
 university.
 
+**2026-09-03 deep-dive:** [`turkey-schooling-location-gap-2026-09-03.md`](./turkey-schooling-location-gap-2026-09-03.md)
+traces this specific case precisely — `resolvePathway`'s actual code, what it returns for each
+of Turkey's three named schooling-location exceptions (embassy school, MOBİS-listed institution,
+MEB-project-relocated), whether the shipped copy actively misleads those students or is merely
+incomplete (it misleads), and whether any of the 11 real profiles in `oryn-qa-scratch` are
+currently affected (checked directly: no confirmed case, though 2 of 5 Turkey-resident profiles'
+schools remain unconfirmed either way).
+
 ## Gap 3 — Gate-1 needs institution granularity, not just country + field
 
 The design spec's §7 item 3 proposes a field-specific override layer keyed on `(target

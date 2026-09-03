@@ -520,6 +520,15 @@ confident `"not_met"`, not an honest `"unknown"`, for any of these six schools' 
 moment it does. Two decisions — the profile-data shape and this dormant-rule trap — are stated
 as founder decisions in the document's own §E, not worked around.
 
+**Turkey's own side of the gap, measured (2026-09-03):**
+[`implementation-gap/turkey-schooling-location-gap-2026-09-03.md`](./implementation-gap/turkey-schooling-location-gap-2026-09-03.md)
+traces `resolvePathway`'s actual code against Turkey's own three named exceptions and checks
+whether the shipped copy actively misleads those students (it does, not merely incompletely) —
+then checks live whether any of the 11 real profiles in `oryn-qa-scratch` are currently affected
+(no confirmed case; 3 of 5 Turkey-resident profiles' school, Robert College, is directly
+confirmed to be YKS-track and correctly resolved, 2 remain genuinely unconfirmed). Measurement
+and a cost-shape sketch only, per instruction — nothing built.
+
 ## Full source list
 
 Every claim above traces to a specific `source_url` with a `source_type`, scope label,
