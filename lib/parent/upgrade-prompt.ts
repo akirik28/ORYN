@@ -1,5 +1,6 @@
 import type { PlanTier } from "@/types/database";
 import { startOfNextMonthUTC } from "@/lib/date/month-boundary";
+import type { ParentLinkStatus } from "@/lib/tier/parent-tier";
 import {
   type UpgradePromptDismissalState,
   NOT_YET_DISMISSED,
@@ -32,14 +33,22 @@ export type { UpgradePromptDismissalState };
  * version already uses, just without an event requirement layered on top of it.
  */
 export interface ParentUpgradePromptContext {
-  /** The linked student's plan_tier, inherited per spec §5 ("veli için efektif tier =
-   *  bağlı öğrencinin plan_tier'ı") — a parent's own profiles.plan_tier column is never
-   *  written, so this must come from the student side, not the parent's own row. */
+  /** lib/tier/parent-tier.ts's resolveParentEffectiveTier(linkStatus, studentProfile) —
+   *  reuse that function to produce this field rather than reading a parent profile's
+   *  plan_tier directly (there is nothing meaningful there; §K4 never writes it). */
   linkedStudentTier: PlanTier;
-  /** parent_links.status. Anything but "active" means no data has actually started
-   *  flowing yet (or has been cut off) — selling into that state is the one CEO named
-   *  directly: "a free parent with a pending link should not be sold anything yet." */
-  linkStatus: "pending" | "active" | "revoked";
+  /** parent_links.status, the same ParentLinkStatus resolveParentEffectiveTier itself
+   *  takes. **Not redundant with linkedStudentTier below, even though
+   *  resolveParentEffectiveTier already folds status into its own output** —
+   *  resolveParentEffectiveTier(pending, ...) returns "standard", which would pass this
+   *  function's own tier gate unchanged. Only checking the resolved tier would show this
+   *  prompt to a pending parent (a real bug, not a hypothetical one: "standard" is exactly
+   *  the tier this prompt is FOR). This field is what stops that — CEO's own instruction,
+   *  verbatim: "a free parent with a pending link should not be sold anything yet." Do not
+   *  remove this gate as "already covered by the tier check" — it is a different fact
+   *  (confirmed vs. unconfirmed) that happens to share a resolution path with tier, not a
+   *  duplicate of it. */
+  linkStatus: ParentLinkStatus;
   alreadyShownThisSession: boolean;
 }
 
@@ -48,7 +57,7 @@ export function shouldShowParentUpgradePrompt(
   state: UpgradePromptDismissalState,
   now: Date = new Date(),
 ): boolean {
-  if (context.linkStatus !== "active") return false; // never for pending or revoked
+  if (context.linkStatus !== "active") return false; // never for pending or revoked — see the field's own comment above for why this can't be inferred from tier alone
   if (context.linkedStudentTier !== "standard") return false; // never for Ultra — shared subscription, nothing left to sell
   if (context.alreadyShownThisSession) return false; // once per panel visit
 
