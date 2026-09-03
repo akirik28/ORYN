@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Drive-import batch, stage 2: turn scripts/drive-import/parsed/*.json (produced by
-parse.py) into a ready-to-apply Postgres SQL file matching ORYN's real schema.
+parse.py) into a ready-to-apply Postgres SQL file matching Proxola's real schema.
 
 Usage:
     python3 scripts/drive-import/generate_sql.py supabase/seed_drive_batchN.sql

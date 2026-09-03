@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * READ-ONLY measurement, per the coordination session's assignment (2026-08-22): for every
- * Turkish university_programs row Oryn holds, how many distinct YOK Atlas kilavuzKodu values
+ * Turkish university_programs row Proxola holds, how many distinct YOK Atlas kilavuzKodu values
  * does the source actually publish against it? Answers the question that decides B6's
  * architectural call (docs/handoffs/schema-gaps-design-2026-08-22.md) -- widen the
  * placement-cycle key, or split the programme row -- with a real distribution instead of a

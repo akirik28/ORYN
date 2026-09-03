@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Reports how far Oryn is from being fully bilingual. Run with: npm run check:i18n
+ * Reports how far Proxola is from being fully bilingual. Run with: npm run check:i18n
  *
  * Written because the first version of this measurement was an ad-hoc grep pasted into a
  * doc, which went stale the moment anyone translated a file — and a coverage number nobody

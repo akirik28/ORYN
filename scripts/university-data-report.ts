@@ -176,7 +176,7 @@ async function main() {
   const distinctUnisFor = (code: string) => new Set((metricsByCode.get(code) ?? []).map((m) => m!.university_id)).size;
 
   console.log("=".repeat(70));
-  console.log(`ORYN UNIVERSITY DATA COMPLETENESS — ${new Date().toISOString().slice(0, 10)}`);
+  console.log(`PROXOLA UNIVERSITY DATA COMPLETENESS — ${new Date().toISOString().slice(0, 10)}`);
   console.log("=".repeat(70));
   console.log(`\nTotal universities: ${total}\n`);
 
