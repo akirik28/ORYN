@@ -20,6 +20,25 @@ import { runReverificationPass, DEFAULT_MAX_ROWS, DEFAULT_BUDGET_MS } from "@/li
  * Body per design doc §2.3, all optional: max_rows (default 25), budget_ms (default 45000),
  * allow_demotion (can only narrow REVERIFY_ALLOW_DEMOTION off for this one call, never widen
  * it on — see run-job.ts's own comment on why).
+ *
+ * dry_run (2026-09-03, added for design doc §10's dry run): no writes at all — see
+ * run-job.ts's own RunOptions.dryRun doc comment for the exact guarantee. Also supported
+ * this way rather than only via §10.2's pictured standalone script: everything under
+ * lib/opportunities/reverification/ (like nearly everything server-side in this codebase)
+ * is guarded with `import "server-only"`, a Next.js build-time marker not a real
+ * standalone npm package — a plain `tsx`/`node` script needs a one-line no-op shim on its
+ * module path to resolve it at all (the real package IS a no-op outside a browser; only its
+ * *resolvability* is Next-bundler-specific — see scripts/opportunity-reverification-dry-run.ts's
+ * own header for the exact mechanism). The route needs no such workaround:
+ *   curl -X POST /api/jobs/opportunity-reverification \
+ *     -H "Authorization: Bearer $CRON_SECRET" -H "Content-Type: application/json" \
+ *     -d '{"max_rows": 20, "budget_ms": 240000, "dry_run": true}'
+ *
+ * A dry run deliberately bypasses runWithTracking entirely rather than passing dryRun
+ * through it — that wrapper writes a real external_sync_jobs row on every call (start,
+ * finish, status), and "no writes at all" should mean exactly that, not "no writes except
+ * the job's own tracking metadata." A dry run therefore leaves no trace in run history at
+ * all, which is the honest behaviour for something that isn't a real run.
  */
 export async function POST(request: NextRequest) {
   if (!verifyCronRequest(request)) {
@@ -37,8 +56,13 @@ export async function POST(request: NextRequest) {
   const budgetMs = typeof params.budget_ms === "number" && params.budget_ms > 0 ? Math.floor(params.budget_ms) : DEFAULT_BUDGET_MS;
   const allowDemotion = typeof params.allow_demotion === "boolean" ? params.allow_demotion : undefined;
 
+  if (params.dry_run === true) {
+    const runResult = await runReverificationPass({ maxRows, budgetMs, allowDemotion, jobId: null, dryRun: true });
+    return NextResponse.json(runResult);
+  }
+
   const result = await runWithTracking("opportunity_reverification", async (jobId) => {
-    const runResult = await runReverificationPass({ maxRows, budgetMs, allowDemotion, jobId });
+    const runResult = await runReverificationPass({ maxRows, budgetMs, allowDemotion, jobId, dryRun: false });
     // errorsEncountered per run-with-tracking.ts's own contract: attempted-but-not-committed
     // rows, i.e. ones whose per-row pipeline threw before writing any run record at all
     // (JobBudgetExceededError aside, which stops the batch cleanly rather than counting as
