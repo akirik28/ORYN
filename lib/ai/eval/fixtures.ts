@@ -72,6 +72,18 @@ export const REGRESSION_CONTEXT: StudentAdvisorContext = {
   projects: [{ title: "Peer tutoring marketplace (side project)", outcomeSummary: "40 active student users, self-funded", ongoing: true, evidenceStatus: "self_reported" }],
   research: [],
   awards: [{ title: "Regional Young Entrepreneur Award, 2nd place", level: "regional", evidenceStatus: "evidence_added" }],
+  // 2026-09-03 six-category build: matches academics sitting at "developing" (71/100, above) —
+  // a real IB courseload and a real, mid-range SAT, neither strong enough on their own to
+  // explain the score, both present enough that formatContextForPrompt has something to show.
+  educationRecords: [{ schoolName: "Istanbul International School", overallGpa: 5.8, gpaScale: 7 }],
+  courses: [
+    { courseName: "Economics HL", level: "ib_hl", gradeValue: "6", gradeScale: "IB 1-7" },
+    { courseName: "Mathematics: Analysis and Approaches SL", level: "ib_sl", gradeValue: "5", gradeScale: "IB 1-7" },
+  ],
+  testScores: [{ testName: "SAT", score: "1380", maxScore: "1600", subscores: { math: 700, reading_writing: 680 } }],
+  certifications: [],
+  volunteeringExperiences: [],
+  workExperiences: [],
   sports: [],
   goals: [{ title: "Study Economics at a top European university", category: "academic" }],
   interests: ["Economics", "Entrepreneurship"],
@@ -115,6 +127,18 @@ export const BASELINE_CONTEXT: StudentAdvisorContext = {
   projects: [{ title: "Youth unemployment dataset (OECD extract)", outcomeSummary: "Data cleaned, analysis in progress", ongoing: true, evidenceStatus: "verified" }],
   research: [{ title: "Youth unemployment and tertiary education across OECD countries", field: "Economics", outputType: "independent study", ongoing: true, evidenceStatus: "self_reported" }],
   awards: [],
+  // 2026-09-03 six-category build: matches academics sitting at "strong" (85/100, above) — a
+  // strong GPA and a strong SAT, the evidence a demanding-mentor reply should be able to cite
+  // instead of only ever quoting the 85.
+  educationRecords: [{ schoolName: "Lincoln High School", overallGpa: 3.9, gpaScale: 4 }],
+  courses: [
+    { courseName: "AP Calculus BC", level: "ap", gradeValue: "A", gradeScale: "4.0" },
+    { courseName: "AP Chemistry", level: "ap", gradeValue: "A-", gradeScale: "4.0" },
+  ],
+  testScores: [{ testName: "SAT", score: "1490", maxScore: "1600", subscores: { math: 760, reading_writing: 730 } }],
+  certifications: [],
+  volunteeringExperiences: [],
+  workExperiences: [],
   sports: [{ sport: "Swimming", level: "varsity", isCaptain: false, hoursPerWeek: 6, ongoing: true, achievements: null }],
   goals: [{ title: "Improve SAT score", category: "academic" }],
   interests: ["Economics", "Data Science"],

@@ -1,6 +1,15 @@
 import { describe, expect, test } from "vitest";
-import { formatContextForPrompt, isBusyModeActive, timeBudgetLabel, reflectionOutcomeLabel, requirementTypeLabel, type StudentAdvisorContext } from "@/lib/ai/student-context";
-import type { EvidenceStatus, ReflectionOutcome, TimeBudget } from "@/types/database";
+import {
+  formatContextForPrompt,
+  isBusyModeActive,
+  timeBudgetLabel,
+  reflectionOutcomeLabel,
+  requirementTypeLabel,
+  courseLevelLabel,
+  employmentTypeLabel,
+  type StudentAdvisorContext,
+} from "@/lib/ai/student-context";
+import type { CourseLevel, EmploymentType, EvidenceStatus, ReflectionOutcome, TimeBudget } from "@/types/database";
 
 /** Phase 65: the exact "marked exam week in November, never unmarked, should not still
  * read as busy in March" scenario CEO named — confirmed live nobody clears this
@@ -49,6 +58,12 @@ function baseContext(overrides: Partial<StudentAdvisorContext> = {}): StudentAdv
     projects: [],
     research: [],
     awards: [],
+    educationRecords: [],
+    courses: [],
+    testScores: [],
+    certifications: [],
+    volunteeringExperiences: [],
+    workExperiences: [],
     sports: [],
     goals: [],
     interests: [],
@@ -397,5 +412,201 @@ describe("formatContextForPrompt — age/experience calibration", () => {
     // The pre-existing bare mention on the Student: line is untouched -- this test is about
     // the new line specifically, not a claim that "unknown" never appears anywhere at all.
     expect(text).toContain("graduating unknown");
+  });
+});
+
+/**
+ * 2026-09-03 -- docs/advisor-context-coverage-2026-09-03.md's headline finding, closed:
+ * schoolName was fetched into context.student since the assembler's first version and never
+ * rendered, with no comment anywhere explaining why (unlike birthYear/citizenshipCountries,
+ * which both have one) -- treated as an oversight and fixed.
+ */
+describe("formatContextForPrompt — schoolName", () => {
+  test("folds into the existing student line rather than a separate one", () => {
+    const text = formatContextForPrompt({ ...baseContext(), student: { ...baseContext().student, schoolName: "Robert College" } });
+    expect(text).toContain("at Robert College");
+  });
+
+  test("a null schoolName adds no stray clause", () => {
+    const text = formatContextForPrompt(baseContext()); // schoolName: null by default
+    expect(text).not.toContain(" at ,");
+    expect(text).not.toContain("at null");
+  });
+});
+
+/**
+ * The headline finding itself: educationRecords/courses/testScores were already fetched by
+ * assembleScoringFacts on every call and dropped before reaching the model. This block proves
+ * they render, and render through their label accessors rather than as raw enum members --
+ * courses.level is now a TRACKED_TYPES entry in ai-prompt-enum-labels.test.ts specifically
+ * because this is the first place it reaches lib/ai/.
+ */
+describe("formatContextForPrompt — raw academic evidence (education, courses, test scores)", () => {
+  test("an education record with a GPA shows the school and the GPA", () => {
+    const text = formatContextForPrompt({ ...baseContext(), educationRecords: [{ schoolName: "Robert College", overallGpa: 3.82, gpaScale: 4 }] });
+    expect(text).toContain("Education (1): Robert College (GPA 3.82/4)");
+  });
+
+  test("an education record with no GPA on file still shows the school, with no invented figure", () => {
+    const text = formatContextForPrompt({ ...baseContext(), educationRecords: [{ schoolName: "Robert College", overallGpa: null, gpaScale: null }] });
+    expect(text).toContain("Education (1): Robert College");
+    expect(text).not.toContain("GPA");
+  });
+
+  test("no education records renders none, not an empty list", () => {
+    const text = formatContextForPrompt(baseContext());
+    expect(text).toContain("Education (0): none");
+  });
+
+  test("a course renders its readable level label, never the raw enum member", () => {
+    const text = formatContextForPrompt({ ...baseContext(), courses: [{ courseName: "Economics HL", level: "ib_hl", gradeValue: "6", gradeScale: "IB 1-7" }] });
+    expect(text).toContain("Economics HL [IB Higher Level (HL)]: 6/IB 1-7");
+    expect(text).not.toContain("ib_hl");
+  });
+
+  test("a course with no grade on file omits the grade suffix but still shows the level", () => {
+    const text = formatContextForPrompt({ ...baseContext(), courses: [{ courseName: "Physics SL", level: "ib_sl", gradeValue: null, gradeScale: null }] });
+    expect(text).toContain("Physics SL [IB Standard Level (SL)]");
+    expect(text).not.toContain("Physics SL [IB Standard Level (SL)]:");
+  });
+
+  test("courses in Turkish use real Turkish level labels, not the English carried over", () => {
+    const text = formatContextForPrompt({ ...baseContext(), courses: [{ courseName: "Ekonomi", level: "a_level", gradeValue: null, gradeScale: null }] }, "tr");
+    expect(text).toContain("A-Level");
+  });
+
+  test("a test score renders name, score, and max score", () => {
+    const text = formatContextForPrompt({ ...baseContext(), testScores: [{ testName: "SAT", score: "1470", maxScore: "1600", subscores: {} }] });
+    expect(text).toContain("SAT: 1470/1600");
+  });
+
+  test("subscores render prettified (spaces, not underscores) and are omitted entirely when empty", () => {
+    const withSubscores = formatContextForPrompt({
+      ...baseContext(),
+      testScores: [{ testName: "SAT", score: "1470", maxScore: "1600", subscores: { math: 780, reading_writing: 690 } }],
+    });
+    expect(withSubscores).toContain("(math: 780, reading writing: 690)");
+    expect(withSubscores).not.toContain("reading_writing");
+
+    const withoutSubscores = formatContextForPrompt({
+      ...baseContext(),
+      testScores: [{ testName: "IB Predicted", score: "38", maxScore: "45", subscores: {} }],
+    });
+    expect(withoutSubscores).toContain("IB Predicted: 38/45");
+    expect(withoutSubscores).not.toContain("IB Predicted: 38/45 (");
+  });
+
+  test("no courses or test scores renders none for each, not an empty list", () => {
+    const text = formatContextForPrompt(baseContext());
+    expect(text).toContain("Courses (0): none");
+    expect(text).toContain("Test scores (0): none");
+  });
+});
+
+/**
+ * Same headline finding, the other three already-fetched-and-dropped categories. Work
+ * experience's employment_type is the second new TRACKED_TYPES entry.
+ */
+describe("formatContextForPrompt — certifications, volunteering, work experience", () => {
+  test("a certification shows title, organization, and its evidence tag", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      certifications: [{ title: "CS50x", organization: "HarvardX", evidenceStatus: "evidence_added" }],
+    });
+    expect(text).toContain("CS50x — HarvardX [evidence added, not independently verified]");
+  });
+
+  test("a volunteering entry uses the same ongoing/evidence tag activities and projects already use", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      volunteeringExperiences: [{ title: "Weekend numeracy volunteer", organization: "TGV", ongoing: true, evidenceStatus: "self_reported" }],
+    });
+    expect(text).toContain("Weekend numeracy volunteer — TGV [ongoing] [self-reported]");
+  });
+
+  test("a work experience shows its readable employment-type label, never the raw enum member", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      workExperiences: [
+        { title: "Summer intern, operations", organization: "Getir", employmentType: "internship", ongoing: false, paid: true, evidenceStatus: "self_reported" },
+      ],
+    });
+    expect(text).toContain("Summer intern, operations — Getir [Internship] [paid]");
+    expect(text).not.toContain("[internship]"); // raw enum member is lowercase; the label is not
+  });
+
+  test("an unpaid, ongoing work experience shows neither a stray [paid] tag nor loses its ongoing tag", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      workExperiences: [{ title: "Tutor", organization: "Kumon", employmentType: "part_time_job", ongoing: true, paid: false, evidenceStatus: "verified" }],
+    });
+    expect(text).toContain("Tutor — Kumon [Part-time job] [ongoing]");
+    expect(text).not.toContain("[paid]");
+  });
+
+  test("no certifications, volunteering, or work experience renders none for each", () => {
+    const text = formatContextForPrompt(baseContext());
+    expect(text).toContain("Certifications (0): none");
+    expect(text).toContain("Volunteering (0): none");
+    expect(text).toContain("Work experience (0): none");
+  });
+});
+
+/**
+ * The two smallest fixes from the same audit: goals.category and interests were both already
+ * fetched and typed, just never rendered by this formatter (confirmed: weekly-plan.ts uses this
+ * same function, and research-generator.ts's interests param is caller-supplied, not
+ * context.interests -- so before this, interests reached no AI feature at all).
+ */
+describe("formatContextForPrompt — goals category and interests", () => {
+  test("a goal with a category shows it alongside the title", () => {
+    const text = formatContextForPrompt({ ...baseContext(), goals: [{ title: "Study Economics in the UK", category: "academic" }] });
+    expect(text).toContain("Study Economics in the UK [academic]");
+  });
+
+  test("a goal with no category shows the title alone, no stray brackets", () => {
+    const text = formatContextForPrompt({ ...baseContext(), goals: [{ title: "Launch my startup", category: null }] });
+    expect(text).toContain("Launch my startup");
+    expect(text).not.toContain("Launch my startup [");
+  });
+
+  test("interests render as a plain comma-joined list", () => {
+    const text = formatContextForPrompt({ ...baseContext(), interests: ["Economics", "Artificial Intelligence", "Youth Employment"] });
+    expect(text).toContain("Interests: Economics, Artificial Intelligence, Youth Employment");
+  });
+
+  test("no interests set renders the same 'none set' wording goals already uses, not a blank line", () => {
+    const text = formatContextForPrompt(baseContext());
+    expect(text).toContain("Interests: none set");
+  });
+});
+
+describe("courseLevelLabel", () => {
+  const ALL: CourseLevel[] = ["regular", "honors", "ap", "ib_hl", "ib_sl", "a_level", "dual_enrollment", "other"];
+  test("never returns the raw value in either locale", () => {
+    for (const v of ALL) {
+      expect(courseLevelLabel(v, "en")).not.toBe(v);
+      expect(courseLevelLabel(v, "tr")).not.toBe(v);
+    }
+  });
+
+  test("English wording matches features/profile/field-config.ts's COURSE_LEVEL_OPTIONS verbatim, not reinvented copy", () => {
+    expect(courseLevelLabel("ib_hl", "en")).toBe("IB Higher Level (HL)");
+    expect(courseLevelLabel("dual_enrollment", "en")).toBe("Dual enrollment");
+  });
+});
+
+describe("employmentTypeLabel", () => {
+  const ALL: EmploymentType[] = ["internship", "part_time_job", "full_time_job", "apprenticeship", "freelance", "other"];
+  test("never returns the raw value in either locale", () => {
+    for (const v of ALL) {
+      expect(employmentTypeLabel(v, "en")).not.toBe(v);
+      expect(employmentTypeLabel(v, "tr")).not.toBe(v);
+    }
+  });
+
+  test("English wording matches features/profile/field-config.ts's EMPLOYMENT_TYPE_OPTIONS verbatim, not reinvented copy", () => {
+    expect(employmentTypeLabel("part_time_job", "en")).toBe("Part-time job");
+    expect(employmentTypeLabel("internship", "en")).toBe("Internship");
   });
 });

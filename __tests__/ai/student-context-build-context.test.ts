@@ -1,5 +1,6 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { buildStudentAdvisorContext } from "@/lib/ai/student-context";
+import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 
@@ -143,5 +144,55 @@ describe("buildStudentAdvisorContext — read-failure visibility", () => {
     expect(messages.some((m) => typeof m === "string" && m.includes("recentActionOutcomes"))).toBe(true);
     expect(messages.some((m) => typeof m === "string" && m.includes("recentRecommendationTitles"))).toBe(false);
     spy.mockRestore();
+  });
+});
+
+/**
+ * 2026-09-03, the six-category build: assembleScoringFacts already returned educationRecords/
+ * courses/testScores/certifications/volunteeringExperiences/workExperiences before this change
+ * (see the mock's shape above, unchanged) -- buildStudentAdvisorContext simply never read five
+ * of its six own destructured fields into the returned context. This proves the mapping now
+ * happens end-to-end through the real assembler, not just that a hand-built context renders
+ * correctly (that half is __tests__/ai/student-context.test.ts's job) -- the two tests are
+ * deliberately non-overlapping.
+ */
+describe("buildStudentAdvisorContext — the six previously-dropped categories are mapped through", () => {
+  test("each category's raw DB shape reaches context under its camelCase field, unmodified in content", async () => {
+    vi.mocked(assembleScoringFacts).mockResolvedValueOnce({
+      educationRecords: [{ id: "e1", user_id: "u1", school_name: "Robert College", overall_gpa: 3.82, gpa_scale: 4 } as never],
+      courses: [{ id: "c1", user_id: "u1", course_name: "Economics HL", level: "ib_hl", grade_value: "6", grade_scale: "IB 1-7" } as never],
+      testScores: [{ id: "t1", user_id: "u1", test_name: "SAT", score: "1470", max_score: "1600", subscores: { math: 780 } } as never],
+      certifications: [{ id: "cert1", user_id: "u1", title: "CS50x", organization: "HarvardX", evidence_status: "self_reported" } as never],
+      volunteeringExperiences: [{ id: "v1", user_id: "u1", title: "Numeracy volunteer", organization: "TGV", ongoing: true, evidence_status: "self_reported" } as never],
+      workExperiences: [
+        { id: "w1", user_id: "u1", title: "Intern", organization: "Getir", employment_type: "internship", ongoing: false, paid: true, evidence_status: "self_reported" } as never,
+      ],
+      activities: [],
+      awards: [],
+      projects: [],
+      researchExperiences: [],
+      interests: [],
+      goals: [],
+      targetUniversities: [],
+    });
+    const client = fakeClient({
+      ...EMPTY_HELPER_TABLES,
+      profiles: { data: { display_name: "Ada" }, error: null },
+      student_interests: { data: [], error: null },
+      sports_experiences: { data: [], error: null },
+      ai_recommendations: { data: [], error: null },
+      weekly_actions: { data: [], error: null },
+    });
+
+    const context = await buildStudentAdvisorContext("user-1", client);
+
+    expect(context.educationRecords).toEqual([{ schoolName: "Robert College", overallGpa: 3.82, gpaScale: 4 }]);
+    expect(context.courses).toEqual([{ courseName: "Economics HL", level: "ib_hl", gradeValue: "6", gradeScale: "IB 1-7" }]);
+    expect(context.testScores).toEqual([{ testName: "SAT", score: "1470", maxScore: "1600", subscores: { math: 780 } }]);
+    expect(context.certifications).toEqual([{ title: "CS50x", organization: "HarvardX", evidenceStatus: "self_reported" }]);
+    expect(context.volunteeringExperiences).toEqual([{ title: "Numeracy volunteer", organization: "TGV", ongoing: true, evidenceStatus: "self_reported" }]);
+    expect(context.workExperiences).toEqual([
+      { title: "Intern", organization: "Getir", employmentType: "internship", ongoing: false, paid: true, evidenceStatus: "self_reported" },
+    ]);
   });
 });
