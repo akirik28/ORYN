@@ -26,9 +26,16 @@ Bugün **yazılan ama uygulanmayan** 8 migrasyon, kendi sıralarıyla:
 (`universities`, `profiles`, `education_records`, `advisor_conversations`) **var** — yani
 "tablo yok" hatası da çıkmaz. Dosyada iç içe `begin/commit` kaçağı yok, sadece en dıştaki ikisi.
 
-**Doğrulamadım:** dosyayı canlı veritabanında çalıştırıp geri almadım. Yani **sözdizimi
-hatası ihtimali sıfır değil.** Tek işlem içinde olduğu için böyle bir hata veri kaybına yol
-açmaz — sadece hiçbiri uygulanmaz ve hata mesajını bana iletirsin.
+**Ayrıca çalıştırıp doğruladım — artık "belki sözdizimi hatası vardır" ihtimali de kapandı.**
+Bu makinede zaten kurulu olan yerel Postgres 17'de (Supabase ile aynı ana sürüm) sıfırdan bir
+veritabanı kurdum, **canlı veritabanının bugünkü hâlini birebir kurdum** (0001-0106 arası 106
+migrasyon), sonra **senin yapıştıracağın dosyanın tam olarak kendisini** çalıştırdım.
+
+Sonuç: **hatasız çalıştı**, ve oluşturması gereken 14 nesnenin **14'ü de** oluştu — 4 tablo,
+9 kolon, 1 enum tipi. Ayrıca ayrı bir testte 114 migrasyonun tamamı baştan sona temiz uygulandı.
+
+**Canlı veritabanına hiçbir şey yazılmadı** — bunların hepsi bu makinedeki geçici bir
+veritabanında oldu.
 
 ## Sıra
 
