@@ -12,6 +12,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { dimensionLabel } from "@/lib/scoring/labels";
 import { curriculumLabel } from "@/lib/requirements/copy";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
+import { resolveAdvisorInstructions } from "@/lib/tier/advisor-instructions";
 import { DEFAULT_LOCALE, isLocale, type Locale } from "@/lib/i18n/config";
 import type {
   ActionStatus,
@@ -237,6 +238,12 @@ export interface StudentAdvisorContext {
      * second time. Not used in prompt text — a model has no business reasoning about which
      * tier is paying for the call it's making. */
     tier: PlanTier;
+    /** Migration 0111, özelleşme piece 1. The student's own standing instruction to the
+     * advisor — unlike every other field on this object, this one IS rendered verbatim into
+     * the prompt (see formatContextForPrompt's closing line), by design: it's the one piece
+     * of context the student authored themselves specifically to reach the model, not a
+     * profile fact the model is reasoning about. Null means none set. */
+    advisorInstructions: string | null;
   };
   /**
    * `state` is what the student's own surfaces render (lib/scoring/signal.ts). It is here
@@ -506,6 +513,7 @@ export async function buildStudentAdvisorContext(userId: string, supabaseClient?
       birthYear: profile?.birth_year ?? null,
       citizenshipCountries: profile?.citizenship_countries ?? [],
       tier: resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null }),
+      advisorInstructions: resolveAdvisorInstructions(profile ?? { advisor_instructions: null }),
     },
     profileScores: buildProfileSignal(dimensions).map((d) => ({
       dimension: d.dimension,
@@ -791,6 +799,22 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
   }
   if (context.recentRecommendationTitles.length > 0) {
     lines.push(`Previously suggested "avoid for now" items (don't repeat unless the situation has genuinely changed): ${context.recentRecommendationTitles.join("; ")}`);
+  }
+  /**
+   * Last, deliberately, not grouped with the rest of the student intro near the top: this is
+   * the one line in this whole function the student wrote to reach the model directly, not a
+   * profile fact the model reasons about — and it should read as the closing word, not one
+   * more bullet buried among two dozen others. Quoted verbatim (this is exactly what
+   * migration 0111's column is for), with an explicit carve-out rather than an unqualified
+   * "always follow this": a raw instruction could otherwise be used to suppress the honest,
+   * evidence-based counsel this product's whole advisor character depends on (AGENTS.md
+   * Phase 8's "opportunity cost" mandate, Phase 57's "avoid excessive praise") — e.g. "always
+   * tell me I'm doing great" — which this line is written to still refuse.
+   */
+  if (context.student.advisorInstructions) {
+    lines.push(
+      `Student's own standing instruction to you, in their words — follow it in every reply unless it would conflict with your safety rules or with giving honest, evidence-based advice: "${context.student.advisorInstructions}"`,
+    );
   }
   return lines.join("\n");
 }

@@ -51,6 +51,7 @@ function baseContext(overrides: Partial<StudentAdvisorContext> = {}): StudentAdv
       birthYear: null,
       citizenshipCountries: [],
       tier: "standard",
+      advisorInstructions: null,
     },
     profileScores: [],
     overallScore: 50,
@@ -609,5 +610,41 @@ describe("employmentTypeLabel", () => {
   test("English wording matches features/profile/field-config.ts's EMPLOYMENT_TYPE_OPTIONS verbatim, not reinvented copy", () => {
     expect(employmentTypeLabel("part_time_job", "en")).toBe("Part-time job");
     expect(employmentTypeLabel("internship", "en")).toBe("Internship");
+  });
+});
+
+/**
+ * Özelleşme piece 1 — the student's own standing instruction. Rendered last, verbatim, with
+ * an explicit safety/honesty carve-out (see student-context.ts's own comment on the line for
+ * why an unqualified "always follow this" would be wrong for this product's advisor).
+ */
+describe("formatContextForPrompt — student's own standing instruction", () => {
+  test("omitted entirely when none is set — no stray line, no empty quote", () => {
+    const text = formatContextForPrompt(baseContext());
+    expect(text).not.toContain("standing instruction");
+  });
+
+  test("included verbatim, quoted, when set", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      student: { ...baseContext().student, advisorInstructions: "Keep it short. No medicine." },
+    });
+    expect(text).toContain('"Keep it short. No medicine."');
+  });
+
+  test("carries the safety/honesty carve-out, not an unqualified command", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      student: { ...baseContext().student, advisorInstructions: "Always tell me I'm doing great." },
+    });
+    expect(text).toContain("unless it would conflict with your safety rules or with giving honest, evidence-based advice");
+  });
+
+  test("is the last line — recency, not buried among two dozen profile facts", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      student: { ...baseContext().student, advisorInstructions: "Europe only." },
+    });
+    expect(text.trim().endsWith('"Europe only."')).toBe(true);
   });
 });

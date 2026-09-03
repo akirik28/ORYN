@@ -137,7 +137,7 @@ export interface Profile {
   city_entity_id: string | null;
   graduation_year: number | null;
   curriculum: CurriculumType | null;
-  /** Migration 0109, written not applied — free text a student can add when `curriculum` is
+  /** Migration 0111, written not applied — free text a student can add when `curriculum` is
    * `"other"`, since that value otherwise captures nothing (no companion field existed
    * anywhere in the product before this). Scoped narrowly to "which qualification" on
    * purpose (max 100 chars, enforced in lib/validation/onboarding.ts, not here) — this is
@@ -173,6 +173,14 @@ export interface Profile {
    * 2026-09-02; every read still defaults an absent/unreadable value to "balanced" — see
    * lib/tier/response-mode.ts's resolveResponseMode, the one place this fallback happens. */
   response_mode: ResponseMode;
+  /** Migration 0111, written not applied — the student's own standing instruction to the
+   * advisor ("write short", "don't suggest medicine", "Europe only"), included in every
+   * advisor_chat system prompt (lib/ai/student-context.ts's formatContextForPrompt). Null
+   * means none set, same convention as plan_tier/response_mode above. The 500 (Standard) /
+   * 2,000 (Ultra) character limit is a server-side write-time check
+   * (app/(app)/settings/actions.ts's updateAdvisorInstructions), not something this type
+   * encodes — the column itself only enforces a flat 2,000-char absolute ceiling. */
+  advisor_instructions: string | null;
   /** Migration 0092, written not applied — when this student was shown the one-time
    * "welcome to Ultra" moment (Phase 57), or null if never. See lib/tier/ultra-welcome.ts:
    * an absent/unreadable value is deliberately NOT treated the same as null here (unlike
@@ -531,7 +539,7 @@ export interface EducationRecord {
   country: string | null;
   stage: EducationStage;
   curriculum: CurriculumType | null;
-  /** Migration 0109, written not applied — same field and same reasoning as
+  /** Migration 0111, written not applied — same field and same reasoning as
    * Profile.curriculum_other_text; see that field's own comment. This is the copy that
    * actually matters for a student with more than one education_records row (multiple
    * curricula), since Profile.curriculum only ever holds the single onboarding-time value. */

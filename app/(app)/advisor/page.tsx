@@ -17,7 +17,9 @@ import { getCounselorRecommendations } from "@/lib/counselor";
 import { getMonthlyQuota } from "@/lib/ai/monthly-quota";
 import { selectModelForUser } from "@/lib/ai/limits/budget";
 import { ResponseModeSlider } from "@/features/advisor/response-mode-slider";
+import { AdvisorInstructionsField } from "@/features/advisor/advisor-instructions-field";
 import { resolveResponseMode } from "@/lib/tier/response-mode";
+import { resolveAdvisorInstructions } from "@/lib/tier/advisor-instructions";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { extractUpgradePromptDismissalState } from "@/lib/advisor/upgrade-prompt";
 
@@ -135,6 +137,12 @@ export default async function AdvisorPage() {
       <section className="space-y-4">
         <SectionHeader title={t("talkItThrough")} description={t("talkItThroughDescription")} />
         <ResponseModeSlider responseMode={responseMode} budgetDegraded={budgetDegraded} quota={quota} planTier={planTier} />
+        {/* Beside AdvisorWorkspace, not inside it — same position as ResponseModeSlider
+            above, for the same reason: this is a per-student, cross-conversation setting
+            (docs/ozellesme-spec-2026-09-03.md §1, "her sohbette, her istemde geçerli"),
+            not state about which conversation is active, which is exactly what
+            AdvisorWorkspace exists to own. */}
+        <AdvisorInstructionsField initialInstructions={profile ? resolveAdvisorInstructions(profile) : null} planTier={planTier} />
         <AdvisorWorkspace
           initialConversationId={conversation?.id ?? null}
           initialMessages={messages}

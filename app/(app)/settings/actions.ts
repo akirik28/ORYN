@@ -12,6 +12,7 @@ import { meetsMinimumSignupAge } from "@/lib/legal/age-policy";
 import { logEvent } from "@/lib/analytics/log";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { getTranslations } from "next-intl/server";
+import { advisorInstructionsMaxLength } from "@/lib/tier/advisor-instructions";
 import type { NotificationCategory, TimeBudget, ResponseMode } from "@/types/database";
 
 /**
@@ -283,6 +284,57 @@ export async function updateResponseMode(mode: ResponseMode): Promise<{ error?: 
       return { error: "Response mode isn't available on your account yet, so nothing was saved. Retrying won't change that." };
     }
     return { error: "Couldn't save your response mode." };
+  }
+
+  revalidatePath("/advisor");
+  return {};
+}
+
+/**
+ * Özelleşme piece 1 (docs/ozellesme-spec-2026-09-03.md §1) — the student's own standing
+ * instruction to the advisor. Empty/whitespace-only input clears it (`null`), a legitimate
+ * "remove my instruction" action, not an error.
+ *
+ * The 500 (Standard) / 2,000 (Ultra) character limit is re-checked here, server-side,
+ * against the real char count of the trimmed text — never trusted from the client. The
+ * spec's own words: "İstemciyi atlayıp doğrudan çağıran biri 20.000 karakter yazamamalı; bu
+ * bir maliyet kontrolü, bir arayüz nezaketi değil" (someone bypassing the client and calling
+ * directly must not be able to write 20,000 characters — this is a cost control, not a UI
+ * nicety) — this text enters every advisor_chat system prompt
+ * (lib/ai/student-context.ts's formatContextForPrompt), so an unenforced limit is an
+ * unbounded per-call cost, not just a cosmetic overflow. Rejected outright rather than
+ * silently truncated: a student who wrote 600 characters and had it silently cut to 500
+ * would not know their instruction now ends mid-sentence, and would have no way to notice
+ * until the advisor's behavior stopped matching what they thought they'd asked for.
+ *
+ * Same shape as updateResponseMode above: a real tier check re-verified server-side (a
+ * Server Action is directly callable with any argument regardless of what UI called it, and
+ * a plan_tier downgrade after an Ultra-length instruction was saved must not let that
+ * instruction silently keep costing Ultra-sized tokens on a Standard-priced call), and the
+ * same isUndefinedColumnError handling for migration 0111 being written but not yet applied
+ * everywhere this runs.
+ */
+export async function updateAdvisorInstructions(text: string): Promise<{ error?: string }> {
+  const session = await requireUser();
+  const profile = await getCurrentProfile();
+  const tier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+  const maxLength = advisorInstructionsMaxLength(tier);
+
+  const trimmed = text.trim();
+  if (trimmed.length > maxLength) {
+    return { error: `Instructions can be at most ${maxLength} characters on your plan, so nothing was saved.` };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ advisor_instructions: trimmed.length > 0 ? trimmed : null })
+    .eq("id", session.userId!);
+  if (error) {
+    if (isUndefinedColumnError(error, "advisor_instructions")) {
+      return { error: "Instructions aren't available on your account yet, so nothing was saved. Retrying won't change that." };
+    }
+    return { error: "Couldn't save your instructions." };
   }
 
   revalidatePath("/advisor");
