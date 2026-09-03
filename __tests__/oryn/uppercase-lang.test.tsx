@@ -50,15 +50,15 @@ describe("EvidenceSignal", () => {
 });
 
 describe("AdvisorMessage", () => {
-  test("oryn variant's default attribution mark defaults to lang=en, text 'Oryn'", () => {
+  test("oryn variant's default attribution mark defaults to lang=en, text 'Proxola'", () => {
     const { container, getByText } = render(<AdvisorMessage>Some counsel.</AdvisorMessage>);
-    expect(getByText("Oryn")).toHaveAttribute("lang", "en");
+    expect(getByText("Proxola")).toHaveAttribute("lang", "en");
     expect(container.querySelector('[lang="en"]')).toBeInTheDocument();
   });
 
-  test("oryn variant under locale=tr still renders 'Oryn' (brand name, not translated) with lang=tr", () => {
+  test("oryn variant under locale=tr still renders 'Proxola' (brand name, not translated) with lang=tr", () => {
     const { getByText } = render(<AdvisorMessage locale="tr">Bazı tavsiyeler.</AdvisorMessage>);
-    expect(getByText("Oryn")).toHaveAttribute("lang", "tr");
+    expect(getByText("Proxola")).toHaveAttribute("lang", "tr");
   });
 
   test("student variant's default mark is 'You' in English, 'Sen' in Turkish", () => {
@@ -81,10 +81,10 @@ describe("AdvisorMessage", () => {
 
   test("AdvisorMessageThinking's mark follows the same default/override rule", () => {
     const en = render(<AdvisorMessageThinking />);
-    expect(en.getByText("Oryn")).toHaveAttribute("lang", "en");
+    expect(en.getByText("Proxola")).toHaveAttribute("lang", "en");
     cleanup();
     const tr = render(<AdvisorMessageThinking locale="tr" />);
-    expect(tr.getByText("Oryn")).toHaveAttribute("lang", "tr");
+    expect(tr.getByText("Proxola")).toHaveAttribute("lang", "tr");
   });
 });
 
@@ -104,12 +104,12 @@ describe("NextMove", () => {
     expect(container.querySelector('[lang="en"]')).toBeInTheDocument();
   });
 
-  test("the internal 'What Oryn is reading' evidence-row label translates under locale=tr", () => {
+  test("the internal 'What Proxola is reading' evidence-row label translates under locale=tr", () => {
     const { getByText, queryByText } = render(
       <NextMove headline="Başlık" locale="tr" evidence={[{ label: "Değerlendirilen alan", value: 3 }]} />,
     );
-    expect(getByText("Oryn'ın okuduğu veriler")).toHaveAttribute("lang", "tr");
-    expect(queryByText("What Oryn is reading")).not.toBeInTheDocument();
+    expect(getByText("Proxola'nın okuduğu veriler")).toHaveAttribute("lang", "tr");
+    expect(queryByText("What Proxola is reading")).not.toBeInTheDocument();
   });
 
   test("a caller that has translated eyebrow/facts passes locale=tr and gets it throughout", () => {

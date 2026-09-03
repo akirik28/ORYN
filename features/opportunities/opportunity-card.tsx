@@ -51,7 +51,7 @@ export function useNotInterestedReasons(): { value: string; label: string }[] {
 
 /** "match" register — Browse's own recommendation framing. The detail page's fitLabel
  * (same lib/opportunities/matching.ts matchTierKey thresholds, not just coincidentally
- * matching numbers) deliberately uses "fit" instead ("Oryn's take" is a first-person verdict,
+ * matching numbers) deliberately uses "fit" instead ("Proxola's take" is a first-person verdict,
  * not a ranked-list tag) — see that file's own comment. Middle two tiers share their English
  * text between the two files, but that's this codebase's actual wording, not a shortcut. */
 function tierFor(score: number, t: Translator): { label: string; tone: StatusTone } {
@@ -81,13 +81,13 @@ function reasonSentence(reasonCodes: string[], locale: Locale): string | null {
   // their own full sentence before the joined-fragments shape below.
   if (reasonCodes.includes("limited_opportunity_information")) {
     return locale === "tr"
-      ? "Oryn'ın bu fırsatın odak alanları hakkında henüz yeterli bilgisi yok."
-      : "Oryn doesn't have enough information about this opportunity's focus areas yet.";
+      ? "Proxola'nın bu fırsatın odak alanları hakkında henüz yeterli bilgisi yok."
+      : "Proxola doesn't have enough information about this opportunity's focus areas yet.";
   }
   if (reasonCodes.includes("limited_profile_information")) {
     return locale === "tr"
-      ? "İlgi alanlarını eklersen Oryn bu eşleşmeyi daha net açıklayabilir."
-      : "Add your interests to your profile for Oryn to explain this match more specifically.";
+      ? "İlgi alanlarını eklersen Proxola bu eşleşmeyi daha net açıklayabilir."
+      : "Add your interests to your profile for Proxola to explain this match more specifically.";
   }
 
   const parts: string[] =

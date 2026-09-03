@@ -17,7 +17,7 @@
     "moreDestinations": "More destinations",
     "primaryLandmark": "Primary",
     "skipToContent": "Skip to content",
-    "homeLink": "Oryn — home",
+    "homeLink": "Proxola — home",
     "saved": "Saved",
     "upgradePlan": "Upgrade your plan",
     "upgradePlanPrice": "399,99 TL/month · First week free"
@@ -53,7 +53,7 @@
     "noPlanTitle": "No weekly plan yet",
     "planNotConfiguredDescription": "Weekly plans aren't available right now. You can still explore and update the rest of your profile.",
     "planFailedDescription": "Please try again.",
-    "noPlanDescription": "Add a few things to your profile and Oryn will generate your first weekly plan.",
+    "noPlanDescription": "Add a few things to your profile and Proxola will generate your first weekly plan.",
     "dueSoon": "Due soon",
     "oneThingNotToDo": "One thing not to do",
     "universityOutlook": "University outlook",
@@ -63,14 +63,14 @@
     "newOpportunities": "New opportunities",
     "homeStripAriaLabel": "Recommended opportunities",
     "homeStripEmptyTitle": "No matches yet",
-    "homeStripEmptyDescription": "Oryn ranks opportunities honestly once it knows enough about you — add a few activities, interests, or goals to get started.",
+    "homeStripEmptyDescription": "Proxola ranks opportunities honestly once it knows enough about you — add a few activities, interests, or goals to get started.",
     "homeStripEmptyAction": "Add to your profile",
     "unknownUniversity": "Unknown university",
     "noTargetUniversitiesPrefix": "No target universities yet.",
     "exploreUniversities": "Explore universities",
-    "noTargetUniversitiesSuffix": "to add your first — Oryn will start showing you where you stand.",
+    "noTargetUniversitiesSuffix": "to add your first — Proxola will start showing you where you stand.",
     "couldntRefreshMatches": "We couldn't refresh your matches just now. The list below is your last known result, not necessarily current.",
-    "noOpportunityMatches": "Personalized matches appear here once your profile has enough signal for Oryn to rank them honestly.",
+    "noOpportunityMatches": "Personalized matches appear here once your profile has enough signal for Proxola to rank them honestly.",
     "weeklyFocus": {
       "markComplete": "Mark as complete",
       "markNotStarted": "Mark as not started",
@@ -103,9 +103,9 @@
   },
   "confirmAge": {
     "title": "One more thing",
-    "subtitle": "We need your birth year before you can continue — it's how Oryn checks age limits on programs, and it was missing from your account.",
+    "subtitle": "We need your birth year before you can continue — it's how Proxola checks age limits on programs, and it was missing from your account.",
     "fieldLabel": "Year you were born",
-    "fieldWhy": "The year is enough — Oryn never asks for your full birthday.",
+    "fieldWhy": "The year is enough — Proxola never asks for your full birthday.",
     "submit": "Continue",
     "invalidYear": "Enter the year you were born."
   },
@@ -117,27 +117,27 @@
       "password": "Password",
       "signOut": "Sign out",
       "yourRecord": "Your record",
-      "yourRecordDescription": "Import from a CV instead of typing everything in. Oryn shows you what it found and adds only what you confirm.",
+      "yourRecordDescription": "Import from a CV instead of typing everything in. Proxola shows you what it found and adds only what you confirm.",
       "scanCv": "Scan a CV",
       "preferences": "Preferences",
       "locationTitle": "Location",
       "locationDescription": "Used to prioritize nearby opportunities. Country is part of your public profile if you turn that on below; city is never shown publicly.",
       "ageTitle": "Age",
-      "ageDescription": "Most competitions and summer programs have an age limit. Without this, Oryn shows them as unverified instead of telling you whether you qualify.",
+      "ageDescription": "Most competitions and summer programs have an age limit. Without this, Proxola shows them as unverified instead of telling you whether you qualify.",
       "citizenshipTitle": "Citizenship",
       "citizenshipDescription": "Different from your location above — used to check citizenship-restricted opportunities. Optional; add as many as apply.",
       "studyCapacityTitle": "Study capacity",
       "studyCapacityDescription": "Helps the weekly plan match what you can realistically do.",
       "visibilityTitle": "Visibility",
-      "visibilityDescription": "Control what other Oryn students can see about you.",
+      "visibilityDescription": "Control what other Proxola students can see about you.",
       "notificationsTitle": "Notifications",
       "notificationsDescription": "Turn a category off to stop new notifications like it. This doesn't clear notifications you already have — use \"Mark all read\" below if you want a clean slate.",
       "dangerZone": "Danger zone",
-      "dangerZoneDescription": "Download everything Oryn has stored about you, or permanently delete your account.",
+      "dangerZoneDescription": "Download everything Proxola has stored about you, or permanently delete your account.",
       "exportData": "Export my data",
-      "footerDisclaimer": "Career profile scores are Oryn's own development assessment, not an official admissions probability. See individual pages for source information on university and opportunity data.",
+      "footerDisclaimer": "Career profile scores are Proxola's own development assessment, not an official admissions probability. See individual pages for source information on university and opportunity data.",
       "languageTitle": "Language",
-      "languageDescription": "The language Oryn uses for the interface and for your counselor's replies. Your choice follows you to another device."
+      "languageDescription": "The language Proxola uses for the interface and for your counselor's replies. Your choice follows you to another device."
     },
     "plan": {
       "title": "Your plan",
@@ -204,12 +204,12 @@
     },
     "birthYear": {
       "label": "Year you were born",
-      "notSet": "Not set. Programs with an age limit will show as unverified rather than confirmed either way, because Oryn won't guess your age.",
-      "helper": "Used to check age limits on programs and competitions. The year is enough — Oryn never asks for your full birthday.",
+      "notSet": "Not set. Programs with an age limit will show as unverified rather than confirmed either way, because Proxola won't guess your age.",
+      "helper": "Used to check age limits on programs and competitions. The year is enough — Proxola never asks for your full birthday.",
       "saved": "Saved"
     },
     "citizenship": {
-      "notStated": "Not stated. Oryn will show eligibility for citizenship-restricted opportunities as unverified rather than confirmed either way.",
+      "notStated": "Not stated. Proxola will show eligibility for citizenship-restricted opportunities as unverified rather than confirmed either way.",
       "addLabel": "Add a citizenship",
       "placeholder": "e.g. Turkey",
       "removeAriaLabel": "Remove {country}",
@@ -266,7 +266,7 @@
       },
       "copyLink": "Copy link",
       "copied": "Copied",
-      "visibleToStudents": "Visible to other signed-in Oryn students, not the open web.",
+      "visibleToStudents": "Visible to other signed-in Proxola students, not the open web.",
       "saved": "Saved"
     },
     "location": {
@@ -285,7 +285,7 @@
     "page": {
       "eyebrow": "Journey",
       "title": "Everything you've built so far.",
-      "description": "Your record of academics, leadership, research and execution. This is Oryn's development assessment — not an admissions score, and not visible to universities.",
+      "description": "Your record of academics, leadership, research and execution. This is Proxola's development assessment — not an admissions score, and not visible to universities.",
       "scanCv": "Scan a CV",
       "tabs": {
         "overview": "Overview",
@@ -296,7 +296,7 @@
       },
       "professionalProfile": {
         "title": "Professional profile",
-        "description": "What other Oryn students see on your public profile."
+        "description": "What other Proxola students see on your public profile."
       },
       "openTo": "Open to",
       "contactInformation": "Contact information",
@@ -306,7 +306,7 @@
       },
       "completeness": {
         "title": "Profile Completeness",
-        "description": "How much Oryn knows about you — separate from how strong your profile is. Only you can see this.",
+        "description": "How much Proxola knows about you — separate from how strong your profile is. Only you can see this.",
         "percentComplete": "{percent}% complete",
         "fullyFilled": "Your profile is fully filled out."
       },
@@ -318,12 +318,12 @@
       "journeyNote": {
         "emptyEyebrow": "Nothing to read yet",
         "emptyTitle": "Add a few things and this page starts working.",
-        "emptyBody": "Oryn hasn't been given enough to assess any area yet. That's a gap in the record, not a judgement about you — add your courses, activities and projects below and it will start telling you where you actually stand.",
+        "emptyBody": "Proxola hasn't been given enough to assess any area yet. That's a gap in the record, not a judgement about you — add your courses, activities and projects below and it will start telling you where you actually stand.",
         "gapEyebrow": "Where the leverage is",
         "gapTitle": "{dimension} is where your next effort counts most.",
-        "gapBodyWithAwaiting": "Of the {assessed, plural, one {# area} other {# areas}} Oryn can currently assess, this one has the least behind it — so the same hours move your profile furthest here. {awaitingEvidence, plural, one {# other area has} other {# other areas have}} nothing recorded yet, so this reading may change as you add more.",
-        "gapBodySimple": "Of everything Oryn can assess, this area has the least behind it — which makes it where the same hours move your profile furthest.",
-        "strengthEyebrow": "Oryn noticed a pattern",
+        "gapBodyWithAwaiting": "Of the {assessed, plural, one {# area} other {# areas}} Proxola can currently assess, this one has the least behind it — so the same hours move your profile furthest here. {awaitingEvidence, plural, one {# other area has} other {# other areas have}} nothing recorded yet, so this reading may change as you add more.",
+        "gapBodySimple": "Of everything Proxola can assess, this area has the least behind it — which makes it where the same hours move your profile furthest.",
+        "strengthEyebrow": "Proxola noticed a pattern",
         "strengthTitle": "{dimension} is becoming a consistent strength.",
         "strengthBody": "It's the best-evidenced part of your record. Adding more of the same is unlikely to change how your profile reads — the leverage is elsewhere."
       },
@@ -341,7 +341,7 @@
         },
         "coursework": {
           "title": "Coursework",
-          "description": "AP, IB HL/SL, A-Level, honors, and regular courses. Oryn uses these to understand your academic rigor and subject range.",
+          "description": "AP, IB HL/SL, A-Level, honors, and regular courses. Proxola uses these to understand your academic rigor and subject range.",
           "empty": "No coursework yet. Add the courses you're taking — advanced coursework is one of the strongest academic signals."
         },
         "testScores": {
@@ -430,15 +430,15 @@
       "backToJourney": "Back to journey",
       "eyebrow": "Journey",
       "title": "Scan a CV.",
-      "description": "Already have your record written down somewhere? Oryn can read it and pull out your education, activities, awards, projects, research and work — you review everything before any of it is saved.",
+      "description": "Already have your record written down somewhere? Proxola can read it and pull out your education, activities, awards, projects, research and work — you review everything before any of it is saved.",
       "notConfiguredTitle": "CV scanning isn't configured yet",
       "notConfiguredDescription": "CV scanning isn't available right now. You can still add everything to your profile manually.",
       "reviewBeforeAdding": "Review before adding",
-      "foundItems": "Oryn found {count, plural, one {# item} other {# items}} in {fileName}. Nothing is added to your profile until you confirm it — uncheck anything that isn't right, or edit the details.",
-      "unsureAboutThis": "Oryn is unsure about this one",
+      "foundItems": "Proxola found {count, plural, one {# item} other {# items}} in {fileName}. Nothing is added to your profile until you confirm it — uncheck anything that isn't right, or edit the details.",
+      "unsureAboutThis": "Proxola is unsure about this one",
       "addItemsToProfile": "{count, plural, one {Add # item} other {Add # items}} to my profile",
       "scanTitle": "Scan a CV or résumé",
-      "scanDescription": "Upload a PDF, DOCX or text file. Oryn reads it, shows you what it found, and adds only what you confirm — nothing is saved without your review.",
+      "scanDescription": "Upload a PDF, DOCX or text file. Proxola reads it, shows you what it found, and adds only what you confirm — nothing is saved without your review.",
       "readingFile": "Reading {fileName}…",
       "chooseFile": "Choose a file",
       "noItemsFoundError": "We read the file but couldn't find anything to import from it. You can add entries manually instead.",
@@ -470,7 +470,7 @@
     },
     "journeyTimeline": {
       "emptyTitle": "Your journey starts as soon as you add something",
-      "emptyDescription": "Courses, activities, projects, awards, work — anything you've done. Oryn builds this timeline from the sections below, and reads it to work out what to recommend next.",
+      "emptyDescription": "Courses, activities, projects, awards, work — anything you've done. Proxola builds this timeline from the sections below, and reads it to work out what to recommend next.",
       "undated": "Undated",
       "noDateRecorded": "No date recorded",
       "entryCount": "{count, plural, one {# entry} other {# entries}}",
@@ -528,7 +528,7 @@
       "printButton": "Print / Save as PDF"
     },
     "peerBenchmark": {
-      "notEnoughStudents": "Not enough comparable Oryn students yet",
+      "notEnoughStudents": "Not enough comparable Proxola students yet",
       "notEnoughDescription": "Needs at least {min} comparable students ({cohort}) — showing a percentile with fewer would be a guess, not a real comparison.",
       "comparedTo": "Compared to {cohort}",
       "overallProfile": "Overall profile",
@@ -549,7 +549,7 @@
     "researchIdeas": {
       "eyebrow": "Research",
       "title": "Find a project you can actually finish.",
-      "description": "Oryn proposes research scaled to your level and the time you have — grounded in real academic literature and public data, never an impressive-sounding question with no way to answer it.",
+      "description": "Proxola proposes research scaled to your level and the time you have — grounded in real academic literature and public data, never an impressive-sounding question with no way to answer it.",
       "fieldLabel": "What field do you want to work in?",
       "fieldPlaceholder": "e.g. Economics, Computer Science, Psychology",
       "generating": "Thinking",
@@ -564,7 +564,7 @@
         "environmentalScience": "Environmental Science"
       },
       "noIdeasTitle": "No ideas generated yet",
-      "noIdeasDescription": "Name a field and Oryn will propose three projects scaled to your level — each one something you could realistically finish, with real data sources rather than an impressive-sounding title.",
+      "noIdeasDescription": "Name a field and Proxola will propose three projects scaled to your level — each one something you could realistically finish, with real data sources rather than an impressive-sounding title.",
       "timeNeeded": "Time needed",
       "finishedLooksLike": "Finished project looks like",
       "method": "Method",
@@ -573,7 +573,7 @@
       "firstSteps": "Your first steps",
       "addedToResearch": "Added to your research",
       "addToResearch": "Add to my research",
-      "couldntGenerate": "Oryn couldn't put together a project for that field. Try naming it a little differently.",
+      "couldntGenerate": "Proxola couldn't put together a project for that field. Try naming it a little differently.",
       "difficulty": {
         "accessible": "accessible",
         "moderate": "moderate",
@@ -583,7 +583,7 @@
     },
     "storyBank": {
       "title": "Essay Story Bank",
-      "description": "Find which of your real experiences carry an essay-worthy story, and how you might structure it. Oryn organizes what you've recorded — it never invents an event and never writes the essay for you.",
+      "description": "Find which of your real experiences carry an essay-worthy story, and how you might structure it. Proxola organizes what you've recorded — it never invents an event and never writes the essay for you.",
       "emptyTitle": "Add experiences to your profile first",
       "emptyDescription": "Add activities, projects, research, sports, volunteering, or work to your profile first — your essay stories come from things you've actually done, never from something invented for you.",
       "promptLabel": "The essay prompt you're answering",
@@ -598,7 +598,7 @@
       "findMyStories": "Find my stories",
       "angleLabel": "Angle {number}:",
       "missingDetailPrefix": "Worth adding to your story notes: {detail}",
-      "footerDisclaimer": "These are structures for your own writing, not a draft. The essay has to sound like you, and admissions readers can tell when it doesn't — so Oryn never writes it for you, and never adds a detail you didn't record yourself.",
+      "footerDisclaimer": "These are structures for your own writing, not a draft. The essay has to sound like you, and admissions readers can tell when it doesn't — so Proxola never writes it for you, and never adds a detail you didn't record yourself.",
       "outlineSteps": {
         "hook": "Hook",
         "context": "Context",
@@ -638,11 +638,11 @@
       "whereYouStand": "Where you stand",
       "strongestEvidence": "Your strongest evidence is in <bold>{dimensions}</bold>. ",
       "developing": "{count, plural, one {# area is} other {# areas are}} developing. ",
-      "awaitingEvidence": "Oryn still has too little to say about {count} of them.",
+      "awaitingEvidence": "Proxola still has too little to say about {count} of them.",
       "nextToStrengthen": "Next area to strengthen",
-      "nextToStrengthenBody": " — {state}. Of everything Oryn has a read on, this is where the same hours of work change your profile most.",
+      "nextToStrengthenBody": " — {state}. Of everything Proxola has a read on, this is where the same hours of work change your profile most.",
       "notEnoughHistoryTitle": "Not enough history yet",
-      "notEnoughHistoryDescription": "Check back after your profile has had a chance to change over a few weeks. Oryn compares your dimensions against a snapshot taken at least a month ago.",
+      "notEnoughHistoryDescription": "Check back after your profile has had a chance to change over a few weeks. Proxola compares your dimensions against a snapshot taken at least a month ago.",
       "whatChanged": "What changed",
       "movedForward": "{count, plural, one {# area moved forward} other {# areas moved forward}}",
       "noneMovedForward": "No area moved forward",
@@ -654,7 +654,7 @@
     "recommendations": {
       "title": "Recommendations",
       "write": "Write a recommendation",
-      "anonymousAuthor": "An Oryn student",
+      "anonymousAuthor": "A Proxola student",
       "hidden": "Hidden",
       "noneYet": "No recommendations yet",
       "writePlaceholder": "What would you tell someone about working with them?",
@@ -686,14 +686,14 @@
         "notSureYet": "Not sure yet"
       },
       "schoolTitle": "Tell us about your school",
-      "schoolSubtitle": "This helps Oryn understand your academic context.",
+      "schoolSubtitle": "This helps Proxola understand your academic context.",
       "countryLabel": "Country",
       "countryPlaceholder": "United States",
       "schoolLabel": "School",
       "schoolPlaceholder": "Start typing your school's name",
       "graduationYearLabel": "Graduation year",
       "birthYearLabel": "Year you were born",
-      "birthYearWhy": "Lots of programs have age limits. Oryn needs this to tell you which ones you can actually apply to — the year is enough, never your full birthday.",
+      "birthYearWhy": "Lots of programs have age limits. Proxola needs this to tell you which ones you can actually apply to — the year is enough, never your full birthday.",
       "curriculumLabel": "Curriculum",
       "curriculumOptions": {
         "ap": "AP",
@@ -727,8 +727,8 @@
       "schoolStepError": "Fill in your country, school, and curriculum to continue.",
       "genericFormError": "Please check the form and try again.",
       "graduationYearError": "Pick a graduation year in the future.",
-      "birthYearError": "Enter the year you were born — Oryn needs it to check age limits on programs.",
-      "birthYearTooYoung": "Oryn isn't able to offer accounts below this age yet.",
+      "birthYearError": "Enter the year you were born — Proxola needs it to check age limits on programs.",
+      "birthYearTooYoung": "Proxola isn't able to offer accounts below this age yet.",
       "pageTitle": "Set up your profile"
     },
     "interests": {
@@ -766,7 +766,7 @@
       "readingCvHint": "This usually takes a few seconds.",
       "clickToChoose": "Click to choose a file",
       "clickToChooseHint": "PDF, DOCX, or plain text — up to 10MB",
-      "foundItems": "We found {count, plural, one {# item} other {# items}}. Review before adding them to your Oryn profile — uncheck anything that isn't right, or edit the details.",
+      "foundItems": "We found {count, plural, one {# item} other {# items}}. Review before adding them to your Proxola profile — uncheck anything that isn't right, or edit the details.",
       "lowConfidence": "Low confidence — please check",
       "schoolPlaceholder": "School",
       "organizationPlaceholder": "Organization",
@@ -794,8 +794,8 @@
       "testScores": "Test scores",
       "graduationRate": "Graduation rate",
       "unavailable": "Unavailable",
-      "notResearchedTitle": "Oryn hasn't researched this university in depth yet",
-      "notResearchedDescription": "Program, requirement, and admissions details aren't in Oryn's records yet — that's a gap in our research, not a reflection of the university.",
+      "notResearchedTitle": "Proxola hasn't researched this university in depth yet",
+      "notResearchedDescription": "Program, requirement, and admissions details aren't in Proxola's records yet — that's a gap in our research, not a reflection of the university.",
       "undergradPostgradCaption": "{undergrad} undergrad · {postgrad} postgrad",
       "qsSizeBandCaption": "QS size band, not an exact count",
       "domesticRateCaption": "Domestic rate: {rate}",
@@ -803,17 +803,17 @@
       "internationalFeeNotSeparate": "International fee not separately published",
       "internationalFeeNotPublished": "International fee not published as a single figure — varies by course",
       "programsTitle": "Programs",
-      "programsDescription": "Degree programs Oryn has verified against this university's own official pages.",
+      "programsDescription": "Degree programs Proxola has verified against this university's own official pages.",
       "researchStrengthsTitle": "Research strengths",
       "researchStrengthsDescription": "Topics this university publishes in most, from OpenAlex's open research index.",
       "requirementCheckTitle": "Requirement check",
-      "requirementCheckDescription": "Oryn's read of your profile against each stated requirement — not an official admissions decision. See each source before relying on it.",
-      "requirementCheckEmptyMessage": "This university's admission requirements aren't in Oryn's records yet — that's a gap in our research, not a confirmation that none exist.",
+      "requirementCheckDescription": "Proxola's read of your profile against each stated requirement — not an official admissions decision. See each source before relying on it.",
+      "requirementCheckEmptyMessage": "This university's admission requirements aren't in Proxola's records yet — that's a gap in our research, not a confirmation that none exist.",
       "programFallback": "Program",
       "programSpecific": "Program-specific",
       "optional": "Optional",
       "importantDatesTitle": "Important dates",
-      "importantDatesDescription": "Deadlines Oryn has verified against this university's own official pages.",
+      "importantDatesDescription": "Deadlines Proxola has verified against this university's own official pages.",
       "upcoming": "Upcoming",
       "recurringTitle": "Recurring — exact year not published",
       "recurringBadge": "Recurring",
@@ -964,7 +964,7 @@
       "uncoveredNote": "Note: {count, plural, one {{formatted} check-in-progress country isn't} other {{formatted} check-in-progress countries aren't}} yet mapped to a region ({names}) — included in the total above, not yet in any region tab.",
       "sortByName": "Name",
       "researchDepth": "Research depth",
-      "researchDepthHint": "Most universities in Oryn's catalog don't have detailed program and requirement data yet — this narrows to the ones that do.",
+      "researchDepthHint": "Most universities in Proxola's catalog don't have detailed program and requirement data yet — this narrows to the ones that do.",
       "detailedProfilesOnly": "Detailed profiles only"
     },
     "comparePage": {
@@ -1070,19 +1070,19 @@
       "forYou": "For you",
       "browseAll": "Browse all",
       "noMatchesTitle": "No matches yet",
-      "noMatchesConfigured": "Opportunities are discovered on a schedule. Check back soon, or complete more of your profile so Oryn knows what to look for.",
-      "noMatchesNotConfigured": "New opportunities aren't being discovered right now. You can still browse everything already in Oryn from the \"Browse all\" tab.",
+      "noMatchesConfigured": "Opportunities are discovered on a schedule. Check back soon, or complete more of your profile so Proxola knows what to look for.",
+      "noMatchesNotConfigured": "New opportunities aren't being discovered right now. You can still browse everything already in Proxola from the \"Browse all\" tab.",
       "bestNextMove": "Best next move",
       "bestNextMoveDescription": "The single opportunity that would add most to your profile right now.",
       "alsoWorthYourTime": "Also worth your time",
       "resultsCount": "{count, plural, one {{formatted} opportunity matches} other {{formatted} opportunities match}}",
       "noOpportunitiesFound": "No opportunities found",
       "matchingQuerySuffix": " matching “{query}”",
-      "tryDifferentSearch": "Try a different search, or clear a filter — Oryn's opportunity catalog grows over time."
+      "tryDifferentSearch": "Try a different search, or clear a filter — Proxola's opportunity catalog grows over time."
     },
     "detailPage": {
-      "orynsTake": "Oryn's take",
-      "cantConfirmPrefix": "One thing Oryn can't confirm: ",
+      "proxolasTake": "Proxola's take",
+      "cantConfirmPrefix": "One thing Proxola can't confirm: ",
       "refreshError": "We couldn't refresh your match for this opportunity just now. The eligibility and match details below are your last known result, not necessarily current.",
       "fit": "Fit",
       "selectivity": "Selectivity",
@@ -1138,25 +1138,25 @@
     "page": {
       "eyebrow": "Counselor",
       "title": "Your strategy room.",
-      "description": "Oryn answers from your actual profile — including when the honest answer is to do less.",
+      "description": "Proxola answers from your actual profile — including when the honest answer is to do less.",
       "talkItThrough": "Talk it through",
-      "talkItThroughDescription": "Ask anything about your profile, your targets or what to do next. Oryn answers from your record — including when the honest answer is to do less."
+      "talkItThroughDescription": "Ask anything about your profile, your targets or what to do next. Proxola answers from your record — including when the honest answer is to do less."
     },
     "chat": {
       "startHere": "Start here",
-      "headline": "Ask Oryn what to do — or whether something is worth doing at all.",
-      "subtext": "Oryn answers from what it already knows about your profile, and will tell you when the honest answer is to do less.",
+      "headline": "Ask Proxola what to do — or whether something is worth doing at all.",
+      "subtext": "Proxola answers from what it already knows about your profile, and will tell you when the honest answer is to do less.",
       "prompts": {
         "weakestPart": "What's the weakest part of my profile?",
         "anotherClub": "Should I start another club?",
         "thisWeek": "What should I do this week?",
         "universityListRealistic": "Is my university list realistic?"
       },
-      "couldntComplete": "Oryn couldn't complete this response.",
+      "couldntComplete": "Proxola couldn't complete this response.",
       "tryAgain": "Try again",
-      "placeholderReady": "Ask Oryn…",
+      "placeholderReady": "Ask Proxola…",
       "placeholderNotConfigured": "The AI counselor isn't configured yet",
-      "placeholderExhausted": "This month's Oryn AI is used up",
+      "placeholderExhausted": "This month's Proxola AI is used up",
       "sendAriaLabel": "Send message",
       "degradeNote": {
         "label": "Shorter reply",
@@ -1170,7 +1170,7 @@
       },
       "exhausted": {
         "title": "This month's allowance is used up",
-        "detail": "Chat resets on {date}. The rest of Oryn — your plan, opportunities, universities — stays open as always."
+        "detail": "Chat resets on {date}. The rest of Proxola — your plan, opportunities, universities — stays open as always."
       }
     },
     "sessionWall": {
@@ -1189,7 +1189,7 @@
       "unknown": "We couldn't load how many tokens you've used. Your {limit}-token monthly allowance still applies and resets {date}.",
       "exhausted": "All {limit} tokens are used for this month. Resets {date}.",
       "low": "Only {remaining} left. Resets {date}.",
-      "degraded": "You've used a lot of Oryn's AI this month, so replies are shorter for now. Resets {date}.",
+      "degraded": "You've used a lot of Proxola's AI this month, so replies are shorter for now. Resets {date}.",
       "normal": "{remaining} tokens left. Resets {date}."
     },
     "responseMode": {
@@ -1202,18 +1202,18 @@
         "thorough": "Ultra"
       },
       "overridden": "Ultra is saved for after this resets — this month's usage means shorter replies for now. Resets {date}.",
-      "ultraLocked": "Ultra gives longer, more thorough answers — part of Oryn Ultra.",
+      "ultraLocked": "Ultra gives longer, more thorough answers — part of Proxola Ultra.",
       "ultraLockedLink": "Learn more"
     },
     "instructions": {
       "label": "Your standing instructions",
-      "description": "A permanent note to Oryn, applied to every reply — for example \"keep it short\" or \"don't suggest medicine.\"",
+      "description": "A permanent note to Proxola, applied to every reply — for example \"keep it short\" or \"don't suggest medicine.\"",
       "placeholder": "e.g. Keep answers short. Don't suggest medical fields. Focus on Europe.",
       "saved": "Saved",
       "ultraUpsell": "Ultra allows up to {limit} characters."
     },
     "strategyPanel": {
-      "ariaLabel": "What Oryn is working from",
+      "ariaLabel": "What Proxola is working from",
       "whereYouStand": "Where you stand",
       "currentFocus": "Current focus",
       "nextDecision": "Next decision",
@@ -1238,11 +1238,11 @@
       },
       "whyThis": "Why this",
       "impactEffort": "{impact} impact · {effort} effort",
-      "needsMoreInfoTitle": "Oryn needs a bit more information before it can make confident recommendations",
+      "needsMoreInfoTitle": "Proxola needs a bit more information before it can make confident recommendations",
       "needsMoreInfoDescription": "Profile completeness: {percent}%. The items below are the highest-value ones to add first.",
       "completeProfile": "Complete your profile",
       "noRecommendationsTitle": "No verified, eligible recommendations right now",
-      "noRecommendationsDescription": "Oryn only recommends opportunities and requirements it can verify and confirm you're eligible for — it doesn't guess. Check back as more verified data becomes available, or explore Opportunities and Universities directly.",
+      "noRecommendationsDescription": "Proxola only recommends opportunities and requirements it can verify and confirm you're eligible for — it doesn't guess. Check back as more verified data becomes available, or explore Opportunities and Universities directly.",
       "yourPriorities": "Your priorities",
       "oneThingNotToDo": "One thing not to do",
       "worthConsidering": "Worth considering"
@@ -1372,7 +1372,7 @@
     "view": {
       "title": "Search",
       "placeholder": "Search universities, opportunities, your profile…",
-      "inputAriaLabel": "Search Oryn",
+      "inputAriaLabel": "Search Proxola",
       "clearAriaLabel": "Clear search",
       "keepTyping": "Keep typing — search needs at least 2 characters.",
       "noResultsTitle": "No results",
@@ -1380,9 +1380,9 @@
     },
     "commandPalette": {
       "barLabel": "Search universities, programs, competitions…",
-      "barSrOnly": "Search Oryn. Shortcut: Command K",
+      "barSrOnly": "Search Proxola. Shortcut: Command K",
       "iconAriaLabel": "Search",
-      "dialogTitle": "Search Oryn",
+      "dialogTitle": "Search Proxola",
       "inputPlaceholder": "Search universities, opportunities, your profile…",
       "searchFailed": "Search isn't available right now. Please try again.",
       "keepTyping": "Keep typing — at least 2 characters.",
@@ -1396,7 +1396,7 @@
       "welcomeBack": "Welcome back",
       "signInToContinue": "Sign in to continue.",
       "invalidConfirmationLink": "That link is invalid or has expired. Please try again.",
-      "newToOryn": "New to ORYN?",
+      "newToProxola": "New to Proxola?",
       "createAccount": "Create an account",
       "emailLabel": "Email",
       "passwordLabel": "Password",
@@ -1459,7 +1459,7 @@
     "badge": "Personalized for ages 14–18",
     "headlineLine1": "Your profile.",
     "headlineLine2": "Your strategy.",
-    "subhead": "ORYN is a personal career and profile operating system for students preparing for competitive universities and opportunities."
+    "subhead": "Proxola is a personal career and profile operating system for students preparing for competitive universities and opportunities."
   },
   "messaging": {
     "list": {
@@ -1520,7 +1520,7 @@
     "page": {
       "eyebrow": "Connections",
       "title": "People on a similar path.",
-      "description": "Students whose record overlaps with yours. Oryn shows you why before you connect — and only ever surfaces someone who has chosen to make their profile public.",
+      "description": "Students whose record overlaps with yours. Proxola shows you why before you connect — and only ever surfaces someone who has chosen to make their profile public.",
       "emptyTitle": "No connections yet",
       "emptyDescription": "Turn on your public profile in Settings to share it, or accept a request when one comes in.",
       "requestsTitle": "Requests",
@@ -1552,7 +1552,7 @@
     "peopleYouMayKnow": {
       "overlapLabel": "You overlap on",
       "viewProfile": "View profile",
-      "defaultName": "Oryn student"
+      "defaultName": "Proxola student"
     },
     "errors": {
       "cantConnectSelf": "You can't connect with yourself.",
@@ -1620,7 +1620,7 @@
     "placeholder": "What happened?",
     "submit": "Send",
     "successTitle": "Sent",
-    "successDescription": "Thanks — this goes straight to the Oryn team. We read every message, but we can't reply here.",
+    "successDescription": "Thanks — this goes straight to the Proxola team. We read every message, but we can't reply here.",
     "done": "Done",
     "errorFailed": "Couldn't send that — want to try again?",
     "errorNotConfigured": "This feature isn't available right now."
@@ -1637,7 +1637,7 @@
     "emptyDescription": "Generate one to get your prioritized actions."
   },
   "publicProfile": {
-    "fallbackName": "Oryn student",
+    "fallbackName": "Proxola student",
     "classOf": "Class of {year}",
     "mutualConnections": "{count, plural, one {{count} mutual connection} other {{count} mutual connections}}",
     "message": "Message",
@@ -1682,7 +1682,7 @@
   },
   "catalog": {
     "eyebrow": "Features",
-    "title": "Everything Oryn can do.",
+    "title": "Everything Proxola can do.",
     "description": "Tools that work from the record you've already built — not separate things to fill in again.",
     "open": "Open",
     "groups": {
@@ -1697,7 +1697,7 @@
       },
       "scanCv": {
         "title": "Scan a CV",
-        "description": "Upload a CV or résumé and Oryn extracts your activities, awards and education. You review every item before anything is saved."
+        "description": "Upload a CV or résumé and Proxola extracts your activities, awards and education. You review every item before anything is saved."
       },
       "storyBank": {
         "title": "Essay Story Bank",
@@ -1747,7 +1747,7 @@
     "name": "Name",
     "city": "City",
     "country": "Country",
-    "unverifiedNotice": "Oryn will add this as unverified until someone checks it against an official source."
+    "unverifiedNotice": "Proxola will add this as unverified until someone checks it against an official source."
   },
   "admin": {
     "pageTitle": "Admin",
@@ -1984,7 +1984,7 @@
     "jobs": {
       "sectionTitle": "Scheduled jobs",
       "subtitle": "One row per job — a job that hasn't run recently can't hide behind another job's activity",
-      "notDeployedNote": "ORYN has not been deployed yet. Scheduled jobs only run against a live deployment, so every job below reads “Never run” or “Stale” — that's an infrastructure fact, not a defect in any of them.",
+      "notDeployedNote": "Proxola has not been deployed yet. Scheduled jobs only run against a live deployment, so every job below reads “Never run” or “Stale” — that's an infrastructure fact, not a defect in any of them.",
       "triggerOpportunityDiscovery": "Run opportunity discovery",
       "triggerUniversitySync": "Run university sync",
       "triggerDeadlineScan": "Run deadline scan",
@@ -2270,6 +2270,6 @@
   },
   "maintenance": {
     "title": "We will be back shortly",
-    "description": "Oryn is temporarily down for maintenance. Nothing about your account or data has changed — check back in a little while."
+    "description": "Proxola is temporarily down for maintenance. Nothing about your account or data has changed — check back in a little while."
   }
 }

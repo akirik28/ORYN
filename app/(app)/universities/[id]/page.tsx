@@ -413,12 +413,12 @@ export default async function UniversityDetailPage({ params }: { params: Promise
           </div>
           {/* The freshly computed range, for the same reason as the badge above: `targetRes.data`
               was read before the refresh wrote to it, so pairing a stale range with a fresh
-              label can print "Oryn estimate: 15-25%" directly under "Not rated on this scale" —
+              label can print "Proxola estimate: 15-25%" directly under "Not rated on this scale" —
               exactly the false precision non-negotiable #5 forbids. `computeAdmissionOutlook`
               returns whole percentage points; the persisted columns store 0-1. */}
           {outlookEstimate ? (
             <p lang={locale} className="text-sm text-muted-foreground">
-              {locale === "tr" ? "Oryn tahmini:" : "Oryn estimate:"}{" "}
+              {locale === "tr" ? "Proxola tahmini:" : "Proxola estimate:"}{" "}
               <span className="font-medium text-foreground">
                 {outlookEstimate.low}–{outlookEstimate.high}%
               </span>{" "}
@@ -461,7 +461,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
               ) : null}
               {admissionSystemSources.length > 0 ? (
                 <SourceBadge
-                  sourceName={locale === "tr" ? "Oryn'ın kabul sistemi araştırması" : "Oryn's admissions-system research"}
+                  sourceName={locale === "tr" ? "Proxola'nın kabul sistemi araştırması" : "Proxola's admissions-system research"}
                   locale={locale}
                   sourceLabel={tSourceBadge("source")}
                   checkedLabel={(time) => tSourceBadge("checked", { time })}
@@ -709,8 +709,8 @@ export default async function UniversityDetailPage({ params }: { params: Promise
                 title={locale === "tr" ? "Program kaydedilmemiş" : "Program not recorded"}
                 description={
                   locale === "tr"
-                    ? "Üniversitenin kendi sayfalarından alındı — Oryn bunların her birinin hangi programa ait olduğunu kaydetmedi."
-                    : "Sourced from the university's own pages — Oryn hasn't recorded which specific program each of these belongs to."
+                    ? "Üniversitenin kendi sayfalarından alındı — Proxola bunların her birinin hangi programa ait olduğunu kaydetmedi."
+                    : "Sourced from the university's own pages — Proxola hasn't recorded which specific program each of these belongs to."
                 }
                 items={universityWideRequirements}
                 evaluationByRequirement={evaluationByRequirement}

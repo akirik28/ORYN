@@ -51,7 +51,7 @@ export async function createCustomEntityAction(
   const session = await requireUser();
   if (!isEntityScope(scope)) return { status: "error", error: "Invalid entity type." };
   if (!ENTITY_SCOPES[scope].customFallbackType) {
-    return { status: "error", error: "This field only accepts entries from Oryn's verified catalogue." };
+    return { status: "error", error: "This field only accepts entries from Proxola's verified catalogue." };
   }
 
   // The rate limit is the abuse control for this path: the underlying RPC is SECURITY

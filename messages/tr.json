@@ -17,7 +17,7 @@
     "moreDestinations": "Diğer sayfalar",
     "primaryLandmark": "Ana gezinme",
     "skipToContent": "İçeriğe geç",
-    "homeLink": "Oryn — ana sayfa",
+    "homeLink": "Proxola — ana sayfa",
     "saved": "Kaydedilenler",
     "upgradePlan": "Planınızı yükseltin",
     "upgradePlanPrice": "Ayda 399,99 TL · İlk hafta ücretsiz"
@@ -53,7 +53,7 @@
     "noPlanTitle": "Henüz haftalık plan yok",
     "planNotConfiguredDescription": "Haftalık planlar şu anda kullanılamıyor. Profilinin geri kalanını keşfetmeye ve güncellemeye devam edebilirsin.",
     "planFailedDescription": "Lütfen tekrar dene.",
-    "noPlanDescription": "Profiline birkaç şey ekle, Oryn ilk haftalık planını oluştursun.",
+    "noPlanDescription": "Profiline birkaç şey ekle, Proxola ilk haftalık planını oluştursun.",
     "dueSoon": "Yaklaşan",
     "oneThingNotToDo": "Yapılmaması gereken bir şey",
     "universityOutlook": "Üniversite görünümü",
@@ -63,14 +63,14 @@
     "newOpportunities": "Yeni fırsatlar",
     "homeStripAriaLabel": "Önerilen fırsatlar",
     "homeStripEmptyTitle": "Henüz eşleşme yok",
-    "homeStripEmptyDescription": "Oryn, seni yeterince tanıdığında fırsatları dürüstçe sıralar — başlamak için birkaç aktivite, ilgi alanı veya hedef ekle.",
+    "homeStripEmptyDescription": "Proxola, seni yeterince tanıdığında fırsatları dürüstçe sıralar — başlamak için birkaç aktivite, ilgi alanı veya hedef ekle.",
     "homeStripEmptyAction": "Profiline ekle",
     "unknownUniversity": "Bilinmeyen üniversite",
     "noTargetUniversitiesPrefix": "Henüz hedef üniversite yok.",
     "exploreUniversities": "Üniversiteleri keşfet",
-    "noTargetUniversitiesSuffix": "ilkini eklemek için — Oryn nerede durduğunu göstermeye başlasın.",
+    "noTargetUniversitiesSuffix": "ilkini eklemek için — Proxola nerede durduğunu göstermeye başlasın.",
     "couldntRefreshMatches": "Eşleşmelerini şu an yenileyemedik. Aşağıdaki liste son bilinen sonucun, güncel olmayabilir.",
-    "noOpportunityMatches": "Oryn'ın seni dürüstçe sıralayabilmesi için profilinde yeterli sinyal oluştuğunda kişiselleştirilmiş eşleşmeler burada görünecek.",
+    "noOpportunityMatches": "Proxola'nın seni dürüstçe sıralayabilmesi için profilinde yeterli sinyal oluştuğunda kişiselleştirilmiş eşleşmeler burada görünecek.",
     "weeklyFocus": {
       "markComplete": "Tamamlandı olarak işaretle",
       "markNotStarted": "Başlanmadı olarak işaretle",
@@ -103,9 +103,9 @@
   },
   "confirmAge": {
     "title": "Bir şey daha",
-    "subtitle": "Devam etmeden önce doğduğun yıla ihtiyacımız var — Oryn bunu programlardaki yaş sınırlarını kontrol etmek için kullanıyor ve hesabında eksikti.",
+    "subtitle": "Devam etmeden önce doğduğun yıla ihtiyacımız var — Proxola bunu programlardaki yaş sınırlarını kontrol etmek için kullanıyor ve hesabında eksikti.",
     "fieldLabel": "Doğduğun yıl",
-    "fieldWhy": "Yıl yeterli — Oryn tam doğum tarihini asla sormaz.",
+    "fieldWhy": "Yıl yeterli — Proxola tam doğum tarihini asla sormaz.",
     "submit": "Devam et",
     "invalidYear": "Doğduğun yılı gir."
   },
@@ -117,27 +117,27 @@
       "password": "Şifre",
       "signOut": "Çıkış yap",
       "yourRecord": "Kaydın",
-      "yourRecordDescription": "Her şeyi tek tek yazmak yerine bir CV'den içe aktar. Oryn ne bulduğunu gösterir ve yalnızca onayladığını ekler.",
+      "yourRecordDescription": "Her şeyi tek tek yazmak yerine bir CV'den içe aktar. Proxola ne bulduğunu gösterir ve yalnızca onayladığını ekler.",
       "scanCv": "CV Tara",
       "preferences": "Tercihler",
       "locationTitle": "Konum",
       "locationDescription": "Yakındaki fırsatları önceliklendirmek için kullanılır. Aşağıda açarsan ülke herkese açık profilinin bir parçası olur; şehir hiçbir zaman herkese açık gösterilmez.",
       "ageTitle": "Yaş",
-      "ageDescription": "Çoğu yarışma ve yaz programının bir yaş sınırı var. Bu bilgi olmadan Oryn, uygun olup olmadığını söylemek yerine bunları doğrulanmamış olarak gösterir.",
+      "ageDescription": "Çoğu yarışma ve yaz programının bir yaş sınırı var. Bu bilgi olmadan Proxola, uygun olup olmadığını söylemek yerine bunları doğrulanmamış olarak gösterir.",
       "citizenshipTitle": "Vatandaşlık",
       "citizenshipDescription": "Yukarıdaki konumundan farklı — vatandaşlıkla sınırlı fırsatları kontrol etmek için kullanılır. İsteğe bağlı; geçerli olan kadarını ekle.",
       "studyCapacityTitle": "Çalışma kapasitesi",
       "studyCapacityDescription": "Haftalık planın gerçekçi olarak yapabileceklerinle eşleşmesine yardımcı olur.",
       "visibilityTitle": "Görünürlük",
-      "visibilityDescription": "Diğer Oryn öğrencilerinin senin hakkında ne görebileceğini kontrol et.",
+      "visibilityDescription": "Diğer Proxola öğrencilerinin senin hakkında ne görebileceğini kontrol et.",
       "notificationsTitle": "Bildirimler",
       "notificationsDescription": "Bir kategoriyi kapatmak, o türden yeni bildirimleri durdurur. Bu, zaten sahip olduğun bildirimleri temizlemez — temiz bir başlangıç istiyorsan aşağıdaki \"Tümünü okundu işaretle\"yi kullan.",
       "dangerZone": "Tehlikeli bölge",
-      "dangerZoneDescription": "Oryn'ın senin hakkında sakladığı her şeyi indir veya hesabını kalıcı olarak sil.",
+      "dangerZoneDescription": "Proxola'nın senin hakkında sakladığı her şeyi indir veya hesabını kalıcı olarak sil.",
       "exportData": "Verilerimi dışa aktar",
-      "footerDisclaimer": "Kariyer profili puanları Oryn'ın kendi gelişim değerlendirmesidir, resmi bir kabul olasılığı değildir. Üniversite ve fırsat verileri için kaynak bilgisine ilgili sayfalardan bakabilirsin.",
+      "footerDisclaimer": "Kariyer profili puanları Proxola'nın kendi gelişim değerlendirmesidir, resmi bir kabul olasılığı değildir. Üniversite ve fırsat verileri için kaynak bilgisine ilgili sayfalardan bakabilirsin.",
       "languageTitle": "Dil",
-      "languageDescription": "Oryn'ın arayüzde ve danışman cevaplarında kullandığı dil. Seçimin başka bir cihazda da geçerli olur."
+      "languageDescription": "Proxola'nın arayüzde ve danışman cevaplarında kullandığı dil. Seçimin başka bir cihazda da geçerli olur."
     },
     "plan": {
       "title": "Planın",
@@ -204,12 +204,12 @@
     },
     "birthYear": {
       "label": "Doğduğun yıl",
-      "notSet": "Belirtilmedi. Yaş sınırı olan programlar, onaylı ya da onaysız değil, doğrulanmamış olarak gösterilecek — çünkü Oryn yaşını tahmin etmez.",
-      "helper": "Programlardaki ve yarışmalardaki yaş sınırlarını kontrol etmek için kullanılır. Yıl yeterli — Oryn tam doğum tarihini asla sormaz.",
+      "notSet": "Belirtilmedi. Yaş sınırı olan programlar, onaylı ya da onaysız değil, doğrulanmamış olarak gösterilecek — çünkü Proxola yaşını tahmin etmez.",
+      "helper": "Programlardaki ve yarışmalardaki yaş sınırlarını kontrol etmek için kullanılır. Yıl yeterli — Proxola tam doğum tarihini asla sormaz.",
       "saved": "Kaydedildi"
     },
     "citizenship": {
-      "notStated": "Belirtilmedi. Oryn, vatandaşlıkla sınırlı fırsatlar için uygunluğu onaylı ya da onaysız değil, doğrulanmamış olarak gösterecek.",
+      "notStated": "Belirtilmedi. Proxola, vatandaşlıkla sınırlı fırsatlar için uygunluğu onaylı ya da onaysız değil, doğrulanmamış olarak gösterecek.",
       "addLabel": "Bir vatandaşlık ekle",
       "placeholder": "ör. Türkiye",
       "removeAriaLabel": "{country} ülkesini kaldır",
@@ -266,7 +266,7 @@
       },
       "copyLink": "Bağlantıyı kopyala",
       "copied": "Kopyalandı",
-      "visibleToStudents": "Diğer oturum açmış Oryn öğrencilerine görünür, açık web'e değil.",
+      "visibleToStudents": "Diğer oturum açmış Proxola öğrencilerine görünür, açık web'e değil.",
       "saved": "Kaydedildi"
     },
     "location": {
@@ -285,7 +285,7 @@
     "page": {
       "eyebrow": "Yolculuk",
       "title": "Şimdiye dek oluşturduğun her şey.",
-      "description": "Akademik, liderlik, araştırma ve uygulama kayıtların. Bu, Oryn'ın gelişim değerlendirmesi — bir kabul puanı değil ve üniversiteler tarafından görülemez.",
+      "description": "Akademik, liderlik, araştırma ve uygulama kayıtların. Bu, Proxola'nın gelişim değerlendirmesi — bir kabul puanı değil ve üniversiteler tarafından görülemez.",
       "scanCv": "CV Tara",
       "tabs": {
         "overview": "Genel Bakış",
@@ -296,7 +296,7 @@
       },
       "professionalProfile": {
         "title": "Profesyonel profil",
-        "description": "Diğer Oryn öğrencilerinin herkese açık profilinde gördüğü."
+        "description": "Diğer Proxola öğrencilerinin herkese açık profilinde gördüğü."
       },
       "openTo": "Açık olduğun fırsatlar",
       "contactInformation": "İletişim bilgileri",
@@ -306,7 +306,7 @@
       },
       "completeness": {
         "title": "Profil Tamamlanma Durumu",
-        "description": "Oryn'ın seni ne kadar tanıdığı — profilinin ne kadar güçlü olduğundan ayrı bir şey. Bunu yalnızca sen görebilirsin.",
+        "description": "Proxola'nın seni ne kadar tanıdığı — profilinin ne kadar güçlü olduğundan ayrı bir şey. Bunu yalnızca sen görebilirsin.",
         "percentComplete": "%{percent} tamamlandı",
         "fullyFilled": "Profilin tamamen dolduruldu."
       },
@@ -318,12 +318,12 @@
       "journeyNote": {
         "emptyEyebrow": "Henüz okunacak bir şey yok",
         "emptyTitle": "Birkaç şey ekle, bu sayfa çalışmaya başlasın.",
-        "emptyBody": "Oryn'a henüz hiçbir alanı değerlendirmesi için yeterli bilgi verilmedi. Bu, kayıtlardaki bir eksiklik — senin hakkında bir yargı değil. Aşağıya derslerini, faaliyetlerini ve projelerini ekle; Oryn sana gerçekten nerede durduğunu söylemeye başlayacak.",
+        "emptyBody": "Proxola'ya henüz hiçbir alanı değerlendirmesi için yeterli bilgi verilmedi. Bu, kayıtlardaki bir eksiklik — senin hakkında bir yargı değil. Aşağıya derslerini, faaliyetlerini ve projelerini ekle; Proxola sana gerçekten nerede durduğunu söylemeye başlayacak.",
         "gapEyebrow": "Kaldıraç nerede",
         "gapTitle": "{dimension} — bir sonraki çabanın en çok işe yarayacağı alan bu.",
-        "gapBodyWithAwaiting": "Oryn'ın şu anda değerlendirebildiği {assessed, plural, one {# alandan} other {# alandan}} bu, arkasında en az veri olanı — yani aynı saatler burada profilini en çok ileri taşır. Diğer {awaitingEvidence, plural, one {# alanda} other {# alanda}} henüz hiçbir şey kayıtlı değil, bu yüzden daha fazla ekledikçe bu değerlendirme değişebilir.",
-        "gapBodySimple": "Oryn'ın değerlendirebildiği her şey arasında, arkasında en az veri olan alan bu — yani aynı saatler burada profilini en çok ileri taşır.",
-        "strengthEyebrow": "Oryn bir örüntü fark etti",
+        "gapBodyWithAwaiting": "Proxola'nın şu anda değerlendirebildiği {assessed, plural, one {# alandan} other {# alandan}} bu, arkasında en az veri olanı — yani aynı saatler burada profilini en çok ileri taşır. Diğer {awaitingEvidence, plural, one {# alanda} other {# alanda}} henüz hiçbir şey kayıtlı değil, bu yüzden daha fazla ekledikçe bu değerlendirme değişebilir.",
+        "gapBodySimple": "Proxola'nın değerlendirebildiği her şey arasında, arkasında en az veri olan alan bu — yani aynı saatler burada profilini en çok ileri taşır.",
+        "strengthEyebrow": "Proxola bir örüntü fark etti",
         "strengthTitle": "{dimension} — istikrarlı bir güçlü yön haline geliyor.",
         "strengthBody": "Kayıtlarının en iyi kanıtlanmış kısmı bu. Aynısından daha fazla eklemek profilinin nasıl okunduğunu değiştirmez — kaldıraç başka yerde."
       },
@@ -341,7 +341,7 @@
         },
         "coursework": {
           "title": "Dersler",
-          "description": "AP, IB HL/SL, A-Level, onur (honors) ve normal dersler. Oryn bunları akademik zorluk düzeyini ve konu çeşitliliğini anlamak için kullanır.",
+          "description": "AP, IB HL/SL, A-Level, onur (honors) ve normal dersler. Proxola bunları akademik zorluk düzeyini ve konu çeşitliliğini anlamak için kullanır.",
           "empty": "Henüz ders kaydı yok. Aldığın dersleri ekle — ileri düzey dersler en güçlü akademik sinyallerden biridir."
         },
         "testScores": {
@@ -430,15 +430,15 @@
       "backToJourney": "Yolculuğa geri dön",
       "eyebrow": "Yolculuk",
       "title": "CV Tara.",
-      "description": "Kaydın zaten bir yerde yazılı mı? Oryn onu okuyup eğitim, faaliyet, ödül, proje, araştırma ve iş bilgilerini çıkarabilir — hiçbiri kaydedilmeden önce her şeyi sen gözden geçirirsin.",
+      "description": "Kaydın zaten bir yerde yazılı mı? Proxola onu okuyup eğitim, faaliyet, ödül, proje, araştırma ve iş bilgilerini çıkarabilir — hiçbiri kaydedilmeden önce her şeyi sen gözden geçirirsin.",
       "notConfiguredTitle": "CV taraması henüz yapılandırılmadı",
       "notConfiguredDescription": "CV taraması şu anda kullanılamıyor. Yine de her şeyi profiline elle ekleyebilirsin.",
       "reviewBeforeAdding": "Eklemeden önce gözden geçir",
-      "foundItems": "Oryn, {fileName} içinde {count, plural, one {# öğe} other {# öğe}} buldu. Onaylamadan hiçbiri profiline eklenmez — doğru olmayanların işaretini kaldır ya da ayrıntıları düzenle.",
-      "unsureAboutThis": "Oryn bundan emin değil",
+      "foundItems": "Proxola, {fileName} içinde {count, plural, one {# öğe} other {# öğe}} buldu. Onaylamadan hiçbiri profiline eklenmez — doğru olmayanların işaretini kaldır ya da ayrıntıları düzenle.",
+      "unsureAboutThis": "Proxola bundan emin değil",
       "addItemsToProfile": "{count, plural, one {# öğeyi profilime ekle} other {# öğeyi profilime ekle}}",
       "scanTitle": "Bir CV veya özgeçmiş tara",
-      "scanDescription": "Bir PDF, DOCX veya metin dosyası yükle. Oryn onu okur, ne bulduğunu gösterir ve yalnızca onayladığını ekler — incelemeden hiçbir şey kaydedilmez.",
+      "scanDescription": "Bir PDF, DOCX veya metin dosyası yükle. Proxola onu okur, ne bulduğunu gösterir ve yalnızca onayladığını ekler — incelemeden hiçbir şey kaydedilmez.",
       "readingFile": "{fileName} okunuyor…",
       "chooseFile": "Bir dosya seç",
       "noItemsFoundError": "Dosyayı okuduk ama içe aktarılacak bir şey bulamadık. Kayıtları elle ekleyebilirsin.",
@@ -470,7 +470,7 @@
     },
     "journeyTimeline": {
       "emptyTitle": "Bir şey eklediğin an yolculuğun başlar",
-      "emptyDescription": "Dersler, faaliyetler, projeler, ödüller, iş — yaptığın her şey. Oryn bu zaman çizelgesini aşağıdaki bölümlerden oluşturur ve sırada ne önereceğini bulmak için okur.",
+      "emptyDescription": "Dersler, faaliyetler, projeler, ödüller, iş — yaptığın her şey. Proxola bu zaman çizelgesini aşağıdaki bölümlerden oluşturur ve sırada ne önereceğini bulmak için okur.",
       "undated": "Tarihsiz",
       "noDateRecorded": "Kayıtlı tarih yok",
       "entryCount": "{count, plural, one {# kayıt} other {# kayıt}}",
@@ -528,7 +528,7 @@
       "printButton": "Yazdır / PDF olarak kaydet"
     },
     "peerBenchmark": {
-      "notEnoughStudents": "Henüz karşılaştırılabilir yeterli Oryn öğrencisi yok",
+      "notEnoughStudents": "Henüz karşılaştırılabilir yeterli Proxola öğrencisi yok",
       "notEnoughDescription": "En az {min} karşılaştırılabilir öğrenci gerekir ({cohort}) — daha azıyla gösterilecek bir yüzdelik dilim, gerçek bir karşılaştırma değil bir tahmin olurdu.",
       "comparedTo": "Karşılaştırma grubu: {cohort}",
       "overallProfile": "Genel profil",
@@ -549,7 +549,7 @@
     "researchIdeas": {
       "eyebrow": "Araştırma",
       "title": "Gerçekten bitirebileceğin bir proje bul.",
-      "description": "Oryn, seviyene ve ayırabildiğin zamana göre ölçeklenmiş araştırmalar önerir — gerçek akademik literatüre ve kamuya açık verilere dayanır, asla cevaplanma yolu olmayan, sadece kulağa etkileyici gelen bir soru değil.",
+      "description": "Proxola, seviyene ve ayırabildiğin zamana göre ölçeklenmiş araştırmalar önerir — gerçek akademik literatüre ve kamuya açık verilere dayanır, asla cevaplanma yolu olmayan, sadece kulağa etkileyici gelen bir soru değil.",
       "fieldLabel": "Hangi alanda çalışmak istiyorsun?",
       "fieldPlaceholder": "ör. Ekonomi, Bilgisayar Bilimi, Psikoloji",
       "generating": "Düşünüyor",
@@ -564,7 +564,7 @@
         "environmentalScience": "Çevre Bilimi"
       },
       "noIdeasTitle": "Henüz fikir üretilmedi",
-      "noIdeasDescription": "Bir alan belirt, Oryn seviyene göre ölçeklenmiş üç proje önersin — her biri gerçekten bitirebileceğin, kulağa etkileyici gelen bir başlık yerine gerçek veri kaynaklarına dayanan projeler.",
+      "noIdeasDescription": "Bir alan belirt, Proxola seviyene göre ölçeklenmiş üç proje önersin — her biri gerçekten bitirebileceğin, kulağa etkileyici gelen bir başlık yerine gerçek veri kaynaklarına dayanan projeler.",
       "timeNeeded": "Gereken süre",
       "finishedLooksLike": "Bitmiş proje nasıl görünür",
       "method": "Yöntem",
@@ -573,7 +573,7 @@
       "firstSteps": "İlk adımların",
       "addedToResearch": "Araştırmana eklendi",
       "addToResearch": "Araştırmama ekle",
-      "couldntGenerate": "Oryn bu alan için bir proje oluşturamadı. Farklı bir şekilde adlandırmayı dene.",
+      "couldntGenerate": "Proxola bu alan için bir proje oluşturamadı. Farklı bir şekilde adlandırmayı dene.",
       "difficulty": {
         "accessible": "erişilebilir",
         "moderate": "orta",
@@ -583,7 +583,7 @@
     },
     "storyBank": {
       "title": "Deneme Hikaye Bankası",
-      "description": "Gerçek deneyimlerinden hangilerinin deneme yazmaya değer bir hikaye taşıdığını ve bunu nasıl kurgulayabileceğini bul. Oryn kaydettiklerini düzenler — asla bir olay uydurmaz ve senin yerine denemeyi yazmaz.",
+      "description": "Gerçek deneyimlerinden hangilerinin deneme yazmaya değer bir hikaye taşıdığını ve bunu nasıl kurgulayabileceğini bul. Proxola kaydettiklerini düzenler — asla bir olay uydurmaz ve senin yerine denemeyi yazmaz.",
       "emptyTitle": "Önce profiline deneyim ekle",
       "emptyDescription": "Önce profiline faaliyet, proje, araştırma, spor, gönüllülük veya iş ekle — deneme hikayelerin gerçekten yaptığın şeylerden gelir, asla senin için uydurulan bir şeyden değil.",
       "promptLabel": "Cevapladığın deneme sorusu",
@@ -598,7 +598,7 @@
       "findMyStories": "Hikayelerimi bul",
       "angleLabel": "{number}. Açı:",
       "missingDetailPrefix": "Hikaye notlarına eklemeye değer: {detail}",
-      "footerDisclaimer": "Bunlar kendi yazın için birer yapı, taslak değil. Deneme senin sesini taşımalı, yoksa değerlendirenler bunu anlar — bu yüzden Oryn senin yerine denemeyi asla yazmaz ve kendinin kaydetmediği bir detayı asla eklemez.",
+      "footerDisclaimer": "Bunlar kendi yazın için birer yapı, taslak değil. Deneme senin sesini taşımalı, yoksa değerlendirenler bunu anlar — bu yüzden Proxola senin yerine denemeyi asla yazmaz ve kendinin kaydetmediği bir detayı asla eklemez.",
       "outlineSteps": {
         "hook": "Kanca",
         "context": "Bağlam",
@@ -638,11 +638,11 @@
       "whereYouStand": "Nerede durduğun",
       "strongestEvidence": "En güçlü kanıtın <bold>{dimensions}</bold> alanında. ",
       "developing": "{count, plural, one {# alan} other {# alan}} gelişiyor. ",
-      "awaitingEvidence": "Oryn bunlardan {count} tanesi hakkında henüz yeterince bilgiye sahip değil.",
+      "awaitingEvidence": "Proxola bunlardan {count} tanesi hakkında henüz yeterince bilgiye sahip değil.",
       "nextToStrengthen": "Güçlendirilecek sıradaki alan",
-      "nextToStrengthenBody": " — {state}. Oryn'ın hakkında bilgi sahibi olduğu her şey arasında, aynı çalışma saatleri profilini en çok burada değiştirir.",
+      "nextToStrengthenBody": " — {state}. Proxola'nın hakkında bilgi sahibi olduğu her şey arasında, aynı çalışma saatleri profilini en çok burada değiştirir.",
       "notEnoughHistoryTitle": "Henüz yeterli geçmiş yok",
-      "notEnoughHistoryDescription": "Profilinin birkaç hafta içinde değişme fırsatı bulduktan sonra tekrar kontrol et. Oryn, alanlarını en az bir ay önce alınmış bir anlık görüntüyle karşılaştırır.",
+      "notEnoughHistoryDescription": "Profilinin birkaç hafta içinde değişme fırsatı bulduktan sonra tekrar kontrol et. Proxola, alanlarını en az bir ay önce alınmış bir anlık görüntüyle karşılaştırır.",
       "whatChanged": "Neler değişti",
       "movedForward": "{count, plural, one {# alan ilerledi} other {# alan ilerledi}}",
       "noneMovedForward": "Hiçbir alan ilerlemedi",
@@ -654,7 +654,7 @@
     "recommendations": {
       "title": "Referanslar",
       "write": "Referans yaz",
-      "anonymousAuthor": "Bir Oryn öğrencisi",
+      "anonymousAuthor": "Bir Proxola öğrencisi",
       "hidden": "Gizli",
       "noneYet": "Henüz referans yok",
       "writePlaceholder": "Onunla çalışmak hakkında birine ne söylerdin?",
@@ -686,14 +686,14 @@
         "notSureYet": "Henüz emin değilim"
       },
       "schoolTitle": "Bize okulunu anlat",
-      "schoolSubtitle": "Bu, Oryn'ın akademik bağlamını anlamasına yardımcı olur.",
+      "schoolSubtitle": "Bu, Proxola'nın akademik bağlamını anlamasına yardımcı olur.",
       "countryLabel": "Ülke",
       "countryPlaceholder": "Türkiye",
       "schoolLabel": "Okul",
       "schoolPlaceholder": "Okulunun adını yazmaya başla",
       "graduationYearLabel": "Mezuniyet yılı",
       "birthYearLabel": "Doğduğun yıl",
-      "birthYearWhy": "Birçok programın yaş sınırı var. Oryn, hangilerine gerçekten başvurabileceğini söylemek için buna ihtiyaç duyar — yıl yeterli, tam doğum tarihin asla gerekmez.",
+      "birthYearWhy": "Birçok programın yaş sınırı var. Proxola, hangilerine gerçekten başvurabileceğini söylemek için buna ihtiyaç duyar — yıl yeterli, tam doğum tarihin asla gerekmez.",
       "curriculumLabel": "Müfredat",
       "curriculumOptions": {
         "ap": "AP",
@@ -727,8 +727,8 @@
       "schoolStepError": "Devam etmek için ülkeni, okulunu ve müfredatını doldur.",
       "genericFormError": "Lütfen formu kontrol edip tekrar dene.",
       "graduationYearError": "Geçerli bir mezuniyet yılı gir.",
-      "birthYearError": "Doğduğun yılı gir — Oryn, programlardaki yaş sınırlarını kontrol etmek için buna ihtiyaç duyar.",
-      "birthYearTooYoung": "Oryn henüz bu yaşın altındaki hesaplara hizmet veremiyor.",
+      "birthYearError": "Doğduğun yılı gir — Proxola, programlardaki yaş sınırlarını kontrol etmek için buna ihtiyaç duyar.",
+      "birthYearTooYoung": "Proxola henüz bu yaşın altındaki hesaplara hizmet veremiyor.",
       "pageTitle": "Profilini kur"
     },
     "interests": {
@@ -766,7 +766,7 @@
       "readingCvHint": "Bu genellikle birkaç saniye sürer.",
       "clickToChoose": "Bir dosya seçmek için tıkla",
       "clickToChooseHint": "PDF, DOCX veya düz metin — en fazla 10MB",
-      "foundItems": "{count, plural, one {# öğe} other {# öğe}} bulduk. Oryn profiline eklemeden önce gözden geçir — doğru olmayanların işaretini kaldır ya da ayrıntıları düzenle.",
+      "foundItems": "{count, plural, one {# öğe} other {# öğe}} bulduk. Proxola profiline eklemeden önce gözden geçir — doğru olmayanların işaretini kaldır ya da ayrıntıları düzenle.",
       "lowConfidence": "Düşük güven — lütfen kontrol et",
       "schoolPlaceholder": "Okul",
       "organizationPlaceholder": "Kurum",
@@ -794,8 +794,8 @@
       "testScores": "Standart sınav puanları",
       "graduationRate": "Mezuniyet oranı",
       "unavailable": "Mevcut değil",
-      "notResearchedTitle": "Oryn bu üniversiteyi henüz derinlemesine araştırmadı",
-      "notResearchedDescription": "Program, gereklilik ve kabul bilgileri henüz Oryn'ın kayıtlarında yok — bu, üniversitenin değil, bizim araştırmamızdaki bir eksiklik.",
+      "notResearchedTitle": "Proxola bu üniversiteyi henüz derinlemesine araştırmadı",
+      "notResearchedDescription": "Program, gereklilik ve kabul bilgileri henüz Proxola'nın kayıtlarında yok — bu, üniversitenin değil, bizim araştırmamızdaki bir eksiklik.",
       "undergradPostgradCaption": "{undergrad} lisans · {postgrad} lisansüstü",
       "qsSizeBandCaption": "QS büyüklük bandı, tam sayı değil",
       "domesticRateCaption": "Yerel ücret: {rate}",
@@ -803,17 +803,17 @@
       "internationalFeeNotSeparate": "Uluslararası ücret ayrıca yayınlanmamış",
       "internationalFeeNotPublished": "Uluslararası ücret tek bir rakam olarak yayınlanmamış — bölüme göre değişir",
       "programsTitle": "Programlar",
-      "programsDescription": "Oryn'ın bu üniversitenin resmi sayfalarına karşı doğruladığı lisans programları.",
+      "programsDescription": "Proxola'nın bu üniversitenin resmi sayfalarına karşı doğruladığı lisans programları.",
       "researchStrengthsTitle": "Araştırma güçlü yönleri",
       "researchStrengthsDescription": "OpenAlex'in açık araştırma dizininden, bu üniversitenin en çok yayın yaptığı konular.",
       "requirementCheckTitle": "Gereklilik kontrolü",
-      "requirementCheckDescription": "Oryn'ın profilini her belirtilen gerekliliğe karşı okuması — resmi bir kabul kararı değildir. Güvenmeden önce her kaynağı kontrol edin.",
-      "requirementCheckEmptyMessage": "Bu üniversitenin kabul gereklilikleri henüz Oryn'ın kayıtlarında yok — bu, gereklilik olmadığının değil, araştırmamızdaki bir eksikliğin göstergesi.",
+      "requirementCheckDescription": "Proxola'nın profilini her belirtilen gerekliliğe karşı okuması — resmi bir kabul kararı değildir. Güvenmeden önce her kaynağı kontrol edin.",
+      "requirementCheckEmptyMessage": "Bu üniversitenin kabul gereklilikleri henüz Proxola'nın kayıtlarında yok — bu, gereklilik olmadığının değil, araştırmamızdaki bir eksikliğin göstergesi.",
       "programFallback": "Program",
       "programSpecific": "Programa özel",
       "optional": "İsteğe bağlı",
       "importantDatesTitle": "Önemli tarihler",
-      "importantDatesDescription": "Oryn'ın bu üniversitenin resmi sayfalarına karşı doğruladığı son başvuru tarihleri.",
+      "importantDatesDescription": "Proxola'nın bu üniversitenin resmi sayfalarına karşı doğruladığı son başvuru tarihleri.",
       "upcoming": "Yaklaşan",
       "recurringTitle": "Tekrarlayan — kesin yıl yayınlanmamış",
       "recurringBadge": "Tekrarlayan",
@@ -964,7 +964,7 @@
       "uncoveredNote": "Not: {count, plural, one {{formatted} incelenmekte olan ülke} other {{formatted} incelenmekte olan ülke}} henüz bir bölgeye eşleştirilmedi ({names}) — yukarıdaki toplama dahil, henüz hiçbir bölge sekmesinde değil.",
       "sortByName": "Ad",
       "researchDepth": "Araştırma derinliği",
-      "researchDepthHint": "Oryn'ın kataloğundaki çoğu üniversitenin henüz detaylı program ve gereklilik verisi yok — bu, verisi olanlara daraltır.",
+      "researchDepthHint": "Proxola'nın kataloğundaki çoğu üniversitenin henüz detaylı program ve gereklilik verisi yok — bu, verisi olanlara daraltır.",
       "detailedProfilesOnly": "Yalnızca detaylı profiller"
     },
     "comparePage": {
@@ -1070,19 +1070,19 @@
       "forYou": "Senin için",
       "browseAll": "Tümüne göz at",
       "noMatchesTitle": "Henüz eşleşme yok",
-      "noMatchesConfigured": "Fırsatlar belirli aralıklarla keşfediliyor. Yakında tekrar kontrol et, ya da Oryn'ın ne arayacağını bilmesi için profilini daha fazla tamamla.",
-      "noMatchesNotConfigured": "Yeni fırsatlar şu anda keşfedilmiyor. Yine de Oryn'de bulunan tüm fırsatlara \"Tümüne göz at\" sekmesinden bakabilirsin.",
+      "noMatchesConfigured": "Fırsatlar belirli aralıklarla keşfediliyor. Yakında tekrar kontrol et, ya da Proxola'nın ne arayacağını bilmesi için profilini daha fazla tamamla.",
+      "noMatchesNotConfigured": "Yeni fırsatlar şu anda keşfedilmiyor. Yine de Proxola'da bulunan tüm fırsatlara \"Tümüne göz at\" sekmesinden bakabilirsin.",
       "bestNextMove": "En iyi sıradaki adım",
       "bestNextMoveDescription": "Profiline şu anda en çok katkı sağlayacak tek fırsat.",
       "alsoWorthYourTime": "Değerlendirmeye değer diğerleri",
       "resultsCount": "{count, plural, one {{formatted} fırsat eşleşiyor} other {{formatted} fırsat eşleşiyor}}",
       "noOpportunitiesFound": "Fırsat bulunamadı",
       "matchingQuerySuffix": " — “{query}” ile eşleşen",
-      "tryDifferentSearch": "Farklı bir arama dene, ya da bir filtreyi temizle — Oryn'ın fırsat kataloğu zamanla büyüyor."
+      "tryDifferentSearch": "Farklı bir arama dene, ya da bir filtreyi temizle — Proxola'nın fırsat kataloğu zamanla büyüyor."
     },
     "detailPage": {
-      "orynsTake": "Oryn'ın değerlendirmesi",
-      "cantConfirmPrefix": "Oryn'ın doğrulayamadığı bir şey: ",
+      "proxolasTake": "Proxola'nın değerlendirmesi",
+      "cantConfirmPrefix": "Proxola'nın doğrulayamadığı bir şey: ",
       "refreshError": "Bu fırsat için eşleşmeni şu anda yenileyemedik. Aşağıdaki uygunluk ve eşleşme bilgileri son bilinen sonucun, güncel olmayabilir.",
       "fit": "Uyum",
       "selectivity": "Seçicilik",
@@ -1138,23 +1138,23 @@
     "page": {
       "eyebrow": "Danışman",
       "title": "Strateji odan.",
-      "description": "Oryn, gerçek profilinden yola çıkarak yanıt verir — dürüst cevap daha az yapman olduğunda bile.",
+      "description": "Proxola, gerçek profilinden yola çıkarak yanıt verir — dürüst cevap daha az yapman olduğunda bile.",
       "talkItThrough": "Konuşarak değerlendir",
-      "talkItThroughDescription": "Profilin, hedeflerin veya sırada ne yapman gerektiği hakkında istediğini sor. Oryn kayıtlarından yola çıkarak yanıt verir — dürüst cevap daha az yapman olduğunda bile."
+      "talkItThroughDescription": "Profilin, hedeflerin veya sırada ne yapman gerektiği hakkında istediğini sor. Proxola kayıtlarından yola çıkarak yanıt verir — dürüst cevap daha az yapman olduğunda bile."
     },
     "chat": {
       "startHere": "Buradan başla",
-      "headline": "Oryn'a ne yapman gerektiğini sor — ya da bir şeyin gerçekten yapmaya değip değmediğini.",
-      "subtext": "Oryn, profilin hakkında zaten bildiklerinden yola çıkarak yanıt verir ve dürüst cevap daha az yapman olduğunda bunu sana söyler.",
+      "headline": "Proxola'ya ne yapman gerektiğini sor — ya da bir şeyin gerçekten yapmaya değip değmediğini.",
+      "subtext": "Proxola, profilin hakkında zaten bildiklerinden yola çıkarak yanıt verir ve dürüst cevap daha az yapman olduğunda bunu sana söyler.",
       "prompts": {
         "weakestPart": "Profilimin en zayıf yanı ne?",
         "anotherClub": "Başka bir kulüp kursam mı?",
         "thisWeek": "Bu hafta ne yapmalıyım?",
         "universityListRealistic": "Üniversite listem gerçekçi mi?"
       },
-      "couldntComplete": "Oryn bu yanıtı tamamlayamadı.",
+      "couldntComplete": "Proxola bu yanıtı tamamlayamadı.",
       "tryAgain": "Tekrar dene",
-      "placeholderReady": "Oryn'a sor…",
+      "placeholderReady": "Proxola'ya sor…",
       "placeholderNotConfigured": "Yapay zeka danışmanı henüz yapılandırılmadı",
       "placeholderExhausted": "Bu ayki yapay zeka hakkın bitti",
       "sendAriaLabel": "Mesajı gönder",
@@ -1170,7 +1170,7 @@
       },
       "exhausted": {
         "title": "Bu ayki hakkın doldu",
-        "detail": "Sohbet {date} tarihinde yenilenir. Oryn'in geri kalanı — planın, fırsatların, üniversitelerin — her zamanki gibi açık."
+        "detail": "Sohbet {date} tarihinde yenilenir. Proxola'nın geri kalanı — planın, fırsatların, üniversitelerin — her zamanki gibi açık."
       }
     },
     "sessionWall": {
@@ -1189,7 +1189,7 @@
       "unknown": "Kaç token kullandığını yükleyemedik. {limit} tokenlik aylık hakkın yine de geçerli ve {date} tarihinde yenilenir.",
       "exhausted": "{limit} tokenin tamamı bu ay için bitti. {date} tarihinde yenilenir.",
       "low": "Sadece {remaining} kaldı. {date} tarihinde yenilenir.",
-      "degraded": "Bu ay Oryn'in yapay zekasını çok kullandın, bu yüzden yanıtlar şimdilik daha kısa. {date} tarihinde yenilenir.",
+      "degraded": "Bu ay Proxola'nın yapay zekasını çok kullandın, bu yüzden yanıtlar şimdilik daha kısa. {date} tarihinde yenilenir.",
       "normal": "{remaining} token kaldı. {date} tarihinde yenilenir."
     },
     "responseMode": {
@@ -1202,18 +1202,18 @@
         "thorough": "Ultra"
       },
       "overridden": "Ultra tercihin saklı kalıyor — bu ayki kullanım nedeniyle yanıtlar şimdilik daha kısa. {date} tarihinde yenilenir.",
-      "ultraLocked": "Ultra, daha uzun ve detaylı yanıtlar verir — Oryn Ultra'nın bir parçası.",
+      "ultraLocked": "Ultra, daha uzun ve detaylı yanıtlar verir — Proxola Ultra'nın bir parçası.",
       "ultraLockedLink": "Daha fazla bilgi"
     },
     "instructions": {
       "label": "Kalıcı talimatların",
-      "description": "Oryn'e kalıcı bir not — her yanıtta geçerli olur. Örneğin \"kısa yaz\" ya da \"tıp önerme\".",
+      "description": "Proxola'ya kalıcı bir not — her yanıtta geçerli olur. Örneğin \"kısa yaz\" ya da \"tıp önerme\".",
       "placeholder": "örn. Kısa cevaplar ver. Tıp alanlarını önerme. Avrupa'ya odaklan.",
       "saved": "Kaydedildi",
       "ultraUpsell": "Ultra'da en fazla {limit} karakter yazabilirsin."
     },
     "strategyPanel": {
-      "ariaLabel": "Oryn'ın üzerinden çalıştığı bilgiler",
+      "ariaLabel": "Proxola'nın üzerinden çalıştığı bilgiler",
       "whereYouStand": "Şu anda durumun",
       "currentFocus": "Şu anki odak",
       "nextDecision": "Sıradaki karar",
@@ -1238,11 +1238,11 @@
       },
       "whyThis": "Neden bu",
       "impactEffort": "{impact} etki · {effort} emek",
-      "needsMoreInfoTitle": "Oryn'ın güvenilir öneriler yapabilmesi için biraz daha bilgiye ihtiyacı var",
+      "needsMoreInfoTitle": "Proxola'nın güvenilir öneriler yapabilmesi için biraz daha bilgiye ihtiyacı var",
       "needsMoreInfoDescription": "Profil tamamlanma oranı: %{percent}. Aşağıdakiler önce eklemeye değer en yüksek etkili öğeler.",
       "completeProfile": "Profilini tamamla",
       "noRecommendationsTitle": "Şu anda doğrulanmış, uygun bir öneri yok",
-      "noRecommendationsDescription": "Oryn yalnızca doğrulayabildiği ve uygun olduğunu onaylayabildiği fırsatları ve gereklilikleri önerir — tahmin yürütmez. Daha fazla doğrulanmış veri geldikçe tekrar kontrol et, ya da doğrudan Fırsatlar ve Üniversiteler'i keşfet.",
+      "noRecommendationsDescription": "Proxola yalnızca doğrulayabildiği ve uygun olduğunu onaylayabildiği fırsatları ve gereklilikleri önerir — tahmin yürütmez. Daha fazla doğrulanmış veri geldikçe tekrar kontrol et, ya da doğrudan Fırsatlar ve Üniversiteler'i keşfet.",
       "yourPriorities": "Önceliklerin",
       "oneThingNotToDo": "Yapılmaması gereken bir şey",
       "worthConsidering": "Değerlendirmeye değer"
@@ -1372,7 +1372,7 @@
     "view": {
       "title": "Arama",
       "placeholder": "Üniversitelerde, fırsatlarda, profilinde ara…",
-      "inputAriaLabel": "Oryn'de ara",
+      "inputAriaLabel": "Proxola'da ara",
       "clearAriaLabel": "Aramayı temizle",
       "keepTyping": "Yazmaya devam et — arama en az 2 karakter gerektiriyor.",
       "noResultsTitle": "Sonuç yok",
@@ -1380,9 +1380,9 @@
     },
     "commandPalette": {
       "barLabel": "Üniversite, program, yarışma ara…",
-      "barSrOnly": "Oryn'de ara. Kısayol: Command K",
+      "barSrOnly": "Proxola'da ara. Kısayol: Command K",
       "iconAriaLabel": "Ara",
-      "dialogTitle": "Oryn'de ara",
+      "dialogTitle": "Proxola'da ara",
       "inputPlaceholder": "Üniversitelerde, fırsatlarda, profilinde ara…",
       "searchFailed": "Arama şu anda kullanılamıyor. Lütfen tekrar dene.",
       "keepTyping": "Yazmaya devam et — en az 2 karakter.",
@@ -1396,7 +1396,7 @@
       "welcomeBack": "Tekrar hoş geldin",
       "signInToContinue": "Devam etmek için giriş yap.",
       "invalidConfirmationLink": "Bu bağlantı geçersiz veya süresi dolmuş. Lütfen tekrar dene.",
-      "newToOryn": "ORYN'de yeni misin?",
+      "newToProxola": "Proxola'da yeni misin?",
       "createAccount": "Hesap oluştur",
       "emailLabel": "E-posta",
       "passwordLabel": "Şifre",
@@ -1459,7 +1459,7 @@
     "badge": "14–18 yaş için kişiselleştirilmiş",
     "headlineLine1": "Profilin.",
     "headlineLine2": "Stratejin.",
-    "subhead": "ORYN, rekabetçi üniversitelere ve fırsatlara hazırlanan öğrenciler için kişisel bir kariyer ve profil işletim sistemi."
+    "subhead": "Proxola, rekabetçi üniversitelere ve fırsatlara hazırlanan öğrenciler için kişisel bir kariyer ve profil işletim sistemi."
   },
   "messaging": {
     "list": {
@@ -1520,7 +1520,7 @@
     "page": {
       "eyebrow": "Bağlantılar",
       "title": "Benzer bir yoldaki kişiler.",
-      "description": "Kaydı seninkiyle örtüşen öğrenciler. Oryn bağlanmadan önce nedenini gösterir — ve yalnızca profilini herkese açık yapmış kişileri gösterir.",
+      "description": "Kaydı seninkiyle örtüşen öğrenciler. Proxola bağlanmadan önce nedenini gösterir — ve yalnızca profilini herkese açık yapmış kişileri gösterir.",
       "emptyTitle": "Henüz bağlantın yok",
       "emptyDescription": "Paylaşmak için Ayarlar'dan profilini herkese açık yap, ya da gelen bir isteği kabul et.",
       "requestsTitle": "İstekler",
@@ -1552,7 +1552,7 @@
     "peopleYouMayKnow": {
       "overlapLabel": "Ortak yönlerin",
       "viewProfile": "Profili görüntüle",
-      "defaultName": "Oryn öğrencisi"
+      "defaultName": "Proxola öğrencisi"
     },
     "errors": {
       "cantConnectSelf": "Kendinle bağlantı kuramazsın.",
@@ -1620,7 +1620,7 @@
     "placeholder": "Ne oldu?",
     "submit": "Gönder",
     "successTitle": "Gönderildi",
-    "successDescription": "Teşekkürler — bu mesaj doğrudan Oryn ekibine gidiyor. Her mesajı okuyoruz, ancak buradan yanıt veremiyoruz.",
+    "successDescription": "Teşekkürler — bu mesaj doğrudan Proxola ekibine gidiyor. Her mesajı okuyoruz, ancak buradan yanıt veremiyoruz.",
     "done": "Tamam",
     "errorFailed": "Gönderilemedi, tekrar dener misin?",
     "errorNotConfigured": "Bu özellik şu anda kullanılamıyor."
@@ -1637,7 +1637,7 @@
     "emptyDescription": "Öncelikli işlerini görmek için bir plan oluştur."
   },
   "publicProfile": {
-    "fallbackName": "Oryn öğrencisi",
+    "fallbackName": "Proxola öğrencisi",
     "classOf": "{year} mezunu",
     "mutualConnections": "{count, plural, one {{count} ortak bağlantı} other {{count} ortak bağlantı}}",
     "message": "Mesaj gönder",
@@ -1682,7 +1682,7 @@
   },
   "catalog": {
     "eyebrow": "Özellikler",
-    "title": "Oryn'ın yapabileceği her şey.",
+    "title": "Proxola'nın yapabileceği her şey.",
     "description": "Zaten oluşturduğun kayıttan çalışan araçlar — yeniden doldurman gereken ayrı şeyler değil.",
     "open": "Aç",
     "groups": {
@@ -1697,7 +1697,7 @@
       },
       "scanCv": {
         "title": "CV Tara",
-        "description": "Bir CV ya da özgeçmiş yükle, Oryn aktivitelerini, ödüllerini ve eğitimini çıkarsın. Hiçbir şey kaydedilmeden önce her öğeyi sen gözden geçirirsin."
+        "description": "Bir CV ya da özgeçmiş yükle, Proxola aktivitelerini, ödüllerini ve eğitimini çıkarsın. Hiçbir şey kaydedilmeden önce her öğeyi sen gözden geçirirsin."
       },
       "storyBank": {
         "title": "Deneme Hikaye Bankası",
@@ -1747,7 +1747,7 @@
     "name": "Ad",
     "city": "Şehir",
     "country": "Ülke",
-    "unverifiedNotice": "Oryn bunu, resmi bir kaynakla karşılaştırılana kadar doğrulanmamış olarak ekleyecek."
+    "unverifiedNotice": "Proxola bunu, resmi bir kaynakla karşılaştırılana kadar doğrulanmamış olarak ekleyecek."
   },
   "admin": {
     "pageTitle": "Yönetici Paneli",
@@ -1984,7 +1984,7 @@
     "jobs": {
       "sectionTitle": "Zamanlanmış görevler",
       "subtitle": "Her görev kendi satırında — yakın zamanda çalışmamış bir görev, başka bir görevin etkinliğinin arkasına gizlenemez",
-      "notDeployedNote": "ORYN henüz canlıya alınmadı. Zamanlanmış görevler yalnızca canlı bir dağıtıma karşı çalışır, bu yüzden aşağıdaki her görev “Hiç çalıştırılmadı” ya da “Güncel değil” gösteriyor — bu bir altyapı gerçeği, hiçbirinde sorun olduğu anlamına gelmiyor.",
+      "notDeployedNote": "Proxola henüz canlıya alınmadı. Zamanlanmış görevler yalnızca canlı bir dağıtıma karşı çalışır, bu yüzden aşağıdaki her görev “Hiç çalıştırılmadı” ya da “Güncel değil” gösteriyor — bu bir altyapı gerçeği, hiçbirinde sorun olduğu anlamına gelmiyor.",
       "triggerOpportunityDiscovery": "Fırsat taramasını çalıştır",
       "triggerUniversitySync": "Üniversite senkronizasyonunu çalıştır",
       "triggerDeadlineScan": "Son tarih taramasını çalıştır",
@@ -2270,6 +2270,6 @@
   },
   "maintenance": {
     "title": "Kısa süre içinde döneceğiz",
-    "description": "Oryn geçici olarak bakımda. Hesabınız veya verileriniz hakkında hiçbir şey değişmedi — birazdan tekrar kontrol edin."
+    "description": "Proxola geçici olarak bakımda. Hesabınız veya verileriniz hakkında hiçbir şey değişmedi — birazdan tekrar kontrol edin."
   }
 }

@@ -32,7 +32,7 @@ export default async function LoginPage({
       ) : null}
       <LoginForm next={next} />
       <p className="text-center text-[13px]" style={{ color: "#AAAABC" }}>
-        {t("newToOryn")}{" "}
+        {t("newToProxola")}{" "}
         <Link href="/signup" className="font-semibold" style={{ color: "#3D35E8" }}>
           {t("createAccount")}
         </Link>

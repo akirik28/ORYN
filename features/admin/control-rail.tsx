@@ -98,7 +98,7 @@ export function ControlRail() {
           style={{ background: "conic-gradient(from 210deg,#54c087,#1f7a4d,#2f8f5c,#54c087)" }}
         />
         <span className="min-w-0">
-          <span className="block text-sm font-semibold leading-tight">Oryn</span>
+          <span className="block text-sm font-semibold leading-tight">Proxola</span>
           <span className="block text-[10px] uppercase tracking-[0.13em] text-[#8fb69d]">
             {t("brandSub")}
           </span>

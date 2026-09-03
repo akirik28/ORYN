@@ -202,13 +202,13 @@ export async function DashboardView({
                 why={
                   tr ? (
                     <span lang="tr">
-                      Oryn seni diğer öğrencilerle değil, kendi alanlarınla kıyaslar. Kaydettiğin her şey arasında en
+                      Proxola seni diğer öğrencilerle değil, kendi alanlarınla kıyaslar. Kaydettiğin her şey arasında en
                       az kanıta sahip olan alan burası — yani aynı sürede harcanan emeğin profilini en çok
                       değiştireceği yer de burası.
                     </span>
                   ) : (
                     <>
-                      Oryn compares your dimensions against each other, not against other students. Across
+                      Proxola compares your dimensions against each other, not against other students. Across
                       everything you&apos;ve recorded, this is the area with the least supporting evidence — so
                       it&apos;s where the same hours of work change your profile most.
                     </>
@@ -271,19 +271,19 @@ export async function DashboardView({
                 as="h1"
                 locale={locale}
                 eyebrow={tr ? "Şu anki durumun" : "Where you stand"}
-                headline={tr ? "Oryn henüz en belirgin boşluğunu söyleyemiyor." : "Oryn can't name your clearest gap yet."}
+                headline={tr ? "Proxola henüz en belirgin boşluğunu söyleyemiyor." : "Proxola can't name your clearest gap yet."}
                 why={
                   coverage.awaitingEvidence > 0 ? (
                     tr ? (
                       <span lang="tr">
-                        Şu an en zayıf görünen alan, Oryn&apos;ın karar verecek kadar kanıta sahip olmadığı bir alan —
+                        Şu an en zayıf görünen alan, Proxola&apos;nın karar verecek kadar kanıta sahip olmadığı bir alan —
                         bu yüzden onu boşluğun olarak göstermek tahmin olurdu. {coverage.total} alandan{" "}
                         {coverage.awaitingEvidence} tanesi bu durumda; birini bile doldurmak bunu gerçek bir cevaba
                         dönüştürür.
                       </span>
                     ) : (
                       <>
-                        The area that currently looks weakest is one Oryn has too little evidence to judge,
+                        The area that currently looks weakest is one Proxola has too little evidence to judge,
                         so ranking it as your gap would be guessing.{" "}
                         {coverage.awaitingEvidence} of {coverage.total} areas are in that position — filling
                         even one of them in is what turns this into a real answer.
@@ -291,12 +291,12 @@ export async function DashboardView({
                     )
                   ) : tr ? (
                     <span lang="tr">
-                      Oryn alanlarını birbiriyle kıyaslar; şu anda en zayıf olanı, boşluğun diye adlandıracak kadar
+                      Proxola alanlarını birbiriyle kıyaslar; şu anda en zayıf olanı, boşluğun diye adlandıracak kadar
                       güvenle konumlandıramıyor.
                     </span>
                   ) : (
                     <>
-                      Oryn compares your dimensions against each other, and right now it can&apos;t place
+                      Proxola compares your dimensions against each other, and right now it can&apos;t place
                       the weakest one confidently enough to name it as your gap.
                     </>
                   )
@@ -331,12 +331,12 @@ export async function DashboardView({
                 locale={locale}
                 eyebrow={tr ? "Başlarken" : "Getting started"}
                 headline={
-                  tr ? "Oryn'a neler yaptığını anlat, o da sana sırada ne olduğunu söylesin." : "Tell Oryn what you've done, and it will tell you what to do next."
+                  tr ? "Proxola'ya neler yaptığını anlat, o da sana sırada ne olduğunu söylesin." : "Tell Proxola what you've done, and it will tell you what to do next."
                 }
                 why={
                   tr
-                    ? "Oryn, profilinin nerede en zayıf olduğunu bulmak için derslerini, aktivitelerini, projelerini ve ödüllerini okur. Şu anda arkasında durabileceği bir şey söylemesi için yeterli kayıt yok — bu Oryn'ın bilgisindeki bir eksiklik, senin hakkında bir yargı değil."
-                    : "Oryn reads your courses, activities, projects and awards to find where your profile is thinnest. Right now there isn't enough recorded for it to say anything it could stand behind — that's a gap in what Oryn knows, not a judgement about you."
+                    ? "Proxola, profilinin nerede en zayıf olduğunu bulmak için derslerini, aktivitelerini, projelerini ve ödüllerini okur. Şu anda arkasında durabileceği bir şey söylemesi için yeterli kayıt yok — bu Proxola'nın bilgisindeki bir eksiklik, senin hakkında bir yargı değil."
+                    : "Proxola reads your courses, activities, projects and awards to find where your profile is thinnest. Right now there isn't enough recorded for it to say anything it could stand behind — that's a gap in what Proxola knows, not a judgement about you."
                 }
                 action={
                   <ButtonLink href="/profile">

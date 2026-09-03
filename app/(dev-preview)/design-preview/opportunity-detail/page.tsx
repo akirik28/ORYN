@@ -65,7 +65,7 @@ const TAKE_SENTENCES: Record<string, string> = {
   addresses_a_current_gap:
     "It targets an area where your profile currently has the least supporting evidence, so the same effort here moves your profile further than it would elsewhere.",
   matches_your_interests:
-    "It sits in a field you've told Oryn you're pursuing, which makes it easier to sustain and more coherent alongside the rest of your record.",
+    "It sits in a field you've told Proxola you're pursuing, which makes it easier to sustain and more coherent alongside the rest of your record.",
 };
 
 export default async function OpportunityDetailPreviewPage() {
@@ -110,7 +110,7 @@ export default async function OpportunityDetailPreviewPage() {
           <NextMove
             surface
             locale={locale}
-            eyebrow={t("orynsTake")}
+            eyebrow={t("proxolasTake")}
             headline={fitLabel(match.match_score, tTier)}
             why={
               <div className="space-y-2.5">
