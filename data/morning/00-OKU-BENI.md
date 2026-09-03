@@ -136,7 +136,23 @@ Girecek dokuz: Forage (ücretsiz iş simülasyonları), NYAS Junior Academy, sci
 dünya çapında araştırma mentorluğu), Pivotal Essay Contest, Medicine Encompassed, CS50x,
 Zooniverse, iNaturalist, Emory Winship (sanal).
 
-## 7. İki paneli karşılaştır
+## 7. Yayına almadan önce — sadece deploy edeceksen
+
+`05-universite-bildirim-arka-doldurma-2026-09-03.sql`
+
+**Bunu çalıştırmadan deploy edersen üç öğrenciye yanlış bildirim gider.** Sebep: bildirim
+işi "üniversite bilgisi güncellendi" diye haber veriyor, ama şu an tetikleyecek olan şey
+gerçek bir değişiklik değil — **bizim kendi katalog araştırmamız.** 21 Ağustos'ta üç dakika
+içinde 87 satır eklenmiş, saniyenin altında aralıklarla, bir düzine program sayfasından.
+Hiçbir üniversite üç dakikada bir düzine gereksinim değiştirmez.
+
+Dosya, bugün var olan 10 eşleşmeyi kayıt defterine işliyor — yani iş ilk çalıştığında
+"bugünden itibaren" saymaya başlıyor, iki haftalık araştırmayı geriye dönük haber
+yapmıyor.
+
+Deploy etmeyeceksen acelesi yok. Edeceksen **önce bu.**
+
+## 8. İki paneli karşılaştır
 
 **`/admin`** — bugünkü hali. Ondört bölüm, tek sayfa. Bugüne kadar hiç gerçek admin
 hesabıyla açılmadı; ilk açan sen olacaksın.
