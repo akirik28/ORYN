@@ -199,7 +199,7 @@ describe("selectModelForWeeklyPlan — layers the aggregate check on top of the 
       }),
     );
 
-    const selection = await selectModelForWeeklyPlan("11111111-1111-1111-1111-111111111111");
+    const selection = await selectModelForWeeklyPlan("11111111-1111-1111-1111-111111111111", "standard");
 
     expect(selection.degraded).toBe(true);
     expect(selection.reason).toBe("at_or_over_target");
@@ -214,7 +214,7 @@ describe("selectModelForWeeklyPlan — layers the aggregate check on top of the 
       }),
     );
 
-    const selection = await selectModelForWeeklyPlan("11111111-1111-1111-1111-111111111111");
+    const selection = await selectModelForWeeklyPlan("11111111-1111-1111-1111-111111111111", "standard");
 
     expect(selection.degraded).toBe(false);
     expect(selection.model).toBe(env.anthropic.model);
@@ -229,7 +229,7 @@ describe("selectModelForWeeklyPlan — layers the aggregate check on top of the 
       }),
     );
 
-    const selection = await selectModelForWeeklyPlan("11111111-1111-1111-1111-111111111111");
+    const selection = await selectModelForWeeklyPlan("11111111-1111-1111-1111-111111111111", "standard");
 
     expect(selection.degraded).toBe(true);
     expect(selection.reason).toBe("aggregate_feature_budget");
@@ -248,7 +248,7 @@ describe("selectModelForWeeklyPlan — layers the aggregate check on top of the 
       mockAdmin({ settings: { data: { monthly_ceiling_usd: 10 }, error: null }, usageByFeature: { data: [{ estimated_cost: 10 }], error: null } }),
     );
 
-    const selection = await selectModelForWeeklyPlan(null);
+    const selection = await selectModelForWeeklyPlan(null, "standard");
 
     expect(selection.degraded).toBe(true);
     expect(selection.reason).toBe("aggregate_feature_budget");

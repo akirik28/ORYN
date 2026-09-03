@@ -95,6 +95,13 @@ export async function sendAdvisorMessage(
     throw error;
   }
 
+  // Resolved here, ahead of the quota check below, rather than only later near
+  // generateAdvisorReply (2026-09-03, the Ultra tier-economics build) -- getCurrentProfile()
+  // is cache()-wrapped, so this and the later read inside the try block are one real query,
+  // not two.
+  const tierProfile = await getCurrentProfile();
+  const planTier = resolvePlanTier(tierProfile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+
   // The monthly allowance the UI shows has to be the one actually enforced, or the bar is
   // decoration. Checked after the burst limiter because that one is the cheaper guard.
   //
@@ -105,7 +112,7 @@ export async function sendAdvisorMessage(
   // with any argument, same discipline as every authorization check in this file) — someone
   // with a stale client state, a second tab, or JS genuinely disabled still gets the honest
   // message, not a lesser one.
-  const quota = await getMonthlyQuota(userId);
+  const quota = await getMonthlyQuota(userId, planTier);
   if (quota.usedIsKnown && quota.remaining <= 0) {
     return { conversationId: conversationId ?? "", error: quotaExhaustedMessage(quota.resetsAt, locale) };
   }
@@ -180,9 +187,10 @@ export async function sendAdvisorMessage(
   await logEvent(userId, "advisor_message_sent", { conversationId: convId });
 
   try {
-    const profile = await getCurrentProfile();
-    const responseMode = profile ? resolveResponseMode(profile) : "balanced";
-    const planTier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+    // Reuses tierProfile/planTier resolved above the quota check, not a second computation
+    // — getCurrentProfile() is cache()-wrapped regardless, but there is no reason to name
+    // the same value twice in one function.
+    const responseMode = tierProfile ? resolveResponseMode(tierProfile) : "balanced";
     const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: trimmed, responseMode, planTier });
     let { data: assistantMessage, error: assistantMessageError } = await supabase
       .from("advisor_messages")
@@ -287,12 +295,17 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
     throw error;
   }
 
+  // Resolved here, ahead of the quota check below, same reasoning as sendAdvisorMessage's
+  // identical reorder above (2026-09-03, the Ultra tier-economics build).
+  const tierProfile = await getCurrentProfile();
+  const planTier = resolvePlanTier(tierProfile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+
   // A retry spends real model budget like any other call, so it draws on the same
   // allowance rather than offering a way around it. Same fallback reasoning as
   // sendAdvisorMessage's identical check above — AdvisorChat now disables the retry
   // button itself once exhausted, so this is the same defence-in-depth backstop, not the
   // usual path.
-  const quota = await getMonthlyQuota(userId);
+  const quota = await getMonthlyQuota(userId, planTier);
   if (quota.usedIsKnown && quota.remaining <= 0) {
     return { error: quotaExhaustedMessage(quota.resetsAt, locale) };
   }
@@ -318,9 +331,9 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
     .map((m) => ({ role: m.role, content: m.content ?? "" }));
 
   try {
-    const profile = await getCurrentProfile();
-    const responseMode = profile ? resolveResponseMode(profile) : "balanced";
-    const planTier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+    // Reuses tierProfile/planTier resolved above the quota check — see sendAdvisorMessage's
+    // identical comment above.
+    const responseMode = tierProfile ? resolveResponseMode(tierProfile) : "balanced";
     const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: userMessage.content, responseMode, planTier });
     let { error: updateError } = await supabase
       .from("advisor_messages")

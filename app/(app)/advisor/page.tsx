@@ -42,21 +42,27 @@ export default async function AdvisorPage() {
     getUpcomingDeadlines(supabase, userId, 10),
   ]);
 
+  // getCurrentProfile() (unlike layout.tsx's requireProfile()) can return null — same
+  // "balanced" default resolveResponseMode itself falls back to for a genuinely missing
+  // column, just handled one layer up here for a genuinely missing profile.
+  const responseMode = profile ? resolveResponseMode(profile) : "balanced";
+  // Resolved before the two calls below (2026-09-03, the Ultra tier-economics build) --
+  // both now need it, and profile is already in scope from the Promise.all above, so this
+  // is a reorder, not a new fetch. This page doesn't thread the dev-preview override
+  // layout.tsx does (that mechanism exists to preview the whole shell, not one page in
+  // isolation) -- resolvePlanTier(profile) alone is this file's own established pattern,
+  // unchanged by this build.
+  const planTier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
   // The allowance the chat actually enforces (app/(app)/advisor/actions.ts) — shared
   // across all seven student-facing AI features since the 2026-09-02 token-metering
   // change, not chat messages alone (lib/ai/monthly-quota.ts's PER_STUDENT_AI_FEATURES).
-  const quota = await getMonthlyQuota(userId);
+  const quota = await getMonthlyQuota(userId, planTier);
   // A second, independent read purely for display — selectModelForUser has no side
   // effects (it only reads ai_usage, same table getMonthlyQuota above already reads for
   // the same reason), so calling it here doesn't select a model for any real generation,
   // it just answers "is this student currently past lib/ai/limits/budget.ts's target" so
   // the meter can say so before the student notices from the replies themselves.
-  const { degraded: budgetDegraded } = await selectModelForUser(userId);
-  // getCurrentProfile() (unlike layout.tsx's requireProfile()) can return null — same
-  // "balanced" default resolveResponseMode itself falls back to for a genuinely missing
-  // column, just handled one layer up here for a genuinely missing profile.
-  const responseMode = profile ? resolveResponseMode(profile) : "balanced";
-  const planTier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+  const { degraded: budgetDegraded } = await selectModelForUser(userId, planTier);
   // Derived from the same already-loaded `profile` object `planTier` above reads, not a
   // second query — see lib/advisor/upgrade-prompt.ts's own header for why this used to be
   // a separate fetch and no longer is (next build's Client Component SSR check, 2026-09-02).

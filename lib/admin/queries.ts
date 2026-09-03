@@ -550,11 +550,22 @@ export async function getProductActivity(admin: SupabaseClient<Database>): Promi
  * file's existing names rather than changing every admin component that already imports
  * them — the display layer now reads the enforcement layer's own constant instead of a
  * second copy of the founder's number that could silently drift from it.
+ *
+ * Both became `Record<PlanTier, number>` 2026-09-03 (the Ultra tier-economics build) — kept
+ * as a straight re-export rather than picking one tier's figure here, since getPerUserSpend
+ * below checks a REAL per-user tier against these, and silently collapsing to Standard's
+ * number would misclassify every genuine Ultra spender (their real $2.00 ceiling read as
+ * $1.00, a false "over ceiling" on spend that is actually fine).
  */
 export const PER_STUDENT_MONTHLY_TARGET_USD = MONTHLY_BUDGET_TARGET_USD;
 export const PER_STUDENT_MONTHLY_CEILING_USD = MONTHLY_BUDGET_CEILING_USD;
 export const BUDGET_WARNING_FRACTION = 0.8;
-export const BUDGET_WARNING_THRESHOLD_USD = PER_STUDENT_MONTHLY_CEILING_USD * BUDGET_WARNING_FRACTION;
+/** Per tier, not one number, for the same reason the two constants above are re-exported as
+ *  `Record<PlanTier, number>` rather than collapsed — see their shared comment. */
+export const BUDGET_WARNING_THRESHOLD_USD: Record<PlanTier, number> = {
+  standard: PER_STUDENT_MONTHLY_CEILING_USD.standard * BUDGET_WARNING_FRACTION,
+  ultra: PER_STUDENT_MONTHLY_CEILING_USD.ultra * BUDGET_WARNING_FRACTION,
+};
 
 type AiUsageCostRow = Pick<Database["public"]["Tables"]["ai_usage"]["Row"], "estimated_cost">;
 
@@ -766,6 +777,13 @@ export async function getSpendSummary(admin: SupabaseClient<Database>): Promise<
 export interface UserSpend {
   userId: string;
   displayName: string | null;
+  /** The real, resolved tier (resolvePlanTier — plan_tier plus any active Ultra gift), not
+   *  just the raw column — overWarningThreshold/overCeiling below are checked against THIS
+   *  tier's own target/ceiling, 2026-09-03 (the Ultra tier-economics build). Before that
+   *  build every student shared one ceiling, so this list didn't need to know tier at all;
+   *  once Ultra's real ceiling diverged from Standard's, checking every row against one
+   *  blanket number would misclassify genuine Ultra spend as over-ceiling. */
+  tier: PlanTier;
   last30dUsd: number;
   lifetimeUsd: number;
   callCount: number;
@@ -846,20 +864,31 @@ export async function getPerUserSpend(admin: SupabaseClient<Database>): Promise<
   // and vice versa for a brand-new spender with no older history.
   const userIds = new Set([...lifetimeByUser.keys(), ...last30dByUser.keys()]);
   const idList = [...userIds];
-  const { data: profiles } = idList.length > 0 ? await admin.from("profiles").select("id, display_name").in("id", idList) : { data: [] };
+  // plan_tier/ultra_gift_expires_at added 2026-09-03 (the Ultra tier-economics build) —
+  // resolvePlanTier needs both; see UserSpend.tier's own comment for why this list can no
+  // longer check every row against one shared ceiling.
+  const { data: profiles } = idList.length > 0 ? await admin.from("profiles").select("id, display_name, plan_tier, ultra_gift_expires_at").in("id", idList) : { data: [] };
   const nameById = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
+  const tierById = new Map((profiles ?? []).map((p) => [p.id, resolvePlanTier(p)]));
 
   return idList
     .map((userId) => {
       const recent = last30dByUser.get(userId) ?? { costUsd: 0, calls: 0 };
+      // Missing from the batch profile fetch above only if the row itself vanished between
+      // the id being collected and the .in() query running — falls back to "standard" the
+      // same way the rest of this codebase treats an unresolvable profile (student-context.ts,
+      // advisor/actions.ts), never "ultra": understating a ceiling produces an extra, harmless
+      // warning; overstating one would hide a real overage.
+      const tier = tierById.get(userId) ?? "standard";
       return {
         userId,
         displayName: nameById.get(userId) ?? null,
+        tier,
         last30dUsd: recent.costUsd,
         lifetimeUsd: lifetimeByUser.get(userId) ?? 0,
         callCount: recent.calls,
-        overWarningThreshold: recent.costUsd >= BUDGET_WARNING_THRESHOLD_USD,
-        overCeiling: recent.costUsd >= PER_STUDENT_MONTHLY_CEILING_USD,
+        overWarningThreshold: recent.costUsd >= BUDGET_WARNING_THRESHOLD_USD[tier],
+        overCeiling: recent.costUsd >= PER_STUDENT_MONTHLY_CEILING_USD[tier],
         monthToDateSpendUsd: monthToDateByUser.get(userId) ?? 0,
         monthToDateGrantsUsd: monthToDateGrantsByUser.get(userId) ?? 0,
       };

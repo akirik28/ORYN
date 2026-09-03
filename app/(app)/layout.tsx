@@ -80,6 +80,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   // *result*, not the timing, so running it here in parallel still costs nothing extra
   // on the first call each request, and is what makes this the read that populates the
   // cache before any page-level code runs.
+  //
+  // planTier resolved here, ahead of the Promise.all below, 2026-09-03 (the Ultra
+  // tier-economics build) -- getMonthlyQuota/selectModelForUser inside it both now need it,
+  // and profile is already in scope from requireProfile() above, so this is a reorder, not
+  // a new fetch. Uses the dev-preview-aware planTier, not resolvePlanTier(profile) alone
+  // (realTier) -- isDevTierPreviewAllowed() is hard-gated on NODE_ENV, so the two are
+  // identical in production; in development, a dev previewing "what does Ultra look like"
+  // should see Ultra's real quota number under the Ultra visual skin, not a mismatched
+  // Standard number underneath an Ultra-styled bar.
+  const realTier = resolvePlanTier(profile);
+  const devPreviewAllowed = isDevTierPreviewAllowed();
+  const devPreviewOverride = devPreviewAllowed ? resolveDevTierPreviewOverride((await cookies()).get(DEV_TIER_PREVIEW_COOKIE)?.value) : null;
+  const planTier = devPreviewOverride ?? realTier;
+
   const [notificationsRes, unreadRes, scores, quota, modelSelection] = await Promise.all([
     supabase
       .from("notifications")
@@ -104,23 +118,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     // selectModelForUser has no side effects here, it only answers whether this student is
     // currently past lib/ai/limits/budget.ts's target, same table getMonthlyQuota already
     // reads.
-    getMonthlyQuota(session.userId!),
-    selectModelForUser(session.userId!),
+    getMonthlyQuota(session.userId!, planTier),
+    selectModelForUser(session.userId!, planTier),
   ]);
   const notifications = notificationsRes.data;
   const unreadCount = unreadRes.count ?? 0;
   const profileSignal = toProfileSignal(scores);
   const budgetDegraded = modelSelection.degraded;
-  const realTier = resolvePlanTier(profile);
-  // lib/tier/dev-preview.ts's own header has the full reasoning: migration 0089 is
-  // unapplied, so `realTier` is "standard" for every account tonight, including the
-  // founder's, with no way to reach "ultra" otherwise. `devPreviewAllowed` gates BOTH the
-  // override and whether the toggle control even renders — resolveDevTierPreviewOverride
-  // also re-checks this itself, so there is no single flag whose removal alone would
-  // re-enable this in production.
-  const devPreviewAllowed = isDevTierPreviewAllowed();
-  const devPreviewOverride = devPreviewAllowed ? resolveDevTierPreviewOverride((await cookies()).get(DEV_TIER_PREVIEW_COOKIE)?.value) : null;
-  const planTier = devPreviewOverride ?? realTier;
 
   return (
     // Literal source ambient background (App.tsx `App()`'s root container) — the ground

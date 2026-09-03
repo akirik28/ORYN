@@ -3,6 +3,7 @@ import "server-only";
 import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { isUndefinedTableError } from "@/lib/supabase/errors";
 import { selectModelForUser, DEGRADE_MODEL, type ModelSelection } from "./budget";
+import type { PlanTier } from "@/types/database";
 
 /**
  * The aggregate monthly spend ceiling for `weekly_plan` (Phase 30 Job D / Phase 9) —
@@ -111,9 +112,16 @@ export async function checkWeeklyPlanAggregateBudget(): Promise<WeeklyPlanAggreg
  * their own reason (`selectModelForUser`'s own `at_or_over_target`/`unknown_cost_this_month`),
  * that stands unchanged — already the cheaper model, and there is no reason to also pay for
  * the aggregate check's own DB read when it cannot change the outcome.
+ *
+ * `tier` required, not defaulted, 2026-09-03: `withUsageLogging`'s own `selectModel?`
+ * signature only ever takes a bare `userId`, so this function's one real caller
+ * (weekly-plan.ts) can't pass it as a direct reference the way it used to — it wraps this
+ * in a small closure that already has `context.student.tier` in scope instead. A default
+ * here would silently paper over that closure being forgotten someday; the one call site
+ * having to say the tier explicitly is the point.
  */
-export async function selectModelForWeeklyPlan(userId: string | null): Promise<ModelSelection> {
-  const perStudent = await selectModelForUser(userId);
+export async function selectModelForWeeklyPlan(userId: string | null, tier: PlanTier): Promise<ModelSelection> {
+  const perStudent = await selectModelForUser(userId, tier);
   if (perStudent.degraded) return perStudent;
 
   const aggregate = await checkWeeklyPlanAggregateBudget();

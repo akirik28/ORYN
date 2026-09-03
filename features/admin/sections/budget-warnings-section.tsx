@@ -12,6 +12,9 @@ const money = (value: number) => formatCurrency(value, "USD", { minimumFractionD
  */
 export async function BudgetWarningsSection() {
   const t = await getTranslations("admin.warnings");
+  // Scoped to admin.perUser purely for its tierStandard/tierUltra strings — reused rather
+  // than a third copy of "Standard"/"Ultra" under this namespace too.
+  const tTier = await getTranslations("admin.perUser");
   const admin = createAdminClient();
   const users = await getPerUserSpend(admin);
   const flagged = users.filter((u) => u.overWarningThreshold).sort((a, b) => b.last30dUsd - a.last30dUsd);
@@ -24,11 +27,21 @@ export async function BudgetWarningsSection() {
       ) : (
         <ul className="space-y-2">
           {flagged.map((user) => {
-            const percent = Math.round((user.last30dUsd / PER_STUDENT_MONTHLY_CEILING_USD) * 100);
+            // Each user's own ceiling, not one blanket figure -- see UserSpend.tier's
+            // comment (lib/admin/queries.ts): checking every row against Standard's ceiling
+            // would understate how close a real Ultra spender is to their actual, higher one.
+            const ceiling = PER_STUDENT_MONTHLY_CEILING_USD[user.tier];
+            const percent = Math.round((user.last30dUsd / ceiling) * 100);
             return (
               <li key={user.userId} className={`rounded-lg border px-4 py-2.5 text-sm ${user.overCeiling ? "border-red-500/30" : "border-amber-500/30"}`}>
                 <span className={user.overCeiling ? "text-red-700 dark:text-red-400" : "text-amber-700 dark:text-amber-400"}>
-                  {t("message", { name: user.displayName ?? user.userId, amount: money(user.last30dUsd), percent, ceiling: money(PER_STUDENT_MONTHLY_CEILING_USD) })}
+                  {t("message", {
+                    name: user.displayName ?? user.userId,
+                    tier: tTier(user.tier === "ultra" ? "tierUltra" : "tierStandard"),
+                    amount: money(user.last30dUsd),
+                    percent,
+                    ceiling: money(ceiling),
+                  })}
                 </span>
               </li>
             );

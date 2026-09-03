@@ -56,8 +56,25 @@ export const RECURRING_INFRA_USD = SUPABASE_PRO_USD + VERCEL_PRO_USD + DOMAIN_US
 export const SYSTEM_JOB_COSTS_USD = JOB_BUDGET_USD.opportunity_extraction + JOB_BUDGET_USD.requirement_extraction;
 
 /** The absolute per-active-user ceiling — see this file's own header comment for why this
- *  reads the enforcement constant rather than a derived literal. */
-export const WORST_CASE_AI_COST_PER_ACTIVE_USER_USD = MONTHLY_BUDGET_CEILING_USD;
+ *  reads the enforcement constant rather than a derived literal.
+ *
+ *  Reads `.standard` specifically, not a blend across tiers, 2026-09-03 (the Ultra
+ *  tier-economics build, which made `MONTHLY_BUDGET_CEILING_USD` a `Record<PlanTier,
+ *  number>` -- Ultra's real ceiling is now genuinely $2.00, double Standard's $1.00). This
+ *  model (`computeUnitEconomics` below) has no per-user granularity -- it takes a scenario's
+ *  `totalUsers`/`activeRatio` and applies one flat worst-case cost to every active user, per
+ *  `UnitEconomicsInput.totalUsers`'s own comment ("a free and a paying user cost the same in
+ *  this model"), written when that was true for every real account. Correctly modelling a
+ *  mixed population would mean assuming what fraction of active users are on Ultra -- a real
+ *  number nothing in this codebase measures yet (no payment provider, migration 0089 still
+ *  unapplied on every real account per `RevenueFigure`'s own comment above), and inventing
+ *  one would be the same "never invent a rate" failure this file's `RateDependent` boundary
+ *  exists to prevent for the exchange rate. Pinned to Standard's ceiling instead: the
+ *  existing 100/500/1,000/5,000/10,000-user scale scenarios below keep producing the exact
+ *  figures they always did (`.standard` is unchanged at $1.00), and this stays a known,
+ *  disclosed understatement -- once real Ultra adoption exists to measure, the fix is a
+ *  weighted blend here, not a guess now. */
+export const WORST_CASE_AI_COST_PER_ACTIVE_USER_USD = MONTHLY_BUDGET_CEILING_USD.standard;
 
 /** The founder's own price, set 2026-09-02 (relayed through oryn-a7, verbatim: "399,99 TL
  *  olarak düşün, öyle yaz her yere"). Duplicated in messages/en.json and messages/tr.json as
@@ -165,11 +182,16 @@ export function projectRevenueUsd(payingUsers: number, rateTryPerUsd: number, pr
 // -------------------------------------------------------------------------------------------
 
 export interface UnitEconomicsInput {
-  /** Every registered user in the scenario, paying or not — cost is driven by usage, and
-   *  Ultra does not currently carry a different AI allowance (confirmed 2026-09-02, see
-   *  docs/ultra-feature-recommendation-2026-09-02.md and lib/tier/comparison.ts's own note:
-   *  the one real Ultra AI difference is reply-mode depth, not a bigger monthly pool), so a
-   *  free and a paying user cost the same in this model. */
+  /** Every registered user in the scenario, paying or not. Until 2026-09-03 this model
+   *  treated every user's worst-case cost as identical because Ultra genuinely had no
+   *  bigger AI allowance (confirmed 2026-09-02, docs/ultra-feature-recommendation-2026-09-02.md
+   *  and lib/tier/comparison.ts's own note-at-the-time: the one real Ultra AI difference was
+   *  reply-mode depth, not a bigger monthly pool) — the Ultra tier-economics build that day
+   *  made that no longer true (Ultra's real ceiling is now $2.00, double Standard's), but
+   *  this model still applies one flat per-user cost to every active user regardless of
+   *  tier. See `WORST_CASE_AI_COST_PER_ACTIVE_USER_USD`'s own comment for why (no measured
+   *  Ultra-adoption rate exists to blend a mixed-tier cost correctly) and why that is a
+   *  disclosed understatement, not a fixed one. */
   totalUsers: number;
   /** 0–1. Cost doc §4's own 30%/60% scenarios are explicitly marked VARSAYIM — assumption,
    *  not measurement (§9's own open checklist: "Gerçek aktif kullanıcı oranı — ölçüm

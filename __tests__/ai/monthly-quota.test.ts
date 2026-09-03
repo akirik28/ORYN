@@ -72,7 +72,7 @@ describe("getMonthlyQuota", () => {
     // asserting on a floor/rounding edge.
     storeReturning({ rows: [{ estimated_cost: 0.03 }, { estimated_cost: 0.03 }] });
     const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
-    const quota = await getMonthlyQuota("user-1");
+    const quota = await getMonthlyQuota("user-1", "standard");
 
     expect(quota.usedIsKnown).toBe(true);
     expect(quota.used).toBe(9446);
@@ -88,7 +88,7 @@ describe("getMonthlyQuota", () => {
     // $1.00).
     storeReturning({ rows: [{ estimated_cost: 0.53 }] });
     const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
-    const quota = await getMonthlyQuota("user-1");
+    const quota = await getMonthlyQuota("user-1", "standard");
 
     expect(quota.used).toBe(92885);
   });
@@ -96,7 +96,7 @@ describe("getMonthlyQuota", () => {
   test("an unreadable count is marked unknown rather than reported as zero used", async () => {
     storeReturning(new Error("connection reset"));
     const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
-    const quota = await getMonthlyQuota("user-1");
+    const quota = await getMonthlyQuota("user-1", "standard");
 
     // `used` still reads 0 so the surface renders, but the flag is what a caller must branch
     // on — this is exactly the pair that used to be indistinguishable.
@@ -108,7 +108,7 @@ describe("getMonthlyQuota", () => {
   test("a genuine zero is not confused with an unreadable count", async () => {
     storeReturning({ rows: [] });
     const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
-    const quota = await getMonthlyQuota("user-1");
+    const quota = await getMonthlyQuota("user-1", "standard");
 
     expect(quota.used).toBe(0);
     expect(quota.usedIsKnown).toBe(true);
@@ -121,7 +121,7 @@ describe("getMonthlyQuota", () => {
     // guards against on the degrade side (lib/ai/limits/budget.ts's hasUnknownCostRows).
     storeReturning({ rows: [{ estimated_cost: 0.03 }, { estimated_cost: null }] });
     const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
-    const quota = await getMonthlyQuota("user-1");
+    const quota = await getMonthlyQuota("user-1", "standard");
 
     expect(quota.usedIsKnown).toBe(false);
   });
@@ -129,11 +129,25 @@ describe("getMonthlyQuota", () => {
   test("the token limit is exactly 50 reference uses' worth, not a separately-chosen number", async () => {
     storeReturning({ rows: [] });
     const { getMonthlyQuota, TOKENS_PER_USE_REFERENCE, MONTHLY_AI_TOKEN_LIMIT } = await import("@/lib/ai/monthly-quota");
-    const quota = await getMonthlyQuota("user-1");
+    const quota = await getMonthlyQuota("user-1", "standard");
 
     expect(TOKENS_PER_USE_REFERENCE).toBe(4723);
-    expect(MONTHLY_AI_TOKEN_LIMIT).toBe(50 * 4723);
-    expect(quota.limit).toBe(MONTHLY_AI_TOKEN_LIMIT);
+    expect(MONTHLY_AI_TOKEN_LIMIT.standard).toBe(50 * 4723);
+    expect(quota.limit).toBe(MONTHLY_AI_TOKEN_LIMIT.standard);
+  });
+
+  // 2026-09-03, the Ultra tier-economics build: MONTHLY_AI_TOKEN_LIMIT/HISTORICAL_USE_LIMIT
+  // became Record<PlanTier, number>, exactly doubled — pinned here the same way the test
+  // above pins Standard's, so a future change to either tier's multiplier is caught rather
+  // than silently drifting the two out of their approved 2x relationship.
+  test("Ultra's token limit is exactly Standard's doubled — 100 reference uses' worth, not an independently-chosen number", async () => {
+    storeReturning({ rows: [] });
+    const { getMonthlyQuota, MONTHLY_AI_TOKEN_LIMIT } = await import("@/lib/ai/monthly-quota");
+    const quota = await getMonthlyQuota("user-1", "ultra");
+
+    expect(MONTHLY_AI_TOKEN_LIMIT.ultra).toBe(100 * 4723);
+    expect(MONTHLY_AI_TOKEN_LIMIT.ultra).toBe(MONTHLY_AI_TOKEN_LIMIT.standard * 2);
+    expect(quota.limit).toBe(MONTHLY_AI_TOKEN_LIMIT.ultra);
   });
 });
 
@@ -141,7 +155,7 @@ describe("getMonthlyQuota — grants (2026-09-02/03): \"a student who exhausted 
   test("a grant equal to real spend resets used back to 0 — the 'reset' primitive", async () => {
     storeReturning({ rows: [{ estimated_cost: 1.0 }] }, [{ amount_usd: 1.0 }]);
     const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
-    const quota = await getMonthlyQuota("user-1");
+    const quota = await getMonthlyQuota("user-1", "standard");
 
     expect(quota.used).toBe(0);
     expect(quota.remaining).toBe(quota.limit);
@@ -150,7 +164,7 @@ describe("getMonthlyQuota — grants (2026-09-02/03): \"a student who exhausted 
   test("a grant larger than real spend still floors used at 0, not a negative/rolled-over credit", async () => {
     storeReturning({ rows: [{ estimated_cost: 0.1 }] }, [{ amount_usd: 5 }]);
     const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
-    const quota = await getMonthlyQuota("user-1");
+    const quota = await getMonthlyQuota("user-1", "standard");
 
     expect(quota.used).toBe(0);
   });
@@ -158,7 +172,7 @@ describe("getMonthlyQuota — grants (2026-09-02/03): \"a student who exhausted 
   test("a partial grant reduces used proportionally rather than clearing it", async () => {
     storeReturning({ rows: [{ estimated_cost: 0.06 }] }, [{ amount_usd: 0.03 }]);
     const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
-    const quota = await getMonthlyQuota("user-1");
+    const quota = await getMonthlyQuota("user-1", "standard");
 
     // Same reference math as the un-granted $0.06 test above (9,446 tokens), but only half
     // the effective spend now that $0.03 of the $0.06 is granted.
@@ -168,7 +182,7 @@ describe("getMonthlyQuota — grants (2026-09-02/03): \"a student who exhausted 
   test("a grant never masks a genuinely unreadable ai_usage count — usedIsKnown still flips false", async () => {
     storeReturning(new Error("connection reset"), [{ amount_usd: 1.0 }]);
     const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
-    const quota = await getMonthlyQuota("user-1");
+    const quota = await getMonthlyQuota("user-1", "standard");
 
     expect(quota.usedIsKnown).toBe(false);
   });
@@ -183,7 +197,7 @@ describe("getMonthlyQuota — grants (2026-09-02/03): \"a student who exhausted 
       },
     });
     const { getMonthlyQuota } = await import("@/lib/ai/monthly-quota");
-    const quota = await getMonthlyQuota("user-1");
+    const quota = await getMonthlyQuota("user-1", "standard");
 
     expect(quota.usedIsKnown).toBe(true);
     expect(quota.used).toBe(9446); // identical to the no-grant $0.06 case — the failed grants read changed nothing
@@ -199,7 +213,7 @@ describe("isMonthlyQuotaExhausted", () => {
     storeReturning({ rows: [{ estimated_cost: 1.0 }] });
     const { isMonthlyQuotaExhausted } = await import("@/lib/ai/monthly-quota");
 
-    expect(await isMonthlyQuotaExhausted("user-1")).toBe(true);
+    expect(await isMonthlyQuotaExhausted("user-1", "standard")).toBe(true);
   });
 
   test("does not block a moment before the limit is genuinely reached", async () => {
@@ -209,13 +223,45 @@ describe("isMonthlyQuotaExhausted", () => {
     storeReturning({ rows: [{ estimated_cost: 0.8 }] });
     const { isMonthlyQuotaExhausted } = await import("@/lib/ai/monthly-quota");
 
-    expect(await isMonthlyQuotaExhausted("user-1")).toBe(false);
+    expect(await isMonthlyQuotaExhausted("user-1", "standard")).toBe(false);
   });
 
   test("permits the call when the count is unreadable — deliberate, and asserted so a silent flip is caught", async () => {
     storeReturning(new Error("connection reset"));
     const { isMonthlyQuotaExhausted } = await import("@/lib/ai/monthly-quota");
 
-    expect(await isMonthlyQuotaExhausted("user-1")).toBe(false);
+    expect(await isMonthlyQuotaExhausted("user-1", "standard")).toBe(false);
+  });
+
+  // 2026-09-03, the Ultra tier-economics build: the exhaustion boundary itself moves with
+  // tier, not just the displayed limit — an Ultra student's real ceiling is $2.00, double
+  // Standard's, so spend that would exhaust a Standard student's month must NOT exhaust an
+  // Ultra one's. $1.00 alone (the amount that exhausts Standard, per the first test in this
+  // describe block) is only Ultra's *target* — nowhere near its own ~$1.6667 use-limit
+  // boundary (the same uniform-2x derivation lib/ai/limits/budget.ts's own header proves) —
+  // so it must read false here.
+  test("Ultra is not exhausted at the exact spend that would exhaust a Standard student", async () => {
+    storeReturning({ rows: [{ estimated_cost: 1.0 }] });
+    const { isMonthlyQuotaExhausted } = await import("@/lib/ai/monthly-quota");
+
+    expect(await isMonthlyQuotaExhausted("user-1", "ultra")).toBe(false);
+  });
+
+  test("Ultra does block once real spend genuinely reaches its own, higher limit", async () => {
+    // Comfortably past Ultra's ~$1.6667 use-limit boundary (100 reference uses, the same
+    // uniform-2x derivation as the test above) without hugging it to the cent.
+    storeReturning({ rows: [{ estimated_cost: 1.9 }] });
+    const { isMonthlyQuotaExhausted } = await import("@/lib/ai/monthly-quota");
+
+    expect(await isMonthlyQuotaExhausted("user-1", "ultra")).toBe(true);
+  });
+
+  test("does not block a moment before Ultra's own limit is genuinely reached", async () => {
+    // Comfortably under Ultra's ~$1.6667 boundary — mirrors the Standard "$0.80 under $0.50
+    // target" case above, scaled to Ultra's target.
+    storeReturning({ rows: [{ estimated_cost: 1.4 }] });
+    const { isMonthlyQuotaExhausted } = await import("@/lib/ai/monthly-quota");
+
+    expect(await isMonthlyQuotaExhausted("user-1", "ultra")).toBe(false);
   });
 });

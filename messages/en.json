@@ -1728,7 +1728,9 @@
     },
     "perUser": {
       "sectionTitle": "Spend per student",
-      "subtitle": "Target {target}/month · Ceiling {ceiling}/month",
+      "subtitle": "{tier}: target {target}/month · ceiling {ceiling}/month",
+      "tierStandard": "Standard",
+      "tierUltra": "Ultra",
       "thisMonth": "This month",
       "last30d": "Last 30 days",
       "lifetime": "Lifetime",
@@ -1800,7 +1802,7 @@
     },
     "warnings": {
       "sectionTitle": "Budget warnings",
-      "message": "{name}: {amount} in the last 30 days ({percent}% of the {ceiling} monthly ceiling)",
+      "message": "{name} ({tier}): {amount} in the last 30 days ({percent}% of the {ceiling} monthly ceiling)",
       "none": "No student is over 80% of the monthly ceiling."
     },
     "weeklyPlanBudget": {
@@ -2043,7 +2045,9 @@
         },
         "aiCap": {
           "sectionTitle": "AI cost cap",
-          "sectionDescription": "Read-only — these are the real, enforced constants (lib/ai/limits/budget.ts), not a setting to adjust here. Changing them is a code change, not a form.",
+          "sectionDescription": "Read-only — these are the real, enforced constants (lib/ai/limits/budget.ts, lib/ai/monthly-quota.ts), not a setting to adjust here. Changing them is a code change, not a form.",
+          "tierStandard": "Standard",
+          "tierUltra": "Ultra",
           "degradePoint": "Degrades to Haiku at",
           "hardCeiling": "Hard ceiling",
           "tokenLimit": "Visible token quota"

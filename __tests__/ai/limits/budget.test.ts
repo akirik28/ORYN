@@ -166,6 +166,44 @@ describe("selectModelForUser", () => {
   });
 });
 
+describe("selectModelForUser — tier moves the degrade point (2026-09-03, the Ultra tier-economics build)", () => {
+  test("spend that degrades a Standard student does not degrade the same spend for Ultra", async () => {
+    // $0.50 is exactly Standard's target (see "spend exactly at the target degrades" above)
+    // -- Ultra's own target is $1.00, double, so the identical spend must still read as
+    // comfortably under target for an Ultra student.
+    tryCreateAdminClientMock.mockReturnValue(adminReturning({ data: [{ estimated_cost: 0.5 }], error: null }));
+
+    const selection = await selectModelForUser(USER_ID, "ultra");
+
+    expect(selection.degraded).toBe(false);
+    expect(selection.reason).toBe("under_target");
+    expect(selection.model).toBe(env.anthropic.model);
+  });
+
+  test("spend exactly at Ultra's own $1.00 target degrades — same >=, not >, boundary as Standard's", async () => {
+    tryCreateAdminClientMock.mockReturnValue(adminReturning({ data: [{ estimated_cost: 1.0 }], error: null }));
+
+    const selection = await selectModelForUser(USER_ID, "ultra");
+
+    expect(selection.degraded).toBe(true);
+    expect(selection.reason).toBe("at_or_over_target");
+    expect(selection.model).not.toBe(env.anthropic.model);
+  });
+
+  test("omitting tier defaults to standard — an Ultra-target spend does not degrade when tier isn't passed", async () => {
+    // Guards the default itself: withUsageLogging's own callers that don't override
+    // selectModel (every PER_STUDENT_AI_FEATURE except advisor_chat/weekly_plan, as of this
+    // build) reach selectModelForUser with no tier argument at all, and must keep degrading
+    // at Standard's $0.50, not silently start using Ultra's $1.00 for every caller.
+    tryCreateAdminClientMock.mockReturnValue(adminReturning({ data: [{ estimated_cost: 0.5 }], error: null }));
+
+    const selection = await selectModelForUser(USER_ID);
+
+    expect(selection.degraded).toBe(true);
+    expect(selection.reason).toBe("at_or_over_target");
+  });
+});
+
 describe("selectModelForUser — grants relieve the degrade decision, not just the display number (2026-09-02/03)", () => {
   test("a grant covering this month's spend keeps the ceiling model instead of degrading", async () => {
     tryCreateAdminClientMock.mockReturnValue(

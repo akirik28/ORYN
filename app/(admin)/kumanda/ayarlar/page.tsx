@@ -8,6 +8,9 @@ import { MaintenanceModeToggle } from "@/features/admin/maintenance-mode-toggle"
 import { TrialPeriodForm } from "@/features/admin/trial-period-form";
 import { MONTHLY_BUDGET_TARGET_USD, MONTHLY_BUDGET_CEILING_USD } from "@/lib/ai/limits/budget";
 import { MONTHLY_AI_TOKEN_LIMIT } from "@/lib/ai/monthly-quota";
+import type { PlanTier } from "@/types/database";
+
+const TIERS: PlanTier[] = ["standard", "ultra"];
 
 /**
  * Settings. The build plan lists five things here: new signups, maintenance mode, trial
@@ -16,6 +19,13 @@ import { MONTHLY_AI_TOKEN_LIMIT } from "@/lib/ai/monthly-quota";
  * mechanisms behind them -- oryn-31 shipped this screen honest about that gap on
  * 2026-09-03 rather than rendering switches that did nothing, and this closes it. AI cap
  * stays read-only from the real enforced constant (accurate today, nothing to configure).
+ *
+ * AI cap now shows both tiers (2026-09-03, the Ultra tier-economics build) -- the three
+ * constants it reads became `Record<PlanTier, number>` the same day, and a settings screen
+ * showing only Standard's figures while an Ultra account reads a different real number
+ * would be the tier-blind-display defect this build exists to close, one screen removed
+ * from the one a student sees. One row per tier rather than six flat numbers with no label
+ * distinguishing which tier each belongs to.
  */
 export default async function SettingsPage() {
   const admin = createAdminClient();
@@ -51,26 +61,35 @@ export default async function SettingsPage() {
         <p className="mb-4 text-xs" style={{ color: "var(--admin-ink-3)" }}>
           {t("aiCap.sectionDescription")}
         </p>
-        <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
-          <div>
-            <dt style={{ color: "var(--admin-ink-3)" }}>{t("aiCap.degradePoint")}</dt>
-            <dd className="text-lg font-semibold tabular-nums" style={{ color: "var(--admin-ink-1)" }}>
-              ${MONTHLY_BUDGET_TARGET_USD.toFixed(2)}
-            </dd>
-          </div>
-          <div>
-            <dt style={{ color: "var(--admin-ink-3)" }}>{t("aiCap.hardCeiling")}</dt>
-            <dd className="text-lg font-semibold tabular-nums" style={{ color: "var(--admin-ink-1)" }}>
-              ${MONTHLY_BUDGET_CEILING_USD.toFixed(2)}
-            </dd>
-          </div>
-          <div>
-            <dt style={{ color: "var(--admin-ink-3)" }}>{t("aiCap.tokenLimit")}</dt>
-            <dd className="text-lg font-semibold tabular-nums" style={{ color: "var(--admin-ink-1)" }}>
-              {MONTHLY_AI_TOKEN_LIMIT.toLocaleString()}
-            </dd>
-          </div>
-        </dl>
+        <div className="space-y-4">
+          {TIERS.map((tier) => (
+            <div key={tier} className="rounded-lg p-4" style={{ border: "1px solid var(--admin-border)" }}>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--admin-ink-2)" }}>
+                {t(tier === "ultra" ? "aiCap.tierUltra" : "aiCap.tierStandard")}
+              </p>
+              <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
+                <div>
+                  <dt style={{ color: "var(--admin-ink-3)" }}>{t("aiCap.degradePoint")}</dt>
+                  <dd className="text-lg font-semibold tabular-nums" style={{ color: "var(--admin-ink-1)" }}>
+                    ${MONTHLY_BUDGET_TARGET_USD[tier].toFixed(2)}
+                  </dd>
+                </div>
+                <div>
+                  <dt style={{ color: "var(--admin-ink-3)" }}>{t("aiCap.hardCeiling")}</dt>
+                  <dd className="text-lg font-semibold tabular-nums" style={{ color: "var(--admin-ink-1)" }}>
+                    ${MONTHLY_BUDGET_CEILING_USD[tier].toFixed(2)}
+                  </dd>
+                </div>
+                <div>
+                  <dt style={{ color: "var(--admin-ink-3)" }}>{t("aiCap.tokenLimit")}</dt>
+                  <dd className="text-lg font-semibold tabular-nums" style={{ color: "var(--admin-ink-1)" }}>
+                    {MONTHLY_AI_TOKEN_LIMIT[tier].toLocaleString()}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="admin-panel rounded-xl p-6">

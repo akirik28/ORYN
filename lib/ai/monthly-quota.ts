@@ -4,6 +4,16 @@ import { createClient } from "@/lib/supabase/server";
 import { MONTHLY_BUDGET_TARGET_USD } from "./limits/budget";
 import { getMonthlyGrantsUsd } from "./limits/grants";
 import { startOfMonthUTC, startOfNextMonthUTC } from "@/lib/date/month-boundary";
+import { TOKENS_PER_USE_REFERENCE, MONTHLY_AI_TOKEN_LIMIT } from "./token-limits";
+import type { PlanTier } from "@/types/database";
+
+// Re-exported rather than re-defined -- these two moved to lib/ai/token-limits.ts
+// 2026-09-03 (the Ultra tier-economics build) specifically so a `"use client"` consumer
+// (design-preview/preview-shell.tsx) can read the real per-tier limit without pulling this
+// file's own `import "server-only"` into a client bundle. Re-exporting under this file's
+// existing names means every other existing caller (this file's own functions below,
+// __tests__/ai/monthly-quota.test.ts) needed no change — see token-limits.ts's own header.
+export { TOKENS_PER_USE_REFERENCE, MONTHLY_AI_TOKEN_LIMIT };
 
 /**
  * Calendar-month AI allowance, enforced server-side and surfaced in the UI as a real
@@ -53,48 +63,6 @@ export const PER_STUDENT_AI_FEATURES = [
   "counselor_explanation",
   "essay_story_bank",
 ] as const;
-
-/**
- * The shared monthly allowance, still 50 of an internal unit derived from real spend (see
- * `usesConsumed` below) — kept private now, because nothing outside this file should
- * reason in it any more. This is a re-derivation against the same $1.00 ceiling and the
- * same margin logic that produced the original message-count 50 (see git history), not a
- * coincidence — the real dollar economics never moved, only the unit and the scope (one
- * feature to seven) did.
- *
- * This is also the founder-level decision lib/ai/limits/budget.ts's own comment on
- * `MONTHLY_BUDGET_CEILING_USD` said would be needed before that number stopped being
- * monitoring-only — see that file's updated comment for what changed and when.
- */
-const HISTORICAL_USE_LIMIT = 50;
-
-/**
- * Tokens per unit of `HISTORICAL_USE_LIMIT` — 3,628 input + 1,095 output, the exact real
- * advisor_chat average this whole session has anchored on (queried 2026-09-02; see the
- * $0.03 reference below for the fuller real-data picture). Reused here rather than
- * re-derived from a volume-weighted blend across features, for the same reason $0.03 was:
- * traceable to the one figure both the founder and the fleet have already reasoned about,
- * not marginally more accurate and unexplainable.
- *
- * `MONTHLY_AI_TOKEN_LIMIT` below (236,150) lands within 0.06% of the founder-approved
- * response-mode prototype's own ceiling figure (236,000, `oryn-bar-motion.html`'s `TOK`
- * array) — arrived at independently, from real per-message token averages, not read off
- * the prototype. The number the founder already looked at and approved is, to within
- * rounding, the same one this produces.
- */
-export const TOKENS_PER_USE_REFERENCE = 4_723;
-
-/**
- * The shared monthly allowance, in tokens — what actually reaches the screen. `used`,
- * `limit` and `remaining` on `MonthlyQuota` are now denominated in this unit throughout,
- * not just at the final display step: scaling every field by the same positive constant
- * preserves every sign and ratio comparison exactly (`remaining <= 0`, `remaining <=
- * limit * 0.1` in lib/ai/usage-state.ts), so there is no separate "uses" representation to
- * keep in sync with this one — one computed value, one unit, used everywhere. See
- * `usesConsumed` below for the piecewise dollar-to-token conversion this constant is built
- * from.
- */
-export const MONTHLY_AI_TOKEN_LIMIT = HISTORICAL_USE_LIMIT * TOKENS_PER_USE_REFERENCE;
 
 /**
  * Reference cost of one "AI use" pre-degrade, and the basis for `usesConsumed` below.
@@ -155,12 +123,13 @@ const DEGRADED_REFERENCE_COST_PER_USE_USD = REFERENCE_COST_PER_USE_USD / 3;
  * expressed in one unit — not this function's raw output for enforcement and a second,
  * separately-scaled number for display.
  */
-function usesConsumed(spendUsd: number): number {
-  const preDegradeCapacityUses = MONTHLY_BUDGET_TARGET_USD / REFERENCE_COST_PER_USE_USD;
-  if (spendUsd <= MONTHLY_BUDGET_TARGET_USD) {
+function usesConsumed(spendUsd: number, tier: PlanTier): number {
+  const targetUsd = MONTHLY_BUDGET_TARGET_USD[tier];
+  const preDegradeCapacityUses = targetUsd / REFERENCE_COST_PER_USE_USD;
+  if (spendUsd <= targetUsd) {
     return spendUsd / REFERENCE_COST_PER_USE_USD;
   }
-  const postDegradeSpendUsd = spendUsd - MONTHLY_BUDGET_TARGET_USD;
+  const postDegradeSpendUsd = spendUsd - targetUsd;
   return preDegradeCapacityUses + postDegradeSpendUsd / DEGRADED_REFERENCE_COST_PER_USE_USD;
 }
 
@@ -207,8 +176,8 @@ export interface MonthlyQuota {
  * module's one failure signal meaning one thing: "the number below is not trustworthy,"
  * not "trustworthy, but possibly missing something."
  */
-export async function getMonthlyQuota(userId: string): Promise<MonthlyQuota> {
-  const limit = MONTHLY_AI_TOKEN_LIMIT;
+export async function getMonthlyQuota(userId: string, tier: PlanTier): Promise<MonthlyQuota> {
+  const limit = MONTHLY_AI_TOKEN_LIMIT[tier];
   const resetsAt = startOfNextMonthUTC().toISOString();
 
   let used = 0;
@@ -242,7 +211,7 @@ export async function getMonthlyQuota(userId: string): Promise<MonthlyQuota> {
       // limit" only fires once spend has genuinely earned it. Scaled to tokens before the
       // floor, not after — flooring the small "uses" value first and multiplying up would
       // throw away real fractional spend the token scale has room to represent.
-      used = Math.floor(usesConsumed(effectiveSpendUsd) * TOKENS_PER_USE_REFERENCE);
+      used = Math.floor(usesConsumed(effectiveSpendUsd, tier) * TOKENS_PER_USE_REFERENCE);
     }
   } catch (error) {
     usedIsKnown = false;
@@ -274,8 +243,8 @@ export async function getMonthlyQuota(userId: string): Promise<MonthlyQuota> {
  * independently-computed enforcement path is exactly what could show a student a positive
  * token balance while already blocked, or the reverse.
  */
-export async function isMonthlyQuotaExhausted(userId: string): Promise<boolean> {
-  const quota = await getMonthlyQuota(userId);
+export async function isMonthlyQuotaExhausted(userId: string, tier: PlanTier): Promise<boolean> {
+  const quota = await getMonthlyQuota(userId, tier);
   if (!quota.usedIsKnown) return false;
   return quota.remaining <= 0;
 }
