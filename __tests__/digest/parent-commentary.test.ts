@@ -131,6 +131,7 @@ interface FakeProfile {
   display_name: string | null;
   preferred_language: string | null;
   plan_tier: string;
+  ultra_gift_expires_at?: string | null;
 }
 
 function fakeSupabase(profile: FakeProfile, opts: { scores?: { dimension: string; score: number }[]; previousSnapshot?: { dimension_scores: Record<string, number> } | null } = {}) {
@@ -222,5 +223,25 @@ describe("resolveParentWeeklyCommentary — tier gate", () => {
     const outcome = await resolveParentWeeklyCommentary(supabase, "s1", null);
     expect(outcome.kind).toBe("ok");
     if (outcome.kind === "ok") expect(outcome.content.narrativeSource).toBe("no_activity");
+  });
+
+  // The exact bug an earlier version of this function had: a raw `plan_tier === "ultra"`
+  // read misses a currently-active Ultra GIFT, where the permanent column still says
+  // "standard" but ultra_gift_expires_at is a real future timestamp. Caught before shipping
+  // by routing through lib/tier/parent-tier.ts's resolveParentEffectiveTier (which itself
+  // calls the one function, lib/tier/plan-tier.ts's resolvePlanTier, every other Ultra-aware
+  // surface already uses) instead of re-deriving the same fallback a third time.
+  test("an active Ultra gift resolves to premium even though the permanent plan_tier column still says standard", async () => {
+    const farFuture = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const supabase = fakeSupabase({ id: "s1", display_name: "Ada", preferred_language: "en", plan_tier: "standard", ultra_gift_expires_at: farFuture });
+    const outcome = await resolveParentWeeklyCommentary(supabase, "s1", null);
+    expect(outcome.kind).toBe("ok");
+  });
+
+  test("an EXPIRED Ultra gift does not resolve to premium", async () => {
+    const past = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const supabase = fakeSupabase({ id: "s1", display_name: "Ada", preferred_language: "en", plan_tier: "standard", ultra_gift_expires_at: past });
+    const outcome = await resolveParentWeeklyCommentary(supabase, "s1", null);
+    expect(outcome.kind).toBe("not_premium");
   });
 });

@@ -55,6 +55,17 @@ This is genuinely a smaller, simpler feature than the first draft — one fewer 
 fewer fact category the model has to be told not to invent from. The privacy constraint made
 the implementation better, not just narrower.
 
+A second, independent correction landed the same way, later in the same build: the tier gate
+(`resolveParentWeeklyCommentary`) originally read `profiles.plan_tier` directly and compared it
+to `"ultra"`. P6 (the tier-inheritance lane, landed on main mid-build) shipped
+`lib/tier/parent-tier.ts`'s `resolveParentEffectiveTier`, which routes through
+`lib/tier/plan-tier.ts`'s `resolvePlanTier` — the one function, with roughly thirty existing
+call sites, that also resolves an active Ultra *gift* (`ultra_gift_expires_at` in the future,
+permanent `plan_tier` still `"standard"`). The raw read this file started with would have
+silently denied the commentary to a legitimately gifted-Ultra student's parent. Fixed before
+shipping, with a test that constructs exactly that shape (gift active, permanent tier still
+standard) rather than trusting the import was sufficient on its own.
+
 ## The honest-nothing path, built first
 
 `hasNotableWeeklySignal` is the single gate: real signal is a notable dimension-score movement
