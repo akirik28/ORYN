@@ -387,11 +387,24 @@ düzelttiğimiz "veri yok ama kendinden emin etiket" hatasını yirmi katına ç
 Üç seçenek: koridoru genişlet, kapsam dışını çıkar, ya da kalsınlar ama etiketsiz. **Şu an
 üçüncüsünün yarısındayız.**
 
-**Hollanda tarafı için ilk adım hazır bekliyor:** 36 hogeschool, DUO'nun resmî listesinden,
-`data/research/sql-dry-runs/universities/netherlands-hbo-2026-09-03.sql`. Deneme
-çalıştırıldı — 36 ekleme temiz, mevcut 13 Hollanda kaydıyla sıfır çakışma, geri alındı.
-Bilerek sabah paketine adım olarak koymadım: aşağıdaki şema kararı verilmeden uygulanırsa
-36 kurum eksik etiketle girer. Karar seninse, uygulaması bir komut.
+**İki ülke için de dosyalar hazır bekliyor**, ikisi de denendi ve geri alındı, ikisi de
+bilerek sabah paketine adım olarak konmadı — aşağıdaki şema kararı verilmeden uygulanırlarsa
+228 kurum eksik etiketle girer:
+
+- **Hollanda: 36 hogeschool**, DUO'nun resmî listesinden —
+  `netherlands-hbo-2026-09-03.sql`. Mevcut 13 Hollanda kaydıyla sıfır çakışma. Web adresi
+  36'nın 35'inde var, çünkü DUO onu kendi dosyasında zaten veriyor.
+- **Almanya: 192 Fachhochschule/HAW**, HRK'nın kendi arama sisteminden —
+  `germany-haw-2026-09-03.sql`. 16 eyaletin hepsi temsil ediliyor, mevcut 49 Alman kaydıyla
+  sıfır çakışma.
+
+Almanya'da bir tavizi bilmen gerekiyor: **web adresi 192'nin sadece 10'unda var.** Sebebi
+şu — HRK'nın sitesi toplu erişimi bot koruması ile engelliyor. Bunu aşmaya çalışmadık:
+ne başlık taklidi, ne doğrulama çözme, ne de yavaşlatıp gizlice geçme. Site kendini
+kasten koruyorsa etrafından dolaşmak doğru iş değil. 181 boş alan, 181 uydurulmuş
+adresten iyidir. Kalan adresler tek tek, elle doldurulacak bir iş.
+
+İkisi de sana kalırsa, uygulaması iki komut.
 
 **Bir kurumun "hangi tür" olduğunu tutacak yer yok.** Bu, yukarıdaki soruyu uygulamaya
 çevirince çıkan gerçek engel.
