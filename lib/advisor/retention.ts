@@ -54,7 +54,11 @@ const SummarySchema = z.object({
 
 const SUMMARY_SYSTEM_PROMPT = `You are compressing one student's conversation with their own career advisor into a short summary, so the student's next conversation can pick up context after the raw messages are deleted for data-minimization reasons — not for any other reader.
 
-Write 2-4 sentences. Cover: what the student was working on or asking about, anything the advisor and student agreed on or decided, and anything left unresolved. Never invent a fact, a number, a deadline, or a recommendation that isn't actually in the conversation — an inaccurate summary is worse than a short one.`;
+Write 2-4 sentences. Cover: what the student was working on or asking about, anything the advisor and student agreed on or decided, and anything left unresolved. Never invent a fact, a number, a deadline, or a recommendation that isn't actually in the conversation — an inaccurate summary is worse than a short one.
+
+Write the summary in the same language the student and advisor used in the conversation. If they spoke Turkish, write the summary in Turkish; if English, write it in English.
+
+The <conversation> tag carries a date attribute: the day this conversation took place. This summary is a durable record that may be read long after that day, so convert any relative time reference in the conversation ("in 6 days," "next week," "this March") into an absolute date computed from that attribute — never leave it relative. If you cannot compute a specific date with confidence, describe it plainly instead of inventing false precision.`;
 
 /**
  * The one real AI call this module makes, extracted so a quality-evaluation script
@@ -65,17 +69,24 @@ Write 2-4 sentences. Cover: what the student was working on or asking about, any
  * from the real job or an eval script — a synthetic-fixture eval run still costs real,
  * accounted-for cents against the same monthly ceiling, deliberately (an eval that bypassed
  * the budget check could no longer promise the real job's own spend is what it claims).
+ *
+ * referenceDate has no default on purpose — docs/advisor-summary-quality-eval-2026-09-03.md
+ * found that without an anchor date, a relative reference ("the deadline is in 6 days")
+ * survives into the summary and goes stale the moment it's re-read. The caller must supply
+ * the day the conversation actually took place (processOneConversation uses the last
+ * message's created_at) so the model can convert it to an absolute date instead.
  */
-export async function summarizeTranscript(transcript: string): Promise<{ summary: string; usage: { inputTokens: number; outputTokens: number }; model: string }> {
+export async function summarizeTranscript(transcript: string, referenceDate: Date): Promise<{ summary: string; usage: { inputTokens: number; outputTokens: number }; model: string }> {
   await assertWithinJobBudget("advisor_conversation_retention");
 
   const provider = getAIProvider();
+  const referenceDateIso = referenceDate.toISOString().slice(0, 10);
   const result = await withUsageLogging(
     { userId: null, feature: "advisor_conversation_retention", selectModel: async () => ({ model: SUMMARY_MODEL, degraded: false, reason: "no_user", monthToDateSpendUsd: null }) },
     (model) =>
       provider.generateStructured({
         system: SUMMARY_SYSTEM_PROMPT,
-        prompt: `<conversation>\n${transcript.slice(0, 40_000)}\n</conversation>`,
+        prompt: `<conversation date="${referenceDateIso}">\n${transcript.slice(0, 40_000)}\n</conversation>`,
         schema: SummarySchema,
         schemaName: "summarize_advisor_conversation",
         schemaDescription: "A short, non-fabricated summary of a student's advisor conversation for data-minimization retention.",
@@ -164,7 +175,7 @@ async function processOneConversation(admin: SupabaseClient<Database>, candidate
 
   const { data: messages, error: messagesError } = await admin
     .from("advisor_messages")
-    .select("id, role, content")
+    .select("id, role, content, created_at")
     .eq("conversation_id", candidate.id)
     .order("created_at", { ascending: true });
   if (messagesError) return { ...base, outcome: "skipped_no_messages", error: `failed to read messages: ${messagesError.message}` };
@@ -185,10 +196,15 @@ async function processOneConversation(admin: SupabaseClient<Database>, candidate
     // run-job.ts's "stop, don't degrade" job-budget policy) while still letting
     // already-summarized candidates later in the batch proceed to deletion, since that step
     // is unpaid and unaffected by this exact budget.
-    const transcript = (messages ?? [])
+    const orderedMessages = messages ?? [];
+    const transcript = orderedMessages
       .map((m) => `${m.role === "user" ? "Student" : "Advisor"}: ${m.content ?? "[no content]"}`)
       .join("\n\n");
-    const result = await summarizeTranscript(transcript);
+    // Anchor date for relative-time conversion: the conversation's own last activity, not
+    // "now" — this job can run any time after the 24h cutoff, and "now" is not when "in 6
+    // days" was actually said.
+    const lastMessageAt = new Date(orderedMessages[orderedMessages.length - 1].created_at);
+    const result = await summarizeTranscript(transcript, lastMessageAt);
     summaryText = result.summary;
     wroteSummaryThisPass = true;
   }
