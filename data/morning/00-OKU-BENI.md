@@ -25,7 +25,7 @@
 > veritabanının içinde, öğrencilerin okuduğu metinlerde de 128 satır "Oryn" geçiyor**, ve kodu
 > değiştirmek onlara dokunmuyor. Bu dosya onları temizler.
 >
-> **Sırası ikinci, aceleси yok.** 07 kırık olan şeyleri düzeltiyor; 08 sadece isim.
+> **Sırası ikinci, acelesi yok.** 07 kırık olan şeyleri düzeltiyor; 08 sadece isim.
 >
 > **Ve bu dosya sana bir seçim sunuyor:** haftalık aksiyonlar/planlar/bildirimler/öneriler
 > zaten haftalık döngüde kendiliğinden yenilenir (~1 hafta). **112 gereksinim değerlendirmesi
