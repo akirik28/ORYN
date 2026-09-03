@@ -39,10 +39,28 @@ update public.profiles set display_name = 'Bob',   account_role = 'parent'  wher
 update public.profiles set display_name = 'Carol', account_role = 'student' where id = 'c3000000-0000-0000-0000-000000000003';
 update public.profiles set display_name = 'Dave',  account_role = 'parent'  where id = 'd4000000-0000-0000-0000-000000000004';
 
--- Seed one row of real-shaped data Alice owns, so "can a parent read it" has something to
--- actually return.
+-- Seed one row of real-shaped data Alice owns per direct-policy table (section 4 of the
+-- migration grants all three the identical `using (public.is_active_parent_of(user_id))`
+-- shape) so "can a parent read it" has something to actually return for every one of them,
+-- not just profile_scores -- a shared one-line policy is still three separate CREATE POLICY
+-- statements, and "the other two are structurally the same" is exactly the kind of assumption
+-- this script exists to stop trusting unverified.
 insert into public.profile_scores (user_id, dimension, score, calculation_version)
 values ('a1000000-0000-0000-0000-000000000001', 'research', 42, 'career_profile_v1');
+
+insert into public.profile_score_snapshots (user_id, overall_score, dimension_scores, snapshot_reason)
+values ('a1000000-0000-0000-0000-000000000001', 74, '{}'::jsonb, 'test fixture');
+
+-- opportunity_matches needs a real opportunities row to reference (unique(user_id,
+-- opportunity_id) plus the FK itself both require it) -- seeded here, before any
+-- `set local role authenticated` runs, so it goes in unrestricted the same way the auth.users
+-- rows above do. Global data, no RLS relevant to this feature; cleaned up explicitly in
+-- section 7 since nothing cascades from auth.users to it.
+insert into public.opportunities (id, title, category, normalized_title)
+values ('e5000000-0000-0000-0000-000000000005', 'Test Fixture Competition', 'competition', 'test fixture competition');
+
+insert into public.opportunity_matches (user_id, opportunity_id, relevance_score, profile_need_score, match_score)
+values ('a1000000-0000-0000-0000-000000000001', 'e5000000-0000-0000-0000-000000000005', 80, 70, 75);
 
 -- Bob <-> Alice: ACTIVE (as if the full K3 flow already ran).
 insert into public.parent_links (parent_user_id, student_user_id, status, invited_email, invited_at, confirmed_at)
@@ -61,6 +79,8 @@ select set_config('request.jwt.claims', '{"sub":"b2000000-0000-0000-0000-0000000
 select
   (select count(*) from public.get_parent_child_profile('a1000000-0000-0000-0000-000000000001')) as sees_alice_via_function___expect_1,
   exists(select 1 from public.profile_scores where user_id = 'a1000000-0000-0000-0000-000000000001') as sees_alice_scores_direct___expect_true,
+  exists(select 1 from public.profile_score_snapshots where user_id = 'a1000000-0000-0000-0000-000000000001') as sees_alice_snapshots_direct___expect_true,
+  exists(select 1 from public.opportunity_matches where user_id = 'a1000000-0000-0000-0000-000000000001') as sees_alice_opportunity_matches_direct___expect_true,
   public.is_active_parent_of('a1000000-0000-0000-0000-000000000001') as helper_reports_active___expect_true;
 
 -- The single most important negative check in this block: the function's own return type
@@ -143,6 +163,8 @@ select set_config('request.jwt.claims', '{"sub":"c3000000-0000-0000-0000-0000000
 select
   (select count(*) from public.get_parent_child_profile('a1000000-0000-0000-0000-000000000001')) as carol_sees_alice_via_function___expect_0,
   exists(select 1 from public.profile_scores where user_id = 'a1000000-0000-0000-0000-000000000001') as carol_sees_alice_scores___expect_false,
+  exists(select 1 from public.profile_score_snapshots where user_id = 'a1000000-0000-0000-0000-000000000001') as carol_sees_alice_snapshots___expect_false,
+  exists(select 1 from public.opportunity_matches where user_id = 'a1000000-0000-0000-0000-000000000001') as carol_sees_alice_opportunity_matches___expect_false,
   public.is_active_parent_of('a1000000-0000-0000-0000-000000000001') as helper_for_unrelated_user___expect_false;
 
 -- Carol attempts to grant herself access by inserting a link naming Alice as the student --
@@ -165,6 +187,8 @@ select set_config('request.jwt.claims', '{"sub":"d4000000-0000-0000-0000-0000000
 select
   (select count(*) from public.get_parent_child_profile('a1000000-0000-0000-0000-000000000001')) as dave_sees_alice_via_function___expect_0,
   exists(select 1 from public.profile_scores where user_id = 'a1000000-0000-0000-0000-000000000001') as dave_sees_alice_scores___expect_false,
+  exists(select 1 from public.profile_score_snapshots where user_id = 'a1000000-0000-0000-0000-000000000001') as dave_sees_alice_snapshots___expect_false,
+  exists(select 1 from public.opportunity_matches where user_id = 'a1000000-0000-0000-0000-000000000001') as dave_sees_alice_opportunity_matches___expect_false,
   public.is_active_parent_of('a1000000-0000-0000-0000-000000000001') as helper_for_pending_link___expect_false;
 
 -- THE critical write-side test: can Dave self-activate by UPDATE-ing his own pending link
@@ -260,6 +284,13 @@ from public.profiles where display_name in ('Alice','Bob','Carol','Dave') and id
   'c3000000-0000-0000-0000-000000000003','d4000000-0000-0000-0000-000000000004'
 );
 
+-- opportunities is global data, not owned by any of the four disposable users -- nothing
+-- cascades to it from the auth.users delete above, so it needs its own explicit cleanup or
+-- it's a permanent stray row left in whatever database this actually runs against.
+delete from public.opportunities where id = 'e5000000-0000-0000-0000-000000000005';
+select count(*) as remaining_test_opportunity___expect_0
+from public.opportunities where id = 'e5000000-0000-0000-0000-000000000005';
+
 -- ---------------------------------------------------------------------------
 -- 8. Mutation map — which policy each block above actually depends on. Comment out the
 --    named policy/check, re-run only the listed block, and confirm the expectation flips
@@ -272,21 +303,23 @@ from public.profiles where display_name in ('Alice','Bob','Carol','Dave') and id
 --   (WHERE removed), which the ___expect_1 assertion would wrongly still show as passing --
 --   confirm by ALSO re-running block 4 (Carol) after removing the WHERE clause; Carol
 --   suddenly seeing Alice is the actual failure signal for that specific mutation.
--- Block 2/3 (opportunity_matches, profile_scores direct policies): drop
---   "active parent can view child's profile scores" -- block 2's sees_alice_scores_direct
---   flips to false.
+-- Block 2 (the three direct-policy tables — each is its own CREATE POLICY, verify each
+--   independently, "they're all the same one-liner" is not proof they all actually apply):
+--     drop "active parent can view child's profile scores" -- sees_alice_scores_direct flips
+--       to false, no other assertion in this block moves.
+--     drop "active parent can view child's profile score snapshots" -- sees_alice_snapshots_
+--       direct flips to false, no other assertion moves.
+--     drop "active parent can view child's opportunity matches" -- sees_alice_opportunity_
+--       matches_direct flips to false, no other assertion moves.
+--   Also re-run blocks 4 and 5 (Carol, Dave) after each drop to confirm the negative side was
+--   never depending on the same policy for a different reason -- their ___expect_false
+--   assertions for these two tables should already read false before and after any of these
+--   drops, since Carol/Dave were never passing is_active_parent_of() to begin with.
 -- Block 3 (direct profiles read denied): this one has no policy to remove -- it is already
 --   the absence of a policy. To confirm the test itself is real, TEMPORARILY add
 --   `create policy "temp test" on public.profiles for select to authenticated using (true)`,
 --   re-run, confirm direct_profiles_read_of_alice flips to 1, then drop that temporary
 --   policy immediately -- never leave it in place even inside this disposable branch.
--- Block 4 (Carol cannot insert a link to Alice): change the insert policy's WITH CHECK from
---   `student_user_id = auth.uid()` to `true` -- carol_inserted_link_to_alice flips to 1.
--- Block 5 (Dave cannot self-activate): change the parent-side UPDATE policy's WITH CHECK
---   from `status = 'revoked'` to `true` -- daves_link_status_after_self_activation_attempt
---   flips from pending to active. THIS is the single test that most directly verifies K3's
---   "asla ama asla" — if only one mutation gets run before this branch is torn down, run
---   this one.
 -- Block 3 (Bob cannot smuggle confirmed_at through his own revoke): remove the
 --   `if auth.uid() is distinct from old.student_user_id then new.confirmed_at := ...`
 --   branch from parent_links_guard_immutable_columns (or replace the whole function body with
@@ -295,5 +328,12 @@ from public.profiles where display_name in ('Alice','Bob','Carol','Dave') and id
 --   1900-01-01. Lower stakes than block 5 (no access changes hands either way, since
 --   is_active_parent_of() never reads confirmed_at) but the same "closed, not just narrow"
 --   standard applies to every column in this table, not only the ones that gate access.
+-- Block 4 (Carol cannot insert a link to Alice): change the insert policy's WITH CHECK from
+--   `student_user_id = auth.uid()` to `true` -- carol_inserted_link_to_alice flips to 1.
+-- Block 5 (Dave cannot self-activate): change the parent-side UPDATE policy's WITH CHECK
+--   from `status = 'revoked'` to `true` -- daves_link_status_after_self_activation_attempt
+--   flips from pending to active. THIS is the single test that most directly verifies K3's
+--   "asla ama asla" — if only one mutation gets run before this branch is torn down, run
+--   this one.
 -- Block 6 (guard trigger): drop trigger parent_links_00_guard_immutable_columns --
 --   parent_user_id_after_smuggled_repoint_attempt flips to Dave's id instead of Carol's.
