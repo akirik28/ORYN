@@ -658,15 +658,45 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
    * would recognise, not identifiers — found undocumented and closed by
    * `__tests__/i18n/ai-prompt-enum-labels.test.ts`'s own first real run, 2026-09-02; see
    * that file's `EXEMPT` list, which now enforces this decision rather than only recording it.
+   *
+   * Assessed dimensions are pre-sorted weakest-to-strongest here, not left in whatever order
+   * buildProfileSignal happens to return (docs/advisor-chat-stability-eval-2026-09-03.md,
+   * oryn-80, live-verified 3/3 reads): asking "what are the two weakest dimensions" made the
+   * model sort nine numbers by eye mid-reply, and it got the answer wrong every time — not by
+   * hedging, by confidently naming the dimension whose number best supported the
+   * recommendation already being made (Career Exploration 40, because it fit the argument)
+   * over the actual second-lowest (Entrepreneurship 30, correct but narratively inconvenient),
+   * while quoting an unrelated score correctly in the same reply. AGENTS.md §6.1's own
+   * pipeline is structured facts -> deterministic features -> scoring rules -> AI
+   * interpretation — sorting nine integers is a deterministic feature, not something to hand
+   * to interpretation. The fix is not a prompt instruction asking the model to sort more
+   * carefully; it's to stop asking it to sort at all.
+   *
+   * The sort only ever runs over `isAssessed` dimensions — an unassessed one has no real score
+   * to rank by (its `score` field may still hold a number; see the fixture/type comment above
+   * for why that number is never rendered), and letting it enter the ordering would silently
+   * revive the exact "absence read as a measurement" defect this file already fixed once.
+   * Ties are named explicitly rather than left for position alone to imply: two dimensions
+   * sharing the true minimum both get "tied for weakest", not a single arbitrary "weakest" —
+   * scoped to the weakest boundary specifically (where "Biggest Gap"/avoid_for_now reasoning
+   * actually reads from), not a general mid-list tie annotation, which nothing found a need
+   * for and would only add noise to lines the model never singles out today.
    */
-  lines.push("Dimension states (describe these as states; never quote a score for a dimension Oryn has not assessed):");
-  for (const d of context.profileScores) {
+  lines.push(
+    "Dimension states, assessed ones ordered weakest to strongest (this order is already computed — use it directly if asked which dimensions are weakest or strongest; do not re-rank by eye). Never quote a score for a dimension Oryn has not assessed:",
+  );
+  const assessedScores = context.profileScores.filter((d) => isAssessed(d.state)).sort((a, b) => a.score - b.score);
+  const unassessedScores = context.profileScores.filter((d) => !isAssessed(d.state));
+  const weakestScore = assessedScores[0]?.score;
+  const weakestIsTied = assessedScores.filter((d) => d.score === weakestScore).length > 1;
+  for (const d of assessedScores) {
     const label = dimensionLabel(d.dimension, locale);
-    lines.push(
-      isAssessed(d.state)
-        ? `  - ${label}: ${evidenceStateLabel(d.state, locale)} (${d.score}/100, confidence: ${d.confidence})`
-        : `  - ${label}: ${evidenceStateLabel(d.state, locale)} — no score to quote, Oryn has not assessed this`,
-    );
+    const weakestTag = d.score === weakestScore ? (weakestIsTied ? " — tied for weakest" : " — weakest") : "";
+    lines.push(`  - ${label}: ${evidenceStateLabel(d.state, locale)} (${d.score}/100, confidence: ${d.confidence})${weakestTag}`);
+  }
+  for (const d of unassessedScores) {
+    const label = dimensionLabel(d.dimension, locale);
+    lines.push(`  - ${label}: ${evidenceStateLabel(d.state, locale)} — no score to quote, Oryn has not assessed this`);
   }
   /**
    * `verified` renders silently (no tag) — the "no news is good news" default, unchanged
