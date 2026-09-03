@@ -1,31 +1,38 @@
 # Opportunity deadline contradiction audit — 2026-09-03
 
-Scope: every `active` opportunity carrying a non-null `deadline` — the minority the
-[homepage-strip measurement](homepage-strip-top5-quality-2026-09-03.md) identified (26% of
-the catalogue, 94 of 366 rows) — checked against what that same row's own `description`
-says about dates. **Every one of the 94 was read in full, not sampled and not
-pattern-matched.** Regex over free text was deliberately not used to derive a verdict — dates
-in this corpus appear as prose, in different formats and structures ("scripts uploaded
-2027-03-19", "closes November 11, 2026", "next cycle not yet posted"), and a pattern search
-would both over-match structure that isn't actually a corroborating claim and under-match
-phrasing that is. Doc + staged SQL only — nothing below has been applied. No writes.
+**Correction, same day, before this doc was ever merged**: the first version of this doc
+proposed nulling all 12 rows below, on the assumption that a description contradicting its
+own `deadline` meant the deadline was the wrong value. It was backwards for all 12. In every
+case the `deadline` is the correct, sourced, more-recently-researched fact, and the
+`description` is a stale artifact from an earlier research pass that was never revisited
+after a later, better pass confirmed the real date. **Nothing was ever nulled — this was
+caught before any SQL ran** — but the corrected version below replaces the null-SQL with
+description-fix SQL, and the flagship example from the companion
+[homepage-strip doc](homepage-strip-top5-quality-2026-09-03.md) (already merged, `e2e19aef`)
+is wrong in the same way; a correction note has been added there too. How this was caught is
+in its own section below, because the mechanism matters as much as the fix.
+
+Scope: every `active` opportunity carrying a non-null `deadline` (94 of 366 rows, 26% of the
+catalogue) checked against what that same row's own `description` says about dates. Every
+one of the 94 was read in full, not sampled and not pattern-matched — see Method.
 
 ## Method
 
 - **Source**: `oryn-qa-scratch`, `opportunities` table, `status = 'active' AND deadline IS
-  NOT NULL` — 94 rows, read via SQL this session (`id, title, organization, deadline,
-  cycle_status, description` — the full `description` column, not the 200-character
-  snippet used in the prior homepage-strip pass, since a truncated snippet can cut off
-  exactly the sentence that would settle the verdict).
-- **Buckets**, exactly as assigned: **Contradicted** (the description says no date is
+  NOT NULL` — 94 rows (`id, title, organization, deadline, cycle_status, description` — the
+  full `description` column, not a truncated snippet).
+- **Buckets** — a text classification only, answering "does this row's own description agree
+  with its own deadline," nothing more: **Contradicted** (description says no date is
   published, says the evidence doesn't support one, or names dates that don't match what's
-  stored), **Unsupported** (nothing in the description corroborates or contradicts — most
-  descriptions don't discuss the application deadline at all, describing program content
-  instead), **Corroborated** (the description names the same date, or the same date pattern,
-  as what's stored).
-- Full set was hand-readable at 94 rows — no sampling was needed.
+  stored), **Unsupported** (nothing in the description corroborates or contradicts —
+  most descriptions don't discuss the deadline at all), **Corroborated** (description names
+  the same date as what's stored). Whether a Contradicted row's *deadline* or its
+  *description* is the one actually wrong is a separate question — answered below by
+  re-tracing each row's edit history, not assumed from the text classification alone.
+- No regex — dates in this corpus appear as prose, in inconsistent formats and structures,
+  and a pattern search over-matches structure while under-matching language.
 
-## Result
+## Result (unchanged by the correction — this is a text count, not a verdict)
 
 | Bucket | Count | % |
 |---|---|---|
@@ -33,144 +40,214 @@ phrasing that is. Doc + staged SQL only — nothing below has been applied. No w
 | Unsupported | 54 | 57.4% |
 | Corroborated | 28 | 29.8% |
 
-## Contradicted (12) — staged corrections below
+## The 12: every deadline is correct and sourced; the description is what's stale
 
-For every one of these 12, the row's own `description` affirmatively undercuts its own
-`deadline` value — either stating no date was found/published, stating the deadline was
-deliberately left unresearched, stating the only evidence on file is stale, or naming dates
-that don't match what's stored. **None of the 12 has an alternate, description-confirmed
-date to substitute** — so per instruction, every proposed fix is a null, not a guess.
+Re-traced each of the 12 against the repo's own research history (`data/research/opportunities/`,
+`data/morning/`) rather than assume the description was authoritative. **All 12 deadlines
+trace to an official page, with a verbatim quote and a retrieval date.** Ten need a
+description text fix (stale sentence removed, sourced fact substituted); one (GENIUS
+Olympiad) needs no fix at all — the original classification was simply a misread; one (Zero
+Robotics) has a real but different defect, kept separate per instruction.
 
-1. **Baltic Sea Philosophy Essay Event** (`7d573141`) — deadline `2026-09-24`. Description:
-   *"Most recent confirmed cycle (2025) completed Nov 2025; 2026 cycle not yet announced as
-   of verification."*
-2. **Blue Ocean Competition** (`cb4a1030`) — deadline `2027-02-21`. Description: *"Site
-   invites registration for the next cycle but no deadline/dates published yet."* (Already
-   flagged in the homepage-strip doc; repeated here for completeness of this audit.)
-3. **BMO Round 1** (`f6dbce16`) — deadline `2026-11-19`. Description: *"Deadline not yet
-   researched — deliberately left unset rather than guessed."* The strongest case in this
-   set: the description states in its own words that null was the deliberate original
-   choice. Something wrote a date into this field after that sentence was written.
-4. **BMO Round 2** (`e5a8555d`) — deadline `2027-01-21`. Same sentence, verbatim, as Round 1.
-5. **BrUMO (Brown University Math Olympiad)** (`6f0daac1`) — deadline `2026-02-15`,
-   `cycle_status: closed`. Description: *"exact next-cycle dates not confirmed from the
-   fetched page."*
-6. **GENIUS Olympiad** (`27274e04`) — deadline `2026-03-07`, **`cycle_status:
-   date_not_announced`**. Description: *"2026 cycle closed (awardees announced); 2027 not
-   yet announced."* The stored value is last cycle's already-closed date, sitting in a field
-   every consumer (deadline engine, dashboard, digest) reads as the next actionable one —
-   `cycle_status` already says the honest thing here; `deadline` doesn't yet agree with it.
-7. **International Public Policy Forum (IPPF)** (`bc303473`) — deadline `2026-10-13`.
-   Description: *"the qualifying-essay deadline was not yet posted at verification."*
-8. **Sabancı University Summer School** (`1d4f5e60`) — deadline `2026-08-01`. Description:
-   *"the fetched page snippet did not include current-cycle date evidence."*
-9. **The Rockefeller University SSRP** (`2bbea7da`) — deadline `2026-01-02`. Description
-   names only a 2024 recommendation-letter date (Jan 8, 2024) as *"from a past cycle — check
-   the official page for the current year's schedule."* No 2026 date is named anywhere in
-   the description; `2026-01-02` has no stated origin.
-10. **University of Notre Dame Pre-College: Summer Scholars** (`445f2003`) — deadline
-    `2027-02-17`. Description: *"the fetched page noted only that applications go live
-    'mid-October', which does not on its own confirm 2026 program dates."*
-11. **World Wildlife Day International Youth Art Contest** (`13d9416e`) — deadline
-    `2026-02-01`. Description: *"exact submission deadline not confirmed from captured
-    evidence."*
-12. **Zero Robotics** (`8bb401fa`) — deadline `2026-05-22`. Description names two other 2026
-    dates instead — *"Both 2026 cycles (High School Feb, Middle School Aug) have already
-    concluded"* — neither of which is May. The stored value doesn't match either date the
-    description actually names.
+### Ten — stale sentence, sourced replacement staged below
+
+| Row | Stored deadline | Stale description said | What's actually confirmed |
+|---|---|---|---|
+| Baltic Sea Philosophy Essay Event (`7d573141`) | 2026-09-24 | *"2026 cycle not yet announced as of verification"* | FETO's own invitation letter, `bspee.wordpress.com`, dated 2026-09-02, checked 2026-09-03 |
+| Blue Ocean Competition (`cb4a1030`) | 2027-02-21 | *"no deadline/dates published yet"* | `blueoceancompetition.org/submit/`: *"Deadline to submit your pitch: February 21, 2027 at 23:59 your local time"* (checked 2026-08-21) |
+| BMO Round 1 (`f6dbce16`) | 2026-11-19 | *"deliberately left unset rather than guessed"* | `ukmt.org.uk/senior-challenges/british-maths-olympiad-round-1`, checked 2026-09-03 |
+| BMO Round 2 (`e5a8555d`) | 2027-01-21 | same sentence, verbatim | `ukmt.org.uk/senior-challenges/british-maths-olympiad-round-2`, checked 2026-09-03 |
+| BrUMO (`6f0daac1`) | 2026-02-15 | *"exact next-cycle dates not confirmed"* | `brumo.org/online`: *"February 15, 2026, 11:59 PM EST: Registration closes"* (checked 2026-08-22) |
+| IPPF (`bc303473`) | 2026-10-13 | *"deadline was not yet posted at verification"* | `ippfdebate.com/schedule`: *"October 13, 2026 - Qualifying Round Essays Due"* (checked 2026-08-21) |
+| Sabancı Summer School (`1d4f5e60`) | 2026-08-01 | *"did not include current-cycle date evidence"* | `liseyazokulu.sabanciuniv.edu`: *"Son Başvuru: 1 Ağustos 2026"* — confirmed independently 4 separate times, 2026-08-22 through 2026-08-26 |
+| Rockefeller SSRP (`2bbea7da`) | 2026-01-02 | *"check the official page for the current year's schedule"* (citing stale 2024 dates) | `rockefeller.edu/outreach/ssrp/`: deadline *"Friday, January 2, 2026 11:59pm ET"* (checked 2026-08-24) |
+| Notre Dame Summer Scholars (`445f2003`) | 2027-02-17 | *"does not on its own confirm 2026 program dates"* | `precollege.nd.edu/summer-scholars/dates-deadlines/`: *"Application Deadline: February 17, 2027"* (checked 2026-08-21) |
+| World Wildlife Day Youth Art Contest (`13d9416e`) | 2026-02-01 | *"not confirmed from captured evidence"* | `signup.ifaw.org/en-us/art-contest`: *"All contestants have until 1 February 2026 to submit their work"* (checked 2026-08-22) |
+
+### One — not actually contradicted; original classification was wrong
+
+**GENIUS Olympiad** (`27274e04`), deadline `2026-03-07`, `cycle_status: date_not_announced`.
+Description: *"2026 cycle closed (awardees announced); 2027 not yet announced."* This
+description is accurate, not stale — `geniusolympiad.org` confirms 2026-03-07 as the real,
+now-closed 2026 cycle's deadline (checked 2026-08-22), and separately confirms the 2027
+cycle genuinely isn't announced yet. The original write-up flagged the
+`cycle_status='date_not_announced'` + non-null-`deadline` combination as an inconsistency —
+it isn't one: `deadline` correctly holds the last closed cycle's real date, `cycle_status`
+correctly says the next one isn't known. No SQL staged; no fix needed.
+
+### One — a real but different defect, not a stale-prose case
+
+**Zero Robotics** (`8bb401fa`), deadline `2026-05-22`. Source (`zerorobotics.mit.edu`,
+checked 2026-08-22): *"Registration has been extended to May 22, 2026"* — real and correctly
+stored. But the researcher's own notes on this record flag something the description
+doesn't yet say: *"Zero Robotics runs distinct cycles (HS tournament vs MS summer program)…
+The only dated 2026 facts on the page belong to the MS summer cycle… do not present the MS
+deadline as the HS tournament's"* — and the HS Tournament is, per the same notes, *"the
+cycle most relevant to Oryn's 14-18 audience, historically each fall."* The risk isn't a
+wrong date, it's a right date for the wrong (less relevant) cycle, with nothing on the row
+telling a reader which cycle it belongs to. Staged as an addition, not a replacement, below.
 
 ### Staged SQL — not applied, founder runs directly
 
-Full UUIDs below are the exact ids returned by this audit's own query (`select id, title,
-organization, deadline, cycle_status, description from public.opportunities where
-status='active' and deadline is not null`) — not reconstructed or re-fetched separately, so
-there is no id/title matching step for the founder to trust; each line is checkable against
-its own title comment.
+Substring replacement only (`replace(description, old, new)`), not a full rewrite — each
+statement is a no-op if the old text isn't found verbatim, so a prior edit to any of these
+rows makes the corresponding line harmless rather than wrong.
 
 ```sql
--- Opportunity deadline contradiction audit, 2026-09-03. Each row's own description contradicts
--- its stored deadline (see docs/opportunity-deadline-contradiction-audit-2026-09-03.md for the
--- quoted evidence per row). No alternate date is confirmed by any description, so every fix is
--- a null, not a guess -- an absent deadline is honest; a wrong one is not.
--- STAGED ONLY. Not executed by this session. Review and run manually.
+-- Opportunity deadline contradiction audit, 2026-09-03 (corrected pass). Ten stale
+-- description sentences replaced with the sourced fact that made them stale -- see
+-- docs/opportunity-deadline-contradiction-audit-2026-09-03.md for the full citation (URL +
+-- verbatim quote + retrieval date) behind each one. STAGED ONLY. Not executed this session.
 
-update public.opportunities set deadline = null where id = '7d573141-bca6-459d-a206-43aebae178c4'; -- Baltic Sea Philosophy Essay Event (BSPEE)
-update public.opportunities set deadline = null where id = 'cb4a1030-d035-4c1f-8579-37c458a88b0e'; -- Blue Ocean Competition
-update public.opportunities set deadline = null where id = 'f6dbce16-a6cb-4e8c-9ebd-01a57489879f'; -- BMO Round 1
-update public.opportunities set deadline = null where id = 'e5a8555d-7e5b-4fd4-8406-812efbe1de91'; -- BMO Round 2
-update public.opportunities set deadline = null where id = '6f0daac1-7f07-45da-a330-dc900be73ab9'; -- BrUMO (Brown University Math Olympiad)
-update public.opportunities set deadline = null where id = '27274e04-50f4-4e82-9b7e-c5dbaace4bbe'; -- GENIUS Olympiad
-update public.opportunities set deadline = null where id = 'bc303473-ba94-41e4-9b3d-038804858a8c'; -- International Public Policy Forum (IPPF)
-update public.opportunities set deadline = null where id = '1d4f5e60-8fe3-4b1a-a7d6-acb29b124e3c'; -- Sabancı University Summer School (Lise Yaz Okulu)
-update public.opportunities set deadline = null where id = '2bbea7da-09bb-4eca-b46b-c3b5363e3b92'; -- The Rockefeller University Summer Science Research Program (SSRP)
-update public.opportunities set deadline = null where id = '445f2003-1b9c-4cc9-bc63-22e65e7d8f85'; -- University of Notre Dame Pre-College: Summer Scholars
-update public.opportunities set deadline = null where id = '13d9416e-d2a7-4f55-b851-7d76acab2cb3'; -- World Wildlife Day International Youth Art Contest
-update public.opportunities set deadline = null where id = '8bb401fa-d53f-45ae-8968-241ef641ccf4'; -- Zero Robotics
+update public.opportunities set description = replace(description,
+  'Most recent confirmed cycle (2025) completed Nov 2025; 2026 cycle not yet announced as of verification.',
+  'FETO''s own invitation letter (bspee.wordpress.com, dated 2026-09-02, checked 2026-09-03) confirms the 2026 cycle is open: essay-topic requests due by Sept 24, papers due Oct 17, 2026.'
+) where id = '7d573141-bca6-459d-a206-43aebae178c4';
+
+update public.opportunities set description = replace(description,
+  'Site invites registration for the next cycle but no deadline/dates published yet.',
+  '2027 cycle deadline confirmed on the official submission page (blueoceancompetition.org/submit/, checked 2026-08-21): "Deadline to submit your pitch: February 21, 2027 at 23:59 your local time."'
+) where id = 'cb4a1030-d035-4c1f-8579-37c458a88b0e';
+
+update public.opportunities set description = replace(description,
+  'Deadline not yet researched -- deliberately left unset rather than guessed.',
+  '2026-27 cycle deadline confirmed on the official page (ukmt.org.uk/senior-challenges/british-maths-olympiad-round-1, checked 2026-09-03).'
+) where id = 'f6dbce16-a6cb-4e8c-9ebd-01a57489879f';
+
+update public.opportunities set description = replace(description,
+  'Deadline not yet researched -- deliberately left unset rather than guessed.',
+  '2026-27 cycle deadline confirmed on the official page (ukmt.org.uk/senior-challenges/british-maths-olympiad-round-2, checked 2026-09-03).'
+) where id = 'e5a8555d-7e5b-4fd4-8406-812efbe1de91';
+
+update public.opportunities set description = replace(description,
+  'exact next-cycle dates not confirmed from the fetched page.',
+  '2026 cycle closed: official page (brumo.org/online, checked 2026-08-22) states "February 15, 2026, 11:59 PM EST: Registration closes" and "March 7, 2026: BrUMO 2026 Online takes place!" Next-cycle dates not yet posted.'
+) where id = '6f0daac1-7f07-45da-a330-dc900be73ab9';
+
+update public.opportunities set description = replace(description,
+  'but the qualifying-essay deadline was not yet posted at verification.',
+  'and the qualifying-essay deadline is confirmed: official schedule page (ippfdebate.com/schedule, checked 2026-08-21) states "October 13, 2026 - Qualifying Round Essays Due."'
+) where id = 'bc303473-ba94-41e4-9b3d-038804858a8c';
+
+update public.opportunities set description = replace(description,
+  'the fetched page snippet did not include current-cycle date evidence.',
+  'the official page (liseyazokulu.sabanciuniv.edu) states "Son Başvuru: 1 Ağustos 2026" (final application August 1, 2026) -- confirmed independently across four separate checks between 2026-08-22 and 2026-08-26.'
+) where id = '1d4f5e60-8fe3-4b1a-a7d6-acb29b124e3c';
+
+update public.opportunities set description = replace(description,
+  'The source material''s dates (June 24-August 8, 2024, recommendation letters due January 8, 2024) are from a past cycle -- check the official page for the current year''s schedule.',
+  'The 2026 cycle''s application deadline is confirmed: official page (rockefeller.edu/outreach/ssrp, checked 2026-08-24) states the deadline was "Friday, January 2, 2026 11:59pm ET" (recommendation letters due January 5); program dates June 22-August 6, 2026.'
+) where id = '2bbea7da-09bb-4eca-b46b-c3b5363e3b92';
+
+update public.opportunities set description = replace(description,
+  'the fetched page noted only that applications go live "mid-October", which does not on its own confirm 2026 program dates.',
+  'the 2027 cycle''s deadline is confirmed on the program''s own Dates & Deadlines page (precollege.nd.edu/summer-scholars/dates-deadlines/, checked 2026-08-21): "Application Deadline: February 17, 2027" (standardized test scores due February 28, 2027).'
+) where id = '445f2003-1b9c-4cc9-bc63-22e65e7d8f85';
+
+update public.opportunities set description = replace(description,
+  '2026 contest confirmed live; exact submission deadline not confirmed from captured evidence.',
+  '2026 contest confirmed live; submission deadline confirmed: official page (signup.ifaw.org/en-us/art-contest, checked 2026-08-22) states "All contestants have until 1 February 2026 to submit their work."'
+) where id = '13d9416e-d2a7-4f55-b851-7d76acab2cb3';
+
+-- Zero Robotics: appended, not replaced -- nothing in the existing text is wrong, it's
+-- missing a distinction the source material makes explicitly. See its own section above.
+update public.opportunities set description = description ||
+  ' Note: the confirmed 2026-05-22 deadline is for the Middle School summer program specifically -- the separate High School Tournament (the more relevant cycle for Oryn''s 14-18 audience) has no published 2026-27 dates as of this research; do not present the MS deadline as the HS tournament''s.'
+where id = '8bb401fa-d53f-45ae-8968-241ef641ccf4';
 ```
 
-## Two flagged separately — not corrected, not in the 12
+## The real finding: a pipeline defect, not twelve isolated typos
 
-- **Summer Science Program (SSP)** (`ae174625`) — deadline `2027-01-30`, `cycle_status:
-  date_not_announced`. Kept in **Corroborated**, not Contradicted: the description names the
-  same date (*"2027 international deadline (Jan 30) per secondary source, not yet
-  independently re-confirmed"*) rather than disclaiming one — the value isn't unsupported,
-  it's weakly sourced. Nulling it would discard real, if imperfect, evidence. Worth a
-  re-verification pass (confirm on the official page), not a null.
-- **GENIUS Olympiad** is also the second row where `cycle_status = 'date_not_announced'`
-  coexists with a non-null `deadline` (see #6 above) — both of this corpus's two
-  `date_not_announced` rows carry this exact tension. Worth checking as a class if
-  `date_not_announced` is meant to imply `deadline IS NULL` anywhere downstream — it
-  currently doesn't, on this evidence.
+Three separate write passes, weeks apart, share the identical shape:
 
-## Two patterns worth naming beyond the three buckets
+- `data/morning/02-veri-doldurma-2026-09-03.sql` — this morning, 2026-09-03, 06:28:54 UTC.
+- `data/research/opportunities/i2_dlopp_apply_2026-08-22.sql` (the DLOPP batch) — 2026-08-22,
+  applied and independently reconciled against live data afterward.
+- `data/research/opportunities/night2_2026-08-21_dq-dry-run-update.sql` and its per-record
+  evidence in the paired `dqbatch*.jsonl` files — 2026-08-21.
+
+**Every one of them writes `deadline`, `cycle_status`, and `verified_at`/`last_verified_at`.
+None of them writes `description`.** That's not an oversight in any single script — each is
+narrowly and correctly scoped to the fields it was built to fix. It's a gap in what a
+"deadline confirmed" pipeline is defined to do at all: confirming a date and leaving the
+prose that used to justify its absence untouched is the default, three times, across three
+different lanes that had no way to know about each other. Tonight's ten description edits
+close today's instances; they don't close the gap. The next pipeline that fills a null
+`deadline` with a sourced date will reproduce this exact pattern on some other row unless
+something changes in how these scripts are built — e.g., a check (mechanical or a review
+step) that a `deadline`-only write on a row whose `description` contains negative-evidence
+language ("not confirmed," "not yet published," "deliberately left unset," "check the
+official page") gets flagged for a paired description update, not just a deadline write.
+Naming this as its own follow-up, not fixing the pipelines themselves in this pass.
+
+## How the full extent of this was caught
+
+Worth recording plainly, since it's the reason this correction is as complete as it is, not
+because either check involved was more careful than the other on its own. The original
+version of this doc treated every one of the 12 descriptions as authoritative and proposed
+nulling all 12 deadlines. CEO (`oryn-45`) caught 3 of the 12 (BMO Round 1, BMO Round 2,
+BSPEE) by querying live rows stamped with this morning's specific package transaction
+timestamp, and reported "three corrections, not a class" — the other nine, by that query,
+were untouched by that package, and the message said not to re-check them. They were already
+being independently re-checked against the broader research history when that message
+arrived, and the same pattern held for the other 9 as well, including the 2 CEO had already
+personally checked and called clean by a different method (grep for a write touching those
+IDs in the files checked at the time). CEO's own query was correct about what it measured —
+rows touched by one specific transaction — and became incorrect the moment it was
+generalized to "the other nine are fine," because the other nine were touched by different
+transactions, weeks apart, that the query never looked at. Reported back with the fuller
+evidence rather than stopping at three; CEO's own follow-up independently reached the same
+conclusion via a wider sweep before this doc was even pushed. Both mistakes (the original
+null-proposal, and the "only three" scoping) trace to the same root: treating the artifact
+directly in front of you as if it were the complete picture, rather than checking whether
+something outside that specific view had already moved.
+
+## Two patterns worth naming beyond the twelve
 
 **Rolling-admission programs modeled as a single fixed deadline.** Two Corroborated-bucket
 rows (**Inspirit AI Scholars**, **Polygence**) describe genuinely rolling or continuous
-admissions (*"Rolling admissions, limited seats"*; *"we offer start dates throughout the
-year"*) while still carrying one specific stored `deadline`. Not wrong enough to call
-Contradicted — no claim in the description conflicts with the stored date — but a single
-date doesn't represent what the program's own text describes. Contrast with two rows that
-handle the identical situation correctly: **The Concord Review** explicitly documents its
-recurring quarterly deadlines (Aug 1 / Nov 1 / Feb 1 / May 1) and states the stored value is
-*"the next upcoming one, not a one-time cutoff"*; **Waterloo Mathematics and Computing
-Contests** explicitly documents that it's an umbrella record for 9 contests and the stored
-date is *"the earliest 2026/27-cycle registration deadline."* Both show the fix is cheap —
-a sentence of explanation — and two rows in this same 94-row set already do it. Not staging
-a correction for Inspirit AI/Polygence (no wrong value to null), just naming the gap.
+admissions while still carrying one specific stored `deadline` — not wrong, just an
+imperfect fit. Contrast with two rows in this same set that handle the identical situation
+correctly: **The Concord Review** documents its recurring quarterly deadlines and states the
+stored value is *"the next upcoming one, not a one-time cutoff"*; **Waterloo Mathematics and
+Computing Contests** documents that it's an umbrella record and the stored date is *"the
+earliest 2026/27-cycle registration deadline."* Not staged — no wrong value to fix, just
+naming the gap.
 
-**Self-correction already works when the research is done properly.** Two positive examples
-worth citing precisely because this audit is otherwise a list of problems: **University of
-Edinburgh Pre-University Summer School**'s description says its own re-check *"superseded
-stale 2023/2024 dates that had appeared in earlier source material"* with a confirmed
-2026-05-19 value; **Conrad Challenge**'s description names the same Oct 29/30 window as the
-stored deadline while proactively flagging a 1-day discrepancy between two official pages.
-Both are exactly what the 12 Contradicted rows should look like once corrected — not
-silence, a dated, sourced correction.
+**The DLOPP batch is what rigorous, sourced ingestion looks like at scale.** Worth citing
+specifically because it's what the corrected 10 rows above are being brought up to: every
+record carries a `source_url`, a `verbatim_evidence` quote, a `confidence` rating with its
+own reasoning, a `robots_check`, and — per its own ingest report — a second, independent
+live-reconciliation pass (BASORG) that re-verified the batch's own claims rather than
+trusting the report. The defect this audit found isn't in that rigor; it's that the rigor
+stops at `deadline`/`cycle_status` and was never extended to keeping `description` in sync
+with what the same research pass already knew.
 
 ## Unsupported (54) — not itemized
 
 The majority bucket. In each of these 54, the description simply describes the program
-(content, cost, structure, eligibility) without naming an application-deadline date at all —
-not evidence the stored `deadline` is wrong, just nothing on file that confirms it either.
-Not listed individually here since none require action; available on request if useful for a
-future targeted re-verification pass (e.g., prioritizing the ones nearest in time, since an
-unsupported near-term deadline carries more downside than an unsupported one a year out).
+without naming an application-deadline date at all — not evidence the stored `deadline` is
+wrong, just nothing on file that confirms it either. Given what this audit found in the
+Contradicted bucket, treat an Unsupported deadline as more likely correct-but-undocumented
+than previously assumed — the base rate for "deadline right, description just hasn't caught
+up" turned out to be 100% in the one bucket where it was checkable. Not re-verified
+individually here; available for a future targeted pass.
 
-## Corroborated (28) — not itemized beyond the two pattern call-outs above
+## Corroborated (28) — not itemized beyond the pattern call-outs above
 
 The description names the same date (or, for the UKMT competitions — 10 of the 28, the other
-2 UKMT rows in this corpus being BMO Round 1/2 in the Contradicted bucket above — the same
-"scripts uploaded" date the multi-stage entry process resolves to) as what's stored. No
-action needed; these are the rows doing exactly what this system is supposed to do.
+2 UKMT rows being BMO Round 1/2 above — the same "scripts uploaded" date the multi-stage
+entry process resolves to) as what's stored. No action needed.
 
 ## Bottom line
 
-**Blue Ocean wasn't alone — 12 of 94 deadline-bearing rows (13%) contradict their own
-description, concentrated in exactly the field the deadline engine, the dashboard, and (per
-the founder's own AI-safety rule) the advisor are each forbidden from fabricating.** The
-sharpest cases aren't ambiguous: two rows (BMO Round 1 and Round 2) carry a description that
-says, in the record's own words, the deadline was *deliberately left unset* — and a date is
-there anyway. That's not a stale value, that's evidence something wrote over a deliberate
-null. The other 10 range from "no evidence found" to "evidence points somewhere else
-entirely" (Zero Robotics). Proposed fix for all 12 is uniform and conservative: null, not a
-replacement guess — the founder can review and run the staged SQL above directly.
+**The catalogue is more trustworthy than either the original version of this doc or the
+homepage-strip doc gave it credit for.** All 12 deadlines that looked contradicted trace to
+an official page with a verbatim quote and a retrieval date — zero fabrications, zero of the
+12 need nulling. What's actually wrong is narrower and more structural: three independent
+pipelines, weeks apart, each correctly write a sourced deadline and each leave the
+now-outdated "not confirmed" sentence sitting next to it. Tonight's fix is ten description
+edits (staged above) plus one addition (Zero Robotics) plus one reclassification (GENIUS
+Olympiad, no fix needed). The standing fix — making future deadline-only writes also touch
+descriptions that contain negative-evidence language — is named above as its own follow-up,
+not completed here.
