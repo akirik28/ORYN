@@ -188,9 +188,12 @@ gerçek öneri. Dokunulmadı. Sayı benziyordu, içerik benzemiyordu.
 **`/admin`** — bugünkü hali. Ondört bölüm, tek sayfa.
 
 **`/kumanda`** — onayladığın tasarımın gerçek hali. Ayrı uygulama kabuğu, açık yeşil zemin,
-kendi sol rayı, 12 bölüm. Şu an sadece iskelet: ray çalışıyor, tema çalışıyor, genel bakış
-ekranı duruyor. İçerik bölümleri sıradaki adım — mevcut 14 bölüm buraya taşınacak, yeniden
-yazılmayacak.
+kendi sol rayı, **on iki ekranın on ikisi de yazıldı ve gerçek veriyle çalışıyor** — Genel
+Bakış, Kâr & Zarar, Trafik, Öğrenciler, Harcama, Katalog, Araştırma, Topluluk, Moderasyon,
+Sistem, Defter, Ayarlar.
+
+Bunu tarayıcıda tek tek açıp gördüm, koda bakıp varsaymadım. Gece boyunca bu belge
+"şu an sadece iskelet" diyordu; o cümle yazıldığında doğruydu, sabaha kadar doğru kalmadı.
 
 **İçeri girince ilk yapılacak şey: Ayarlar'dan USD/TRY kurunu gir.** Kâr & Zarar ekranı
 kuru bilmeden hesap yapamaz ve şu an dürüstçe `—` "kur ayarlanmamış" gösteriyor. Kuru
