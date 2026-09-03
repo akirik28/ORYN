@@ -207,6 +207,15 @@ gösteriyor, boş bir sayfa ya da hata değil.
 `/admin` yerinde duruyor ve çalışmaya devam ediyor. İkisini yan yana görüp karar ver:
 `/kumanda` doğru yolsa `/admin`'i oraya yönlendiririz.
 
+**Yapmadığım bir şeyi söylemem gerekiyor: görseller.** "Şu yeşil yuvarlaklı görselleri
+ChatGPT'ye tasarlattır" demiştin. ChatGPT'yi buradan çağıramıyorum — başka bir servise
+gidip görsel ürettiremem. Ray ve kartlar şu an ikon kullanıyor, üretilmiş görsel değil.
+
+İki yol var, ikisi de sende: ya sen ChatGPT'de üretip dosyaları verirsin, yerleri hazır;
+ya da biz kendi çizimlerimizi yaparız (kontrol merkezinin grafikleri zaten öyle, dışarıdan
+kütüphane değil, bizim SVG'lerimiz). İkincisini isteyip istemediğini bilmediğim için
+kendiliğimden yapmadım — istediğin ChatGPT'nin çizimiydi, benimki değil.
+
 Not: ikisi de admin olmayana **404** veriyor, yönlendirme değil — panelin var olduğunu
 bile belli etmiyor. Canlıda doğrulandı.
 
