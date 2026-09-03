@@ -274,6 +274,24 @@ from public.parent_links where student_user_id = 'a1000000-0000-0000-0000-000000
 -- ---------------------------------------------------------------------------
 -- 7. Cleanup.
 -- ---------------------------------------------------------------------------
+-- RESET ROLE first -- found by actually running this script (2026-09-04), not by reading it.
+-- Block 6 leaves the session impersonating Alice (`set local role authenticated` + Alice's
+-- own claim), and that persists into this section since nothing here changes it back. Every
+-- statement below then runs AS ALICE, an ordinary authenticated user: the auth.users delete
+-- fails outright ("permission denied for table users" -- authenticated was never granted
+-- anything there, correctly, since real Supabase doesn't grant it either), and the
+-- opportunities delete silently affects 0 rows (RLS-filtered: no delete policy exists for
+-- authenticated on that table, so USING excludes every row without erroring). Both
+-- ___expect_0 assertions below then read against Alice's own restricted view too -- e.g.
+-- remaining_test_profiles undercounts to 1 (only Alice's own row, owner-only SELECT policy)
+-- rather than the real 4, which is a second, independent way the same missing RESET ROLE
+-- produces a misleading result. None of this is a gap in migration 0116's RLS -- it's the
+-- opposite: RLS held even against this script's own cleanup step running unprivileged. The
+-- role this needs is whatever ran section 1's setup (superuser locally; service_role on
+-- Supabase) -- RESET ROLE returns to the session's ORIGINAL authorization, not to a fixed
+-- name, so it works unchanged in both environments.
+reset role;
+
 delete from auth.users where id in (
   'a1000000-0000-0000-0000-000000000001','b2000000-0000-0000-0000-000000000002',
   'c3000000-0000-0000-0000-000000000003','d4000000-0000-0000-0000-000000000004'
