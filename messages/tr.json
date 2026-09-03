@@ -803,6 +803,7 @@
       "internationalFeeNotPublished": "Uluslararası ücret tek bir rakam olarak yayınlanmamış — bölüme göre değişir",
       "programsTitle": "Programlar",
       "programsDescription": "Proxola'nın bu üniversitenin resmi sayfalarına karşı doğruladığı lisans programları.",
+      "programsEmptyMessage": "Bu üniversitenin lisans programları henüz Proxola'nın kayıtlarında yok — bu, program olmadığının değil, araştırmamızdaki bir eksikliğin göstergesi.",
       "researchStrengthsTitle": "Araştırma güçlü yönleri",
       "researchStrengthsDescription": "OpenAlex'in açık araştırma dizininden, bu üniversitenin en çok yayın yaptığı konular.",
       "requirementCheckTitle": "Gereklilik kontrolü",

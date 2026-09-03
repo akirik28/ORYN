@@ -634,10 +634,16 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         />
       ) : null}
 
-      {programsRes.data && programsRes.data.length > 0 ? (
-        <section className="space-y-5">
-          <SectionHeader title={t("programsTitle")} description={t("programsDescription")} />
-          {groupProgramsBySubject(programsRes.data, locale).map(([subject, programs]) => (
+      {/* Was `{programsRes.data && programsRes.data.length > 0 ? <section>...</section> : null}`
+          — for 85.1% of universities (measured live, docs/empty-field-measurement-2026-09-04.md)
+          this section simply didn't exist, no different from having scrolled past where it
+          would be. Same fix, same register, same reasoning as the requirements section
+          immediately below (its own comment there has the fuller account): the section always
+          renders, and an empty result says so rather than disappearing. */}
+      <section className="space-y-5">
+        <SectionHeader title={t("programsTitle")} description={t("programsDescription")} />
+        {programsRes.data && programsRes.data.length > 0 ? (
+          groupProgramsBySubject(programsRes.data, locale).map(([subject, programs]) => (
             <div key={subject} className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground">{subject}</h3>
               <ul className="grid gap-2 sm:grid-cols-2">
@@ -662,9 +668,13 @@ export default async function UniversityDetailPage({ params }: { params: Promise
                 ))}
               </ul>
             </div>
-          ))}
-        </section>
-      ) : null}
+          ))
+        ) : (
+          <p lang={locale} className="max-w-3xl text-sm text-muted-foreground">
+            {t("programsEmptyMessage")}
+          </p>
+        )}
+      </section>
 
       {researchTopics.length > 0 ? (
         <section className="space-y-3">
