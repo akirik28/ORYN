@@ -47,7 +47,7 @@ export default async function DashboardPreviewPage({ searchParams }: { searchPar
   // real accounts to reach each one. Omitted/anything else shows the full five, same as a
   // student with plenty of eligible matches would actually see.
   const stripCount = matchesParam !== undefined ? Math.max(0, Math.min(5, Number(matchesParam) || 0)) : 5;
-  // Reads the real oryn_locale cookie (lib/i18n/locale.ts) rather than hardcoding "en" —
+  // Reads the real proxola_locale cookie (lib/i18n/locale.ts) rather than hardcoding "en" —
   // this preview is the only way to check Turkish rendering without a live account
   // (migration 0089 unapplied, same reason UltraAmbient earns its place here). Was
   // hardcoded to "en" before 2026-09-03's Turkish pass, which silently made every

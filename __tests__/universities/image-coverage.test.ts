@@ -11,8 +11,8 @@ describe("displayTierOf", () => {
     expect(displayTierOf({ hasRealImage: false, hasLogo: true })).toBe("logo_fallback");
   });
 
-  test("falls back to the PROXOLA icon when there's neither", () => {
-    expect(displayTierOf({ hasRealImage: false, hasLogo: false })).toBe("oryn_fallback");
+  test("falls back to the Proxola icon when there's neither", () => {
+    expect(displayTierOf({ hasRealImage: false, hasLogo: false })).toBe("proxola_fallback");
   });
 });
 

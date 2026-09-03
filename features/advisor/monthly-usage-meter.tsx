@@ -96,7 +96,7 @@ export function MonthlyUsageMeter({
       : "0 0 20px -2px rgba(139,92,246,0.55)";
 
   // formatAbsoluteDate, not a bare toLocaleDateString(undefined, ...) — the old call used the
-  // *browser's* locale, entirely independent of the app's own oryn_locale cookie, so this
+  // *browser's* locale, entirely independent of the app's own proxola_locale cookie, so this
   // date could already disagree with a page otherwise rendering in Turkish.
   const resets = formatAbsoluteDate(quota.resetsAt, locale, { month: "short", day: "numeric" });
 

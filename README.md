@@ -1,7 +1,7 @@
-# Oryn
+# Proxola
 
 A Personal Career Operating System for students (roughly ages 14-18) preparing for
-competitive universities and future careers. Oryn captures a student's academic
+competitive universities and future careers. Proxola captures a student's academic
 history, activities, projects, research, and goals; analyzes it into an honest picture of
 strengths and gaps; and tells them — specifically, not generically — what's worth doing
 next.
@@ -108,7 +108,7 @@ npm run build
 than improvising — it covers two blockers that stop a first deploy dead, and both need a
 repository change before you start.
 
-Oryn has not been deployed yet: there is no hosting project, domain, or production
+Proxola has not been deployed yet: there is no hosting project, domain, or production
 database. In short:
 
 - Deploys anywhere Next.js 16 runs; Vercel is the reference target and `vercel.json` is

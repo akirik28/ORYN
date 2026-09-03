@@ -1,4 +1,4 @@
-# How much of Oryn is actually bilingual
+# How much of Proxola is actually bilingual
 
 Run it yourself: `npm run check:i18n` (`scripts/measure-i18n-coverage.ts`). Numbers below
 are that command's output on `main`, 2026-09-01. The founder's requirement is explicit —
@@ -100,7 +100,7 @@ inside a `lang="tr"` subtree: `"Signed in as"` → **`SİGNED İN AS`**, while `
 fix; the fix is only ever needed for the strings still awaiting translation.
 
 **Which means passing `locale` to an element whose text is still English would cause the bug
-rather than prevent it.** `components/oryn/eyebrow.tsx` already documents exactly this and
+rather than prevent it.** `components/proxola/eyebrow.tsx` already documents exactly this and
 defaults to English for that reason — "a caller that translates `children` should pass the
 locale it translated to." Audited all five call sites that pass `locale`, plus every
 `ProfileSignal` caller, whose `heading` defaults to the English `"Profile signal"`: every one

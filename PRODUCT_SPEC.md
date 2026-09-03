@@ -8,7 +8,7 @@ two disagree on a detail, AGENTS.md wins.
 
 > What should I do next to improve my future opportunities?
 
-Oryn should answer this specifically, for this student, based on their actual
+Proxola should answer this specifically, for this student, based on their actual
 profile — not with generic advice that would apply to anyone.
 
 ## What it is / isn't
@@ -21,7 +21,7 @@ chatbot with a dashboard attached, and — per V1 scope, see below — not a soc
 
 ## V1 social scope (added 2026-08-15, see `docs/product-decisions.md`)
 
-Oryn is broadening toward an "Operating System for Ambitious Students" — counseling,
+Proxola is broadening toward an "Operating System for Ambitious Students" — counseling,
 career guidance, opportunity discovery, a professional network layer, and AI next-best-
 action — but V1's social surface is deliberately narrow: an optionally-shareable profile
 (off by default), mutual-consent connections (request → accept, not an open follow), and

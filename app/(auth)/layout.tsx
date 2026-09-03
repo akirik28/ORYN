@@ -18,7 +18,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
   return (
     // Figma source (AuthFlow.tsx `Signup`/`Login`/`ForgotPassword`) — all three render
     // this identical gradient + translucent card, so it's transplanted once here rather
-    // than duplicated per page. Real logo (unmodified) in place of source's OrynMark.
+    // than duplicated per page. Real logo (unmodified) in place of source's ProxolaMark.
     <div
       className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden px-4 py-12"
       style={{ background: "linear-gradient(145deg, #DDDAF5 0%, #D4DBF0 100%)" }}

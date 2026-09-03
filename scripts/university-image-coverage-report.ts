@@ -65,7 +65,7 @@ async function main(): Promise<void> {
   );
   const hasRealImage = new Set(urlRows.map((r) => r.university_id));
 
-  const displayCounts: Record<DisplayTier, number> = { real_verified: 0, logo_fallback: 0, oryn_fallback: 0 };
+  const displayCounts: Record<DisplayTier, number> = { real_verified: 0, logo_fallback: 0, proxola_fallback: 0 };
   const pipelineCounts = { real: 0, needsReview: 0, noCandidate: 0 };
   const rejectionCounts = new Map<RejectionCategory, number>();
   const needsReviewByUniversity: { name: string; reason: RejectionCategory; notes: string | null }[] = [];
@@ -90,7 +90,7 @@ async function main(): Promise<void> {
     }
   }
 
-  const displaySafeTotal = displayCounts.real_verified + displayCounts.logo_fallback + displayCounts.oryn_fallback;
+  const displaySafeTotal = displayCounts.real_verified + displayCounts.logo_fallback + displayCounts.proxola_fallback;
 
   console.log(`Total live universities: ${live.length}\n`);
 
@@ -98,7 +98,7 @@ async function main(): Promise<void> {
   console.log(`  Display-safe: ${displaySafeTotal}/${live.length}`);
   console.log(`  Real verified image:  ${displayCounts.real_verified}`);
   console.log(`  Official logo fallback: ${displayCounts.logo_fallback}`);
-  console.log(`  PROXOLA branded fallback:  ${displayCounts.oryn_fallback}`);
+  console.log(`  Proxola branded fallback:  ${displayCounts.proxola_fallback}`);
   console.log(`  Broken: 0 (every write is HEAD-verified before being stored — see verifyPublicUrlServes)\n`);
 
   console.log(`PIPELINE STATUS (internal — what still needs follow-up work):`);

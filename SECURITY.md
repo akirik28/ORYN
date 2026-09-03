@@ -1,6 +1,6 @@
 # Security
 
-Oryn's primary users may be minors (roughly 14-18). This document describes what's
+Proxola's primary users may be minors (roughly 14-18). This document describes what's
 actually implemented, and is explicit about what still needs professional legal review
 before a public launch — see "Known gaps" at the end.
 

@@ -33,7 +33,7 @@ import type { PlanTier } from "@/types/database";
  * silently re-enable this in a production build. Same gate as every /design-preview/* route
  * already uses in this codebase (`if (process.env.NODE_ENV === "production") notFound()`).
  */
-export const DEV_TIER_PREVIEW_COOKIE = "oryn_dev_tier_preview";
+export const DEV_TIER_PREVIEW_COOKIE = "proxola_dev_tier_preview";
 
 export function isDevTierPreviewAllowed(): boolean {
   return process.env.NODE_ENV !== "production";

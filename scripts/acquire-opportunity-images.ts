@@ -588,7 +588,7 @@ async function main(): Promise<void> {
   );
 
   const contactEmail = process.env.OPENALEX_CONTACT_EMAIL;
-  const userAgent = `Oryn-ImageAcquisition/1.0 (https://oryn.app${contactEmail ? `; ${contactEmail}` : ""}) node`;
+  const userAgent = `Proxola-ImageAcquisition/1.0 (https://proxola.com${contactEmail ? `; ${contactEmail}` : ""}) node`;
   const fetchImpl = withUserAgent(withRetry(timedFetch(FETCH_TIMEOUT_MS), 1), userAgent);
   const retrievedAt = new Date().toISOString().slice(0, 10);
 

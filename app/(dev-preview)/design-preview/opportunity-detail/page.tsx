@@ -71,7 +71,7 @@ const TAKE_SENTENCES: Record<string, string> = {
 export default async function OpportunityDetailPreviewPage() {
   if (process.env.NODE_ENV === "production") notFound();
 
-  // Reads the real oryn_locale cookie rather than hardcoding "en" — see
+  // Reads the real proxola_locale cookie rather than hardcoding "en" — see
   // design-preview/dashboard/page.tsx's own comment on this exact class of bug. Note this
   // page also doesn't thread ?tier= to PreviewShell at all (defaults to "standard", no
   // toggle effect) — a separate, pre-existing gap, out of scope for this fix.

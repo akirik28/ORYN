@@ -117,7 +117,7 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
 
   const { tier: tierParam, requirements: requirementsParam } = await searchParams;
   const tier = tierParam === "ultra" ? "ultra" : "standard";
-  // Reads the real oryn_locale cookie rather than hardcoding "en" — see
+  // Reads the real proxola_locale cookie rather than hardcoding "en" — see
   // design-preview/dashboard/page.tsx's own comment on this exact class of bug.
   const locale: Locale = await resolveLocale();
   const t = (await getTranslations("universities.detail")) as Translator;
