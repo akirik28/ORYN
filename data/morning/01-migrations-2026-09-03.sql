@@ -3,8 +3,11 @@
 -- yaparak belirlendi — her migration'ın kendi tablosu/sütunu information_schema'da tek tek
 -- arandı, migration listesine güvenilmedi (bu projede o liste güvenilmez).
 --
--- 0083-0089, 0091 ve 0092 UYGULANMIŞ. Aşağıdaki 13 tanesi uygulanmamış. 0090 ve 0093 bu
--- geceden değil, gözden kaçmışlar; kalanı gece boyunca yazıldı.
+-- 0083-0089, 0091 ve 0092 UYGULANMIŞ. Aşağıdakiler 13 migration ama **12'si yeni**:
+-- 0090 canlıda ZATEN UYGULANMIŞ (6e doğruladı — yedi notify_* sütununun hepsi yerinde).
+-- Dosyada duruyor çünkü baştan sona "IF NOT EXISTS" kullanıyor, yani tekrar çalışması
+-- zararsız. Benim önceki başlığım 13'ünün de uygulanmamış olduğunu söylüyordu; yanlıştı.
+-- 0093 bu geceden değil, gözden kaçmış; kalanı gece boyunca yazıldı.
 --
 -- TEK İŞLEM: hepsi BEGIN/COMMIT arasında. Biri patlarsa HİÇBİRİ uygulanmaz ve dosyayı
 -- tekrar çalıştırmak güvenli olur. Bilerek: birkaçı "IF NOT EXISTS" kullanmıyor, yani
@@ -797,19 +800,31 @@ alter table public.profiles add column ultra_gift_granted_at timestamptz;
 COMMIT;
 
 -- ── DOĞRULAMA — ayrıca çalıştır, 13 satır da true olmalı ─────────────
+--
+-- ÜÇÜ TABLO DEĞİL SÜTUN KONTROL EDER. 0090, 0093 ve 0104 mevcut `profiles` tablosuna
+-- sütun ekliyor, yeni tablo yaratmıyor. Önceki sürüm üçünü de tablo diye arıyordu, yani
+-- her şey mükemmel gitse bile 2 satır kırmızı dönerdi ve sen bir şeyin patladığını
+-- sanırdın. 6e canlıda çalıştırıp gösterdi: 11/13 true, tam da o ikisi false.
 select t.beklenen, coalesce((
   select count(*) > 0 from information_schema.tables it
   where it.table_schema = 'public' and it.table_name = t.beklenen
 ), false) as uygulanmis
 from (values
-  ('notification_preferences'), ('upgrade_prompt_dismissals'), ('admin_finance_settings'),
-  ('job_controls'), ('quota_grants'), ('admin_action_log'), ('admin_actions'),
-  ('job_budget_overrides'), ('ai_model_pricing'), ('admin_dead_feature_flags'),
-  ('weekly_plan_budget_settings'), ('opportunity_verification_runs')
+  ('admin_finance_settings'), ('job_controls'), ('quota_grants'), ('admin_action_log'),
+  ('admin_actions'), ('job_budget_overrides'), ('ai_model_pricing'),
+  ('admin_dead_feature_flags'), ('weekly_plan_budget_settings'),
+  ('opportunity_verification_runs')
 ) as t(beklenen)
 union all
-select 'profiles.ultra_gift_granted_at (0104)', exists(
-  select 1 from information_schema.columns
-  where table_schema = 'public' and table_name = 'profiles' and column_name = 'ultra_gift_granted_at'
-)
+select 'profiles.notify_deadline (0090)',
+       exists(select 1 from information_schema.columns where table_schema='public'
+              and table_name='profiles' and column_name='notify_deadline')
+union all
+select 'profiles.upgrade_prompt_not_now_at (0093)',
+       exists(select 1 from information_schema.columns where table_schema='public'
+              and table_name='profiles' and column_name='upgrade_prompt_not_now_at')
+union all
+select 'profiles.ultra_gift_granted_at (0104)',
+       exists(select 1 from information_schema.columns where table_schema='public'
+              and table_name='profiles' and column_name='ultra_gift_granted_at')
 order by uygulanmis, beklenen;

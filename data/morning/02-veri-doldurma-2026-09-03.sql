@@ -38,7 +38,7 @@
 -- eklediğim şeyler (korumalar, sıra, işlem komutlarının çıkarılması) yukarıdaki üç yolla
 -- kontrol edildi, bütünsel bir deneme çalıştırmayla değil.
 --
--- 8. bölüm (34 kayıt) paket kurulduktan SONRA geldi ve sonradan eklendi. Bunu bir
+-- 8. bölüm (30 kayıt) paket kurulduktan SONRA geldi ve sonradan eklendi. Bunu bir
 -- doğrulama yakalamadı: ilk kontrolüm kaynak dosyadan ayırt edici bir metin çıkarmaya
 -- çalıştı, çıkarma başarısız oldu, ve BOŞ bir dizgeyi aradığı için "var" dedi. Bölüm
 -- başlıklarını saymak yakaladı. Boş bir sonucun her şeyle eşleşmesi, bu gecenin
@@ -1263,7 +1263,7 @@ where id = '79117533-f7d0-4319-8636-16cbe9864673';
 
 
 -- ══════════════════════════════════════════════════════════════════
--- 8) Ham kazıma metinlerinin yeniden yazımı — 34 kayıt
+-- 8) Ham kazıma metinlerinin yeniden yazımı — 30 kayıt (sayıldı, 6e doğruladı)
 -- ══════════════════════════════════════════════════════════════════
 -- Raw-scrape description prose rewrite — staged cleanup
 -- 2026-09-03, oryn-bd, branch docs/scrape-description-prose-rewrite-2026-09-03
