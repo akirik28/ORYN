@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, TargetUniversity, University } from "@/types/database";
 import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
+import { deriveTuitionContext, type CounselingTuitionFigure } from "@/lib/universities/counseling-adapter";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
 import { isOutlookStale } from "@/lib/admissions/staleness";
 
@@ -90,6 +91,75 @@ export async function getAllCostOfAttendance(supabase: SupabaseClient<Database>)
   }
   if (seen !== expectedTotal) {
     throw new Error(`getAllCostOfAttendance: assembled ${seen} rows but the server counts ${expectedTotal}. Refusing to return a partial result.`);
+  }
+  return result;
+}
+
+/**
+ * Every university with a resolvable annual tuition figure from either source
+ * deriveTuitionContext prioritizes — cost_of_attendance (university_statistics) first, then
+ * university_profile_metrics' tuition_international_annual/tuition_domestic_annual — merged
+ * through that exact same priority function, so a university that resolves to a number here is
+ * guaranteed to be the same figure (or absence) its browse card and the compare page already
+ * show it. Built for the cost-bucket filter (lib/universities/filters.ts's COST_BUCKETS /
+ * applyRangeFilters), which until 2026-09-03 read getAllCostOfAttendance alone and so silently
+ * classified every university whose only tuition figure lives in university_profile_metrics —
+ * live-verified at 166 of 1010 non-superseded universities, zero overlap with the
+ * cost_of_attendance set — as "cost unknown," alongside the ones that genuinely have no cost
+ * data at all.
+ *
+ * getAllCostOfAttendance itself is left unchanged and untouched: it still answers "what is this
+ * university's recorded cost_of_attendance," a narrower and still-correct question its own
+ * (unrelated) callers keep asking directly, without paying for a three-source resolution they
+ * don't need.
+ *
+ * Paginated + exact-count-verified the same way — 296 tuition_domestic_annual/
+ * tuition_international_annual rows today (a university can have both, e.g. a domestic and an
+ * international figure on the same UK-style institution), comfortably under PostgREST's 1000-row
+ * cap for now but built paginated from the start rather than waiting to hit it, same rationale
+ * as every other function in this file.
+ */
+export async function getAllResolvedTuitionAmounts(supabase: SupabaseClient<Database>): Promise<Map<string, number>> {
+  const costOfAttendanceById = await getAllCostOfAttendance(supabase);
+
+  const internationalById = new Map<string, CounselingTuitionFigure>();
+  const domesticById = new Map<string, CounselingTuitionFigure>();
+  let offset = 0;
+  let expectedTotal: number | null = null;
+  let seen = 0;
+  for (;;) {
+    const { data, count, error } = await supabase
+      .from("university_profile_metrics")
+      .select("university_id, metric_code, value_numeric, unit, precision_state", { count: "exact" })
+      .in("metric_code", ["tuition_domestic_annual", "tuition_international_annual"])
+      .not("value_numeric", "is", null)
+      .order("university_id", { ascending: true })
+      .range(offset, offset + PAGE_SIZE - 1);
+    if (error) throw new Error(`getAllResolvedTuitionAmounts: ${error.message}`);
+    if (expectedTotal === null) expectedTotal = count ?? 0;
+    for (const row of data ?? []) {
+      if (row.value_numeric == null) continue;
+      const figure: CounselingTuitionFigure = { amount: row.value_numeric, unit: row.unit, precisionState: row.precision_state };
+      if (row.metric_code === "tuition_international_annual") internationalById.set(row.university_id, figure);
+      else domesticById.set(row.university_id, figure);
+    }
+    seen += (data ?? []).length;
+    if (!data || data.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+  if (seen !== expectedTotal) {
+    throw new Error(`getAllResolvedTuitionAmounts: assembled ${seen} rows but the server counts ${expectedTotal}. Refusing to return a partial result.`);
+  }
+
+  const result = new Map<string, number>();
+  const allIds = new Set([...costOfAttendanceById.keys(), ...internationalById.keys(), ...domesticById.keys()]);
+  for (const id of allIds) {
+    const rawAmount = deriveTuitionContext({
+      costOfAttendance: costOfAttendanceById.get(id) ?? null,
+      internationalTuition: internationalById.get(id) ?? null,
+      domesticTuition: domesticById.get(id) ?? null,
+    }).rawAmount;
+    if (rawAmount != null) result.set(id, rawAmount);
   }
   return result;
 }

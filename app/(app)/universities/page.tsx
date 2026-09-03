@@ -17,7 +17,7 @@ import { UniversitySearchBox } from "@/features/universities/university-search-b
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { regionById, regionLabel } from "@/lib/data/regions";
 import { getSupersededUniversityIds, loadSupersessionMap } from "@/lib/universities/canonical";
-import { getUniversityCountByCountry, getAllCostOfAttendance, getAllQsListPositions, getAllResearchDepthUniversityIds } from "@/lib/universities/queries";
+import { getUniversityCountByCountry, getAllResolvedTuitionAmounts, getAllQsListPositions, getAllResearchDepthUniversityIds } from "@/lib/universities/queries";
 import { formatNumber } from "@/lib/i18n/format";
 import {
   COST_BUCKETS,
@@ -136,7 +136,7 @@ export default async function UniversitiesPage({
   // side size limit: a live test against this project during this build showed `.in()` starting
   // to fail (Bad Request / connection reset) somewhere around 400-700 uuids, well under the
   // ~1019 universities a "World" scope can produce. A rank filter alone ("Top 500") can already
-  // exceed that on its own. Fetching the full column once (paginated, see getAllCostOfAttendance/
+  // exceed that on its own. Fetching the full column once (paginated, see getAllResolvedTuitionAmounts/
   // getAllQsListPositions) and intersecting client-side avoids the limit entirely, at the cost
   // of one extra small query when these filters (or Ranking sort) are actually in use.
   const needsQsRankMap = !q && (sort === "ranking" || rank !== null);
@@ -144,7 +144,7 @@ export default async function UniversitiesPage({
   // profile" card badge on every page regardless of whether the filter itself is active,
   // not just the filtered-narrowing path.
   const [costMap, qsRankMap, depthIds] = await Promise.all([
-    cost ? getAllCostOfAttendance(supabase) : Promise.resolve(null),
+    cost ? getAllResolvedTuitionAmounts(supabase) : Promise.resolve(null),
     needsQsRankMap ? getAllQsListPositions(supabase) : Promise.resolve(null),
     getAllResearchDepthUniversityIds(supabase),
   ]);
