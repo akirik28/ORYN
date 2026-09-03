@@ -441,7 +441,21 @@ describe("migration numbering", () => {
     // qualifications the fixed 6-value enum can't name -- this migration doesn't add those
     // enum values (a separate, priced, not-yet-decided piece of work), only the free text so
     // "other" stops being a value that captures nothing. Proposed, not applied.
-    expect(Math.max(...numbers.map(Number))).toBe(109);
+    //
+    // 0110 (advisor_conversation_retention) -- claimed 0109 first, on the belief a different
+    // lane (piece 1 of the same özelleşme spec, advisor_instructions on profiles) had already
+    // taken it; rebasing here found the real 0109 was this curriculum column pair instead,
+    // from a third lane neither of us knew about. Renumbered to 110 on rebase, not assumed --
+    // exactly the "check every remote branch, not just this worktree's own listing" discipline
+    // this comment block has been asking for since the 0075/0076 collision above. summary/
+    // summarized_at on advisor_conversations plus an append-only audit table, for the 24-hour
+    // inactivity retention rule (docs/ozellesme-spec-2026-09-03.md §3, founder decision).
+    // Purely additive, no backfill. The job that would actually read and delete real messages
+    // is built separately (lib/advisor/retention.ts) and stays off -- the spec is explicit
+    // this "cannot be implemented before the privacy notice says so," and LEGAL_REVIEW.md §3
+    // item 5 lists retention as an open policy question. This migration is preparation for
+    // that decision, not an implementation of it.
+    expect(Math.max(...numbers.map(Number))).toBe(110);
   });
 });
 

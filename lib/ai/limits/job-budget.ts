@@ -37,7 +37,7 @@ import { tryCreateAdminClient } from "@/lib/supabase/admin";
  *       spend, not a new invention for this file.
  */
 
-export type JobBudgetFeature = "opportunity_extraction" | "requirement_extraction" | "opportunity_reverification";
+export type JobBudgetFeature = "opportunity_extraction" | "requirement_extraction" | "opportunity_reverification" | "advisor_conversation_retention";
 
 function envBudgetUsd(envVar: string, defaultUsd: number): number {
   const raw = process.env[envVar];
@@ -86,11 +86,27 @@ function envBudgetUsd(envVar: string, defaultUsd: number): number {
  * daily cadence, ≤$3.50/month even doubling every input. $5 is ~3–4× that estimate — the
  * same "headroom for the number to be wrong without moving the ceiling" reasoning already
  * used for the other two, sized down to match this job's genuinely smaller usage.
+ *
+ * advisor_conversation_retention: docs/ozellesme-spec-2026-09-03.md §3's own explicit ask
+ * ("if summarising should be cheaper than the advisor itself, pick accordingly and say so")
+ * — this uses claude-haiku-4-5 deliberately, not the student advisor's default model
+ * (see lib/advisor/retention.ts). A realistic conversation reaching 24h-idle (not the
+ * MAX_HISTORY_TURNS=40 ceiling, which almost nothing hits) — call it ~15 messages,
+ * ~300 chars each — is roughly 1,300 input tokens (content + a short system prompt) and a
+ * concise ~200-token summary output. At Haiku pricing ($1/$5 per M, lib/ai/pricing.ts) that's
+ * ≈$0.0023/call, under a sixth of opportunity_reverification's own per-call adjudication
+ * cost. Real volume is NOT measured — this feature has never run — and today's live
+ * `advisor_conversations` count is 5 rows total across 3 students (queried 2026-09-03), too
+ * small to extrapolate a monthly rate from honestly. $3 buys roughly 1,300 calls/month at
+ * this rate — headroom against a real runaway, not a projection from real usage that doesn't
+ * exist yet. Revisit once this job has actually run and ai_usage has real rows to check
+ * against, same discipline the other two estimates above already ask for.
  */
 export const JOB_BUDGET_USD: Record<JobBudgetFeature, number> = {
   opportunity_extraction: envBudgetUsd("AI_JOB_BUDGET_OPPORTUNITY_EXTRACTION_USD", 25),
   requirement_extraction: envBudgetUsd("AI_JOB_BUDGET_REQUIREMENT_EXTRACTION_USD", 15),
   opportunity_reverification: envBudgetUsd("AI_JOB_BUDGET_OPPORTUNITY_REVERIFICATION_USD", 5),
+  advisor_conversation_retention: envBudgetUsd("AI_JOB_BUDGET_ADVISOR_CONVERSATION_RETENTION_USD", 3),
 };
 
 export type JobBudgetReason = "under_budget" | "over_budget" | "unknown_cost_this_month" | "usage_unavailable";
