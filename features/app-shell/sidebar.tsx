@@ -88,7 +88,7 @@ export function Sidebar({
   return (
     <aside className="tier-sidebar-surface sticky top-0 hidden h-svh w-[214px] shrink-0 flex-col lg:flex">
       <Link href="/dashboard" aria-label={t("homeLink")} className="flex items-center gap-2.5 px-5 pt-[26px] pb-5">
-        <Image src="/brand/logo-full.png" alt="Proxola" width={100} height={31} priority className="h-6 w-auto" />
+        <Image src="/brand/logo-full.png" alt="Proxola" width={110} height={36} priority className="h-9 w-auto" />
       </Link>
 
       <nav aria-label={t("primaryLandmark")} className="flex flex-1 flex-col gap-px overflow-y-auto px-2.5">

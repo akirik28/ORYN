@@ -16,7 +16,7 @@ export default async function RootNotFound() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-8 px-4 py-12">
       <Link href="/">
-        <Image src="/brand/logo-full.png" alt="Proxola" width={113} height={35} priority className="h-8 w-auto" />
+        <Image src="/brand/logo-full.png" alt="Proxola" width={135} height={44} priority className="h-11 w-auto" />
       </Link>
       <EmptyState
         icon={SearchX}
