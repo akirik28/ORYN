@@ -22,13 +22,17 @@ canlıda doğrulandı).
 
 ## 2. Migration'ları uygula
 
-`01-migrations-2026-09-03.sql` — tamamını yapıştır, çalıştır. **On üç migration ama on
-ikisi yeni** — 0090 canlıda zaten uygulanmış, dosyada duruyor çünkü tekrar çalışması
+`01-migrations-2026-09-03.sql` — tamamını yapıştır, çalıştır. **On beş migration ama on
+dördü yeni** — 0090 canlıda zaten uygulanmış, dosyada duruyor çünkü tekrar çalışması
 zararsız. Hepsi tek
 işlem içinde. Bir tanesi patlarsa hiçbiri uygulanmaz ve tekrar çalıştırmak güvenli.
 
 Sıra kesintisiz. Bir ara 0101 eksikti — sahibi oturum push edemiyordu — ama engel kalktı
 ve iş birleşti. **Yani sabaha bekleyen bir engel kalmadı.**
+
+Sonuncu ikisi gece bitiminde geldi: yeni kayıtları kapatma, bakım modu ve deneme süresi
+ayarları. **Üçü de güvenli varsayılanla geliyor** — kayıt açık, bakım kapalı, deneme 7 gün.
+Uyguladığın an hiçbir şey kapanmıyor.
 
 **Bu adım olmadan panelin yazma tarafı çalışmaz.** Ultra yapma, hediye etme, iş durdurma,
 bütçe ayarlama — hepsi bu migration'lara bağlı. Panel bunları dürüstçe "kurulu değil"

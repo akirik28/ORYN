@@ -1,25 +1,26 @@
 -- ORYN — sabah paketi 1/2: uygulanmamış migration'lar
--- Yeniden oluşturuldu: 2026-09-03 06:00. Kapsam canlıya (qtcvcflzxbuagvvwahhu) okuma
+-- Yeniden oluşturuldu: 2026-09-03 09:00. Kapsam canlıya (qtcvcflzxbuagvvwahhu) okuma
 -- yaparak belirlendi — her migration'ın kendi tablosu/sütunu information_schema'da tek tek
 -- arandı, migration listesine güvenilmedi (bu projede o liste güvenilmez).
 --
--- 0083-0089, 0091 ve 0092 UYGULANMIŞ. Aşağıdakiler 13 migration ama **12'si yeni**:
+-- 0083-0089, 0091 ve 0092 UYGULANMIŞ. Aşağıda 15 migration var ama **14'ü yeni**:
 -- 0090 canlıda ZATEN UYGULANMIŞ (6e doğruladı — yedi notify_* sütununun hepsi yerinde).
--- Dosyada duruyor çünkü baştan sona "IF NOT EXISTS" kullanıyor, yani tekrar çalışması
--- zararsız. Benim önceki başlığım 13'ünün de uygulanmamış olduğunu söylüyordu; yanlıştı.
--- 0093 bu geceden değil, gözden kaçmış; kalanı gece boyunca yazıldı.
+-- Dosyada duruyor çünkü baştan sona "IF NOT EXISTS" kullanıyor, tekrarı zararsız.
+--
+-- SIRA ÖNEMLİ: 0104 `ultra_gift_granted_at` sütununu yaratıyor, 0106 onu
+-- `ultra_gift_expires_at` diye yeniden adlandırıyor. İkisi de uygulanmamış olduğu için
+-- ikisini sırayla çalıştırmak doğru sonucu veriyor; 0106'yı tek başına çalıştırma.
 --
 -- TEK İŞLEM: hepsi BEGIN/COMMIT arasında. Biri patlarsa HİÇBİRİ uygulanmaz ve dosyayı
--- tekrar çalıştırmak güvenli olur. Bilerek: birkaçı "IF NOT EXISTS" kullanmıyor, yani
--- yarısı uygulanmış bir durumda ikinci deneme patlardı. Postgres'te DDL geri alınabilir;
--- hiçbirinde kendi BEGIN/COMMIT'i ya da CONCURRENTLY yok (kontrol edildi).
+-- tekrar çalıştırmak güvenli olur. Postgres'te DDL geri alınabilir; hiçbirinde kendi
+-- BEGIN/COMMIT'i ya da CONCURRENTLY yok (kontrol edildi).
 --
--- 0103 yeni bir işi KURAR ama ÇALIŞTIRMAZ: zamanlayıcı kapalı, kayıt düşürme kapalı.
--- 0104 paneldeki "1 hafta Ultra hediye et" düğmesinin dayandığı sütun — o olmadan düğme
--- görünür ama iş görmez.
+-- 0103 yeni bir işi KURAR ama ÇALIŞTIRMAZ: zamanlayıcı kapalı, düşürme kapalı.
+-- 0105 kayıt/bakım modu/deneme süresi ayarlarını kurar — üçü de güvenli varsayılanla gelir
+-- (kayıt açık, bakım kapalı, deneme 7 gün). Hiçbiri kendiliğinden bir şeyi kapatmaz.
 --
--- NASIL: Supabase SQL Editor'e tamamını yapıştır, Run. Sonundaki doğrulamada 13 satır da
--- "uygulanmis = true" dönmeli.
+-- NASIL: Supabase SQL Editor'e tamamını yapıştır, Run. Sonundaki doğrulama 15 satır döner,
+-- hepsi true olmalı.
 
 BEGIN;
 
@@ -797,14 +798,109 @@ alter table public.opportunity_verification_runs enable row level security;
 alter table public.profiles add column ultra_gift_granted_at timestamptz;
 
 
+-- ══════════════════════════════════════════════════════════════════
+-- MIGRATION 0105_admin_product_settings.sql
+-- ══════════════════════════════════════════════════════════════════
+
+-- The three Ayarlar controls the plan doc named that had no mechanism anywhere
+-- (docs/kumanda-merkezi-yapi-plani-2026-09-03.md; oryn-31 shipped that screen honest about
+-- the gap rather than rendering switches that do nothing). Singleton, not a generic
+-- key-value settings table -- same reasoning as admin_finance_settings (0094), whose own
+-- header comment this one matches deliberately: exactly three known settings, all typed,
+-- named columns, no generic settings table exists anywhere in this schema to extend
+-- instead. A distinct table from admin_finance_settings rather than three more columns on
+-- it -- this is product/access configuration, not money, and finance's own header comment
+-- already reasons that a new settings category gets its own table, not a shared one.
+--
+-- All three columns are `not null default <current behavior>`, unlike admin_finance_settings'
+-- usd_try_rate (which has no safe default and is deliberately nullable) -- every one of
+-- these three already has a real, known-correct value today: signups are open, there is no
+-- maintenance mode, and the trial period has been a hardcoded 7 everywhere it's checked
+-- (ULTRA_GIFT_DURATION_DAYS, lib/tier/plan-tier.ts, before this migration). That means the
+-- unapplied-migration default and the pre-migration behavior are identical by construction
+-- -- reading this table before it exists changes nothing about how the product behaves.
+--
+-- One shared updated_at/updated_by for the whole row, not per-field like admin_finance_settings'
+-- two independent timestamps -- that file needed per-field staleness because the rate and
+-- price are independently meaningful facts an admin might set at different times for
+-- different reasons. These three are toggles/a single number on one "how open is the
+-- product right now" screen; nothing downstream needs to know which of the three changed
+-- most recently.
+create table public.admin_product_settings (
+  id uuid primary key,
+  signups_enabled boolean not null default true,
+  maintenance_mode boolean not null default false,
+  trial_period_days integer not null default 7 check (trial_period_days > 0),
+  updated_by uuid references auth.users(id) on delete set null,
+  updated_at timestamptz not null default now()
+);
+
+comment on table public.admin_product_settings is
+  'Singleton settings row for the control centre''s Ayarlar screen (2026-09-03). Application code always reads/writes the one row at id = 00000000-0000-0000-0000-000000000002 (ADMIN_PRODUCT_SETTINGS_ID in lib/admin/queries.ts) -- no code path inserts a second row. Distinct id from admin_finance_settings'' 00000000-0000-0000-0000-000000000001 so the two singletons can never collide.';
+comment on column public.admin_product_settings.signups_enabled is
+  'Gates app/(auth)/actions.ts''s signUp() itself, not just the signup page''s UI -- a student mid-onboarding or an existing account signing back in is unaffected either way, this only blocks a brand-new supabase.auth.signUp() call from happening at all.';
+comment on column public.admin_product_settings.maintenance_mode is
+  'Gates app/(app)/layout.tsx, the authenticated student shell -- deliberately NOT app/(admin)/layout.tsx, which is its own route group with its own layout and is never touched by this flag by construction. No admin exemption inside the check itself either: a check that treats the checker specially stops being a check, and the panel is already reachable regardless (oryn-a7, 2026-09-03).';
+comment on column public.admin_product_settings.trial_period_days is
+  'Read by grantUltraGift (app/(app)/admin/actions.ts) at the moment a gift is granted, and stored as that student''s own ultra_gift_expires_at (migration 0106) -- changing this number going forward only affects gifts granted after the change, never one already in progress.';
+
+-- Admin-only, same posture as admin_finance_settings and every other operational-config
+-- table this project has (0013_ops.sql''s provider_health/external_sync_jobs/ai_usage) --
+-- NOT `alter table ... enable row level security`, matching admin_finance_settings' own
+-- explicit choice: no RLS, no policies, unreachable from anon/authenticated roles because
+-- no GRANT exists for those roles, the same outcome an enabled-but-policy-less table would
+-- produce, without inventing an is_admin(uuid) SQL function this schema doesn't have.
+-- Read from two request paths with no admin session (app/(app)/layout.tsx for any
+-- authenticated student, app/(auth)/actions.ts's signUp() before any session exists at
+-- all) via the service-role client precisely because this data is operational
+-- configuration, not a privileged secret, and every other settings singleton in this
+-- schema already reads that way rather than through a per-consumer RLS policy invented
+-- just for this table.
+
+
+-- ══════════════════════════════════════════════════════════════════
+-- MIGRATION 0106_ultra_gift_expires_at.sql
+-- ══════════════════════════════════════════════════════════════════
+
+-- Redefines migration 0104's ultra_gift_granted_at into ultra_gift_expires_at -- safe as a
+-- plain rename because 0104 has never been applied to a live database (this project's own
+-- write-then-leave-unapplied discipline), so there is no existing row's value whose meaning
+-- would silently change underneath it.
+--
+-- Why the meaning has to change, not just the name: 0104 computed a gift's expiry as
+-- granted_at + a hardcoded ULTRA_GIFT_DURATION_DAYS constant. Migration 0105
+-- (admin_product_settings.trial_period_days) makes that duration admin-configurable --
+-- and resolvePlanTier (lib/tier/plan-tier.ts) is a synchronous function with roughly thirty
+-- call sites across this app, none of which have a settings read threaded through them, so
+-- it cannot become "async, fetch trial_period_days, then compare" without a much larger and
+-- unasked-for change. Storing the already-computed expiry instead keeps resolvePlanTier
+-- exactly as simple and synchronous as it already was -- it only ever needs today's date and
+-- this one column, never today's configured trial length. The settings table is read
+-- exactly once per grant, inside grantUltraGift, at the one moment a duration actually needs
+-- deciding -- not on every tier check across the app.
+--
+-- This also fixes the product behavior, not just the architecture: a trial-length change now
+-- only affects gifts granted after it, never retroactively shortens or lengthens a gift
+-- already promised to a student mid-week. Storing granted_at + a mutable global constant
+-- would have gotten that wrong by construction.
+--
+-- "Once per person" is unaffected by the rename -- still enforced by this column never being
+-- cleared once set, forever, independent of whether the stored moment is in the past
+-- (expired) or the future (active).
+alter table public.profiles rename column ultra_gift_granted_at to ultra_gift_expires_at;
+
+comment on column public.profiles.ultra_gift_expires_at is
+  'Migration 0106 (renamed+redefined from 0104''s ultra_gift_granted_at), written not applied — when this student''s one-time 7-day-by-default Ultra gift stops being active, or null if never granted. Never cleared once set: this is the "once per person" record (lib/tier/plan-tier.ts''s resolvePlanTier reads it directly, comparing against now()), not a flag that resets when the gift lapses. An absent/unreadable value reads as "never granted," same convention as plan_tier/response_mode elsewhere on this table.';
+
+
 COMMIT;
 
--- ── DOĞRULAMA — ayrıca çalıştır, 13 satır da true olmalı ─────────────
+-- ── DOĞRULAMA — ayrıca çalıştır, 15 satır da true olmalı ─────────────
 --
--- ÜÇÜ TABLO DEĞİL SÜTUN KONTROL EDER. 0090, 0093 ve 0104 mevcut `profiles` tablosuna
--- sütun ekliyor, yeni tablo yaratmıyor. Önceki sürüm üçünü de tablo diye arıyordu, yani
--- her şey mükemmel gitse bile 2 satır kırmızı dönerdi ve sen bir şeyin patladığını
--- sanırdın. 6e canlıda çalıştırıp gösterdi: 11/13 true, tam da o ikisi false.
+-- DÖRDÜ TABLO DEĞİL SÜTUN KONTROL EDER. 0090, 0093, 0105 ve 0106 mevcut tablolara sütun
+-- ekliyor ya da adlandırıyor, yeni tablo yaratmıyor. Önceki bir sürüm hepsini tablo diye
+-- arıyordu, yani her şey mükemmel gitse bile satırlar kırmızı dönerdi ve bir şeyin
+-- patladığını sanırdın. 6e canlıda çalıştırıp gösterdi.
 select t.beklenen, coalesce((
   select count(*) > 0 from information_schema.tables it
   where it.table_schema = 'public' and it.table_name = t.beklenen
@@ -813,18 +909,15 @@ from (values
   ('admin_finance_settings'), ('job_controls'), ('quota_grants'), ('admin_action_log'),
   ('admin_actions'), ('job_budget_overrides'), ('ai_model_pricing'),
   ('admin_dead_feature_flags'), ('weekly_plan_budget_settings'),
-  ('opportunity_verification_runs')
+  ('opportunity_verification_runs'), ('admin_product_settings')
 ) as t(beklenen)
-union all
-select 'profiles.notify_deadline (0090)',
-       exists(select 1 from information_schema.columns where table_schema='public'
-              and table_name='profiles' and column_name='notify_deadline')
-union all
-select 'profiles.upgrade_prompt_not_now_at (0093)',
-       exists(select 1 from information_schema.columns where table_schema='public'
-              and table_name='profiles' and column_name='upgrade_prompt_not_now_at')
-union all
-select 'profiles.ultra_gift_granted_at (0104)',
-       exists(select 1 from information_schema.columns where table_schema='public'
-              and table_name='profiles' and column_name='ultra_gift_granted_at')
+union all select 'profiles.notify_deadline (0090)', exists(select 1 from information_schema.columns
+  where table_schema='public' and table_name='profiles' and column_name='notify_deadline')
+union all select 'profiles.upgrade_prompt_not_now_at (0093)', exists(select 1 from information_schema.columns
+  where table_schema='public' and table_name='profiles' and column_name='upgrade_prompt_not_now_at')
+union all select 'profiles.ultra_gift_expires_at (0104+0106)', exists(select 1 from information_schema.columns
+  where table_schema='public' and table_name='profiles' and column_name='ultra_gift_expires_at')
+union all select 'profiles.ultra_gift_granted_at YOK OLMALI (0106 adlandırdı)', not exists(
+  select 1 from information_schema.columns where table_schema='public'
+  and table_name='profiles' and column_name='ultra_gift_granted_at')
 order by uygulanmis, beklenen;
