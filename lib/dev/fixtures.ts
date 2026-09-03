@@ -1022,7 +1022,7 @@ const FIXTURE_MATCH_STUDENT: StudentMatchProfile = {
  * silently go stale the moment eligibilityMessages' wording changes.
  */
 export function buildFixtureHomeStrip(locale: Locale = DEFAULT_LOCALE): HomeStripOpportunity[] {
-  return FIXTURE_OPPORTUNITIES.map(({ opportunity, matchScore }) => {
+  return FIXTURE_OPPORTUNITIES.map(({ opportunity }) => {
     const { notes } = computeEligibility(
       FIXTURE_MATCH_STUDENT,
       {
@@ -1053,7 +1053,6 @@ export function buildFixtureHomeStrip(locale: Locale = DEFAULT_LOCALE): HomeStri
       cycleStatus: opportunity.cycle_status,
       currentCycleLabel: opportunity.current_cycle_label,
       selectivityTier: opportunity.selectivity_tier,
-      matchScore,
       eligibilityNotes: notes,
     };
   });

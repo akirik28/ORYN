@@ -4,56 +4,48 @@ import { Compass } from "lucide-react";
 import { placeholderTint } from "@/lib/ui/placeholder-tint";
 import { StatusBadge } from "@/components/oryn/status-badge";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
-import { Eyebrow } from "@/components/oryn/eyebrow";
 import { MediaImage } from "@/components/oryn/media-image";
 import { selectivityLabel, cycleStatusLabel, CYCLE_STATUSES_WORTH_A_DESCRIPTOR } from "@/lib/opportunities/lifecycle";
-import { matchTierKey, type MatchTier } from "@/lib/opportunities/matching";
 import { categoryGlyph } from "@/lib/opportunities/category-glyph";
 import type { Locale } from "@/lib/i18n/config";
 import type { HomeStripOpportunity } from "@/lib/opportunities/home-strip";
 
 type Translator = (key: string) => string;
 
-const TIER_TONE: Record<MatchTier, "brand" | "neutral"> = {
-  exceptional: "brand",
-  strong: "brand",
-  worthALook: "neutral",
-  lowPriority: "neutral",
-};
-
 /**
  * The rotating home strip's own card — deliberately narrower in scope than the full
  * features/opportunities/OpportunityCard: no save/apply/dismiss actions (this is a teaser,
  * not Browse — the whole card is one link to the real thing), no reason sentence (see
- * lib/opportunities/home-strip.ts's own comment on why), no description paragraph. What it
- * keeps from that card is the two things that make the honesty guarantee real: the same
- * category-glyph/tint placeholder chain when there's no image, and the same
- * canClaimMatch-gated split between "Oryn vouches for this match" and "eligibility not
- * checked yet" — a caveat badge, not silence, exactly like Browse.
+ * lib/opportunities/home-strip.ts's own comment on why), no description paragraph.
+ *
+ * **No match-tier label ("Exceptional match" etc.), on purpose — not an oversight.**
+ * docs/homepage-strip-top5-quality-2026-09-03.md measured the real matching chain against
+ * three personas and found the tier label doesn't distinguish a genuinely strong match from
+ * a confidently-wrong one: a 14-year-old with a near-empty profile got the identical
+ * "Exceptional match" label, at the identical score, that a genuinely well-matched profile
+ * got, on a #1 slot whose own description asked for "largely independent work." Removing
+ * the label from the app's most-visible, unrequested surface is the correct scope for
+ * tonight; fixing the ranker itself is a separate, larger problem. See
+ * lib/opportunities/home-strip.ts's own comment on the same decision from the data side.
+ *
+ * What DOES still show — the one thing that makes the honesty guarantee real — is the
+ * eligibility caveat: a warning badge whenever `eligibilityNotes` is non-null, exactly like
+ * Browse's own OpportunityCard does and the OLD homepage preview (dashboard-view.tsx, this
+ * card's direct predecessor, per the same doc above) never did at all.
  *
  * A plain server component — no client interactivity lives here (the whole card is a
  * `<Link>`), so unlike the plan-page marquee's cards this needs no "use client" and no
- * per-card translation fetch; `t`/`tTier` are fetched once by the caller and threaded down,
- * the same split app/(app)/dashboard/page.tsx's own tTier already establishes one file over.
+ * per-card translation fetch; `t` is fetched once by the caller and threaded down.
  */
 export function OpportunityStripCard({
   opportunity,
   locale,
   t,
-  tTier,
 }: {
   opportunity: HomeStripOpportunity;
   locale: Locale;
   t: Translator;
-  tTier: Translator;
 }) {
-  // eligible is always true for anything reaching this card (getHomeOpportunityStrip's own
-  // SQL filter) and needsVerification can't occur here either (same function's comment) —
-  // eligibilityNotes is the one and only thing that can withhold the confident-match claim
-  // on this surface.
-  const canClaimMatch = opportunity.eligibilityNotes === null;
-  const tierKey = matchTierKey(opportunity.matchScore);
-
   const daysUntilDeadline = opportunity.deadline ? differenceInCalendarDays(new Date(opportunity.deadline), new Date()) : null;
   // Selectivity + cycle-label only, not the full descriptor set OpportunityCard shows
   // (languages of instruction dropped) — a compact card in a 5-wide strip has room for two
@@ -96,16 +88,10 @@ export function OpportunityStripCard({
       )}
 
       <div className="flex flex-1 flex-col gap-2 p-4">
-        {canClaimMatch ? (
-          <Eyebrow tone={TIER_TONE[tierKey]} locale={locale}>
-            {tTier(tierKey)}
-          </Eyebrow>
-        ) : (
-          // Never silence: an eligibility-unverified match still shows, just without the
-          // confident tier claim riding along with it — same rule OpportunityStandingBadge
-          // encodes for Browse, reused here via the identical badge rather than a second copy.
-          <StatusBadge label={t("eligibilityUnknown")} tone="warning" />
-        )}
+        {/* No confident-match claim to gate here anymore (see this file's own header) —
+            only ever a caveat, never a substitute claim in its place. Silence is the
+            correct, honest state when there's nothing uncertain to flag. */}
+        {opportunity.eligibilityNotes ? <StatusBadge label={t("eligibilityUnknown")} tone="warning" /> : null}
 
         <h3 className="line-clamp-2 text-balance font-medium leading-snug group-hover/strip:underline">{opportunity.title}</h3>
         {opportunity.organization ? <p className="line-clamp-1 text-sm text-ink-3">{opportunity.organization}</p> : null}

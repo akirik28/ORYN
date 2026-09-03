@@ -14,9 +14,11 @@ type Translator = (key: string) => string;
 
 /**
  * The home page's rotating "best 5 opportunities" strip (founder dispatch 2026-09-03).
- * Framed explicitly as the highest-confidence surface in the app — every card here is
- * either a confirmed match or visibly says it isn't (OpportunityStripCard's own
- * canClaimMatch gate), never a bare score with no caveat.
+ * Framed as the highest-confidence surface in the app, which is exactly why it carries no
+ * match-tier claim at all — see OpportunityStripCard's own header and lib/opportunities/
+ * home-strip.ts's for docs/homepage-strip-top5-quality-2026-09-03.md's measurement of why a
+ * confident tier label isn't currently a claim this surface can back up. What every card
+ * still does is surface a real eligibility caveat when one exists, never silence.
  *
  * **Motion mechanism, identical to features/settings/ultra-feature-marquee.tsx**: a doubled
  * card row, translated by exactly -50% via `@keyframes opportunity-strip-scroll`
@@ -54,7 +56,6 @@ type Translator = (key: string) => string;
  */
 export async function OpportunityStrip({ opportunities, locale = DEFAULT_LOCALE }: { opportunities: HomeStripOpportunity[]; locale?: Locale }) {
   const t = (await getTranslations({ locale, namespace: "opportunities.card" })) as Translator;
-  const tTier = (await getTranslations({ locale, namespace: "opportunities.matchTier" })) as Translator;
   const tDash = await getTranslations({ locale, namespace: "dashboard" });
 
   if (opportunities.length === 0) {
@@ -69,7 +70,7 @@ export async function OpportunityStrip({ opportunities, locale = DEFAULT_LOCALE 
   }
 
   const cards = opportunities.map((opportunity) => (
-    <OpportunityStripCard key={opportunity.id} opportunity={opportunity} locale={locale} t={t} tTier={tTier} />
+    <OpportunityStripCard key={opportunity.id} opportunity={opportunity} locale={locale} t={t} />
   ));
 
   if (!shouldAnimateStrip(opportunities.length)) {
@@ -103,7 +104,7 @@ export async function OpportunityStrip({ opportunities, locale = DEFAULT_LOCALE 
             precedent, which never had to solve this because it has no links in its cards. */}
         <div className="flex gap-4 motion-reduce:hidden" aria-hidden="true" inert>
           {opportunities.map((opportunity) => (
-            <OpportunityStripCard key={`loop-${opportunity.id}`} opportunity={opportunity} locale={locale} t={t} tTier={tTier} />
+            <OpportunityStripCard key={`loop-${opportunity.id}`} opportunity={opportunity} locale={locale} t={t} />
           ))}
         </div>
       </div>

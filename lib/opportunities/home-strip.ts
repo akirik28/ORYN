@@ -39,13 +39,26 @@ export interface HomeStripOpportunity {
   cycleStatus: Opportunity["cycle_status"];
   currentCycleLabel: string | null;
   selectivityTier: Opportunity["selectivity_tier"];
-  matchScore: number;
   /** From opportunity_matches.eligibility_notes — see lib/opportunities/matching.ts's
    * computeEligibility for what can populate this. The only caveat this surface can ever
    * show; see getHomeOpportunityStrip's own comment on why needsVerification/notActionable
    * are not part of this shape at all. */
   eligibilityNotes: string | null;
 }
+
+/** No `matchScore` here, deliberately -- docs/homepage-strip-top5-quality-2026-09-03.md
+ * (a4's measurement against the real matching chain and live catalogue, three personas)
+ * found every persona's real top-5 tied on `matchScore` and rendered the identical
+ * "Exceptional match" tier label for a 14-year-old with a near-empty profile as for a
+ * genuinely strong one -- the ranker doesn't yet distinguish "reachable now" from
+ * "prestigious but currently unreachable," and this surface would otherwise put that
+ * confident, unearned claim on the single most-visible slot in the app. That's a ranker
+ * problem, out of scope for this build (CEO: "too big for tonight," going to the founder
+ * separately) -- but this card must not amplify it in the meantime. `match_score` still
+ * drives ranking/ordering upstream (the SQL `.order()` below, CandidateMatch in
+ * selectHomeStripCandidates) -- only the OUTPUT shape a card can render from drops it, so
+ * a future renderer can't casually reach for a number this doc already showed isn't a
+ * trustworthy confidence claim on its own. */
 
 /** No `reasonCodes`/generated reason sentence here, deliberately — this is a compact
  * preview surface (same register the dashboard's existing opportunityPreview list already
@@ -99,7 +112,6 @@ export function selectHomeStripCandidates(matches: CandidateMatch[], opportuniti
       cycleStatus: o.cycle_status,
       currentCycleLabel: o.current_cycle_label,
       selectivityTier: o.selectivity_tier,
-      matchScore: match.match_score,
       eligibilityNotes: match.eligibility_notes,
     });
     if (result.length >= HOME_STRIP_SIZE) break;
