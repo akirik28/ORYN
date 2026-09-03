@@ -824,7 +824,17 @@ update public.opportunities set status = 'active', cycle_status = 'upcoming', ve
 update public.opportunities set status = 'active', cycle_status = 'date_not_announced', verification_state = 'verified_current', verified_at = '2026-09-03T00:00:00Z', organization = 'Michigan State University, College of Education' where id = '7b6ebabf-dd0a-4da5-9155-381674f6d7f0';
 
 -- Harvard University (MA, USA)
-update public.opportunities set status = 'active', cycle_status = 'date_not_announced', verification_state = 'verified_current', verified_at = '2026-09-03T00:00:00Z', organization = 'Harvard Division of Continuing Education (Harvard Summer School)' where id = '66c76976-90e5-4637-8afe-6828992e838a';
+-- YORUMA ALINDI 2026-09-03 (oryn-31'in incelemesi, oryn-a7 uyguladi).
+-- Bu kayit ("Harvard University (MA, USA)") buyuk olasilikla zaten aktif olan
+-- "Harvard Secondary School Program (SSP)" ile AYNI programin ikinci bir kopyasi.
+-- Kanit yas kosulu: SSP kaydi "en az 16, Temmuz sonunda henuz 19 degil" diyor; bu kayit
+-- "20 Haziran 2026'da en az 16, 31 Temmuz 2026'dan once 19 olmayacak" diyor. Bu kadar
+-- ozgul bir kosulun iki ayri programda tesaduf etmesi beklenmez -- ayni programin
+-- Harvard'in kendi sitesinden alinmis farkli bir anlik goruntusu.
+-- Aktif edilirse ogrenci ayni programi katalogda iki kez gorur.
+-- Ustteki organization guncellemesi (satir 343) calisiyor; sadece aktife cekme durduruldu.
+-- Ayni programin iki kaydindan hangisinin kalacagina karar verildiginde acilabilir.
+-- update public.opportunities set status = 'active', cycle_status = 'date_not_announced', verification_state = 'verified_current', verified_at = '2026-09-03T00:00:00Z', organization = 'Harvard Division of Continuing Education (Harvard Summer School)' where id = '66c76976-90e5-4637-8afe-6828992e838a';
 
 -- Horizon Academic Essay Prize
 update public.opportunities set status = 'active', cycle_status = 'date_not_announced', verification_state = 'verified_current', verified_at = '2026-09-03T00:00:00Z', organization = 'Horizon Academic Research Program LLC' where id = '496ef7db-b8d4-4a72-8bcc-b7cb13208e40';
@@ -959,7 +969,18 @@ update public.opportunities set status = 'active', cycle_status = 'date_not_anno
 update public.opportunities set status = 'active', cycle_status = 'date_not_announced', verification_state = 'verified_current', verified_at = '2026-09-03T00:00:00Z', organization = 'University of Bath' where id = 'bb519c8f-71f8-4e89-83e2-3b7e7a7ebf1f';
 
 -- University of Chicago Chicago, IL
-update public.opportunities set status = 'active', cycle_status = 'date_not_announced', verification_state = 'verified_current', verified_at = '2026-09-03T00:00:00Z', organization = 'University of Chicago Summer Session' where id = '16ab0b91-6ecd-463a-a0bf-85f9376c67a9';
+-- YORUMA ALINDI 2026-09-03 (oryn-31'in incelemesi, oryn-a7 uyguladi).
+-- Bu kayit ("University of Chicago Chicago, IL") kendi aciklamasinda dort programi
+-- sayiyor: "Pre-College Summer Programs: Immersion / Stones and Bones / Summer Bridge /
+-- Summer College" -- zaten aktif olan kardes kaydin BASLIGINDA gecen ayni dort programin
+-- birebir aynisi. Aktif edilirse ayni paket katalogda iki kez gorunur.
+-- Ustteki organization guncellemesi (satir 243) calisiyor; sadece aktife cekme durduruldu.
+--
+-- Not: 31 ilk raporunda bu kaydin official_url'inin bozuk oldugunu da soylemis, sonra
+-- kendisi duzeltti -- official_url temiz (https://summer.uchicago.edu/international-students/).
+-- Bozuk olan metin serbest aciklama alanindaki bir kazima artigi. Tekrar iddiasi bundan
+-- bagimsiz olarak ayrica dogrulandi.
+-- update public.opportunities set status = 'active', cycle_status = 'date_not_announced', verification_state = 'verified_current', verified_at = '2026-09-03T00:00:00Z', organization = 'University of Chicago Summer Session' where id = '16ab0b91-6ecd-463a-a0bf-85f9376c67a9';
 
 -- University of Miami
 update public.opportunities set status = 'active', cycle_status = 'date_not_announced', verification_state = 'verified_current', verified_at = '2026-09-03T00:00:00Z', organization = 'University of Miami, Division of Continuing and International Education (DCIE)' where id = '1228cff1-265d-4cc2-aa49-95b1f3408250';

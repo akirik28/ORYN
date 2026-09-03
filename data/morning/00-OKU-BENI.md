@@ -78,8 +78,24 @@ Ultra'ya alıp öğrencinin ne gördüğünü görebilirsin.
 ## 3. Bekleyen veriyi doldur
 
 `02-veri-doldurma-2026-09-03.sql` — **377 düzeltme ifadesi, 213 tekil kayıt.** En görünür
-etkisi: kurum adı boş olan **190 kayıt dolacak**, ve 84 kayıt tek tek doğrulanmış haliyle
+etkisi: kurum adı boş olan **190 kayıt dolacak**, ve 78 kayıt tek tek doğrulanmış haliyle
 `under_review`'dan `active`'e geçecek — yani öğrencinin göreceği katalog büyüyecek.
+
+**İkisini son anda çıkardım, sebebiyle birlikte.** Aktife çekilecek kayıtların arasında
+çıplak kurum adı taşıyan dokuz tane vardı (Cornell, Harvard, Brown, Chicago, Columbia,
+Miami, Penn, Toronto, Tulane). Dokuzunu da zaten aktif olan kardeşleriyle yan yana
+okuttum. **Yedisi gerçekten farklı program** — Cornell'inki Cornell'in *online* seçeneğini
+kapsıyor, Columbia'nınki *yatılı* olanı (aktif olan gündüzlü), Penn'inki mühendislik
+akademisi. İkisi ise değil:
+
+- **Harvard**: yaş koşulu zaten aktif olan "Harvard Secondary School Program" ile neredeyse
+  birebir aynı ("en az 16, 31 Temmuz'dan önce 19 olmayacak"). Bu kadar özgül bir koşul iki
+  ayrı programda tesadüf etmez — aynı programın ikinci kaydı.
+- **Chicago**: kendi açıklaması dört programı sayıyor, ve o dördü zaten aktif olan kardeş
+  kaydın **başlığında** aynen geçiyor.
+
+İkisi de dosyada duruyor ama yorum satırına alındı, gerekçesi yanına yazılı. Açmak
+istersen `--` işaretlerini silmen yeterli. Sayı bu yüzden 84 değil 78.
 
 Şu anki durum (2026-09-03 02:40, canlı ölçüm — **kapsam yazılı, çünkü kapsamsız sayı
 karşılaştırılamıyor**):
