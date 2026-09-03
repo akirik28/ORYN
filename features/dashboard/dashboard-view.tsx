@@ -240,7 +240,7 @@ export async function DashboardView({
             ) : heroState.kind === "rich_unclaimable" ? (
               /* This state does NOT mean "your profile is balanced", and it must never say
                  so. `computeDashboardHeroState` reaches it when the profile has real signal
-                 but the *lowest-scoring* dimension is one Oryn has not assessed — which is
+                 but the *lowest-scoring* dimension is one Proxola has not assessed — which is
                  exactly what this file's own test calls it ("rich profile whose weakest
                  dimension is unassessed"). On the real call path it can mean nothing else:
                  `app/(app)/dashboard/page.tsx` builds `profileSignal` and `biggestGap` from
@@ -257,7 +257,7 @@ export async function DashboardView({
                  surfaces, one set of scores, and Home was the one contradicting the others
                  (founder account, 2026-08-31).
 
-                 What is true here is narrower and more useful: Oryn cannot rank a gap it
+                 What is true here is narrower and more useful: Proxola cannot rank a gap it
                  has no evidence for, so the honest move is to say which areas are missing
                  and send the student to fill them in — not to reassure. */
               // Turkish here is not a translation exercise — see the block comment above:

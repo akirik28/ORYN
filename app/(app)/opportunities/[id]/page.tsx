@@ -192,7 +192,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
     ? differenceInCalendarDays(new Date(opportunity.deadline), new Date())
     : null;
   const takeReasons = match ? takeSentences((match.reason_codes as string[]) ?? [], locale) : [];
-  // Oryn only offers a take on a row it can vouch for; otherwise the caveats below speak
+  // Proxola only offers a take on a row it can vouch for; otherwise the caveats below speak
   // for themselves and a confident-sounding verdict on top of them would be the exact
   // false certainty this product is not allowed to manufacture. Found live 2026-09-02: 165
   // eligible, verified matches share zero interest overlap, address no weak dimension, and
@@ -280,7 +280,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
         <StatusBadge label={categoryLabel(opportunity.category, locale)} tone="brand" />
         {/* One shared component with Browse's card (features/opportunities/standing-badge.tsx):
             it keeps "not open" (about the opportunity), "not eligible" (about the student) and
-            "needs verification" (about Oryn's data) from ever being described in each other's
+            "needs verification" (about Proxola's data) from ever being described in each other's
             words, in one place rather than two that drift. */}
         <OpportunityStandingBadge
           eligible={eligibility?.eligible ?? true}

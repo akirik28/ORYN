@@ -62,7 +62,7 @@ function tierFor(score: number, t: Translator): { label: string; tone: StatusTon
 
 /**
  * The student-facing reason, as a sentence rather than three concatenated fragments.
- * UI-V3 § 19 puts "why Oryn recommends it" above the opportunity's own identity, so this
+ * UI-V3 § 19 puts "why Proxola recommends it" above the opportunity's own identity, so this
  * needs to read as counsel, not as a tag list.
  *
  * Kept local (not moved to lib/opportunities/) rather than routed through the message
@@ -130,7 +130,7 @@ function reasonSentence(reasonCodes: string[], locale: Locale): string | null {
  * arrived before the student learned what the opportunity even was. Now the reason comes
  * first, then identity, then facts.
  *
- * The badges themselves all survive, because each one encodes something Oryn is or isn't
+ * The badges themselves all survive, because each one encodes something Proxola is or isn't
  * willing to claim. They're split by role rather than thinned out:
  *
  * - **Caveats** (unverified, not eligible, eligibility unknown) stay directly under the
@@ -175,7 +175,7 @@ export function OpportunityCard({
    * they don't qualify for something nobody can currently apply to. Defaults false, so the
    * "For you" call site (which pre-filters to actionable) is unaffected. */
   notActionable?: boolean;
-  /** Set when Oryn has no evidence either way — no deadline on file and no record of ever
+  /** Set when Proxola has no evidence either way — no deadline on file and no record of ever
    * verifying it (lib/opportunities/lifecycle.ts). Suppresses the match tier and shows a
    * "Needs verification" caveat instead. Neither a closure claim nor an eligibility claim. */
   needsVerification?: boolean;
@@ -194,7 +194,7 @@ export function OpportunityCard({
   const [isPending, startTransition] = useTransition();
   const tier = tierFor(matchScore, tTier);
   const reason = reasonSentence(reasonCodes, locale);
-  // The confidence tier is a claim Oryn can only make about a row it can vouch for.
+  // The confidence tier is a claim Proxola can only make about a row it can vouch for.
   const canClaimMatch = eligible && !needsVerification;
 
   const daysUntilDeadline = opportunity.deadline
@@ -325,7 +325,7 @@ export function OpportunityCard({
               broken image rather than a designed one. The Compass is now redundant -- it was
               standing in for "an icon belongs here," which the glyph does properly and
               per-category. The text itself stays, and stays honest: it is a founder-directed
-              string (2026-08-30) and it is the only thing on the card that says Oryn has no
+              string (2026-08-30) and it is the only thing on the card that says Proxola has no
               real photograph of this programme. A prettier band that dropped it would be
               claiming the glyph is a picture of something. */}
           <span className="absolute bottom-2 left-3 text-[11px] text-ink-4/80">{t("noImageYet")}</span>
@@ -394,7 +394,7 @@ export function OpportunityCard({
               ineligibleLabel={t("ineligibleLabel")}
             />
             {/* Eligible-but-unverified is not the same claim as eligible-and-confirmed — a
-                restriction exists but Oryn is missing the fact needed to check it (see
+                restriction exists but Proxola is missing the fact needed to check it (see
                 computeEligibility's unknownNotes). Never silently badge that as a plain match. */}
             {eligible && eligibilityNotes ? <StatusBadge label={t("eligibilityUnknown")} tone="warning" /> : null}
           </div>
@@ -417,7 +417,7 @@ export function OpportunityCard({
             (Tufts, Georgetown, Wharton M&TSI...) with nothing distinguishing them from
             an unresearched one. Display-only, per explicit instruction: this renders the
             stored string verbatim, never parses it into a structured claim (no
-            deadline_mode, no "this one is rolling" inference) -- if Oryn hasn't recorded
+            deadline_mode, no "this one is rolling" inference) -- if Proxola hasn't recorded
             a cycle label, this says nothing rather than guessing. Gated on no deadline:
             when a real deadline exists it's already the clearer, more specific signal,
             and repeating a cycle label beside it would just be noise. */}
