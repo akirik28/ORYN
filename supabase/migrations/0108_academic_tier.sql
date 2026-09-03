@@ -55,10 +55,19 @@
 --       schema level instead of correcting it.
 --
 -- This migration leans toward (b) in the comment below because it matches why this data was
--- sourced in the first place, but says so rather than deciding it silently, and does NOT
--- currently know whether Irish TU admissions today are, in practice, materially different from
--- Dublin/UCC/Galway's -- that's a factual question nobody has checked yet, distinct from the
--- institutional-history question this migration can answer on its own. The founder's call.
+-- sourced in the first place, but says so rather than deciding it silently.
+--
+-- 2026-09-03 UPDATE: the admissions-mechanism half of this open question has been checked and
+-- answered -- Irish TU admissions today are NOT, in practice, materially different from
+-- Dublin/UCC/Galway's. TU Dublin's own CAO entry-requirements page and CAO's own unified Level 8
+-- points list both confirm the identical points-and-tiebreak mechanism, with the same
+-- restricted-course exceptions every CAO-route HEI carries, no TU-specific process. Structural
+-- reason: the Technological Universities Act 2018 dissolved the Institutes of Technology outright
+-- rather than creating a parallel statute the way Austria's FHStG or Finland's
+-- ammattikorkeakoululaki did -- see docs/research/admissions-systems/ireland.md's own 2026-09-03
+-- addendum for the full sourcing. This resolves the factual/admissions half of the open question
+-- this comment originally flagged; the (a)-vs-(b) academic_tier lineage-classification choice
+-- below is unaffected by it and remains the founder's call.
 --
 -- ABSENCE, NOT UNKNOWN-AS-A-VALUE
 --

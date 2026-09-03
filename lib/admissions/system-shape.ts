@@ -741,6 +741,54 @@ const REGISTRY: AdmissionSystemEntry[] = [
         },
       },
     ],
+    // The Fachhochschule (FH) sector -- named because it genuinely differs, confirmed at the
+    // statute level, not assumed from the sector label alone. Unlike the Netherlands (HBO/WO
+    // share one framework, checked and found to converge), Austria's FH sector runs under its
+    // own separate law (FHStG) with its own self-governance body (FHK) distinct from the
+    // university sector's -- the same structural signature that made Finland's AMK sector a
+    // genuine divergence. matchNames is the real 21-institution list 6e verified live, per-row
+    // (docs/austria-fh-sector-2026-09-03.md) -- deliberately includes Fachhochschule für
+    // angewandte Militärwissenschaften (housed at the Theresian Military Academy, open to
+    // civilian applicants, appears identically on all three of 6e's source lists) since nothing
+    // found this pass suggests its FHStG-governed admission differs from the other 20's.
+    subdivisions: [
+      {
+        key: "fh",
+        matchNames: [
+          "UAS for Business & Society BFI Vienna",
+          "University of Applied Sciences Technikum Vienna",
+          "Hochschule Campus Wien",
+          "FHV - Vorarlberg University of Applied Sciences",
+          "FH Kärnten",
+          "University of Applied Sciences Wiener Neustadt",
+          "USTP – University of Applied Sciences St. Pölten",
+          "IMC Krems University of Applied Sciences",
+          "FH Salzburg",
+          "HOK | University of Applied Sciences Kufstein Tirol",
+          "FH Campus 02",
+          "FH JOANNEUM",
+          "FH Upper Austria",
+          "University of Applied Sciences Burgenland",
+          "MCI | The Entrepreneurial School",
+          "FHWien der WKW",
+          "Lauder Business School",
+          "fh gesundheit",
+          "Ferdinand Porsche FernFH",
+          "Fachhochschule für angewandte Militärwissenschaften",
+          "FH Gesundheitsberufe OÖ",
+        ],
+        domestic: {
+          shape: "holistic_review",
+          mechanism:
+            "§11 of Austria's Fachhochschul-Studiengesetz (FHStG) — a separate statute from the law governing the general-university sector — legally requires an admission procedure whenever applicants exceed places, which happens routinely at FH programmes: a documented interview with every applicant where organizationally possible, plus programme-set performance criteria, not a grades-only formula. In practice this runs as a multi-stage aptitude test (general knowledge, logical reasoning) plus an admission interview explicitly built around motivation and personal fit ('why this programme, why you') — a genuine holistic read, confirmed by Austria's own FH sector as different in kind from the university sector's open-access default.",
+        },
+        international: {
+          shape: "holistic_review",
+          mechanism:
+            "The same law-mandated interview-and-aptitude-test procedure applies to every applicant, EU or not. Non-EU/EEA applicants additionally need their secondary qualification recognized as equivalent before entering that same selection process — Austria's own government portal names a Turkish diploma specifically as needing proof of the university entrance exam (YKS) on top of the standard FH admission procedure everyone else also goes through.",
+        },
+      },
+    ],
     sources: [DOC("austria.md")],
   },
   {

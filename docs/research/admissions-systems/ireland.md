@@ -437,6 +437,43 @@ cycles. ORYN should never present a Layer 4 or 5 fact as a Layer 1-3 national fa
 should never treat a past year's points requirement as a reliable predictor of a future
 cycle's cutoff.
 
+## Technological Universities — checked directly, confirmed to converge with the general CAO route (2026-09-03 addendum)
+
+**Trigger:** migration `0108_academic_tier.sql`'s own comment named this as a real, unanswered
+question — whether Ireland's five Technological Universities (TU Dublin, Munster TU, South East
+TU, Atlantic TU, TU Shannon: Midlands Midwest), converted from Institutes of Technology by the
+Technological Universities Act 2018, admit students *in practice* any differently from UCD,
+Trinity, or the other traditional universities already in this entry's CAO-route description.
+Not assumed either way, and not the same question the migration itself can answer on its own
+(that one is about legal/lineage classification for `academic_tier`, a founder decision this
+document doesn't weigh in on).
+
+**Confirmed: no material difference.** TU Dublin's own official CAO entry-requirements page
+(fetched directly, primary confidence) describes the identical mechanism this document's Layer 2
+already established — best-six-subjects points, the standard CAO tie-break rule, and the same
+"suitability tests/interviews/auditions/portfolio reviews" exception for specific restricted
+courses that Trinity, UCD, and every other CAO-route HEI also carry (Medicine, Art & Design, and
+similar fields, not a TU-specific carve-out). No language on the page suggests a different points
+formula, a separate admissions body, or any process distinct from a traditional university's.
+CAO's own official Level 8 points list (`www2.cao.ie/points/l8.php`, fetched directly) presents
+TU and traditional-university courses in one unified list, identical notation, no visible
+separation by institution type.
+
+**Why this converges where Austria's FH sector and Finland's AMK sector diverged — a structural
+reason, not just an absence of evidence:** the Technological Universities Act 2018 did not create
+a parallel legal category the way Austria's FHStG or Finland's ammattikorkeakoululaki did — it
+**dissolved** the Institutes of Technology outright, transferring their functions, assets,
+liabilities and staff into the new TUs as genuinely, currently full universities, "no different
+in law from Trinity or UCD" (migration `0108`'s own phrase, now checked rather than asserted).
+Where Austria and Finland kept a separate governing statute for the applied-sciences sector,
+Ireland's 2018 Act was specifically designed to erase that separation. **No subdivision was
+added — this confirms the existing entry's CAO-route description already covers TUs correctly,
+the same finding-shape as the Netherlands' HBO/WO check, for an analogous structural reason.**
+
+This resolves the open question named in migration `0108`'s own comment (the admissions-mechanism
+half specifically — the separate `academic_tier` lineage-classification question is unaffected
+and remains the founder's call).
+
 ## Unresolved questions
 
 Whether Turkey's national entrance exam (YKS, or the pre-2018 "LYS" name still used on

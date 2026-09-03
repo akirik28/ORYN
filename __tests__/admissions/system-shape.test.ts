@@ -499,6 +499,87 @@ describe("resolveAdmissionSystem — Austria (2026-09-03, threshold by default, 
   });
 });
 
+// A second real subdivision, confirmed at the statute level (FHStG vs. the university sector's
+// own law) -- unlike Netherlands' checked-and-converged HBO, Austria's FH sector genuinely
+// diverges: a law-mandated interview and aptitude test, not the country default's open access.
+describe("resolveAdmissionSystem — Austria FH sector (2026-09-03, a second real subdivision, confirmed divergence)", () => {
+  test("a named FH institution resolves through the subdivision, holistic rather than the country's open-access default", () => {
+    const result = resolveAdmissionSystem({
+      targetCountry: "Austria",
+      studentCountry: "Austria",
+      targetUniversityName: "FH Kärnten",
+    });
+    expect(result.basis).toBe("subdivision");
+    expect(result.shape).toBe("holistic_review");
+    expect(reviewsNonAcademicEvidence(result.shape)).toBe(true);
+    expect(result.mechanism).toContain("FHStG");
+  });
+
+  test("the FH subdivision's domestic and international pathways share the same law-mandated shape, with international's mechanism naming the added recognition step", () => {
+    const domestic = resolveAdmissionSystem({
+      targetCountry: "Austria",
+      studentCountry: "Austria",
+      targetUniversityName: "FH Upper Austria",
+    });
+    const international = resolveAdmissionSystem({
+      targetCountry: "Austria",
+      studentCountry: "Turkey",
+      targetUniversityName: "FH Upper Austria",
+    });
+    expect(domestic.shape).toBe("holistic_review");
+    expect(international.shape).toBe("holistic_review");
+    expect(international.mechanism).not.toBe(domestic.mechanism);
+    expect(international.mechanism).toContain("YKS");
+  });
+
+  test("a real Austrian university is NOT swept into the FH subdivision", () => {
+    const result = resolveAdmissionSystem({
+      targetCountry: "Austria",
+      studentCountry: "Turkey",
+      targetUniversityName: "University of Vienna",
+    });
+    expect(result.basis).toBe("country_pathway");
+    expect(result.shape).toBe("academic_threshold");
+  });
+
+  test("matching is exact-after-normalization, not fuzzy — a near-miss name falls through to the country default", () => {
+    const result = resolveAdmissionSystem({
+      targetCountry: "Austria",
+      studentCountry: "Austria",
+      targetUniversityName: "Kärnten",
+    });
+    expect(result.basis).not.toBe("subdivision");
+    expect(result.basis).toBe("country_pathway");
+  });
+
+  test("every FH subdivision name is distinct, and every one resolves through the subdivision", () => {
+    const names = [
+      "UAS for Business & Society BFI Vienna", "University of Applied Sciences Technikum Vienna",
+      "Hochschule Campus Wien", "FHV - Vorarlberg University of Applied Sciences", "FH Kärnten",
+      "University of Applied Sciences Wiener Neustadt", "USTP – University of Applied Sciences St. Pölten",
+      "IMC Krems University of Applied Sciences", "FH Salzburg",
+      "HOK | University of Applied Sciences Kufstein Tirol", "FH Campus 02", "FH JOANNEUM",
+      "FH Upper Austria", "University of Applied Sciences Burgenland", "MCI | The Entrepreneurial School",
+      "FHWien der WKW", "Lauder Business School", "fh gesundheit", "Ferdinand Porsche FernFH",
+      "Fachhochschule für angewandte Militärwissenschaften", "FH Gesundheitsberufe OÖ",
+    ];
+    expect(new Set(names).size).toBe(names.length);
+    for (const name of names) {
+      const result = resolveAdmissionSystem({ targetCountry: "Austria", studentCountry: "Austria", targetUniversityName: name });
+      expect(result.basis).toBe("subdivision");
+    }
+  });
+
+  test("Austria FH traces to its own research document", () => {
+    const result = resolveAdmissionSystem({
+      targetCountry: "Austria",
+      studentCountry: "Austria",
+      targetUniversityName: "FH Kärnten",
+    });
+    expect(result.sources).toContain("docs/research/admissions-systems/austria.md");
+  });
+});
+
 describe("resolveAdmissionSystem — Czechia (2026-09-03, confirmed divergence, not just decentralization)", () => {
   // Charles University's own admissions page confirms mechanism varies by PROGRAMME within one
   // institution (czechia.md §A) -- a finer grain of divergence than Canada's confirmed
