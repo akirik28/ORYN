@@ -20,6 +20,7 @@ import { isUndefinedColumnError, isUndefinedTableError } from "@/lib/supabase/er
 import { ULTRA_PRICE_TRY } from "@/lib/admin/finance";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { CONTAMINATION_CLEANUP_2026_09_02 } from "@/lib/opportunities/contamination-cleanup-2026-09-02";
+import { readOr, countOr } from "@/lib/supabase/safe-read";
 
 /**
  * Every admin-panel read, one module (docs/admin-panel-architecture-2026-09-02.md, D1). Each
@@ -1959,4 +1960,69 @@ export async function getAdminActivityTimeline(admin: SupabaseClient<Database>):
   }));
 
   return [...fromCatalog, ...fromOps].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, ADMIN_ACTIVITY_FETCH_LIMIT);
+}
+
+/**
+ * `/kumanda/topluluk` (2026-09-03). CEO's own correction mid-build: the plan doc called this
+ * screen "new, empty -- fills in once the feature ships," written before messages/
+ * connections landed. Checked live against oryn-qa-scratch, not assumed from the code alone
+ * (docs/kumanda-merkezi-yapi-plani-2026-09-03.md's third hard rule, applied to a table this
+ * time rather than a column): `connections` and `messages` are real, applied tables --
+ * `posts` and `post_likes` (migration 0058) are NOT. lib/social/posts.ts calling `.from
+ * ("posts")` proves the code is written, not that the migration is live anywhere. Each
+ * table's presence is checked with a real `.select().limit(1)`, never `head:true` -- the
+ * exact bug this session found and fixed everywhere else tonight
+ * (isAdminActionsTableLive's own header comment has the live-compared proof): a HEAD request
+ * against a genuinely missing table returns a false-success 204, not the real PGRST205,
+ * which would have made this function silently report "0 posts" instead of "not set up
+ * yet" for the one pair of tables that needed exactly that distinction.
+ *
+ * `postAuthorCount` is a DISTINCT count (`count(distinct author_id)`, computed client-side
+ * from the row set), not `count(*)` on posts -- a handful of prolific posters can never
+ * read as "many students are posting."
+ */
+export interface CommunityStats {
+  /** `null` means the table isn't live yet -- never render as 0, which would claim a
+   *  measurement that didn't happen. */
+  postCount: number | null;
+  postAuthorCount: number | null;
+  messageCount: number | null;
+  acceptedConnectionCount: number | null;
+  likeCount: number | null;
+}
+
+async function isTableLive(admin: SupabaseClient<Database>, table: "posts" | "post_likes" | "connections" | "messages"): Promise<boolean> {
+  const { error } = await admin.from(table).select("id").limit(1);
+  if (!error) return true;
+  if (!isUndefinedTableError(error, table)) {
+    console.error(`[admin/community] unexpected error checking ${table}`, error);
+  }
+  return false;
+}
+
+export async function getCommunityStats(admin: SupabaseClient<Database>): Promise<CommunityStats> {
+  const [postsLive, postLikesLive, connectionsLive, messagesLive] = await Promise.all([
+    isTableLive(admin, "posts"),
+    isTableLive(admin, "post_likes"),
+    isTableLive(admin, "connections"),
+    isTableLive(admin, "messages"),
+  ]);
+
+  const [postsRes, postAuthorsRes, messagesRes, connectionsRes, likesRes] = await Promise.all([
+    postsLive ? admin.from("posts").select("id", { count: "exact", head: true }) : null,
+    postsLive ? admin.from("posts").select("author_id") : null,
+    messagesLive ? admin.from("messages").select("id", { count: "exact", head: true }) : null,
+    connectionsLive ? admin.from("connections").select("id", { count: "exact", head: true }).eq("status", "accepted") : null,
+    postLikesLive ? admin.from("post_likes").select("id", { count: "exact", head: true }) : null,
+  ]);
+
+  const postAuthorRows = postAuthorsRes ? readOr("getCommunityStats.postAuthors", postAuthorsRes, []) : null;
+
+  return {
+    postCount: postsRes ? countOr("getCommunityStats.posts", postsRes, 0) : null,
+    postAuthorCount: postAuthorRows ? new Set(postAuthorRows.map((r) => r.author_id)).size : null,
+    messageCount: messagesRes ? countOr("getCommunityStats.messages", messagesRes, 0) : null,
+    acceptedConnectionCount: connectionsRes ? countOr("getCommunityStats.connections", connectionsRes, 0) : null,
+    likeCount: likesRes ? countOr("getCommunityStats.likes", likesRes, 0) : null,
+  };
 }

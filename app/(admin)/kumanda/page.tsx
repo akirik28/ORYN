@@ -1,29 +1,114 @@
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/oryn/page-header";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getReports, summarizeReportsBacklog, getContaminationCleanupPreview, getDegradeStanding, getSpendSummary, getAdminUserList, getFinanceSettings } from "@/lib/admin/queries";
+import { resolveLocale } from "@/lib/i18n/locale";
 
 /**
- * Overview. Deliberately the shortest screen in the control centre.
+ * Overview. Deliberately the shortest screen in the control centre (see the placeholder
+ * this replaces for the founder's own "her şeyi üst üste yığma" complaint this whole
+ * restructure answers). Two things only: what genuinely needs a decision right now, and one
+ * card per other Daily-group screen so nothing requires a click to get a first read.
  *
- * The founder's complaint about the previous admin design was that fourteen sections were
- * stacked on one page: "her şeyi üst üste yığma." The answer is not a smaller pile — it is
- * that this screen answers one question ("what needs me right now?") and every other screen
- * is reachable from the rail. Anything added here has to earn its place against that.
- *
- * The attention rows and summary cards are the next commit; this establishes the shell,
- * the light ground, and the rail so they can be verified on their own before content lands
- * on top of them.
+ * All three attention items and all four cards are read-only reuses of existing
+ * lib/admin/queries.ts functions -- no new cross-cutting logic, nothing that duplicates a
+ * number another screen already owns computing.
  */
+function AttentionRow({ href, label, detail }: { href: string; label: string; detail: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center justify-between gap-4 rounded-lg px-4 py-3 text-sm transition-colors hover:opacity-90"
+      style={{ background: "var(--admin-bg-elevated-2)" }}
+    >
+      <span style={{ color: "var(--admin-ink-1)" }}>{label}</span>
+      <span className="shrink-0 font-medium" style={{ color: "var(--admin-accent)" }}>
+        {detail}
+      </span>
+    </Link>
+  );
+}
+
+function SummaryCard({ href, label, value, hint }: { href: string; label: string; value: string; hint: string }) {
+  return (
+    <Link href={href} className="admin-panel block rounded-xl p-5 transition-opacity hover:opacity-90">
+      <p className="text-xs font-medium uppercase tracking-wide" style={{ color: "var(--admin-ink-3)" }}>
+        {label}
+      </p>
+      <p className="mt-2 text-2xl font-semibold tabular-nums" style={{ color: "var(--admin-ink-1)" }}>
+        {value}
+      </p>
+      <p className="mt-1 text-xs" style={{ color: "var(--admin-ink-3)" }}>
+        {hint}
+      </p>
+    </Link>
+  );
+}
+
 export default async function ControlOverviewPage() {
-  const t = await getTranslations("admin.control");
+  const [t, locale] = await Promise.all([getTranslations("admin.control"), resolveLocale()]);
+  const admin = createAdminClient();
+
+  const [reports, cleanupPreview, degradeStanding, spend, users, financeSettings] = await Promise.all([
+    getReports(admin, locale),
+    getContaminationCleanupPreview(admin),
+    getDegradeStanding(admin),
+    getSpendSummary(admin),
+    getAdminUserList(admin),
+    getFinanceSettings(admin),
+  ]);
+
+  const backlog = summarizeReportsBacklog(reports);
+  const pendingCleanupCount = cleanupPreview.filter((r) => r.guardWouldPass === true).length;
+  const rate = financeSettings.usdTryRate?.rateTryPerUsd ?? null;
+
+  const attentionItems: { href: string; label: string; detail: string }[] = [];
+  if (backlog.openCount > 0) {
+    attentionItems.push({ href: "/kumanda/moderasyon", label: t("attention.openReports"), detail: t("attention.count", { count: backlog.openCount }) });
+  }
+  if (pendingCleanupCount > 0) {
+    attentionItems.push({ href: "/kumanda/katalog", label: t("attention.pendingCleanup"), detail: t("attention.count", { count: pendingCleanupCount }) });
+  }
+  if (degradeStanding.studentsEverDegraded > 0) {
+    attentionItems.push({
+      href: "/kumanda/harcama",
+      label: t("attention.degradedStudents"),
+      detail: t("attention.countOfTotal", { count: degradeStanding.studentsEverDegraded, total: degradeStanding.totalStudentsWithUsage }),
+    });
+  }
 
   return (
     <div className="space-y-6">
       <PageHeader title={t("overviewTitle")} description={t("overviewDescription")} />
-      <div
-        className="rounded-xl border p-6 text-sm"
-        style={{ borderColor: "var(--admin-border)", background: "var(--admin-bg-elevated)", color: "var(--admin-ink-2)" }}
-      >
-        {t("overviewPlaceholder")}
+
+      <div className="admin-panel rounded-xl p-5">
+        <h2 className="mb-3 text-sm font-semibold" style={{ color: "var(--admin-ink-1)" }}>
+          {t("attention.sectionTitle")}
+        </h2>
+        {attentionItems.length > 0 ? (
+          <div className="space-y-2">
+            {attentionItems.map((item) => (
+              <AttentionRow key={item.href} {...item} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm" style={{ color: "var(--admin-ink-3)" }}>
+            {t("attention.nothingPending")}
+          </p>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <SummaryCard
+          href="/kumanda/kar-zarar"
+          label={t("item.profitLoss")}
+          value={rate !== null ? `${financeSettings.ultraPriceTry.toFixed(2)} ₺` : "—"}
+          hint={rate !== null ? t("cards.priceHint") : t("cards.rateNotConfigured")}
+        />
+        <SummaryCard href="/kumanda/trafik" label={t("item.traffic")} value="—" hint={t("cards.noPageviewTracking")} />
+        <SummaryCard href="/kumanda/ogrenciler" label={t("item.students")} value={String(users.length)} hint={t("cards.registeredStudents")} />
+        <SummaryCard href="/kumanda/harcama" label={t("item.spend")} value={`$${spend.last30dUsd.toFixed(2)}`} hint={t("cards.spendLast30d")} />
       </div>
     </div>
   );

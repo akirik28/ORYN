@@ -1937,7 +1937,6 @@
       "footerNote": "Öğrenci uygulamasından ayrı. Buradaki hiçbir şeye öğrenci erişemez.",
       "overviewTitle": "Bugün neye bakman gerekiyor",
       "overviewDescription": "Her şeyi değil — sadece karar bekleyenleri.",
-      "overviewPlaceholder": "Dikkat listesi ve özet kartlar buraya gelecek. Bu ekran bilerek kısa: diğer her alanın raydaki kendi yeri var, üst üste yığılmıyorlar.",
       "ledgerDescription": "Her admin işlemi, tek listede — hangi tabloya yazıldığından bağımsız.",
       "moderationDescription": "Şikayet edilen mesajlar ve gönderiler, karar bekliyor.",
       "systemDescription": "Altyapı sağlıklı mı — sağlayıcılar, işler ve AI yanıt kalitesi.",
@@ -1946,7 +1945,104 @@
       "studentsDescription": "Her öğrenci, plan katmanı ve son ne zaman göründüğü.",
       "pendingTitle": "Henüz yapılmadı",
       "pendingDescription": "Bu ekran planlı ve rayda duruyor, ama henüz kimse yazmadı.",
-      "pendingBody": "404 yerine bunu görüyorsun, bilerek. Yönetim rotaları erişimi olmayana 404 döndürüyor — yani yazılmamış bir ekranla yetkisizlik birbirinden ayırt edilemezdi, hangisine denk geldiğini anlayamazdın."
+      "pendingBody": "404 yerine bunu görüyorsun, bilerek. Yönetim rotaları erişimi olmayana 404 döndürüyor — yani yazılmamış bir ekranla yetkisizlik birbirinden ayırt edilemezdi, hangisine denk geldiğini anlayamazdın.",
+      "attention": {
+        "sectionTitle": "Karar bekleyen",
+        "openReports": "Açık moderasyon raporları",
+        "pendingCleanup": "Hâlâ kirli fırsat açıklamaları",
+        "degradedStudents": "Bu ay yapay zekâ düşüş noktasına ulaşan öğrenciler",
+        "count": "{count}",
+        "countOfTotal": "{total} kişiden {count}",
+        "nothingPending": "Şu anda senden bekleyen bir şey yok."
+      },
+      "cards": {
+        "priceHint": "Güncel Ultra fiyatı",
+        "rateNotConfigured": "Kur girilmedi",
+        "noPageviewTracking": "Henüz sayfa görüntüleme takibi yok",
+        "registeredStudents": "Kayıtlı öğrenci",
+        "spendLast30d": "Son 30 gün yapay zekâ harcaması"
+      },
+      "community": {
+        "title": "Topluluk",
+        "description": "Gönderiler, mesajlar ve bağlantılar — gerçek, canlı sayılar. Ürün henüz erken olduğu için sayılar küçük.",
+        "posts": "Gönderi",
+        "postAuthors": "{count, plural, =0 {henüz kimseden} one {1 öğrenciden} other {{count} öğrenciden}}",
+        "messages": "Mesaj",
+        "connections": "Bağlantı",
+        "likes": "Beğeni",
+        "earlyNote": "Bu sayılar küçük çünkü ürün erken aşamada, bir şey bozuk olduğu için değil. Tam tabloyu görmek için Trafik ekranındaki kayıt sayısıyla karşılaştır.",
+        "notSetUp": "Henüz kurulmadı"
+      },
+      "profitLoss": {
+        "title": "Kâr & Zarar",
+        "description": "Bir rapor değil, canlı bir hesap makinesi — herhangi bir girdiyi değiştir, yeniden hesaplansın.",
+        "scaleTableTitle": "Ölçeğe göre kullanıcı başı maliyet",
+        "scaleTableDescription": "docs/maliyet-ve-fiyatlandirma-2026-09-02.md §4/§6, yukarıdaki hesap makinesinin kullandığı aynı formülden canlı hesaplanır — bu sayıların elle yazılmış ikinci bir kopyası asla değil.",
+        "scaleTableUsers": "Kullanıcı",
+        "scaleTableActiveRatio": "Aktif",
+        "scaleTableCostPerUser": "Kullanıcı başı maliyet",
+        "scaleTableBreakEven": "Başabaş için ödeyen kullanıcı",
+        "calculator": {
+          "inputsTitle": "Senaryo",
+          "subscriberCount": "Toplam kullanıcı",
+          "activePercent": "Bu ay aktif (%)",
+          "rate": "USD/TRY kuru",
+          "rateNotConfigured": "Girilmedi",
+          "priceTry": "Fiyat (TL/ay)",
+          "hardCapNote": "Yapay zekâ maliyeti aktif kullanıcı başına <b>{cap}</b> ile sınırlı — koda gömülü sert bir tavan (lib/ai/limits/budget.ts), aşılabilecek bir tahmin değil.",
+          "editSavedSettings": "Kaydedilmiş kur ve fiyatı Ayarlar'dan düzenle →",
+          "totalMonthlyCost": "Toplam aylık maliyet",
+          "costPerUser": "Kullanıcı başı maliyet",
+          "breakEvenUsers": "Başabaş (ödeyen kullanıcı)",
+          "rateNotConfiguredHint": "Bunu hesaplamak için döviz kurunu gir.",
+          "marginMultiple": "Marj katsayısı"
+        }
+      },
+      "research": {
+        "title": "Araştırma kuyruğu",
+        "description": "Şu anda ne araştırılıyor ve kim üstünde çalışıyor. İşi Claude Code oturumları yapar; bu ekran sadece görünür kılar.",
+        "unavailable": "Araştırma kuyruğu dosyası şu anda okunamadı. Eski veya boş bir durum göstermek yerine hiçbir şey gösterilmiyor — birazdan tekrar dene.",
+        "columnArea": "Bölge",
+        "columnKnownFact": "Bilinen gerçek",
+        "columnStatus": "Durum",
+        "lanesTitle": "Bu gece görevli"
+      },
+      "settings": {
+        "title": "Ayarlar",
+        "description": "Bugün gerçekten yapılandırılabilen ve henüz olmayan.",
+        "finance": {
+          "sectionTitle": "Fiyat ve döviz kuru",
+          "sectionDescription": "Bu ürünün bir yöneticinin girmesini gerektirdiği tek iki rakam — kur asla tahmin edilmez, yanlış bir kur Kâr & Zarar'daki her rakamı sessizce bozar.",
+          "rateLabel": "USD/TRY kuru (1$ için TL)",
+          "rateNotConfigured": "Girilmedi",
+          "rateHint": "Girilmeden bırakılırsa yapılandırılmamış kalır — başabaş ve marj rakamları girilene kadar — gösterir.",
+          "priceLabel": "Ultra fiyatı (TL/ay)",
+          "invalidRate": "Pozitif bir döviz kuru gir.",
+          "invalidPrice": "Pozitif bir fiyat gir.",
+          "saved": "Kaydedildi.",
+          "saving": "Kaydediliyor…",
+          "save": "Kaydet"
+        },
+        "aiCap": {
+          "sectionTitle": "Yapay zekâ maliyet tavanı",
+          "sectionDescription": "Salt okunur — bunlar gerçek, koda gömülü sabitler (lib/ai/limits/budget.ts), buradan değiştirilecek bir ayar değil. Bunları değiştirmek bir kod değişikliğidir, form değil.",
+          "degradePoint": "Haiku'ya düştüğü nokta",
+          "hardCeiling": "Sert tavan",
+          "tokenLimit": "Görünen token kotası"
+        },
+        "notYetWired": {
+          "sectionTitle": "Henüz buradan yapılandırılamıyor",
+          "signups": "Yeni kayıt kontrolü — kodda hiçbir yerde bir açma/kapama anahtarı yok; kayıtlar her zaman açık.",
+          "maintenance": "Bakım modu — böyle bir bayrak yok; açılacak bir şey yok.",
+          "trialPeriod": "Deneme süresi uzunluğu — bir ayar olarak saklanmıyor; bir denemenin bugün nasıl belirlendiği için lib/tier'e bak."
+        }
+      },
+      "traffic": {
+        "title": "Trafik",
+        "description": "Kayıtlar, aktivasyon ve ürün olayları gerçek ve ölçülüyor. Ziyaretçi sayısı değil — uygulama hiç yayına alınmadı ve hiçbir şey bir sayfa görüntülemesini saymıyor.",
+        "visitorsLabel": "Ziyaretçi",
+        "visitorsNotMeasured": "Ölçülmüyor — henüz sayfa görüntüleme takibi yok. Bu bir sıfır değil."
+      }
     },
     "growth": {
       "signups": {

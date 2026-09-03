@@ -1937,7 +1937,6 @@
       "footerNote": "Separate from the student app. Nothing here is reachable by a student.",
       "overviewTitle": "What needs you right now",
       "overviewDescription": "Not everything — only what is waiting on a decision.",
-      "overviewPlaceholder": "The attention list and summary cards land here next. This screen is deliberately short: every other area has its own place in the rail rather than being stacked on top of this one.",
       "ledgerDescription": "Every admin action, in one list — regardless of which table recorded it.",
       "moderationDescription": "Reported messages and posts, waiting on a decision.",
       "systemDescription": "Whether the machinery is healthy — providers, jobs, and AI response quality.",
@@ -1946,7 +1945,104 @@
       "studentsDescription": "Every student, their plan tier, and when they last showed up.",
       "pendingTitle": "Not built yet",
       "pendingDescription": "This screen is planned and on the rail, but nobody has written it.",
-      "pendingBody": "You are seeing this instead of a 404 on purpose. Admin routes return 404 for anyone without access, so an unbuilt screen and a permission failure would otherwise look identical — and you would have no way to tell which one you hit."
+      "pendingBody": "You are seeing this instead of a 404 on purpose. Admin routes return 404 for anyone without access, so an unbuilt screen and a permission failure would otherwise look identical — and you would have no way to tell which one you hit.",
+      "attention": {
+        "sectionTitle": "Waiting on a decision",
+        "openReports": "Open moderation reports",
+        "pendingCleanup": "Opportunity descriptions still contaminated",
+        "degradedStudents": "Students who hit the AI degrade point this month",
+        "count": "{count}",
+        "countOfTotal": "{count} of {total}",
+        "nothingPending": "Nothing is currently waiting on you."
+      },
+      "cards": {
+        "priceHint": "Current Ultra price",
+        "rateNotConfigured": "Rate not configured",
+        "noPageviewTracking": "No pageview tracking yet",
+        "registeredStudents": "Registered students",
+        "spendLast30d": "AI spend, last 30 days"
+      },
+      "community": {
+        "title": "Community",
+        "description": "Posts, messages and connections — real, live counts. Early numbers on a product with no real traffic yet.",
+        "posts": "Posts",
+        "postAuthors": "{count, plural, =0 {from no one yet} one {from 1 student} other {from {count} students}}",
+        "messages": "Messages",
+        "connections": "Connections",
+        "likes": "Likes",
+        "earlyNote": "These are small numbers because the product is early, not because anything is broken. Compare against Traffic's signup count for the full picture.",
+        "notSetUp": "Not set up yet"
+      },
+      "profitLoss": {
+        "title": "Profit & Loss",
+        "description": "A live calculator, not a report — adjust any input to see it recompute.",
+        "scaleTableTitle": "Cost per user at scale",
+        "scaleTableDescription": "docs/maliyet-ve-fiyatlandirma-2026-09-02.md §4/§6, computed live from the same formula the calculator above uses — never a second, hand-typed copy of these numbers.",
+        "scaleTableUsers": "Users",
+        "scaleTableActiveRatio": "Active",
+        "scaleTableCostPerUser": "Cost / user",
+        "scaleTableBreakEven": "Paying users to break even",
+        "calculator": {
+          "inputsTitle": "Scenario",
+          "subscriberCount": "Total users",
+          "activePercent": "Active this month (%)",
+          "rate": "USD/TRY rate",
+          "rateNotConfigured": "Not set",
+          "priceTry": "Price (TL/month)",
+          "hardCapNote": "AI cost is capped at <b>{cap}</b> per active user — a hard ceiling enforced in code (lib/ai/limits/budget.ts), not a projection that could be exceeded.",
+          "editSavedSettings": "Edit the saved rate and price in Settings →",
+          "totalMonthlyCost": "Total monthly cost",
+          "costPerUser": "Cost per user",
+          "breakEvenUsers": "Break-even (paying users)",
+          "rateNotConfiguredHint": "Set the exchange rate to compute this.",
+          "marginMultiple": "Margin multiple"
+        }
+      },
+      "research": {
+        "title": "Research queue",
+        "description": "What's being researched right now, and who's staffed on it. Claude Code sessions do the work; this screen only makes that visible.",
+        "unavailable": "Couldn't read the research queue file right now. The last known state isn't shown rather than showing a stale or empty one — try again shortly.",
+        "columnArea": "Area",
+        "columnKnownFact": "What's known",
+        "columnStatus": "Status",
+        "lanesTitle": "Staffed tonight"
+      },
+      "settings": {
+        "title": "Settings",
+        "description": "What's actually configurable today, and what isn't yet.",
+        "finance": {
+          "sectionTitle": "Price & exchange rate",
+          "sectionDescription": "The only two figures this product needs an admin to enter — the rate is never guessed, and a wrong one would silently falsify every dollar figure in Profit & Loss.",
+          "rateLabel": "USD/TRY rate (TL per $1)",
+          "rateNotConfigured": "Not configured",
+          "rateHint": "Leave blank to keep it unconfigured — break-even and margin figures show — until it's set.",
+          "priceLabel": "Ultra price (TL/month)",
+          "invalidRate": "Enter a positive exchange rate.",
+          "invalidPrice": "Enter a positive price.",
+          "saved": "Saved.",
+          "saving": "Saving…",
+          "save": "Save"
+        },
+        "aiCap": {
+          "sectionTitle": "AI cost cap",
+          "sectionDescription": "Read-only — these are the real, enforced constants (lib/ai/limits/budget.ts), not a setting to adjust here. Changing them is a code change, not a form.",
+          "degradePoint": "Degrades to Haiku at",
+          "hardCeiling": "Hard ceiling",
+          "tokenLimit": "Visible token quota"
+        },
+        "notYetWired": {
+          "sectionTitle": "Not yet configurable here",
+          "signups": "New-signup control — no toggle exists anywhere in the code today; signups are always open.",
+          "maintenance": "Maintenance mode — no such flag exists; there is nothing to switch on.",
+          "trialPeriod": "Trial period length — not stored as a setting; check lib/tier for how a trial is currently determined."
+        }
+      },
+      "traffic": {
+        "title": "Traffic",
+        "description": "Signups, activation and product events are real and measured. Visitor count is not — the app has never been deployed and nothing counts a pageview.",
+        "visitorsLabel": "Visitors",
+        "visitorsNotMeasured": "Not measured — no pageview tracking exists yet. This is not a zero."
+      }
     },
     "growth": {
       "signups": {
