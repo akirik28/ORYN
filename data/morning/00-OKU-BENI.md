@@ -106,6 +106,16 @@ yazılı). Biri de kapanmış bir marka: Duke TIP artık Duke Pre-College, canl�
 Ayrıntı: `docs/yedi-kapsanmayan-kayit-2026-09-03.md`. **SQL hazırlamadım** — kurum adı
 doldurmak dördü için de yanlış düzeltme olurdu. Duke'un kimliğini değiştirmek senin kararın.
 
+**Bu adımın bir yan etkisini bilmen gerekiyor, çünkü aşağıdaki kararlardan birini
+etkiliyor.** İncelemedeki 112 kaydın **111'inde yaş sınırı yok.** Aktife çekilen 80 kayıt da
+bu havuzdan geliyor. Yani bu adımdan sonra, öğrencinin gördüğü katalogda yaş sınırı
+bilinmeyen kayıt sayısı 189'dan yaklaşık 269'a çıkıyor.
+
+Kayıtların kendisi sorunlu değil — tek tek doğrulandılar. Sorun, `eligible` alanının
+"bilmiyoruz" diyememesi (aşağıdaki kararlardan biri): sınır kaydedilmemiş bir kayda motor
+"uygun" diyor. Yani bu adım o kararı **daha acil** hale getiriyor, daha az değil. Adımı
+durdurmanı önermiyorum; sadece sırayı bilerek kurman için söylüyorum.
+
 ## 4. Tek tek kayıt düzeltmeleri
 
 `03-firsat-kayit-duzeltmeleri-2026-09-03.sql` — iki gerçek düzeltme. Google CSSI'nin adresi
