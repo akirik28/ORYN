@@ -47,7 +47,7 @@ describe("resolveAdmissionSystem — the three shapes the research actually foun
   });
 
   test("every resolved entry carries at least one traceable source document", () => {
-    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland", "Denmark", "Hungary"]) {
+    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland", "Denmark", "Hungary", "Austria"]) {
       const result = resolveAdmissionSystem({ targetCountry: country, studentCountry: "Turkey" });
       expect(result.sources.length, country).toBeGreaterThan(0);
       expect(result.mechanism, country).not.toBeNull();
@@ -453,6 +453,49 @@ describe("resolveAdmissionSystem — Hungary (2026-09-03, a real funding-status 
   test("Hungary traces to its own research document, not an invented source", () => {
     const result = resolveAdmissionSystem({ targetCountry: "Hungary", studentCountry: "Hungary" });
     expect(result.sources).toContain("docs/research/admissions-systems/hungary.md");
+  });
+});
+
+describe("resolveAdmissionSystem — Austria (2026-09-03, threshold by default, competitive only where named)", () => {
+  // The first entry in this expansion line whose default posture is academic_threshold, not
+  // academic_rank_competitive — matches the Netherlands/Italy/Switzerland general-route pattern
+  // already in the original 15, rather than introducing a new shape.
+  test("Austria's general track is threshold, not competitive — eligible functionally equals admitted", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Austria", studentCountry: "Austria" });
+    expect(domestic.shape).toBe("academic_threshold");
+    expect(reviewsNonAcademicEvidence(domestic.shape)).toBe(false);
+    expect(domestic.mechanism).toContain("open access");
+  });
+
+  test("Austria's international track keeps the same shape, with an added eligibility step in the mechanism text", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Austria", studentCountry: "Austria" });
+    const international = resolveAdmissionSystem({ targetCountry: "Austria", studentCountry: "Turkey" });
+    expect(international.shape).toBe("academic_threshold");
+    expect(international.mechanism).not.toBe(domestic.mechanism);
+    expect(international.mechanism).toContain("home country");
+  });
+
+  // Medicine is the named exception (austria.md §C) — recorded as a fieldOverride the same way
+  // Switzerland's EMS and Germany's NC-Medicine already are in this registry, RULE-ADMISSIONS-019.
+  test("Medicine flips Austria from threshold to rank-competitive via MedAT", () => {
+    const general = resolveAdmissionSystem({ targetCountry: "Austria", studentCountry: "Turkey" });
+    const medicine = resolveAdmissionSystem({ targetCountry: "Austria", studentCountry: "Turkey", targetField: "medicine" });
+    expect(general.shape).toBe("academic_threshold");
+    expect(medicine.shape).toBe("academic_rank_competitive");
+    expect(medicine.basis).toBe("country_field");
+    expect(medicine.mechanism).toContain("MedAT");
+  });
+
+  test("a field with no override falls back to Austria's open-access default", () => {
+    const general = resolveAdmissionSystem({ targetCountry: "Austria", studentCountry: "Turkey" });
+    const engineering = resolveAdmissionSystem({ targetCountry: "Austria", studentCountry: "Turkey", targetField: "engineering" });
+    expect(engineering.shape).toBe(general.shape);
+    expect(engineering.mechanism).toBe(general.mechanism);
+  });
+
+  test("Austria traces to its own research document, not an invented source", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Austria", studentCountry: "Austria" });
+    expect(result.sources).toContain("docs/research/admissions-systems/austria.md");
   });
 });
 
