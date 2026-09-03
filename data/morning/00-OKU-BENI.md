@@ -223,6 +223,33 @@ bir şey söylemiyor" diye bırakılırdı.
 
 **İş şu an kapalı ve öyle duruyor.** Açmak senin kararın.
 
+**Oryn hangi kurumları bilmeli?** İki ölçüm aynı soruya çıkıyor.
+
+*Ülke tarafı:* veritabanında **458 üniversite şartnamedeki koridorun dışında** — Çin 64,
+Hindistan 37, Güney Kore 31, Malezya 25, Japonya 22. Koridor içinde kalan ise ince:
+Finlandiya 9, sonra Litvanya 4, Estonya 3, Kıbrıs 3. Yani "en çok kurum" ile "bu ürün için
+en önemli" ters yönü gösteriyor.
+
+*Kurum tarafı — bu daha çarpıcı:* katalog **bütün bir tabakayı görmüyor.** Almanya'da 243
+uygulamalı bilimler üniversitesinin **sıfırı** kayıtlı, ve DAAD'ın kendi rakamıyla Alman
+öğrencilerin **%37'si** o sektörde okuyor. Hollanda'da 40+ hogeschool'un sıfırı — ve HBO
+orada **daha büyük** sektör (462.130 öğrenci, WO'da 340.179). Avusturya 0/21, İsviçre 1,
+İrlanda 1/5.
+
+Sebebi bulundu: **adında "University" geçen kurumlar girmiş, geçmeyenler girmemiş.**
+İngiltere kontrol vakası — oradaki eski politeknikler eksiksiz var, çünkü 1992'de yasayla
+o adı almışlar. Yani ayrım prestij ya da müfredat değil, isim.
+
+Ve bunun Türk öğrenciye somut bedeli var: Finlandiya'da sınavsız kapı açan sektör tam
+olarak o, ve katalog o kurumların hiçbirini içermiyor.
+
+Karşı argüman da gerçek: Hollanda'nın kendi verisi uluslararası öğrencilerin zaten diğer
+tarafa yığıldığını gösteriyor, ve 243 kurumu arkalarında veri olmadan eklemek bu gece
+düzelttiğimiz "veri yok ama kendinden emin etiket" hatasını yirmi katına çıkarır.
+
+Üç seçenek: koridoru genişlet, kapsam dışını çıkar, ya da kalsınlar ama etiketsiz. **Şu an
+üçüncüsünün yarısındayız.**
+
 **Fırsat görselleri ve lisans.** 282 kaydın 218'inde görsel yok, ve **128'inin kaynak
 sayfasında zaten görsel yok** — daha çok taramak bunu çözmüyor. Üçüncü taraf görseli
 sunmanın hukuki temeli açık değil; `LEGAL_REVIEW.md`'ye eklendi. Bu arada lisans gerektirmeyen,
