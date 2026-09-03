@@ -131,14 +131,21 @@ Ayrıntı: `docs/yedi-kapsanmayan-kayit-2026-09-03.md`. **SQL hazırlamadım** �
 doldurmak dördü için de yanlış düzeltme olurdu. Duke'un kimliğini değiştirmek senin kararın.
 
 **Bu adımın bir yan etkisini bilmen gerekiyor, çünkü aşağıdaki kararlardan birini
-etkiliyor.** İncelemedeki 112 kaydın **111'inde yaş sınırı yok.** Aktife çekilen 80 kayıt da
-bu havuzdan geliyor. Yani bu adımdan sonra, öğrencinin gördüğü katalogda yaş sınırı
-bilinmeyen kayıt sayısı 189'dan yaklaşık 269'a çıkıyor.
+etkiliyor.** İncelemedeki 112 kaydın hiçbirinde kimin başvurabileceği kayıtlı değil — ne yaş
+ne sınıf. Aktife çekilen 78 kayıt oradan geliyor. Yani bu adımdan sonra, öğrencinin gördüğü
+katalogda "kimin başvurabileceğini bilmiyoruz" durumundaki kayıt sayısı **128'den ~206'ya**
+çıkıyor.
 
 Kayıtların kendisi sorunlu değil — tek tek doğrulandılar. Sorun, `eligible` alanının
 "bilmiyoruz" diyememesi (aşağıdaki kararlardan biri): sınır kaydedilmemiş bir kayda motor
 "uygun" diyor. Yani bu adım o kararı **daha acil** hale getiriyor, daha az değil. Adımı
 durdurmanı önermiyorum; sadece sırayı bilerek kurman için söylüyorum.
+
+*(Bu sayıyı sana daha önce 189 diye yazmıştım, yanlıştı — sadece yaş alanına bakıyordum.
+Ürünün `eligible_grades` diye ikinci bir alanı var ve 282 aktif kaydın 95'inde o dolu.
+İkisinden biri doluysa kimin başvurabileceği aslında biliniyor: 154 kayıtta biliniyor,
+128'inde bilinmiyor. Bunu 31 kendi ölçümünde yakaladı — benim verdiğim görev yanlış alanı
+sayıyordu.)*
 
 ## 4. Tek tek kayıt düzeltmeleri
 
