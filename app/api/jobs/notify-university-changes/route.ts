@@ -4,10 +4,13 @@ import { runWithTracking } from "@/lib/jobs/run-with-tracking";
 import { scanUniversityDataChanges } from "@/lib/universities/data-change-scan";
 
 /**
- * Scheduled job (Phase 24 notification). Not wired into vercel.json — scheduling is a
- * deployment decision left to the founder, and this route is safely inert without
- * CRON_SECRET regardless (verifyCronRequest refuses everything when it's unset). Run
- * manually or on whatever cadence is chosen:
+ * Scheduled job (Phase 24 notification). Armed in vercel.json (0 7 * * *, 2026-09-03) — see
+ * docs/job-dry-run-audit-2026-09-03.md for the pre-arm dry run of this job specifically,
+ * including a live-data finding worth reading before its first real run: right now, every
+ * candidate notification traces to this project's own catalogue-research backfill landing
+ * after a student started tracking a university, not to a genuine external change. This
+ * route is also safely inert without CRON_SECRET regardless (verifyCronRequest refuses
+ * everything when it's unset). Run manually or on whatever cadence is chosen:
  *   curl -X POST /api/jobs/notify-university-changes -H "Authorization: Bearer $CRON_SECRET"
  *
  * Aggregates every changed tracked university into one notification per student per run —
