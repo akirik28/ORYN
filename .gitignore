@@ -40,3 +40,9 @@ scripts/drive-import/parsed/
 # artifacts, never deliverables -- one reached origin/main on 2026-09-03 because a
 # broad `git add -A` during a merge resolution swept it up.
 public/_tmp-*
+
+# Worktrees registered inside this checkout rather than as siblings. Not ours to remove --
+# another session is using it -- but it shows as an untracked directory here, so a broad
+# `git add -A` can sweep it in. That is not hypothetical: public/_tmp-kumanda.html reached
+# origin/main on 2026-09-03 exactly that way.
+trace-worktree-tmp/
