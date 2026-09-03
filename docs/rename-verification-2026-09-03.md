@@ -174,17 +174,78 @@ have masked).
 
 _(filled in as each branch lands)_
 
-### Lane 48 — catalogs
+### Lane 1 — catalogs
 Not yet pushed.
 
-### Lane 44 — legal + prompts + metadata
+### Lane 2 — legal + prompts + metadata
 Not yet pushed.
 
-### Lane ab — logos + alt text
-Not yet pushed.
+### Lane 3 — brand assets (logos + alt text) — merged `4627e37e` — CLEAN
 
-### Lane a4 — internals + disclosure files
-Not yet pushed.
+All 9 hardcoded `alt="Oryn"` instances confirmed changed to `alt="Proxola"` by direct
+grep (`app/page.tsx`, `not-found.tsx`, both dev-preview pages, confirm-age/onboarding/
+auth layouts, sidebar, mobile-nav) — zero `alt="Oryn"` remain anywhere except the
+inventory doc's own prose describing the finding. Logo files (`logo-full.png`,
+`logo-mark.png`, `icon.png`, `apple-icon.png`, `favicon.ico`) replaced from crops
+isolated by color-channel difference rather than eyeballed, per the commit message —
+not independently re-verified pixel-by-pixel (a design-quality judgment, not a
+rename-correctness one, and out of this report's scope), but the two things that *are*
+this report's business check out: forbidden list untouched (confirmed via the combined
+script run above), and the width replacements for the new aspect ratio are real
+arithmetic, not guessed numbers. Read the actual diffs rather than trust the commit
+message's framing, which called these "height" replacements — they're not: `height` is
+the fixed dimension in both changed lines (sidebar.tsx: `height={31}` unchanged,
+`width={92}`→`{100}`; auth layout: `height={35}` unchanged, `width={104}`→`{113}`), and
+checking `height × (664/205)` against the new width in each case: 31 × 3.239 ≈ 100.4 →
+100 ✓, 35 × 3.239 ≈ 113.4 → 113 ✓. Correct, just mislabeled in the commit message —
+worth a one-line correction back to the lane, not a finding.
+
+Two things flagged by the lane itself, correctly left alone rather than fixed out of
+scope: a blue-mark/purple-accent color clash (a founder design decision, not a rename
+defect) and the auth screen's "New to ORYN? Create an account" string, which lives in
+`messages/*.json` — explicitly Lane 1/2's territory. Worth checking that this specific
+string actually gets caught when Lane 1 or 2 lands, since it's now a named, waiting
+item rather than an assumption.
+
+### Lane 6 — directory rename (`components/oryn/` → `components/proxola/`) — merged `a55c035c` — CLEAN, pending typecheck/test confirmation
+
+`git mv` of 28 files plus 115 import repoints. Matched specifically on the
+`components/oryn/` path, never on the bare word — confirmed two ways: the four
+collision identifiers are exactly unchanged (storyNotes 9, storyNotesCount 3,
+hasStoryNotes 3, categoryNavAriaLabel 3 — all identical to baseline), and
+`__tests__/oryn/` (a different directory that happens to share the word) had its
+*imports* fixed but was not itself renamed.
+
+Verified that second point isn't a gap: `oryn/rename-lane7-tests-2026-09-03` exists as
+a branch (not yet started — zero commits ahead of main), consistent with `__tests__/`
+being a separate lane's named territory rather than something Lane 6 missed. Correct
+lane-boundary discipline, not an omission — the same distinction this fleet's own gate
+work drew between "found and fixed" and "found and correctly left for someone else."
+
+One judgment call worth naming rather than just accepting: the lane fixed 10 files'
+stale `components/oryn/...` path references inside developer doc-comments, past the
+letter of an import-only brief. Own reasoning was "a doc-comment pointing at a moved
+file is a broken pointer, not a record of anything" — checked this against Bucket 3's
+actual rule (historical *record* is protected, not incidental *pointers* that happen to
+predate a move) and it holds: a doc-comment saying "see components/oryn/foo.tsx" is a
+navigation aid that becomes actively wrong after the file moves, not a record of a
+decision made at a point in time. Different in kind from editing AGENTS.md's verbatim
+block.
+
+`npx tsc --noEmit` and the full test suite are running against this combined state
+(Lanes 3+6+8); results below once both finish.
+
+### Lane 8 — data/ triage — merged `83b8eaa6` — CLEAN (report only, zero files touched)
+
+Concludes the entire `data/` living-reference group is empty — everything in `data/` is
+historical record, nothing renamed. Independently spot-checked the central claim
+("nothing outside `data/` reads these files at runtime, only cites them in comments")
+rather than trusting the doc's own count of 45 citations: grepped `lib/`, `app/`,
+`scripts/` for any `readFileSync`/`require`/`import` against a `data/research` or
+`data/morning` path — zero matches, consistent with the claim. Also disclosed its own
+discrepancy against the founder's cited count (4,235 vs. 3,397 occurrences) rather than
+silently adopting the higher-authority number — noted, not material to the conclusion,
+and the right instinct either way.
 
 ### Lane 05 — database SQL — merged `e03becc4` — CLEAN
 
