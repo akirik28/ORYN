@@ -96,6 +96,52 @@ describe("findClosurePhrases / findOpeningPhrases -- design doc §5.1's fixed ph
     expect(findClosurePhrases("A page about the weather today.")).toEqual([]);
     expect(findOpeningPhrases("A page about the weather today.")).toEqual([]);
   });
+
+  test("'check back' is no longer a standalone closure trigger -- dry run #1 found it false-positive 2/2 times on unrelated blog/gallery text, and a third instance (BUTI's 'Check back regularly for more!' news blurb) surfaced during the before/after comparison for this very fix", () => {
+    expect(findClosurePhrases("Latest stories. Season announcements. Check back regularly for more!")).toEqual([]);
+  });
+});
+
+describe("the evidence-grounded patterns added 2026-09-03 -- each traceable to a specific real page from the 49-row stratified sample, not intuition", () => {
+  test("'apply now' -- Wharton M&TSI ('Apply Now!'), LaunchX, UNO", () => {
+    expect(findOpeningPhrases("Learn about technological innovation. Apply Now! OVERVIEW M&TSI is...").length).toBeGreaterThan(0);
+  });
+
+  test("'now open' / 'open now' / 'now opened' in either word order -- EYP Türkiye ('ARE OPEN NOW'), Özyeğin ('ARE NOW OPENED')", () => {
+    expect(findOpeningPhrases("DELEGATE CALLS FOR ISTANBUL ARE OPEN NOW for the national session").length).toBeGreaterThan(0);
+    expect(findOpeningPhrases("APPLICATIONS FOR 2026 ARE NOW OPENED! Özyeğin University Summer Research").length).toBeGreaterThan(0);
+  });
+
+  test("'applications are/is (now) open' -- Girl Up ('are now open'), Habitat ('Applications are open to')", () => {
+    expect(findOpeningPhrases("Applications for the 2025-2026 Global Teen Advisor Board are now open! Apply by January 26").length).toBeGreaterThan(0);
+    expect(findOpeningPhrases("Who Can Apply? Applications are open to young people living in all 81 provinces of Türkiye.").length).toBeGreaterThan(0);
+  });
+
+  test("'registration open' -- Wall Street 101 ('Registration open for Summer 2026')", () => {
+    expect(findOpeningPhrases("Plant the seeds for your child's financial future. Registration open for Summer 2026").length).toBeGreaterThan(0);
+  });
+
+  test("'application is available' -- Coca-Cola Scholars ('The 2027 ... application is available here!')", () => {
+    expect(findOpeningPhrases("The 2027 Coca-Cola Scholars application is available here! This $20,000 college scholarship").length).toBeGreaterThan(0);
+  });
+
+  test("'is/are/has now closed' -- JLI ('Registration ... is now closed'), ASSIP, Girl Up Project Awards", () => {
+    expect(findClosurePhrases("Registration for the 2026 Global Essay Prize is now closed. Registered contestants may submit").length).toBeGreaterThan(0);
+    expect(findClosurePhrases("The 2026 ASSIP Application is now closed. What's next for 2026 ASSIP applicants?").length).toBeGreaterThan(0);
+  });
+
+  test("'officially concluded' -- SIP ('SIP 2026 Has Officially Concluded')", () => {
+    expect(findClosurePhrases("under the mentorship of UCSC researchers. SIP 2026 Has Officially Concluded! Thank you").length).toBeGreaterThan(0);
+  });
+
+  test("'not open for submissions' -- Interlochen Review, the one legitimate observed 'check back' usage, still caught without needing 'check back' as its own trigger", () => {
+    expect(findClosurePhrases("The Interlochen Review is currently not open for submissions. Check back in January, 2027.").length).toBeGreaterThan(0);
+  });
+
+  test("stays anchored, never a bare word match -- Columbia's own course-FILTER UI ('Status - Any - Open Closed') must not fire, since it is a control, not a fact about this opportunity", () => {
+    expect(findOpeningPhrases("Format - Any - Online In Person Status - Any - Open Closed Related Program")).toEqual([]);
+    expect(findClosurePhrases("Format - Any - Online In Person Status - Any - Open Closed Related Program")).toEqual([]);
+  });
 });
 
 describe("findDateCandidates -- design doc §5.1 step 3, explicit formats only", () => {
