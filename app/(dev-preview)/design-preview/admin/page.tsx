@@ -27,13 +27,31 @@ import { PreviewToolbar } from "../preview-toolbar";
  * to let a working session actually look at the output once, the same reason every other
  * design-preview/* route exists.
  */
-export default async function AdminDesignPreviewPage() {
+/**
+ * `?tone=light` renders these same sections on the control centre's light-green ground
+ * (app/globals.css's [data-surface="admin"][data-admin-tone="light"], the tone
+ * app/(admin)/layout.tsx uses). Added 2026-09-03 because the claim that the light tone
+ * needs no component changes -- it redefines the same --admin-* token NAMES rather than
+ * introducing a second component family -- could not be checked by anyone: /kumanda is
+ * behind requireAdmin(), no account is is_admin yet, and there is deliberately no dev
+ * bypass. This route already renders the real sections without that gate, so it is the
+ * one place the claim is falsifiable. Default stays dark so the existing tone is still
+ * what you get without asking.
+ */
+export default async function AdminDesignPreviewPage({ searchParams }: { searchParams: Promise<{ tone?: string }> }) {
   if (process.env.NODE_ENV === "production") notFound();
 
+  const { tone } = await searchParams;
+  const light = tone === "light";
   const t = await getTranslations("admin");
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6">
+    <div
+      data-surface="admin"
+      data-admin-tone={light ? "light" : undefined}
+      style={{ background: "var(--admin-bg)", color: "var(--admin-ink-1)" }}
+      className="mx-auto max-w-5xl space-y-6 p-6"
+    >
       <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-2 text-xs text-amber-700 dark:text-amber-400">
         Design-preview route (dev only, no requireAdmin() gate) — renders the real admin
         sections against live, read-only data. Not linked from anywhere; the real page is
