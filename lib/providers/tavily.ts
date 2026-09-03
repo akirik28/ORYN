@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 import { env } from "@/lib/env";
 import { fetchProviderJson } from "./fetch-json";
+import { recordProviderNotConfigured } from "./health";
 import type { ProviderResult } from "./types";
 
 const PROVIDER_NAME = "tavily";
@@ -71,7 +72,9 @@ export class TavilySearchProvider {
 
   async search(query: string, options: TavilySearchOptions = {}): Promise<ProviderResult<TavilySearchResult[]>> {
     if (!this.apiKey) {
-      return { success: false, error: { type: "not_configured", message: "TAVILY_API_KEY is not set." } };
+      const message = "TAVILY_API_KEY is not set.";
+      await recordProviderNotConfigured(PROVIDER_NAME, message);
+      return { success: false, error: { type: "not_configured", message } };
     }
 
     const result = await fetchProviderJson(
@@ -114,7 +117,9 @@ export class TavilySearchProvider {
    */
   async extract(urls: string[]): Promise<ProviderResult<TavilyExtractResponse>> {
     if (!this.apiKey) {
-      return { success: false, error: { type: "not_configured", message: "TAVILY_API_KEY is not set." } };
+      const message = "TAVILY_API_KEY is not set.";
+      await recordProviderNotConfigured(PROVIDER_NAME, message);
+      return { success: false, error: { type: "not_configured", message } };
     }
     if (urls.length === 0) return { success: true, data: { results: [], failedResults: [] } };
 

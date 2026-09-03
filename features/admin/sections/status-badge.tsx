@@ -22,6 +22,15 @@ const STATUS_CLASS: Record<string, string> = {
   never_run: "border-red-500/30 text-red-700 dark:text-red-400",
   stale: "border-red-500/30 text-red-700 dark:text-red-400",
   stuck: "border-amber-500/30 text-amber-700 dark:text-amber-400",
+  // Synthetic states from lib/admin/provider-health.ts, added 2026-09-03 for the same
+  // reason as the pair above: derived from stored data (no row at all, or a specific
+  // last_error marker), not read directly off `provider_status`. Two different colors on
+  // purpose, not the muted `unknown` treatment for both: `never_attempted` is calm (nothing
+  // has happened yet, no action implied); `not_configured` is its own blue, distinct from
+  // both that calm gray and from `degraded`'s amber — actionable (a credential is missing)
+  // but not an active failure, which amber would wrongly imply.
+  never_attempted: "text-muted-foreground",
+  not_configured: "border-blue-500/30 text-blue-700 dark:text-blue-400",
 };
 
 /**
@@ -47,6 +56,8 @@ const STATUS_LABELS: Record<string, string> = {
   never_run: "Never run",
   stale: "Stale",
   stuck: "Stuck",
+  never_attempted: "Never attempted",
+  not_configured: "Not configured",
 };
 
 /**
@@ -74,6 +85,8 @@ const STATUS_LABELS_TR: Record<string, string> = {
   never_run: "Hiç çalıştırılmadı",
   stale: "Güncel değil",
   stuck: "Takıldı",
+  never_attempted: "Hiç denenmedi",
+  not_configured: "Yapılandırılmadı",
 };
 
 export function statusLabel(status: string, locale: Locale): string {

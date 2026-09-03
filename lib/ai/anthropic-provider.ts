@@ -3,7 +3,7 @@ import "server-only";
 import { Anthropic } from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { env } from "@/lib/env";
-import { recordProviderSuccess, recordProviderFailure } from "@/lib/providers/health";
+import { recordProviderSuccess, recordProviderFailure, recordProviderNotConfigured } from "@/lib/providers/health";
 import { reportError } from "@/lib/monitoring";
 import {
   AIProviderNotConfiguredError,
@@ -36,8 +36,14 @@ const PROVIDER_NAME = "anthropic";
  */
 const DEFAULT_MAX_TOKENS = 8192;
 
-function getClient(): Anthropic {
+/**
+ * Async since 2026-09-03 (was sync) so the not-configured case can be recorded before it
+ * throws — see recordProviderNotConfigured's own header for why this needed a distinct
+ * synthetic status rather than being folded into a plain provider_health failure.
+ */
+async function getClient(): Promise<Anthropic> {
   if (!env.anthropic.apiKey) {
+    await recordProviderNotConfigured(PROVIDER_NAME, "ANTHROPIC_API_KEY is not set.");
     throw new AIProviderNotConfiguredError();
   }
   return new Anthropic({ apiKey: env.anthropic.apiKey });
@@ -61,9 +67,11 @@ function toToolInputSchema(schema: z.ZodType<unknown>) {
  * this call, and not passing `request` here is what makes that true by construction rather
  * than by remembering to strip it. `model` is an identifier, not content, so it's fine as a
  * tag. Same failure-worth-reporting line `recordProviderFailure` already draws: a missing
- * API key (`getClient()`, above the try/catch every caller wraps) never reaches here, because
- * "nobody configured this yet" is a deployment fact, not an error — see that function's own
- * comment.
+ * API key (`getClient()`, above the try/catch every caller wraps) never reaches Sentry via
+ * this function, because "nobody configured this yet" is a deployment fact, not an error —
+ * still true after getClient() started recording it to provider_health (2026-09-03): that
+ * change is about the admin panel's own visibility, a different question from whether this
+ * specific alerting channel should fire.
  */
 async function reportProviderFailure(message: string, model: string, tags?: Record<string, string>): Promise<void> {
   // Awaited, like recordProviderFailure alongside it: a serverless invocation can be frozen
@@ -100,12 +108,17 @@ function buildMessages(request: AIRequest): Anthropic.MessageParam[] {
 
 export class AnthropicProvider implements AIProvider {
   async generateText(request: AIRequest): Promise<AITextResult> {
-    const client = getClient();
+    const client = await getClient();
 
     // Wraps only the actual network call, not getClient() above — a missing API key is a
-    // deployment/configuration fact (AIProviderNotConfiguredError), not a live health
-    // signal, and recording it as a provider_health failure would make a dashboard read
-    // "Anthropic is degraded" when the honest statement is "nobody has set the key yet".
+    // deployment/configuration fact (AIProviderNotConfiguredError), recorded by getClient()
+    // itself as the distinct `not_configured` synthetic status (2026-09-03), not folded into
+    // a plain provider_health failure the way this comment used to say it deliberately
+    // wasn't: that reasoning was "don't make a dashboard read 'Anthropic is degraded' when
+    // the honest statement is 'nobody has set the key yet'", which still holds — it's why
+    // getClient() calls recordProviderNotConfigured rather than recordProviderFailure — but
+    // the conclusion changed from "so don't record it" to "so record it as what it actually
+    // is", once a status existed that wouldn't be misread as an active failure.
     const model = request.model ?? env.anthropic.model;
     let message: Anthropic.Message;
     try {
@@ -145,7 +158,7 @@ export class AnthropicProvider implements AIProvider {
   }
 
   async generateStructured<T>(request: AIStructuredRequest<T>): Promise<AIStructuredResult<T>> {
-    const client = getClient();
+    const client = await getClient();
     const tool: Anthropic.Tool = {
       name: request.schemaName,
       description: request.schemaDescription,

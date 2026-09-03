@@ -1,4 +1,5 @@
 import type { ProviderHealth } from "@/types/database";
+import { isNotConfiguredLastError } from "@/lib/providers/health";
 
 /**
  * Mirrors lib/jobs/job-health.ts's shape deliberately — same "definition + latest recorded
@@ -18,12 +19,19 @@ export interface ProviderDefinition {
 }
 
 /** Exact strings each provider module registers under (grepped from each provider's own
- *  `PROVIDER_NAME`/`recordProviderSuccess` call site, 2026-09-02 — not guessed). */
+ *  `PROVIDER_NAME`/`recordProviderSuccess` call site — re-verified 2026-09-03, which is how
+ *  `internet_archive` (lib/opportunities/reverification/corroborate.ts, added since the
+ *  original 2026-09-02 grep) was found live-reporting real, healthy data that this list —
+ *  and therefore the panel, which only ever iterates this list — had no entry for and so
+ *  never rendered at all. Not a hypothetical: confirmed against the live `provider_health`
+ *  table the same session this was found, alongside the tavily gap this file's other
+ *  2026-09-03 changes exist to close). */
 export const PROVIDER_DEFINITIONS: readonly ProviderDefinition[] = [
   { provider: "anthropic", label: "Anthropic" },
   { provider: "tavily", label: "Tavily" },
   { provider: "college_scorecard", label: "College Scorecard" },
   { provider: "openalex", label: "OpenAlex" },
+  { provider: "internet_archive", label: "Internet Archive" },
 ];
 
 /**
@@ -54,10 +62,26 @@ function classifyFreshness(sinceLastSuccessMs: number | null): ProviderFreshness
 export interface ProviderHealthSummary {
   readonly provider: string;
   readonly label: string;
-  /** The raw stored `provider_health.status`, or "unknown" (an existing, real member of
-   *  `ProviderStatus`) for a provider with no row at all — never invented as "down", since
-   *  a provider that's simply never been called (no API key configured, feature unused) is
-   *  a different, calmer fact than one that's actively failing. */
+  /**
+   * The raw stored `provider_health.status`, or one of two synthetic values this module
+   * derives rather than reads off a row — mirrors job_health.ts's own `never_run`/`stale`,
+   * neither of which is a real `sync_job_status` enum value either:
+   *
+   * - `"never_attempted"` — no row at all. Renamed from a bare "unknown" 2026-09-03: a
+   *   provider that's simply never been called is a calmer, more specific fact than
+   *   "unknown" suggests, and conflating it with the case below is exactly what let a whole
+   *   night of Tavily calls go unnoticed.
+   * - `"not_configured"` — a row exists, but its `last_error` carries the
+   *   isNotConfiguredLastError marker (lib/providers/health.ts): the call was attempted and
+   *   skipped before ever reaching the provider, because no credential was configured. Kept
+   *   distinct from the raw stored `"degraded"` value on purpose — `"degraded"` should mean
+   *   "we tried and the provider itself failed", not "we never tried because nobody set the
+   *   key", and collapsing those two into one badge is the specific defect this exists to
+   *   fix (TAVILY_API_KEY sat empty all night; the panel had no way to say so).
+   *
+   * Never invented as `"down"` for either case — a provider that's uncalled or unconfigured
+   * is a different, calmer fact than one that's actively failing.
+   */
   readonly status: string;
   /**
    * Deliberately kept separate from `status`, not folded into one overridden verdict the
@@ -79,7 +103,7 @@ export function summarizeProviderHealth(def: ProviderDefinition, row: ProviderHe
     return {
       provider: def.provider,
       label: def.label,
-      status: "unknown",
+      status: "never_attempted",
       freshness: "never_called",
       lastSuccessAt: null,
       lastFailureAt: null,
@@ -92,7 +116,7 @@ export function summarizeProviderHealth(def: ProviderDefinition, row: ProviderHe
   return {
     provider: def.provider,
     label: def.label,
-    status: row.status,
+    status: isNotConfiguredLastError(row.last_error) ? "not_configured" : row.status,
     freshness: classifyFreshness(sinceLastSuccessMs),
     lastSuccessAt: row.last_success_at,
     lastFailureAt: row.last_failure_at,
