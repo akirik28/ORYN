@@ -1876,7 +1876,8 @@
       "noReports": "No reports filed yet.",
       "repostNoComment": "(repost with no added comment)",
       "messageMissing": "(reported message no longer available)",
-      "recommendationMissing": "(reported recommendation no longer available)"
+      "recommendationMissing": "(reported recommendation no longer available)",
+      "postMissing": "(reported post no longer available)"
     },
     "providers": {
       "sectionTitle": "Provider health",
@@ -2082,7 +2083,8 @@
           "save": "Save",
           "saved": "Saved."
         },
-        "productSettingsNotSetUp": "Not set up yet — migration 0105 (admin_product_settings) needs to be applied before this will work."
+        "productSettingsNotSetUp": "Not set up yet — migration 0105 (admin_product_settings) needs to be applied before this will work.",
+        "saveError": "Couldn't save that. Please try again."
       },
       "traffic": {
         "title": "Traffic",

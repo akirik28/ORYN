@@ -8,6 +8,12 @@ import { describe, expect, test, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/security/require-admin", () => ({ requireAdmin: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+// Identity mock, same convention as __tests__/plan/persist.test.ts and the other files
+// using this pattern -- t(key) returns the key itself. Real catalog content (including that
+// productSettingsNotSetUp mentions "0105") is covered separately by
+// __tests__/i18n/translation-keys.test.ts; this file only needs to confirm the action picks
+// the right key for the right branch, which the key name alone already proves.
+vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
 
 const { upsertMock } = vi.hoisted(() => ({ upsertMock: vi.fn() }));
 
@@ -68,16 +74,15 @@ describe("updateProductSettings — partial writes", () => {
     expect(payload).toMatchObject({ signups_enabled: false, maintenance_mode: true, trial_period_days: 14, updated_by: "admin-1" });
   });
 
-  test("table missing (migration 0105 unapplied): a clear error naming the migration", async () => {
+  test("table missing (migration 0105 unapplied): the not-set-up key, naming the migration in the real catalog", async () => {
     upsertMock.mockResolvedValue({ error: { code: "PGRST205", message: `Could not find the table 'public.admin_product_settings' in the schema cache` } });
     const result = await updateProductSettings({ maintenanceMode: true });
-    expect(result.error).toContain("0105");
+    expect(result.error).toBe("productSettingsNotSetUp");
   });
 
-  test("a real write error surfaces as a generic save failure", async () => {
+  test("a real write error surfaces as a generic save failure, not the not-set-up key", async () => {
     upsertMock.mockResolvedValue({ error: { code: "42501", message: "permission denied" } });
     const result = await updateProductSettings({ signupsEnabled: false });
-    expect(result.error).toBeTruthy();
-    expect(result.error).not.toContain("0105");
+    expect(result.error).toBe("saveError");
   });
 });

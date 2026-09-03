@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/oryn/page-header";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getFinanceSettings, getAdminUserList } from "@/lib/admin/queries";
+import { formatNumber } from "@/lib/i18n/format";
 import { KarZararCalculator } from "@/features/admin/kar-zarar-calculator";
 import {
   RECURRING_INFRA_USD,
@@ -19,6 +20,13 @@ import {
  * 2026-09-02.md §4/§6) rendered from the same computeUnitEconomics/computeBreakEven this
  * codebase already uses everywhere else that number matters -- reproduced as data, not
  * retyped, so it can never drift from the formula it illustrates.
+ *
+ * Scale-table counts route through formatNumber() (lib/i18n/format.ts) rather than a bare
+ * `.toLocaleString()` -- found during 2026-09-03's kumanda sweep. Not a locale-visible
+ * change (formatNumber is pinned to NUMBER_FORMAT_LOCALE, still English-formatted, per that
+ * file's own "not locale-switched yet, deliberately" note): a bare `.toLocaleString()` with
+ * no argument depends on the server's own ICU default locale, which formatNumber's
+ * constant makes explicit and environment-independent instead.
  */
 export default async function ProfitLossPage() {
   const t = await getTranslations("admin.control.profitLoss");
@@ -80,7 +88,7 @@ export default async function ProfitLossPage() {
             {scaleRows.map((row) => (
               <tr key={`${row.totalUsers}-${row.activeRatio}`} style={{ borderTop: "1px solid var(--admin-border)" }}>
                 <td className="px-4 py-2 tabular-nums" style={{ color: "var(--admin-ink-1)" }}>
-                  {row.totalUsers.toLocaleString()}
+                  {formatNumber(row.totalUsers)}
                 </td>
                 <td className="px-4 py-2 tabular-nums" style={{ color: "var(--admin-ink-2)" }}>
                   {Math.round(row.activeRatio * 100)}%
@@ -89,7 +97,7 @@ export default async function ProfitLossPage() {
                   ${row.costPerUserUsd.toFixed(2)}
                 </td>
                 <td className="px-4 py-2 tabular-nums" style={{ color: "var(--admin-ink-2)" }}>
-                  {row.requiredPayingUsers !== null ? row.requiredPayingUsers.toLocaleString() : "—"}
+                  {row.requiredPayingUsers !== null ? formatNumber(row.requiredPayingUsers) : "—"}
                 </td>
               </tr>
             ))}

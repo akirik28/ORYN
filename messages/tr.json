@@ -1876,7 +1876,8 @@
       "noReports": "Henüz bildirim yapılmadı.",
       "repostNoComment": "(yorum eklenmemiş repost)",
       "messageMissing": "(bildirilen mesaj artık mevcut değil)",
-      "recommendationMissing": "(bildirilen öneri artık mevcut değil)"
+      "recommendationMissing": "(bildirilen öneri artık mevcut değil)",
+      "postMissing": "(bildirilen gönderi artık mevcut değil)"
     },
     "providers": {
       "sectionTitle": "Sağlayıcı durumu",
@@ -2082,7 +2083,8 @@
           "save": "Kaydet",
           "saved": "Kaydedildi."
         },
-        "productSettingsNotSetUp": "Henüz kurulmadı — bunun çalışması için 0105 (admin_product_settings) migration'ının uygulanması gerekiyor."
+        "productSettingsNotSetUp": "Henüz kurulmadı — bunun çalışması için 0105 (admin_product_settings) migration'ının uygulanması gerekiyor.",
+        "saveError": "Kaydedilemedi. Lütfen tekrar deneyin."
       },
       "traffic": {
         "title": "Trafik",
