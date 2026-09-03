@@ -47,7 +47,7 @@ describe("resolveAdmissionSystem — the three shapes the research actually foun
   });
 
   test("every resolved entry carries at least one traceable source document", () => {
-    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland"]) {
+    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland", "Denmark"]) {
       const result = resolveAdmissionSystem({ targetCountry: country, studentCountry: "Turkey" });
       expect(result.sources.length, country).toBeGreaterThan(0);
       expect(result.mechanism, country).not.toBeNull();
@@ -380,6 +380,45 @@ describe("resolveAdmissionSystem — Poland (2026-09-03, decentralized but conve
   test("Poland traces to its own research document, not an invented source", () => {
     const result = resolveAdmissionSystem({ targetCountry: "Poland", studentCountry: "Poland" });
     expect(result.sources).toContain("docs/research/admissions-systems/poland.md");
+  });
+});
+
+describe("resolveAdmissionSystem — Denmark (2026-09-03, the first shape that genuinely does not reduce to one answer)", () => {
+  // Kvote 1 (grades-only, rank-competitive) and Kvote 2 (genuinely holistic) exist in parallel
+  // for a domestic applicant, and Oryn has no signal for which one a student is pursuing — see
+  // docs/research/admissions-systems/denmark.md §D. Unlike Ireland's pathway_undetermined case
+  // (ambiguous only with NO student country on file), Denmark's domestic ambiguity exists even
+  // WITH a confirmed domestic student — a different kind of "unknown" than anything else in
+  // this registry, and asserted directly rather than smoothed into a guess.
+  test("Denmark's domestic pathway is honestly unknown even for a confirmed Danish student", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Denmark", studentCountry: "Denmark" });
+    expect(result.shape).toBe("unknown");
+    expect(result.pathway).toBe("domestic");
+    expect(reviewsNonAcademicEvidence(result.shape)).toBeNull();
+    expect(result.mechanism).toContain("Kvote 1");
+    expect(result.mechanism).toContain("Kvote 2");
+  });
+
+  // Confirmed via multiple institutions: a non-EU/non-IB/non-EB qualification has no Kvote 1
+  // option at all, so this is a genuinely confident answer despite the domestic ambiguity above
+  // — the first holistic_review finding anywhere in this expansion line.
+  test("Denmark's international pathway is a confident holistic_review, unlike the domestic unknown", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Denmark", studentCountry: "Turkey" });
+    expect(result.shape).toBe("holistic_review");
+    expect(reviewsNonAcademicEvidence(result.shape)).toBe(true);
+    expect(result.mechanism).toContain("Kvote 2");
+    expect(result.mechanism).not.toBeNull();
+  });
+
+  test("Denmark's domestic and international mechanisms genuinely differ, not just in shape", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Denmark", studentCountry: "Denmark" });
+    const international = resolveAdmissionSystem({ targetCountry: "Denmark", studentCountry: "Turkey" });
+    expect(domestic.mechanism).not.toBe(international.mechanism);
+  });
+
+  test("Denmark traces to its own research document, not an invented source", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Denmark", studentCountry: "Denmark" });
+    expect(result.sources).toContain("docs/research/admissions-systems/denmark.md");
   });
 });
 
