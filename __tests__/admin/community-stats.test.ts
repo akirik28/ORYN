@@ -16,23 +16,45 @@ import type { Database } from "@/types/database";
  * Fixed by a real `.select().limit(1)` existence check per table (isTableLive, this file)
  * before any count query runs. These tests pin that each table's absence produces `null`
  * (never 0, never a thrown error), independently of the others.
+ *
+ * 2026-09-03, later the same night (CEO's vacuous-test sweep): the fakeClient below is a
+ * REWRITE. The original version returned a hand-configured result per call, keyed only by
+ * call order ("call #1 is the existence check, call #2 is the count") -- it never inspected
+ * what the source actually asked PostgREST for, so it could not tell a real `.limit(1)`
+ * existence check apart from the exact `head:true` bug this file exists to prevent.
+ * Reintroducing that bug into isTableLive and re-running these tests left all three green,
+ * unchanged -- proof the suite was vacuous for the one thing it was written to catch. This
+ * version tracks whether `head: true` was actually passed and simulates PostgREST's real
+ * masking behavior from that (a missing table returns the real PGRST205 without it, a false-
+ * success 204 with it) -- confirmed by re-running the same reintroduced bug against this
+ * version and watching it fail (see the sweep's own report for the transcript).
  */
 
-type QueryResult = { data: unknown; error: { code?: string; message: string } | null; count?: number };
+type TableConfig = { missing?: true; data?: unknown; error?: { code?: string; message: string } | null; count?: number };
 
-function fakeClient(perTable: Record<string, QueryResult[]>): SupabaseClient<Database> {
-  const callIndex: Record<string, number> = {};
+function fakeClient(perTable: Record<string, TableConfig>): SupabaseClient<Database> {
   const client = {
     from: (table: string) => {
-      const results = perTable[table] ?? [{ data: [], error: null, count: 0 }];
-      const i = callIndex[table] ?? 0;
-      callIndex[table] = i + 1;
-      const result = results[Math.min(i, results.length - 1)];
-      const builder = {
-        select: () => builder,
-        eq: () => builder,
-        limit: () => Promise.resolve(result),
-        then: (resolve: (value: QueryResult) => void) => resolve(result),
+      const config = perTable[table] ?? { data: [], error: null };
+      const resolveFor = (opts?: { head?: boolean }) => {
+        if (config.missing) {
+          // The real PostgREST behavior this whole file exists to get right: head:true
+          // masks a missing table as a false-success 204, no error at all.
+          if (opts?.head === true) return { data: null, error: null, count: null };
+          return { data: null, error: { code: "PGRST205", message: `Could not find the table 'public.${table}' in the schema cache` } };
+        }
+        return { data: config.data ?? [], error: config.error ?? null, count: config.count ?? (Array.isArray(config.data) ? config.data.length : 0) };
+      };
+      const builder: Record<string, unknown> = {
+        select: (_cols: string, opts?: { head?: boolean }) => {
+          const result = resolveFor(opts);
+          const inner: Record<string, unknown> = {
+            eq: () => inner,
+            limit: () => Promise.resolve(result),
+            then: (resolve: (value: typeof result) => void) => resolve(result),
+          };
+          return inner;
+        },
       };
       return builder;
     },
@@ -40,22 +62,14 @@ function fakeClient(perTable: Record<string, QueryResult[]>): SupabaseClient<Dat
   return client as unknown as SupabaseClient<Database>;
 }
 
-function tableMissing(table: string) {
-  return { code: "PGRST205", message: `Could not find the table 'public.${table}' in the schema cache` };
-}
-
 describe("getCommunityStats", () => {
   test("all four tables live: real counts, distinct post authors, no console.error", async () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     const client = fakeClient({
-      posts: [
-        { data: null, error: null }, // existence check
-        { data: null, error: null, count: 5 }, // count
-        { data: [{ author_id: "u1" }, { author_id: "u1" }, { author_id: "u2" }], error: null }, // author rows
-      ],
-      post_likes: [{ data: null, error: null }, { data: null, error: null, count: 12 }],
-      connections: [{ data: null, error: null }, { data: null, error: null, count: 3 }],
-      messages: [{ data: null, error: null }, { data: null, error: null, count: 40 }],
+      posts: { data: [{ author_id: "u1" }, { author_id: "u1" }, { author_id: "u2" }], count: 5 },
+      post_likes: { data: [], count: 12 },
+      connections: { data: [], count: 3 },
+      messages: { data: [], count: 40 },
     });
     const stats = await getCommunityStats(client);
     expect(stats).toEqual({ postCount: 5, postAuthorCount: 2, messageCount: 40, acceptedConnectionCount: 3, likeCount: 12 });
@@ -66,10 +80,10 @@ describe("getCommunityStats", () => {
   test("posts and post_likes missing (migration 0058 unapplied): null, not 0, and no error thrown", async () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     const client = fakeClient({
-      posts: [{ data: null, error: tableMissing("posts") }],
-      post_likes: [{ data: null, error: tableMissing("post_likes") }],
-      connections: [{ data: null, error: null }, { data: null, error: null, count: 0 }],
-      messages: [{ data: null, error: null }, { data: null, error: null, count: 0 }],
+      posts: { missing: true },
+      post_likes: { missing: true },
+      connections: { data: [], count: 0 },
+      messages: { data: [], count: 0 },
     });
     const stats = await getCommunityStats(client);
     expect(stats.postCount).toBeNull();
@@ -87,10 +101,10 @@ describe("getCommunityStats", () => {
   test("an unexpected error (not table-missing) on a live-seeming table still degrades to null-safe, and IS logged", async () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     const client = fakeClient({
-      posts: [{ data: null, error: { code: "53300", message: "too many connections" } }],
-      post_likes: [{ data: null, error: null }, { data: null, error: null, count: 0 }],
-      connections: [{ data: null, error: null }, { data: null, error: null, count: 0 }],
-      messages: [{ data: null, error: null }, { data: null, error: null, count: 0 }],
+      posts: { data: null, error: { code: "53300", message: "too many connections" } },
+      post_likes: { data: [], count: 0 },
+      connections: { data: [], count: 0 },
+      messages: { data: [], count: 0 },
     });
     const stats = await getCommunityStats(client);
     expect(stats.postCount).toBeNull();
