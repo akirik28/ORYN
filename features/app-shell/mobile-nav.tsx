@@ -12,6 +12,7 @@ import type { DimensionSignal } from "@/lib/scoring/signal";
 import { UserMenu } from "./user-menu";
 import { NotificationBell } from "./notification-bell";
 import { UsageIndicator } from "./usage-indicator";
+import { FeedbackButton } from "./feedback-button";
 import { CommandPalette } from "@/features/search/command-palette";
 import { LanguageSwitcher } from "./language-switcher";
 import { PRIMARY_NAV, SECONDARY_NAV } from "./nav-items";
@@ -77,6 +78,7 @@ export function MobileNav({
         <div className="flex items-center gap-1">
           <CommandPalette />
           <UsageIndicator quota={quota} budgetDegraded={budgetDegraded} tier={tier} />
+          <FeedbackButton />
           <NotificationBell notifications={notifications} unreadCount={unreadCount} />
           <UserMenu displayName={displayName} email={email} signal={signal} isAdmin={isAdmin} />
         </div>

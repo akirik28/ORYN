@@ -2350,3 +2350,68 @@ export async function getCommunityStats(admin: SupabaseClient<Database>): Promis
     likeCount: likesRes ? countOr("getCommunityStats.likes", likesRes, 0) : null,
   };
 }
+
+/** feedback_reports, migration 0113 — proposed, not yet applied. Same one-check-per-table
+ *  discipline as every other proactive-disable gate this session: read via `.select().limit`
+ *  never `head: true` (a HEAD request against a genuinely missing table returns a
+ *  false-success 204, masking the real PGRST205). */
+export async function isFeedbackReportsTableLive(admin: SupabaseClient<Database>): Promise<boolean> {
+  const { error } = await admin.from("feedback_reports").select("id").limit(1);
+  if (!error) return true;
+  if (!isUndefinedTableError(error, "feedback_reports")) {
+    console.error("[admin] unexpected error checking feedback_reports", error);
+  }
+  return false;
+}
+
+export interface FeedbackReportRow {
+  id: string;
+  userId: string | null;
+  displayName: string | null;
+  message: string;
+  path: string;
+  locale: string;
+  planTier: PlanTier;
+  createdAt: string;
+}
+
+/**
+ * Returns `null`, never an empty array, when the table doesn't exist yet — "not measured"
+ * and "measured, found zero reports" are different claims, the same distinction this
+ * session has already drawn for provider_health and page_views. `displayName` is a
+ * best-effort second lookup against `profiles` (a report's own `user_id` may be null if the
+ * author's account was later deleted — see migration 0113's own header) — a missing name
+ * is expected, not an error, and never blocks showing the report itself.
+ */
+export async function getFeedbackReports(admin: SupabaseClient<Database>): Promise<FeedbackReportRow[] | null> {
+  const { data, error } = await admin
+    .from("feedback_reports")
+    .select("id, user_id, message, path, locale, plan_tier, created_at")
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) {
+    if (!isUndefinedTableError(error, "feedback_reports")) {
+      console.error("[admin] unexpected error reading feedback_reports", error);
+    }
+    return null;
+  }
+
+  const userIds = [...new Set((data ?? []).map((r) => r.user_id).filter((id): id is string => id !== null))];
+  const namesByUserId = new Map<string, string | null>();
+  if (userIds.length > 0) {
+    const { data: profileRows } = await admin.from("profiles").select("id, display_name").in("id", userIds);
+    for (const row of profileRows ?? []) namesByUserId.set(row.id, row.display_name);
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    userId: row.user_id,
+    displayName: row.user_id ? (namesByUserId.get(row.user_id) ?? null) : null,
+    message: row.message,
+    path: row.path,
+    locale: row.locale,
+    planTier: row.plan_tier as PlanTier,
+    createdAt: row.created_at,
+  }));
+}

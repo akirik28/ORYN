@@ -172,6 +172,12 @@ describe("message catalogs", () => {
       // messages/*.json, correctly differs.
       "admin.control.settings.aiCap.tierUltra",
       "admin.perUser.tierUltra",
+      // A fifth "Ultra" surface, same precedent — the Moderation screen's feedback-reports
+      // section (migration 0113, 2026-09-03), which tags each report with the student's
+      // plan_tier at submission time. Its own "tierStandard" ("Standart"), right next to it
+      // in messages/*.json, correctly differs — this test caught it copy-pasted as
+      // "Standard" before this file was written and it was fixed to the real word.
+      "admin.feedbackReports.tierUltra",
       // Same "numeric template, not words" reasoning as opportunities.comparePage.ageRangeMin
       // above, at its simplest: the whole string is one bare interpolation, nothing else —
       // there is no word in either language to translate. Its sibling countOfTotal
@@ -253,6 +259,11 @@ describe("ICU plural counts that bypass formatNumber are deliberate", () => {
     // today), the same shape as the DIMENSION_ORDER-bounded entries above, not a row count
     // that grows with the user base.
     "admin.growth.featureCensus.unknownWarning",
+    // How many feedback_reports rows exist (migration 0113, the Moderation screen's
+    // feedback section) — getFeedbackReports (lib/admin/queries.ts) itself caps this read
+    // at .limit(200), so the count this renders can never reach even four figures, let
+    // alone need a thousands separator.
+    "admin.feedbackReports.totalCount",
   ];
 
   test("no un-reviewed `#` inside a plural block", () => {

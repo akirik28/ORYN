@@ -138,6 +138,16 @@ export const EXPORT_EXCLUDED_TABLES: Record<string, string> = {
    */
   advisor_generation_locks:
     "a live mutex, not a log or content — rows are deleted within seconds of creation (see the migration's own header), so there is nothing durable here for an export to preserve",
+  /**
+   * Migration 0113's own feedback/complaint form (2026-09-03). Same posture as
+   * deadline_notification_log/university_notification_log immediately above: their data,
+   * benign (a student's own written feedback plus the page/locale/plan_tier it was sent
+   * with), select-own RLS already written into the migration — and not yet applied
+   * anywhere. Move it into EXPORT_TABLES once 0113 lands; no column allowlist is needed
+   * when it does, since this table has no admin-internal column the way message_reports
+   * does.
+   */
+  feedback_reports: "migration 0113 is not applied anywhere yet — would export as permanently empty until it is",
 };
 
 /** Tables keyed by a participant pair rather than a plain user_id — each needs its own
