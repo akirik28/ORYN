@@ -695,29 +695,29 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
    * need for one past rank 2), just the two positions a "name your weakest areas" question
    * actually asks for.
    *
-   * Second-weakest is only computed when rank 1 is a clean, untied minimum. When two or more
-   * dimensions already tie for weakest, they already are the answer to "two weakest
-   * dimensions" — tagging a third, higher-scoring dimension as "second-weakest" alongside them
-   * would claim three dimensions share the bottom two slots, which is false.
+   * Third pass (docs/advisor-rank2-narrowing-instruction-2026-09-03.md, CEO's call after both
+   * tagging passes were live-verified by two independent sessions): tagging rank 2 the same way
+   * as rank 1 reached the model correctly but didn't reliably close the symptom — 4/5 and then
+   * 4/5 again, independently, still named the wrong second dimension despite the correct tag
+   * sitting right there. Rather than a third attempt at making the claim correct, this removes
+   * it: the second-weakest tag and computation are gone, and the model is told directly not to
+   * assert an ordinal position it has repeatedly gotten wrong. Withholding a claim is a
+   * different operation from computing one correctly — this fix stopped asking the model to
+   * sort at all for rank 1, and asking it to *rank* is exactly what rank 2 still needed the
+   * model to do on its own past the single tagged position. Rank 1 is untouched: confirmed
+   * live 7/7 then 5/5 across two sessions, no reason to touch what already works.
    */
   lines.push(
-    "Dimension states, assessed ones ordered weakest to strongest (this order is already computed — use it directly if asked which dimensions are weakest or strongest; do not re-rank by eye). Never quote a score for a dimension Oryn has not assessed:",
+    "Dimension states, assessed ones ordered weakest to strongest (this order is already computed — use it directly if asked which dimensions are weakest or strongest; do not re-rank by eye). Only the dimension(s) explicitly tagged \"weakest\" may be named by rank — do not claim which dimension is second-weakest, third-weakest, or any other ordinal position; if discussing multiple lower-scoring dimensions, describe them without ranking them against each other. Never quote a score for a dimension Oryn has not assessed:",
   );
   const assessedScores = context.profileScores.filter((d) => isAssessed(d.state)).sort((a, b) => a.score - b.score);
   const unassessedScores = context.profileScores.filter((d) => !isAssessed(d.state));
   const weakestScore = assessedScores[0]?.score;
   const weakestIsTied = assessedScores.filter((d) => d.score === weakestScore).length > 1;
-  const secondWeakestScore = weakestIsTied ? undefined : assessedScores.find((d) => d.score > weakestScore)?.score;
-  const secondWeakestIsTied = secondWeakestScore !== undefined && assessedScores.filter((d) => d.score === secondWeakestScore).length > 1;
   for (const d of assessedScores) {
     const label = dimensionLabel(d.dimension, locale);
-    let rankTag = "";
-    if (d.score === weakestScore) {
-      rankTag = weakestIsTied ? " — tied for weakest" : " — weakest";
-    } else if (d.score === secondWeakestScore) {
-      rankTag = secondWeakestIsTied ? " — tied for second-weakest" : " — second-weakest";
-    }
-    lines.push(`  - ${label}: ${evidenceStateLabel(d.state, locale)} (${d.score}/100, confidence: ${d.confidence})${rankTag}`);
+    const weakestTag = d.score === weakestScore ? (weakestIsTied ? " — tied for weakest" : " — weakest") : "";
+    lines.push(`  - ${label}: ${evidenceStateLabel(d.state, locale)} (${d.score}/100, confidence: ${d.confidence})${weakestTag}`);
   }
   for (const d of unassessedScores) {
     const label = dimensionLabel(d.dimension, locale);
