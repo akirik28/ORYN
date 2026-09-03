@@ -137,7 +137,7 @@ program kapsanıyor" sayısı yine 32'de kalıyor. Derinlik geldi, kapsam geniş
 
 ## 6. Yeni fırsatları katalog'a al
 
-Beş parti hazır bekliyor, **15 yeni fırsat.** Terminalden, sırayla:
+Altı parti hazır bekliyor, **17 yeni fırsat.** Terminalden, sırayla:
 
 ```bash
 npm run ingest:opportunities -- data/research/opportunities/batch-category-balance-2026-09-03.jsonl --apply
@@ -154,9 +154,12 @@ npm run ingest:opportunities -- data/research/opportunities/batch-catalog-format
 ```bash
 npm run ingest:opportunities -- data/research/opportunities/batch-scholarship-corridor-2026-09-03.jsonl --apply
 ```
+```bash
+npm run ingest:opportunities -- data/research/opportunities/batch-thin-categories-2026-09-03.jsonl --apply
+```
 
 `--apply` olmadan çalıştırırsan sadece ne olacağını gösterir, hiçbir şey yazmaz. Üçünü de
-öyle çalıştırdım: **15 kabul, 3 red.**
+öyle çalıştırdım: **17 kabul, 5 red.**
 
 Reddedilen üçü hakkında: bd o kayıtları zaten "kaynağın kendi sitesinden doğrulanamadı,
 ikinci el kaynağa dayanıyor" diye işaretlemişti. **Kapı da bağımsız olarak aynı kararı
@@ -183,10 +186,30 @@ bırakıldı.
 Yani burs kategorisi 9'dan 12'ye çıkıyor, 30'a değil. Tavan gerçek: bu yaş grubuna
 Türkiye'den gerçekten açık olan burs sayısı az.
 
-**Ayrıca bir tanesi zaten katalogda ama yanlış yerde:** Breakthrough Junior Challenge
-(13-18 yaş, dünya çapında, 250 bin dolarlık burs, son tarih 15 Eylül — 12 gün) `competition`
-olarak kayıtlı. Bugün "burs" diye arayan bir öğrenci onu bulamıyor. Yeni kayıt değil,
-mevcut bir kaydın kategorisi — bu yüzden yukarıdaki komutlarla düzelmiyor, ayrı bir karar.
+Son partideki iki red ayrı bir cinsten ve bilerek öyle bırakıldı: kayıtlar gerçek ve
+alıntılı, ama kaynağın kendi sitesine her erişim denemesi başarısız oldu, o yüzden "arama
+sonucundan" diye işaretlendiler — ve kapı da tam olarak bunu reddetti. Araştırma çöpe
+atılmadı, kanıt seviyesi yeterli olmadığı için katalog'a girmedi.
+
+**Ve bir tanesi zaten katalogda ama yanlış yerde.** Breakthrough Junior Challenge — 13-18
+yaş, dünya çapında, 250 bin dolarlık burs, son tarih **15 Eylül, 12 gün** — `competition`
+olarak kayıtlı, yani bugün "burs" diye arayan öğrenci bulamıyor.
+
+Bunu tam denetlettim, çünkü "acaba daha kaç tane var" sorusunun cevabı önemliydi. **Cevap:
+bir tane, o da bu.** 282 aktif kaydın tamamı tarandı, en karışabilecek üç kategori tek tek
+elle okundu. Breakthrough'nun ayrıcalığı şu: ödülün adını *organizasyonun kendisi*
+"250.000 dolarlık yüksek öğrenim bursu" koymuş — bizim yorumumuz değil.
+
+Bulunan diğer sekiz kayıt "yanlış" değil, **iki kategoriye birden ait** — JAX Summer
+Student (hem tam burslu araştırma bursu hem gerçek bir yaz programı), Nuffield, Simons,
+Scholastic. Onlara dokunulmadı: tek tek taşımak aynı tek-sütun sıkışmasını başka yere
+kaydırmaktan başka bir şey yapmaz.
+
+Yani bu da yukarıdaki üç alanla (`eligible`, `cost`, `deadline`) aynı aileden dördüncü bir
+şey: **bir kaydın aynı anda iki şey olabilmesi için yer yok.** Hazır bekleyen tek satırlık
+düzeltme (`data/research/opportunity-category-relabel-2026-09-03.sql`) Breakthrough'yu
+burs'a taşıyor — ama o da onu yarışma listesinden çıkarıyor, ki hâlâ bir yarışma. Senin
+kararın; son tarih 12 gün sonra.
 
 ## 7. Yayına almadan önce — sadece deploy edeceksen
 
