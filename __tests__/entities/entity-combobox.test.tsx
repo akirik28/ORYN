@@ -47,7 +47,19 @@ const DEBOUNCE_MS = 300;
 // Real timers, not fake ones: the component's own debounce is a plain setTimeout and the
 // mocked action resolves via a real microtask, so waiting out the wall-clock debounce is
 // simpler and less brittle here than reconciling fake timers with async mock resolution.
-const AFTER_DEBOUNCE = DEBOUNCE_MS + 200;
+// AFTER_DEBOUNCE is deliberately generous, not tight. It serves two different jobs and the
+// slack is safe in both: as a findBy timeout it is an upper bound on patience, resolved the
+// instant the condition is met, so it costs nothing on the happy path and only lengthens a
+// genuine failure; as a fixed wait before a negative assertion it gives a leak MORE time to
+// manifest, so a larger value makes that test stricter rather than weaker.
+//
+// Widened 2026-09-03 from DEBOUNCE + 200. That margin was thin enough that this file went
+// red under a 344-file parallel run -- twice, and the second time on a branch that already
+// carried the unmount-cleanup fix for the real leak, which is how it became clear there were
+// two separate causes and only one had been addressed. A suite whose result depends on
+// machine load makes every gate unreadable, which is the same reason vitest.config.mts
+// carries its own raised testTimeout.
+const AFTER_DEBOUNCE = DEBOUNCE_MS + 2000;
 
 function harborResult(overrides: Partial<EntitySearchResult> = {}): EntitySearchResult {
   return {
