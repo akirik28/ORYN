@@ -26,3 +26,22 @@ export function readOr<T>(category: string, result: { data: T | null; error?: { 
   }
   return result.data ?? fallback;
 }
+
+/**
+ * Same contract as readOr, for a `{ count: "exact", head: true }` query instead of a
+ * `.data` one (lib/counselor/state.ts's skillCount/featuredCount completeness signals are
+ * the first consumer -- both currently `x.count ?? 0`, indistinguishable between "confirmed
+ * zero rows" and "the count query itself failed"). A separate function rather than widening
+ * readOr's own signature to a union: the two query shapes return genuinely different
+ * fields (`count`, not `data`), and a caller reading either should see one obvious function
+ * per shape rather than guess which branch of a wider type applies to their result.
+ */
+export function countOr(category: string, result: { count: number | null; error?: { message?: string } | null }, fallback: number, context: Record<string, unknown> = {}): number {
+  if (result.error) {
+    console.error(`[data-read] ${category}: count read failed, returning the fallback -- this is NOT a confirmed zero`, {
+      ...context,
+      error: result.error.message,
+    });
+  }
+  return result.count ?? fallback;
+}

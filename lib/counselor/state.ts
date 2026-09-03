@@ -17,6 +17,7 @@ import { ACTIVE_TARGET_STATUSES } from "@/lib/deadlines/upcoming";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import { toDimensionScoreRows } from "./gaps";
 import type { CounselorState, RequirementCandidateInput } from "./types";
+import { readOr, countOr } from "@/lib/supabase/safe-read";
 
 /**
  * Requirement-driven candidates for one student's active target universities (see
@@ -37,8 +38,9 @@ async function getRequirementCandidateInputs(
   if (activeTargets.length === 0) return [];
 
   const universityIds = [...new Set(activeTargets.map((t) => t.universityId))];
-  const { data: requirements } = await supabase.from("university_requirements").select("*").in("university_id", universityIds);
-  if (!requirements || requirements.length === 0) return [];
+  const requirementsRes = await supabase.from("university_requirements").select("*").in("university_id", universityIds);
+  const requirements = readOr("getRequirementCandidateInputs.requirements", requirementsRes, [], { userId });
+  if (requirements.length === 0) return [];
 
   // Never surface a candidate ("sit this test", "meet this grade") built from a requirement
   // a research pass has since confirmed closed or unresolved — mirrors
@@ -175,7 +177,7 @@ export async function getCounselorState(
     supabase.from("opportunity_matches").select("*").eq("user_id", userId).eq("eligible", true),
   ]);
 
-  const contact = contactRes.data;
+  const contact = readOr("getCounselorState.contactInfo", contactRes, null, { userId });
   const hasContactInfo = Boolean(
     contact &&
       (contact.phone ||
@@ -190,13 +192,13 @@ export async function getCounselorState(
 
   const completenessChecklist = getCompletenessChecklist({
     ...facts,
-    profile: profileRes.data ?? { country: null, school_name: null, graduation_year: null, curriculum: null, headline: null, about: null },
-    skillCount: skillsRes.count ?? 0,
-    featuredCount: featuredRes.count ?? 0,
+    profile: readOr("getCounselorState.profile", profileRes, { country: null, school_name: null, graduation_year: null, curriculum: null, headline: null, about: null }, { userId }),
+    skillCount: countOr("getCounselorState.skillCount", skillsRes, 0, { userId }),
+    featuredCount: countOr("getCounselorState.featuredCount", featuredRes, 0, { userId }),
     hasContactInfo,
   });
 
-  const matches: OpportunityMatch[] = matchesRes.data ?? [];
+  const matches: OpportunityMatch[] = readOr("getCounselorState.matches", matchesRes, [], { userId });
   const opportunityIds = [...new Set(matches.map((m) => m.opportunity_id))];
   // `status` must be re-checked here, not only `verification_state`. refreshOpportunityMatches
   // recomputes over `status = 'active'` rows only (persist-matches.ts) but never deletes match
@@ -206,7 +208,7 @@ export async function getCounselorState(
   // documents; without this, pulling a record to `under_review` silently fails to stop it being
   // recommended (live 2026-08-23: Wharton Hack-AI-thon, under_review + verified_current, still
   // matched eligible for all 7 users).
-  const { data: opportunities } =
+  const opportunitiesRes =
     opportunityIds.length > 0
       ? await supabase
           .from("opportunities")
@@ -215,7 +217,8 @@ export async function getCounselorState(
           .eq("status", "active")
           .eq("verification_state", "verified_current")
       : { data: [] as Opportunity[] };
-  const opportunityById = new Map((opportunities ?? []).map((o) => [o.id, o]));
+  const opportunities = readOr("getCounselorState.opportunities", opportunitiesRes, [], { userId });
+  const opportunityById = new Map(opportunities.map((o) => [o.id, o]));
 
   const eligibleOpportunityMatches = matches
     .map((match) => ({ match, opportunity: opportunityById.get(match.opportunity_id) }))
@@ -231,7 +234,7 @@ export async function getCounselorState(
   return {
     userId,
     advisor,
-    dimensionScores: toDimensionScoreRows(scoresRes.data ?? []),
+    dimensionScores: toDimensionScoreRows(readOr("getCounselorState.scores", scoresRes, [], { userId })),
     completenessChecklist,
     eligibleOpportunityMatches,
     requirementCandidateInputs,
