@@ -293,6 +293,14 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   const internationalTuition = internationalTuitionMetric?.value_numeric ?? null;
   const domesticTuition = domesticTuitionMetric?.value_numeric ?? null;
   const qsSizeLabel = qsSizeCode ? (qsSizeCode in QS_SIZE_LABEL_KEYS ? tQsSize(QS_SIZE_LABEL_KEYS[qsSizeCode] as never) : qsSizeCode) : null;
+  // Which row is actually driving the tuition StatCard below, mirroring that card's own
+  // precedence exactly (cost_of_attendance > international > domestic-only). Only non-null
+  // when the tuition card is showing a university_profile_metrics-sourced figure — never
+  // when cost_of_attendance fired instead, since that's a different concept already covered
+  // by the stats SourceBadge below (source-traceability-audit-2026-09-03.md's own finding:
+  // this row's source_url is required and always present, and was simply never rendered,
+  // unlike research_topics_top5's identical field one section down, which already is).
+  const tuitionSourceMetric = stats?.cost_of_attendance ? null : internationalTuition != null ? internationalTuitionMetric : domesticTuition != null ? domesticTuitionMetric : null;
 
   const imageMetric = metricByCode.get("primary_image_url");
   const imageLicenseMetric = metricByCode.get("primary_image_license");
@@ -585,17 +593,40 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       {/* Phase 36/71: admission rate, test scores, and graduation rate above all come from
           this one `university_statistics` row, and every row on file already carries a
           real `source`/`data_confidence` (confirmed live: 129/129 do) — this badge was the
-          missing wire, not missing data. Placed once for the whole stat grid rather than
-          once per card: they share one row, so repeating it per card would imply four
+          missing wire, not missing data. Placed once for those three cards rather than
+          once each: they share one row, so repeating it per card would imply three
           independent sources instead of one. Deliberately separate from "Your outlook"
           above (which already carries its own "not a guarantee" disclaimer) — this badge's
           job is only to say where the raw institutional number came from, not to reinterpret
-          the personalized estimate. */}
+          the personalized estimate.
+
+          Scoped to exactly those three cards, not the whole grid: student size and tuition
+          draw from a different table (university_profile_metrics) with their own source —
+          see the tuition badge immediately below, added specifically so this one's
+          placement under the grid stops implying it covers the tuition card too
+          (source-traceability-audit-2026-09-03.md). */}
       {stats?.source ? (
         <SourceBadge
           sourceName={stats.source}
           checkedAt={stats.updated_at}
           confidence={stats.data_confidence ?? undefined}
+          locale={locale}
+          sourceLabel={tSourceBadge("source")}
+          checkedLabel={(time) => tSourceBadge("checked", { time })}
+          viewSourceLabel={tSourceBadge("viewSource")}
+        />
+      ) : null}
+      {/* The fix: tuitionSourceMetric's row (university_profile_metrics) has a required,
+          always-present source_url — was computed for the tuition card's own value above
+          and never rendered, while the identical field on the identical table already
+          renders correctly for research_topics_top5 further down this page. Separate badge,
+          not folded into the one above, because it's a genuinely different row with its own
+          source/confidence/timestamp, not an extension of the university_statistics one. */}
+      {tuitionSourceMetric ? (
+        <SourceBadge
+          sourceName={tuitionSourceMetric.source_type}
+          checkedAt={tuitionSourceMetric.verified_at}
+          url={tuitionSourceMetric.source_url}
           locale={locale}
           sourceLabel={tSourceBadge("source")}
           checkedLabel={(time) => tSourceBadge("checked", { time })}

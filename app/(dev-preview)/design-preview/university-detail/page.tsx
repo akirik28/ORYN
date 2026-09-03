@@ -256,6 +256,19 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
             viewSourceLabel="View source"
           />
         ) : null}
+        {/* The tuition-specific badge added 2026-09-03 — university_profile_metrics'
+            own source_url, previously computed and never rendered. */}
+        {!stats.cost_of_attendance && internationalTuition != null ? (
+          <SourceBadge
+            sourceName={internationalTuitionMetric!.source_type!}
+            checkedAt={internationalTuitionMetric!.verified_at}
+            url={internationalTuitionMetric!.source_url!}
+            locale={locale}
+            sourceLabel="Source"
+            checkedLabel={(time) => `Checked ${time}`}
+            viewSourceLabel="View source"
+          />
+        ) : null}
 
         <section className="space-y-5">
           <SectionHeader title={t("programsTitle")} description="Verified, current programmes." />
