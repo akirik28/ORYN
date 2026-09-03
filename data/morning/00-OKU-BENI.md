@@ -97,6 +97,32 @@ sıfır hata. Ürünün en ince yeri burasıydı — 17.046 programın 32'si kap
 Dürüst kısmı: bu satırların hepsi **üniversite geneli**, programa bağlı değil. Yani "kaç
 program kapsanıyor" sayısı yine 32'de kalıyor. Derinlik geldi, kapsam genişliği değil.
 
+## 3d. Yeni fırsatları katalog'a al
+
+Üç parti hazır bekliyor, **9 yeni fırsat.** Terminalden, sırayla:
+
+```bash
+npm run ingest:opportunities -- data/research/opportunities/batch-category-balance-2026-09-03.jsonl --apply
+```
+```bash
+npm run ingest:opportunities -- data/research/opportunities/batch-catalog-fill-2026-09-03.jsonl --apply
+```
+```bash
+npm run ingest:opportunities -- data/research/opportunities/batch-catalog-scale-2026-09-03.jsonl --apply
+```
+
+`--apply` olmadan çalıştırırsan sadece ne olacağını gösterir, hiçbir şey yazmaz. Üçünü de
+öyle çalıştırdım: **9 kabul, 3 red.**
+
+Reddedilen üçü hakkında: bd o kayıtları zaten "kaynağın kendi sitesinden doğrulanamadı,
+ikinci el kaynağa dayanıyor" diye işaretlemişti. **Kapı da bağımsız olarak aynı kararı
+verdi** — biri "arama sonucu keşif kanıtıdır, doğrulama değil" diyor. Yani sistem, insanın
+dürüst uyarısını kendi başına teyit etti. Bu üçü katalog'a girmiyor, doğrusu da bu.
+
+Girecek dokuz: Forage (ücretsiz iş simülasyonları), NYAS Junior Academy, sci-MI (ücretsiz
+dünya çapında araştırma mentorluğu), Pivotal Essay Contest, Medicine Encompassed, CS50x,
+Zooniverse, iNaturalist, Emory Winship (sanal).
+
 ## 4. İki paneli karşılaştır
 
 **`/admin`** — bugünkü hali. Ondört bölüm, tek sayfa. Bugüne kadar hiç gerçek admin
