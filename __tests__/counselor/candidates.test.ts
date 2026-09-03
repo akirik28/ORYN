@@ -180,6 +180,40 @@ describe("generateCandidateActions — opportunities", () => {
     );
     expect(candidates.map((c) => c.title)).toEqual(["First", "Second"]);
   });
+
+  /**
+   * 2026-09-03 (docs/vacuous-gate-test-sweep-2026-09-03.md): every test above this one
+   * passes a `cost: null, selectivity_tier: "unknown"` opportunity (this file's own fixture
+   * default) — a shape `competesInCoreRecommendations` always lets through, so none of them
+   * would notice if opportunityCandidates' `.filter(({ opportunity }) =>
+   * competesInCoreRecommendations(opportunity))` (candidates.ts:16) were deleted entirely.
+   * Verified by actually deleting that line locally and watching this specific test go red
+   * before restoring it — the standard this file was missing.
+   *
+   * `cost: 500` is above commercial.ts's NOMINAL_FEE_CEILING (100), and `selectivity_tier:
+   * "open_enrollment"` is explicitly excluded from MATERIALLY_SELECTIVE_TIERS — the same
+   * "money decides entry, not merit" combination that pattern is written to catch.
+   */
+  test("a pay-to-enroll opportunity is excluded from candidates — the founder's categorical ruling, not down-ranked", () => {
+    const candidates = generateCandidateActions(
+      state({
+        eligibleOpportunityMatches: [
+          { match: match({ opportunity_id: "opp-paid" }), opportunity: opportunity({ id: "opp-paid", title: "Pay To Enroll Camp", cost: 500, selectivity_tier: "open_enrollment" }) },
+          { match: match({ opportunity_id: "opp-free" }), opportunity: opportunity({ id: "opp-free", title: "Free Programme" }) },
+        ],
+      })
+    );
+    expect(candidates.map((c) => c.title)).toEqual(["Free Programme"]);
+  });
+
+  test("a selective programme with a real fee is NOT excluded — the pay-to-enroll gate exempts materially selective admissions", () => {
+    const candidates = generateCandidateActions(
+      state({
+        eligibleOpportunityMatches: [{ match: match({ opportunity_id: "opp-selective" }), opportunity: opportunity({ id: "opp-selective", title: "Selective Award", cost: 500, selectivity_tier: "highly_selective" }) }],
+      })
+    );
+    expect(candidates.map((c) => c.title)).toEqual(["Selective Award"]);
+  });
 });
 
 describe("generateCandidateActions — requirement actions", () => {
