@@ -50,13 +50,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const session = await verifySession();
 
   // Parent-account routing (P2, docs/veli-hesabi-spec-2026-09-04.md). Checked before the
-  // onboarding/age-gate redirects below on purpose -- a parent account never goes through
-  // student onboarding, so routing it there first would be wrong even transiently. This is
-  // routing convenience only, not the access boundary: a parent role landing here gets
-  // sent to their own surface, but nothing about this check is what stops a parent from
-  // reading or writing student data -- that's 44's RLS, enforced at the database regardless
-  // of which layout a request happened to render through. See lib/auth/account-role.ts's
-  // own header for why a missing account_role column reads as "student", not as an error.
+  // onboarding/age-gate redirects below, not after -- a parent account has no onboarding to
+  // complete and no birth year to confirm. In the other order, a parent signing in would be
+  // bounced into /onboarding, a flow built to construct a STUDENT profile. That's not a
+  // cosmetic ordering bug: it's a parent account being walked into writing data, on a
+  // feature whose one non-negotiable rule is the founder's own "veli hesapları sadece
+  // gözlemleyebilmeli asla ama asla bir şey değiştirememesi lazım" (a parent account must
+  // never, ever be able to change anything). This is routing convenience only, not the
+  // access boundary itself: a parent role landing here gets sent to their own surface, but
+  // nothing about this check is what actually stops a parent from reading or writing
+  // student data -- that's 44's RLS, enforced at the database regardless of which layout a
+  // request happened to render through. Routing exists so a parent never sees a form they
+  // can't submit in the first place; denial and routing are different products. See
+  // lib/auth/account-role.ts's own header for why a missing account_role column reads as
+  // "student", not as an error.
   const accountRole = await getAccountRole(session.userId!);
   if (accountRole === "parent") {
     redirect("/parent");

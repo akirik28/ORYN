@@ -58,20 +58,32 @@ export default async function LandingPage() {
         {/* Our real logo, unmodified (no recolor, no reshape) — the Figma source's own
             ProxolaMark placeholder is intentionally not used; sized to sit in this nav row. */}
         <Image src="/brand/logo-full.png" alt="Proxola" width={114} height={36} priority style={{ height: 36, width: "auto" }} />
-        <Link
-          href="/login"
-          style={{
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            color: "rgba(255,255,255,0.8)",
-            borderRadius: 10,
-            padding: "8px 20px",
-            fontSize: 14,
-            textDecoration: "none",
-          }}
-        >
-          {t("signIn")}
-        </Link>
+        {/* Founder, 2026-09-04, verbatim: "ana sayfada artık sign in yerine student sign in
+            olmalı" -- the primary CTA is now explicitly Student, with Parent sign in as its
+            own, smaller, separate entrance (docs/veli-hesabi-spec-2026-09-04.md, P2) rather
+            than a variant of the same button. Deliberately not repeated in the hero CTA row
+            below -- that row's two buttons (Get started / Student sign in) are the primary
+            path for this landing page's primary audience; a third, less-common entrance
+            belongs in the persistent nav, not competing there. */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <Link href="/parent/login" style={{ color: "rgba(255,255,255,0.55)", fontSize: 13, textDecoration: "none" }}>
+            {t("parentSignIn")}
+          </Link>
+          <Link
+            href="/login"
+            style={{
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "rgba(255,255,255,0.8)",
+              borderRadius: 10,
+              padding: "8px 20px",
+              fontSize: 14,
+              textDecoration: "none",
+            }}
+          >
+            {t("studentSignIn")}
+          </Link>
+        </div>
       </nav>
 
       {/* Hero */}
@@ -192,7 +204,7 @@ export default async function LandingPage() {
                 textDecoration: "none",
               }}
             >
-              {t("signIn")}
+              {t("studentSignIn")}
             </Link>
           </div>
         </div>

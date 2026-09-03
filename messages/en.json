@@ -1475,9 +1475,11 @@
       "bodyAwaitingConfirmation": "You're signed in, but your child hasn't confirmed the link yet. Nothing will be visible here until they do.",
       "signOut": "Sign out"
     },
-    "dashboard": {
-      "placeholderHeading": "You're viewing as a parent",
-      "placeholderBody": "The full parent view — opportunities, universities, recent applications, and what to focus on next — is still being built. Routing and access are live; the page itself isn't yet."
+    "upgradePrompt": {
+      "detail": "Ultra also changes what your child's own account can do — a monthly AI allowance twice as large, longer and more detailed advisor replies, unlimited chat sessions instead of one, a longer standing instruction, and the Ultra flame theme.",
+      "cta": "See Ultra",
+      "notNow": "Not now",
+      "close": "Close"
     }
   },
   "messaging": {
@@ -2286,14 +2288,6 @@
     "compare": "Compare",
     "comparing": "Comparing",
     "compareLimitTooltip": "You can compare up to {max} at a time."
-  },
-  "parent": {
-    "upgradePrompt": {
-      "detail": "Ultra also changes what your child's own account can do — a monthly AI allowance twice as large, longer and more detailed advisor replies, unlimited chat sessions instead of one, a longer standing instruction, and the Ultra flame theme.",
-      "cta": "See Ultra",
-      "notNow": "Not now",
-      "close": "Close"
-    }
   },
   "maintenance": {
     "title": "We will be back shortly",
