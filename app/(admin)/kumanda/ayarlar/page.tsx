@@ -1,29 +1,25 @@
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/oryn/page-header";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getFinanceSettings } from "@/lib/admin/queries";
+import { getFinanceSettings, getProductSettings } from "@/lib/admin/queries";
 import { FinanceSettingsForm } from "@/features/admin/finance-settings-form";
+import { SignupsToggle } from "@/features/admin/signups-toggle";
+import { MaintenanceModeToggle } from "@/features/admin/maintenance-mode-toggle";
+import { TrialPeriodForm } from "@/features/admin/trial-period-form";
 import { MONTHLY_BUDGET_TARGET_USD, MONTHLY_BUDGET_CEILING_USD } from "@/lib/ai/limits/budget";
 import { MONTHLY_AI_TOKEN_LIMIT } from "@/lib/ai/monthly-quota";
 
 /**
  * Settings. The build plan lists five things here: new signups, maintenance mode, trial
- * period, AI cap, price. Only price has a real mechanism behind it today
- * (admin_finance_settings, migration 0094, app/(app)/admin/actions.ts's
- * updateFinanceSettings) -- the other four have no toggle, no column, no code path anywhere
- * in this codebase that reads a "signups enabled"/"maintenance mode"/"trial period" flag.
- *
- * Building four new admin-controllable feature flags (each one a real gate somewhere else
- * in the app, not just a UI control) is a bigger scope than this screen -- it's several
- * small features, not a page. Rather than ship a toggle that doesn't do anything, or invent
- * the gating mechanism unasked, this screen is honest about the gap: AI cap is shown
- * read-only from the real enforced constant (accurate today, nothing to configure), and
- * signups/maintenance/trial period say plainly that no control exists yet. Flagged in the
- * handoff, not silently built or silently skipped.
+ * period, AI cap, price. Price (admin_finance_settings, migration 0094) and now all three
+ * of signups/maintenance/trial period (admin_product_settings, migration 0105) have real
+ * mechanisms behind them -- oryn-31 shipped this screen honest about that gap on
+ * 2026-09-03 rather than rendering switches that did nothing, and this closes it. AI cap
+ * stays read-only from the real enforced constant (accurate today, nothing to configure).
  */
 export default async function SettingsPage() {
-  const [t, admin] = await Promise.all([getTranslations("admin.control.settings"), Promise.resolve(createAdminClient())]);
-  const settings = await getFinanceSettings(admin);
+  const admin = createAdminClient();
+  const [t, settings, productSettings] = await Promise.all([getTranslations("admin.control.settings"), getFinanceSettings(admin), getProductSettings(admin)]);
 
   return (
     <div className="space-y-6">
@@ -68,15 +64,42 @@ export default async function SettingsPage() {
         </dl>
       </div>
 
-      <div className="admin-panel rounded-xl p-6 text-sm" style={{ color: "var(--admin-ink-2)" }}>
+      <div className="admin-panel rounded-xl p-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="mb-1 text-sm font-semibold" style={{ color: "var(--admin-ink-1)" }}>
+              {t("signups.sectionTitle")}
+            </h2>
+            <p className="text-xs" style={{ color: "var(--admin-ink-3)" }}>
+              {productSettings.signupsEnabled ? t("signups.statusOpen") : t("signups.statusClosed")}
+            </p>
+          </div>
+          <SignupsToggle enabled={productSettings.signupsEnabled} />
+        </div>
+      </div>
+
+      <div className="admin-panel rounded-xl p-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="mb-1 text-sm font-semibold" style={{ color: "var(--admin-ink-1)" }}>
+              {t("maintenance.sectionTitle")}
+            </h2>
+            <p className="text-xs" style={{ color: "var(--admin-ink-3)" }}>
+              {productSettings.maintenanceMode ? t("maintenance.statusOn") : t("maintenance.statusOff")}
+            </p>
+          </div>
+          <MaintenanceModeToggle active={productSettings.maintenanceMode} />
+        </div>
+      </div>
+
+      <div className="admin-panel rounded-xl p-6">
         <h2 className="mb-1 text-sm font-semibold" style={{ color: "var(--admin-ink-1)" }}>
-          {t("notYetWired.sectionTitle")}
+          {t("trial.sectionTitle")}
         </h2>
-        <ul className="mt-2 list-disc space-y-1 pl-5">
-          <li>{t("notYetWired.signups")}</li>
-          <li>{t("notYetWired.maintenance")}</li>
-          <li>{t("notYetWired.trialPeriod")}</li>
-        </ul>
+        <p className="mb-4 text-xs" style={{ color: "var(--admin-ink-3)" }}>
+          {t("trial.sectionDescription")}
+        </p>
+        <TrialPeriodForm currentDays={productSettings.trialPeriodDays} />
       </div>
     </div>
   );

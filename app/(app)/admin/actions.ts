@@ -11,11 +11,11 @@ import { runWithTracking } from "@/lib/jobs/run-with-tracking";
 import { isJobDisabled, setJobDisabled } from "@/lib/jobs/job-controls";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { buildPostRemovalUpdate, buildPostRestoreUpdate, ModerationInputError } from "@/lib/social/posts-moderation";
-import { ADMIN_FINANCE_SETTINGS_ID, getAdminOpportunityList, type AdminOpportunityRow, KNOWN_PRODUCT_EVENT_NAMES } from "@/lib/admin/queries";
+import { ADMIN_FINANCE_SETTINGS_ID, ADMIN_PRODUCT_SETTINGS_ID, getAdminOpportunityList, type AdminOpportunityRow, KNOWN_PRODUCT_EVENT_NAMES, getProductSettings } from "@/lib/admin/queries";
 import { isValidExchangeRate, isValidPrice } from "@/lib/admin/finance";
 import { isUndefinedTableError, isUndefinedColumnError } from "@/lib/supabase/errors";
 import { WEEKLY_PLAN_BUDGET_SETTINGS_ID } from "@/lib/ai/limits/weekly-plan-budget";
-import { resolvePlanTier, ULTRA_GIFT_DURATION_DAYS } from "@/lib/tier/plan-tier";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { logAdminAction } from "@/lib/admin/log";
 import { tavilyProvider } from "@/lib/providers/tavily";
 import { collegeScorecardProvider } from "@/lib/providers/college-scorecard";
@@ -380,6 +380,41 @@ export async function updateFinanceSettings(input: { usdTryRate?: number; ultraP
   return {};
 }
 
+/**
+ * One action for all three Ayarlar controls (signups, maintenance, trial period), same
+ * "every field optional, whichever provided" contract updateFinanceSettings above already
+ * established -- SignupsToggle, MaintenanceModeToggle and TrialPeriodForm each call this
+ * with only their own one field.
+ */
+export async function updateProductSettings(input: { signupsEnabled?: boolean; maintenanceMode?: boolean; trialPeriodDays?: number }): Promise<{ error?: string }> {
+  const adminProfile = await requireAdmin();
+  if (input.signupsEnabled === undefined && input.maintenanceMode === undefined && input.trialPeriodDays === undefined) return {};
+  if (input.trialPeriodDays !== undefined && (!Number.isInteger(input.trialPeriodDays) || input.trialPeriodDays <= 0)) {
+    return { error: "Enter a whole number of days, at least 1." };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("admin_product_settings").upsert({
+    id: ADMIN_PRODUCT_SETTINGS_ID,
+    ...(input.signupsEnabled !== undefined ? { signups_enabled: input.signupsEnabled } : {}),
+    ...(input.maintenanceMode !== undefined ? { maintenance_mode: input.maintenanceMode } : {}),
+    ...(input.trialPeriodDays !== undefined ? { trial_period_days: input.trialPeriodDays } : {}),
+    updated_by: adminProfile.id,
+    updated_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    if (isUndefinedTableError(error, "admin_product_settings")) {
+      return { error: "Product settings aren't set up in the database yet — migration 0105 needs to be applied first." };
+    }
+    console.error("[admin] failed to update product settings", { code: error.code, message: error.message });
+    return { error: "Couldn't save that. Please try again." };
+  }
+
+  revalidatePath("/admin");
+  return {};
+}
+
 // ---------------------------------------------------------------------------------------------
 // Growth tab actions (docs/admin-growth-panel-2026-09-02.md)
 // ---------------------------------------------------------------------------------------------
@@ -570,14 +605,14 @@ export async function setUserPlanTier(userId: string, tier: PlanTier): Promise<S
   if (tier !== "standard" && tier !== "ultra") return { error: "Invalid tier." };
 
   const admin = createAdminClient();
-  let { data: before, error: readError } = await admin.from("profiles").select("plan_tier, ultra_gift_granted_at, display_name").eq("id", userId).maybeSingle();
-  // Same degrade lib/admin/queries.ts's getAdminUserList now uses -- migration 0104
+  let { data: before, error: readError } = await admin.from("profiles").select("plan_tier, ultra_gift_expires_at, display_name").eq("id", userId).maybeSingle();
+  // Same degrade lib/admin/queries.ts's getAdminUserList now uses -- migration 0106
   // unapplied must not make this pre-existing, already-shipped action start reporting
   // "Couldn't find that user" for every real user, which is what a raw readError check
   // would do here without this retry.
-  if (readError && isUndefinedColumnError(readError, "ultra_gift_granted_at")) {
+  if (readError && isUndefinedColumnError(readError, "ultra_gift_expires_at")) {
     const fallback = await admin.from("profiles").select("plan_tier, display_name").eq("id", userId).maybeSingle();
-    before = fallback.data ? { ...fallback.data, ultra_gift_granted_at: null } : null;
+    before = fallback.data ? { ...fallback.data, ultra_gift_expires_at: null } : null;
     readError = fallback.error;
   }
   if (readError || !before) {
@@ -623,26 +658,31 @@ export interface GrantUltraGiftResult {
 /**
  * The one prototype item the founder asked for by name, and the one thing here that can't
  * be undone by pressing it again: setUserPlanTier's permanent toggle is reversible (flip it
- * back), this is once per person, forever, enforced by ultra_gift_granted_at (migration
- * 0104) never being non-null twice. Reads the current value before writing for the exact
+ * back), this is once per person, forever, enforced by ultra_gift_expires_at (migration
+ * 0106) never being non-null twice. Reads the current value before writing for the exact
  * same reason setUserPlanTier does — a blind UPDATE can't tell a real grant from a second
  * click that should have been rejected.
  *
- * Writes ultra_gift_granted_at only, never plan_tier — resolvePlanTier (lib/tier/plan-tier.ts)
- * is what turns a recent grant into an effective "ultra" everywhere else in the app; a
- * student's permanent tier column stays exactly what it was before the gift and after it
- * expires, which is the whole point of it being a gift rather than a silent upgrade.
+ * Reads admin_product_settings.trial_period_days (migration 0105) at the moment of grant
+ * and stores the resulting expiry directly, rather than a grant timestamp resolvePlanTier
+ * would need to add a duration to later — see that migration's own header for why a later
+ * change to the configured trial length must not retroactively change a gift already
+ * granted. Writes ultra_gift_expires_at only, never plan_tier — resolvePlanTier
+ * (lib/tier/plan-tier.ts) is what turns a not-yet-expired grant into an effective "ultra"
+ * everywhere else in the app; a student's permanent tier column stays exactly what it was
+ * before the gift and after it expires, which is the whole point of it being a gift rather
+ * than a silent upgrade.
  */
 export async function grantUltraGift(userId: string): Promise<GrantUltraGiftResult> {
   const adminProfile = await requireAdmin();
   if (!isUuidLike(userId)) return { error: "Invalid user." };
 
   const admin = createAdminClient();
-  const { data: before, error: readError } = await admin.from("profiles").select("ultra_gift_granted_at, display_name").eq("id", userId).maybeSingle();
-  if (readError && isUndefinedColumnError(readError, "ultra_gift_granted_at")) {
+  const { data: before, error: readError } = await admin.from("profiles").select("ultra_gift_expires_at, display_name").eq("id", userId).maybeSingle();
+  if (readError && isUndefinedColumnError(readError, "ultra_gift_expires_at")) {
     // Unlike setUserPlanTier's degrade above, there's nothing to fall back to here -- this
     // column IS the feature. A clear "not set up yet" beats a misleading "couldn't find that
-    // user" when the real cause is migration 0104 not being applied.
+    // user" when the real cause is migration 0106 not being applied.
     return { error: "The Ultra gift isn't set up on this environment yet." };
   }
   if (readError || !before) {
@@ -650,16 +690,17 @@ export async function grantUltraGift(userId: string): Promise<GrantUltraGiftResu
     return { error: "Couldn't find that user." };
   }
 
-  if (before.ultra_gift_granted_at) {
+  if (before.ultra_gift_expires_at) {
     return { granted: false };
   }
 
-  const grantedAt = new Date().toISOString();
+  const { trialPeriodDays } = await getProductSettings(admin);
+  const expiresAt = new Date(Date.now() + trialPeriodDays * 24 * 60 * 60 * 1000).toISOString();
   const { data: updated, error } = await admin
     .from("profiles")
-    .update({ ultra_gift_granted_at: grantedAt })
+    .update({ ultra_gift_expires_at: expiresAt })
     .eq("id", userId)
-    .is("ultra_gift_granted_at", null)
+    .is("ultra_gift_expires_at", null)
     .select("id");
   if (error) {
     console.error("[admin] failed to grant ultra gift", { userId, error });
@@ -678,7 +719,7 @@ export async function grantUltraGift(userId: string): Promise<GrantUltraGiftResu
     action: "grant_ultra_gift",
     targetUserId: userId,
     targetLabel: before.display_name,
-    detail: { grantedAt, durationDays: ULTRA_GIFT_DURATION_DAYS },
+    detail: { expiresAt, durationDays: trialPeriodDays },
   });
 
   revalidatePath("/admin");

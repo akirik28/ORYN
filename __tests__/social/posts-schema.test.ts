@@ -397,9 +397,27 @@ describe("migration numbering", () => {
     // also 0103, claimed on a branch this worktree couldn't see until the next sweep.
     // Renumbered to 0104, re-checked against every remote branch again before landing on
     // it, the same discipline every entry above this one already established. See
-    // lib/tier/plan-tier.ts's own comment for why this is one column and not two, and why
-    // nothing here is a scheduled job.
-    expect(Math.max(...numbers.map(Number))).toBe(104);
+    // lib/tier/plan-tier.ts's own comment for why this was one column and not two, and why
+    // nothing here is a scheduled job -- superseded in one detail by 0106 directly below,
+    // corrected here rather than left standing per this file's own repeated discipline.
+    //
+    // 0105 (admin_product_settings) closes the three Ayarlar controls oryn-31 shipped
+    // honest about having no mechanism (signups on/off, maintenance mode, trial period
+    // length) -- one settings singleton for all three, same shape as admin_finance_settings
+    // (0094) rather than three columns spread across unrelated tables. All three columns
+    // default to today's actual behavior (signups open, no maintenance, 7-day trial), so
+    // reading this table before it exists changes nothing -- see the migration's own header
+    // for why that's true by construction, not a coincidence.
+    //
+    // 0106 renames+redefines 0104's ultra_gift_granted_at into ultra_gift_expires_at --
+    // safe as a plain rename since 0104 has never been applied to a live database. Once
+    // 0105 made the gift's duration admin-configurable (trial_period_days), storing a grant
+    // timestamp and re-deriving expiry from a now-mutable global constant would have meant
+    // a later trial-length change silently reached backward into gifts already granted.
+    // Storing the already-computed expiry instead keeps resolvePlanTier exactly as simple
+    // and synchronous as it already was, and makes a length change affect only future
+    // grants -- see that migration's own header for the full reasoning.
+    expect(Math.max(...numbers.map(Number))).toBe(106);
   });
 });
 

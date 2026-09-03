@@ -1380,7 +1380,8 @@
       "creatingAccount": "Creating account…",
       "createAccount": "Create account",
       "checkEmailMessage": "Check your email to confirm your account and get started.",
-      "displayNameTooShort": "Enter at least 2 characters."
+      "displayNameTooShort": "Enter at least 2 characters.",
+      "signupsClosedMessage": "New signups are closed right now. Please check back later."
     },
     "forgotPassword": {
       "headline": "Reset your password",
@@ -1770,7 +1771,8 @@
       "giftConfirmDescription": "One-time only — this can't be granted again for this student, even after the 7 days end. It doesn't change their permanent tier.",
       "giftConfirmButton": "Grant gift",
       "giftGrantedToast": "{name} now has Ultra for 7 days.",
-      "giftAlreadyUsedToast": "{name} already used their gift."
+      "giftAlreadyUsedToast": "{name} already used their gift.",
+      "giftActive": "Ultra active, {time}"
     },
     "opportunities": {
       "sectionTitle": "Opportunities",
@@ -2017,7 +2019,7 @@
       },
       "settings": {
         "title": "Settings",
-        "description": "What's actually configurable today, and what isn't yet.",
+        "description": "The knobs that change how the product behaves right now.",
         "finance": {
           "sectionTitle": "Price & exchange rate",
           "sectionDescription": "The only two figures this product needs an admin to enter — the rate is never guessed, and a wrong one would silently falsify every dollar figure in Profit & Loss.",
@@ -2038,11 +2040,34 @@
           "hardCeiling": "Hard ceiling",
           "tokenLimit": "Visible token quota"
         },
-        "notYetWired": {
-          "sectionTitle": "Not yet configurable here",
-          "signups": "New-signup control — no toggle exists anywhere in the code today; signups are always open.",
-          "maintenance": "Maintenance mode — no such flag exists; there is nothing to switch on.",
-          "trialPeriod": "Trial period length — not stored as a setting; check lib/tier for how a trial is currently determined."
+        "signups": {
+          "sectionTitle": "New signups",
+          "statusOpen": "Open — anyone can create an account.",
+          "statusClosed": "Closed — existing students are unaffected.",
+          "enable": "Open signups",
+          "disable": "Close signups",
+          "disableConfirmTitle": "Stop new signups?",
+          "disableConfirmBody": "Nobody will be able to create a new account until you turn this back on. Existing students keep working normally.",
+          "disableConfirmAction": "Close signups"
+        },
+        "maintenance": {
+          "sectionTitle": "Maintenance mode",
+          "statusOn": "On — every student sees a maintenance screen instead of the app.",
+          "statusOff": "Off — the app is working normally.",
+          "turnOff": "Turn off",
+          "turnOn": "Turn on",
+          "turnOnConfirmTitle": "Put the app into maintenance mode?",
+          "turnOnConfirmBody": "Every student loses access to the app immediately, until you turn this back off. The control centre is unaffected — you will always be able to reach this switch.",
+          "turnOnConfirmAction": "Turn on maintenance mode"
+        },
+        "trial": {
+          "sectionTitle": "Trial period",
+          "sectionDescription": "How many days a granted Ultra gift lasts. Changing this only affects gifts granted after the change — one already granted keeps whatever length it was promised.",
+          "label": "Days",
+          "invalidDays": "Enter a whole number of days, at least 1.",
+          "saving": "Saving…",
+          "save": "Save",
+          "saved": "Saved."
         }
       },
       "traffic": {
@@ -2128,5 +2153,9 @@
     "compare": "Compare",
     "comparing": "Comparing",
     "compareLimitTooltip": "You can compare up to {max} at a time."
+  },
+  "maintenance": {
+    "title": "We will be back shortly",
+    "description": "Oryn is temporarily down for maintenance. Nothing about your account or data has changed — check back in a little while."
   }
 }

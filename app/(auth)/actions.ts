@@ -4,6 +4,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getProductSettings } from "@/lib/admin/queries";
 import {
   SignUpSchema,
   SignInSchema,
@@ -23,6 +25,15 @@ async function getOrigin() {
 }
 
 export async function signUp(_prevState: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  // Checked first, before validating anything the visitor typed -- gates account creation
+  // itself, not just this form's own affordance. An existing student signing back in
+  // (signIn() below) is a completely separate action and is never touched by this.
+  const { signupsEnabled } = await getProductSettings(createAdminClient());
+  if (!signupsEnabled) {
+    const t = await getTranslations("auth.signup");
+    return { message: t("signupsClosedMessage"), variant: "error" };
+  }
+
   const parsed = SignUpSchema.safeParse({
     displayName: formData.get("displayName"),
     email: formData.get("email"),
