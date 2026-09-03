@@ -11,6 +11,7 @@ import { computeAdmissionOutlook, dataConfidenceForCompleteness, type AdmissionO
 import { resolveAdmissionSystem } from "./system-shape";
 import { hasConfidentSignal, toProfileSignal } from "@/lib/scoring/signal";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+import { readOr } from "@/lib/supabase/safe-read";
 
 /**
  * Computes and caches the admission outlook onto a target_universities row. Cheap
@@ -55,12 +56,13 @@ export async function refreshAdmissionOutlook(
 ): Promise<AdmissionOutlookResult | null> {
   const supabase = client ?? (await createClient());
 
-  const { data: target } = await supabase
+  const targetRes = await supabase
     .from("target_universities")
     .select("id, university_id, program_id")
     .eq("id", targetUniversityId)
     .eq("user_id", userId)
     .single();
+  const target = readOr("refreshAdmissionOutlook.target", targetRes, null, { userId, targetUniversityId });
   if (!target) return null;
 
   // Shared, cache()'d helpers (docs/performance.md §2/§5) only on the normal,
@@ -118,23 +120,35 @@ export async function refreshAdmissionOutlook(
       : Promise.resolve({ data: null }),
   ]);
 
+  // Read once each, reused below -- was several separate `xRes.data?.field` reads per
+  // result, which would have logged the same underlying failure multiple times.
+  const logContext = { userId, targetUniversityId };
+  const profile = readOr("refreshAdmissionOutlook.profile", profileRes, null, logContext);
+  const scores = readOr("refreshAdmissionOutlook.scores", scoresRes, [], logContext);
+  const stats = readOr("refreshAdmissionOutlook.stats", statsRes, null, logContext);
+  const university = readOr("refreshAdmissionOutlook.university", universityRes, null, logContext);
+  const program = readOr("refreshAdmissionOutlook.program", programRes, null, logContext);
+
   // The gate. Oryn has not read enough of this profile to say anything about it — leaving
   // the row untouched (not writing a "low confidence" guess either) is the honest move,
-  // and it's what lets OutlookBadge's own "Not yet assessed" fallback do its job.
-  if (!hasConfidentSignal(toProfileSignal(scoresRes.data ?? []))) {
+  // and it's what lets OutlookBadge's own "Not yet assessed" fallback do its job. A failed
+  // scores read lands here too now (same as a genuinely-empty one always did) -- the
+  // conservative, safe direction (withhold judgment) either way, just visible now via
+  // readOr's own log above rather than indistinguishable from "not enough data yet."
+  if (!hasConfidentSignal(toProfileSignal(scores))) {
     return null;
   }
 
-  const profileStrength = profileRes.data?.profile_strength_score ?? 0;
-  const dataConfidence = dataConfidenceForCompleteness(profileRes.data?.completeness_percent ?? 0);
-  const targetCountry = universityRes.data?.country ?? null;
-  const targetField = programRes.data?.subject_taxonomy ?? null;
+  const profileStrength = profile?.profile_strength_score ?? 0;
+  const dataConfidence = dataConfidenceForCompleteness(profile?.completeness_percent ?? 0);
+  const targetCountry = university?.country ?? null;
+  const targetField = program?.subject_taxonomy ?? null;
 
   const admissionSystem = resolveAdmissionSystem(
     {
       targetCountry,
-      studentCountry: profileRes.data?.country ?? null,
-      targetUniversityName: universityRes.data?.name ?? null,
+      studentCountry: profile?.country ?? null,
+      targetUniversityName: university?.name ?? null,
       targetField,
     },
     locale
@@ -144,7 +158,7 @@ export async function refreshAdmissionOutlook(
   const outlook = computeAdmissionOutlook(
     {
       profileStrength,
-      admissionRate: statsRes.data?.admission_rate ?? null,
+      admissionRate: stats?.admission_rate ?? null,
       dataConfidence,
       admissionSystem,
       fieldAvailability,
