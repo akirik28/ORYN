@@ -104,7 +104,7 @@ export function formatCounselorGrounding(recommendations: CounselorRecommendatio
 
   const sections = [
     section(
-      "Oryn's Counselor Core has already identified these verified candidate actions this week (prefer these over inventing new ones when one genuinely fits — you may still propose something grounded in the student's own existing projects/activities/goals that isn't in this list, but never invent a new external program, competition, or deadline). A line marked ELIGIBILITY UNKNOWN or NOT ELIGIBLE has NOT been confirmed open to this student — pass that caveat on rather than presenting the item as a settled option. Never put one of these in \"avoidForNow\" — they are Counselor Core's recommendations, the opposite of something to discourage, even if you choose not to put it in \"actions\" yourself:",
+      "Proxola's Counselor Core has already identified these verified candidate actions this week (prefer these over inventing new ones when one genuinely fits — you may still propose something grounded in the student's own existing projects/activities/goals that isn't in this list, but never invent a new external program, competition, or deadline). A line marked ELIGIBILITY UNKNOWN or NOT ELIGIBLE has NOT been confirmed open to this student — pass that caveat on rather than presenting the item as a settled option. Never put one of these in \"avoidForNow\" — they are Counselor Core's recommendations, the opposite of something to discourage, even if you choose not to put it in \"actions\" yourself:",
       recommended,
       locale,
     ),

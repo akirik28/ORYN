@@ -1,8 +1,8 @@
 /**
- * The single place ORYN tells an AI surface that an opportunity costs money.
+ * The single place PROXOLA tells an AI surface that an opportunity costs money.
  *
  * The product rule this implements already existed and had no code behind it: a programme
- * charging a fee *before* any outcome must have that fee stated before Oryn recommends it
+ * charging a fee *before* any outcome must have that fee stated before Proxola recommends it
  * with confidence. Until this helper, `cost` reached no recommendation surface at all —
  * neither lib/ai/opportunity-context.ts, nor lib/ai/weekly-plan.ts, nor anything under
  * lib/counselor. The advisor could tell a 16-year-old to apply to a programme with a
@@ -35,8 +35,8 @@
  */
 export function formatFeeCaveat(costOnFile: number | null): string | null {
   if (costOnFile === null) {
-    return "COST NOT ON FILE: Oryn has not recorded a fee for this — do not assume it is free. If cost matters to the student, say the amount is unconfirmed and point them to the official page.";
+    return "COST NOT ON FILE: Proxola has not recorded a fee for this — do not assume it is free. If cost matters to the student, say the amount is unconfirmed and point them to the official page.";
   }
   if (costOnFile <= 0) return null;
-  return `HAS A FEE: ${costOnFile} on file — Oryn does not record which currency, so treat the amount as unconfirmed and point the student to the official page for the real price.`;
+  return `HAS A FEE: ${costOnFile} on file — Proxola does not record which currency, so treat the amount as unconfirmed and point the student to the official page for the real price.`;
 }

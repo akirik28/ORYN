@@ -55,7 +55,7 @@ export function formatOpportunityContext(recommendations: CounselorRecommendatio
   if (opportunities.length === 0) return "";
 
   const lines = opportunities.map(formatOne);
-  return `\n\nReal opportunities Oryn has already verified and matched to this student (prefer these when relevant — never invent a program, competition, scholarship, or deadline not on this list; if nothing here fits what the student is asking about, say so honestly rather than guessing):\n${lines.join("\n")}`;
+  return `\n\nReal opportunities Proxola has already verified and matched to this student (prefer these when relevant — never invent a program, competition, scholarship, or deadline not on this list; if nothing here fits what the student is asking about, say so honestly rather than guessing):\n${lines.join("\n")}`;
 }
 
 /**

@@ -22,16 +22,16 @@ export const AdjudicationVerdictSchema = z.object({
   cycleStateConfirmedChanged: z
     .boolean()
     .describe(
-      "True ONLY if the excerpt unambiguously states the cycle's open/closed state is different from what Oryn has stored. False whenever there is real ambiguity -- the excerpt could describe a past cycle, a different track/tier of the same programme, or reads consistently with the stored state on a second look."
+      "True ONLY if the excerpt unambiguously states the cycle's open/closed state is different from what Proxola has stored. False whenever there is real ambiguity -- the excerpt could describe a past cycle, a different track/tier of the same programme, or reads consistently with the stored state on a second look."
     ),
   reasoning: z.string().describe("One sentence, referencing only the provided excerpt -- never a fact not stated in it."),
 });
 
 export type AdjudicationVerdict = z.infer<typeof AdjudicationVerdictSchema>;
 
-const SYSTEM_PROMPT = `You are adjudicating a single disagreement a deterministic text scan already flagged, between what Oryn has stored about a student opportunity's application cycle and a specific excerpt found on that opportunity's own official page.
+const SYSTEM_PROMPT = `You are adjudicating a single disagreement a deterministic text scan already flagged, between what Proxola has stored about a student opportunity's application cycle and a specific excerpt found on that opportunity's own official page.
 
-Your only job: does the excerpt UNAMBIGUOUSLY state that the cycle's open/closed state is different from what Oryn has stored? Answer false whenever there is real ambiguity, not just when you are fully certain the state is unchanged -- e.g. the excerpt could plausibly describe a past cycle rather than the current one, a different track or tier of the same programme, or could be read either way on a careful second look.
+Your only job: does the excerpt UNAMBIGUOUSLY state that the cycle's open/closed state is different from what Proxola has stored? Answer false whenever there is real ambiguity, not just when you are fully certain the state is unchanged -- e.g. the excerpt could plausibly describe a past cycle rather than the current one, a different track or tier of the same programme, or could be read either way on a careful second look.
 
 Rules:
 - Base your verdict ONLY on the excerpt provided. Do not assume anything about the page beyond it.
@@ -59,7 +59,7 @@ export async function adjudicateDisagreement(input: AdjudicationInput): Promise<
   const result = await withUsageLogging({ userId: null, feature: "opportunity_reverification" }, (model) =>
     provider.generateStructured({
       system: SYSTEM_PROMPT,
-      prompt: `Opportunity: ${input.opportunityTitle}\nOryn's stored cycle status: ${input.storedCycleStatus}\nOryn's stored deadline: ${input.storedDeadline ?? "none on file"}\n\n<excerpt>\n${input.excerpt.slice(0, 2000)}\n</excerpt>`,
+      prompt: `Opportunity: ${input.opportunityTitle}\nProxola's stored cycle status: ${input.storedCycleStatus}\nProxola's stored deadline: ${input.storedDeadline ?? "none on file"}\n\n<excerpt>\n${input.excerpt.slice(0, 2000)}\n</excerpt>`,
       schema: AdjudicationVerdictSchema,
       schemaName: "adjudicate_verification_disagreement",
       schemaDescription: "Classifies whether a page excerpt unambiguously confirms the opportunity's cycle status changed from what is stored.",
