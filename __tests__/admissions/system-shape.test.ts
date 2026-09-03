@@ -47,7 +47,7 @@ describe("resolveAdmissionSystem — the three shapes the research actually foun
   });
 
   test("every resolved entry carries at least one traceable source document", () => {
-    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland", "Denmark", "Hungary", "Austria", "Czechia", "Belgium", "Estonia", "Lithuania"]) {
+    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland", "Denmark", "Hungary", "Austria", "Czechia", "Belgium", "Estonia", "Lithuania", "Cyprus"]) {
       const result = resolveAdmissionSystem({ targetCountry: country, studentCountry: "Turkey" });
       expect(result.sources.length, country).toBeGreaterThan(0);
       expect(result.mechanism, country).not.toBeNull();
@@ -621,6 +621,42 @@ describe("resolveAdmissionSystem — Lithuania (2026-09-03, a scored system that
   test("Lithuania traces to its own research document, not an invented source", () => {
     const result = resolveAdmissionSystem({ targetCountry: "Lithuania", studentCountry: "Lithuania" });
     expect(result.sources).toContain("docs/research/admissions-systems/lithuania.md");
+  });
+});
+
+describe("resolveAdmissionSystem — Cyprus (2026-09-03, structurally linked to Greece, scoped to the Republic)", () => {
+  // The Pancyprian Examinations are officially described as feeding admission to "Public
+  // Universities of Cyprus and Greece" (cyprus.md §A) -- a real structural link, not a naming
+  // coincidence, to Greece's own academic_rank_competitive domestic entry already registered.
+  test("Cyprus's domestic track is rank-competitive, confirmed with real allocation numbers", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Cyprus", studentCountry: "Cyprus" });
+    expect(domestic.shape).toBe("academic_rank_competitive");
+    expect(reviewsNonAcademicEvidence(domestic.shape)).toBe(false);
+    expect(domestic.mechanism).toContain("Pancyprian");
+  });
+
+  // Ruled out holistic (no essay/interview found) but couldn't distinguish threshold from rank
+  // for the international pathway -- recorded unknown rather than guessed between the two.
+  test("Cyprus's international track is honestly unknown, not defaulted to the domestic shape", () => {
+    const international = resolveAdmissionSystem({ targetCountry: "Cyprus", studentCountry: "Turkey" });
+    expect(international.shape).toBe("unknown");
+    expect(reviewsNonAcademicEvidence(international.shape)).toBeNull();
+    expect(international.mechanism).not.toBeNull();
+    expect(international.mechanism).toContain("Greek-language");
+  });
+
+  // ORYN's database carries "Northern Cyprus" as a genuinely separate country value (a
+  // distinct political entity) -- this entry must not accidentally also answer for it.
+  test("Northern Cyprus does not inherit this entry — it resolves independently, to unknown", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Northern Cyprus", studentCountry: "Turkey" });
+    expect(result.basis).toBe("no_entry");
+    expect(result.shape).toBe("unknown");
+    expect(result.sources).toEqual([]);
+  });
+
+  test("Cyprus traces to its own research document, not an invented source", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Cyprus", studentCountry: "Cyprus" });
+    expect(result.sources).toContain("docs/research/admissions-systems/cyprus.md");
   });
 });
 
