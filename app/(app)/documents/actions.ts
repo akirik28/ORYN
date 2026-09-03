@@ -5,6 +5,8 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { isEvidenceLinkableTable } from "@/lib/validation/evidence";
+import { resolveLocale } from "@/lib/i18n/locale";
+import { toFriendlyDbErrorMessage } from "@/lib/errors/friendly-db-error";
 
 const MAX_EVIDENCE_SIZE_BYTES = 15 * 1024 * 1024;
 
@@ -36,21 +38,23 @@ const ALLOWED_EVIDENCE_MIME_TYPES = new Set([
 export async function uploadEvidence(formData: FormData): Promise<{ error?: string }> {
   const session = await requireUser();
   const userId = session.userId!;
+  const locale = await resolveLocale();
+  const tr = locale === "tr";
 
   const file = formData.get("file");
   const linkedTable = formData.get("linkedTable");
   const linkedId = formData.get("linkedId");
 
-  if (!(file instanceof File)) return { error: "No file was selected." };
-  if (typeof linkedTable !== "string" || !isEvidenceLinkableTable(linkedTable)) return { error: "Invalid item type." };
-  if (typeof linkedId !== "string" || !linkedId) return { error: "Choose which item this evidence supports." };
-  if (file.size > MAX_EVIDENCE_SIZE_BYTES) return { error: "File is too large (15MB max)." };
-  if (!ALLOWED_EVIDENCE_MIME_TYPES.has(file.type)) return { error: "Unsupported file type. Upload a PDF, image, or Word document." };
+  if (!(file instanceof File)) return { error: tr ? "Bir dosya seçilmedi." : "No file was selected." };
+  if (typeof linkedTable !== "string" || !isEvidenceLinkableTable(linkedTable)) return { error: tr ? "Geçersiz öğe türü." : "Invalid item type." };
+  if (typeof linkedId !== "string" || !linkedId) return { error: tr ? "Bu kanıtın hangi öğeyi desteklediğini seç." : "Choose which item this evidence supports." };
+  if (file.size > MAX_EVIDENCE_SIZE_BYTES) return { error: tr ? "Dosya çok büyük (en fazla 15MB)." : "File is too large (15MB max)." };
+  if (!ALLOWED_EVIDENCE_MIME_TYPES.has(file.type)) return { error: tr ? "Desteklenmeyen dosya türü. PDF, görsel veya Word belgesi yükle." : "Unsupported file type. Upload a PDF, image, or Word document." };
 
   const admin = tryCreateAdminClient();
   if (!admin) {
     console.error("[evidence] SUPABASE_SECRET_KEY not configured — cannot record evidence");
-    return { error: "Evidence upload is temporarily unavailable. Please try again shortly." };
+    return { error: tr ? "Kanıt yükleme şu anda kullanılamıyor. Lütfen kısa süre sonra tekrar dene." : "Evidence upload is temporarily unavailable. Please try again shortly." };
   }
 
   const supabase = await createClient();
@@ -58,13 +62,18 @@ export async function uploadEvidence(formData: FormData): Promise<{ error?: stri
   // Ownership check: confirm the target row actually belongs to this user before linking
   // evidence to it (the table name is already allow-listed, but the row id is caller-supplied).
   const { data: owned } = await supabase.from(linkedTable).select("id").eq("id", linkedId).eq("user_id", userId).maybeSingle();
-  if (!owned) return { error: "That item couldn't be found." };
+  if (!owned) return { error: tr ? "Bu öğe bulunamadı." : "That item couldn't be found." };
 
   const filePath = `${userId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_")}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
   const { error: uploadError } = await supabase.storage.from("evidence").upload(filePath, buffer, { contentType: file.type, upsert: false });
-  if (uploadError) return { error: `Upload failed: ${uploadError.message}` };
+  if (uploadError) {
+    // Prefix is app copy and gets translated; uploadError.message is Supabase Storage's
+    // own SDK text and stays English, same deliberate choice as app/(auth)/actions.ts.
+    console.error("[evidence] upload failed", { code: uploadError.name, message: uploadError.message });
+    return { error: `${tr ? "Yükleme başarısız" : "Upload failed"}: ${uploadError.message}` };
+  }
 
   const { error: insertError } = await admin.from("evidence_files").insert({
     user_id: userId,
@@ -75,7 +84,15 @@ export async function uploadEvidence(formData: FormData): Promise<{ error?: stri
     external_url: null,
     verification_status: "evidence_added",
   });
-  if (insertError) return { error: `Couldn't save evidence record: ${insertError.message}` };
+  if (insertError) {
+    // Was interpolating insertError.message directly -- a raw Postgres error can name a
+    // real column/constraint/table, exactly what Phase 45 (SECURITY.md) already says a
+    // client must never see. Found during 2026-09-03's student-facing i18n audit; this was
+    // a real leak, not only a missing translation. Logged server-side instead, same
+    // friendly-fallback toFriendlyDbErrorMessage already uses everywhere else.
+    console.error("[evidence] failed to save evidence_files row", { linkedTable, linkedId, code: insertError.code, message: insertError.message });
+    return { error: toFriendlyDbErrorMessage("save", locale) };
+  }
 
   // Best-effort mirror onto the achievement item itself, same "log rather than fail the
   // whole action" posture as completeOnboarding()'s secondary writes: the evidence_files

@@ -5,6 +5,7 @@ import mammoth from "mammoth";
 import { getAIProvider } from "./index";
 import { withUsageLogging } from "./usage";
 import { selectModelForUser } from "./limits/budget";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { PlanTier } from "@/types/database";
 
 const ExtractedItemSchema = z.object({
@@ -93,16 +94,31 @@ export const SUPPORTED_CV_MIME_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
 ] as const;
 
+/**
+ * `mimeType` is kept as a field for server-side logging (see the throw site's own
+ * console.error), never interpolated into `.message` — a raw MIME type ("application/
+ * x-msword") is an internal detail, not something a student reading their own language
+ * needs named, same reasoning as RateLimitExceededError (lib/errors/rate-limit-exceeded.ts)
+ * baking a locale-aware message in at construction rather than leaving translation to
+ * whoever catches it. Found leaking the raw type into the user-facing message during
+ * 2026-09-03's student-facing i18n audit.
+ */
 export class UnsupportedCVFileTypeError extends Error {
-  constructor(mimeType: string) {
-    super(`Unsupported file type "${mimeType}". Upload a PDF, DOCX, or plain text file.`);
+  readonly mimeType: string;
+  constructor(mimeType: string, locale: Locale = DEFAULT_LOCALE) {
+    super(locale === "tr" ? "PDF, DOCX veya düz metin dosyası yükle." : "Upload a PDF, DOCX, or plain text file.");
     this.name = "UnsupportedCVFileTypeError";
+    this.mimeType = mimeType;
   }
 }
 
 export class CVExtractionFailedError extends Error {
-  constructor(cause: unknown) {
-    super("We couldn't fully read this document. You can retry or add the information manually.");
+  constructor(cause: unknown, locale: Locale = DEFAULT_LOCALE) {
+    super(
+      locale === "tr"
+        ? "Bu belgeyi tam olarak okuyamadık. Tekrar deneyebilir veya bilgilerini elle ekleyebilirsin."
+        : "We couldn't fully read this document. You can retry or add the information manually."
+    );
     this.name = "CVExtractionFailedError";
     this.cause = cause;
   }
@@ -132,8 +148,10 @@ export async function extractCVData(params: {
    *  point, so a real tier is genuinely resolvable there, not merely assumed. Required, no
    *  default, matching every other tier-threaded AI feature this build touches. */
   tier: PlanTier;
+  locale?: Locale;
 }): Promise<CVExtractionResult> {
-  const document = await toAIDocument(params.mimeType, params.buffer);
+  const locale = params.locale ?? DEFAULT_LOCALE;
+  const document = await toAIDocument(params.mimeType, params.buffer, locale);
 
   try {
     const provider = getAIProvider();
@@ -160,11 +178,11 @@ export async function extractCVData(params: {
     );
     return result.data;
   } catch (error) {
-    throw new CVExtractionFailedError(error);
+    throw new CVExtractionFailedError(error, locale);
   }
 }
 
-async function toAIDocument(mimeType: string, buffer: Buffer): Promise<{ mediaType: "application/pdf" | "text/plain"; data: string }> {
+async function toAIDocument(mimeType: string, buffer: Buffer, locale: Locale): Promise<{ mediaType: "application/pdf" | "text/plain"; data: string }> {
   if (mimeType === "application/pdf") {
     return { mediaType: "application/pdf", data: buffer.toString("base64") };
   }
@@ -178,5 +196,9 @@ async function toAIDocument(mimeType: string, buffer: Buffer): Promise<{ mediaTy
     return { mediaType: "text/plain", data: text };
   }
 
-  throw new UnsupportedCVFileTypeError(mimeType);
+  // Not logged anywhere before this pass -- the .message the caller shows a student no
+  // longer names the real type (see the class's own comment), so this is now the only
+  // place the actual mimeType a student tried is recorded at all.
+  console.error("[cv-extraction] unsupported file type uploaded", { mimeType });
+  throw new UnsupportedCVFileTypeError(mimeType, locale);
 }

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { logEvent } from "@/lib/analytics/log";
+import { resolveLocale } from "@/lib/i18n/locale";
 import type { ApplicationStatus, ApplicationType, RequirementStatus } from "@/types/database";
 
 const DEFAULT_REQUIREMENTS = ["application", "transcript", "test_score", "essay", "recommendation", "portfolio", "interview", "financial_aid"];
@@ -14,6 +15,7 @@ export async function createApplication(params: {
   deadline: string | null;
 }): Promise<{ error?: string; applicationId?: string }> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const supabase = await createClient();
 
   const { data: application, error } = await supabase
@@ -29,7 +31,7 @@ export async function createApplication(params: {
     .select()
     .single();
 
-  if (error || !application) return { error: "Couldn't create application." };
+  if (error || !application) return { error: locale === "tr" ? "Başvuru oluşturulamadı." : "Couldn't create application." };
 
   // Best-effort, same posture as onboarding's secondary writes: the application row above
   // is the record that matters and is already saved, so a failure here logs and continues
@@ -60,6 +62,7 @@ export async function createApplication(params: {
 
 export async function updateApplicationStatus(applicationId: string, status: ApplicationStatus): Promise<{ error?: string }> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -68,7 +71,7 @@ export async function updateApplicationStatus(applicationId: string, status: App
     .eq("id", applicationId)
     .eq("user_id", session.userId!);
 
-  if (error) return { error: "Couldn't update status." };
+  if (error) return { error: locale === "tr" ? "Durum güncellenemedi." : "Couldn't update status." };
   await logEvent(session.userId!, "application_updated", { applicationId, status });
   revalidatePath("/applications");
   revalidatePath(`/applications/${applicationId}`);
@@ -77,6 +80,7 @@ export async function updateApplicationStatus(applicationId: string, status: App
 
 export async function updateRequirementStatus(requirementId: string, status: RequirementStatus): Promise<{ error?: string }> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -85,7 +89,7 @@ export async function updateRequirementStatus(requirementId: string, status: Req
     .eq("id", requirementId)
     .eq("user_id", session.userId!);
 
-  if (error) return { error: "Couldn't update requirement." };
+  if (error) return { error: locale === "tr" ? "Gereklilik güncellenemedi." : "Couldn't update requirement." };
   revalidatePath("/applications", "layout");
   return {};
 }
@@ -96,6 +100,7 @@ export async function updateRequirementStatus(requirementId: string, status: Req
 
 export async function updateApplicationNotes(applicationId: string, notes: string): Promise<{ error?: string }> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const supabase = await createClient();
   const trimmed = notes.trim();
 
@@ -105,13 +110,14 @@ export async function updateApplicationNotes(applicationId: string, notes: strin
     .eq("id", applicationId)
     .eq("user_id", session.userId!);
 
-  if (error) return { error: "Couldn't save your note." };
+  if (error) return { error: locale === "tr" ? "Notun kaydedilemedi." : "Couldn't save your note." };
   revalidatePath(`/applications/${applicationId}`);
   return {};
 }
 
 export async function updateRequirementNotes(requirementId: string, notes: string): Promise<{ error?: string }> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const supabase = await createClient();
   const trimmed = notes.trim();
 
@@ -121,7 +127,7 @@ export async function updateRequirementNotes(requirementId: string, notes: strin
     .eq("id", requirementId)
     .eq("user_id", session.userId!);
 
-  if (error) return { error: "Couldn't save your note." };
+  if (error) return { error: locale === "tr" ? "Notun kaydedilemedi." : "Couldn't save your note." };
   revalidatePath("/applications", "layout");
   return {};
 }

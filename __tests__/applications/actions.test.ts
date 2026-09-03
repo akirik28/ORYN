@@ -16,6 +16,11 @@ import { describe, expect, test, vi, beforeEach } from "vitest";
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/security/dal", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/analytics/log", () => ({ logEvent: vi.fn() }));
+// Every action here now resolves a real locale (2026-09-03, student-facing i18n audit) --
+// this file's own tests are about the writes themselves, not locale, so a fixed "en" is
+// enough; resolveLocale's real implementation reaches next/headers' cookies(), which has
+// no request scope in a plain vitest run.
+vi.mock("@/lib/i18n/locale", () => ({ resolveLocale: vi.fn().mockResolvedValue("en") }));
 
 type TableResult = { data?: unknown; error?: { message: string } | null };
 type Resolved = { data: unknown; error: { message: string } | null };

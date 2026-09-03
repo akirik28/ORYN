@@ -7,6 +7,7 @@ import { isEducationRecordsCurriculumOtherTextLive } from "@/lib/profile/curricu
 import { recomputeCareerProfile } from "@/lib/scoring/persist";
 import { refineAchievementDescription, type AchievementRefinement } from "@/lib/ai/refine-achievement";
 import { resolveLocale } from "@/lib/i18n/locale";
+import type { Locale } from "@/lib/i18n/config";
 import { generateResearchProjects, type ResearchProject } from "@/lib/ai/research-generator";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
@@ -38,6 +39,7 @@ import {
   type CertificationFormInput,
   type GoalFormInput,
   type SportsFormInput,
+  translateAchievementValidationError,
 } from "@/lib/validation/achievements";
 import { resolveEntity } from "@/lib/entities/resolve";
 import type { EntityScope } from "@/lib/entities/field-policy";
@@ -91,7 +93,8 @@ const ENTITY_LINK_FIELDS: Record<string, EntityLink[]> = {
 async function resolveEntityLinkage<T extends Record<string, unknown>>(
   supabase: Awaited<ReturnType<typeof createClient>>,
   table: string,
-  data: T
+  data: T,
+  locale: Locale
 ): Promise<{ data: T; error?: string }> {
   const links = ENTITY_LINK_FIELDS[table];
   if (!links) return { data };
@@ -100,10 +103,16 @@ async function resolveEntityLinkage<T extends Record<string, unknown>>(
   for (const link of links) {
     const rawId = next[link.idField];
     if (rawId === null || rawId === undefined) continue;
-    if (typeof rawId !== "string") return { data, error: "Invalid entity reference." };
+    if (typeof rawId !== "string") {
+      // A client sending a non-string id is a contract violation, not a real student
+      // mistake -- logged rather than named as "invalid" to the student, same category as
+      // an internal-cause message (2026-09-03 audit).
+      console.error("[profile] resolveEntityLinkage: non-string id", { table, field: link.idField });
+      return { data, error: locale === "tr" ? "Geçersiz giriş." : "Invalid input." };
+    }
 
     const resolved = await resolveEntity(supabase, link.scope, rawId);
-    if (!resolved) return { data, error: "That entry couldn't be verified. Please search and select it again." };
+    if (!resolved) return { data, error: locale === "tr" ? "Bu kayıt doğrulanamadı. Lütfen tekrar arayıp seç." : "That entry couldn't be verified. Please search and select it again." };
 
     next = { ...next, [link.idField]: resolved.id, ...(link.textField ? { [link.textField]: resolved.canonicalName } : {}) };
   }
@@ -149,11 +158,20 @@ async function friendlyDbError(action: CrudAction, table: string, error: { messa
  */
 async function crudCreate<T extends Record<string, unknown>>(table: string, schema: ZodLike<T>, input: T, extraFields?: Record<string, unknown>): Promise<ActionResult> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const parsed = schema.safeParse(input);
-  if (!parsed.success || !parsed.data) return { error: parsed.error?.issues[0]?.message ?? "Invalid input." };
+  if (!parsed.success || !parsed.data) {
+    // These are already real, field-specific messages (achievements.ts's own
+    // ACHIEVEMENT_ERROR_MESSAGES_TR translates every one of them, checked exhaustively
+    // against the real schemas by __tests__/validation/achievement-error-messages.test.ts)
+    // -- not Zod's own unconfigured default text, which is a different bug (unwritten, not
+    // untranslated) this table deliberately doesn't try to translate.
+    const message = parsed.error?.issues[0]?.message;
+    return { error: translateAchievementValidationError(message, locale) ?? (locale === "tr" ? "Geçersiz giriş." : "Invalid input.") };
+  }
 
   const supabase = await createClient();
-  const linked = await resolveEntityLinkage(supabase, table, parsed.data);
+  const linked = await resolveEntityLinkage(supabase, table, parsed.data, locale);
   if (linked.error) return { error: linked.error };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- table name varies per call site; the Zod schema above is the real type check.
@@ -167,11 +185,16 @@ async function crudCreate<T extends Record<string, unknown>>(table: string, sche
 
 async function crudUpdate<T extends Record<string, unknown>>(table: string, schema: ZodLike<T>, id: string, input: T): Promise<ActionResult> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const parsed = schema.safeParse(input);
-  if (!parsed.success || !parsed.data) return { error: parsed.error?.issues[0]?.message ?? "Invalid input." };
+  if (!parsed.success || !parsed.data) {
+    // Same reasoning as crudCreate's identical branch above.
+    const message = parsed.error?.issues[0]?.message;
+    return { error: translateAchievementValidationError(message, locale) ?? (locale === "tr" ? "Geçersiz giriş." : "Invalid input.") };
+  }
 
   const supabase = await createClient();
-  const linked = await resolveEntityLinkage(supabase, table, parsed.data);
+  const linked = await resolveEntityLinkage(supabase, table, parsed.data, locale);
   if (linked.error) return { error: linked.error };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -355,17 +378,18 @@ export async function refineAchievement(params: {
   description: string | null;
 }): Promise<{ data?: AchievementRefinement; error?: string }> {
   const session = await requireUser();
-  if (!params.title.trim()) return { error: "Add a title first." };
+  const locale = await resolveLocale();
+  const tr = locale === "tr";
+  if (!params.title.trim()) return { error: tr ? "Önce bir başlık ekle." : "Add a title first." };
   // Same reason as the advisor's cap: without one, an overlong description produces a
   // provider 400 that lib/ai/service-failure.ts reads as "not your fault", when it is both
   // the student's and fixable by them. Stop it reaching the provider rather than trying to
   // tell two 400s apart afterwards (review finding, 2026-09-01).
   if ((params.description ?? "").length > MAX_DESCRIPTION_LENGTH) {
-    return { error: "That description is too long to refine. Trim it to the key facts and try again." };
+    return { error: tr ? "Bu açıklama iyileştirmek için çok uzun. Temel bilgilere indirip tekrar dene." : "That description is too long to refine. Trim it to the key facts and try again." };
   }
 
   try {
-    const locale = await resolveLocale();
     await assertWithinAIRateLimit(session.userId!, "achievement_refinement", { maxCalls: 20, windowMinutes: 30 }, locale);
     // 2026-09-03, closing the Ultra tier-economics boundary -- same pattern as
     // app/(app)/advisor/actions.ts: getCurrentProfile() is cache()'d, so this costs nothing
@@ -376,19 +400,27 @@ export async function refineAchievement(params: {
     return { data };
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { error: error.message };
-    if (error instanceof AIProviderNotConfiguredError) return { error: "AI suggestions aren't configured yet." };
+    if (error instanceof AIProviderNotConfiguredError) {
+      // A missing API key is a deployment fact, not student copy -- same rewrite as
+      // onboarding's uploadAndExtractCV (2026-09-03 audit): no mention of AI/configuration,
+      // real reason logged server-side only.
+      console.error("[profile] AI refinement unavailable: provider not configured");
+      return { error: tr ? "Bu özellik şu anda kullanılamıyor." : "This feature isn't available right now." };
+    }
     console.error("[profile] refinement failed", error);
-    return { error: "Couldn't generate suggestions right now." };
+    return { error: tr ? "Şu anda öneri üretilemedi." : "Couldn't generate suggestions right now." };
   }
 }
 
 // ---------- Research project generator (Phase 13) ----------
 export async function generateResearchIdeas(field: string): Promise<{ data?: ResearchProject[]; error?: string }> {
   const session = await requireUser();
-  if (!field.trim()) return { error: "Enter a field or interest first." };
+  const locale = await resolveLocale();
+  const tr = locale === "tr";
+  if (!field.trim()) return { error: tr ? "Önce bir alan veya ilgi alanı gir." : "Enter a field or interest first." };
 
   try {
-    await assertWithinAIRateLimit(session.userId!, "research_generator", { maxCalls: 10, windowMinutes: 60 }, await resolveLocale());
+    await assertWithinAIRateLimit(session.userId!, "research_generator", { maxCalls: 10, windowMinutes: 60 }, locale);
     const supabase = await createClient();
     const [{ data: interests }, profile] = await Promise.all([
       supabase.from("student_interests").select("label").eq("user_id", session.userId!),
@@ -405,9 +437,14 @@ export async function generateResearchIdeas(field: string): Promise<{ data?: Res
     return { data };
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { error: error.message };
-    if (error instanceof AIProviderNotConfiguredError) return { error: "The AI Advisor isn't configured yet, so research ideas can't be generated. See API_SETUP.md." };
+    if (error instanceof AIProviderNotConfiguredError) {
+      // Was naming both "AI Advisor" and a setup doc a student has no access to -- same
+      // rewrite as refineAchievement's identical catch above (2026-09-03 audit).
+      console.error("[profile] research generation unavailable: AI provider not configured");
+      return { error: tr ? "Bu özellik şu anda kullanılamıyor." : "This feature isn't available right now." };
+    }
     console.error("[profile] research generation failed", error);
-    return { error: "Couldn't generate research ideas right now." };
+    return { error: tr ? "Şu anda araştırma fikri üretilemedi." : "Couldn't generate research ideas right now." };
   }
 }
 

@@ -9,10 +9,13 @@ import { RateLimitExceededError } from "@/lib/ai/rate-limit";
 import { logEvent } from "@/lib/analytics/log";
 import { aiServiceFailureMessage } from "@/lib/ai/service-failure";
 import { buildActionStatusPatch, shouldLogCompletion } from "@/lib/plan/status-patch";
+import { resolveLocale } from "@/lib/i18n/locale";
 import type { ActionStatus, ReflectionOutcome } from "@/types/database";
 
 export async function regenerateWeeklyPlan(): Promise<{ error?: string }> {
   const session = await requireUser();
+  const locale = await resolveLocale();
+  const tr = locale === "tr";
   try {
     // The rate limit itself now lives inside getOrCreateWeeklyPlan (lib/plan/persist.ts,
     // 2026-09-02) so every caller gets it, not just this action -- removed the duplicate
@@ -25,15 +28,21 @@ export async function regenerateWeeklyPlan(): Promise<{ error?: string }> {
       return { error: error.message };
     }
     if (error instanceof AIProviderNotConfiguredError) {
-      return { error: "The AI Advisor isn't configured yet, so weekly plans can't be generated. See API_SETUP.md." };
+      // Same rewrite as every other AIProviderNotConfiguredError catch touched in this
+      // audit (2026-09-03): a missing API key is a deployment fact, not student copy, and
+      // API_SETUP.md isn't something a student can open.
+      console.error("[plan] weekly plan generation unavailable: AI provider not configured");
+      return { error: tr ? "Bu özellik şu anda kullanılamıyor." : "This feature isn't available right now." };
     }
     console.error("[plan] failed to regenerate weekly plan", error);
     // A spent balance or a provider outage is not something a student fixes by pressing the
     // button again — see lib/ai/service-failure.ts. Falls through to the generic wording only
-    // when the error carries no status to classify on.
-    const serviceMessage = aiServiceFailureMessage(error, "Your plan generator");
+    // when the error carries no status to classify on. Now passes locale (that file's own
+    // header comment had documented this exact call as the one deliberately left English by
+    // an earlier pass) -- closed during 2026-09-03's student-facing i18n audit.
+    const serviceMessage = aiServiceFailureMessage(error, tr ? "Plan oluşturucun" : "Your plan generator", locale);
     if (serviceMessage) return { error: serviceMessage };
-    return { error: "Something went wrong generating your plan. Please try again." };
+    return { error: tr ? "Planın oluşturulurken bir şeyler ters gitti. Lütfen tekrar dene." : "Something went wrong generating your plan. Please try again." };
   }
   revalidatePath("/dashboard");
   revalidatePath("/plan");
@@ -47,6 +56,7 @@ export async function updateActionStatus(params: {
   reflectionNote?: string;
 }): Promise<{ error?: string }> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const supabase = await createClient();
 
   // See lib/plan/status-patch.ts for why this is built conditionally rather than
@@ -76,7 +86,7 @@ export async function updateActionStatus(params: {
     .eq("user_id", session.userId!);
 
   if (error) {
-    return { error: "Couldn't update that action. Please try again." };
+    return { error: locale === "tr" ? "Bu adım güncellenemedi. Lütfen tekrar dene." : "Couldn't update that action. Please try again." };
   }
 
   // See lib/plan/status-patch.ts's shouldLogCompletion for why a transition, not a mention:

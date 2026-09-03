@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { recomputeCareerProfile } from "@/lib/scoring/persist";
 import { toFriendlyDbErrorMessage } from "@/lib/errors/friendly-db-error";
-import { LanguageSchema, type LanguageFormInput } from "@/lib/validation/achievements";
+import { LanguageSchema, translateAchievementValidationError, type LanguageFormInput } from "@/lib/validation/achievements";
 import { isDuplicateLanguage } from "@/lib/social/languages";
 import { resolveLocale } from "@/lib/i18n/locale";
 
@@ -32,19 +32,20 @@ async function afterLanguagesWrite(userId: string) {
 
 export async function createLanguage(input: LanguageFormInput): Promise<ActionResult> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const parsed = LanguageSchema.safeParse(input);
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  if (!parsed.success) return { error: translateAchievementValidationError(parsed.error.issues[0]?.message, locale) ?? (locale === "tr" ? "Geçersiz giriş." : "Invalid input.") };
 
   const supabase = await createClient();
   const { data: existing } = await supabase.from("languages").select("name").eq("user_id", session.userId!);
   if (isDuplicateLanguage((existing ?? []).map((l) => l.name), parsed.data.name)) {
-    return { error: "You've already added that language." };
+    return { error: locale === "tr" ? "Bu dili zaten eklemişsin." : "You've already added that language." };
   }
 
   const { error } = await supabase.from("languages").insert({ ...parsed.data, user_id: session.userId! });
   if (error) {
     console.error("[profile] createLanguage failed", { code: error.code, message: error.message });
-    return { error: toFriendlyDbErrorMessage("save", await resolveLocale()) };
+    return { error: toFriendlyDbErrorMessage("save", locale) };
   }
 
   await afterLanguagesWrite(session.userId!);
@@ -53,18 +54,19 @@ export async function createLanguage(input: LanguageFormInput): Promise<ActionRe
 
 export async function updateLanguage(id: string, input: LanguageFormInput): Promise<ActionResult> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const parsed = LanguageSchema.safeParse(input);
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  if (!parsed.success) return { error: translateAchievementValidationError(parsed.error.issues[0]?.message, locale) ?? (locale === "tr" ? "Geçersiz giriş." : "Invalid input.") };
 
   const supabase = await createClient();
   const { data: existing } = await supabase.from("languages").select("id, name").eq("user_id", session.userId!);
   const otherNames = (existing ?? []).filter((l) => l.id !== id).map((l) => l.name);
-  if (isDuplicateLanguage(otherNames, parsed.data.name)) return { error: "You've already added that language." };
+  if (isDuplicateLanguage(otherNames, parsed.data.name)) return { error: locale === "tr" ? "Bu dili zaten eklemişsin." : "You've already added that language." };
 
   const { error } = await supabase.from("languages").update(parsed.data).eq("id", id).eq("user_id", session.userId!);
   if (error) {
     console.error("[profile] updateLanguage failed", { code: error.code, message: error.message });
-    return { error: toFriendlyDbErrorMessage("save", await resolveLocale()) };
+    return { error: toFriendlyDbErrorMessage("save", locale) };
   }
 
   await afterLanguagesWrite(session.userId!);

@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { logEvent } from "@/lib/analytics/log";
 import { browseOpportunities, type OpportunityBrowseFilters, type OpportunityBrowseRow } from "@/lib/opportunities/browse";
+import { resolveLocale } from "@/lib/i18n/locale";
 import type { SavedOpportunityStatus } from "@/types/database";
 
 export async function setOpportunityStatus(params: {
@@ -13,6 +14,7 @@ export async function setOpportunityStatus(params: {
   notInterestedReason?: string;
 }): Promise<{ error?: string }> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const supabase = await createClient();
 
   const { error } = await supabase.from("saved_opportunities").upsert(
@@ -25,7 +27,7 @@ export async function setOpportunityStatus(params: {
     { onConflict: "user_id,opportunity_id" }
   );
 
-  if (error) return { error: "Couldn't update that opportunity. Please try again." };
+  if (error) return { error: locale === "tr" ? "Bu fırsat güncellenemedi. Lütfen tekrar dene." : "Couldn't update that opportunity. Please try again." };
 
   if (params.status === "saved" || params.status === "applied") {
     await logEvent(session.userId!, params.status === "saved" ? "opportunity_saved" : "opportunity_applied", {
@@ -55,6 +57,7 @@ export async function loadMoreOpportunities(
   page: number
 ): Promise<{ rows: OpportunityBrowseRow[]; statuses: Record<string, SavedOpportunityStatus>; hasMore: boolean; error?: string }> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const supabase = await createClient();
 
   try {
@@ -73,6 +76,6 @@ export async function loadMoreOpportunities(
   } catch {
     // The grid keeps what it already showed and surfaces a retry — a failed fetch must
     // never blank out results the student is already reading.
-    return { rows: [], statuses: {}, hasMore: true, error: "Couldn't load more opportunities." };
+    return { rows: [], statuses: {}, hasMore: true, error: locale === "tr" ? "Daha fazla fırsat yüklenemedi." : "Couldn't load more opportunities." };
   }
 }
