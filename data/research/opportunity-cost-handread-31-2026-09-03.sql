@@ -1,0 +1,26 @@
+-- Cost field hand-read pass (oryn-31), 2026-09-03 -- staged, NOT applied. Founder/CEO applies.
+--
+-- CEO gave overlapping briefs to two lanes within minutes of each other: this pass covers
+-- the full null-cost population (all 227 active rows outside bd's own 34-row sample), bd's
+-- covers a separate 28-row aid-flagged cut (financial_aid_available=true, cost still null).
+-- Compared id lists directly: all 6 fills this pass would have staged are already covered by
+-- bd's own file (data/research/opportunity-cost-handread-bd-2026-09-03.sql), including an
+-- identical $2,500 independently found for the same row (Iowa Young Writers' Studio) --
+-- confirmed the fill, not just the row. Per CEO's call, the overlap belongs to the narrower
+-- file; this file drops all 6 rather than duplicate the writes.
+--
+-- NOTHING IS STAGED IN THIS FILE. Its value is the read, not new UPDATE statements:
+--   - 6 candidate fills found, all already covered by bd's file (see above) -- cross-validation,
+--     not new information.
+--   - 21 more real, known prices found unrepresentable by the current `cost numeric` column
+--     (foreign currency and/or genuine tiered/range pricing) -- see the accompanying findings
+--     doc's evidence-pile list. This is the pass's actual finding: bd's original 34-row sample
+--     found 2 such rows; reading the other 227 found 21 more, which moves this from "one
+--     anecdote plus a couple more" to "the normal shape of a real price in this catalog."
+--   - 5 rows refused as needing a judgment call the source text doesn't make.
+--   - 192 rows genuinely silent (3 of those because the concept doesn't apply -- a scholarship
+--     or paid role pays the student, not the other way around).
+--   - A real (not hypothetical) keyword-sweep comparison run over this same 227-row pool:
+--     see docs/opportunity-cost-field-handread-2026-09-03.md section 5.
+--
+-- Full per-row accounting: docs/opportunity-cost-field-handread-2026-09-03.md

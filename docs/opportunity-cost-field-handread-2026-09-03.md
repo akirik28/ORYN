@@ -33,9 +33,18 @@ Combined with bd's 34-row sample (4 filled, 2 unrepresentable, 1 institutional, 
 concept-N/A, ~25 silent-or-refused), the full 261-row read of the 258-row null-cost
 population is now essentially complete top to bottom, not sampled.
 
-## 1. The 6 filled — staged in `data/research/opportunity-cost-field-handread-2026-09-03.sql`
+## 1. The 6 filled — cross-validated by bd's parallel pass, staged in her file instead
 
-Five explicit, unscoped "free" statements, one explicit single USD price:
+CEO gave overlapping briefs to two lanes within minutes of each other (this pass: the full
+null-cost population; bd's: a separate 28-row aid-flagged cut). Compared id lists directly
+once that surfaced: all 6 of these rows are also in bd's own file
+(`data/research/opportunity-cost-handread-bd-2026-09-03.sql`), including an identical $2,500
+independently found for Iowa Young Writers' Studio — two unrelated hand-reads landing on the
+same figure is a real cross-check, not a coincidence to shrug off. Per CEO's call, the
+overlap belongs to the narrower file (this one); nothing here is staged as new SQL —
+`data/research/opportunity-cost-handread-31-2026-09-03.sql` documents the reconciliation and
+points to bd's file for the actual UPDATE statements. Five explicit, unscoped "free"
+statements, one explicit single USD price:
 
 - **Hong Kong Baptist University (HKBU)**: *"has offered nine free, online summer
   programmes"* → `cost = 0`.
@@ -49,8 +58,9 @@ Five explicit, unscoped "free" statements, one explicit single USD price:
 - **Iowa Young Writers' Studio**: *"cost $2,500 per session"*, both 2026 sessions the same
   length and price — no tiering, no range, a genuine single figure → `cost = 2500`.
 
-All six re-verified live (`status = 'active'`, `cost is null`) immediately before this SQL was
-written; the file's own `WHERE` re-checks both at apply time too.
+All six re-verified live (`status = 'active'`, `cost is null`) immediately before this pass
+identified them as candidates — the actual `UPDATE` statements, with their own `WHERE`
+re-checks at apply time, live in bd's file per the reconciliation above.
 
 ## 2. The 21 unrepresentable — the schema question, now with much more evidence behind it
 
@@ -186,3 +196,13 @@ a human to catch what it misses and correct what it wrongly flags.
 Same boundary as bd's report: this reads what's already stored, it does not re-fetch any
 organizer's live page. The 21-row unrepresentable list and the 5 refused rows are handed over
 as-is for the founder's own schema and judgment calls, not resolved here.
+
+## Coordination note
+
+CEO dispatched two overlapping briefs on this same field within minutes of each other
+(this pass and bd's aid-flagged-28 pass) without namespacing either output, and both lanes
+independently reached for the same filename. Confirmed by CEO directly, not diagnosed here —
+resolved by renaming both files to carry a lane suffix (`-31-`, `-bd-`) and comparing id lists
+directly rather than guessing at a merge. Named for the record since it's the same failure
+shape this fleet has a standing rule about (prefix identifiers before parallel dispatch on the
+same target), not because either lane's actual work was wrong.
