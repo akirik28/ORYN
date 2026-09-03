@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { differenceInCalendarDays } from "date-fns";
-import { Compass } from "lucide-react";
 import { placeholderTint } from "@/lib/ui/placeholder-tint";
 import { StatusBadge } from "@/components/oryn/status-badge";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
@@ -37,6 +36,23 @@ type Translator = (key: string) => string;
  * `<Link>`), so unlike the plan-page marquee's cards this needs no "use client" and no
  * per-card translation fetch; `t` is fetched once by the caller and threaded down.
  */
+/**
+ * Load-failure fallback is a `monogram`, not `icon={Compass}` as Browse's OpportunityCard
+ * passes — 2026-09-03, a real crash on /dashboard for a logged-in user:
+ * "Functions cannot be passed directly to Client Components ... render: function Compass".
+ *
+ * MediaImage is a "use client" component and this card is deliberately a Server Component
+ * (see the header above for why), so a Lucide icon — a function — cannot cross that prop
+ * boundary. Browse gets away with the identical line only because its card is itself
+ * "use client". Copying a correct pattern into a server context is what broke it, and the
+ * line looks the same in both files.
+ *
+ * Not fixed by adding "use client" here: this card also receives `t`/`tTier` as props from
+ * a server parent, which are functions too — that trade one boundary crash for another.
+ *
+ * The no-image branch below renders its category glyph as JSX, which crosses nothing and
+ * was always correct; only this image branch was passing a component as a prop.
+ */
 export function OpportunityStripCard({
   opportunity,
   locale,
@@ -69,7 +85,7 @@ export function OpportunityStripCard({
           tintKey={opportunity.id}
           src={opportunity.imageUrl}
           alt={`${opportunity.title}${opportunity.organization ? ` — ${opportunity.organization}` : ""}`}
-          icon={Compass}
+          monogram={opportunity.organization}
           sizes="320px"
         />
       ) : (
