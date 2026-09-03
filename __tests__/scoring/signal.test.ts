@@ -47,7 +47,7 @@ describe("evidenceStateFor", () => {
     expect(evidenceStateFor(90, "low", WITH_EVIDENCE)).toBe("limited_evidence");
   });
 
-  test("a zero score is only 'emerging' when Oryn actually assessed it", () => {
+  test("a zero score is only 'emerging' when Proxola actually assessed it", () => {
     expect(evidenceStateFor(0, "high", NO_EVIDENCE)).toBe("not_assessed");
     expect(evidenceStateFor(0, "high", WITH_EVIDENCE)).toBe("emerging");
   });
@@ -164,7 +164,7 @@ describe("honesty guards", () => {
     expect(hasConfidentSignal(signal)).toBe(true);
   });
 
-  test("but a gap still can't be named in a dimension Oryn hasn't assessed", () => {
+  test("but a gap still can't be named in a dimension Proxola hasn't assessed", () => {
     const signal = buildProfileSignal([row("academics", 80), row("research", 0, "low", false)]);
     expect(canClaimGap(signal, "research")).toBe(false);
     expect(canClaimGap(signal, "academics")).toBe(true);
@@ -192,7 +192,7 @@ describe("signalCoverage", () => {
     return { dimension, score, confidence, reasonCodes: hasEvidence ? [{ code: "x" }] : [] };
   }
 
-  test("separates what Oryn assessed from what it is still waiting on", () => {
+  test("separates what Proxola assessed from what it is still waiting on", () => {
     const signal = buildProfileSignal([
       row("academics", 85),
       row("leadership", 72),

@@ -110,7 +110,7 @@ interpretation. The number is never LLM-invented:
   `(ScoringFacts) => DimensionResult`, unit tested against the specific behaviors the
   product spec calls out by name (e.g. a bare activity title shouldn't score high on
   leadership; a research project shouldn't need a publication to score well).
-- `lib/scoring/completeness.ts` — a completely independent metric (how much Oryn
+- `lib/scoring/completeness.ts` — a completely independent metric (how much Proxola
   knows) from profile strength (how good it is). Never conflate these two.
 - `lib/scoring/persist.ts` — the only place that writes scores to the database.
 

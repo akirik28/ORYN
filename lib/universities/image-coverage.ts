@@ -19,12 +19,12 @@ export interface UniversityImageState {
  * because features/universities/university-card.tsx's fallback chain (photo -> logo -> icon)
  * guarantees it structurally, not by measurement. This function just counts which tier each
  * university landed on. */
-export type DisplayTier = "real_verified" | "logo_fallback" | "oryn_fallback";
+export type DisplayTier = "real_verified" | "logo_fallback" | "proxola_fallback";
 
 export function displayTierOf(state: Pick<UniversityImageState, "hasRealImage" | "hasLogo">): DisplayTier {
   if (state.hasRealImage) return "real_verified";
   if (state.hasLogo) return "logo_fallback";
-  return "oryn_fallback";
+  return "proxola_fallback";
 }
 
 /**

@@ -20,7 +20,7 @@ export default async function PortfolioPreviewPage({ searchParams }: { searchPar
 
   const { tier: tierParam } = await searchParams;
   const tier = tierParam === "ultra" ? "ultra" : "standard";
-  // Reads the real oryn_locale cookie rather than hardcoding English — see
+  // Reads the real proxola_locale cookie rather than hardcoding English — see
   // design-preview/dashboard/page.tsx's own comment on this exact class of bug. This hero's
   // three strings were plain JSX literals with no translation mechanism at all, found during
   // 2026-09-03's Turkish pass.

@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 import { resolveComparisonWidthCeiling } from "@/lib/comparison/limits";
 import type { PlanTier } from "@/types/database";
 
-const STORAGE_KEY = "oryn:compare-universities";
+const STORAGE_KEY = "proxola:compare-universities";
 
 export interface CompareEntry {
   id: string;

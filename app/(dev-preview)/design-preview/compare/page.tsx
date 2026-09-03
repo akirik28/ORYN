@@ -54,7 +54,7 @@ export default async function ComparePreviewPage({ searchParams }: { searchParam
   // which this reads straight back out.
   const { tier: tierParam } = await searchParams;
   const tier = tierParam === "ultra" ? "ultra" : "standard";
-  // Reads the real oryn_locale cookie rather than hardcoding "en" — see dashboard/page.tsx's
+  // Reads the real proxola_locale cookie rather than hardcoding "en" — see dashboard/page.tsx's
   // own comment on this exact class of bug, fixed the same way across every preview page
   // that had it during 2026-09-03's Turkish pass. The row labels below were still hardcoded
   // English until this same pass — locale threading alone wasn't enough, since these were

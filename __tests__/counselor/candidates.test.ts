@@ -253,7 +253,7 @@ describe("generateCandidateActions — requirement actions", () => {
     expect(candidates.some((c) => c.source.kind === "requirement_action")).toBe(false);
   });
 
-  test("does not generate a candidate for needs_manual_review (not Oryn-actionable data entry)", () => {
+  test("does not generate a candidate for needs_manual_review (not Proxola-actionable data entry)", () => {
     const candidates = generateCandidateActions(
       state({ requirementCandidateInputs: [{ ...baseInput, evaluation: { status: "needs_manual_review", reasoning: "Depends on submitted material." } }] })
     );

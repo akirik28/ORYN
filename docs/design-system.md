@@ -1,7 +1,7 @@
 # Design System
 
 Written during Chat 2 (World-Class UI/UX/Brand/Interaction Design). This is the living
-reference for Oryn's visual language — read this before adding or restyling any surface.
+reference for Proxola's visual language — read this before adding or restyling any surface.
 See `/docs/chat-2-handoff.md` for the full pass summary and what Chat 3 should attack.
 
 ## Brand tokens (`app/globals.css`)
@@ -42,8 +42,8 @@ Prefer `brand-primary-*` in anything you write or substantially rewrite.
 strong outlook). `warning` = needs attention, not failure (needs_manual_review, reach
 outlook, deadline ≤7 days). `error` = confirmed negative (not_met, rejected, extreme
 reach). `info` = a distinct-but-not-bad state (likely_met, submitted). `brand` = neutral
-but "this is Oryn's own" (competitive outlook, exceptional opportunity match, active
-application). `neutral` = no signal yet (unknown, not started). `components/oryn/status-badge.tsx`
+but "this is Proxola's own" (competitive outlook, exceptional opportunity match, active
+application). `neutral` = no signal yet (unknown, not started). `components/proxola/status-badge.tsx`
 is the *only* place this mapping should be decided — a new status badge should reuse it,
 not invent its own color logic. See `features/universities/requirement-evaluation-badge.tsx`
 and `app/(app)/applications/page.tsx`'s `APPLICATION_STATUS_TONE` for worked examples.
@@ -57,12 +57,12 @@ Two families, with a hard split by *role* rather than by heading level:
 
 - **`--font-sans` (Manrope)** — all product UI: nav, buttons, form labels, table/list
   content, badges, **and card/dialog/sheet titles**.
-- **`--font-display` (Fraunces)** — only where Oryn is making a statement *to* the
+- **`--font-display` (Fraunces)** — only where Proxola is making a statement *to* the
   student: page `<h1>`s (via `PageHeader`), the dashboard greeting, the score number, an
   `InsightCard` headline, an `EvidenceSignal` value, the acceptance moment,
   auth/onboarding titles.
 
-The question to ask is unchanged — *is this Oryn talking to the student, or is this a UI
+The question to ask is unchanged — *is this Proxola talking to the student, or is this a UI
 label?* — but the answer moved. Previously `CardTitle`, `DialogTitle` and `SheetTitle`
 inherited the serif, which meant a busy page rendered ten serif sub-headings and the face
 stopped signifying anything. Those are sans now.
@@ -141,14 +141,14 @@ already do the job. See the shape/radius rules below, which still apply to level
 
 ### Module tones
 
-Four grounds, one per kind of Oryn utterance, so a reader can tell an interpretation from a
+Four grounds, one per kind of Proxola utterance, so a reader can tell an interpretation from a
 fact from a directive without reading a label: `module-insight` (cool — an interpretation
 stands back from the page), `module-evidence` and `module-action` (warm — a fact and a
 directive sit in it), and `module-recommendation` (the only one carrying brand indigo,
 which is exactly why indigo stays rare everywhere else). Backgrounds only, never text.
 
 **Only `module-recommendation` is in use today** (`NextMove`'s `surface`, on Home's hero and
-the opportunity detail's "Oryn's take"). `module-insight`, `module-evidence`,
+the opportunity detail's "Proxola's take"). `module-insight`, `module-evidence`,
 `module-action` and the warm `accent-sand`/`accent-clay` accents are defined and unused —
 they exist so the four utterance types have somewhere consistent to land as later surfaces
 adopt the language, in the same spirit as the fully-defined-but-unused `.dark` block.
@@ -201,14 +201,14 @@ intent rather than uniformly:
   the profile page's score section. There should be at most one `rounded-3xl` element per
   screen — it's a "this is the point of this page" signal, not a size utility.
 
-## Core primitives (`components/oryn/*`)
+## Core primitives (`components/proxola/*`)
 
 Built this pass; every page redesign in the product now composes from these instead of
 one-off `<div className="rounded-xl border p-4">` copies:
 
 - **`PageHeader`** — page-level title (serif) + description + optional action slot.
 - **`SectionHeader`** — in-page section divider (sans, dense).
-- **`InsightCard`** — the "Oryn is telling you something" statement. UI-V3-0b removed its
+- **`InsightCard`** — the "Proxola is telling you something" statement. UI-V3-0b removed its
   border, fill and icon chip: an interpretation should distinguish itself through scale,
   voice and hierarchy, and boxing it made it look like one more data card in a stack of
   data cards. Variants now tint only the eyebrow rule. `avoid` stays deliberately calm —
@@ -222,7 +222,7 @@ one-off `<div className="rounded-xl border p-4">` copies:
 - **`StatusBadge`** — see the tone table above. Every colored pill in the product should
   render through this.
 - **`ConfidenceIndicator`** — a lit/unlit 3-bar meter, not a colored word — Phase 68's
-  "Oryn should know when it doesn't know enough" made visible without reading as an
+  "Proxola should know when it doesn't know enough" made visible without reading as an
   error state.
 - **`DeadlineBadge`** — single source of truth for "how urgent is this deadline"
   (≤3 days `error`, ≤7 `warning`, ≤14 `brand`, else `neutral`) — was previously
@@ -238,12 +238,12 @@ one-off `<div className="rounded-xl border p-4">` copies:
   `tabular-nums`). Displays a fact; `InsightCard` interprets one. Its `missing` tone matters:
   absent evidence ("0 verified research projects") is real signal here and should read as
   noted, not failed.
-- **`NextMove`** — Oryn's signature argument: eyebrow, claim, reasoning, the evidence it
+- **`NextMove`** — Proxola's signature argument: eyebrow, claim, reasoning, the evidence it
   used, labelled facts, an action, and an optional footnote for a qualification that must
   travel *with* the claim rather than sit loose beneath it. It is the only component that
   carries the warm recommendation ground (`surface`), which is what makes the brief's
   "at most one per screen" something you can actually check. Home and the opportunity
-  detail's "Oryn's take" are the same anatomy through this one component, not two copies.
+  detail's "Proxola's take" are the same anatomy through this one component, not two copies.
 - **`MediaImage`** — the product's one image surface. Photo → logo → designed monogram,
   each tier falling through on a failed load. The monogram tier is the point: "no broken
   placeholders" must not be solved with generic stock imagery, which would imply we have a

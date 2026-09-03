@@ -18,7 +18,7 @@ import { canClaimGap, hasConfidentSignal, isAssessed, toProfileSignal } from "@/
  */
 
 describe("dev-preview fixture", () => {
-  test("is a scored profile, and Oryn can say so", () => {
+  test("is a scored profile, and Proxola can say so", () => {
     expect(FIXTURE_SCORES.length).toBeGreaterThan(0);
     expect(FIXTURE_SCORES.every((row) => row.score > 0)).toBe(true);
     expect(hasConfidentSignal(FIXTURE_PROFILE_SIGNAL)).toBe(true);

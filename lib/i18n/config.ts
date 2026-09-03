@@ -31,7 +31,7 @@ export const DEFAULT_LOCALE: Locale = "en";
  * localhost, and it carries a UI preference, not an authentication or authorization
  * decision. Nothing security-relevant is gated on it.
  */
-export const LOCALE_COOKIE = "oryn_locale";
+export const LOCALE_COOKIE = "proxola_locale";
 
 /** One year. A language choice is not a session-scoped decision. */
 export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;

@@ -12,7 +12,7 @@ describe("displayTierOf", () => {
   });
 
   test("falls back to the ORYN icon when there's neither", () => {
-    expect(displayTierOf({ hasRealImage: false, hasLogo: false })).toBe("oryn_fallback");
+    expect(displayTierOf({ hasRealImage: false, hasLogo: false })).toBe("proxola_fallback");
   });
 });
 

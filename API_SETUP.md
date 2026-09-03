@@ -1,6 +1,6 @@
 # API Setup
 
-Every integration below is optional at boot. Oryn runs and the core product works
+Every integration below is optional at boot. Proxola runs and the core product works
 with none of these configured — each one just unlocks a specific feature. Run
 `npm run check:integrations` at any time to see what's actually working (it makes real,
 minimal calls to each configured provider, not just an env-var presence check).
@@ -21,7 +21,7 @@ yet" screen instead of crashing.
 - `SUPABASE_SECRET_KEY` (server-only — bypasses Row Level Security, never exposed to the browser)
 
 **Where to get it:** Create a project at [supabase.com](https://supabase.com), then
-Project Settings → API. Oryn expects the newer "publishable"/"secret" key naming
+Project Settings → API. Proxola expects the newer "publishable"/"secret" key naming
 (not the legacy "anon"/"service_role" naming) — if your project shows the old names,
 they're equivalent.
 

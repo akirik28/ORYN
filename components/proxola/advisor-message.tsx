@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /**
- * A block of counsel from Oryn (UI-V3 § 14).
+ * A block of counsel from Proxola (UI-V3 § 14).
  *
  * Deliberately **not** a chat bubble: no rounded container, no avatar circle, no tail, no
  * alternating alignment. Those are messaging affordances, and they make a considered
@@ -11,7 +11,7 @@ import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
  * attribution mark, and body copy at a generous measure and line height — the shape of
  * written advice.
  *
- * The distinction is the product's, not a stylistic preference: Oryn is supposed to read
+ * The distinction is the product's, not a stylistic preference: Proxola is supposed to read
  * as a counselor taking a position it can defend, and a chat UI frames every answer as
  * disposable conversational output. If this ever grows a bubble, the differentiator is
  * gone.
@@ -19,21 +19,21 @@ import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
  * User turns get `variant="student"` — quieter, unruled, clearly secondary. The student's
  * question is the prompt for the counsel, not a peer utterance in a transcript.
  */
-const DEFAULT_ATTRIBUTION: Record<Locale, { oryn: string; student: string }> = {
-  en: { oryn: "Proxola", student: "You" },
-  tr: { oryn: "Proxola", student: "Sen" },
+const DEFAULT_ATTRIBUTION: Record<Locale, { proxola: string; student: string }> = {
+  en: { proxola: "Proxola", student: "You" },
+  tr: { proxola: "Proxola", student: "Sen" },
 };
 
 export function AdvisorMessage({
-  variant = "oryn",
+  variant = "proxola",
   attribution,
   meta,
   locale = DEFAULT_LOCALE,
   children,
   className,
 }: {
-  variant?: "oryn" | "student";
-  /** Small uppercase mark. Defaults to a locale-appropriate "Oryn" / "You", per `locale`. */
+  variant?: "proxola" | "student";
+  /** Small uppercase mark. Defaults to a locale-appropriate "Proxola" / "You", per `locale`. */
   attribution?: string;
   /** Quiet right-aligned metadata — a timestamp, a model note. */
   meta?: ReactNode;
@@ -44,9 +44,9 @@ export function AdvisorMessage({
   children: ReactNode;
   className?: string;
 }) {
-  const isOryn = variant === "oryn";
+  const isProxola = variant === "proxola";
 
-  if (!isOryn) {
+  if (!isProxola) {
     return (
       <div className={cn("max-w-2xl", className)}>
         <p lang={locale} className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-3 uppercase">
@@ -61,12 +61,12 @@ export function AdvisorMessage({
     <article className={cn("max-w-2xl border-l border-border pl-6 sm:pl-8", className)}>
       <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span lang={locale} className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-1 uppercase">
-          {attribution ?? DEFAULT_ATTRIBUTION[locale].oryn}
+          {attribution ?? DEFAULT_ATTRIBUTION[locale].proxola}
         </span>
         {meta ? <span className="ml-auto text-[0.6875rem] text-ink-3 tabular-nums">{meta}</span> : null}
       </header>
       {/* Serif at a long measure and 1.75 line height. Counsel should feel like something
-          written, and the display face is already the voice Oryn speaks in elsewhere. */}
+          written, and the display face is already the voice Proxola speaks in elsewhere. */}
       <div className="mt-3 font-display text-[1.0625rem] leading-[1.75] text-ink-1 [&>p+p]:mt-4">
         {children}
       </div>

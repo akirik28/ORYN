@@ -38,7 +38,7 @@ export default async function UniversitiesPreviewPage({ searchParams }: { search
 
   const { tier: tierParam } = await searchParams;
   const tier = tierParam === "ultra" ? "ultra" : "standard";
-  // Reads the real oryn_locale cookie rather than hardcoding "en" — see
+  // Reads the real proxola_locale cookie rather than hardcoding "en" — see
   // design-preview/dashboard/page.tsx's own comment on this exact class of bug.
   const t = await getTranslations("universities.browsePage");
   const universities: University[] = [FIXTURE_UNIVERSITY, FIXTURE_UNIVERSITY_2, FIXTURE_UNIVERSITY_3];

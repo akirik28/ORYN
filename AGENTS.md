@@ -10,15 +10,18 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Product build specification
 
-The original founder prompt this product was built against, verbatim except for the
-product name (was "Career AI" throughout — renamed to "Oryn" for consistency with the
-rest of the codebase; nothing else changed). `PRODUCT_SPEC.md` is a short orientation
-summary of this document; when the two disagree, this file wins.
+The original founder prompt this product was built against, verbatim except for two
+documented product-name changes — nothing else has been altered. First: the prompt said
+"Career AI" throughout; it was renamed to "Oryn" for consistency with the rest of the
+codebase. Second, disclosed here rather than applied silently: renamed from "Oryn" to
+"Proxola" on 2026-09-03, per the founder's own go-ahead on a full product rename that
+night, applied everywhere else in the codebase this same night. `PRODUCT_SPEC.md` is a
+short orientation summary of this document; when the two disagree, this file wins.
 
 ---
 
-ORYN — MASTER BUILD PROMPT
-You are the lead product engineer, AI architect, data engineer, UX designer, and technical product manager responsible for building Oryn from zero into a polished, working web application.
+PROXOLA — MASTER BUILD PROMPT
+You are the lead product engineer, AI architect, data engineer, UX designer, and technical product manager responsible for building Proxola from zero into a polished, working web application.
 You are not here to only write a product plan, mockup, prototype, or architecture document.
 You must build the actual product.
 Do not continuously ask me for decisions.
@@ -35,7 +38,7 @@ Even when an API credential is missing, continue building everything else and cr
 Do not replace a real integration with fake data just because setup is inconvenient.
 0. PRODUCT NAME
 Working name:
-Oryn
+Proxola
 Product category:
 Personal Career Operating System for Students
 Initial target user:
@@ -50,7 +53,7 @@ Initial geographic focus:
 
 The architecture must be global from day one.
 1. PRODUCT VISION
-Oryn should become the central place where a student manages:
+Proxola should become the central place where a student manages:
 
 * academic history
 * grades
@@ -80,14 +83,14 @@ Oryn should become the central place where a student manages:
 
 The product should answer one central question extremely well:
 What should I do next to improve my future opportunities?
-Oryn should not merely store a student's CV.
+Proxola should not merely store a student's CV.
 It should continuously:
 Capture → Verify → Organize → Analyze → Benchmark → Discover → Plan → Act → Reflect → Update → Repeat
 2. CORE PRODUCT PRINCIPLE
-Oryn must behave more like an intelligent career advisor than a generic chatbot.
+Proxola must behave more like an intelligent career advisor than a generic chatbot.
 A generic chatbot says:
 You could try doing research.
-Oryn should say:
+Proxola should say:
 Leadership is already one of the strongest areas of your profile. Starting another school club is unlikely to materially improve your profile. Your largest current gap is research exposure. I recommend spending the next four weeks completing one small economics research project instead.
 The system must understand opportunity cost.
 It must sometimes explicitly tell the student:
@@ -97,7 +100,7 @@ This is currently a low-priority activity for you.
 The goal is not maximum activity.
 The goal is maximum development per unit of student time.
 3. PRODUCT POSITIONING
-Oryn is NOT primarily:
+Proxola is NOT primarily:
 
 * a CV builder
 * a university ranking website
@@ -352,7 +355,7 @@ Use OpenAlex for academic discovery, including:
 * institutions
 * research directions
 
-Oryn should use research literature to help generate realistic student-level research ideas.
+Proxola should use research literature to help generate realistic student-level research ideas.
 Example:
 Student interest:
 
@@ -363,7 +366,7 @@ Youth Employment
 
 ```
 
-Oryn can identify current research themes and generate an achievable project such as:
+Proxola can identify current research themes and generate an achievable project such as:
 Analyze whether youth unemployment differs by educational attainment across selected OECD countries.
 The system should scale the difficulty to the student's age and experience.
 11. PRIVACY-FIRST EVIDENCE SYSTEM
@@ -739,7 +742,7 @@ Every score:
 
 ```
 
-These are Oryn development metrics.
+These are Proxola development metrics.
 They are NOT university-generated scores.
 Make this clear in UI.
 6.1 SCORE ARCHITECTURE
@@ -902,7 +905,7 @@ This is the core intelligence product.
 Create:
 
 ```text
-Oryn Advisor
+Proxola Advisor
 
 ```
 
@@ -967,7 +970,7 @@ Student asks:
 Should I start another entrepreneurship club?
 Bad response:
 Yes! Starting a club can show leadership.
-Correct Oryn behavior:
+Correct Proxola behavior:
 I would not prioritize another club. Leadership and entrepreneurship are already among your strongest profile areas. Your research exposure is considerably weaker. Unless this new club creates a unique measurable outcome, the same time would likely generate more value if invested in completing a substantive research project.
 PHASE 9 — WEEKLY AI REVIEW
 Create a weekly review engine.
@@ -1351,13 +1354,13 @@ Medium
 ```
 
 Clearly label:
-Oryn estimate. This is not a guarantee or an official university probability.
+Proxola estimate. This is not a guarantee or an official university probability.
 Never display misleading decimal precision.
 16.2 ADMISSION EXPLANATION
 Example:
 
 ```text
-Why Oryn classifies this as a Reach:
+Why Proxola classifies this as a Reach:
 
 Strengths
 + Academics are competitive
@@ -1465,7 +1468,7 @@ minimum n = 100
 If insufficient:
 
 ```text
-Not enough comparable Oryn users yet.
+Not enough comparable Proxola users yet.
 
 ```
 
@@ -1676,7 +1679,7 @@ the answer should distinguish:
 
 ```text
 Verified information
-Oryn analysis
+Proxola analysis
 
 ```
 
@@ -1883,7 +1886,7 @@ Impact
 Do not blindly use this exact multiplication if it produces unstable behavior.
 Implement normalized factors and unit tests.
 The point is:
-Oryn prioritizes.
+Proxola prioritizes.
 PHASE 39 — "DON'T DO THIS" LOGIC
 Create explicit recommendation types:
 
@@ -1997,7 +2000,7 @@ Better:
 ```text
 You haven't added any activities yet.
 
-Add clubs, projects, sports, leadership or other experiences. Oryn uses them to understand your profile.
+Add clubs, projects, sports, leadership or other experiences. Proxola uses them to understand your profile.
 
 ```
 
@@ -2175,7 +2178,7 @@ The first real MVP is complete when a student can:
 11. save target universities
 12. see an honest admission outlook
 13. track deadlines
-14. ask Oryn personalized questions
+14. ask Proxola personalized questions
 15. complete actions
 16. see their profile evolve
 
@@ -2203,8 +2206,8 @@ PHASE 55 — FUTURE ARCHITECTURE
 Do not implement now, but avoid making future expansion impossible.
 Potential future features:
 
-* university student Oryn
-* professional Oryn
+* university student Proxola
+* professional Proxola
 * counselors
 * mentors
 * schools
@@ -2218,7 +2221,7 @@ Potential future features:
 * internship matching
 * recruiter functionality
 * verified credentials
-* Oryn mobile application
+* Proxola mobile application
 
 PHASE 56 — PRODUCT LANGUAGE
 Use short, clear product copy.
@@ -2266,7 +2269,7 @@ Recommended intervention pathways
 
 The product should feel intelligent but simple.
 PHASE 57 — AI COPY STYLE
-Oryn responses should be:
+Proxola responses should be:
 
 * specific
 * concise
@@ -2376,7 +2379,7 @@ Review screen:
 
 ```text
 We found 12 items.
-Review before adding them to your Oryn profile.
+Review before adding them to your Proxola profile.
 
 ```
 
@@ -2407,7 +2410,7 @@ Research is currently your weakest major profile dimension at 42/100. Your targe
 This reasoning is essential.
 PHASE 63 — RECOMMENDATION HISTORY
 Store previous recommendations.
-Allow Oryn to avoid repeatedly recommending the same rejected idea.
+Allow Proxola to avoid repeatedly recommending the same rejected idea.
 Fields:
 
 ```text
@@ -2446,7 +2449,7 @@ Exam week
 ```
 
 or reduce available time.
-Oryn should reduce recommendations accordingly.
+Proxola should reduce recommendations accordingly.
 PHASE 66 — GOAL SYSTEM
 Students can create goals:
 Examples:
@@ -2484,9 +2487,9 @@ Profile strength: 79
 
 These are completely different concepts.
 Do not confuse them.
-Completeness means Oryn knows enough about the student.
+Completeness means Proxola knows enough about the student.
 PHASE 68 — CONFIDENCE SYSTEM
-Oryn should know when it does not know enough.
+Proxola should know when it does not know enough.
 Example:
 
 ```text
@@ -2642,7 +2645,7 @@ PHASE 77 — README
 At the end, README must contain:
 
 ```text
-What Oryn is
+What Proxola is
 Architecture
 Setup
 Environment variables
@@ -2675,7 +2678,7 @@ Fix failures.
 PHASE 79 — FINAL PRODUCT AUDIT
 Audit the application from five perspectives.
 Product
-Does Oryn clearly answer:
+Does Proxola clearly answer:
 What should I do next?
 UX
 Can a first-time 16-year-old understand the product without instruction?
@@ -2724,9 +2727,9 @@ Do not ask me what we should build next unless there are multiple genuinely stra
 NON-NEGOTIABLE PRODUCT REQUIREMENTS
 These requirements override shortcuts elsewhere in this prompt.
 1
-Oryn must be useful even if a student has no university targets yet.
+Proxola must be useful even if a student has no university targets yet.
 2
-Oryn must prioritize rather than endlessly recommend more activities.
+Proxola must prioritize rather than endlessly recommend more activities.
 3
 Evidence is optional in V1.
 4
@@ -2754,20 +2757,20 @@ The product must be understandable to a student within minutes.
 15
 The dashboard should emphasize the top three actions, not twenty metrics.
 KEY USER EXPERIENCE
-The ideal repeated Oryn experience should feel like this:
+The ideal repeated Proxola experience should feel like this:
 
 ```text
-Student opens Oryn
+Student opens Proxola
 ↓
-Oryn understands what changed
+Proxola understands what changed
 ↓
-Oryn identifies what matters
+Proxola identifies what matters
 ↓
-Oryn shows only the highest-value actions
+Proxola shows only the highest-value actions
 ↓
 Student acts
 ↓
-Oryn observes the outcome
+Proxola observes the outcome
 ↓
 Profile changes
 ↓
@@ -2850,4 +2853,4 @@ If the repository is empty, initialize the complete application.
 Whenever you find a weak implementation from an earlier phase, fix it instead of building new features on top of bad foundations.
 The end goal is not a visually impressive demo.
 The end goal is:
-A trustworthy, simple, intelligent and genuinely useful Oryn product that continuously helps students decide what to do next.
+A trustworthy, simple, intelligent and genuinely useful Proxola product that continuously helps students decide what to do next.

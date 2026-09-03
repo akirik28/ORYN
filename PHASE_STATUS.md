@@ -593,7 +593,7 @@ dedup module); `npm run build` still succeeds with the new route.
 ## Chat 2 — World-Class UI/UX/Brand/Interaction Design pass
 
 Full design system (brand token ramp, Newsreader/Geist typography split, motion,
-`components/oryn/*` primitives) applied across every major surface — Home dashboard, app
+`components/proxola/*` primitives, renamed from `components/oryn/*` 2026-09-03) applied across every major surface — Home dashboard, app
 shell, landing/auth, onboarding, university exploration, profile, advisor, opportunities,
 plan/applications (new acceptance-moment celebration), and a rebuilt command-palette
 global search. Also shipped mid-pass at the founder's direction: a narrow V1 social scope

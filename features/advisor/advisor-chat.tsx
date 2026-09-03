@@ -21,7 +21,7 @@ import type { AdvisorMessage as AdvisorMessageRow, PlanTier } from "@/types/data
  * The durable dismissal tiers (soft/not-now/forever) are a different question, answered by
  * lib/advisor/upgrade-prompt.ts against the database -- this key only ever answers "have I
  * shown it in this browser tab already," nothing more. */
-const UPGRADE_PROMPT_SESSION_KEY = "oryn:upgrade-prompt-shown";
+const UPGRADE_PROMPT_SESSION_KEY = "proxola:upgrade-prompt-shown";
 
 function hasShownUpgradePromptThisSession(): boolean {
   try {
