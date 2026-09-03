@@ -484,29 +484,41 @@ version (one file per family, same repo location pattern as the country fragment
 
 Every entry above keys `pathway` off `studentCountry` (residence). Founder-flagged, 2026-09-03:
 some Turkey-based schools issue *another* country's own school-leaving qualification — Deutsche
-Schule Istanbul's Abitur, Liceo Italiano di Istanbul's maturità, and (named but not yet
-researched) French-track and Austrian schools.
+Schule Istanbul's Abitur, Liceo Italiano di Istanbul's maturità, St. Georgs-Kolleg's Austrian
+Matura, and three French-track schools (Galatasaray, Saint-Joseph, Notre Dame de Sion).
 [`foreign-curriculum-schools-in-turkey-2026-09-03.md`](./foreign-curriculum-schools-in-turkey-2026-09-03.md)
-checked Germany and Italy, and found this isn't a new problem — it's the same structural gap
-Turkey's own entry already has, undiscovered until now: `turkey.md` §B confirms pathway there is
-meant to be gated by *schooling location* (with three narrow named exceptions decoupled even
-from that), not the residence field `resolvePathway` actually reads, but that finding was never
-wired into the shipped mechanism text or the resolver. Germany and Turkey are two instances of
-one gap, in opposite directions — Turkey: a foreign curriculum delivered *inside* the target
-country mostly doesn't change the pathway; Germany: the target country's *own* qualification,
-delivered *outside* it (Bildungsinländer status), does. Confirmed real and material for Germany
-specifically — it changes which pool an Abitur/DIA holder from a recognized Auslandsschule
-competes in for the NC-quota system, the highest-stakes case the founder's framing pointed at.
-Italy answers differently: a Liceo Italiano di Istanbul maturità plausibly eases general
-admission but does not appear to move the holder out of the non-EU-resident-abroad reserved pool
-for numero chiuso Medicine — residence, not the diploma's issuing authority, is what "equiparato"
-status turns on there. A genuine divergence, not two versions of one answer. France and Austria
-remain open. No mechanism was built, even though the two-independent-instances bar that
-justified `subdivision-key-proposal.md` is arguably now met — France/Austria could still change
-the shape needed, a proper fix plausibly touches Turkey's own shipped entry too, and the
-profile's own `CurriculumType` enum has no field that could hold "Abitur" or "maturità" even if
-a resolver existed to read it. All stated as founder decisions in the document's own §D–E, not
-worked around.
+checked all four countries, in two passes, and found this isn't a new problem to begin with —
+it's the same structural gap Turkey's own entry already has, undiscovered until now: `turkey.md`
+§B confirms pathway there is meant to be gated by *schooling location* (with three narrow named
+exceptions decoupled even from that), not the residence field `resolvePathway` actually reads,
+but that finding was never wired into the shipped mechanism text or the resolver.
+
+**The aggregate result, stated explicitly rather than left implicit: not 4 of 4, and not a clean
+2 of 4 either.** Germany and Austria both confirm real, material, statute/policy-grounded
+pathway changes — Germany's Bildungsinländer status and Austria's named-school statutory
+equal-status finding for St. Georgs-Kolleg are both primary-sourced and both affect the
+highest-stakes case in each country (the NC quota, MedAT's quota). Italy answers differently:
+"equiparato" status for numero chiuso turns on residence-in-Italy, not the diploma's issuing
+authority, so a Liceo Italiano di Istanbul maturità most likely does not move the holder out of
+the reserved non-EU-abroad pool for Medicine, even though it plausibly eases general admission.
+**France is the sharpest finding of all four: it doesn't reduce to one country-level answer at
+all** — of the three named schools, Saint-Joseph plausibly qualifies for Parcoursup under
+france.md's own already-established AEFE-network rule, Notre Dame de Sion most likely does not
+(it holds the lesser FrancEducation label, not full baccalauréat homologation), and Galatasaray's
+own status came back genuinely unresolved after its claimed French-equivalence didn't survive a
+second check (inconsistent treaty dates across sources, no corroboration on the school's own
+French Wikipedia page). **That single fact settles the mechanism question**: the real grain this
+problem lives at is per-*school*, not per-country — meaning neither "build a general resolver"
+nor CEO's proposed cheaper fallback ("per-country facts instead") is the right shape; a
+per-country fact for France would still be wrong for at least one of its own three named schools.
+No mechanism was built. A second, independently-verified finding (live-queried against
+`oryn-qa-scratch`, not relayed) sharpens why the profile-data blocker matters beyond this one
+document: `university_requirements` already has 130 rows tagged `requirement_type = 'curriculum'`,
+but zero of them carry any `structured_rule` — the automated `case "curriculum":` evaluator path
+in `lib/requirements/evaluate.ts` has never once fired in production, and would return a
+confident `"not_met"`, not an honest `"unknown"`, for any of these six schools' graduates the
+moment it does. Two decisions — the profile-data shape and this dormant-rule trap — are stated
+as founder decisions in the document's own §E, not worked around.
 
 ## Full source list
 
