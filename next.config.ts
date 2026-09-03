@@ -15,6 +15,18 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: supabaseHostname ? [{ protocol: "https", hostname: supabaseHostname, pathname: "/storage/v1/object/public/**" }] : [],
   },
+  // 2026-09-03, founder decision ("admin ve kumanda aynı şey değil mi, öyle olmalı"): /admin
+  // was the old, single-page control panel; /kumanda is its full replacement (same 23
+  // sections as of this pass, verified by count). /admin's own route files
+  // (app/(app)/admin/page.tsx, actions.ts) are untouched -- actions.ts is still real, shared
+  // infrastructure several /kumanda sections import directly -- so removing this one entry
+  // is the entire revert, with nothing else to restore. `permanent: false` (307) rather than
+  // 308 deliberately: the founder hasn't opened either panel with a real admin account yet,
+  // and a permanent redirect can outlive its own removal in a browser's/CDN's cache in a way
+  // a temporary one won't.
+  async redirects() {
+    return [{ source: "/admin", destination: "/kumanda", permanent: false }];
+  },
 };
 
 // Points next-intl at lib/i18n/request.ts instead of its default `./i18n/request.ts`, so

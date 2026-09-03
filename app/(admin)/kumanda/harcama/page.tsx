@@ -9,6 +9,7 @@ import { RemainingCreditSection } from "@/features/admin/sections/remaining-cred
 import { BudgetWarningsSection } from "@/features/admin/sections/budget-warnings-section";
 import { AiFeatureShapeSection } from "@/features/admin/sections/ai-feature-shape-section";
 import { JobBudgetSection } from "@/features/admin/sections/job-budget-section";
+import { WeeklyPlanBudgetSection } from "@/features/admin/sections/weekly-plan-budget-section";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("admin.control");
@@ -16,11 +17,20 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * Fifth group, and the largest single move: the six sections that made up the old page's
- * entire "spend" tab, unchanged. Three of the six (SpendPerUserSection, JobBudgetSection,
- * AiFeatureShapeSection) import server actions directly from app/(app)/admin/actions.ts --
- * that file is untouched by this package, so those imports keep resolving exactly as they
- * do on the old page.
+ * Fifth group, and the largest single move: seven of the eight sections that made up the
+ * old page's "spend" tab, unchanged (the eighth, DegradeStandingSection, moved to
+ * /kumanda/sistem instead -- a reliability/model-selection status, not a dollar-budget
+ * control, closer in kind to that screen's other sections). Three of the seven
+ * (SpendPerUserSection, JobBudgetSection, AiFeatureShapeSection) import server actions
+ * directly from app/(app)/admin/actions.ts -- that file is untouched by this package, so
+ * those imports keep resolving exactly as they do on the old page.
+ *
+ * WeeklyPlanBudgetSection added 2026-09-03: the one section this restructure genuinely
+ * missed (docs/control-centre-number-reconciliation-2026-09-03.md-adjacent finding,
+ * oryn-a7) -- /admin had 23 sections to /kumanda's 22, and this was the exact gap. Placed
+ * immediately after JobBudgetSection, matching its position on the old page precisely: both
+ * are dollar-ceiling controls for an AI feature's spend, not a status/monitoring section
+ * like DegradeStandingSection above.
  */
 export default async function SpendPage() {
   const t = await getTranslations("admin.control");
@@ -45,6 +55,9 @@ export default async function SpendPage() {
       </Suspense>
       <Suspense fallback={<SectionSkeleton rows={2} />}>
         <JobBudgetSection />
+      </Suspense>
+      <Suspense fallback={<SectionSkeleton rows={2} />}>
+        <WeeklyPlanBudgetSection />
       </Suspense>
     </div>
   );
