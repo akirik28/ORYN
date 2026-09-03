@@ -160,34 +160,45 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
 
       <RequirementChecklist requirements={requirements} />
 
-      {universityWideRequirements.length > 0 || thisProgramRequirements.length > 0 ? (
-        <section className="space-y-4">
-          <SectionHeader title={tUni("requirementCheckTitle")} description={tUni("requirementCheckDescription")} />
-          {thisProgramRequirements.length > 0 ? (
-            <RequirementGroup
-              title={programRes.data?.name ?? tUni("programFallback")}
-              items={thisProgramRequirements}
-              evaluationByRequirement={evaluationByRequirement}
-              locale={locale}
-              t={tUni}
-            />
-          ) : null}
-          {universityWideRequirements.length > 0 ? (
-            <RequirementGroup
-              title={locale === "tr" ? "Program kaydedilmemiş" : "Program not recorded"}
-              description={
-                locale === "tr"
-                  ? "Üniversitenin kendi sayfalarından alındı — Oryn bunların her birinin hangi programa ait olduğunu kaydetmedi."
-                  : "Sourced from the university's own pages — Oryn hasn't recorded which specific program each of these belongs to."
-              }
-              items={universityWideRequirements}
-              evaluationByRequirement={evaluationByRequirement}
-              locale={locale}
-              t={tUni}
-            />
-          ) : null}
-        </section>
-      ) : null}
+      {/* Was gated behind `universityWideRequirements.length > 0 || thisProgramRequirements.length
+          > 0 ? <section>...</section> : null` — same silent-omission shape found and fixed on
+          app/(app)/universities/[id]/page.tsx (2026-09-03), a distinct gate expression in a
+          separate file even though both call the same RequirementGroup component, so it needed
+          its own fix rather than following from the other page's automatically. */}
+      <section className="space-y-4">
+        <SectionHeader title={tUni("requirementCheckTitle")} description={tUni("requirementCheckDescription")} />
+        {universityWideRequirements.length > 0 || thisProgramRequirements.length > 0 ? (
+          <>
+            {thisProgramRequirements.length > 0 ? (
+              <RequirementGroup
+                title={programRes.data?.name ?? tUni("programFallback")}
+                items={thisProgramRequirements}
+                evaluationByRequirement={evaluationByRequirement}
+                locale={locale}
+                t={tUni}
+              />
+            ) : null}
+            {universityWideRequirements.length > 0 ? (
+              <RequirementGroup
+                title={locale === "tr" ? "Program kaydedilmemiş" : "Program not recorded"}
+                description={
+                  locale === "tr"
+                    ? "Üniversitenin kendi sayfalarından alındı — Oryn bunların her birinin hangi programa ait olduğunu kaydetmedi."
+                    : "Sourced from the university's own pages — Oryn hasn't recorded which specific program each of these belongs to."
+                }
+                items={universityWideRequirements}
+                evaluationByRequirement={evaluationByRequirement}
+                locale={locale}
+                t={tUni}
+              />
+            ) : null}
+          </>
+        ) : (
+          <p lang={locale} className="max-w-3xl text-sm text-muted-foreground">
+            {tUni("requirementCheckEmptyMessage")}
+          </p>
+        )}
+      </section>
     </div>
   );
 }
