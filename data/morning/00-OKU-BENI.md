@@ -496,9 +496,15 @@ konmadı: aşağıdaki şema kararı verilmeden uygulanırlarsa **275 kurum eksi
   olarak aynı 22 ismi verdi —  `finland-amk-2026-09-03.sql`. **Yirmi ikisinin de web
   adresi tek tek tarayıcıda açılıp doğrulandı**, satır satır. Bu üç partinin en sağlamı.
 
-  Ve senin için muhtemelen en önemlisi bu: 3f'in araştırmasına göre Finlandiya'da
-  **sınav çilesi olmadan kapı açan sektör tam olarak bu.** Katalog bugün o sektörden
-  hiçbir kurum içermiyor.
+  Bu sektör hakkında sana daha önce yazdığım bir cümleyi **düzeltmem gerekiyor.**
+  "Finlandiya'da Türk öğrenciye sınavsız kapı açan sektör tam olarak bu" demiştim. O
+  bulgu bir arama özetinden geliyordu ve orta güvenilirlikte işaretlenmişti; ben o işareti
+  taşımadan sana yazdım. 3f bugün kaynağın kendi sayfalarını açıp baktı: **AMK'nın
+  belge-esaslı seçim listesinde Türkiye yok** — Fin matürasyonu, IB, EB, RP, DIA ve mesleki
+  diploma var. Tek bir kurum (Centria, tek bir programda) Türkiye'yi ayrıca listeliyor.
+
+  Yani sektör hâlâ katalogda hiç yok ve eklenmesi doğru; ama "Türk öğrenciye sınavsız kapı"
+  cümlesi kanıtlanmış değil. 3f kendi önceki bulgusunu, kendi aleyhine düzeltti.
 
 - **Avusturya: 21 Fachhochschule** — `austria-fh-2026-09-03.sql`. Üç bağımsız resmî kaynak
   (bakanlık, sektörün kendi birliği, birliğin portalı) aynı 21'i verdi. Portal 22 gösteriyor
