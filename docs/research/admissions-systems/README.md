@@ -132,6 +132,15 @@ a contained code fix and has since been built (`oryn/tuition-source-url-fix-2026
 item instead:
 [`implementation-gap/university-statistics-source-url-decision-2026-09-03.md`](./implementation-gap/university-statistics-source-url-decision-2026-09-03.md).
 
+The 42-institution `not_applicable` finding got its own follow-up:
+[`implementation-gap/no-badge-diagnosis-2026-09-03.md`](./implementation-gap/no-badge-diagnosis-2026-09-03.md)
+re-confirms the 42 live (unchanged, still firing by design) and checks for any *different*,
+possibly-unintended cause of a missing badge elsewhere. Found one genuinely separate deliberate
+mechanism (US/Canada Medicine/Law field-availability, RULE-ADMISSIONS-021) and no bug — but also
+found the 42 was never the whole picture: counting the original 15 countries' own pre-existing
+rank-competitive/threshold entries, **269 institutions across 14 countries** currently show
+`not_applicable` for a realistic international applicant, not 42. Diagnosis only, nothing built.
+
 Each doc follows the same structure: admissions architecture, qualification eligibility
 (with a **dedicated Türkiye-applicant section** in every country), academic evidence use,
 predicted grades, conditional/unconditional admission, subject prerequisites, standardized
