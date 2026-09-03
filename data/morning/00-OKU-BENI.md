@@ -115,6 +115,13 @@ sütun** var: elle araştırma `financial_aid_available`'ı, otomatik çıkarım
 `funding_available`'ı yazıyor — ikisi asla birlikte dolmuyor. İkisi de migration gerektiren
 şema kararları, o yüzden sana bırakıldı.
 
+**Yeniden doğrulama işi, tasarlandığı haliyle hiçbir şeyi doğrulamıyor.** b9 kurdu, sonra
+20 gerçek sayfayla deneme çalıştırdı: **20 sayfanın 16'sı temiz açıldı, doğru programa
+aitti, ve iş hiçbirini doğrulanmış işaretlemedi.** Sebep sıradan: iş "applications open",
+"apply by" gibi sabit kalıplar arıyor, gerçek sayfalar ise "Apply Now", "Register today"
+yazıyor. Bunu ancak çalıştırınca öğrenebilirdik. Şimdi kalıpları gerçek sayfalardan
+çıkarıyor. **İş kapalı duruyor, kendiliğinden çalışmıyor.**
+
 **Fırsat görselleri ve lisans.** 282 kaydın 218'inde görsel yok, ve **128'inin kaynak
 sayfasında zaten görsel yok** — daha çok taramak bunu çözmüyor. Üçüncü taraf görseli
 sunmanın hukuki temeli açık değil; `LEGAL_REVIEW.md`'ye eklendi. Bu arada lisans gerektirmeyen,
