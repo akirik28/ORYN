@@ -11,9 +11,11 @@ Uyandığında sırayla bunlar. Yedi adım, tahminen 15 dakika — beşi kopyala
 | İncelemedeki kayıt | 84'ü öğrencinin göreceği katalog'a geçer |
 | Üniversite gereksinimi | 14 kurumda 141 satırdan 351'e |
 | Yeni fırsat | 9 tane eklenir |
+| Tekrar eden öneri | 98 kopya silinir, gerçek olan kalır |
 | Kumanda merkezi | açılır ve kullanılabilir olur |
 
-Adımlar birbirinden bağımsız. Yarısında durursan kalan yarısı bozulmaz.
+Yarısında durursan kalan yarısı bozulmaz. Tek sıra kuralı var: **5. adım, 7. adımdan önce**
+(sebebi 5. adımda yazıyor). Gerisi istediğin sırada.
 
 ## 1. Kendini admin yap
 
@@ -158,6 +160,28 @@ Dosya, bugün var olan 10 eşleşmeyi kayıt defterine işliyor — yani iş ilk
 yapmıyor.
 
 Deploy etmeyeceksen acelesi yok. Edeceksen **önce bu.**
+
+## 7b. Kendi hesabındaki tekrar eden önerileri temizle
+
+`06-oneri-tekrar-temizligi-2026-09-03.sql`
+
+30 Ağustos'ta, 38 dakikalık bir pencerede "Yeniden oluştur" düğmesine art arda basılmış ve
+**aynı öneri hesabına 99 kez yazılmış** — "Oxbridge Academic Programs", hepsi birebir aynı
+metin. Yazma tarafındaki kusur zaten düzeltildi ve bir daha bu şekli üretmiyor; duran şey
+geçmişte oluşmuş 98 fazla satır.
+
+Neden önemli: danışman, haftalık plan üretirken "bunu tekrar önerme" listesini senin en son
+15 önerinden dolduruyor. Şu an o 15'in neredeyse tamamı bu tek kopyadan geliyor. Yani bunu
+çalıştırmadan bir plan üretirsen, danışman senin gerçek geçmişini değil aynı başlığın
+gürültüsünü okuyor olacak.
+
+Deneme çalıştırıldı: 98 satır siliniyor, en erken gösterilen gerçek öneri kalıyor.
+Silme koşulu sadece başlığa değil, **her alana** bakıyor — gerçek bir cevap ya da not
+taşıyan bir satır hangi durumda olursa olsun kapsam dışında.
+
+Bir şeyin bilerek dışarıda bırakıldığını da söylemek gerek: başka bir hesapta aynı başlığı
+paylaşan 2 satır bulundu, ama metinleri farklı — yani tesadüfen aynı başlığı taşıyan iki
+gerçek öneri. Dokunulmadı. Sayı benziyordu, içerik benzemiyordu.
 
 ## 8. İki paneli karşılaştır
 
