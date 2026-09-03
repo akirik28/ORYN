@@ -101,6 +101,15 @@ name, Netherlands 0/40+, Austria 0/21, and more), and whether it matters. Measur
 recommendation only — no ingestion, no new rows; a catalogue-composition question for the
 founder, not an admissions-mechanism finding for this registry.
 
+A separate question after the ten countries landed: does any of this research reach a student?
+[`implementation-gap/surfacing-audit-2026-09-03.md`](./implementation-gap/surfacing-audit-2026-09-03.md)
+traces every real call site of `resolveAdmissionSystem`/`computeAdmissionOutlook` end to end.
+Half-yes: the university detail page shows the sourced mechanism sentence for the 42 institutions
+this line moved to `not_applicable`, but silently drops it for the 33 that got a real
+holistic/unknown-shape badge instead (plus every UK institution and every no-registry-country
+one) — and the AI advisor's context never touches any of it, for any country, either way.
+Measurement only, same discipline as the two documents above.
+
 Each doc follows the same structure: admissions architecture, qualification eligibility
 (with a **dedicated Türkiye-applicant section** in every country), academic evidence use,
 predicted grades, conditional/unconditional admission, subject prerequisites, standardized
