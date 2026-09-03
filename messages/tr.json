@@ -1942,7 +1942,10 @@
       "systemDescription": "Altyapı sağlıklı mı — sağlayıcılar, işler ve AI yanıt kalitesi.",
       "catalogDescription": "İncelenmeyi bekleyen fırsatlar ve açıklama temizlik geçişi.",
       "spendDescription": "AI harcaması, bütçeler ve kalan kredi.",
-      "studentsDescription": "Her öğrenci, plan katmanı ve son ne zaman göründüğü."
+      "studentsDescription": "Her öğrenci, plan katmanı ve son ne zaman göründüğü.",
+      "pendingTitle": "Henüz yapılmadı",
+      "pendingDescription": "Bu ekran planlı ve rayda duruyor, ama henüz kimse yazmadı.",
+      "pendingBody": "404 yerine bunu görüyorsun, bilerek. Yönetim rotaları erişimi olmayana 404 döndürüyor — yani yazılmamış bir ekranla yetkisizlik birbirinden ayırt edilemezdi, hangisine denk geldiğini anlayamazdın."
     },
     "growth": {
       "signups": {

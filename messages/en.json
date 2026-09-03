@@ -1942,7 +1942,10 @@
       "systemDescription": "Whether the machinery is healthy — providers, jobs, and AI response quality.",
       "catalogDescription": "Opportunities awaiting review, and the description cleanup pass.",
       "spendDescription": "AI spend, budgets, and remaining credit.",
-      "studentsDescription": "Every student, their plan tier, and when they last showed up."
+      "studentsDescription": "Every student, their plan tier, and when they last showed up.",
+      "pendingTitle": "Not built yet",
+      "pendingDescription": "This screen is planned and on the rail, but nobody has written it.",
+      "pendingBody": "You are seeing this instead of a 404 on purpose. Admin routes return 404 for anyone without access, so an unbuilt screen and a permission failure would otherwise look identical — and you would have no way to tell which one you hit."
     },
     "growth": {
       "signups": {

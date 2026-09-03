@@ -68,6 +68,11 @@ const GROUPS: { key: GroupKey; items: Item[] }[] = [
   },
 ];
 
+/** Every destination the rail offers. Exported so app/(admin)/kumanda/[...slug]/page.tsx can
+ *  distinguish a screen that is planned but not built yet from a URL that is simply wrong --
+ *  without a second hand-maintained list that would drift from this one. */
+export const CONTROL_DESTINATIONS: readonly string[] = GROUPS.flatMap((g) => g.items.map((i) => i.href));
+
 export function ControlRail() {
   const t = useTranslations("admin.control");
   const pathname = usePathname();
