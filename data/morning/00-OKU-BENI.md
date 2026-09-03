@@ -476,6 +476,29 @@ Bir dürüstlük notu daha: tarama mekanizmasının kendisi, bu görevi başlata
 kaydını **kaçırdı** — sayfayı sorunsuz indirdi ama yanlış cümleyi seçti. Yani 8 bir taban,
 tavan değil.
 
+**Ve gün içinde bu soru sonuna kadar kovalandı, sonucu şu:**
+
+Önce kötü haber gibi görünen şey: aynı kayıtları ikinci kez okuyunca **"sağlam" denen üç
+bulgunun üçü de bozuldu.** Biri tarihini tamamen kaybetti, biri sinyalini, biri **farklı bir
+yıl** döndürdü — ve o yıl sayfanın kendisinden değil, aynı sitedeki bir bağış kutusundan
+geliyordu. b9 kendi "3-4 sağlam" sayısını **0-1'e** düşürdü.
+
+Sonra asıl soru soruldu: bu gürültü mü, yoksa düzeltilebilir bir şey mi? 15 kayıt, her biri
+**üç kez** okundu. **13'ü üç okumada da harfi harfine aynı cevabı verdi.** Kalan 2'si de
+**aynı metni** döndürdü — sadece o metnin nasıl sınıflandırılacağı konusunda 2'ye 1 bölündü.
+Hiçbir kayıt üç farklı cevap vermedi.
+
+Yani sorun sayfadan cümle seçmede değil — **o kısım kanıtlanmış biçimde kararlı.** Sorun bir
+kat yukarıda, sınıflandırma kararında, ve küçük (15'te 2) ve çoğunlukla çözülebilir.
+
+Önceki bulguyla da çelişmiyor, tamamlıyor: **farklı** yöntemler farklı cümleler getiriyor,
+ama **aynı** yöntem her seferinde aynı cümleyi getiriyor. Yani kararsızlığın kaynağı
+"hangi yöntem önce cevap verirse o" davranışı — temel bir gürültü değil.
+
+**Sonuç, senin kararın için:** iş açılma yönünde de otomatikleştirilebilir. İki şart var —
+kullanılacak yöntem sabitlenecek, ve sınıflandırma **üç okumadan ikisi** anlaşmadan
+uygulanmayacak. Bu, "yapılamaz" cevabından hem daha iyi hem daha ucuz.
+
 **İş şu an kapalı ve öyle duruyor.** Açmak senin kararın.
 
 **Oryn hangi kurumları bilmeli?** İki ölçüm aynı soruya çıkıyor.
