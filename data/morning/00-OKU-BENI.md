@@ -485,16 +485,16 @@ kanıtlı — ama arada henüz kimse geçmemiş. İki yakası da test edilmiş b
 İki plandan fazlası olan dört hesabın hepsinde ikinci plan, birinci plandaki hiçbir iş
 başlamamışken üretilmiş. Bu bir hata değil, sadece **henüz olmamış bir şey.**
 
-**Ve senin hesabında temizlenecek bir şey var:** 100 mükerrer "bunu önerme" kaydı duruyor,
-sadece 2 farklı başlıktan. Yazma tarafındaki hata düzeltildi ama eski satırlara dokunmuyor.
-Bugün sana bir plan üretilse, "bunu tekrar önerme" sinyali gerçek geçmişin değil, bu
-gürültünün etkisinde kalırdı.
+**Ve senin hesabında temizlenecek bir şey vardı** — 100 mükerrer "bunu önerme" kaydı,
+sadece 2 farklı başlıktan. Gece içinde çözüldü ve pakete girdi: **7b. adım.** Orada
+duruyor, çalıştırman yeterli.
 
 ## Gece ne oldu
 
-8 lane. Dün 18:00'den bu sabah 08:00'e kadar ana dala **121 birleştirme**, **5.566 test
-yeşil** (359 dosya; 2 tanesi bilerek başarısız sayılan test). Bu sayıları 08:00'de
-kendim çalıştırdım — gece boyunca yazılmış eski bir sayıyı taşımıyorum.
+8 lane. Dün 18:00'den bu sabah 09:00'a kadar ana dala **134 birleştirme**, **5.604 test
+yeşil** (360 dosya; 2 tanesi bilerek başarısız sayılan test). Bu sayıları 09:00'da kendim
+çalıştırdım — eski bir sayıyı taşımıyorum. Okurken hâlâ artıyor olacak; o yüzden saati
+yazıyorum, sayı tek başına bir şey ifade etmiyor.
 
 Kumanda merkezi tasarımı iki kez elden geçti, sonra gerçekten kuruldu: on iki bölüm, kendi
 kabuğu, açık yeşil zemin — ve on iki ekranın on ikisi de yazıldı, hepsini tarayıcıda açıp
