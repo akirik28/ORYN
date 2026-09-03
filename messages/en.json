@@ -1787,6 +1787,16 @@
       "message": "{name}: {amount} in the last 30 days ({percent}% of the {ceiling} monthly ceiling)",
       "none": "No student is over 80% of the monthly ceiling."
     },
+    "weeklyPlanBudget": {
+      "sectionTitle": "Weekly plan aggregate budget",
+      "subtitle": "The prerequisite for arming generate-weekly-plans on a schedule",
+      "status": "{spend} of {ceiling} spent this month, across every student",
+      "spendUnavailable": "This month's weekly-plan spend couldn't be read right now.",
+      "degradingNow": "The ceiling has been reached — every weekly-plan call is currently using the cheaper model, for every student, until next month.",
+      "ceilingLabel": "Monthly ceiling (USD)",
+      "saveButton": "Save",
+      "saved": "Ceiling updated."
+    },
     "aiBudget": {
       "featureShape": {
         "sectionTitle": "Where AI spend goes",

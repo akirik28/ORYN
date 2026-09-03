@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 import { getAIProvider } from "./index";
 import { withUsageLogging } from "./usage";
+import { selectModelForWeeklyPlan } from "./limits/weekly-plan-budget";
 import { ADVISOR_SYSTEM_PROMPT } from "./advisor-prompt";
 import { buildStudentAdvisorContext, formatContextForPrompt } from "./student-context";
 import { formatEligibilityCaveat } from "./eligibility-text";
@@ -470,15 +471,23 @@ export async function generateWeeklyPlan(userId: string, supabaseClient?: Parame
   const { text: counselorGrounding, recommendedTitles, recommendations } = await buildCounselorGrounding(userId, context.student.preferredLanguage, supabaseClient);
   const provider = getAIProvider();
 
-  // withUsageLogging resolves selectModelForUser(userId) itself and threads degraded/
-  // degradeReason into logAIUsage on both the success path AND a retry-exhausted
-  // generateStructured failure (added 2026-09-02) -- this feature is the exact one the
-  // founder's own measured incident came from (one student regenerating this plan 102
-  // times in a week, $3.04, 3x the monthly ceiling, see lib/ai/limits/budget.ts), and it
-  // carries roughly 90% of the product's AI spend to date, so a retry-exhausted call here
-  // losing its usage entirely would be the largest single instance of the class the
-  // 2026-09-02 sweep found in cv_extraction/achievement_refinement.
-  const result = await withUsageLogging({ userId, feature: "weekly_plan" }, (model) =>
+  // withUsageLogging resolves a model selection itself and threads degraded/degradeReason
+  // into logAIUsage on both the success path AND a retry-exhausted generateStructured
+  // failure (added 2026-09-02) -- this feature is the exact one the founder's own measured
+  // incident came from (one student regenerating this plan 102 times in a week, $3.04, 3x
+  // the monthly ceiling, see lib/ai/limits/budget.ts), and it carries roughly 90% of the
+  // product's AI spend to date, so a retry-exhausted call here losing its usage entirely
+  // would be the largest single instance of the class the 2026-09-02 sweep found in
+  // cv_extraction/achievement_refinement.
+  //
+  // `selectModel: selectModelForWeeklyPlan` (2026-09-03, the aggregate spend ceiling
+  // package) layers a feature-wide, summed-across-every-student check on top of the
+  // per-student one every other caller of withUsageLogging still gets by default -- see
+  // lib/ai/limits/weekly-plan-budget.ts's own header for why this needs to be a separate
+  // mechanism rather than a change to selectModelForUser itself. This is the prerequisite
+  // generate-weekly-plans needed before it could be armed on a schedule
+  // (docs/job-scheduling-decision-2026-09-02.md, docs/weekly-plan-aggregate-budget-2026-09-02.md).
+  const result = await withUsageLogging({ userId, feature: "weekly_plan", selectModel: selectModelForWeeklyPlan }, (model) =>
     provider.generateStructured({
       system: withOutputLanguage(ADVISOR_SYSTEM_PROMPT, context.student.preferredLanguage),
       prompt: `Here is the student's current context:\n\n${formatContextForPrompt(context, context.student.preferredLanguage)}${counselorGrounding}\n\n${buildWeeklyPlanInstruction()}`,

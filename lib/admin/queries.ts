@@ -13,6 +13,7 @@ import { resolveReportedContentPreview } from "@/lib/moderation/content-preview"
 import { MONTHLY_BUDGET_TARGET_USD, MONTHLY_BUDGET_CEILING_USD } from "@/lib/ai/limits/budget";
 import { PER_STUDENT_AI_FEATURES } from "@/lib/ai/monthly-quota";
 import { JOB_BUDGET_USD, checkJobBudget, type JobBudgetFeature, type JobBudgetReason } from "@/lib/ai/limits/job-budget";
+import { checkWeeklyPlanAggregateBudget } from "@/lib/ai/limits/weekly-plan-budget";
 import type { SeriesPoint } from "@/components/oryn/charts/types";
 import { isOpportunityActionable, isOpportunitySufficientlyVerified, hasDeadlineCommitment, hasAnyVerificationRecord } from "@/lib/opportunities/lifecycle";
 import { isUndefinedColumnError, isUndefinedTableError } from "@/lib/supabase/errors";
@@ -1094,6 +1095,28 @@ export async function getFinanceSettings(admin: SupabaseClient<Database>): Promi
     ultraPriceTry: data.ultra_price_try,
     ultraPriceTryUpdatedAt: data.ultra_price_try_updated_at,
   };
+}
+
+export interface WeeklyPlanBudgetStatus {
+  monthToDateSpendUsd: number | null;
+  ceilingUsd: number;
+  /** Whether the aggregate check is *currently* degrading every weekly_plan call this
+   *  month — the live state lib/ai/limits/weekly-plan-budget.ts's own check would return
+   *  right now, not a static config value. */
+  currentlyDegrading: boolean;
+}
+
+/**
+ * Admin-panel read for the aggregate weekly_plan spend ceiling (migration 0102) —
+ * "surfaced to the admin panel alongside the existing spend cards, not silently" was the
+ * proposal's own explicit requirement (docs/weekly-plan-aggregate-budget-2026-09-02.md §4).
+ * Delegates entirely to `checkWeeklyPlanAggregateBudget` rather than re-querying —
+ * lib/ai/limits/weekly-plan-budget.ts is the one place this specific question is answered,
+ * the same reasoning `getJobControls`'s own re-export above follows for job_controls.
+ */
+export async function getWeeklyPlanBudgetStatus(): Promise<WeeklyPlanBudgetStatus> {
+  const check = await checkWeeklyPlanAggregateBudget();
+  return { monthToDateSpendUsd: check.monthToDateSpendUsd, ceilingUsd: check.ceilingUsd, currentlyDegrading: check.shouldDegrade };
 }
 
 export interface CostTrendPoint {

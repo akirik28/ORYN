@@ -68,7 +68,16 @@ export type ModelSelectionReason =
    * never punish the student for the check's own unavailability" convention (see
    * lib/opportunities/persist-matches.ts's own tryCreateAdminClient() handling). A silent
    * cap that fails toward blocking would itself be the hard wall the founder rejected. */
-  | "usage_unavailable";
+  | "usage_unavailable"
+  /** NOT produced by this file — added here only so `ModelSelection.reason` has a value
+   * for it, since `logAIUsage`'s `degradeReason` is typed against this union. Set by
+   * lib/ai/limits/weekly-plan-budget.ts's `selectModelForWeeklyPlan`, a genuinely separate
+   * mechanism from everything else in this file (2026-09-03): this one is feature-wide,
+   * summed across every student this month, degrade-not-stop like the rest of this file
+   * but answering "how much may this feature spend across everyone," a question this
+   * file's own per-student check structurally cannot ask. See that file's own header for
+   * why it isn't built as a branch inside this one. */
+  | "aggregate_feature_budget";
 
 export interface ModelSelection {
   /** The model this call should actually use — pass straight into AIRequest.model. */

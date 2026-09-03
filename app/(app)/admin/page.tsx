@@ -11,6 +11,7 @@ import { RemainingCreditSection } from "@/features/admin/sections/remaining-cred
 import { BudgetWarningsSection } from "@/features/admin/sections/budget-warnings-section";
 import { AiFeatureShapeSection } from "@/features/admin/sections/ai-feature-shape-section";
 import { JobBudgetSection } from "@/features/admin/sections/job-budget-section";
+import { WeeklyPlanBudgetSection } from "@/features/admin/sections/weekly-plan-budget-section";
 import { DegradeStandingSection } from "@/features/admin/sections/degrade-standing-section";
 import { ProviderHealthSection } from "@/features/admin/sections/provider-health-section";
 import { ScheduledJobsSection } from "@/features/admin/sections/scheduled-jobs-section";
@@ -74,6 +75,9 @@ export default async function AdminPage() {
           </Suspense>
           <Suspense fallback={<SectionSkeleton rows={2} />}>
             <JobBudgetSection />
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton rows={2} />}>
+            <WeeklyPlanBudgetSection />
           </Suspense>
           <Suspense fallback={<SectionSkeleton rows={2} />}>
             <DegradeStandingSection />
