@@ -708,7 +708,7 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
    * live 7/7 then 5/5 across two sessions, no reason to touch what already works.
    */
   lines.push(
-    "Dimension states, assessed ones ordered weakest to strongest (this order is already computed — use it directly if asked which dimensions are weakest or strongest; do not re-rank by eye). Only the dimension(s) explicitly tagged \"weakest\" may be named by rank — do not claim which dimension is second-weakest, third-weakest, or any other ordinal position; if discussing multiple lower-scoring dimensions, describe them without ranking them against each other. Never quote a score for a dimension Oryn has not assessed:",
+    "Dimension states, assessed ones ordered weakest to strongest (this order is already computed — use it directly if asked which dimensions are weakest or strongest; do not re-rank by eye). Only the dimension(s) explicitly tagged \"weakest\" may be named by rank — do not claim which dimension is second-weakest, third-weakest, or any other ordinal position; if discussing multiple lower-scoring dimensions, describe them without ranking them against each other. Never quote a score for a dimension Proxola has not assessed:",
   );
   const assessedScores = context.profileScores.filter((d) => isAssessed(d.state)).sort((a, b) => a.score - b.score);
   const unassessedScores = context.profileScores.filter((d) => !isAssessed(d.state));
@@ -721,7 +721,7 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
   }
   for (const d of unassessedScores) {
     const label = dimensionLabel(d.dimension, locale);
-    lines.push(`  - ${label}: ${evidenceStateLabel(d.state, locale)} — no score to quote, Oryn has not assessed this`);
+    lines.push(`  - ${label}: ${evidenceStateLabel(d.state, locale)} — no score to quote, Proxola has not assessed this`);
   }
   /**
    * `verified` renders silently (no tag) — the "no news is good news" default, unchanged
