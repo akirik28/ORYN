@@ -407,6 +407,65 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
 }
 
 /**
+ * docs/ozellesme-spec-2026-09-03.md §2: Standard gets exactly one conversation, ever; Ultra
+ * gets unlimited. The "new session" button is visible to Standard too (spec's own explicit
+ * choice — locked, not hidden), so this is the actual wall: a Server Action is directly
+ * callable with any argument regardless of what's rendered, same discipline as every other
+ * authorization check in this file (generateAdvisorReply's own planTier param above is the
+ * canonical statement of it), so the button being disabled client-side is UX, not enforcement.
+ *
+ * Counts existing conversations rather than checking "does the student already have one" as a
+ * boolean: a brand-new Standard student with zero conversations (never having sent a first
+ * message, which is the only other way a conversation gets created — sendAdvisorMessage's own
+ * lazy-create above) can still legitimately create their one via this button; only a second
+ * attempt is the wall firing. Ultra skips the count entirely, not because the count would
+ * happen to allow it, but because the tier check short-circuits first — a future change to
+ * how many conversations Standard gets would only need updating in one place.
+ */
+export async function createConversation(): Promise<{ conversationId?: string; error?: string }> {
+  const session = await requireUser();
+  const userId = session.userId!;
+  const locale = await resolveLocale();
+  const tr = locale === "tr";
+  const supabase = await createClient();
+
+  const tierProfile = await getCurrentProfile();
+  const planTier = resolvePlanTier(tierProfile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+
+  if (planTier !== "ultra") {
+    const { count, error: countError } = await supabase.from("advisor_conversations").select("id", { count: "exact", head: true }).eq("user_id", userId);
+    // A count query failing is a real, unexpected error, not an "unapplied migration" shape
+    // (advisor_conversations has existed since migration 0011) — fails closed here rather
+    // than silently letting an uncounted request through, the opposite default from
+    // lib/advisor/generation-lock.ts's fail-open, because the two protect different things:
+    // that lock's failure mode is "a reply never returns", this one's is "the wall doesn't
+    // hold" — the second is the actual feature this function exists to provide.
+    if (countError) {
+      console.error("[advisor] failed to count existing conversations", { userId, error: countError.message });
+      return { error: tr ? "Yeni bir sohbet başlatılamadı." : "Couldn't start a new conversation." };
+    }
+    if ((count ?? 0) > 0) {
+      return {
+        error: tr
+          ? "Standart planda tek sohbet hakkın var, o zaten mevcut. Ayrı oturumlar Ultra'da."
+          : "Standard includes one conversation, and you already have it. Separate sessions are part of Ultra.",
+      };
+    }
+  }
+
+  const { data: conversation, error } = await supabase
+    .from("advisor_conversations")
+    .insert({ user_id: userId, title: tr ? "Yeni sohbet" : "New conversation" })
+    .select("id")
+    .single();
+  if (error || !conversation) {
+    console.error("[advisor] failed to create conversation", { userId, error: error?.message });
+    return { error: tr ? "Yeni bir sohbet başlatılamadı." : "Couldn't start a new conversation." };
+  }
+  return { conversationId: conversation.id };
+}
+
+/**
  * A passive dismiss of the upgrade prompt (click away, close without an explicit choice) —
  * suppresses for 7 days. Distinct control from notNowUpgradePrompt below: this is what a
  * plain close does, not the "Not now" button (docs/research/upgrade-prompt-frequency-

@@ -1161,6 +1161,15 @@
         "detail": "Sohbet {date} tarihinde yenilenir. Oryn'in geri kalanı — planın, fırsatların, üniversitelerin — her zamanki gibi açık."
       }
     },
+    "sessionWall": {
+      "newSession": "Yeni oturum",
+      "title": "Standart'ta her şey tek sohbette",
+      "detail": "Standart'ta her konu aynı sohbette kalır. Ultra'da istediğin zaman ayrı, yeni bir oturum açabilirsin.",
+      "cta": "Ultra'ya bak",
+      "close": "Kapat",
+      "creating": "Başlatılıyor…",
+      "createFailed": "Yeni oturum başlatılamadı. Tekrar dene."
+    },
     "usageMeter": {
       "thisMonth": "Bu ay",
       "ariaUnknown": "Bu ay kaç token kaldığı yüklenemedi. Aylık hakkın {limit} token.",

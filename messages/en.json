@@ -1161,6 +1161,15 @@
         "detail": "Chat resets on {date}. The rest of Oryn — your plan, opportunities, universities — stays open as always."
       }
     },
+    "sessionWall": {
+      "newSession": "New session",
+      "title": "Standard keeps everything in one conversation",
+      "detail": "Every topic lives in the same thread on Standard. Ultra gives you separate sessions whenever you want a fresh start.",
+      "cta": "See Ultra",
+      "close": "Close",
+      "creating": "Starting…",
+      "createFailed": "Couldn't start a new session. Try again."
+    },
     "usageMeter": {
       "thisMonth": "This month",
       "ariaUnknown": "How many tokens you have left this month could not be loaded. The monthly allowance is {limit} tokens.",
