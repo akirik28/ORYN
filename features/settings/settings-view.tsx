@@ -1,4 +1,5 @@
 import { getTranslations, getLocale } from "next-intl/server";
+import { headers } from "next/headers";
 import { Download, FileUp, LogOut } from "lucide-react";
 import { signOut } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,10 @@ import { VisibilityForm } from "@/features/settings/visibility-form";
 import { NotificationPreferencesForm } from "@/features/settings/notification-preferences-form";
 import { DeleteAccountDialog } from "@/features/settings/delete-account-dialog";
 import { PasswordForm } from "@/features/settings/password-form";
+import { ParentInviteSection, type GeneratedInvitePreview } from "@/features/settings/parent-invite-section";
+import { getParentLinksForStudent } from "@/lib/parent/links";
+import { generateParentInvite } from "@/lib/parent/invite";
+import { env } from "@/lib/env";
 import type { NotificationCategory, Profile } from "@/types/database";
 
 export interface SettingsViewProps {
@@ -40,6 +45,40 @@ function initialNotificationPreferences(profile: Profile | null): Record<Notific
   };
 }
 
+/**
+ * P4 (docs/veli-hesabi-spec-2026-09-04.md) — computes the one thing
+ * features/settings/parent-invite-section.tsx can't compute itself: whether a fresh,
+ * shareable invite link should be offered alongside whatever parent_links rows already
+ * exist. Deliberately NOT offered whenever something already covers the current email —
+ * an active link, or a pending one that hasn't expired — since a second live link for the
+ * same relationship would just be a confusing, redundant thing for the student to have to
+ * choose between. Generating one is cheap and side-effect-free (lib/parent/invite.ts's own
+ * header), so this runs on every render rather than being cached or triggered by a button.
+ */
+async function loadGeneratedInvitePreview(
+  profile: Profile | null,
+  links: Awaited<ReturnType<typeof getParentLinksForStudent>>,
+  locale: Awaited<ReturnType<typeof getLocale>>
+): Promise<GeneratedInvitePreview | null> {
+  const invitedEmail = profile?.parent_invite_email ?? null;
+  if (!invitedEmail) return null;
+
+  const somethingAlreadyCoversIt = links.some(
+    (link) => link.status === "active" || (link.status === "pending" && !link.isExpired)
+  );
+  if (somethingAlreadyCoversIt) return null;
+
+  const origin = (await headers()).get("origin") || env.app.url;
+  const generated = await generateParentInvite({
+    studentUserId: profile!.id,
+    studentDisplayName: profile?.display_name ?? "",
+    invitedEmail,
+    locale,
+    origin,
+  });
+  return { acceptUrl: generated.acceptUrl, subject: generated.email.subject, body: generated.email.body, expiresInDays: generated.expiresInDays };
+}
+
 // glass-card grouping — literal source values (Figma App.tsx `SettingsScreen`), same
 // chrome already used on the dashboard: translucent white over the page's own ground,
 // 22px blur. Groups real sections that don't exist in the source's simpler demo
@@ -56,7 +95,10 @@ const cardClassNameOffset = "glass-card-offset space-y-6 rounded-2xl border bord
 export async function SettingsView({ email, userId, profile, unreadNotificationCount }: SettingsViewProps) {
   const t = await getTranslations("settings.view");
   const tNav = await getTranslations("nav");
+  const tParentInvite = await getTranslations("parentInvite");
   const locale = await getLocale();
+  const parentLinks = await getParentLinksForStudent(userId);
+  const generatedInvite = await loadGeneratedInvitePreview(profile, parentLinks, locale);
   return (
     <div className="max-w-xl space-y-8">
       <PageHeader title={tNav("settings")} description={t("description")} />
@@ -90,6 +132,18 @@ export async function SettingsView({ email, userId, profile, unreadNotificationC
             <LogOut className="size-4" /> {t("signOut")}
           </Button>
         </form>
+      </section>
+
+      <section className={cardClassName}>
+        <h2 lang={locale} className="text-[13px] font-bold tracking-[0.08em] text-[#AAAABC] uppercase">
+          {tParentInvite("sectionTitle")}
+        </h2>
+        <p className="text-sm text-muted-foreground">{tParentInvite("sectionDescription")}</p>
+        <ParentInviteSection
+          initialParentEmail={profile?.parent_invite_email ?? null}
+          links={parentLinks}
+          generatedInvite={generatedInvite}
+        />
       </section>
 
       <section className="space-y-3">

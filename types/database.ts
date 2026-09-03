@@ -35,6 +35,11 @@ export type PlanTier = "standard" | "ultra";
  * approved UI labels for two of the three positions; see that migration's own header for
  * why the stored values and the display labels are kept apart on purpose. */
 export type ResponseMode = "fast" | "balanced" | "thorough";
+/** Migration 0116 (docs/veli-hesabi-spec-2026-09-04.md §5), staged, not applied. 'student' is
+ * the default every existing row already satisfies — a parent account is only ever created
+ * through the accept-invite flow (lib/parent/links.ts's setAccountRole), never a value a
+ * student's own signup or settings can set on themselves. */
+export type AccountRole = "student" | "parent";
 export type TargetGeography = "usa" | "uk" | "europe" | "canada" | "turkey" | "not_sure";
 export type EducationStage = "middle_school" | "high_school" | "pre_university" | "undergraduate" | "other";
 export type CourseLevel = "regular" | "honors" | "ap" | "ib_hl" | "ib_sl" | "a_level" | "dual_enrollment" | "other";
@@ -239,6 +244,19 @@ export interface Profile {
    * Null on every real account today. Drives lib/digest/build.ts's "new since last time"
    * window for opportunity matches. */
   last_digest_sent_at: string | null;
+  /** Migration 0116 (docs/veli-hesabi-spec-2026-09-04.md §5), staged, not applied. Defaults
+   * 'student'; see AccountRole's own comment for how it becomes 'parent'. Every read of this
+   * column that gates behavior must treat an absent/unreadable value as 'student' (the same
+   * degrade convention as plan_tier/response_mode above), not as a permission error. */
+  account_role: AccountRole;
+  /** Migration 0116, staged, not applied — the address a student entered at signup or later
+   * in Settings (lib/validation/auth.ts's SignUpSchema.parentEmail,
+   * app/(app)/settings/parent-actions.ts's setParentInviteEmailAction). Distinct from
+   * parent_links.invited_email: this column is "what a student most recently said," a
+   * single current value that gets overwritten on every re-invite; parent_links.invited_email
+   * is "what a specific invite was actually generated for," one immutable value per row
+   * that survives this column changing later. Null means no parent has ever been invited. */
+  parent_invite_email: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -2230,6 +2248,44 @@ export interface PageView {
  * ProductEvent above. */
 export type PageViewInsert = Insertable<PageView, "id" | "created_at">;
 
+/** Migration 0116 (docs/veli-hesabi-spec-2026-09-04.md §5), staged by 44/P1, not yet applied.
+ * Exactly three values, deliberately — a computed "expired" state is derived at read time
+ * instead (lib/parent/invite-token.ts's isPendingLinkExpired) rather than being a fourth
+ * value here, so this stays the one lane contract §5 actually agreed on. Defaults 'pending'
+ * in the migration; a pending row grants nothing (44's RLS policies enforce that, not this
+ * codebase's UI — see lib/parent/links.ts's own header). */
+export type ParentLinkStatus = "pending" | "active" | "revoked";
+
+/** Migration 0116, staged, not yet applied — see lib/parent/links.ts for every read/write
+ * path and why each degrades safely while this table doesn't exist live yet.
+ * unique(parent_user_id, student_user_id) is enforced in the migration, not here;
+ * lib/parent/links.ts's createParentLink treats the resulting 23505 as an idempotent
+ * "already linked" outcome rather than an error — note the constraint is on the *pair*, not
+ * the email, so nothing in the schema stops two invitations to two different addresses for
+ * the same student (CEO/44, 2026-09-04) — see lib/parent/links.ts's
+ * revokeStalePendingLinks for how this codebase's own write path avoids that in practice. */
+export interface ParentLink {
+  id: string;
+  parent_user_id: string;
+  student_user_id: string;
+  status: ParentLinkStatus;
+  /** The address this specific invite was generated for — immutable once the row exists.
+   * See Profile.parent_invite_email's own comment for how this differs from that column. */
+  invited_email: string | null;
+  invited_at: string | null;
+  /** Set only by lib/parent/links.ts's confirmParentLink, the moment §K3's double
+   * confirmation completes and status moves 'pending' -> 'active'. Null until then. */
+  confirmed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+/** id/created_at/updated_at are DB-defaulted; status/invited_at are always supplied
+ * explicitly by lib/parent/links.ts's createParentLink (always 'pending', always "now"),
+ * never left to a column default, so there's nothing optional here beyond the three DB-owned
+ * fields. confirmed_at has no place in an Insert at all — a link is never created already
+ * confirmed. */
+export type ParentLinkInsert = Omit<ParentLink, "id" | "confirmed_at" | "created_at" | "updated_at">;
+
 /** "application" | "opportunity" | "university_deadline" — matches lib/deadlines/scan.ts's
  * DeadlineHit["source"] exactly. Kept as a plain string in the DB (migration 0075's own
  * comment explains why), so this union exists only here and in scan.ts — not a DB enum. */
@@ -2454,6 +2510,7 @@ export interface Database {
       product_events: Table<ProductEvent, ProductEventInsert, Partial<ProductEventInsert>>;
       feedback_reports: Table<FeedbackReport, FeedbackReportInsert, never>;
       page_views: Table<PageView, PageViewInsert, never>;
+      parent_links: Table<ParentLink, ParentLinkInsert, Partial<Pick<ParentLink, "status" | "confirmed_at">>>;
       birth_year_changes: Table<BirthYearChange, never, never>;
       deadline_notification_log: Table<DeadlineNotificationLog, DeadlineNotificationLogInsert, never>;
       university_notification_log: Table<UniversityNotificationLog, UniversityNotificationLogInsert, never>;
