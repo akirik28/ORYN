@@ -1,0 +1,108 @@
+-- Written not applied, same discipline as every migration in this project written ahead of a
+-- founder decision (e.g. 0104/0106's ultra_gift). Proposed in response to a founder decision
+-- that's been open since the Netherlands hogescholen batch and now blocks five countries'
+-- worth of staged, dry-run-validated, not-yet-applied institution data:
+-- data/research/sql-dry-runs/universities/{netherlands-hbo,germany-haw,finland-amk,
+-- austria-fh,ireland-tu}-2026-09-03.sql (275 rows total). All five write institution_type as
+-- NULL specifically because that column is occupied table-wide by US College-Scorecard-style
+-- ownership classification ('university'/'Public'/'Private not for Profit'/etc, 1,019 existing
+-- rows) -- a different axis than academic tier, and writing a tier value into it would
+-- misrepresent it as ownership data for every future reader. See each batch's own findings doc
+-- for the full per-country reasoning; this migration is the schema-level follow-through.
+--
+-- THE NAMING QUESTION, ANSWERED WITH TWO COLUMNS, NOT ONE
+--
+-- A Fachhochschule, an ammattikorkeakoulu, and an Irish Technological University are related
+-- but not the same institutional form, and flattening them into one label loses exactly what a
+-- student researching universities abroad needs: the actual local term, not a lossy English
+-- gloss of it. So this proposes two columns doing two different jobs:
+--
+--   academic_tier (enum, 2 values): the shared, cross-country CLASS -- the thing a control or
+--   a filter can group on without knowing five countries' vocabularies. 'research_university'
+--   vs 'applied_sciences'. Deliberately NOT a bigger enum with a value per country/form --
+--   that would just be institution_type's problem (a column meant for grouping, cluttered with
+--   values that don't group) recreated one level up.
+--
+--   academic_tier_local_name (free text, not enum): the actual local-language institutional
+--   form -- 'Fachhochschule', 'Hogeschool', 'Ammattikorkeakoulu', 'Technological University'.
+--   Free text, not an enum, for the same reason institution_type already is: this axis is
+--   genuinely open-ended (Switzerland's Fachhochschule system, Austria's -- already staged and
+--   using the same German word as Germany's, correctly, since it is the same term -- Belgium's
+--   Hogeschool/Haute École split, whatever the next country turns out to use) and a closed enum
+--   would need a migration every time a sixth country's data landed. `country` already
+--   distinguishes which nation's Fachhochschule a given row is; local_name does not need to
+--   re-encode that.
+--
+-- THE ONE CASE THIS DESIGN DOESN'T RESOLVE ON ITS OWN: IRELAND
+--
+-- Ireland's five Technological Universities are legally, currently, full universities --
+-- converted from Institutes of Technology by statute, the same mechanism as the UK's 1992
+-- polytechnic conversions, with degree-awarding powers no different in law from Trinity or
+-- UCD. Every other country in this batch (NL/DE/FI/AT) uses a word for its applied-sciences
+-- tier specifically because that tier is legally distinct from "university" in that country
+-- *today*. Ireland's TUs are not in that position anymore.
+--
+-- Two defensible answers, and this migration does not pick one by fiat:
+--   (a) academic_tier = 'research_university' for all 5 Irish TUs -- correct by current legal
+--       status, consistent with every other Irish university row already in the catalogue.
+--   (b) academic_tier = 'applied_sciences' for all 5 -- correct by lineage and by the product
+--       reason this whole corridor-gap line of work exists: the corridor scan's own finding
+--       was that the applied-sciences tier is specifically the more accessible admission route
+--       for a Turkish applicant, and Ireland's TUs are the control case for exactly why some
+--       applied-sciences-lineage institutions already read as ordinary universities in this
+--       catalogue while others didn't -- they got the word "University" in their name.
+--       Classifying them as 'research_university' here would repeat that same accident at the
+--       schema level instead of correcting it.
+--
+-- This migration leans toward (b) in the comment below because it matches why this data was
+-- sourced in the first place, but says so rather than deciding it silently, and does NOT
+-- currently know whether Irish TU admissions today are, in practice, materially different from
+-- Dublin/UCC/Galway's -- that's a factual question nobody has checked yet, distinct from the
+-- institutional-history question this migration can answer on its own. The founder's call.
+--
+-- ABSENCE, NOT UNKNOWN-AS-A-VALUE
+--
+-- academic_tier is nullable, and NULL means "not yet classified" -- not "is a research
+-- university," and not "is applied sciences" either. This migration does NOT backfill the
+-- 1,019 existing rows (verified directly before writing this: 1,019 total, 17 already with a
+-- null institution_type for unrelated reasons). Backfilling 1,019 rows with a real, checked
+-- classification is a second, separate, and non-trivial research task this migration does not
+-- attempt -- most of those rows are traditional research universities where the honest answer
+-- is genuinely 'research_university', but "genuinely likely" is not the same discipline this
+-- whole night's work has held every other claim to, and a bulk UPDATE assuming it without
+-- checking would be exactly the kind of confident-output-from-absent-data problem Phase 4 of
+-- this project's own build spec exists to prevent.
+--
+-- What IS ready the moment this migration is approved: the 275 rows in the five staged
+-- applied-sciences files, and the 2 rows in the Netherlands WO-gap file, all have a known,
+-- already-researched classification. None of the six files write academic_tier today, because
+-- the column didn't exist when they were written. Applying them as-is after this migration
+-- lands would leave 277 more rows at NULL alongside the 1,019 -- so if this is approved, the
+-- follow-up is editing those six already-staged (five already merged to main) files to add
+-- real academic_tier / academic_tier_local_name values before they're applied, not a bulk
+-- UPDATE afterward. Flagged as the next step, not done here -- five of those six files are
+-- already merged, and rewriting merged files is its own decision to surface rather than do
+-- unasked.
+--
+-- WHAT THIS MIGRATION DOES NOT BUY
+--
+-- A column no page reads changes nothing for a student. institution_type -- the column this
+-- one is deliberately not overloading -- is already rendered today: as a plain badge on both
+-- the university card (features/universities/university-card.tsx) and the detail page
+-- (app/(app)/universities/[id]/page.tsx), and as a public/private filter
+-- (lib/universities/filters.ts, InstitutionTypeFilter, currently exactly two values, with its
+-- own bilingual EN/TR label map). None of that exists yet for academic_tier. Surfacing it to a
+-- student -- a filter, a badge distinct from the ownership one, a compare-page column, Turkish
+-- strings alongside the English ones the way the existing filter already has them -- is real,
+-- separate front-end work this migration does not include and does not estimate. Approving the
+-- column is a data-modeling decision; approving a visible feature is a second, later one.
+create type academic_tier as enum ('research_university', 'applied_sciences');
+
+alter table public.universities add column academic_tier academic_tier;
+alter table public.universities add column academic_tier_local_name text;
+
+comment on column public.universities.academic_tier is
+  'Migration 0108, written not applied — the shared cross-country class distinguishing a research university from the applied-sciences/polytechnic tier (Fachhochschule/hogeschool/ammattikorkeakoulu/Technological University). NULL means not yet classified, not "is a research university" — this column is not backfilled for the 1,019 pre-existing rows as part of this migration; that is separate, unattempted future research. Where a row''s institution_type is already occupied by US College-Scorecard-style ownership data (public/private/nonprofit), academic_tier is the correct place for tier instead, not institution_type.';
+
+comment on column public.universities.academic_tier_local_name is
+  'Migration 0108, written not applied — the actual local-language institutional form (e.g. "Fachhochschule", "Hogeschool", "Ammattikorkeakoulu", "Technological University"), free text rather than enum because this axis is genuinely open-ended across countries not yet in the catalogue. NULL means not yet classified. Paired with academic_tier (the shared class) and country (which nation''s form this is) — this column does not repeat the country.';
