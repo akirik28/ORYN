@@ -1455,12 +1455,32 @@
     }
   },
   "landing": {
-    "signIn": "Sign in",
+    "studentSignIn": "Student sign in",
+    "parentSignIn": "Parent sign in",
     "getStarted": "Get started — it's free",
     "badge": "Personalized for ages 14–18",
     "headlineLine1": "Your profile.",
     "headlineLine2": "Your strategy.",
     "subhead": "Proxola is a personal career and profile operating system for students preparing for competitive universities and opportunities."
+  },
+  "parent": {
+    "login": {
+      "heading": "Parent sign in",
+      "subheading": "See your child's progress. Nothing here can be changed from a parent account.",
+      "backToStudentSignIn": "Looking for the student sign in?"
+    },
+    "pending": {
+      "heading": "Not linked yet",
+      "bodyNoInvite": "No student has linked this account yet. Ask your child to add your email from their account settings — you'll get an email once they do.",
+      "bodyAwaitingConfirmation": "You're signed in, but your child hasn't confirmed the link yet. Nothing will be visible here until they do.",
+      "signOut": "Sign out"
+    },
+    "upgradePrompt": {
+      "detail": "Ultra also changes what your child's own account can do — a monthly AI allowance twice as large, longer and more detailed advisor replies, unlimited chat sessions instead of one, a longer standing instruction, and the Ultra flame theme.",
+      "cta": "See Ultra",
+      "notNow": "Not now",
+      "close": "Close"
+    }
   },
   "messaging": {
     "list": {
@@ -2268,14 +2288,6 @@
     "compare": "Compare",
     "comparing": "Comparing",
     "compareLimitTooltip": "You can compare up to {max} at a time."
-  },
-  "parent": {
-    "upgradePrompt": {
-      "detail": "Ultra also changes what your child's own account can do — a monthly AI allowance twice as large, longer and more detailed advisor replies, unlimited chat sessions instead of one, a longer standing instruction, and the Ultra flame theme.",
-      "cta": "See Ultra",
-      "notNow": "Not now",
-      "close": "Close"
-    }
   },
   "maintenance": {
     "title": "We will be back shortly",

@@ -1455,12 +1455,32 @@
     }
   },
   "landing": {
-    "signIn": "Giriş yap",
+    "studentSignIn": "Öğrenci girişi",
+    "parentSignIn": "Veli girişi",
     "getStarted": "Ücretsiz başla",
     "badge": "14–18 yaş için kişiselleştirilmiş",
     "headlineLine1": "Profilin.",
     "headlineLine2": "Stratejin.",
     "subhead": "Proxola, rekabetçi üniversitelere ve fırsatlara hazırlanan öğrenciler için kişisel bir kariyer ve profil işletim sistemi."
+  },
+  "parent": {
+    "login": {
+      "heading": "Veli girişi",
+      "subheading": "Çocuğunuzun gelişimini görün. Veli hesabından hiçbir şey değiştirilemez.",
+      "backToStudentSignIn": "Öğrenci girişini mi arıyorsunuz?"
+    },
+    "pending": {
+      "heading": "Henüz bağlı değil",
+      "bodyNoInvite": "Bu hesabı henüz hiçbir öğrenci bağlamadı. Çocuğunuzdan hesap ayarlarından e-posta adresinizi eklemesini isteyin — eklediğinde size bir e-posta gönderilecek.",
+      "bodyAwaitingConfirmation": "Giriş yaptınız, ancak çocuğunuz bağlantıyı henüz onaylamadı. Onaylayana kadar burada hiçbir şey görünmeyecek.",
+      "signOut": "Çıkış yap"
+    },
+    "upgradePrompt": {
+      "detail": "Ultra, çocuğunuzun kendi hesabında neler yapabileceğini de değiştirir: iki katı büyük bir aylık yapay zekâ kotası, daha uzun ve daha detaylı danışman yanıtları, tek yerine sınırsız sohbet oturumu, daha uzun bir kalıcı talimat ve Ultra alev teması.",
+      "cta": "Ultra'ya bak",
+      "notNow": "Şimdi değil",
+      "close": "Kapat"
+    }
   },
   "messaging": {
     "list": {
@@ -2268,14 +2288,6 @@
     "compare": "Karşılaştır",
     "comparing": "Karşılaştırılıyor",
     "compareLimitTooltip": "Aynı anda en fazla {max} tane karşılaştırabilirsin."
-  },
-  "parent": {
-    "upgradePrompt": {
-      "detail": "Ultra, çocuğunuzun kendi hesabında neler yapabileceğini de değiştirir: iki katı büyük bir aylık yapay zekâ kotası, daha uzun ve daha detaylı danışman yanıtları, tek yerine sınırsız sohbet oturumu, daha uzun bir kalıcı talimat ve Ultra alev teması.",
-      "cta": "Ultra'ya bak",
-      "notNow": "Şimdi değil",
-      "close": "Kapat"
-    }
   },
   "maintenance": {
     "title": "Kısa süre içinde döneceğiz",
