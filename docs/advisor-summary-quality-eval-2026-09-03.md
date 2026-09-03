@@ -5,6 +5,48 @@
 Build the evaluation path — synthetic-but-realistic fixtures, run the real summarizer, ten
 examples a human can actually judge — not the job's arming.
 
+## Where this ended up (added after 4 addenda, for a reader who wasn't here)
+
+The body below and the four addenda that follow it happened across one evening, in the order
+they happened — useful for the chronology, not the fastest way to find out where things
+actually landed. This section is that.
+
+**Shipped, live in `lib/advisor/retention.ts`'s `SUMMARY_SYSTEM_PROMPT` right now**: three
+instructions, added across the addenda below. (1) Match the conversation's own language —
+confirmed reliable, 6/6 language-match reads. (2) Convert relative time references to absolute
+dates using the conversation's own last-message timestamp, not "now" — confirmed reliable for
+its intended case (an existing relative phrase like "in 6 days" or "last month"). (3) Don't
+resolve what the conversation left open — don't assert an unstated agreement, don't upgrade
+"probably" into certainty, don't invent a date for an event with no time reference at all.
+Shipped as a real, measured, *partial* improvement, not a claimed fix — see below.
+
+**Measured and left open, on purpose — real, quantified risks, not resolved by anything
+shipped:**
+- **A relative-time instruction can still invent a date where none was ever given.** Fixture 1
+  ("track season starting," no time reference at all) had this cut from ~67% to a softer,
+  vaguer residual (~17% combined across every read run) — improved, explicitly not
+  eliminated. Addendum 4 confirmed the residual tracks the real reference date (an inference,
+  not a fixed hallucination), which is the *good* news about a still-real gap.
+- **Turkish-language uncertainty preservation sits around ~83% correct**, not 100% — a
+  student's own stated "not sure yet" can still get flattened into false certainty in roughly
+  1 of 6 reads. No instruction specifically targets this beyond the general "don't resolve
+  what's left open" fix, which helps but wasn't built to close it and hasn't been shown to.
+- **Disagreement-preservation is unreliable at a real, measured rate (~70% failure)** —
+  independent of either fix, confirmed present under both the original and the fixed prompt
+  at a similar rate. The original eval's own headline claim ("best result in the set") for
+  this exact case was later shown to be an n=1 lucky draw, not the model's typical behavior —
+  the correction is Addendum 1's, and it matters more than either shipped fix.
+- **Two findings never had a fix attempted at all**: the parental-pressure emotional context
+  dropping under the 2-4 sentence cap (~40% of the time) is named as a tradeoff the cap
+  imposes, not a bug to chase. The internally-contradictory fixture (a transcript stating two
+  mutually-exclusive dates) gets handled inconsistently read to read — a source-inconsistency
+  problem, not something a prompt fix targets.
+
+**The job itself remains exactly where it started: built, not armed.** No cron entry, no
+scheduling — still gated on the two legal preconditions (privacy notice, data export) named
+in the original build doc, unchanged by anything measured here. Nothing in this whole chain
+was about deciding whether to turn it on.
+
 ## The rubric, stated before any summary was generated
 
 A good advisor-conversation summary should preserve, in priority order:
