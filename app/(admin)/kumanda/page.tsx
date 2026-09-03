@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/oryn/page-header";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getReports, summarizeReportsBacklog, getContaminationCleanupPreview, getDegradeStanding, getSpendSummary, getAdminUserList, getFinanceSettings } from "@/lib/admin/queries";
+import { getReports, summarizeReportsBacklog, getContaminationCleanupPreview, getDegradeStanding, getSpendSummary, getAdminUserList, getFinanceSettings, getPageViewStats } from "@/lib/admin/queries";
 import { resolveLocale } from "@/lib/i18n/locale";
 
 /**
@@ -50,13 +50,14 @@ export default async function ControlOverviewPage() {
   const [t, locale] = await Promise.all([getTranslations("admin.control"), resolveLocale()]);
   const admin = createAdminClient();
 
-  const [reports, cleanupPreview, degradeStanding, spend, users, financeSettings] = await Promise.all([
+  const [reports, cleanupPreview, degradeStanding, spend, users, financeSettings, pageViews] = await Promise.all([
     getReports(admin, locale),
     getContaminationCleanupPreview(admin),
     getDegradeStanding(admin),
     getSpendSummary(admin),
     getAdminUserList(admin),
     getFinanceSettings(admin),
+    getPageViewStats(admin),
   ]);
 
   const backlog = summarizeReportsBacklog(reports);
@@ -106,7 +107,12 @@ export default async function ControlOverviewPage() {
           value={rate !== null ? `${financeSettings.ultraPriceTry.toFixed(2)} ₺` : "—"}
           hint={rate !== null ? t("cards.priceHint") : t("cards.rateNotConfigured")}
         />
-        <SummaryCard href="/kumanda/trafik" label={t("item.traffic")} value="—" hint={t("cards.noPageviewTracking")} />
+        <SummaryCard
+          href="/kumanda/trafik"
+          label={t("item.traffic")}
+          value={pageViews ? String(pageViews.pageViewsLast30d) : "—"}
+          hint={pageViews ? t("cards.pageViewsLast30d") : t("cards.noPageviewTracking")}
+        />
         <SummaryCard href="/kumanda/ogrenciler" label={t("item.students")} value={String(users.length)} hint={t("cards.registeredStudents")} />
         <SummaryCard href="/kumanda/harcama" label={t("item.spend")} value={`$${spend.last30dUsd.toFixed(2)}`} hint={t("cards.spendLast30d")} />
       </div>

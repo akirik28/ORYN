@@ -35,6 +35,9 @@ export const env = {
   cron: {
     secret: required(process.env.CRON_SECRET),
   },
+  pageViews: {
+    hashSecret: required(process.env.PAGE_VIEW_HASH_SECRET),
+  },
 } as const;
 
 export const integrationStatus = {

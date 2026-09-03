@@ -2126,6 +2126,20 @@ export interface ProductEvent {
 }
 export type ProductEventInsert = Insertable<ProductEvent, "id" | "created_at" | "metadata">;
 
+/** Migration 0107 (proposed, not yet applied as of 2026-09-03) — anonymous logged-out page
+ * views. See that migration's own comment for why visitor_hash can never be an IP, a user
+ * agent, or a persistent identifier. */
+export interface PageView {
+  id: string;
+  created_at: string;
+  path: string;
+  visitor_hash: string;
+}
+/** id/created_at are DB-defaulted; the writer (lib/analytics/page-views.ts) only ever
+ * provides path and visitor_hash. No Update type: an insert-only log, same posture as
+ * ProductEvent above. */
+export type PageViewInsert = Insertable<PageView, "id" | "created_at">;
+
 /** "application" | "opportunity" | "university_deadline" — matches lib/deadlines/scan.ts's
  * DeadlineHit["source"] exactly. Kept as a plain string in the DB (migration 0075's own
  * comment explains why), so this union exists only here and in scan.ts — not a DB enum. */
@@ -2335,6 +2349,7 @@ export interface Database {
       weekly_plan_budget_settings: Table<WeeklyPlanBudgetSettings, Partial<WeeklyPlanBudgetSettings>, Partial<WeeklyPlanBudgetSettings>>;
       rate_limit_events: Table<RateLimitEvent, RateLimitEventInsert, Partial<RateLimitEventInsert>>;
       product_events: Table<ProductEvent, ProductEventInsert, Partial<ProductEventInsert>>;
+      page_views: Table<PageView, PageViewInsert, never>;
       birth_year_changes: Table<BirthYearChange, never, never>;
       deadline_notification_log: Table<DeadlineNotificationLog, DeadlineNotificationLogInsert, never>;
       university_notification_log: Table<UniversityNotificationLog, UniversityNotificationLogInsert, never>;

@@ -774,6 +774,47 @@ export async function getSpendSummary(admin: SupabaseClient<Database>): Promise<
   };
 }
 
+export interface PageViewStats {
+  /** Distinct visitor_hash values seen today (UTC) -- a genuine distinct-visitor count,
+   *  not an approximation, because the hash is only stable within a single UTC day (see
+   *  migration 0107). */
+  uniqueVisitorsToday: number;
+  /** Raw row count, last 30 days -- deliberately labeled "page views" everywhere this is
+   *  shown, never "visitors": summing distinct-per-day hashes across a multi-day window
+   *  double-counts a returning visitor (a new hash every day), so a raw count is the only
+   *  honest multi-day number this table can produce without overclaiming precision. */
+  pageViewsLast30d: number;
+}
+
+/**
+ * page_views, migration 0107 (proposed, not yet applied as of 2026-09-03). Returns null,
+ * never zeroes, when the table doesn't exist -- "not measured" and "measured, found zero"
+ * are different claims (TrafficPage's own doc comment makes the same distinction for
+ * signups vs. visitors). This is the one function both the Trafik detail page and the
+ * /kumanda overview card call, so the two can't drift into disagreeing about which state is
+ * true, matching this file's existing "don't duplicate a number another screen already owns
+ * computing" principle (see ControlOverviewPage's own doc comment).
+ */
+export async function getPageViewStats(admin: SupabaseClient<Database>): Promise<PageViewStats | null> {
+  const [todayRes, last30dRes] = await Promise.all([
+    admin.from("page_views").select("visitor_hash").gte("created_at", startOfTodayUtcIso()),
+    admin.from("page_views").select("id").gte("created_at", daysAgoIso(30)),
+  ]);
+
+  const error = todayRes.error ?? last30dRes.error;
+  if (error) {
+    if (!isUndefinedTableError(error, "page_views")) {
+      console.error("[admin] unexpected error reading page_views", error);
+    }
+    return null;
+  }
+
+  return {
+    uniqueVisitorsToday: new Set((todayRes.data ?? []).map((row) => row.visitor_hash)).size,
+    pageViewsLast30d: (last30dRes.data ?? []).length,
+  };
+}
+
 export interface UserSpend {
   userId: string;
   displayName: string | null;

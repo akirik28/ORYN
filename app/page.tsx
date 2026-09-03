@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { instrumentSerif, inter } from "@/lib/fonts";
 import { SiteFooter } from "@/features/legal/site-footer";
+import { recordPageView } from "@/lib/analytics/page-views";
 
 // Ported from the Figma Make source handoff (src/AuthFlow.tsx, `Landing` component,
 // 2026-08-30 export) — inline styles, copy, spacing, colors, and blur/glow values kept
@@ -32,6 +33,7 @@ const FEATURES = [
 
 export default async function LandingPage() {
   const t = await getTranslations("landing");
+  recordPageView("/");
 
   return (
     <div
