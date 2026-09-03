@@ -618,6 +618,28 @@ const REGISTRY: AdmissionSystemEntry[] = [
     },
     sources: [DOC("poland.md")],
   },
+  {
+    countryNames: ["Denmark", "Danmark"],
+    // The one country in this expansion line that does NOT reduce to one shape per pathway.
+    // Kvote 1 (grades-only, rank-competitive) and Kvote 2 (genuinely holistic: essay,
+    // experience, often an interview) exist in parallel and the APPLICANT chooses between
+    // them where eligible — see docs/research/admissions-systems/denmark.md §D. Domestic is
+    // recorded "unknown" deliberately: forcing either shape would misdescribe whichever track
+    // the specific student is not using. International is a confident holistic_review, because
+    // a non-EU/non-IB/non-EB applicant (the realistic MEB case) has no Kvote 1 option at all —
+    // see denmark.md §E for the one honest exception (a Turkish IB-Diploma holder).
+    domestic: {
+      shape: "unknown",
+      mechanism:
+        "Denmark runs two structurally opposite tracks in parallel through Optagelse.dk, and eligible applicants choose between them: Kvote 1 admits purely on grade point average (EU/IB/EB qualifications only) in strict rank order; Kvote 2 is genuinely holistic — a motivational essay, relevant experience, and often an interview, open to everyone. Oryn cannot tell which track a specific student is pursuing, so neither shape can be claimed as the general answer.",
+    },
+    international: {
+      shape: "holistic_review",
+      mechanism:
+        "Applicants whose qualification does not convert onto the Danish grading scale (a Turkish Lise Diploması, for most students) are automatically assessed in Kvote 2 only — no Kvote 1 alternative exists for them. Kvote 2 is genuinely holistic: a motivational essay described as the most important part of the application, relevant experience, and often an interview. A Turkish student who instead holds a full IB Diploma would also qualify for the grades-only Kvote 1, reintroducing the same choice domestic applicants face.",
+    },
+    sources: [DOC("denmark.md")],
+  },
 ];
 
 // ---------------------------------------------------------------------------
