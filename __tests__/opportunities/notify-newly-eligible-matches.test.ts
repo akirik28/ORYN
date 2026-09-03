@@ -10,20 +10,16 @@ import type { Database } from "@/types/database";
  * shared-core function, rather than mocking refreshOpportunityMatches' full seven-table
  * read + real matching engine just to reach this one decision.
  *
- * `TRANSLATORS` reproduces messages/en.json / messages/tr.json's real
- * `notifications.newOpportunityMatch` string for the two keys this function calls.
+ * No next-intl mock here (2026-09-03, the getTranslations-outside-request-scope fix —
+ * docs/weekly-plan-grounding-loss-2026-09-03.md): the source now builds this title inline
+ * instead of through getTranslations, so this suite runs the real title-generation code
+ * unmocked, which makes it incidental proof the function works with no Next.js request
+ * context at all — the exact thing that broke for every scheduled-job-generated match before
+ * this fix. The literal English/Turkish strings below match messages/en.json /
+ * messages/tr.json's real `notifications.newOpportunityMatch` key verbatim.
  */
 
 vi.mock("@/lib/notifications/create", () => ({ createNotification: vi.fn() }));
-vi.mock("next-intl/server", () => ({
-  getTranslations: vi.fn(async ({ locale }: { locale: "en" | "tr" }) => {
-    const strings: Record<"en" | "tr", (key: string, values?: Record<string, unknown>) => string> = {
-      en: (key, values) => (key === "newOpportunityMatch" ? `New match: ${values?.name}` : key),
-      tr: (key, values) => (key === "newOpportunityMatch" ? `Yeni eşleşme: ${values?.name}` : key),
-    };
-    return strings[locale];
-  }),
-}));
 
 import { notifyNewlyEligibleMatches } from "@/lib/opportunities/persist-matches";
 import { createNotification } from "@/lib/notifications/create";
