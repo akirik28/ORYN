@@ -256,7 +256,7 @@ bile belli etmiyor. Canlıda doğrulandı.
 
 ---
 
-## Senin kararını bekleyen altı şey
+## Senin kararını bekleyen yedi şey
 
 Hiçbiri gece boyunca tek başıma karar vermediğim şeyler — hepsi ya fiyatı, ya öğrencinin
 gördüğünü, ya da bir şemayı değiştiriyor. En üsttekiler en pahalı olanlar.
@@ -311,9 +311,12 @@ en önemli" ters yönü gösteriyor.
 
 *Kurum tarafı — bu daha çarpıcı:* katalog **bütün bir tabakayı görmüyor.** Almanya'da 243
 uygulamalı bilimler üniversitesinin **sıfırı** kayıtlı, ve DAAD'ın kendi rakamıyla Alman
-öğrencilerin **%37'si** o sektörde okuyor. Hollanda'da 40+ hogeschool'un sıfırı — ve HBO
+öğrencilerin **%37'si** o sektörde okuyor. Hollanda'da **36** hogeschool'un sıfırı — ve HBO
 orada **daha büyük** sektör (462.130 öğrenci, WO'da 340.179). Avusturya 0/21, İsviçre 1,
 İrlanda 1/5.
+
+(36 sayısı artık tahmin değil: DUO'nun — Hollanda Milli Eğitim'in yürütme kurumunun — kendi
+resmî kayıt listesinden, 54 satırın `hbo` olanları sayılarak. Önceki "40+" göz kararıydı.)
 
 Sebebi bulundu: **adında "University" geçen kurumlar girmiş, geçmeyenler girmemiş.**
 İngiltere kontrol vakası — oradaki eski politeknikler eksiksiz var, çünkü 1992'de yasayla
@@ -328,6 +331,29 @@ düzelttiğimiz "veri yok ama kendinden emin etiket" hatasını yirmi katına ç
 
 Üç seçenek: koridoru genişlet, kapsam dışını çıkar, ya da kalsınlar ama etiketsiz. **Şu an
 üçüncüsünün yarısındayız.**
+
+**Hollanda tarafı için ilk adım hazır bekliyor:** 36 hogeschool, DUO'nun resmî listesinden,
+`data/research/sql-dry-runs/universities/netherlands-hbo-2026-09-03.sql`. Deneme
+çalıştırıldı — 36 ekleme temiz, mevcut 13 Hollanda kaydıyla sıfır çakışma, geri alındı.
+Bilerek sabah paketine adım olarak koymadım: aşağıdaki şema kararı verilmeden uygulanırsa
+36 kurum eksik etiketle girer. Karar seninse, uygulaması bir komut.
+
+**Bir kurumun "hangi tür" olduğunu tutacak yer yok.** Bu, yukarıdaki soruyu uygulamaya
+çevirince çıkan gerçek engel.
+
+`institution_type` sütunu var, ama dolu: içinde ABD'nin sahiplik sınıflandırması duruyor
+(743 "university", 217 "Public", 35 "Private not for Profit", 7 "Private nonprofit"). Bu
+bambaşka bir eksen — "kim işletiyor", "hangi akademik tür" değil. Oraya
+"University of Applied Sciences" yazmak ikisini kalıcı olarak birbirine karıştırırdı.
+
+Bu yüzden 36 kaydın hepsinde o sütun **boş bırakıldı**, HBO bilgisi `description`'a yazıldı.
+Bu çalışır ama doğru çözüm değil — geçici bir yer.
+
+Doğru çözümü tek başıma seçmedim çünkü sadece Hollanda'yı ilgilendirmiyor: Almanya
+(Fachhochschule), İrlanda (Technological University), Finlandiya (ammattikorkeakoulu),
+İsviçre (Fachhochschule) — hepsinde aynı ayrım var. Yeni bir sütun eklenirse **hepsinde
+aynı anda** tutarlı olmalı, yoksa yarısı etiketli yarısı etiketsiz bir katalog kalır ki
+etiketsiz olandan daha kötüdür. Migration kararı, senin.
 
 **Fırsat görselleri ve lisans.** 282 kaydın 218'inde görsel yok, ve **128'inin kaynak
 sayfasında zaten görsel yok** — daha çok taramak bunu çözmüyor. Üçüncü taraf görseli
