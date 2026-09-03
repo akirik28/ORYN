@@ -120,7 +120,18 @@ sütun** var: elle araştırma `financial_aid_available`'ı, otomatik çıkarım
 aitti, ve iş hiçbirini doğrulanmış işaretlemedi.** Sebep sıradan: iş "applications open",
 "apply by" gibi sabit kalıplar arıyor, gerçek sayfalar ise "Apply Now", "Register today"
 yazıyor. Bunu ancak çalıştırınca öğrenebilirdik. Şimdi kalıpları gerçek sayfalardan
-çıkarıyor. **İş kapalı duruyor, kendiliğinden çalışmıyor.**
+çıkardı: 49 gerçek sayfayı elle okudu ve sorunun kelime dağarcığı değil **kelime sırası**
+olduğunu buldu — iki ayrı sayfa "ARE NOW OPENED" ve "ARE OPEN NOW" yazıyor. Yeni kalıplarla
+aynı 20 satırda 0 doğrulamadan 8'e çıktı, sıfır yanlış pozitifle. **Ve iş ilk kez gerçek bir
+şey yakaladı:** USC Pre-College bizde "açık" kayıtlı, kendi sayfası "2026 başvuruları kapandı"
+diyor.
+
+Ama dürüst olan kısım: geniş örneklemde hâlâ %67'si sessiz. Yani kalıp eşleştirme boşluğun
+bir kısmını kapatıyor, çoğunu değil.
+
+**Senin pazarın için ayrı bir sorun var:** 49 sayfanın 5'i Türkçe ve hiç İngilizce açılma/
+kapanma ifadesi taşımıyor. Yani iş bu kayıtları hiçbir yönde doğrulayamıyor. Türkçe kalıplar
+şimdi çıkarılıyor. **İş kapalı duruyor, kendiliğinden çalışmıyor.**
 
 **Fırsat görselleri ve lisans.** 282 kaydın 218'inde görsel yok, ve **128'inin kaynak
 sayfasında zaten görsel yok** — daha çok taramak bunu çözmüyor. Üçüncü taraf görseli
