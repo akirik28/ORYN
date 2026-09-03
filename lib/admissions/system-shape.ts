@@ -779,6 +779,27 @@ const REGISTRY: AdmissionSystemEntry[] = [
     },
     sources: [DOC("lithuania.md")],
   },
+  {
+    // Scoped to the Republic of Cyprus (EU) specifically -- ORYN's database already carries
+    // "Northern Cyprus" as a genuinely separate country value for TRNC institutions, which
+    // this entry does not represent. See docs/research/admissions-systems/cyprus.md.
+    countryNames: ["Cyprus"],
+    // The Pancyprian Examinations are officially described as serving admission to "Public
+    // Universities of Cyprus and Greece" -- a real structural link to Greece's own entry
+    // already in this registry, not just a naming resemblance. Confirmed with real allocation
+    // numbers (3,113 places, 1,590 to UCY, 1,382 to CUT) for the domestic mechanism.
+    domestic: {
+      shape: "academic_rank_competitive",
+      mechanism:
+        "Public universities allocate a fixed number of places by rank order on Pancyprian Examination results — the same exam sitting that also feeds Greek public university admission. No essay, interview, or portfolio found anywhere in the mechanism.",
+    },
+    international: {
+      shape: "unknown",
+      mechanism:
+        "International admission is exam/qualification-based (GCE/GCSE, IB, or a university-set special examination) rather than holistic — no essay, interview, or portfolio was found for undergraduate admission at either public university checked. Whether it is competitively ranked or a simple threshold could not be established. Some routes were found to require Greek-language proficiency, not resolved to a specific scope or threshold this pass — check the specific target programme.",
+    },
+    sources: [DOC("cyprus.md")],
+  },
 ];
 
 // ---------------------------------------------------------------------------
