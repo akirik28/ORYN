@@ -55,7 +55,7 @@ describe("recommendationClassLabel", () => {
 
 /**
  * Phase 79's audit, 2026-09-02: live on every Counselor Core card, "Academic —
- * insufficient data (0/100)" quoted a score for a dimension Oryn hasn't assessed at all —
+ * insufficient data (0/100)" quoted a score for a dimension Proxola hasn't assessed at all —
  * exactly the false-precision Phase 68 forbids, the same principle
  * lib/scoring/signal.ts's EvidenceState machinery already holds a few files away. Fixed
  * by omitting the score for insufficient_data specifically; every other severity keeps
@@ -75,7 +75,7 @@ describe("gapWhyLine", () => {
 
   test("insufficient_data still names the dimension and the reason, just not a number", () => {
     expect(gapWhyLine("career_exploration", "insufficient_data", 4, "en")).toBe(
-      "Addresses Career Exploration, an area Oryn doesn't have enough data on yet."
+      "Addresses Career Exploration, an area Proxola doesn't have enough data on yet."
     );
     expect(gapWhyLine("career_exploration", "insufficient_data", 4, "tr")).toBe("Kariyer Keşfi — yeterli veri yok.");
   });

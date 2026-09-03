@@ -174,7 +174,7 @@ describe("formatContextForPrompt — dimension names are human labels, not colum
     const line = text.split("\n").find((l) => l.includes("Career Exploration"))!;
     expect(line).toContain("Limited evidence");
     expect(line).not.toMatch(/\d+\/100/);
-    expect(line).toContain("Oryn has not assessed this");
+    expect(line).toContain("Proxola has not assessed this");
   });
 
   test("no snake_case identifier survives anywhere in the prompt", () => {

@@ -4,7 +4,7 @@ import { describe, expect, test, vi, beforeEach } from "vitest";
  * CEO, 2026-09-02: the same evidence-state question as cohort.test.ts, on the other side
  * of the comparison -- does a STUDENT'S OWN not_assessed dimension get offered a benchmark
  * at all? Comparing "no evidence recorded" (score 0 by construction) against real peers
- * would produce a percentile for a signal Oryn doesn't have, the same false-precision harm
+ * would produce a percentile for a signal Proxola doesn't have, the same false-precision harm
  * Phase 68 forbids everywhere else this evidence-state machinery is used.
  */
 vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn() }));
@@ -71,7 +71,7 @@ describe("getPeerBenchmarks — my own evidence-state filtering", () => {
 
     const summary = await getPeerBenchmarks("me");
 
-    // The distinction this guards: "not shown because Oryn has no signal for you here" and
+    // The distinction this guards: "not shown because Proxola has no signal for you here" and
     // "not shown because there aren't enough comparable peers" are different sentences.
     // Before this fix, a not_assessed dimension would appear in `results` with a null
     // percentile, indistinguishable in the UI's own withData filter from a genuinely

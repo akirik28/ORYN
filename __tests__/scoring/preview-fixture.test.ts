@@ -8,7 +8,7 @@ import { canClaimGap, hasConfidentSignal, isAssessed, toProfileSignal } from "@/
  * The dev-preview harness shipped in exactly that state: its signal fixture omitted
  * `reasonCodes`, which the signal layer read as "this dimension found nothing to score",
  * so a student with academics 82 and leadership 91 was shown Home's empty-profile
- * headline — "Tell Oryn what you've done" — above their own scores.
+ * headline — "Tell Proxola what you've done" — above their own scores.
  *
  * Nothing in the type system stopped it and nothing in the test suite noticed, because
  * every test built its own rows correctly. The field is now required, and this file
@@ -18,7 +18,7 @@ import { canClaimGap, hasConfidentSignal, isAssessed, toProfileSignal } from "@/
  */
 
 describe("dev-preview fixture", () => {
-  test("is a scored profile, and Oryn can say so", () => {
+  test("is a scored profile, and Proxola can say so", () => {
     expect(FIXTURE_SCORES.length).toBeGreaterThan(0);
     expect(FIXTURE_SCORES.every((row) => row.score > 0)).toBe(true);
     expect(hasConfidentSignal(FIXTURE_PROFILE_SIGNAL)).toBe(true);

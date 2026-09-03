@@ -19,7 +19,7 @@ import { OpportunityStandingBadge } from "@/features/opportunities/standing-badg
  * The three states this must never conflate:
  *   - the opportunity's cycle isn't open   -> a fact about the opportunity  ("Not open right now")
  *   - the student doesn't qualify          -> a fact about the student      ("Not eligible for you")
- *   - Oryn has no evidence either way      -> a fact about OUR data         ("Needs verification")
+ *   - Proxola has no evidence either way   -> a fact about OUR data         ("Needs verification")
  */
 
 afterEach(cleanup);

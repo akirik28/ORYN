@@ -331,7 +331,7 @@ describe("browseOpportunities — missing match row (Package 8 fix)", () => {
  * verification" badge, and (b) sorts it below every confident row at the same score.
  *
  * Critically it must NOT flip `eligible` to false. That column drives "Not eligible" wording,
- * and this is a fact about Oryn's evidence, not about the student.
+ * and this is a fact about Proxola's evidence, not about the student.
  */
 describe("browseOpportunities — insufficient verification is labelled, never hidden and never called ineligible", () => {
   test("a never-verified, deadline-less opportunity is flagged needsVerification but stays visible and eligible", async () => {
@@ -476,7 +476,7 @@ describe("browseOpportunities — a stored eligibility note and the verification
  * 51 live rows had no `last_verified_at` purely because the 0041-era pipeline recorded into
  * `verified_at` instead; all 51 are `verification_state='verified_current'` and
  * `source_confidence='high'`. Browse demoted and badged every one of them "Needs verification",
- * which told a student Oryn couldn't vouch for the most carefully researched records it has.
+ * which told a student Proxola couldn't vouch for the most carefully researched records it has.
  *
  * The demote-and-label treatment itself is kept exactly as #143 shipped it — it is the right
  * response to a genuine absence of evidence, and the wording below is still pinned. Only the

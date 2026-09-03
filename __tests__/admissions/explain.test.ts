@@ -93,7 +93,7 @@ describe("explainOutlook", () => {
 
   test("strengths and gaps are independent — evidence-backed ties among real strengths are named even when they aren't the single best two", () => {
     // Three dimensions all clear the strength threshold; only the top 2 are named — that's
-    // incompleteness (there IS a third real strength Oryn didn't list), not fabrication, since
+    // incompleteness (there IS a third real strength Proxola didn't list), not fabrication, since
     // all three are genuinely evidenced and >= 55.
     const scores: DimensionScoreInput[] = [
       { dimension: "leadership", score: 80, confidence: "high" },
@@ -147,7 +147,7 @@ describe("explainOutlook — Gate 1 shape awareness", () => {
 
   // The tri-state discipline reviewsNonAcademicEvidence itself keeps: "not established" must
   // never be silently treated as "established false". An unresearched country keeps the
-  // existing framing rather than getting a confident claim Oryn hasn't earned.
+  // existing framing rather than getting a confident claim Proxola hasn't earned.
   test("an unresolved target is treated as holistic, never as established-no-review", () => {
     const unknownShape = explainOutlook(evidenced, "unknown", true);
     expect(unknownShape).toEqual(explainOutlook(evidenced, "holistic_review", true));
@@ -161,7 +161,7 @@ describe("explainOutlook — Gate 1 shape awareness", () => {
     expect(yks.gaps).toEqual([]);
     expect(yks.unknowns).not.toContain("Essays");
     expect(yks.unknowns).not.toContain("Recommendations");
-    // The one thing genuinely unknown about this mechanism: a cutoff exists, Oryn can't see it.
+    // The one thing genuinely unknown about this mechanism: a cutoff exists, Proxola can't see it.
     expect(yks.unknowns).toEqual(["Where this cycle's score cutoff lands"]);
   });
 
@@ -183,7 +183,7 @@ describe("explainOutlook — Gate 1 shape awareness", () => {
   });
 
   // insufficientData drives "we don't know enough about you yet". That is the wrong sentence
-  // for a target where more profile data would not change the answer — Oryn knows plenty here.
+  // for a target where more profile data would not change the answer — Proxola knows plenty here.
   test("an empty profile against a no-review target reports profileNotAnInput, not insufficientData", () => {
     const empty = explainOutlook(allZeroLowConfidence(), "academic_rank_competitive", true);
     expect(empty.profileNotAnInput).toBe(true);

@@ -87,7 +87,7 @@ describe("OutlookBadge — US undergraduate Medicine and Law do not exist as bac
 });
 
 /**
- * Turkish coverage added 2026-09-01 i18n pass. "Reach/Competitive/Likely" are Oryn's own
+ * Turkish coverage added 2026-09-01 i18n pass. "Reach/Competitive/Likely" are Proxola's own
  * classification words, not fixed external vocabulary a student has to recognize on a real
  * form (unlike "Early Decision" — see applications.newDialog's own catalog comment on that
  * distinction) — translated rather than kept as English loanwords. `locale` defaults to

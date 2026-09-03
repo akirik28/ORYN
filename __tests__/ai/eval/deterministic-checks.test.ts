@@ -56,7 +56,7 @@ describe("findUnassessedDimensionScored", () => {
   });
 
   test("does NOT flag the correct behavior: describing the state honestly with no number", () => {
-    const correct = "Research hasn't been assessed yet — there's nothing recorded for Oryn to judge.";
+    const correct = "Research hasn't been assessed yet — there's nothing recorded for Proxola to judge.";
     expect(findUnassessedDimensionScored(correct, unassessed)).toHaveLength(0);
   });
 

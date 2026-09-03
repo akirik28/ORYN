@@ -226,13 +226,13 @@ describe("evaluateCandidateEligibility — opportunities", () => {
     expect(result.verdict).toBe("known_eligible");
   });
 
-  test("unknown, with a note, when citizenship restrictions are on file (free text Oryn can't parse)", () => {
+  test("unknown, with a note, when citizenship restrictions are on file (free text Proxola can't parse)", () => {
     const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ citizenship_restrictions: "US citizens only" })));
     expect(result.verdict).toBe("unknown");
     expect(result.notes.join(" ")).toContain("US citizens only");
   });
 
-  test("unknown when eligible_grades is populated (grade-level not computed by Oryn)", () => {
+  test("unknown when eligible_grades is populated (grade-level not computed by Proxola)", () => {
     const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ eligible_grades: ["11", "12"] })));
     expect(result.verdict).toBe("unknown");
   });

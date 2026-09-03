@@ -277,7 +277,7 @@ describe("decideRequirementIngestion — migration 0056's qualifier columns", ()
 
   it("lands METU's TR-YÖS percentile record with the incomparable_scale gate and its scale intact", () => {
     // REQ-2026-08-21-9330. A rank, not a score: resolving it needs the cycle's national
-    // distribution, which Oryn does not hold and cannot derive from a stored number.
+    // distribution, which Proxola does not hold and cannot derive from a stored number.
     const row = decide(
       req({
         research_requirement_id: "REQ-2026-08-21-9330",

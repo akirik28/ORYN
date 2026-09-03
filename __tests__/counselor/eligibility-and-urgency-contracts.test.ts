@@ -375,7 +375,7 @@ describe("Regression — expired opportunities never reach counselor recommendat
 });
 
 /**
- * Regression — an opportunity Oryn has never verified, with no deadline on file, must not be
+ * Regression — an opportunity Proxola has never verified, with no deadline on file, must not be
  * presented as a high-confidence next action.
  *
  * The gap lib/opportunities/lifecycle.ts documents but cannot close with a date rule: an

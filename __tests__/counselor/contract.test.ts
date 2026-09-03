@@ -225,7 +225,7 @@ describe("Contract test 2 (spec §58) — near-empty profile", () => {
     expect(result.gaps.every((g) => g.severity === "insufficient_data")).toBe(true);
   });
 
-  test("profileReadiness says plainly that Oryn doesn't know this student well enough yet", () => {
+  test("profileReadiness says plainly that Proxola doesn't know this student well enough yet", () => {
     expect(result.profileReadiness.sufficientForJudgment).toBe(false);
   });
 

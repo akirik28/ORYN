@@ -286,7 +286,7 @@ describe("buildRecommendation — locale: tr", () => {
       recommendationClass: "do",
     };
     const rec = buildRecommendation(ranked, state(), "tr");
-    expect(rec.why[0]).toBe("Oryn bu bilgiye henüz sahip değil — güvenilir öneriler için gerekli.");
+    expect(rec.why[0]).toBe("Proxola bu bilgiye henüz sahip değil — güvenilir öneriler için gerekli.");
   });
 
   // The requirement evaluator's own reasoning (lib/requirements/evaluate.ts) used to be

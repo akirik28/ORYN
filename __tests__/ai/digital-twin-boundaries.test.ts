@@ -76,7 +76,7 @@ describe("contact_info's one permitted consumer is completeness, never a dimensi
 
   test("persist.ts reads contact_info only to derive a boolean for completeness", () => {
     // It is allowed to ask "does this student have any contact info at all" — that is
-    // profile *completeness* (how much Oryn knows), an explicitly different concept from
+    // profile *completeness* (how much Proxola knows), an explicitly different concept from
     // profile *strength*. What it must never do is pass the values themselves onward.
     expect(persist).toContain('from("contact_info")');
     expect(persist).toContain("hasContactInfo");

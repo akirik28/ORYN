@@ -125,7 +125,7 @@ describe("classifyRequirementShapes", () => {
     expect(shapesOf(req({ requirement_text: "IELTS Online and IELTS One Skill Retake are not accepted." }))).toContain("score_provenance");
   });
 
-  it("flags an age bar as unevaluable, because ORYN stores birth year only", () => {
+  it("flags an age bar as unevaluable, because PROXOLA stores birth year only", () => {
     expect(shapesOf(req({ requirement_text: "Applicants must be 18 before 31st December (September Start programmes)", is_exclusion: true }))).toContain("unevaluable_age_bar");
   });
 

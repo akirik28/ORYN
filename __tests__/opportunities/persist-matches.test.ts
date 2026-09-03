@@ -61,7 +61,7 @@ describe("buildReasonCodes", () => {
     expect(codes).toEqual(["ineligible"]);
   });
 
-  // Eligibility "unknown" (a restriction Oryn can't confirm either way) is never the same
+  // Eligibility "unknown" (a restriction Proxola can't confirm either way) is never the same
   // state as a confirmed exclusion -- computeEligibility keeps `eligible: true` for it, so
   // the short-circuit above must not fire and a genuine positive reason still comes through.
   test("eligibility-unknown (still eligible: true) does not trigger the ineligible short-circuit", () => {

@@ -52,8 +52,8 @@ describe("evaluateBenchmarkDimension", () => {
 });
 
 describe("describeCohort", () => {
-  test("describes an unset cohort as all Oryn students", () => {
-    expect(describeCohort({ graduationYear: null, curriculum: null })).toBe("All Oryn students");
+  test("describes an unset cohort as all Proxola students", () => {
+    expect(describeCohort({ graduationYear: null, curriculum: null })).toBe("All Proxola students");
   });
 
   test("describes a graduation-year-only cohort", () => {

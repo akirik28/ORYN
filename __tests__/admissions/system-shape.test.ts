@@ -385,7 +385,7 @@ describe("resolveAdmissionSystem — Poland (2026-09-03, decentralized but conve
 
 describe("resolveAdmissionSystem — Denmark (2026-09-03, the first shape that genuinely does not reduce to one answer)", () => {
   // Kvote 1 (grades-only, rank-competitive) and Kvote 2 (genuinely holistic) exist in parallel
-  // for a domestic applicant, and Oryn has no signal for which one a student is pursuing — see
+  // for a domestic applicant, and Proxola has no signal for which one a student is pursuing — see
   // docs/research/admissions-systems/denmark.md §D. Unlike Ireland's pathway_undetermined case
   // (ambiguous only with NO student country on file), Denmark's domestic ambiguity exists even
   // WITH a confirmed domestic student — a different kind of "unknown" than anything else in
@@ -726,7 +726,7 @@ describe("resolveAdmissionSystem — Cyprus (2026-09-03, structurally linked to 
     expect(international.mechanism).toContain("Greek-language");
   });
 
-  // ORYN's database carries "Northern Cyprus" as a genuinely separate country value (a
+  // PROXOLA's database carries "Northern Cyprus" as a genuinely separate country value (a
   // distinct political entity) -- this entry must not accidentally also answer for it.
   test("Northern Cyprus does not inherit this entry — it resolves independently, to unknown", () => {
     const result = resolveAdmissionSystem({ targetCountry: "Northern Cyprus", studentCountry: "Turkey" });
