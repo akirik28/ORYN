@@ -172,13 +172,8 @@ have masked).
 
 ## Results, per lane
 
-_(filled in as each branch lands)_
-
-### Lane 1 — catalogs
-Not yet pushed.
-
-### Lane 2 — legal + prompts + metadata
-Not yet pushed.
+_(filled in as each branch lands — Lanes 1 and 2 appear below, after Lane 5, in the
+order they actually landed)_
 
 ### Lane 3 — brand assets (logos + alt text) — merged `4627e37e` — CLEAN
 
@@ -203,11 +198,12 @@ worth a one-line correction back to the lane, not a finding.
 Two things flagged by the lane itself, correctly left alone rather than fixed out of
 scope: a blue-mark/purple-accent color clash (a founder design decision, not a rename
 defect) and the auth screen's "New to ORYN? Create an account" string, which lives in
-`messages/*.json` — explicitly Lane 1/2's territory. Worth checking that this specific
-string actually gets caught when Lane 1 or 2 lands, since it's now a named, waiting
-item rather than an assumption.
+`messages/*.json` — explicitly Lane 1/2's territory. **Closed**: confirmed
+`messages/en.json:1399-1400` now reads `"newToProxola": "New to Proxola?"` /
+`"createAccount": "Create an account"` — the named waiting item, checked rather than
+assumed.
 
-### Lane 6 — directory rename (`components/oryn/` → `components/proxola/`) — merged `a55c035c` — CLEAN, pending typecheck/test confirmation
+### Lane 6 — directory rename (`components/oryn/` → `components/proxola/`) — merged `a55c035c` — CLEAN, typecheck/tests confirmed below
 
 `git mv` of 28 files plus 115 import repoints. Matched specifically on the
 `components/oryn/` path, never on the bare word — confirmed two ways: the four
@@ -232,8 +228,15 @@ navigation aid that becomes actively wrong after the file moves, not a record of
 decision made at a point in time. Different in kind from editing AGENTS.md's verbatim
 block.
 
-`npx tsc --noEmit` and the full test suite are running against this combined state
-(Lanes 3+6+8); results below once both finish.
+**Typecheck/test result**: `npx tsc --noEmit` clean, zero errors — the 115 import
+repoints all land correctly. Full suite: 1 timeout in
+`refresh-matches-admin-degradation.test.ts` on the first run; re-ran that file alone on
+the latest main and it passed in 1.34s (vs. a 30s timeout under the full-suite run).
+Confirmed environmental, not a regression: that test exercises a sibling function in
+`persist-matches.ts` to the one the i18n fix touched, in a file the fix never changed,
+and the isolated pass was fast and clean. The full suite and a full typecheck were
+running concurrently on a machine with several other active sessions — resource
+contention, not logic.
 
 ### Lane 8 — data/ triage — merged `83b8eaa6` — CLEAN (report only, zero files touched)
 
@@ -247,7 +250,7 @@ discrepancy against the founder's cited count (4,235 vs. 3,397 occurrences) rath
 silently adopting the higher-authority number — noted, not material to the conclusion,
 and the right instinct either way.
 
-### Lane 05 — database SQL — merged `e03becc4` — CLEAN
+### Lane 5 — database SQL — merged `e03becc4` — CLEAN
 
 Two new files: `data/morning/08-isim-degisikligi-veri-2026-09-03.sql` (the staged
 `replace()` backfill, idempotent by construction) and a founder-facing brief,
@@ -276,10 +279,175 @@ Two new files: `data/morning/08-isim-degisikligi-veri-2026-09-03.sql` (the stage
   only `oryn-qa-scratch` is this product). Worth knowing for the final reconciliation —
   the database-layer scope is fully accounted for, not partially unknown.
 
-## Whole-tree reconciliation (after all lanes land)
+### Lane 9 — scripts — merged `561a4278`
 
-Pending.
+### Lane 1 — catalogs (233 lines, the text layer) — merged `bd1d7b65`
 
-## Functional check result
+### Lane 2 — legal text, sitewide metadata, all four AI prompts — merged `e29a6426`
 
-Pending.
+Not individually broken out — their combined effect (together with the i18n fix, Lane
+6, and everything before) is what the whole-tree reconciliation below actually
+measures, and that reconciliation is where their real gaps surface. Two things
+independently confirmed as part of that work: the auth screen's `newToProxola`/
+`createAccount` catalog keys (noted under Lane 3 above), and `ADVISOR_SYSTEM_PROMPT`
+itself (below) — both correct.
+
+## Whole-tree reconciliation — the deliverable
+
+**Bottom line first: this is not finished.** Every forbidden identifier and all five
+collisions survived intact through every lane (re-confirmed above). But the sweep
+surfaces a real, unclaimed category of gap: hardcoded, rendered, sometimes bilingual
+strings living in `lib/` business-logic files that none of lanes 1/2/3/6/9 owned,
+because none of their briefs covered "any file with a hardcoded user-facing string,"
+only the specific files the inventory happened to name. Confirmed live, not just read.
+
+### The count
+
+| Casing | Baseline (post-Lane-5) | Now | In `.md` or `data/` | Outside both |
+|---|---|---|---|---|
+| `Oryn` | 1,116 / 312 files | 799 / 281 files | 472 | **327** |
+| `ORYN` | 3,983 / 612 files | 3,973 / 606 files | 3,537 | **436** |
+| `oryn` | 3,203 / 758 files | 2,990 / 664 files | 2,639 | **351** |
+
+`.md`/`data/` is Bucket 3 by construction (historical record — the inventory's own
+argument, independently re-confirmed for `data/` by Lane 8) — not reconciled
+line-by-line here, consistent with item 1's stated reason manual reading doesn't scale
+past the narrow forbidden list.
+
+**Reconciling the "outside both" columns** — how much of 327/436/351 is accounted for
+by the forbidden list, the five collisions, and the three newly-named known-open items:
+
+| Category | Oryn | ORYN | oryn |
+|---|---|---|---|
+| Forbidden identifiers (oryn_global_id, oryn_public, ORYN_ENABLE_*, ORYN-PRG-, 12 codenames, 4 role tags) | 0 | 356 | 216 |
+| `OrynMark` (unused Figma-source comment reference) | 2 | — | — |
+| `oryn_locale` cookie (9 lines — 1 definition, 8 descriptive comments; 48 has it report-only) | — | — | 9 |
+| `what-oryn-is`/`what-oryn-is-not` URL anchors (4 lines, deliberately kept — anchor renames break inbound links) | — | — | 4 |
+| `docs/reports/2026-08-28-oryn-evidence.json` (dated report, same genre as `.md` corpus — my exclusion pathspec only covers `*.md`, missed this one file; read it, it's exactly Bucket 3) | 0 | 0 | ~1 file's worth |
+| **Remainder — real candidates** | **~325** | **~80** | **~121** |
+
+The `ORYN`/`oryn` remainders (80, 121) are overwhelmingly developer-facing comments —
+sampled 5 files in that range (`lib/admissions/system-shape.ts`,
+`lib/universities/counseling-adapter.ts`, `lib/scoring/signal.ts`,
+`lib/admissions/outlook.ts`, `features/opportunities/opportunity-card.tsx`) and all
+five were comment-only, same register as the docs corpus, just not in a `.md` file.
+Lower priority, not zero — a future pass could sweep these for consistency, but they
+don't render and don't reach the AI.
+
+**The `Oryn` remainder (~325) is where the real gap lives**, because exact brand-casing
+in live code is disproportionately likely to be an actual rendered or AI-fed string,
+not a comment. Read every file with a meaningful count rather than assume the pattern
+from the two biggest hits:
+
+### Confirmed real gaps (rendered and/or fed to the AI, zero lanes touched)
+
+- **`lib/requirements/copy.ts` (32 hits)** — the single largest concentration, and the
+  most important: real, bilingual, live requirement-check explanation strings,
+  including the *exact* sentence Lane 5 backfilled in the database
+  (`student_requirement_evaluations.reasoning`, 112 rows): *"This requirement depends
+  on submitted material Oryn doesn't evaluate automatically — review it yourself."*
+  **Lane 5 fixed the 112 existing rows. This file is what generates every new one.**
+  The backfill and the code source were two different lanes' territory and neither
+  crossed into the other's file.
+- **`lib/counselor/copy.ts` (5 hits)** — same pattern, same "copy.ts" naming
+  convention. These are the only two files in the whole repo named `copy.ts`
+  (`git ls-tree | grep 'copy\.ts$'` — exactly these two), and both slipped through.
+- **Four files that feed the AI's own context window, separate from
+  `ADVISOR_SYSTEM_PROMPT`**: `lib/ai/fee-text.ts`, `lib/ai/opportunity-context.ts`,
+  `lib/ai/student-context.ts`, `lib/ai/weekly-plan.ts`. This is the sharpest finding
+  against oryn-45's own question 5 — **the system prompt itself is correctly fixed
+  ("You are the Proxola Advisor" — confirmed below), but these files inject sentences
+  like "Oryn has not assessed this" and "Oryn's Counselor Core has already identified
+  these..." directly into the same context the model reads.** A fixed system prompt
+  doesn't stop the model from seeing and repeating a brand name its own injected
+  context still uses.
+- **A second real AI system prompt**: `lib/opportunities/reverification/adjudicate.ts:32`
+  — `const SYSTEM_PROMPT = `You are adjudicating...between what Oryn has stored...``.
+  Nobody's brief was "find every `SYSTEM_PROMPT` constant in the repo," only "fix
+  `ADVISOR_SYSTEM_PROMPT`" — this one is a different, smaller LLM call (reverification
+  adjudication) that was never in scope for any lane.
+- **Three feature-flag disabled-messages**, one per social feature:
+  `lib/social/posts-feature-flag.ts:52` ("The Oryn social layer is not enabled..."),
+  `lib/social/connections-feature-flag.ts:60` ("Oryn's Connections feature is not
+  enabled..."), `lib/messaging/messaging-feature-flag.ts:60` ("Oryn's 1:1 messaging is
+  not enabled..."). Shown to an admin/developer when a disabled feature is probed, not
+  to students — real but lower-traffic surface.
+- **A scattered set of single/double-occurrence files, each a real returned or
+  rendered string**: `lib/opportunities/cycle-label-quality.ts` (2), `lib/opportunities/
+  lifecycle.ts` (3, bilingual — "Oryn bu fırsatı şu anda göstermiyor." / "Oryn isn't
+  showing this opportunity right now."), `lib/validation/requirements.ts` (1),
+  `lib/benchmarking/compute.ts` (1, "All Oryn students" — a real cohort-description
+  string in the benchmarking UI), `lib/benchmarking/index.ts` (1, same string),
+  `lib/entities/resolve.ts` (1, an error message).
+- **`lib/dev/fixtures.ts` (2)** — dev-only fixture data (AGENTS.md Phase 49: "Use
+  fixtures for testing only"), not production-reachable. Lower priority, same logic as
+  the database layer's own QA-fixture carve-out (the inventory's "Oryn Test High
+  School" rows), just in code instead of the database.
+- **`app/(dev-preview)/design-preview/university-detail/page.tsx` (4)** — real,
+  rendered strings on a real (if dev-preview) page, and this is the one I verified live
+  rather than by reading: navigated to `/design-preview/university-detail` on the
+  running dev server and read the actual page. Result: **"Oryn estimate: 15–25%
+  (medium confidence)"** renders directly under "Your outlook / Reach" — one of the
+  most prominent spots on the page — right alongside correctly-fixed text elsewhere on
+  the same screen ("Proxola's read of your profile", "Degree programs Proxola has
+  verified", title metadata "Proxola — Your Personal Career Operating System"). Also
+  rendered: "Source: Oryn's admissions-system research" and two requirement-check
+  lines ("...but Oryn can't confirm Mathematics is one of your three A-levels...",
+  "...Oryn hasn't recorded which specific program..."). This is the same underlying
+  string source as `lib/opportunities/lifecycle.ts`/`lib/admissions/*` above, now
+  confirmed by rendering, not inference.
+
+### False positives ruled out, not just assumed
+
+A broad "does this line look like a quoted string" heuristic over-flagged several
+files before individual reading corrected it — worth naming so the corrected list
+isn't mistaken for the raw grep output:
+
+- **`app/(app)/universities/[id]/page.tsx`** — the inventory's own named Bucket-1 item
+  (`"Oryn tahmini:" / "Oryn estimate:"`) is **already correctly fixed** to `"Proxola
+  tahmini:" / "Proxola estimate:"` (line 421). Every remaining "Oryn" in this file is
+  inside a multi-line `{/* ... */}` JSX comment block — invisible to a per-line
+  comment check that only recognizes a leading `//` or `*`, which is precisely the
+  blind spot item 1's methodology section already named in advance. Confirmed by
+  reading each hit, not by the heuristic.
+- **`features/onboarding/onboarding-wizard.tsx`** — same shape, one multi-line JSX
+  comment.
+- The five sampled `ORYN`/`oryn`-remainder files above — comment-only.
+
+### The two rendering-specific checks
+
+- **`ADVISOR_SYSTEM_PROMPT`** (`lib/ai/advisor-prompt.ts:26,58`) — **correctly fixed**:
+  `` `You are the Proxola Advisor...` ``, `"...Proxola checked this specific claim..."`.
+  Direct source read is sufficient here (this is a static template string, not
+  behavior) — no live model call needed to confirm what the text literally says. (The
+  AI-context-injection gap above is a separate, real finding about *other* files in
+  the same conversation, not a contradiction of this one.)
+- **`features/profile/field-config.ts`** — zero remaining `Oryn` (confirmed by
+  `git grep -c`). The one brand-mentioning label
+  (`"Proxola program/opportunity this matches (optional)"`, line 178) has its Turkish
+  dictionary key updated to the identical string verbatim (line 585) — read both sides
+  character-for-character, which is the actual failure mode this check exists for (a
+  key/label drift causing a silent English fallback). **Attempted to confirm by
+  rendering** (`/design-preview/quick-add`, per oryn-45's shared-session-hazard
+  guidance — never touched a real app route): the generic "Activity" quick-add form
+  doesn't surface this specific `scope: "opportunity"` field, and the tool's
+  accessibility-tree reads returned an empty/0×0 viewport against the hidden pane
+  despite `get_page_text` working fine on the same tab — a tool friction, not a app
+  bug. Falling back to the source check above, which directly tests the one thing that
+  can go wrong (key ≠ label), rather than leaving this unverified.
+- **`lib/legal/content.ts` Turkish rendering** — **deliberately not live-rendered**.
+  This is the exact route (`/kvkk`) where 44 found the shared browser pane carrying a
+  persisted session for the founder's real account tonight; no `/design-preview`
+  equivalent exists for legal content. Verified by source instead: zero remaining
+  `Oryn` in the file, and every Turkish suffix on "Proxola" sampled is grammatically
+  correct back-vowel harmony — `Proxola'ya dön` (dative, not `Proxola'e`),
+  `Proxola'nın` (genitive), `Proxola'da` (locative), `Proxola'yı` (accusative) — all
+  consistent with a vowel-final back-vowel stem. This closes both 44's unfinished
+  Turkish check and this report's own item 3 for this file.
+
+### Recommendation
+
+Two copy.ts files, four lib/ai/ context files, one more system prompt, three
+feature-flag messages, and a handful of singletons — a bounded, nameable list, not a
+vague residue. Whoever picks this up next doesn't need to re-run the sweep: the file
+list above is the work order.
