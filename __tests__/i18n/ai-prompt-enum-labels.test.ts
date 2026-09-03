@@ -86,6 +86,12 @@ const TRACKED_TYPES: Record<string, string> = {
   TargetStatus: "no accessor — EXEMPT, see below",
   DataConfidence: "no accessor — EXEMPT, see below",
   ActionStatus: "no accessor yet — zero live template-literal occurrences today (only ever compared with ===, never interpolated); add one the day that changes",
+  // 2026-09-03, the six-category advisor-context build: courses.level and
+  // work_experiences.employment_type are the first two enums this build adds to lib/ai/'s
+  // prompt surface -- tracked from the day they arrive rather than waiting for a live incident
+  // to find them the way DataConfidence was found, per this file's own stated growth model.
+  CourseLevel: "courseLevelLabel (lib/ai/student-context.ts)",
+  EmploymentType: "employmentTypeLabel (lib/ai/student-context.ts)",
 };
 
 const EXEMPT: { file: string; property: string; type: string; reason: string }[] = [

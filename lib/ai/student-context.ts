@@ -14,9 +14,11 @@ import { curriculumLabel } from "@/lib/requirements/copy";
 import { DEFAULT_LOCALE, isLocale, type Locale } from "@/lib/i18n/config";
 import type {
   ActionStatus,
+  CourseLevel,
   CurriculumType,
   Database,
   DataConfidence,
+  EmploymentType,
   EvidenceStatus,
   OutlookLabel,
   ProfileDimension,
@@ -138,6 +140,67 @@ export function requirementTypeLabel(value: string, locale: Locale): string {
   return map[value] ?? value.replace(/_/g, " ");
 }
 
+/**
+ * 2026-09-03 — the six-category advisor-context build: `courses.level` is a closed enum
+ * ("ib_hl", "a_level", "dual_enrollment"...) reaching a prompt template literal for the first
+ * time, so it needs the same label-before-interpolation treatment as every other tracked enum
+ * in this file, not just the eight `__tests__/i18n/ai-prompt-enum-labels.test.ts` already knows
+ * about. Wording copied verbatim from features/profile/field-config.ts's COURSE_LEVEL_OPTIONS —
+ * that file has no locale branching (plain English dropdown labels), so English is reused as-is
+ * and Turkish is new, same "don't invent fresh copy where UI wording already exists" standard
+ * as curriculumLabel/timeBudgetLabel above.
+ */
+const COURSE_LEVEL_LABEL_EN: Record<CourseLevel, string> = {
+  regular: "Regular",
+  honors: "Honors",
+  ap: "AP",
+  ib_hl: "IB Higher Level (HL)",
+  ib_sl: "IB Standard Level (SL)",
+  a_level: "A-Level",
+  dual_enrollment: "Dual enrollment",
+  other: "Other",
+};
+
+const COURSE_LEVEL_LABEL_TR: Record<CourseLevel, string> = {
+  regular: "Normal",
+  honors: "Onur programı",
+  ap: "AP",
+  ib_hl: "IB Üst Düzey (HL)",
+  ib_sl: "IB Standart Düzey (SL)",
+  a_level: "A-Level",
+  dual_enrollment: "Çift kayıt",
+  other: "Diğer",
+};
+
+export function courseLevelLabel(value: CourseLevel, locale: Locale): string {
+  return locale === "tr" ? COURSE_LEVEL_LABEL_TR[value] : COURSE_LEVEL_LABEL_EN[value];
+}
+
+/** Same reasoning as courseLevelLabel above, same source of English wording
+ * (field-config.ts's EMPLOYMENT_TYPE_OPTIONS) — `work_experiences.employment_type` is the
+ * second closed enum this build adds to the AI-prompt surface. */
+const EMPLOYMENT_TYPE_LABEL_EN: Record<EmploymentType, string> = {
+  internship: "Internship",
+  part_time_job: "Part-time job",
+  full_time_job: "Full-time job",
+  apprenticeship: "Apprenticeship",
+  freelance: "Freelance",
+  other: "Other",
+};
+
+const EMPLOYMENT_TYPE_LABEL_TR: Record<EmploymentType, string> = {
+  internship: "Staj",
+  part_time_job: "Yarı zamanlı iş",
+  full_time_job: "Tam zamanlı iş",
+  apprenticeship: "Çıraklık",
+  freelance: "Serbest çalışma",
+  other: "Diğer",
+};
+
+export function employmentTypeLabel(value: EmploymentType, locale: Locale): string {
+  return locale === "tr" ? EMPLOYMENT_TYPE_LABEL_TR[value] : EMPLOYMENT_TYPE_LABEL_EN[value];
+}
+
 export interface StudentAdvisorContext {
   student: {
     displayName: string;
@@ -190,6 +253,32 @@ export interface StudentAdvisorContext {
   projects: { title: string; outcomeSummary: string | null; ongoing: boolean; evidenceStatus: EvidenceStatus }[];
   research: { title: string; field: string | null; outputType: string; ongoing: boolean; evidenceStatus: EvidenceStatus }[];
   awards: { title: string; level: string | null; evidenceStatus: EvidenceStatus }[];
+  /**
+   * 2026-09-03 — docs/advisor-context-coverage-2026-09-03.md's headline finding: assembleScoringFacts
+   * already fetches all six of educationRecords/courses/testScores/certifications/
+   * volunteeringExperiences/workExperiences on every call this function makes (testScores/courses/
+   * educationRecords feed the Academics and Intellectual Curiosity dimension scores directly,
+   * lib/scoring/dimensions/academics.ts, intellectual-curiosity.ts) — none of it reached the model
+   * before this. Zero marginal DB cost; this is a rendering fix, not a new fetch. Kept as separate
+   * arrays rather than folded into `activities` — these are genuinely different shapes (a course's
+   * grade, a test's score, an education record's GPA) and the scoring engine already treats them as
+   * distinct categories; collapsing them here would just mean re-splitting them in formatContextForPrompt.
+   */
+  educationRecords: { schoolName: string; overallGpa: number | null; gpaScale: number | null }[];
+  /** `level` is a closed enum (CourseLevel) — rendered through courseLevelLabel, never raw. */
+  courses: { courseName: string; level: CourseLevel; gradeValue: string | null; gradeScale: string | null }[];
+  /** `subscores` is a freeform JSON blob (SAT: {math, reading_writing}, IELTS: {reading, writing,
+   * speaking, listening}, ...) written by whatever recorded the score, not a closed DB enum — no
+   * label accessor applies to its keys the way one does to a real enum column; formatContextForPrompt
+   * lightly prettifies them (`_` -> space) the same fallback style requirementTypeLabel already uses
+   * for its own unmapped values, not a maintained lookup table. */
+  testScores: { testName: string; score: string; maxScore: string | null; subscores: Record<string, unknown> }[];
+  certifications: { title: string; organization: string | null; evidenceStatus: EvidenceStatus }[];
+  volunteeringExperiences: { title: string; organization: string | null; ongoing: boolean; evidenceStatus: EvidenceStatus }[];
+  /** `employmentType` is a closed enum (EmploymentType) — rendered through employmentTypeLabel,
+   * never raw. `organization` is NOT NULL on this table (unlike certifications/volunteering's
+   * nullable one) — a work experience always names an employer. */
+  workExperiences: { title: string; organization: string; employmentType: EmploymentType; ongoing: boolean; paid: boolean | null; evidenceStatus: EvidenceStatus }[];
   /** Chat 4 founder scope update — deliberately NOT part of `assembleScoringFacts`/the
    * scoring engine this pass (see docs/product-decisions.md): sports feeds the advisor's
    * time-budget reasoning ("10 committed hours/week isn't free capacity") and opportunity-
@@ -437,6 +526,24 @@ export async function buildStudentAdvisorContext(userId: string, supabaseClient?
       evidenceStatus: r.evidence_status,
     })),
     awards: facts.awards.map((a) => ({ title: a.title, level: a.level, evidenceStatus: a.evidence_status })),
+    educationRecords: facts.educationRecords.map((e) => ({ schoolName: e.school_name, overallGpa: e.overall_gpa, gpaScale: e.gpa_scale })),
+    courses: facts.courses.map((c) => ({ courseName: c.course_name, level: c.level, gradeValue: c.grade_value, gradeScale: c.grade_scale })),
+    testScores: facts.testScores.map((t) => ({ testName: t.test_name, score: t.score, maxScore: t.max_score, subscores: t.subscores })),
+    certifications: facts.certifications.map((c) => ({ title: c.title, organization: c.organization, evidenceStatus: c.evidence_status })),
+    volunteeringExperiences: facts.volunteeringExperiences.map((v) => ({
+      title: v.title,
+      organization: v.organization,
+      ongoing: v.ongoing,
+      evidenceStatus: v.evidence_status,
+    })),
+    workExperiences: facts.workExperiences.map((w) => ({
+      title: w.title,
+      organization: w.organization,
+      employmentType: w.employment_type,
+      ongoing: w.ongoing,
+      paid: w.paid,
+      evidenceStatus: w.evidence_status,
+    })),
     goals: facts.goals.map((g) => ({ title: g.title, category: g.category })),
     interests: readOr("interests", interestsRes, [], { userId }).map((i) => i.label),
     sports: readOr("sports", sportsRes, [], { userId }).map((s) => ({
@@ -472,7 +579,13 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
   // — curriculumLabel() already existed and was already used elsewhere (lib/requirements/
   // evaluate.ts), just never wired in here.
   const curriculumText = context.student.curriculum ? curriculumLabel(context.student.curriculum, locale) : "unknown curriculum";
-  lines.push(`Student: ${context.student.displayName}, graduating ${context.student.graduationYear ?? "unknown"}, ${curriculumText}, ${context.student.country ?? "unknown country"}.`);
+  // schoolName: fetched into context since the assembler's first version, never rendered — no
+  // reasoning comment anywhere explaining the omission (contrast birthYear/citizenshipCountries
+  // below, which both have one), so treated as an oversight and closed here rather than left
+  // as a silent, undocumented gap. Folded into the existing student line rather than a
+  // separate one — it's a fact about the same sentence, not a new category.
+  const schoolText = context.student.schoolName ? ` at ${context.student.schoolName}` : "";
+  lines.push(`Student: ${context.student.displayName}, graduating ${context.student.graduationYear ?? "unknown"}, ${curriculumText}${schoolText}, ${context.student.country ?? "unknown country"}.`);
   /**
    * CEO finding, 2026-09-02: graduationYear was already in the line above, but nothing told
    * the model it's the thing to calibrate ambition and pacing against — the spec's own
@@ -552,12 +665,62 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
     return "";
   };
   const tag = (ongoing: boolean, evidenceStatus: EvidenceStatus) => `${ongoing ? " [ongoing]" : ""}${evidenceTag(evidenceStatus)}`;
+  /**
+   * Education/courses/test scores: the raw evidence behind the Academics and Intellectual
+   * Curiosity dimension states just above, placed directly after them so the model can connect
+   * "Academics: strong" to *why* rather than only ever quoting the state. See the interface
+   * comment on `educationRecords` for the zero-marginal-fetch-cost provenance.
+   */
+  lines.push(
+    `Education (${context.educationRecords.length}): ${
+      context.educationRecords
+        .map((e) => `${e.schoolName}${e.overallGpa != null ? ` (GPA ${e.overallGpa}${e.gpaScale != null ? `/${e.gpaScale}` : ""})` : ""}`)
+        .join("; ") || "none"
+    }`
+  );
+  lines.push(
+    `Courses (${context.courses.length}): ${
+      context.courses
+        .map((c) => `${c.courseName} [${courseLevelLabel(c.level, locale)}]${c.gradeValue ? `: ${c.gradeValue}${c.gradeScale ? `/${c.gradeScale}` : ""}` : ""}`)
+        .join("; ") || "none"
+    }`
+  );
+  lines.push(
+    `Test scores (${context.testScores.length}): ${
+      context.testScores
+        .map((t) => {
+          const subscoreEntries = Object.entries(t.subscores);
+          const subscoreText = subscoreEntries.length > 0 ? ` (${subscoreEntries.map(([k, v]) => `${k.replace(/_/g, " ")}: ${v}`).join(", ")})` : "";
+          return `${t.testName}: ${t.score}${t.maxScore ? `/${t.maxScore}` : ""}${subscoreText}`;
+        })
+        .join("; ") || "none"
+    }`
+  );
   lines.push(
     `Activities (${context.activities.length}): ${context.activities.map((a) => `${a.title}${a.isLeadership ? " [leadership]" : ""}${tag(a.ongoing, a.evidenceStatus)}`).join("; ") || "none"}`
   );
   lines.push(`Projects (${context.projects.length}): ${context.projects.map((p) => `${p.title}${tag(p.ongoing, p.evidenceStatus)}`).join("; ") || "none"}`);
   lines.push(`Research (${context.research.length}): ${context.research.map((r) => `${r.title}${tag(r.ongoing, r.evidenceStatus)}`).join("; ") || "none"}`);
   lines.push(`Awards (${context.awards.length}): ${context.awards.map((a) => `${a.title}${evidenceTag(a.evidenceStatus)}`).join("; ") || "none"}`);
+  lines.push(
+    `Certifications (${context.certifications.length}): ${
+      context.certifications.map((c) => `${c.title}${c.organization ? ` — ${c.organization}` : ""}${evidenceTag(c.evidenceStatus)}`).join("; ") || "none"
+    }`
+  );
+  lines.push(
+    `Volunteering (${context.volunteeringExperiences.length}): ${
+      context.volunteeringExperiences
+        .map((v) => `${v.title}${v.organization ? ` — ${v.organization}` : ""}${tag(v.ongoing, v.evidenceStatus)}`)
+        .join("; ") || "none"
+    }`
+  );
+  lines.push(
+    `Work experience (${context.workExperiences.length}): ${
+      context.workExperiences
+        .map((w) => `${w.title} — ${w.organization} [${employmentTypeLabel(w.employmentType, locale)}]${w.paid ? " [paid]" : ""}${tag(w.ongoing, w.evidenceStatus)}`)
+        .join("; ") || "none"
+    }`
+  );
   if (context.sports.length > 0) {
     const committedHours = context.sports.filter((s) => s.ongoing).reduce((sum, s) => sum + (s.hoursPerWeek ?? 0), 0);
     lines.push(
@@ -567,7 +730,16 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
           .join("; ")
     );
   }
-  lines.push(`Goals: ${context.goals.map((g) => g.title).join("; ") || "none set"}`);
+  // category is free text (career_goals.category is `string | null`, not a closed DB enum, so no
+  // label accessor applies — same reasoning as testScores' subscore keys above) and was fetched,
+  // typed, and dropped here until this build; folded onto the same line as title rather than a
+  // separate one since a goal without its category is still a complete, useful line on its own.
+  lines.push(`Goals: ${context.goals.map((g) => `${g.title}${g.category ? ` [${g.category}]` : ""}`).join("; ") || "none set"}`);
+  // Fetched since the assembler's first version, never rendered anywhere (verified: weekly-plan.ts
+  // uses this same formatter, and research-generator.ts's own interests param is a caller-supplied
+  // argument, not context.interests) — a student who set these during onboarding was never once
+  // reminded the advisor already has them, on either hot path.
+  lines.push(`Interests: ${context.interests.join(", ") || "none set"}`);
   /**
    * `outlook` is a persisted enum (`extreme_reach`, `not_applicable`, …) and the badge that
    * renders it says "Extreme Reach". Handed the raw value, the model writes the raw value:
