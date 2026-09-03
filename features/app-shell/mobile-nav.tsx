@@ -71,7 +71,12 @@ export function MobileNav({
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/90 px-4 py-3 backdrop-blur-sm lg:hidden">
+      {/* Zemin yok, sadece blur: `bg-background/90` düz beyaz bir bant çiziyordu ve
+          şeffaf logo o bandın üstünde durunca founder onu "logonun arka planı" olarak
+          gördü (2026-09-03, "niye hala logoda arka plan var"). Logo gerçekten şeffaf --
+          köşeleri (0,0,0,0) -- kutuyu çizen bu bardı. backdrop-blur kalıyor, yoksa
+          altından kayan içerik okunmaz hale gelir. */}
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/10 px-4 py-3 backdrop-blur-md lg:hidden">
         <Link href="/dashboard" aria-label={t("homeLink")}>
           <Image src="/brand/logo-full.png" alt="Proxola" width={126} height={40} className="h-10 w-auto" />
         </Link>
