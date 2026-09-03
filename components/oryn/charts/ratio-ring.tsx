@@ -1,4 +1,5 @@
 import { ChartA11y } from "./chart-a11y";
+import { round2 } from "./scale";
 import type { ChartA11yProps } from "./types";
 
 const SIZE = 120;
@@ -45,12 +46,11 @@ export function RatioRing({
   const filled = Math.min(ratio, 1) * CIRCUMFERENCE;
   const color = overCapacity ? "var(--destructive)" : "var(--admin-accent-bright)";
   const centerText = known ? (formatValue ? formatValue(value, max) : `${Math.round(ratio * 100)}%`) : "—";
-  // Rounded rather than interpolated raw -- burn-chart.tsx's identical `${value}` fallback
-  // was found producing float-precision noise (0.13630000000000003) during 2026-09-03's
-  // Turkish pass. No real caller hits this fallback today (every current RatioRing use
-  // passes its own a11y.description), but the trap is in the component, not the caller, so
-  // it's fixed here rather than left for whichever future caller finds it first.
-  const round2 = (n: number) => Math.round(n * 100) / 100;
+  // round2 (scale.ts) rather than interpolating raw -- burn-chart.tsx's identical `${value}`
+  // fallback was found producing float-precision noise (0.13630000000000003) during
+  // 2026-09-03's Turkish pass. No real caller hits this fallback today (every current
+  // RatioRing use passes its own a11y.description), but the trap is in the component, not
+  // the caller, so it's fixed here rather than left for whichever future caller finds it.
   const description = a11y.description ?? (known ? `${label}: ${round2(value)} of ${round2(max)}${overCapacity ? ", over capacity" : ""}` : `${label}: not measured`);
 
   return (

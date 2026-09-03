@@ -1,5 +1,5 @@
 import { ChartA11y } from "./chart-a11y";
-import { linearScale, yDomain, niceTicks, seriesColor } from "./scale";
+import { linearScale, yDomain, niceTicks, seriesColor, round2 } from "./scale";
 import type { ChartA11yProps, ChartSeries, ChartSizeProps } from "./types";
 
 const VB_WIDTH = 480;
@@ -65,5 +65,5 @@ export function BarChart({ series, a11y, ...size }: { series: ChartSeries; a11y:
 }
 
 function describeBars(series: ChartSeries): string {
-  return series.data.map((p) => `${p.x}: ${p.y === null ? "no data" : p.y}`).join(", ");
+  return series.data.map((p) => `${p.x}: ${p.y === null ? "no data" : round2(p.y)}`).join(", ");
 }

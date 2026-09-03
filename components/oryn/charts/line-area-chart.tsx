@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { ChartA11y } from "./chart-a11y";
-import { linearScale, yDomain, buildLineSegments, buildAreaSegments, niceTicks, seriesColor } from "./scale";
+import { linearScale, yDomain, buildLineSegments, buildAreaSegments, niceTicks, seriesColor, round2 } from "./scale";
 import type { ChartA11yProps, ChartSeries, ChartSizeProps } from "./types";
 
 const VB_WIDTH = 480;
@@ -111,9 +111,9 @@ function describeSeries(series: ChartSeries[]): string {
       const known = s.data.filter((p) => p.y !== null);
       const missing = s.data.length - known.length;
       if (known.length === 0) return `${s.label}: no data`;
-      const last = known[known.length - 1].y;
+      const last = known[known.length - 1].y!;
       const gapNote = missing > 0 ? `, ${missing} point${missing === 1 ? "" : "s"} missing` : "";
-      return `${s.label}: latest value ${last}${gapNote}`;
+      return `${s.label}: latest value ${round2(last)}${gapNote}`;
     })
     .join(". ");
 }
