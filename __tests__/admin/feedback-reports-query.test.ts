@@ -8,6 +8,12 @@ import { describe, expect, test, vi } from "vitest";
  * report rows' own user_id) is a best-effort join -- a report whose author later deleted
  * their account has user_id: null (migration 0113's own on delete set null) and must still
  * render, not throw.
+ *
+ * getFeedbackReportCount (added 2026-09-03, for the Overview screen's "Karar bekleyen"
+ * panel) is a count-only sibling, same table, same null-means-unmeasured contract --
+ * covered in its own describe block below rather than a separate file, since it's testing
+ * the same module's same underlying not-measured/measured-zero distinction for the same
+ * table.
  */
 
 type FeedbackRow = { id: string; user_id: string | null; message: string; path: string; locale: string; plan_tier: string; created_at: string };
@@ -105,5 +111,60 @@ describe("getFeedbackReports — table live", () => {
 
     const result = await getFeedbackReports(admin);
     expect(result?.[0]?.displayName).toBeNull();
+  });
+});
+
+function makeCountAdmin(result: { count: number | null; error: { code?: string; message: string } | null }) {
+  const selectMock = vi.fn((_col: string, _opts?: Record<string, unknown>) => Promise.resolve(result));
+  return {
+    admin: {
+      from: (table: string) => {
+        if (table !== "feedback_reports") throw new Error(`feedback-reports-query.test.ts: unexpected table "${table}"`);
+        return { select: selectMock };
+      },
+    } as never,
+    selectMock,
+  };
+}
+
+describe("getFeedbackReportCount", () => {
+  test("a PGRST205 (table not applied yet) returns null, not 0 -- 'unmeasured' must never read as a confirmed zero", async () => {
+    const { getFeedbackReportCount } = await import("@/lib/admin/queries");
+    const { admin } = makeCountAdmin({ count: null, error: { code: "PGRST205", message: "Could not find the table 'public.feedback_reports' in the schema cache" } });
+
+    expect(await getFeedbackReportCount(admin)).toBeNull();
+  });
+
+  test("an unrecognized error also returns null and is logged, not silently swallowed", async () => {
+    const { getFeedbackReportCount } = await import("@/lib/admin/queries");
+    const { admin } = makeCountAdmin({ count: null, error: { code: "PGRST301", message: "JWT expired" } });
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    expect(await getFeedbackReportCount(admin)).toBeNull();
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    errorSpy.mockRestore();
+  });
+
+  test("a genuine zero (table live, no rows) returns 0, distinguishable from the null/unmeasured case above", async () => {
+    const { getFeedbackReportCount } = await import("@/lib/admin/queries");
+    const { admin } = makeCountAdmin({ count: 0, error: null });
+
+    expect(await getFeedbackReportCount(admin)).toBe(0);
+  });
+
+  test("a real count passes through unchanged", async () => {
+    const { getFeedbackReportCount } = await import("@/lib/admin/queries");
+    const { admin } = makeCountAdmin({ count: 7, error: null });
+
+    expect(await getFeedbackReportCount(admin)).toBe(7);
+  });
+
+  test("does not use head:true -- a head request against a missing table can return a false-success 204 with no error, masking the real PGRST205", async () => {
+    const { getFeedbackReportCount } = await import("@/lib/admin/queries");
+    const { admin, selectMock } = makeCountAdmin({ count: 3, error: null });
+
+    await getFeedbackReportCount(admin);
+    const [, options] = selectMock.mock.calls[0];
+    expect(options?.head).not.toBe(true);
   });
 });

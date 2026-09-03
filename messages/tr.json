@@ -2063,6 +2063,8 @@
         "descriptionQualityCount": "{ready} hazır, {pending} henüz yok",
         "descriptionQualityUnknown": "Bilinmiyor — canlı kontrol başarısız oldu",
         "degradedStudents": "Bu ay yapay zekâ düşüş noktasına ulaşan öğrenciler",
+        "feedbackReports": "Öğrenci geri bildirimi",
+        "feedbackReportsUnknown": "Henüz kurulmadı",
         "count": "{count}",
         "countOfTotal": "{total} kişiden {count}",
         "nothingPending": "Şu anda senden bekleyen bir şey yok."
