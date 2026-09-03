@@ -32,7 +32,7 @@ export const OUTLOOK_LABELS: Record<OutlookLabel, string> = {
  * comment used to name as the reason "reach/competitive/likely" stayed English there).
  * Translated rather than kept as English loanwords: unlike "Early Decision"/"Regular
  * Decision" (the literal, fixed words printed on a real Common App form — see
- * applications.newDialog's own catalog comment), this is Oryn's own classification
+ * applications.newDialog's own catalog comment), this is Proxola's own classification
  * vocabulary, not text a student has to recognize on an external document. A Turkish
  * 14–18-year-old reading "Reach" with no Turkish around it has no more reason to
  * understand it than any other unglossed English adjective.
@@ -127,7 +127,7 @@ export type AdmissionSystemType = "holistic" | "credential_gate";
  * migration the price of a better sentence. All of these persist as `not_applicable`.
  */
 export type NotApplicableKind =
-  /** No non-academic evidence review, and a competitive academic cutoff exists that Oryn
+  /** No non-academic evidence review, and a competitive academic cutoff exists that Proxola
    * cannot see (Turkey/YKS, Ireland/CAO, Spain, Australia, German NC subjects). */
   | "no_evidence_review_rank_competitive"
   /** No non-academic evidence review, and no ranking to clear once the published threshold
@@ -153,7 +153,7 @@ export interface AdmissionOutlookInputs {
   /**
    * Gate 1, resolved — `resolveAdmissionSystem()` from `./system-shape`. Takes precedence
    * over `admissionSystemType`. A `"holistic_review"` or `"unknown"` shape leaves every
-   * output identical to omitting this field entirely: Oryn changes what it says only where
+   * output identical to omitting this field entirely: Proxola changes what it says only where
    * it has established that the reach/competitive/likely scale does not describe the target.
    */
   admissionSystem?: AdmissionSystemResolution;
@@ -203,7 +203,7 @@ export interface AdmissionOutlookResult {
 
 const NOT_APPLICABLE_REASONS: Record<NotApplicableKind, string> = {
   no_evidence_review_rank_competitive:
-    "This target admits on academic results alone, in rank order against a cutoff that moves every year with demand. Oryn's reach/competitive/likely scale describes how a profile reads to a human reviewer, and there is no reviewer here — so it would be describing a step that doesn't exist. Oryn also can't show you where this cycle's cutoff will land, and won't guess.",
+    "This target admits on academic results alone, in rank order against a cutoff that moves every year with demand. Proxola's reach/competitive/likely scale describes how a profile reads to a human reviewer, and there is no reviewer here — so it would be describing a step that doesn't exist. Proxola also can't show you where this cycle's cutoff will land, and won't guess.",
   no_evidence_review_threshold:
     "This target admits by meeting published requirements rather than by competing: once you're eligible, you're in. There's no reviewer reading your activities and no ranking to place highly in, so a reach/competitive/likely rating would be describing a mechanism this system doesn't have. What matters here is the requirement check, not a profile score.",
   field_not_offered_at_undergraduate:
@@ -225,11 +225,11 @@ const NOT_APPLICABLE_REASONS: Record<NotApplicableKind, string> = {
  * "there is no reviewer here — so it would be describing a step that doesn't exist" survives
  * as "burada bir değerlendirici yok — yani var olmayan bir adımı anlatmış olurdu" (would be
  * describing a step that doesn't exist); "and won't guess" survives as "tahmin yürütmez"
- * (does not guess) — neither softens into a claim Oryn doesn't have grounds for.
+ * (does not guess) — neither softens into a claim Proxola doesn't have grounds for.
  */
 const NOT_APPLICABLE_REASONS_TR: Record<NotApplicableKind, string> = {
   no_evidence_review_rank_competitive:
-    "Bu hedef yalnızca akademik sonuçlara göre, her yıl talebe göre değişen bir sıralama eşiğine göre kabul yapıyor. Oryn'ın Zorlu/Rekabetçi/Olası ölçeği bir profilin insan bir değerlendirici gözünde nasıl okunduğunu anlatır; burada bir değerlendirici yok — yani var olmayan bir adımı anlatmış olurdu. Oryn ayrıca bu dönemin eşiğinin nereye geleceğini gösteremez ve tahmin yürütmez.",
+    "Bu hedef yalnızca akademik sonuçlara göre, her yıl talebe göre değişen bir sıralama eşiğine göre kabul yapıyor. Proxola'nın Zorlu/Rekabetçi/Olası ölçeği bir profilin insan bir değerlendirici gözünde nasıl okunduğunu anlatır; burada bir değerlendirici yok — yani var olmayan bir adımı anlatmış olurdu. Proxola ayrıca bu dönemin eşiğinin nereye geleceğini gösteremez ve tahmin yürütmez.",
   no_evidence_review_threshold:
     "Bu hedef, yarışarak değil yayımlanmış koşulları karşılayarak kabul ediyor: uygun olduğun an kabul edilmiş olursun. Aktivitelerini okuyan bir değerlendirici yok, yüksek sıralanacağın bir sıralama da yok — bu yüzden bir Zorlu/Rekabetçi/Olası derecelendirmesi bu sistemde bulunmayan bir mekanizmayı anlatmış olurdu. Burada önemli olan gereklilik kontrolüdür, profil puanı değil.",
   field_not_offered_at_undergraduate: "Bu, bu ülkede bir lisans yolu değil; bu yüzden değerlendirilecek bir lisans kabulü de yok.",
@@ -243,7 +243,7 @@ function notApplicableReasonFor(kind: NotApplicableKind, locale: Locale): string
 
 /** Maps Gate 1's shape onto the suppression decision. `holistic_review` and `unknown` both
  * mean "keep the existing classification": the first because the scale genuinely describes
- * the target, the second because Oryn has established nothing and must not act on a guess. */
+ * the target, the second because Proxola has established nothing and must not act on a guess. */
 function notApplicableKindForShape(shape: AdmissionSystemShape): NotApplicableKind | null {
   if (shape === "academic_rank_competitive") return "no_evidence_review_rank_competitive";
   if (shape === "academic_threshold") return "no_evidence_review_threshold";

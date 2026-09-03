@@ -40,7 +40,7 @@ import type {
  * discrete, addressable thing (it only surfaces per-requirement reasoning text inline):
  *   - `missingEvidence` — the subset of requirement evaluations whose status is "unknown"
  *     specifically because a fact is missing from the student's own profile (never rules
- *     Oryn simply doesn't evaluate — see the exclusions below).
+ *     Proxola simply doesn't evaluate — see the exclusions below).
  *   - `recommendedActions` — those same items (plus a couple of other deterministic,
  *     state-derived cases) reframed as a short, deduplicated action list. Every entry's text
  *     is either `evaluateRequirement`'s own reasoning, verbatim, or static factual copy about
@@ -176,7 +176,7 @@ export interface CounselingProgramSummary {
 export interface ProgramFocus {
   /** Where the target major came from, in priority order: an explicit program the student
    * already targeted at this university beats an inferred match from a stated interest,
-   * which beats "the student hasn't told Oryn what they want to study here." */
+   * which beats "the student hasn't told Proxola what they want to study here." */
   interestSource: "target_program" | "stated_interest" | "none";
   /** The interest label that produced (or was tried for) a match — null when
    * `interestSource` is "target_program" (no inference involved) or "none". */
@@ -210,7 +210,7 @@ export interface AdmissionOutlookSummary {
   strengths: string[];
   gaps: string[];
   unknowns: string[];
-  /** True when Oryn had no evidenced dimension to draw strengths/gaps from at all (every
+  /** True when Proxola had no evidenced dimension to draw strengths/gaps from at all (every
    * dimension "low" confidence) — see `OutlookExplanation.insufficientData` in
    * lib/admissions/explain.ts. The UI must render this as "we don't know enough yet," not as
    * "no strengths/gaps found." */
@@ -227,7 +227,7 @@ export interface AdmissionOutlookSummary {
   notApplicableReason: string | null;
   notApplicableKind: NotApplicableKind | null;
   /** Gate 1's resolved shape and its sourced one-sentence mechanism description, for a
-   * "how this university actually admits" line. Null when Oryn has not established it —
+   * "how this university actually admits" line. Null when Proxola has not established it —
    * which is a state the UI should show as unknown, never as "holistic". */
   admissionSystemShape: AdmissionSystemShape | null;
   admissionSystemMechanism: string | null;
@@ -418,7 +418,7 @@ export function deriveTuitionContext(tuition: CounselingTuitionInput, locale: Lo
  * The student's intended field at this university, split by how strongly they said it.
  *
  * The distinction is load-bearing, not fussiness. `stated` means they picked a specific
- * programme here; `inferred` means Oryn matched a free-text interest label. Only `stated`
+ * programme here; `inferred` means Proxola matched a free-text interest label. Only `stated`
  * is allowed to change the outlook — suppressing a genuinely holistic US undergraduate
  * application because the student once typed "Medicine" into their interests would replace
  * one wrong answer with another. The inferred case still gets told the structural fact
@@ -536,8 +536,8 @@ export function buildUniversityCounselingView(input: UniversityCounselingViewInp
     requirementCounts[item.status] += 1;
   }
 
-  // "Missing evidence" = Oryn could evaluate this if the student's own profile had the fact —
-  // excludes informational rows (nothing to evidence) and MANUAL_REVIEW_CATEGORIES (Oryn
+  // "Missing evidence" = Proxola could evaluate this if the student's own profile had the fact —
+  // excludes informational rows (nothing to evidence) and MANUAL_REVIEW_CATEGORIES (Proxola
   // never evaluates those regardless of what's on file; see recommendedActions below instead).
   const missingEvidence: MissingEvidenceItem[] = rollup
     .filter((item) => item.status === "unknown" && !INFORMATIONAL_CATEGORIES.includes(item.category) && !MANUAL_REVIEW_CATEGORIES.includes(item.category))
@@ -555,7 +555,7 @@ export function buildUniversityCounselingView(input: UniversityCounselingViewInp
   if (!input.target) {
     recommendedActions.push({
       label: `Add ${input.universityName} as a target university`,
-      detail: "Oryn only computes an admission outlook and requirement check once you've added a university to My Universities.",
+      detail: "Proxola only computes an admission outlook and requirement check once you've added a university to My Universities.",
       requirementId: null,
     });
   }
@@ -602,14 +602,14 @@ export function buildUniversityCounselingView(input: UniversityCounselingViewInp
     recommendedActions.push({
       label:
         programFocus.interestSource === "target_program"
-          ? "Oryn can't currently verify the specific program you're targeting here is still offered — check the university's own page directly."
-          : `Oryn hasn't verified a program at ${input.universityName} matching "${programFocus.matchedSubjectLabel}" yet — check the university's own catalog directly.`,
+          ? "Proxola can't currently verify the specific program you're targeting here is still offered — check the university's own page directly."
+          : `Proxola hasn't verified a program at ${input.universityName} matching "${programFocus.matchedSubjectLabel}" yet — check the university's own catalog directly.`,
       detail: "Program catalog",
       requirementId: null,
     });
   } else if (programFocus.totalVerifiedProgramCount === 0) {
     recommendedActions.push({
-      label: `Oryn hasn't verified any programs at ${input.universityName} yet.`,
+      label: `Proxola hasn't verified any programs at ${input.universityName} yet.`,
       detail: "Program catalog",
       requirementId: null,
     });

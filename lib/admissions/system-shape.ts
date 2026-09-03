@@ -49,7 +49,7 @@ import type { ProgramSubjectTaxonomy } from "@/types/database";
  * fourth state for "we have not established this."
  *
  * The split between the two non-holistic shapes is not cosmetic — it changes what a student
- * should be told. `academic_rank_competitive` means "there is a real bar and Oryn cannot see
+ * should be told. `academic_rank_competitive` means "there is a real bar and Proxola cannot see
  * where it sits this cycle"; `academic_threshold` means "there is no bar to clear beyond the
  * published requirements." Telling a Dutch open-programme applicant the first thing, or a
  * YKS candidate the second, are both wrong in opposite directions.
@@ -60,7 +60,7 @@ export type AdmissionSystemShape =
    * this. USA unconditionally; UK, Singapore and several others narrowly. */
   | "holistic_review"
   /** Non-academic evidence has no channel into the decision, AND a genuinely competitive
-   * academic ranking/cutoff exists that Oryn cannot observe (it moves every cycle with
+   * academic ranking/cutoff exists that Proxola cannot observe (it moves every cycle with
    * demand). Turkey/YKS, Ireland/CAO, Spain's nota de admisión, Australia's ATAR,
    * Germany's NC subjects, Italy's numero chiuso. */
   | "academic_rank_competitive"
@@ -70,12 +70,12 @@ export type AdmissionSystemShape =
    * Germany's non-NC programmes, Switzerland's general route. */
   | "academic_threshold"
   /** Not established for this target: no researched entry for the country, or a country
-   * whose pathways genuinely disagree with each other and Oryn lacks the fact that decides
+   * whose pathways genuinely disagree with each other and Proxola lacks the fact that decides
    * which one applies. Never silently treated as any of the three above. */
   | "unknown";
 
 /** True when the reach/competitive/likely scale describes the mechanism; false when it does
- * not; null when Oryn has not established the mechanism at all. Never collapse null into
+ * not; null when Proxola has not established the mechanism at all. Never collapse null into
  * false — "we don't know whether your activities are read here" and "your activities are
  * definitely not read here" are different statements to a student. */
 export function reviewsNonAcademicEvidence(shape: AdmissionSystemShape): boolean | null {
@@ -95,7 +95,7 @@ export function reviewsNonAcademicEvidence(shape: AdmissionSystemShape): boolean
  * pathway; a foreign national schooled in Türkiye is not), Ireland's CAO eligibility follows
  * fee status (a residence-history test), and France's DAP route is defined over residents of
  * the ~72 Études en France countries. Keying any of these off citizenship would produce the
- * wrong answer for exactly the students ORYN exists to serve.
+ * wrong answer for exactly the students PROXOLA exists to serve.
  */
 export type ApplicantPathway = "domestic" | "international" | "unknown";
 
@@ -108,7 +108,7 @@ export type PathwayBasis =
    * signal per the rules cited on `ApplicantPathway`, but still a stated field, not a
    * verified fee-status or diploma determination. */
   | "residence"
-  /** The country has a split and Oryn has no residence on file. */
+  /** The country has a split and Proxola has no residence on file. */
   | "undetermined";
 
 /** Which layer of the (country, pathway, institution, field, subdivision) key produced the
@@ -171,7 +171,7 @@ interface FieldOverride {
 }
 
 interface InstitutionOverride {
-  /** All name forms Oryn might hold for this institution. Matched on
+  /** All name forms Proxola might hold for this institution. Matched on
    * `normalizeEntitySearchText` equality — deliberately exact-after-normalization, not fuzzy:
    * a near-miss here would silently apply one university's admissions mechanism to another. */
   names: string[];
@@ -244,7 +244,7 @@ const DOC = (name: string) => `docs/research/admissions-systems/${name}`;
 const SPEC_18 = "docs/research/counseling-intelligence/18-geography-conditional-scoring-design-spec.md";
 
 /** EU/EFTA plus the UK — the population Ireland's CAO route covers. Fee status is actually a
- * residence-history test (broadly three of the last five years in the EEA), which Oryn has no
+ * residence-history test (broadly three of the last five years in the EEA), which Proxola has no
  * way to evaluate; membership is the closest factual proxy and is recorded as such rather
  * than presented as a determination. Used by exactly one entry. */
 const IRELAND_CAO_FEE_STATUS_COUNTRIES = [
@@ -257,7 +257,7 @@ const IRELAND_CAO_FEE_STATUS_COUNTRIES = [
 
 /**
  * The 15 countries `docs/research/admissions-systems/` covers. A country absent from this
- * list resolves to `shape: "unknown"`, which changes nothing about the outlook Oryn already
+ * list resolves to `shape: "unknown"`, which changes nothing about the outlook Proxola already
  * produced — the alternative (assuming an unresearched country works like one of the three
  * shapes) is exactly the guess this whole module exists to stop.
  */
@@ -307,7 +307,7 @@ const REGISTRY: AdmissionSystemEntry[] = [
         "ÖSYM's YKS placement algorithm is the admission decision itself: exam scores plus your school grade average produce one number, and places are filled in strict rank order against each programme's quota. There is no application file at any point — no essay, no interview, no recommendation letter, no activity record — so non-academic evidence has no channel into the result at all.",
       // "school grade average" is Turkey's own official OBP (Okul Başarı Puanı) — named
       // explicitly rather than left generic, since a real YKS candidate reading this would
-      // recognize the term immediately and a vaguer phrase would read as if Oryn didn't
+      // recognize the term immediately and a vaguer phrase would read as if Proxola didn't
       // actually know the mechanism it's describing.
       mechanismTr:
         "ÖSYM'nin YKS yerleştirme algoritması kabul kararının kendisidir: sınav puanların ile okul başarı puanın (OBP) tek bir sayı üretir ve yerleşmeler her programın kontenjanına göre kesin sıralama sırasıyla yapılır. Hiçbir aşamada bir başvuru dosyası yoktur — ne kompozisyon, ne mülakat, ne referans mektubu, ne de aktivite kaydı — bu yüzden akademik olmayan hiçbir kanıt sonuca hiçbir şekilde etki etmez.",
@@ -686,7 +686,7 @@ const REGISTRY: AdmissionSystemEntry[] = [
     domestic: {
       shape: "unknown",
       mechanism:
-        "Denmark runs two structurally opposite tracks in parallel through Optagelse.dk, and eligible applicants choose between them: Kvote 1 admits purely on grade point average (EU/IB/EB qualifications only) in strict rank order; Kvote 2 is genuinely holistic — a motivational essay, relevant experience, and often an interview, open to everyone. Oryn cannot tell which track a specific student is pursuing, so neither shape can be claimed as the general answer.",
+        "Denmark runs two structurally opposite tracks in parallel through Optagelse.dk, and eligible applicants choose between them: Kvote 1 admits purely on grade point average (EU/IB/EB qualifications only) in strict rank order; Kvote 2 is genuinely holistic — a motivational essay, relevant experience, and often an interview, open to everyone. Proxola cannot tell which track a specific student is pursuing, so neither shape can be claimed as the general answer.",
     },
     international: {
       shape: "holistic_review",
@@ -883,7 +883,7 @@ const REGISTRY: AdmissionSystemEntry[] = [
     sources: [DOC("lithuania.md")],
   },
   {
-    // Scoped to the Republic of Cyprus (EU) specifically -- ORYN's database already carries
+    // Scoped to the Republic of Cyprus (EU) specifically -- PROXOLA's database already carries
     // "Northern Cyprus" as a genuinely separate country value for TRNC institutions, which
     // this entry does not represent. See docs/research/admissions-systems/cyprus.md.
     countryNames: ["Cyprus"],
@@ -912,7 +912,7 @@ const REGISTRY: AdmissionSystemEntry[] = [
     // names below. See docs/research/admissions-systems/finland.md and
     // subdivision-key-proposal.md for why a flat country entry couldn't represent this.
     countryNames: ["Finland", "Suomi"],
-    // The university (yliopisto) sector -- 9 of ORYN's current Finnish institutions, by name.
+    // The university (yliopisto) sector -- 9 of PROXOLA's current Finnish institutions, by name.
     domestic: {
       shape: "unknown",
       mechanism:
@@ -981,7 +981,7 @@ export interface AdmissionSystemQuery {
   targetCountry: string | null;
   /** `profiles.country` — residence/school location, never citizenship. See
    * `ApplicantPathway` for why that is the correct field and not an approximation of a
-   * better one Oryn is missing. */
+   * better one Proxola is missing. */
   studentCountry: string | null;
   /** `universities.name`, for the institution-override layer. */
   targetUniversityName?: string | null;
@@ -1149,7 +1149,7 @@ export function resolveAdmissionSystem(query: AdmissionSystemQuery, locale: Loca
   }
 
   if (pathway === "unknown") {
-    // The country genuinely runs two architectures and Oryn cannot tell which one applies.
+    // The country genuinely runs two architectures and Proxola cannot tell which one applies.
     // Both are described rather than one being picked — picking would be a coin flip
     // presented as a finding, and for Ireland and Hong Kong the two sides land on opposite
     // Gate-1 answers.
