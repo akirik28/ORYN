@@ -63,9 +63,17 @@ Sonuncu ikisi gece bitiminde geldi: yeni kayıtları kapatma, bakım modu ve den
 ayarları. **Üçü de güvenli varsayılanla geliyor** — kayıt açık, bakım kapalı, deneme 7 gün.
 Uyguladığın an hiçbir şey kapanmıyor.
 
-**Bu adım olmadan panelin yazma tarafı çalışmaz.** Ultra yapma, hediye etme, iş durdurma,
-bütçe ayarlama — hepsi bu migration'lara bağlı. Panel bunları dürüstçe "kurulu değil"
-diye gösterecek, ama iş görmeyecek.
+**Bu adım olmadan panelin yazma tarafının çoğu çalışmaz.** Hediye etme, iş durdurma, bütçe
+ayarlama, kur ve fiyat kaydetme — hepsi bu migration'lara bağlı.
+
+Ama ölü düğme görmeyeceksin. Tarayıcıda tek tek kontrol ettim: her biri hangi migration'ı
+beklediğini adıyla söylüyor, örneğin *"Henüz kurulmadı — hediye verebilmek için 0106
+(profiles.ultra_gift_expires_at) migration'ının uygulanması gerekiyor."* On bir hediye
+düğmesinin on biri de gerçekten pasif, sadece soluk görünmüyor.
+
+**Bir şey ise şu an, hiçbir şey uygulamadan çalışıyor:** katman değiştirme (Ultra yap /
+Standart yap). O sütun veritabanında zaten var. Yani panele girer girmez kendi hesabını
+Ultra'ya alıp öğrencinin ne gördüğünü görebilirsin.
 
 ## 3. Bekleyen veriyi doldur
 
