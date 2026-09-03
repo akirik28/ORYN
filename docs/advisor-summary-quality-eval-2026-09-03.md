@@ -266,3 +266,99 @@ by calling the provider directly rather than through `summarizeTranscript`, to i
 fixes' effect) are real spend but not `ai_usage`-logged, since that path deliberately bypasses
 `summarizeTranscript`'s usage-logging wrapper — noted here for the same reason the original
 spend figure was stated plainly. Zero real student data touched, as before.
+
+## Addendum 2 — 2026-09-03, all ten at 3 reads each, and a candidate fix (tested, not shipped)
+
+Two of ten fixtures were now known-unstable, both found by repetition, not by reading once.
+Dispatch: nobody knew whether the other eight were stable or single draws — re-run all ten,
+3 reads each, under the shipped prompt; report per-fixture stability, not an average; if the
+same "flatten nuance into a cleaner claim" shape shows up elsewhere, name it as systematic;
+test a countering instruction if one seems plausible, but only after measuring.
+
+**30 real Haiku 4.5 calls, reference date 2026-09-03 for every fixture. Per-fixture result,
+judged against the specific property that matters for that fixture, not text similarity:**
+
+- **Stable, 3/3, no concerns:** #3 (date math: "September 9, 2026" all three times), #4
+  (stays open — "before deciding where to go deeper," never invents a decision), #10 (all
+  three dollar figures exact every time).
+- **Stable, 3/3, with a confident-but-technically-unstated addition:** #2 ("rejected... in
+  March" becomes "March 2026" every time) and #6 ("up 3 points from last month" becomes
+  "August 2026" every time). Both are defensible — an actual relative-time phrase anchors the
+  computation ("last month," a bare recent month name) — and both are consistent, not random.
+  Flagged, not worrying.
+- **#5 (parental-pressure exclusion):** the functional exclusion (no medicine suggestions) is
+  3/3 stable. The *emotional* context behind it is not: dropped in 1 of these 3 reads,
+  combined with the original pass's data that's 2-dropped-of-5-total. A real, moderate,
+  roughly-40%-of-the-time instability on a softer dimension — not the functional guarantee,
+  the human context around it.
+- **#9 (the internally-inconsistent fixture):** the January-15 computation itself is 3/3
+  stable ("January 15, 2027" every time). But *how the "6 weeks out" phrase gets handled* is
+  not: 2 of 3 reads silently dropped it (no second date, no visible contradiction — but also
+  a completeness loss, that detail is just gone); 1 of 3 surfaced it as a second, disagreeing
+  computed window, matching Addendum 1's finding. Three reads, two different behaviors — the
+  model has no single consistent way of handling a source that contradicts itself.
+- **#7 (Turkish) — the rate revises down with more data, but the risk is still real.**
+  Language-match: 6/6 across every read run so far (this batch's 3, plus the 3 already run
+  for Addendum 1) — fully reliable. Uncertainty-preservation: this batch was 3/3 correct
+  (*"henüz kesinleşmemiş"* kept intact each time). Combined with Addendum 1's 1-flattened
+  read, that's **5 correct out of 6 total new-prompt reads (~83%)** — a real, non-zero risk,
+  but less severe than the 1-in-3 the smaller sample first suggested. More reads changed the
+  number; they did not change the conclusion that it's a live risk, not a hypothetical.
+- **#8 (disagreement) — the worst of the ten, and now on a much larger sample.** This batch:
+  1 of 3 asserted "they agreed" (false resolution); the other 2 avoided asserting resolution
+  at all, closer to the doc's original good framing. Folded into every read run on this
+  fixture across both addenda (1 original + 3 old-prompt + 3 new-prompt-Addendum-1 + 3
+  new-prompt-this-batch = **10 total reads: 7 assert false resolution, 3 correctly leave it
+  open — a ~70% failure rate**, holding steady across both prompt versions.
+- **#1 (avoid-for-now-exclusion) — a new, more serious finding this pass, not previously
+  known.** The exclusion and the *stated* time constraint (4-5 hrs/week) are rock solid, 3/3.
+  But **2 of 3 reads invented a specific date for "track season starting" — an event the
+  transcript gives no date or relative-time phrase for at all.** Read 2: "around early
+  September 2026." Read 3: "on 2026-09-03" — the exact reference date, glued onto an event
+  that was never dated. This is not nuance loss, it's invention: a fact not in the
+  conversation, stated as though it were. Directly against the system prompt's own "never
+  invent... an inaccurate summary is worse than a short one" rule, and arguably worse than
+  the other findings because it adds false information rather than losing true nuance.
+
+**oryn-45's hypothesis is confirmed, and it's broader than agreement-flattening specifically.**
+The model consistently prefers a complete, resolved, specific claim over an accurately hedged,
+open, or undated one — the same underlying pull shows up as false certainty about a stated
+preference (#7, ~17% of reads), false resolution of interpersonal disagreement (#8, ~70%),
+false precision about an undated event (#1, ~67% this batch), and dropped emotional context in
+favor of the clean functional fact (#5, ~40%). #4 is the clean counter-example: plain
+"haven't decided yet" with no interpersonal tension and no date to fabricate stays open
+100% of the time — the pull seems specific to conversations with either an unresolved
+person-to-person tension or a fillable-looking date gap, not universal.
+
+**Candidate instruction, tested — not shipped.** One additional system-prompt paragraph,
+tested by calling the provider directly (not through `summarizeTranscript`, so nothing shipped
+changed): *"Do not resolve what the conversation left open... if the student did not
+explicitly agree, do not write 'they agreed'... keep stated uncertainty in the summary...
+only attach a date to something the conversation actually timed."* Re-ran fixtures #1, #7, #8
+— the three with a characterized problem — 3 reads each (9 more calls) under this candidate:
+
+- **#1 (date fabrication): 3/3 clean — zero invented dates**, both reads describing "track
+  season starting" with no date attached at all. Full elimination in this sample, versus 2/3
+  bad at baseline.
+- **#7 (Turkish uncertainty): 3/3 clean**, consistent with the baseline's already-good ~83%
+  rate — doesn't show a clear additional lift (the baseline was already mostly correct) but
+  doesn't hurt either.
+- **#8 (disagreement): 2/3 avoided false resolution**, versus 3/10 (30%) at baseline — a real
+  improvement in a small sample, but **not a complete fix**: one of the three still wrote
+  "Both agreed the goal is..." So the candidate instruction helps, meaningfully, on the
+  fixture that needed it most — but does not make it reliable.
+
+**This is a recommendation, not a ship.** 3 reads per fixture per condition is enough to see a
+real, directionally clear effect on #1 and #8, not enough to certify a rate. The candidate
+instruction was tested in isolation and never written into `lib/advisor/retention.ts` — that's
+a real prompt change with real downstream effects (on cost, on the other 7 fixtures, on
+whatever else a fourth paragraph might perturb, the same way the first two fixes perturbed
+fixture 8 without touching it), and shipping it without oryn-45/the founder's sign-off would be
+exactly the self-escalation this chain has avoided throughout. The instruction text above is
+ready to drop in if the call is to ship it.
+
+**Total real spend this addendum: 39 more Haiku 4.5 calls (~$0.06)** — the 30-call stability
+sweep goes through `summarizeTranscript` (real `ai_usage` rows); the 9-call candidate-
+instruction test calls the provider directly, same as Addendum 1's old-prompt comparison, and
+is real spend but not `ai_usage`-logged, for the same reason. Zero real student data touched.
+No arming verdict.
