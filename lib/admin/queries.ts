@@ -2415,3 +2415,30 @@ export async function getFeedbackReports(admin: SupabaseClient<Database>): Promi
     createdAt: row.created_at,
   }));
 }
+
+/**
+ * A count-only sibling to getFeedbackReports, for the Overview screen's "Karar bekleyen"
+ * panel -- that panel wants a number, not 200 full rows plus a second profiles join, so this
+ * is a genuinely different, minimal query rather than a second copy of the same read. Same
+ * table, same isUndefinedTableError-gated degrade contract: `null` means "couldn't be
+ * measured" (migration 0113 unapplied, or a real transient failure), a number (including 0)
+ * means "measured, this is the real count" -- the same distinction getFeedbackReports already
+ * draws for its own return type, so the Overview panel can tell "unknown" from "confirmed
+ * zero" instead of a bare 0 standing in for both.
+ *
+ * Deliberately NOT `head: true` -- a HEAD request against a genuinely missing table can
+ * return a false-success 204 with no error, masking the real PGRST205 (confirmed live
+ * elsewhere this session; see isFeedbackReportsTableLive's own comment above). A plain
+ * `{ count: "exact" }` select still returns real data and a real error, so it can't be
+ * fooled the same way.
+ */
+export async function getFeedbackReportCount(admin: SupabaseClient<Database>): Promise<number | null> {
+  const { count, error } = await admin.from("feedback_reports").select("id", { count: "exact" });
+  if (error) {
+    if (!isUndefinedTableError(error, "feedback_reports")) {
+      console.error("[admin] unexpected error counting feedback_reports", error);
+    }
+    return null;
+  }
+  return count ?? 0;
+}

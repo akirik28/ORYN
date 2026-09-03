@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/oryn/page-header";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getReports, summarizeReportsBacklog, getContaminationCleanupPreview, getDescriptionQualityLiveSignal, getDegradeStanding, getSpendSummary, getAdminUserList, getFinanceSettings, getPageViewStats } from "@/lib/admin/queries";
+import { getReports, summarizeReportsBacklog, getContaminationCleanupPreview, getDescriptionQualityLiveSignal, getDegradeStanding, getSpendSummary, getAdminUserList, getFinanceSettings, getPageViewStats, getFeedbackReportCount } from "@/lib/admin/queries";
 import { resolveLocale } from "@/lib/i18n/locale";
 
 /**
@@ -50,7 +50,7 @@ export default async function ControlOverviewPage() {
   const [t, locale] = await Promise.all([getTranslations("admin.control"), resolveLocale()]);
   const admin = createAdminClient();
 
-  const [reports, cleanupPreview, degradeStanding, spend, users, financeSettings, pageViews] = await Promise.all([
+  const [reports, cleanupPreview, degradeStanding, spend, users, financeSettings, pageViews, feedbackReportCount] = await Promise.all([
     getReports(admin, locale),
     getContaminationCleanupPreview(admin),
     getDegradeStanding(admin),
@@ -58,6 +58,7 @@ export default async function ControlOverviewPage() {
     getAdminUserList(admin),
     getFinanceSettings(admin),
     getPageViewStats(admin),
+    getFeedbackReportCount(admin),
   ]);
   // Depends on cleanupPreview's own result (reuses its guard computation, see that function's
   // comment) -- can't join the Promise.all above, one extra light round trip after it resolves.
@@ -90,6 +91,19 @@ export default async function ControlOverviewPage() {
       label: t("attention.degradedStudents"),
       detail: t("attention.countOfTotal", { count: degradeStanding.studentsEverDegraded, total: degradeStanding.totalStudentsWithUsage }),
     });
+  }
+  // The founder asked for a feedback channel specifically so he'd hear from students -- a
+  // report that only surfaces on the Moderation screen he visits looking for moderation work
+  // is effectively unread. Same degrade-honestly shape as descriptionQuality above: `null`
+  // means migration 0113 isn't applied yet (or a real read failure), and that state gets its
+  // own row rather than silently reading as "zero reports," which is exactly the false-
+  // confidence shape this fleet has spent tonight finding and fixing elsewhere. A confirmed
+  // zero gets no row at all, matching how the other two attention items already treat a real
+  // zero -- "nothing pending" is what the section's own empty state already says honestly.
+  if (feedbackReportCount === null) {
+    attentionItems.push({ href: "/kumanda/moderasyon", label: t("attention.feedbackReports"), detail: t("attention.feedbackReportsUnknown") });
+  } else if (feedbackReportCount > 0) {
+    attentionItems.push({ href: "/kumanda/moderasyon", label: t("attention.feedbackReports"), detail: t("attention.count", { count: feedbackReportCount }) });
   }
 
   return (

@@ -2063,6 +2063,8 @@
         "descriptionQualityCount": "{ready} ready to fix, {pending} not yet",
         "descriptionQualityUnknown": "Unknown — live check failed",
         "degradedStudents": "Students who hit the AI degrade point this month",
+        "feedbackReports": "Student feedback",
+        "feedbackReportsUnknown": "Not set up yet",
         "count": "{count}",
         "countOfTotal": "{count} of {total}",
         "nothingPending": "Nothing is currently waiting on you."
