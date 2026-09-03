@@ -182,3 +182,24 @@ world" — see `lib/jobs/verify-cron-request.ts`).
 Every run is logged to the `external_sync_jobs` table (`lib/jobs/run-with-tracking.ts`),
 and every provider call updates `provider_health` (`lib/providers/health.ts`) —
 regardless of admin UI, you can query these tables directly to see what's healthy.
+
+## Page-view tracking (optional, logged-out visitors only)
+
+Answers "how many people have looked at the app" for the public landing page — the app
+behind auth is students, already counted via `profiles`. No third-party analytics, no IP
+or user agent stored, no cookie: `lib/analytics/page-views.ts` hashes the request's IP and
+user agent together with the current UTC date and discards both raw values immediately, so
+the same visitor produces a different, unlinkable hash every day. See migration 0107's own
+comment for the full reasoning.
+
+**Environment variable:** `PAGE_VIEW_HASH_SECRET` — generate with `openssl rand -hex 32`.
+Without it set, recording is skipped (not hashed with a predictable secret) — same visible
+effect as the migration not being applied yet, below.
+
+**Migration 0107 is proposed, not yet applied** to the live database as of 2026-09-03 — a
+deliberate founder decision point (see `docs/founder-morning-runbook-2026-09-02.md`), not
+an oversight. Until it's applied, `getPageViewStats` (`lib/admin/queries.ts`) returns `null`
+and the admin traffic screen shows its honest "not measured" state rather than a zero — the
+landing page's own recording call degrades the same way, silently, and never affects the
+page it's counting (scheduled via `next/server`'s `after()`, so a slow or failed insert runs
+after the response is already sent).

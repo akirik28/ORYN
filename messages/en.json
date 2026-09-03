@@ -1975,6 +1975,7 @@
         "priceHint": "Current Ultra price",
         "rateNotConfigured": "Rate not configured",
         "noPageviewTracking": "No pageview tracking yet",
+        "pageViewsLast30d": "Page views, last 30 days",
         "registeredStudents": "Registered students",
         "spendLast30d": "AI spend, last 30 days"
       },
@@ -2081,8 +2082,11 @@
       "traffic": {
         "title": "Traffic",
         "description": "Signups, activation and product events are real and measured. Visitor count is not — the app has never been deployed and nothing counts a pageview.",
+        "descriptionMeasured": "Signups, activation, product events, and the landing page's visitor count are all real and measured.",
         "visitorsLabel": "Visitors",
-        "visitorsNotMeasured": "Not measured — no pageview tracking exists yet. This is not a zero."
+        "visitorsNotMeasured": "Not measured — no pageview tracking exists yet. This is not a zero.",
+        "visitorsTodayHint": "Distinct visitors today, by IP address — no cookies, nothing that identifies a return visit tomorrow.",
+        "pageViewsLast30d": "{count} page views, last 30 days"
       }
     },
     "growth": {

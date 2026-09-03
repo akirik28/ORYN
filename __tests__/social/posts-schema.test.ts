@@ -417,7 +417,15 @@ describe("migration numbering", () => {
     // Storing the already-computed expiry instead keeps resolvePlanTier exactly as simple
     // and synchronous as it already was, and makes a length change affect only future
     // grants -- see that migration's own header for the full reasoning.
-    expect(Math.max(...numbers.map(Number))).toBe(106);
+    //
+    // 0107 (page_views) -- anonymous logged-out visitor counting, oryn-a7's assignment
+    // 2026-09-03 answering the founder's own "how many people have looked at the app" ask.
+    // Proposed, not yet applied: a schema decision oryn-a7 explicitly asked to be told about
+    // rather than have land silently, since the table (and the ask itself) didn't exist
+    // anywhere in the repo, any branch, or the live database before this -- confirmed all
+    // three before writing this migration, not assumed. See the migration's own header for
+    // why visitor_hash can never be an IP, a user agent, or a persistent identifier.
+    expect(Math.max(...numbers.map(Number))).toBe(107);
   });
 });
 

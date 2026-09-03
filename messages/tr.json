@@ -1975,6 +1975,7 @@
         "priceHint": "Güncel Ultra fiyatı",
         "rateNotConfigured": "Kur girilmedi",
         "noPageviewTracking": "Henüz sayfa görüntüleme takibi yok",
+        "pageViewsLast30d": "Son 30 gün sayfa görüntülemesi",
         "registeredStudents": "Kayıtlı öğrenci",
         "spendLast30d": "Son 30 gün yapay zekâ harcaması"
       },
@@ -2081,8 +2082,11 @@
       "traffic": {
         "title": "Trafik",
         "description": "Kayıtlar, aktivasyon ve ürün olayları gerçek ve ölçülüyor. Ziyaretçi sayısı değil — uygulama hiç yayına alınmadı ve hiçbir şey bir sayfa görüntülemesini saymıyor.",
+        "descriptionMeasured": "Kayıtlar, aktivasyon, ürün olayları ve giriş sayfasının ziyaretçi sayısı — hepsi gerçek ve ölçülüyor.",
         "visitorsLabel": "Ziyaretçi",
-        "visitorsNotMeasured": "Ölçülmüyor — henüz sayfa görüntüleme takibi yok. Bu bir sıfır değil."
+        "visitorsNotMeasured": "Ölçülmüyor — henüz sayfa görüntüleme takibi yok. Bu bir sıfır değil.",
+        "visitorsTodayHint": "Bugün, IP adresine göre tekil ziyaretçi — çerez kullanılmıyor, yarın aynı kişiyi tanıyacak hiçbir şey yok.",
+        "pageViewsLast30d": "Son 30 günde {count} sayfa görüntülemesi"
       }
     },
     "growth": {
