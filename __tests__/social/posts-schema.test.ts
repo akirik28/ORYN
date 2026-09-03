@@ -481,7 +481,7 @@ describe("migration numbering", () => {
     // item 5 lists retention as an open policy question. This migration is preparation for
     // that decision, not an implementation of it.
     //
-    // 0113 (email_digest) -- digest_email_enabled/last_digest_sent_at on profiles, for the
+    // 0114 (email_digest) -- digest_email_enabled/last_digest_sent_at on profiles, for the
     // periodic email digest (founder, 2026-09-03: "dönemden döneme kullanıcılara mail
     // gitmeli... bunlara karar ver uygula" -- decide and implement). Same posture as 0112
     // immediately above: purely additive, no backfill, and the job that would actually read
@@ -489,7 +489,7 @@ describe("migration numbering", () => {
     // sending infrastructure exists anywhere in this codebase, and İYS (Law 6563) requires
     // its own registered consent for a commercial message, separate from what this
     // migration's own two columns exist to gate. See docs/digest-email-design-2026-09-03.md.
-    expect(Math.max(...numbers.map(Number))).toBe(113);
+    expect(Math.max(...numbers.map(Number))).toBe(114);
   });
 });
 

@@ -232,10 +232,10 @@ export interface Profile {
   upgrade_prompt_not_now_at: string | null;
   upgrade_prompt_not_now_count: number;
   upgrade_prompt_dismissed_forever: boolean;
-  /** Migration 0113 -- the periodic email digest's opt-out. Defaults true. Has no live effect
+  /** Migration 0114 -- the periodic email digest's opt-out. Defaults true. Has no live effect
    * today: see lib/digest/run.ts's own header for why nothing calls it with dryRun:false. */
   digest_email_enabled: boolean;
-  /** Migration 0113 -- when this student's last digest actually sent, never on a dry run.
+  /** Migration 0114 -- when this student's last digest actually sent, never on a dry run.
    * Null on every real account today. Drives lib/digest/build.ts's "new since last time"
    * window for opportunity matches. */
   last_digest_sent_at: string | null;

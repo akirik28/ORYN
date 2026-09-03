@@ -67,7 +67,7 @@ state — this is the reasoning for when that decision gets made, not a value ba
 
 ## What's built
 
-- `profiles.digest_email_enabled` / `profiles.last_digest_sent_at` (migration 0113) — the
+- `profiles.digest_email_enabled` / `profiles.last_digest_sent_at` (migration 0114) — the
   opt-out preference and the "since when" marker, both real, both inert until armed.
 - `lib/digest/build.ts` — `buildDigestContent(userId)`: assembles upcoming deadlines
   (reusing `getUpcomingDeadlines`, the same source the dashboard and advisor context already
