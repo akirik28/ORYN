@@ -6,7 +6,7 @@ uygulanmaz, veritabanı olduğu gibi kalır.
 
 ## Ne var içinde
 
-Bugün **yazılan ama uygulanmayan** 7 migrasyon, kendi sıralarıyla:
+Bugün **yazılan ama uygulanmayan** 8 migrasyon, kendi sıralarıyla:
 
 | # | Ne yapar | Uygulanmazsa ne olur |
 |---|---|---|
@@ -16,14 +16,13 @@ Bugün **yazılan ama uygulanmayan** 7 migrasyon, kendi sıralarıyla:
 | 0110 | `advisor_generation_locks` tablosu | "Aynı anda tek ajan" kuralı uygulanamaz — Ultra'nın satılan özelliklerinden biri |
 | 0111 | `profiles.advisor_instructions` | Özelleşme'nin 1. parçası: kalıcı talimat kutusu kaydedemez |
 | 0112 | `advisor_conversations.summary` + geçmiş tablosu | 24 saatlik sohbet özetleme/silme işi çalışamaz |
+| 0113 | `feedback_reports` tablosu | Geri bildirim formu çalışmaz — öğrenci "şu anda kullanılamıyor" görür (sessizce kaybolmaz, orası doğru çalışıyor) |
 | 0114 | `profiles.digest_email_enabled`, `last_digest_sent_at` | Periyodik e-posta özeti kime gideceğini bilemez |
-
-**0113 kasıtlı olarak yok.** Geri bildirim/şikayet formu için ayrıldı, henüz yazılıyor.
 
 ## Neyi doğruladım, neyi doğrulamadım
 
-**Doğruladım:** dosyanın oluşturacağı **13 nesnenin hiçbiri şu anda veritabanında yok**
-(3 tablo, 9 kolon, 1 enum tipi) — yani "zaten var" hatası çıkmaz. Dokunacağı 4 ana tablo
+**Doğruladım:** dosyanın oluşturacağı **14 nesnenin hiçbiri şu anda veritabanında yok**
+(4 tablo, 9 kolon, 1 enum tipi — `feedback_reports` dahil, akşam ayrıca kontrol edildi) — yani "zaten var" hatası çıkmaz. Dokunacağı 4 ana tablo
 (`universities`, `profiles`, `education_records`, `advisor_conversations`) **var** — yani
 "tablo yok" hatası da çıkmaz. Dosyada iç içe `begin/commit` kaçağı yok, sadece en dıştaki ikisi.
 
