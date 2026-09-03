@@ -181,3 +181,88 @@ one throwaway script that generated the ten summaries above was not committed.
 extraction. 10 real Haiku 4.5 calls (~$0.02 total, real `ai_usage` rows), zero database reads
 or writes involving `advisor_conversations`/`advisor_messages` — fixtures only, no real
 student data anywhere in this pass.
+
+## Addendum — 2026-09-03, the two fixes, plus a correction
+
+oryn-45 asked for two fixes to the findings above (both prompt-level), a re-run of all ten —
+not just the two that motivated the fixes — and an explicit note on the third finding.
+
+**Fix 1 — language match.** `SUMMARY_SYSTEM_PROMPT` now instructs: write the summary in the
+conversation's own language. **Fix 2 — absolute dates.** `summarizeTranscript(transcript,
+referenceDate)` takes a required `referenceDate` (no default — an optional one would let a
+careless caller silently reintroduce the bug), stamped onto the prompt as
+`<conversation date="YYYY-MM-DD">`; the system prompt instructs converting relative references
+against that date, or describing them plainly if a specific date can't be computed with
+confidence. In production, `referenceDate` is the conversation's own last message's
+`created_at` — the day something like "in 6 days" was actually said — not the moment the
+retention job happens to run. Pure prompt/signature change; schema, model, and budget gating
+untouched.
+
+**All ten re-run against the fixed prompt**, `referenceDate` = 2026-09-03 for every fixture
+(these are synthetic, no real timestamp — "today" is as defensible a stand-in as any invented
+date). Results:
+
+**Date fix: confirmed working, cleanly.** Fixture 3's "the deadline is in 6 days" became "the
+deadline of September 9, 2026" — the correct date, six days after the reference date. Fixture
+9's bare "January 15th" resolved to "January 15, 2027" (the next real occurrence from a
+September 2026 vantage point) — a case this fix wasn't explicitly built for but handles
+correctly by the same mechanism.
+
+**Language fix: confirmed working, but surfaces a second-order risk.** The Turkish fixture
+came back in Turkish across all 3 reads run (language-matching is reliable). But **1 of those
+3 reads flattened a stated uncertainty into false certainty**: the transcript's *"henüz kesin
+değil ama muhtemelen İngiltere ya da Hollanda"* ("not certain yet, but probably UK or
+Netherlands") became *"...kesinlikle İngiltere veya Hollanda..."* ("...definitely UK or
+Netherlands...") — the exact "flatten uncertainty into resolution" failure mode rubric point 4
+exists to catch, now observed in the language this feature's primary market actually uses. The
+other 2 Turkish reads correctly kept *"henüz kesinleşmemiş"* ("not yet finalized"). 2-out-of-3
+correct is a real, quantified, unresolved risk, not a pass — worth knowing this is a live
+possibility before shipping non-English summaries, not just a hypothetical.
+
+**Fixture 9's own internal inconsistency, surfaced rather than hidden.** The fixture states
+both "January 15th" and, minutes later, "about 6 weeks out" — two claims that can't both be
+true from any single vantage point (they're roughly 3 months apart). The old, relative-only
+summary silently repeated both without anyone noticing. The new summary computes two
+absolute dates that visibly disagree ("January 15, 2027" vs. "by mid-October 2026") — an
+honest side effect of the fix: it can't resolve a transcript's own contradiction, but it does
+make the contradiction visible instead of laundering it through vague relative language. Not a
+fabrication (each individual conversion is locally correct), but flag it: a summary with two
+disagreeing dates reads like a summarizer bug even when the bug is upstream, in the transcript.
+
+**Correction to this document's own earlier claim about fixture 8 (the disagreement
+fixture).** The first pass called this "the best result in the set" for correctly preserving
+*"the advisor's position didn't move" ≠ "the student was convinced."* That was one read.
+Re-running it 3 more times under the NEW prompt, all 3 asserted an explicit resolution
+("they agreed...") the transcript doesn't actually contain — a real difference from the first
+read's framing, worth treating as a possible regression from the two fixes above. So the same
+fixture was run 3 more times under the ORIGINAL, unfixed prompt for a fair comparison: **all 3
+of those also asserted resolution.** Across 7 total reads (1 original + 3 old-prompt + 3
+new-prompt), 6 say the disagreement resolved and only the first-ever read said it didn't. **The
+two fixes did not cause this — the instability was already there, at a similarly high rate,
+under the original prompt too.** What changes is the headline claim: this fixture's
+disagreement-preservation is not reliable evidence the feature handles pushback well; the one
+good read this document led with was the atypical result, not the model's modal behavior. This
+is the single most important correction in this addendum — a claim this document itself made
+with insufficient sampling, caught only because oryn-45 asked for a full re-run rather than a
+targeted one.
+
+**Fixture 5 (parental-pressure exclusion) — the softer finding gets a second data point.** This
+run's parental-pressure context survived (unlike the first pass, where it was dropped). Two
+reads, one dropped it and one kept it — consistent with "a tradeoff the 2-4 sentence cap
+imposes, not a fixed defect," now shown to go either way rather than reliably failing.
+
+**What this changes for the founder's decision.** The two requested fixes both work on their
+own narrow terms and are worth keeping. But the deeper finding from actually re-running all
+ten is that disagreement-preservation — this document's own headline evidence for the feature
+— is unreliable at roughly the rate just measured (6/7), independent of either fix. That's a
+materially different picture than the one this document opened with, and it belongs in front
+of the founder before any decision, not just the two fixes that were asked for.
+
+**Nothing else changed.** No further schema or code change beyond the two fixes described
+above. No pattern shipped beyond the prompt edit. No arming verdict — same posture as
+everything else in this chain. Extra real spend this pass: 17 more Haiku 4.5 calls across the
+full re-run and the two stability checks (~$0.03), 3 of which (the old-prompt comparison, run
+by calling the provider directly rather than through `summarizeTranscript`, to isolate the
+fixes' effect) are real spend but not `ai_usage`-logged, since that path deliberately bypasses
+`summarizeTranscript`'s usage-logging wrapper — noted here for the same reason the original
+spend figure was stated plainly. Zero real student data touched, as before.

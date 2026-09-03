@@ -26,6 +26,7 @@ interface Message {
   conversation_id: string;
   role: "user" | "assistant";
   content: string;
+  created_at: string;
 }
 interface Profile {
   id: string;
@@ -161,8 +162,10 @@ function freshConversation(overrides: Partial<Conversation> = {}): Conversation 
 
 function fixtureMessages(conversationId: string): Message[] {
   return [
-    { id: "m-1", conversation_id: conversationId, role: "user", content: "I'm interested in economics research ideas." },
-    { id: "m-2", conversation_id: conversationId, role: "assistant", content: "Here are three project ideas grounded in OECD youth-unemployment data." },
+    // Deliberately different days on the two messages so a test can confirm the reference
+    // date passed to the summarizer is the LAST message's day (2026-08-10), not the first's.
+    { id: "m-1", conversation_id: conversationId, role: "user", content: "I'm interested in economics research ideas.", created_at: "2026-08-08T09:00:00.000Z" },
+    { id: "m-2", conversation_id: conversationId, role: "assistant", content: "Here are three project ideas grounded in OECD youth-unemployment data.", created_at: "2026-08-10T09:05:00.000Z" },
   ];
 }
 
@@ -216,6 +219,23 @@ describe("runRetentionPass with dryRun: true (the default)", () => {
     expect(updateMock).toHaveBeenCalled();
     expect(deleteMock).toHaveBeenCalledWith(convo.id);
     expect(insertAuditMock).toHaveBeenCalled();
+  });
+});
+
+describe("the summarizer prompt anchors relative dates and matches the conversation's language", () => {
+  test("the prompt carries the LAST message's day, not the first message's day or today's real date", async () => {
+    const convo = freshConversation();
+    conversationsRef.current = [convo];
+    messagesRef.current = fixtureMessages(convo.id); // first message 08-08, last message 08-10
+    providerRef.current!.queueStructured({ summary: "Discussed economics research ideas." });
+
+    const { runRetentionPass } = await import("@/lib/advisor/retention");
+    await runRetentionPass({ dryRun: true, candidateIds: [convo.id] });
+
+    const call = providerRef.current!.structuredCalls[0];
+    expect(call.prompt).toContain('date="2026-08-10"');
+    expect(call.system).toContain("absolute date");
+    expect(call.system).toContain("same language");
   });
 });
 
