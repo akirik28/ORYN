@@ -89,4 +89,11 @@ describe("setModelPricing", () => {
     expect(result.error).toBeDefined();
     expect(revalidatePath).not.toHaveBeenCalled();
   });
+
+  test("migration 0100 unapplied: a specific 'not set up' message, not the generic save failure", async () => {
+    upsertMock.mockResolvedValueOnce({ error: { code: "PGRST205", message: `Could not find the table 'public.ai_model_pricing' in the schema cache` } });
+    const result = await setModelPricing("claude-future-6", 3, 15);
+    expect(result.error).toContain("0100");
+    expect(result.error).not.toBe("Couldn't save that. Please try again.");
+  });
 });

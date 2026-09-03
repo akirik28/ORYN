@@ -2,6 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
+import { isUndefinedTableError } from "@/lib/supabase/errors";
 
 /**
  * The "disable future runs" half of the admin panel's job controls (migration 0095) — read
@@ -58,6 +59,9 @@ export async function setJobDisabled(
       { onConflict: "job_name" }
     );
   if (error) {
+    if (isUndefinedTableError(error, "job_controls")) {
+      return { error: "Job controls aren't set up in the database yet — migration 0095 needs to be applied first." };
+    }
     console.error("[job-controls] failed to update", { jobName, disabled, error: error.message });
     return { error: "Couldn't save that. Please try again." };
   }
