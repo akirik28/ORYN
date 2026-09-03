@@ -24,6 +24,17 @@ vi.mock("@/lib/supabase/server", () => ({ createClient: vi.fn(async () => ({})) 
 vi.mock("@/lib/scoring/persist", () => ({ recomputeCareerProfile }));
 vi.mock("@/lib/profile/cv-import", () => ({ insertCvImportItems, insertCvImportSkills, insertCvImportLanguages }));
 vi.mock("@/lib/analytics/log", () => ({ logEvent }));
+// A real translator (next-intl's own createTranslator, the same engine getTranslations
+// wraps for a request scope this test has none of) against the real English catalog --
+// not the identity-mock convention __tests__/admin/update-product-settings.test.ts uses,
+// because this file's own assertions below (added 2026-09-03) check real prose
+// ("saved 2 items", "2 skills skipped (15 max)", real category names), not which key was
+// selected. Real content is the more valuable thing to lock here.
+vi.mock("next-intl/server", async () => {
+  const { createTranslator } = await import("next-intl");
+  const en = (await import("@/messages/en.json")).default;
+  return { getTranslations: async (namespace?: string) => createTranslator({ locale: "en", messages: en, namespace: namespace as never }) };
+});
 
 import { importReviewedCvItems } from "@/app/(app)/profile/import/actions";
 import type { CvImportItem, CvImportSkillCandidate, CvImportLanguageCandidate } from "@/lib/profile/cv-import";
@@ -65,8 +76,10 @@ describe("importReviewedCvItems", () => {
     const result = await importReviewedCvItems([item, item, item]);
 
     expect(result.inserted).toBe(2);
-    expect(result.error).toContain("awards");
-    expect(result.error).toContain("projects");
+    // Real category labels (profile.page.sections.*.title), not the raw internal codes
+    // ("awards"/"projects") the pre-2026-09-03 version showed a student directly.
+    expect(result.error).toContain("Awards");
+    expect(result.error).toContain("Projects");
     // The count that did land is still reported — this is not an all-or-nothing failure.
     expect(result.error).toMatch(/saved 2 items/i);
   });

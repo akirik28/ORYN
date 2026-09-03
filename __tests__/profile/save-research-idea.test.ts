@@ -37,6 +37,11 @@ vi.mock("@/lib/supabase/server", () => ({
 vi.mock("@/lib/scoring/persist", () => ({ recomputeCareerProfile: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/lib/analytics/log", () => ({ logEvent: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+// crudCreate now resolves a real locale (2026-09-03, student-facing i18n audit) -- this
+// file is about insert-payload provenance, not locale, so a fixed "en" is enough;
+// resolveLocale's real implementation reaches next/headers' cookies(), which has no
+// request scope in a plain vitest run.
+vi.mock("@/lib/i18n/locale", () => ({ resolveLocale: vi.fn().mockResolvedValue("en") }));
 
 const { saveResearchIdea } = await import("@/app/(app)/profile/actions");
 

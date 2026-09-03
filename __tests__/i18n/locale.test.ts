@@ -253,6 +253,16 @@ describe("ICU plural counts that bypass formatNumber are deliberate", () => {
     // today), the same shape as the DIMENSION_ORDER-bounded entries above, not a row count
     // that grows with the user base.
     "admin.growth.featureCensus.unknownWarning",
+    // Skills skipped for the 15-cap in one CV import — bounded by CVExtractionSchema's own
+    // `skills.max(30)` (lib/ai/cv-extraction.ts), so the skip count in a single import can
+    // never exceed 30, nowhere near four digits. Added 2026-09-03, student-facing i18n audit.
+    "onboarding.import.skillsSkippedCap",
+    // Items saved in one CV import — bounded by CVExtractionSchema's own per-category max
+    // limits summed (education 10 + activities 20 + awards 20 + projects 15 + research 10 +
+    // workExperience 15 + skills 30 + languages 10 = 130 max), the same one-document,
+    // one-import ceiling as onboarding.import.foundItems just above, which already covers
+    // the identical count. Added 2026-09-03, student-facing i18n audit.
+    "onboarding.import.savedWithNotes",
   ];
 
   test("no un-reviewed `#` inside a plural block", () => {

@@ -167,7 +167,11 @@ describe("app/(app)/documents/actions.ts", () => {
 
   test("returns a clear error rather than throwing when the admin client is unavailable", () => {
     expect(src).toContain("if (!admin) {");
-    expect(src).toMatch(/return \{ error: ["'`]Evidence upload is temporarily unavailable/);
+    // 2026-09-03, student-facing i18n audit: the English text moved to the second branch
+    // of a `tr ? ... : "..."` ternary (still a `return { error: ... }`, never a throw) --
+    // matched here without pinning its exact position in the ternary, since that position
+    // is an i18n implementation detail, not the security property this test exists to guard.
+    expect(src).toMatch(/return \{ error: [^}]*Evidence upload is temporarily unavailable/);
   });
 });
 

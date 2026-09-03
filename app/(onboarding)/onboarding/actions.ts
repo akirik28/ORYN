@@ -39,15 +39,20 @@ export type CVUploadResult =
 export async function uploadAndExtractCV(formData: FormData): Promise<CVUploadResult> {
   const session = await requireUser();
   const file = formData.get("file");
+  // Resolved once, used for every branch below -- the first form most students
+  // ever submit (2026-09-03, student-facing i18n audit; see this file's own
+  // getTranslations calls in completeOnboarding for the sibling fix).
+  const locale = await resolveLocale();
+  const tr = locale === "tr";
 
   if (!(file instanceof File)) {
-    return { success: false, error: "No file was uploaded." };
+    return { success: false, error: tr ? "Bir dosya yüklenmedi." : "No file was uploaded." };
   }
   if (file.size > MAX_CV_SIZE_BYTES) {
-    return { success: false, error: "File is too large (10MB max)." };
+    return { success: false, error: tr ? "Dosya çok büyük (en fazla 10MB)." : "File is too large (10MB max)." };
   }
   if (!SUPPORTED_CV_MIME_TYPES.includes(file.type as (typeof SUPPORTED_CV_MIME_TYPES)[number])) {
-    return { success: false, error: "Upload a PDF, DOCX, or plain text file." };
+    return { success: false, error: tr ? "PDF, DOCX veya düz metin dosyası yükle." : "Upload a PDF, DOCX, or plain text file." };
   }
 
   const supabase = await createClient();
@@ -59,11 +64,15 @@ export async function uploadAndExtractCV(formData: FormData): Promise<CVUploadRe
     upsert: false,
   });
   if (uploadError) {
-    return { success: false, error: `Upload failed: ${uploadError.message}` };
+    // The prefix is app copy and gets translated; uploadError.message is Supabase
+    // Storage's own SDK text and stays English, same deliberate choice
+    // app/(auth)/actions.ts makes for supabase.auth's own error.message.
+    console.error("[onboarding] CV upload failed", { code: uploadError.name, message: uploadError.message });
+    return { success: false, error: `${tr ? "Yükleme başarısız" : "Upload failed"}: ${uploadError.message}` };
   }
 
   try {
-    await assertWithinAIRateLimit(session.userId!, "cv_extraction", { maxCalls: 5, windowMinutes: 60 }, await resolveLocale());
+    await assertWithinAIRateLimit(session.userId!, "cv_extraction", { maxCalls: 5, windowMinutes: 60 }, locale);
     // 2026-09-03, closing the Ultra tier-economics boundary. This runs mid-onboarding, before
     // onboarding_completed is true -- but the profile row already exists (created at signup,
     // before onboarding starts), so a real tier is genuinely resolvable here, not just
@@ -71,7 +80,7 @@ export async function uploadAndExtractCV(formData: FormData): Promise<CVUploadRe
     // comment on this exact point.
     const profile = await getCurrentProfile();
     const tier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
-    const extraction = await extractCVData({ userId: session.userId!, mimeType: file.type, buffer, tier });
+    const extraction = await extractCVData({ userId: session.userId!, mimeType: file.type, buffer, tier, locale });
     await logEvent(session.userId!, "cv_imported", {
       itemCount:
         extraction.education.length +
@@ -89,7 +98,13 @@ export async function uploadAndExtractCV(formData: FormData): Promise<CVUploadRe
       return { success: false, error: error.message };
     }
     if (error instanceof AIProviderNotConfiguredError) {
-      return { success: false, error: "AI CV import isn't configured yet. Try entering your profile manually." };
+      // A missing ANTHROPIC_API_KEY is a deployment fact, not something a student did or
+      // can act on -- the message they see says nothing about AI or configuration (found
+      // naming both during 2026-09-03's student-facing i18n audit; that's a developer
+      // detail, not student copy, same category as a raw Zod message). Wasn't logged
+      // before this pass either.
+      console.error("[onboarding] CV extraction unavailable: AI provider not configured");
+      return { success: false, error: tr ? "Bu özellik şu anda kullanılamıyor. Bilgilerini elle de ekleyebilirsin." : "This feature isn't available right now. You can still add your information manually." };
     }
     if (error instanceof UnsupportedCVFileTypeError) {
       return { success: false, error: error.message };
@@ -109,7 +124,12 @@ export async function uploadAndExtractCV(formData: FormData): Promise<CVUploadRe
       return { success: false, error: error.message };
     }
     console.error("[onboarding] CV extraction failed", error);
-    return { success: false, error: "We couldn't fully read this document. You can retry or add the information manually." };
+    return {
+      success: false,
+      error: tr
+        ? "Bu belgeyi tam olarak okuyamadık. Tekrar deneyebilir veya bilgilerini elle ekleyebilirsin."
+        : "We couldn't fully read this document. You can retry or add the information manually.",
+    };
   }
 }
 

@@ -14,12 +14,26 @@ import {
   type CvImportLanguageCandidate,
 } from "@/lib/profile/cv-import";
 import { logEvent } from "@/lib/analytics/log";
+import { getTranslations } from "next-intl/server";
 
 // No re-export of `uploadAndExtractCV` here, deliberately. A "use server" module may only
 // export async functions — a re-export (or a type export) makes Turbopack reject the file
 // and it ends up with *no* exports at all, which typecheck happily accepts and the
 // production build does not. The client imports the upload action straight from the
 // onboarding module instead; it is the same server action either way.
+
+// Same six translation keys features/profile/cv-import-flow.tsx's own CATEGORY_LABEL_KEYS
+// resolves against the "profile" namespace -- not imported from there since that constant
+// lives in a "use client" file, but the keys themselves (profile.page.sections.*.title)
+// are the real, already-translated category names, not a second copy of English text.
+const CATEGORY_TITLE_KEYS = {
+  education: "page.sections.education.title",
+  activities: "page.sections.activities.title",
+  awards: "page.sections.awards.title",
+  projects: "page.sections.projects.title",
+  research: "page.sections.research.title",
+  workExperience: "page.sections.workExperience.title",
+} as const satisfies Record<CvImportCategory, string>;
 
 /**
  * Save reviewed CV items into the profile, after onboarding.
@@ -42,9 +56,11 @@ export async function importReviewedCvItems(
 ): Promise<{ inserted?: number; error?: string }> {
   const session = await requireUser();
   const userId = session.userId!;
+  const t = await getTranslations("onboarding.import");
+  const tProfile = await getTranslations("profile");
 
   if (items.length === 0 && skills.length === 0 && languages.length === 0) {
-    return { error: "Nothing was selected to import." };
+    return { error: t("nothingSelected") };
   }
 
   const supabase = await createClient();
@@ -63,7 +79,7 @@ export async function importReviewedCvItems(
   const inserted = achievementsInserted + skillsInserted + languagesInserted;
 
   if (inserted === 0) {
-    return { error: "We couldn't save anything from that CV. Please try again." };
+    return { error: t("savedNothing") };
   }
 
   // The profile changed, so the scores derived from it are stale. Best-effort: a scoring
@@ -84,15 +100,18 @@ export async function importReviewedCvItems(
   // something already on the profile), and the student should be told which parts didn't
   // land rather than have them silently vanish.
   const notes: string[] = [];
-  if (failedCategories.length > 0) notes.push(`${failedCategories.join(", ")} couldn't be saved`);
-  if (skillsSkippedCap > 0) notes.push(`${skillsSkippedCap} skill${skillsSkippedCap === 1 ? "" : "s"} skipped (15 max)`);
+  if (failedCategories.length > 0) {
+    const categories = failedCategories.map((c) => tProfile(CATEGORY_TITLE_KEYS[c])).join(", ");
+    notes.push(t("categoriesFailed", { categories }));
+  }
+  if (skillsSkippedCap > 0) notes.push(t("skillsSkippedCap", { count: skillsSkippedCap }));
   const skippedDuplicate = skillsSkippedDuplicate + languagesSkippedDuplicate;
-  if (skippedDuplicate > 0) notes.push(`${skippedDuplicate} already on your profile`);
+  if (skippedDuplicate > 0) notes.push(t("alreadyOnProfile", { count: skippedDuplicate }));
 
   if (notes.length > 0) {
     return {
       inserted,
-      error: `Saved ${inserted} item${inserted === 1 ? "" : "s"}, but ${notes.join("; ")}. You can add those manually.`,
+      error: t("savedWithNotes", { count: inserted, notes: notes.join("; ") }),
     };
   }
 

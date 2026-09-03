@@ -775,7 +775,13 @@
       "languagesSectionTitle": "Languages",
       "cvSaid": "Your CV said: {level}",
       "proficiencyPlaceholder": "Set proficiency",
-      "startOver": "Start over"
+      "startOver": "Start over",
+      "nothingSelected": "Nothing was selected to import.",
+      "savedNothing": "We couldn't save anything from that CV. Please try again.",
+      "categoriesFailed": "{categories} couldn't be saved",
+      "skillsSkippedCap": "{count, plural, one {# skill} other {# skills}} skipped (15 max)",
+      "alreadyOnProfile": "{count} already on your profile",
+      "savedWithNotes": "Saved {count, plural, one {# item} other {# items}}, but {notes}. You can add those manually."
     }
   },
   "universities": {

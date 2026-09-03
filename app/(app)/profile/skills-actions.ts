@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { recomputeCareerProfile } from "@/lib/scoring/persist";
 import { toFriendlyDbErrorMessage } from "@/lib/errors/friendly-db-error";
-import { SkillSchema, type SkillFormInput } from "@/lib/validation/achievements";
+import { SkillSchema, translateAchievementValidationError, type SkillFormInput } from "@/lib/validation/achievements";
 import { canAddAnotherSkill, isDuplicateSkillName } from "@/lib/social/skills";
 import { resolveLocale } from "@/lib/i18n/locale";
 
@@ -31,20 +31,23 @@ async function afterSkillsWrite(userId: string) {
  */
 export async function createSkill(input: SkillFormInput): Promise<ActionResult> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const parsed = SkillSchema.safeParse(input);
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  if (!parsed.success) return { error: translateAchievementValidationError(parsed.error.issues[0]?.message, locale) ?? (locale === "tr" ? "Geçersiz giriş." : "Invalid input.") };
 
   const supabase = await createClient();
   const { data: existing } = await supabase.from("skills").select("name").eq("user_id", session.userId!);
   const existingNames = (existing ?? []).map((s) => s.name);
 
-  if (!canAddAnotherSkill(existingNames.length)) return { error: "You can have up to 15 skills. Remove one before adding another." };
-  if (isDuplicateSkillName(existingNames, parsed.data.name)) return { error: "You already have that skill." };
+  if (!canAddAnotherSkill(existingNames.length)) {
+    return { error: locale === "tr" ? "En fazla 15 beceri ekleyebilirsin. Yeni bir tane eklemeden önce birini kaldır." : "You can have up to 15 skills. Remove one before adding another." };
+  }
+  if (isDuplicateSkillName(existingNames, parsed.data.name)) return { error: locale === "tr" ? "Bu beceriyi zaten eklemişsin." : "You already have that skill." };
 
   const { error } = await supabase.from("skills").insert({ ...parsed.data, user_id: session.userId! });
   if (error) {
     console.error("[profile] createSkill failed", { code: error.code, message: error.message });
-    return { error: toFriendlyDbErrorMessage("save", await resolveLocale()) };
+    return { error: toFriendlyDbErrorMessage("save", locale) };
   }
 
   await afterSkillsWrite(session.userId!);
@@ -53,18 +56,19 @@ export async function createSkill(input: SkillFormInput): Promise<ActionResult> 
 
 export async function updateSkill(id: string, input: SkillFormInput): Promise<ActionResult> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const parsed = SkillSchema.safeParse(input);
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  if (!parsed.success) return { error: translateAchievementValidationError(parsed.error.issues[0]?.message, locale) ?? (locale === "tr" ? "Geçersiz giriş." : "Invalid input.") };
 
   const supabase = await createClient();
   const { data: existing } = await supabase.from("skills").select("id, name").eq("user_id", session.userId!);
   const otherNames = (existing ?? []).filter((s) => s.id !== id).map((s) => s.name);
-  if (isDuplicateSkillName(otherNames, parsed.data.name)) return { error: "You already have that skill." };
+  if (isDuplicateSkillName(otherNames, parsed.data.name)) return { error: locale === "tr" ? "Bu beceriyi zaten eklemişsin." : "You already have that skill." };
 
   const { error } = await supabase.from("skills").update(parsed.data).eq("id", id).eq("user_id", session.userId!);
   if (error) {
     console.error("[profile] updateSkill failed", { code: error.code, message: error.message });
-    return { error: toFriendlyDbErrorMessage("save", await resolveLocale()) };
+    return { error: toFriendlyDbErrorMessage("save", locale) };
   }
 
   await afterSkillsWrite(session.userId!);

@@ -15,6 +15,11 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/security/dal", () => ({ requireUser: vi.fn() }));
 vi.mock("@/lib/scoring/persist", () => ({ recomputeCareerProfile: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("@/lib/analytics/log", () => ({ logEvent: vi.fn().mockResolvedValue(undefined) }));
+// crudCreate/crudUpdate now resolve a real locale (2026-09-03, student-facing i18n audit) --
+// this file's own tests are about the curriculum_other_text payload shape, not locale, so a
+// fixed "en" is enough; resolveLocale's real implementation reaches next/headers' cookies(),
+// which has no request scope in a plain vitest run.
+vi.mock("@/lib/i18n/locale", () => ({ resolveLocale: vi.fn().mockResolvedValue("en") }));
 
 const { curriculumOtherTextLiveMock, insertMock, updateSelectMock } = vi.hoisted(() => ({
   curriculumOtherTextLiveMock: vi.fn(),

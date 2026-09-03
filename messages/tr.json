@@ -775,7 +775,13 @@
       "languagesSectionTitle": "Diller",
       "cvSaid": "CV'inde: {level}",
       "proficiencyPlaceholder": "Düzey seç",
-      "startOver": "Baştan başla"
+      "startOver": "Baştan başla",
+      "nothingSelected": "İçe aktarılacak hiçbir şey seçilmedi.",
+      "savedNothing": "O CV'den hiçbir şey kaydedemedik. Lütfen tekrar dene.",
+      "categoriesFailed": "{categories} kaydedilemedi",
+      "skillsSkippedCap": "{count, plural, one {# beceri} other {# beceri}} atlandı (en fazla 15)",
+      "alreadyOnProfile": "{count} tanesi zaten profilinde var",
+      "savedWithNotes": "{count, plural, one {# öğe} other {# öğe}} kaydedildi, ama {notes}. Bunları elle ekleyebilirsin."
     }
   },
   "universities": {

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { LANGUAGE_PROFICIENCY_VALUES } from "@/lib/vocabularies/languages";
+import type { Locale } from "@/lib/i18n/config";
 // Client-safe constant file, not the server-only lib/profile/curriculum-other-text.ts --
 // see lib/validation/onboarding.ts's own comment on this exact import for why, even though
 // this file's own importers are all "use server" actions today (a live-verified failure
@@ -259,3 +260,40 @@ export const LanguageSchema = z.object({
   proficiency: z.enum(LANGUAGE_PROFICIENCY_VALUES, { error: "Choose a proficiency level." }).nullable(),
 });
 export type LanguageFormInput = z.infer<typeof LanguageSchema>;
+
+/**
+ * Every custom `{ error: "..." }` message across every schema in this file, translated --
+ * shared rather than copied into each of the three call sites (profile/actions.ts's
+ * crudCreate/crudUpdate, languages-actions.ts, skills-actions.ts) that fall back to a Zod
+ * issue's own `.message` when a save's validation fails after bypassing whatever client-
+ * side check normally catches it first. These are already real, specific, hand-written
+ * messages (unlike Zod's own unconfigured default text, e.g. "String must contain at least
+ * 1 character(s)") -- the gap found during 2026-09-03's student-facing i18n audit was that
+ * they were never translated, not that they needed rewriting. The fallback for anything not
+ * in this table (a future field added here without updating this list) is the raw message
+ * itself -- English, not silently wrong, and `__tests__/validation/achievement-error-
+ * messages.test.ts` asserts this table stays exhaustive against the schemas above so that
+ * gap is caught immediately rather than discovered live.
+ */
+const ACHIEVEMENT_ERROR_MESSAGES_TR: Record<string, string> = {
+  "Choose a proficiency level.": "Bir yeterlilik düzeyi seç.",
+  "Course name is required.": "Ders adı gerekli.",
+  "Keep it under 60 characters.": "60 karakterin altında tut.",
+  "Language is required.": "Dil gerekli.",
+  "Organization is required.": "Kurum gerekli.",
+  "School name is required.": "Okul adı gerekli.",
+  "Score is required.": "Puan gerekli.",
+  "Skill name is required.": "Beceri adı gerekli.",
+  "Sport is required.": "Spor gerekli.",
+  "Test name is required.": "Sınav adı gerekli.",
+  "Title is required.": "Başlık gerekli.",
+  "Score can't be negative.": "Puan negatif olamaz.",
+  "Max score can't be negative.": "Maksimum puan negatif olamaz.",
+  "Score can't be higher than the max score.": "Puan, maksimum puandan yüksek olamaz.",
+};
+
+export function translateAchievementValidationError(message: string | undefined, locale: Locale): string | undefined {
+  if (!message) return message;
+  if (locale !== "tr") return message;
+  return ACHIEVEMENT_ERROR_MESSAGES_TR[message] ?? message;
+}
