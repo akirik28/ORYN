@@ -389,7 +389,17 @@ describe("migration numbering", () => {
     // (admin_dead_feature_flags) and 0102 (weekly_plan_budget_settings) are both real,
     // on-disk files by this point in the rebase -- 0103 is the genuine next-free number,
     // not a guess past a still-claimed one.
-    expect(Math.max(...numbers.map(Number))).toBe(103);
+    //
+    // 0104 (ultra_gift) is the founder's own named prototype item -- a single nullable
+    // ultra_gift_granted_at column on profiles for the once-per-student 7-day Ultra gift.
+    // First claimed 0103 after sweeping every remote branch's own migrations/ tree above
+    // 0102 -- collided with another lane's opportunity_verification_runs directly above,
+    // also 0103, claimed on a branch this worktree couldn't see until the next sweep.
+    // Renumbered to 0104, re-checked against every remote branch again before landing on
+    // it, the same discipline every entry above this one already established. See
+    // lib/tier/plan-tier.ts's own comment for why this is one column and not two, and why
+    // nothing here is a scheduled job.
+    expect(Math.max(...numbers.map(Number))).toBe(104);
   });
 });
 

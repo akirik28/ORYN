@@ -10,6 +10,7 @@ function row(overrides: Partial<AdminUserRow> = {}): AdminUserRow {
     signedUpAt: "2026-08-20T10:00:00.000Z",
     lastSeenAt: "2026-09-02T08:00:00.000Z",
     lifetimeSpendUsd: 1.2345,
+    ultraGiftGrantedAt: null,
     ...overrides,
   };
 }

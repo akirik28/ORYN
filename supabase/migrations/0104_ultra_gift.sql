@@ -1,0 +1,25 @@
+-- The founder's own named prototype item: one button on a student's admin row that grants
+-- seven days of Ultra. A single nullable timestamp, not a boolean -- it has to answer two
+-- different questions over the student's lifetime, not one:
+--
+--   1. "Has this student ever received the gift?" (once per person, forever -- checked by
+--      is-non-null, never cleared, even once the seven days have passed. A boolean reset to
+--      false after expiry would let a second grant through, which is exactly the "silent
+--      pricing leak" the founder's own framing warned against from the other direction.)
+--   2. "Is the gift still active right now?" (granted_at + 7 days > now -- computed at read
+--      time in lib/tier/plan-tier.ts's resolvePlanTier, the one place every Ultra-aware
+--      surface already goes through; see that file's own comment for why storing an
+--      explicit ultra_gift_expires_at column would be redundant rather than clearer, and
+--      for why nothing here is a scheduled job.)
+--
+-- No granted_by column, matching profiles.plan_tier's own convention (migration 0089 /
+-- setUserPlanTier): who did it lives in admin_action_log via logAdminAction, not duplicated
+-- as a column on the target row.
+--
+-- Enforced once-per-person at the application layer (grantUltraGift, app/(app)/admin/
+-- actions.ts) via read-then-check-then-write, the same pattern setUserPlanTier already uses
+-- for its own no-op case -- not a DB constraint, because the invariant being protected is
+-- "don't overwrite a non-null value," which a CHECK constraint can't express on its own; a
+-- unique constraint doesn't fit either, since every granted row's value is a distinct
+-- timestamp, not a shared flag.
+alter table public.profiles add column ultra_gift_granted_at timestamptz;

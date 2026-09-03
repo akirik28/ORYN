@@ -1762,7 +1762,14 @@
       "confirmDescription": "Changes what they see immediately. Reversible — you can switch this back the same way at any time.",
       "confirmButton": "Confirm",
       "changeSuccess": "{name} is now {tier}.",
-      "changeNoop": "{name} was already {tier}. Nothing changed."
+      "changeNoop": "{name} was already {tier}. Nothing changed.",
+      "grantGift": "Grant 7-day Ultra",
+      "giftUsed": "Gift used {time}",
+      "giftConfirmTitle": "Grant {name} 7 days of Ultra?",
+      "giftConfirmDescription": "One-time only — this can't be granted again for this student, even after the 7 days end. It doesn't change their permanent tier.",
+      "giftConfirmButton": "Grant gift",
+      "giftGrantedToast": "{name} now has Ultra for 7 days.",
+      "giftAlreadyUsedToast": "{name} already used their gift."
     },
     "opportunities": {
       "sectionTitle": "Opportunities",

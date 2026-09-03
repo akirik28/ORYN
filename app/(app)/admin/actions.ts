@@ -13,9 +13,9 @@ import { isUuidLike } from "@/lib/validation/uuid";
 import { buildPostRemovalUpdate, buildPostRestoreUpdate, ModerationInputError } from "@/lib/social/posts-moderation";
 import { ADMIN_FINANCE_SETTINGS_ID, getAdminOpportunityList, type AdminOpportunityRow, KNOWN_PRODUCT_EVENT_NAMES } from "@/lib/admin/queries";
 import { isValidExchangeRate, isValidPrice } from "@/lib/admin/finance";
-import { isUndefinedTableError } from "@/lib/supabase/errors";
+import { isUndefinedTableError, isUndefinedColumnError } from "@/lib/supabase/errors";
 import { WEEKLY_PLAN_BUDGET_SETTINGS_ID } from "@/lib/ai/limits/weekly-plan-budget";
-import { resolvePlanTier } from "@/lib/tier/plan-tier";
+import { resolvePlanTier, ULTRA_GIFT_DURATION_DAYS } from "@/lib/tier/plan-tier";
 import { logAdminAction } from "@/lib/admin/log";
 import { tavilyProvider } from "@/lib/providers/tavily";
 import { collegeScorecardProvider } from "@/lib/providers/college-scorecard";
@@ -570,7 +570,16 @@ export async function setUserPlanTier(userId: string, tier: PlanTier): Promise<S
   if (tier !== "standard" && tier !== "ultra") return { error: "Invalid tier." };
 
   const admin = createAdminClient();
-  const { data: before, error: readError } = await admin.from("profiles").select("plan_tier, display_name").eq("id", userId).maybeSingle();
+  let { data: before, error: readError } = await admin.from("profiles").select("plan_tier, ultra_gift_granted_at, display_name").eq("id", userId).maybeSingle();
+  // Same degrade lib/admin/queries.ts's getAdminUserList now uses -- migration 0104
+  // unapplied must not make this pre-existing, already-shipped action start reporting
+  // "Couldn't find that user" for every real user, which is what a raw readError check
+  // would do here without this retry.
+  if (readError && isUndefinedColumnError(readError, "ultra_gift_granted_at")) {
+    const fallback = await admin.from("profiles").select("plan_tier, display_name").eq("id", userId).maybeSingle();
+    before = fallback.data ? { ...fallback.data, ultra_gift_granted_at: null } : null;
+    readError = fallback.error;
+  }
   if (readError || !before) {
     console.error("[admin] failed to read profile before setting plan tier", { userId, error: readError });
     return { error: "Couldn't find that user." };
@@ -601,6 +610,79 @@ export async function setUserPlanTier(userId: string, tier: PlanTier): Promise<S
 
   revalidatePath("/admin");
   return { changed: true, fromTier };
+}
+
+export interface GrantUltraGiftResult {
+  error?: string;
+  /** false only when this student had already received the gift before this call —
+   * distinguished from a real grant the same way setUserPlanTier distinguishes a no-op from
+   * a change, so the button can show "already used" instead of silently doing nothing. */
+  granted?: boolean;
+}
+
+/**
+ * The one prototype item the founder asked for by name, and the one thing here that can't
+ * be undone by pressing it again: setUserPlanTier's permanent toggle is reversible (flip it
+ * back), this is once per person, forever, enforced by ultra_gift_granted_at (migration
+ * 0104) never being non-null twice. Reads the current value before writing for the exact
+ * same reason setUserPlanTier does — a blind UPDATE can't tell a real grant from a second
+ * click that should have been rejected.
+ *
+ * Writes ultra_gift_granted_at only, never plan_tier — resolvePlanTier (lib/tier/plan-tier.ts)
+ * is what turns a recent grant into an effective "ultra" everywhere else in the app; a
+ * student's permanent tier column stays exactly what it was before the gift and after it
+ * expires, which is the whole point of it being a gift rather than a silent upgrade.
+ */
+export async function grantUltraGift(userId: string): Promise<GrantUltraGiftResult> {
+  const adminProfile = await requireAdmin();
+  if (!isUuidLike(userId)) return { error: "Invalid user." };
+
+  const admin = createAdminClient();
+  const { data: before, error: readError } = await admin.from("profiles").select("ultra_gift_granted_at, display_name").eq("id", userId).maybeSingle();
+  if (readError && isUndefinedColumnError(readError, "ultra_gift_granted_at")) {
+    // Unlike setUserPlanTier's degrade above, there's nothing to fall back to here -- this
+    // column IS the feature. A clear "not set up yet" beats a misleading "couldn't find that
+    // user" when the real cause is migration 0104 not being applied.
+    return { error: "The Ultra gift isn't set up on this environment yet." };
+  }
+  if (readError || !before) {
+    console.error("[admin] failed to read profile before granting ultra gift", { userId, error: readError });
+    return { error: "Couldn't find that user." };
+  }
+
+  if (before.ultra_gift_granted_at) {
+    return { granted: false };
+  }
+
+  const grantedAt = new Date().toISOString();
+  const { data: updated, error } = await admin
+    .from("profiles")
+    .update({ ultra_gift_granted_at: grantedAt })
+    .eq("id", userId)
+    .is("ultra_gift_granted_at", null)
+    .select("id");
+  if (error) {
+    console.error("[admin] failed to grant ultra gift", { userId, error });
+    return { error: "Couldn't save that. Please try again." };
+  }
+  if (!updated || updated.length === 0) {
+    // Either a real race (granted between the read above and this write, in which case the
+    // second grant correctly lost) or the account was deleted -- both report as "already
+    // used" rather than a generic error, since from this admin's point of view the gift is
+    // no longer grantable either way, which is the only thing the button needs to convey.
+    return { granted: false };
+  }
+
+  await logAdminAction(admin, {
+    adminProfile,
+    action: "grant_ultra_gift",
+    targetUserId: userId,
+    targetLabel: before.display_name,
+    detail: { grantedAt, durationDays: ULTRA_GIFT_DURATION_DAYS },
+  });
+
+  revalidatePath("/admin");
+  return { granted: true };
 }
 
 export interface SetOpportunityDisabledResult {

@@ -1762,7 +1762,14 @@
       "confirmDescription": "Ne gördüklerini hemen değiştirir. Geri alınabilir — istediğiniz zaman aynı şekilde eski haline döndürebilirsiniz.",
       "confirmButton": "Onayla",
       "changeSuccess": "{name} artık {tier}.",
-      "changeNoop": "{name} zaten {tier} idi. Bir şey değişmedi."
+      "changeNoop": "{name} zaten {tier} idi. Bir şey değişmedi.",
+      "grantGift": "7 günlük Ultra hediye et",
+      "giftUsed": "Hediye kullanıldı ({time})",
+      "giftConfirmTitle": "{name} adlı öğrenciye 7 günlük Ultra hediye edilsin mi?",
+      "giftConfirmDescription": "Sadece bir kez — 7 gün bitse bile bu öğrenciye tekrar hediye edilemez. Kalıcı plan katmanını değiştirmez.",
+      "giftConfirmButton": "Hediye et",
+      "giftGrantedToast": "{name} artık 7 gün boyunca Ultra'ya sahip.",
+      "giftAlreadyUsedToast": "{name} hediyesini zaten kullandı."
     },
     "opportunities": {
       "sectionTitle": "Fırsatlar",
