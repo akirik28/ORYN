@@ -396,9 +396,16 @@ insert into university_requirements (university_id, requirement_type, title, req
 insert into university_requirements (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at, verification_state, data_status) values
   ('d4544b9f-82fb-4563-b48a-346287e4b4d3', 'english_proficiency', 'GCSE English equivalent — Grade 5 for 2026 entry (Grade 6 for Medicine)', 'For 2025 entry, Grade 6 in GCSE English Language satisfied both Standard and Higher requirements. For 2026 entry, Home students need Grade 5 in English Language for all courses except MBBS Medicine, which requires Grade 6. This is a recently changed policy — the grade threshold differs by entry year, so it should be re-verified against the live page for whichever cycle a given student is applying to.', true, 'high', 'https://www.imperial.ac.uk/study/apply/english-language/', '2026-09-03'::timestamptz, 'verified_current', 'fresh');
 
--- Expected after: +192 rows (1,325 -> 1,517), all with retrieved_at/source_url/verification_state set.
+-- Ara kontrol -- bu blok 173 satir ekler (1,325 -> 1,498), hepsinde
+-- retrieved_at/source_url/verification_state dolu. Dosya tek islem oldugu icin bu sorgu
+-- COMMIT'ten once calisir ve islem-ici sayiyi gorur.
+--
+-- Eski hali "+192 rows -> 1,517" diyordu: 192, Caltech'in 19 satiri hala bu blokta
+-- oldugu zamanki sayiydi. O 19 satir cikip yerine asagidaki uzlastirilmis 37 satir
+-- geldi, ama bu yorum guncellenmedi. Iki parca ayri ayri dogruydu, birlestirme
+-- guncellenmedi -- ayni dosyada ikinci kez.
 select count(*) as new_total from university_requirements;
--- Expect: new_total = 1517.
+-- Beklenen: new_total = 1498.
 
 -- [paket: 'commit;' kaldırıldı — işlem dıştaki BEGIN/COMMIT'te]
 
@@ -546,9 +553,12 @@ insert into university_requirements (university_id, requirement_type, title, req
 insert into university_requirements (university_id, requirement_type, title, requirement_detail, is_required, scope, data_confidence, verification_state, source_url, retrieved_at, is_exclusion, research_record_id, data_status) values
   ('d6fe8e8f-749f-462d-88b3-b22dfdc11a4c', 'supplemental_requirement', 'All Fall 2027 applicants will be asked to review Caltech''s guidelines on the ethical use of AI before submitting their supplemental essays.', 'All Fall 2027 applicants will be asked to review Caltech''s guidelines on the ethical use of AI before submitting their supplemental essays.', true, 'first_year_undergraduate', 'high', 'verified_current', 'https://www.admissions.caltech.edu/apply/first-year-applicants/supplemental-application-essays', '2026-09-01'::timestamptz, false, 'REQ-2026-09-01-CAL0027', 'fresh');
 
--- Expected after: +37 rows (1,325 -> 1,362).
+-- Son kontrol -- bu blok 37 satir ekler. Taban 1,325 DEGIL 1,498: yukaridaki blok ayni
+-- islem icinde zaten calisti. Dosyanin tamami: 1,325 + 210 = 1,535.
+-- Eski "1,325 -> 1,362" satiri bu blogun tek basina calistirildigi deneme calismasindan
+-- kalmaydi; dosya icinde artik dogru taban o degil.
 select count(*) as new_total from university_requirements;
--- Expect: new_total = 1362.
+-- Beklenen: new_total = 1535.
 
 -- [paket: 'commit;' kaldırıldı — işlem dıştaki BEGIN/COMMIT'te]
 

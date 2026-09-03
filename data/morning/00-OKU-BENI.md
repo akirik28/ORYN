@@ -9,7 +9,7 @@ Uyandığında sırayla bunlar. Yedi adım, tahminen 15 dakika — beşi kopyala
 | Panelin yazma tarafı | çalışır hale gelir (15 migration) |
 | Kurum adı boş fırsat | 190 tanesi dolar |
 | İncelemedeki kayıt | 84'ü öğrencinin göreceği katalog'a geçer |
-| Üniversite gereksinimi | 14 kurumda 141 satırdan 333'e |
+| Üniversite gereksinimi | 14 kurumda 141 satırdan 351'e |
 | Yeni fırsat | 9 tane eklenir |
 | Kumanda merkezi | açılır ve kullanılabilir olur |
 
@@ -29,7 +29,9 @@ SELECT id, is_admin FROM public.profiles
 WHERE id = 'ccf2161e-4992-49ce-88b4-a76293f1dc1d';
 ```
 
-`is_admin` **true** dönmeli. `SET ROLE service_role` satırı şart — onsuz `UPDATE 1` der
+Hesabın **2 Eylül 22:18'den beri zaten admin** — gece panelleri denerken açılmış.
+Yani bu adım muhtemelen boşa çalışacak, ki zararsız; yine de çalıştır, çünkü tek
+doğrulanmış yol bu. `is_admin` **true** dönmeli. `SET ROLE service_role` satırı şart — onsuz `UPDATE 1` der
 ve hiçbir şey değiştirmez (`profiles_00_guard_protected_columns` trigger'ı geri alır,
 canlıda doğrulandı).
 
@@ -53,7 +55,7 @@ diye gösterecek, ama iş görmeyecek.
 
 ## 3. Bekleyen veriyi doldur
 
-`02-veri-doldurma-2026-09-03.sql` — **377 düzeltme ifadesi, 212 tekil kayıt.** En görünür
+`02-veri-doldurma-2026-09-03.sql` — **377 düzeltme ifadesi, 213 tekil kayıt.** En görünür
 etkisi: kurum adı boş olan **190 kayıt dolacak**, ve 84 kayıt tek tek doğrulanmış haliyle
 `under_review`'dan `active`'e geçecek — yani öğrencinin göreceği katalog büyüyecek.
 
@@ -102,10 +104,15 @@ geri alınabilir.
 
 `04-universite-gereksinimleri-2026-09-03.sql` — **14 kurum, 210 satır** (Caltech'in 19 satırı, uzlaştırılmış 37 satırla değiştirildi). Oxford, Cambridge,
 Imperial, Warwick, MIT, Caltech, Harvard, Princeton, Bocconi, TU Delft, ODTÜ, Boğaziçi,
-Koç, Sabancı. Bu kurumlar 141 satırdan 333'e çıkıyor.
+Koç, Sabancı. Bu kurumlar 141 satırdan 351'e çıkıyor.
 
-Diğerlerinden bağımsız, istediğin zaman çalıştırabilirsin. Canlıda deneme çalıştırıldı,
-sıfır hata. Ürünün en ince yeri burasıydı — 17.046 programın 32'si kapsanıyordu.
+Canlıda deneme çalıştırıldı, sıfır hata.
+
+**Tek sıra kuralı: bu, 7. adımdan önce çalışmalı.** 7. adım "bugün var olanı görülmüş say"
+diye çalışıyor; bu dosya sonra çalışırsa 210 yeni satır ikinci bir toplu ekleme olur ve 7.
+adımın tam olarak engellemek için var olduğu yanlış bildirimi bu sefer kendi elimizle
+üretiriz. Sırayı kaçırdıysan çare basit: 7. adımı tekrar çalıştır, aynı dosya, zararsız.
+Deploy etmeyeceksen ikisinin de acelesi yok. Ürünün en ince yeri burasıydı — 17.046 programın 32'si kapsanıyordu.
 
 Dürüst kısmı: bu satırların hepsi **üniversite geneli**, programa bağlı değil. Yani "kaç
 program kapsanıyor" sayısı yine 32'de kalıyor. Derinlik geldi, kapsam genişliği değil.
@@ -154,8 +161,7 @@ Deploy etmeyeceksen acelesi yok. Edeceksen **önce bu.**
 
 ## 8. İki paneli karşılaştır
 
-**`/admin`** — bugünkü hali. Ondört bölüm, tek sayfa. Bugüne kadar hiç gerçek admin
-hesabıyla açılmadı; ilk açan sen olacaksın.
+**`/admin`** — bugünkü hali. Ondört bölüm, tek sayfa.
 
 **`/kumanda`** — onayladığın tasarımın gerçek hali. Ayrı uygulama kabuğu, açık yeşil zemin,
 kendi sol rayı, 12 bölüm. Şu an sadece iskelet: ray çalışıyor, tema çalışıyor, genel bakış
@@ -225,7 +231,9 @@ bir şey söylemiyor" diye bırakılırdı.
 
 **Oryn hangi kurumları bilmeli?** İki ölçüm aynı soruya çıkıyor.
 
-*Ülke tarafı:* veritabanında **458 üniversite şartnamedeki koridorun dışında** — Çin 64,
+*Ülke tarafı:* veritabanında **481 üniversite şartnamedeki koridorun dışında** (1.019
+kurumun; koridor = ABD, İngiltere, Türkiye, Kanada ve 34 Avrupa ülkesi — sayıyı yeniden
+üretebilmen için tanımı yazıyorum, önceki 458 rakamı hiçbir tanımla tutmuyordu) — Çin 64,
 Hindistan 37, Güney Kore 31, Malezya 25, Japonya 22. Koridor içinde kalan ise ince:
 Finlandiya 9, sonra Litvanya 4, Estonya 3, Kıbrıs 3. Yani "en çok kurum" ile "bu ürün için
 en önemli" ters yönü gösteriyor.
