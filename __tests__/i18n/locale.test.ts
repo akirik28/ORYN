@@ -165,6 +165,12 @@ describe("message catalogs", () => {
       // the button an admin uses to set a student's tier. "tierStandard" ("Standart"),
       // right next to this key in messages/*.json, correctly differs.
       "admin.users.tierUltra",
+      // Same "numeric template, not words" reasoning as opportunities.comparePage.ageRangeMin
+      // above, at its simplest: the whole string is one bare interpolation, nothing else —
+      // there is no word in either language to translate. Its sibling countOfTotal
+      // ("{count} of {total}" / "{total} kişiden {count}") correctly differs, which is what
+      // confirms this one is deliberate rather than the whole block being copy-pasted.
+      "admin.control.attention.count",
       ].sort(),
     );
   });
