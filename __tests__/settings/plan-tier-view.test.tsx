@@ -71,10 +71,11 @@ describe("PlanTierView — no buy button", () => {
     const button = screen.getByRole("button", { name: "I'm interested" });
     expect(button).toBeInTheDocument();
     // The one interactive control on the whole page must not read like a purchase --
-    // checked on actual buttons/links (accessible names), not prose: the honest disclosure
-    // above legitimately contains the word "buy" ("isn't available to buy yet"), which a
-    // plain page-wide text search would (and, in an earlier draft of this test, did)
-    // wrongly flag as if it were a purchase control.
+    // checked on actual buttons/links (accessible names), not a page-wide text search: an
+    // earlier draft of this test searched all visible text, which wrongly flagged the
+    // honest disclosure's own prose the moment it happened to contain one of these words
+    // (it did, briefly, in an earlier wording -- "isn't available to buy yet"). Scoping to
+    // interactive elements' accessible names is what survives that kind of copy change.
     const interactiveNames = [...screen.queryAllByRole("button"), ...screen.queryAllByRole("link")].map((el) => el.textContent ?? "");
     for (const forbidden of ["Buy", "Upgrade", "Subscribe", "Checkout", "Pay"]) {
       expect(interactiveNames.some((name) => new RegExp(forbidden, "i").test(name))).toBe(false);
@@ -86,7 +87,10 @@ describe("PlanTierView — no buy button", () => {
     fireEvent.click(screen.getByRole("button", { name: "I'm interested" }));
 
     await waitFor(() => expect(mockedRegister).toHaveBeenCalledTimes(1));
-    expect(await screen.findByText("Thanks — we'll let you know.")).toBeInTheDocument();
+    // 2026-09-03: "Thanks — we'll let you know." -> "Noted — thanks." -- see the dedicated
+    // "no unfulfillable promise" describe block below for why the wording changed; this
+    // assertion just needs to track whatever the real confirmation string is.
+    expect(await screen.findByText("Noted — thanks.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "I'm interested" })).not.toBeInTheDocument();
   });
 
@@ -95,6 +99,36 @@ describe("PlanTierView — no buy button", () => {
     expect(screen.queryByText("Interested in Ultra?")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "I'm interested" })).not.toBeInTheDocument();
     expect(mockedRegister).not.toHaveBeenCalled();
+  });
+});
+
+// 2026-09-03: registerUltraInterestAction (app/(app)/settings/actions.ts) is, and has
+// always been, only logEvent(userId, "ultra_interest_registered") -- a passive analytics
+// row an admin can read, never a queue, an email, or anything that proactively reaches a
+// student. The page's own copy used to promise otherwise ("we'll tell you the moment it's
+// ready" / a post-click "we'll let you know") regardless of that gap -- a promise the
+// product could not keep on pure mechanism grounds, before any consent-law question even
+// applied (docs/ultra-sales-readiness-scope-2026-09-03.md §C independently reached the same
+// read: "an interest signal nobody can act on efficiently is close to the 'worse than no
+// button' framing"). oryn-45's own call, not defaulted: keep the interest signal (real,
+// low-stakes, worth collecting), drop the specific forward-looking commitment. Pinned here
+// so a future copy edit can't quietly reintroduce a promise nothing backs.
+describe("PlanTierView — the interest CTA never promises a specific future contact", () => {
+  test("neither the pre-click description nor the post-click confirmation claims Oryn will reach out", () => {
+    renderView("standard");
+    for (const unfulfillable of [/we'll tell you/i, /we'll (let you know|notify|reach out|contact you)/i, /we will (tell|notify|reach out|contact)/i]) {
+      expect(screen.queryByText(unfulfillable)).not.toBeInTheDocument();
+    }
+  });
+
+  test("the post-click confirmation states the interest was recorded, without repeating that claim either", async () => {
+    renderView("standard");
+    fireEvent.click(screen.getByRole("button", { name: "I'm interested" }));
+    await waitFor(() => expect(mockedRegister).toHaveBeenCalledTimes(1));
+
+    for (const unfulfillable of [/we'll tell you/i, /we'll (let you know|notify|reach out|contact you)/i, /we will (tell|notify|reach out|contact)/i]) {
+      expect(screen.queryByText(unfulfillable)).not.toBeInTheDocument();
+    }
   });
 });
 

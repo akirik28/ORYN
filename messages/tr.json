@@ -193,9 +193,9 @@
         }
       },
       "interestTitle": "Ultra ile ilgileniyor musun?",
-      "interestDescription": "Ultra henüz kayıtlara açık değil — ayda 399,99 TL olacak, ilk hafta ücretsiz. İlgilendiğini bildir, hazır olduğu anda sana haber verelim.",
+      "interestDescription": "Ultra henüz kayıtlara açık değil — ayda 399,99 TL olacak, ilk hafta ücretsiz. İlgilendiğini bildir, kaç öğrencinin hazır olduğunu bilelim.",
       "interestButton": "İlgileniyorum",
-      "interestConfirmed": "Teşekkürler — sana haber vereceğiz."
+      "interestConfirmed": "Kaydedildi — teşekkürler."
     },
     "birthYear": {
       "label": "Doğduğun yıl",

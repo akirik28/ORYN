@@ -193,9 +193,9 @@
         }
       },
       "interestTitle": "Interested in Ultra?",
-      "interestDescription": "Ultra isn't open for signups yet — it'll be 399.99 TL/month, with the first week free. Register your interest and we'll tell you the moment it's ready.",
+      "interestDescription": "Ultra isn't open for signups yet — it'll be 399.99 TL/month, with the first week free. Register your interest, so we know how many students are ready for it.",
       "interestButton": "I'm interested",
-      "interestConfirmed": "Thanks — we'll let you know."
+      "interestConfirmed": "Noted — thanks."
     },
     "birthYear": {
       "label": "Year you were born",
