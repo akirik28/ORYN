@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getContaminationCleanupPreview, isAdminActionsTableLive } from "@/lib/admin/queries";
+import { getContaminationCleanupPreview, getDescriptionQualityLiveSignal, isAdminActionsTableLive } from "@/lib/admin/queries";
 import { DescriptionCleanupControl } from "@/features/admin/description-cleanup-control";
 
 /**
@@ -20,12 +20,27 @@ export async function DescriptionCleanupSection() {
   const t = await getTranslations("admin.cleanup");
   const admin = createAdminClient();
   const [preview, tableLive] = await Promise.all([getContaminationCleanupPreview(admin), isAdminActionsTableLive(admin)]);
+  // Depends on preview's own guard computation (see that function's comment) -- can't join the
+  // Promise.all above.
+  const qualitySignal = await getDescriptionQualityLiveSignal(admin, preview);
 
   return (
     <section className="space-y-3">
       <div>
         <h2 className="font-semibold">{t("sectionTitle")}</h2>
         <p className="text-sm text-muted-foreground">{t("sectionDescription")}</p>
+        {qualitySignal.status === "ok" ? (
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("liveSummary", {
+              total: qualitySignal.totalDefectiveActive,
+              ready: qualitySignal.readyToFixActive,
+              pending: qualitySignal.noFixYetActive,
+              kinds: qualitySignal.defectKinds.map((kind) => t(`defectLabel.${kind}`)).join(", "),
+            })}
+          </p>
+        ) : (
+          <p className="mt-1 text-sm text-warning">{t("liveSummaryUnknown")}</p>
+        )}
       </div>
       {!tableLive ? <p className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">{t("notSetUp")}</p> : null}
       <DescriptionCleanupControl preview={preview} auditTableLive={tableLive} />

@@ -32,6 +32,21 @@ export type DescriptionDefect =
   | "embedded_url"
   | "truncated";
 
+/**
+ * The complete, ordered list of defect kinds `inspectDescription` can ever return — the
+ * single source of truth a caller iterates to build a human-readable definition of what
+ * "defective" means (see `admin.cleanup.defectLabel.*` i18n keys), instead of that sentence
+ * being typed separately somewhere and drifting from this file's own detectors the next time
+ * one is added, removed, or renamed. If you add a `detectX` function above, add its defect
+ * kind here in the same change — nothing else enforces the two stay in sync.
+ */
+export const DESCRIPTION_DEFECT_KINDS: readonly DescriptionDefect[] = [
+  "multi_program_concatenation",
+  "restates_title",
+  "embedded_url",
+  "truncated",
+];
+
 export type DescriptionDefectSeverity = "reject" | "flag";
 
 export interface DescriptionQualityFinding {

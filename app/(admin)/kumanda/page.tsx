@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/oryn/page-header";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getReports, summarizeReportsBacklog, getContaminationCleanupPreview, getDegradeStanding, getSpendSummary, getAdminUserList, getFinanceSettings, getPageViewStats } from "@/lib/admin/queries";
+import { getReports, summarizeReportsBacklog, getContaminationCleanupPreview, getDescriptionQualityLiveSignal, getDegradeStanding, getSpendSummary, getAdminUserList, getFinanceSettings, getPageViewStats } from "@/lib/admin/queries";
 import { resolveLocale } from "@/lib/i18n/locale";
 
 /**
@@ -59,17 +59,30 @@ export default async function ControlOverviewPage() {
     getFinanceSettings(admin),
     getPageViewStats(admin),
   ]);
+  // Depends on cleanupPreview's own result (reuses its guard computation, see that function's
+  // comment) -- can't join the Promise.all above, one extra light round trip after it resolves.
+  const qualitySignal = await getDescriptionQualityLiveSignal(admin, cleanupPreview);
 
   const backlog = summarizeReportsBacklog(reports);
-  const pendingCleanupCount = cleanupPreview.filter((r) => r.guardWouldPass === true).length;
   const rate = financeSettings.usdTryRate?.rateTryPerUsd ?? null;
 
   const attentionItems: { href: string; label: string; detail: string }[] = [];
   if (backlog.openCount > 0) {
     attentionItems.push({ href: "/kumanda/moderasyon", label: t("attention.openReports"), detail: t("attention.count", { count: backlog.openCount }) });
   }
-  if (pendingCleanupCount > 0) {
-    attentionItems.push({ href: "/kumanda/katalog", label: t("attention.pendingCleanup"), detail: t("attention.count", { count: pendingCleanupCount }) });
+  if (qualitySignal.status === "ok") {
+    if (qualitySignal.totalDefectiveActive > 0) {
+      attentionItems.push({
+        href: "/kumanda/katalog",
+        label: t("attention.descriptionQuality"),
+        detail: t("attention.descriptionQualityCount", { ready: qualitySignal.readyToFixActive, pending: qualitySignal.noFixYetActive }),
+      });
+    }
+  } else {
+    // Degrade honestly: a failed live check is not the same as "zero found", and omitting the
+    // row entirely would read the same as "nothing to worry about" -- the exact silent-failure
+    // shape this fleet has already found and fixed in several other places today.
+    attentionItems.push({ href: "/kumanda/katalog", label: t("attention.descriptionQuality"), detail: t("attention.descriptionQualityUnknown") });
   }
   if (degradeStanding.studentsEverDegraded > 0) {
     attentionItems.push({

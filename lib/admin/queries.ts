@@ -20,6 +20,7 @@ import { isUndefinedColumnError, isUndefinedTableError } from "@/lib/supabase/er
 import { ULTRA_PRICE_TRY } from "@/lib/admin/finance";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { CONTAMINATION_CLEANUP_2026_09_02 } from "@/lib/opportunities/contamination-cleanup-2026-09-02";
+import { inspectDescription, DESCRIPTION_DEFECT_KINDS, type DescriptionDefect } from "@/lib/opportunities/description-quality";
 import { readOr, countOr } from "@/lib/supabase/safe-read";
 
 /**
@@ -1993,6 +1994,95 @@ export async function getContaminationCleanupPreview(admin: SupabaseClient<Datab
       guardWouldPass: current == null ? null : current.startsWith(entry.guardPrefix),
     };
   });
+}
+
+export type DescriptionQualityLiveSignal =
+  | {
+      status: "ok";
+      /** Active rows `inspectDescription` flags right now — live, not the 2026-08-22 snapshot. */
+      totalDefectiveActive: number;
+      /** Of those, how many are in `CONTAMINATION_CLEANUP_2026_09_02` with a guard that still
+       *  passes — i.e. genuinely one click away via the existing apply flow, not just "known
+       *  about". Reuses `getContaminationCleanupPreview`'s own guard computation rather than
+       *  re-deriving it, so this can never disagree with the number that flow itself shows. */
+      readyToFixActive: number;
+      /** `totalDefectiveActive` minus the live-flagged rows that are also ready-to-fix. Not a
+       *  bare subtraction of the two counts above: a row can be in the 35-row batch without
+       *  currently tripping any of `inspectDescription`'s signatures (it was found by a
+       *  different, earlier characterization pass with a different criterion — see
+       *  docs/description-quality-instrument-2026-09-03.md §2), so "ready" is not guaranteed to
+       *  be a subset of "live-flagged". Computed as an explicit set difference for that reason. */
+      noFixYetActive: number;
+      /** The exact defect kinds this run checked for — same array `inspectDescription` itself
+       *  iterates (`DESCRIPTION_DEFECT_KINDS`), so a caller rendering "based on: X, Y, Z" can
+       *  never show a definition that has drifted from what was actually counted. */
+      defectKinds: readonly DescriptionDefect[];
+    }
+  | {
+      status: "unknown";
+      reason: string;
+    };
+
+/**
+ * The live counterpart to the 35-row `CONTAMINATION_CLEANUP_2026_09_02` batch's own count
+ * (`pendingCleanupCount` in kumanda/page.tsx) — built because that number, alone, reads as a
+ * total on the one card the founder actually uses to decide what to work on, when it is
+ * really just the one batch with a prepared fix. Full measurement:
+ * docs/description-quality-instrument-2026-09-03.md.
+ *
+ * Reuses `inspectDescription` (lib/opportunities/description-quality.ts) — the same signatures
+ * `ingest.ts`'s `decideIngestion()` already checks new records against — rather than a
+ * separately-approximated SQL pattern, so this card's number can never quietly disagree with
+ * the codebase's own definition of "defective" the way the original 2026-08-22 audit's raw SQL
+ * signatures already had started to (see the instrument doc's own §2 on why a live re-run of
+ * the audit's four signatures and a union of the three historical passes don't agree).
+ *
+ * Cost, checked rather than assumed before wiring this in: one `select("id, title,
+ * description")` against ~370 active rows (this codebase's actual current scale — checked
+ * live), then `inspectDescription` run in-process, which is pure regex/string work on short
+ * strings — sub-millisecond total, not a per-row round trip. `ingest.ts` already calls this
+ * function per-record with no caching; this just calls it in a loop over one query's results
+ * instead of once. Revisit if the active catalog grows an order of magnitude — a plain
+ * unindexed scan of title+description for every active row stops being "cheap" well before it
+ * stops being correct, and the honest fix then is a cached, timestamped count (visibly stale)
+ * rather than either silently slowing the panel or silently going back to a stale hardcoded
+ * number. Not built now because the problem it would solve doesn't exist yet at today's scale.
+ *
+ * Degrades to `{status: "unknown"}` on any read failure — never a silent zero, matching this
+ * fleet's own standing rule against a check that can only report "fine" or "broken" reporting
+ * "fine" when it actually failed to check at all.
+ */
+export async function getDescriptionQualityLiveSignal(
+  admin: SupabaseClient<Database>,
+  cleanupPreview: ContaminationCleanupPreviewRow[]
+): Promise<DescriptionQualityLiveSignal> {
+  const { data, error } = await admin
+    .from("opportunities")
+    .select("id, title, description")
+    .eq("status", "active");
+
+  if (error || !data) {
+    console.error("[admin] getDescriptionQualityLiveSignal: could not read active opportunities", error);
+    return { status: "unknown", reason: error?.message ?? "no data returned" };
+  }
+
+  const liveFlaggedIds = new Set(
+    data.filter((row) => inspectDescription(row.title, row.description).length > 0).map((row) => row.id)
+  );
+  const readyToFixIds = new Set(cleanupPreview.filter((row) => row.guardWouldPass === true).map((row) => row.id));
+
+  let readyAndLiveFlagged = 0;
+  for (const id of readyToFixIds) {
+    if (liveFlaggedIds.has(id)) readyAndLiveFlagged++;
+  }
+
+  return {
+    status: "ok",
+    totalDefectiveActive: liveFlaggedIds.size,
+    readyToFixActive: readyToFixIds.size,
+    noFixYetActive: liveFlaggedIds.size - readyAndLiveFlagged,
+    defectKinds: DESCRIPTION_DEFECT_KINDS,
+  };
 }
 
 /**
