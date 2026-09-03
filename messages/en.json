@@ -1152,7 +1152,7 @@
         "detail": "This reply was kept brief — you're still getting the answer, just not the long explanation."
       },
       "upgradePrompt": {
-        "detail": "This reply used a lighter model — Ultra keeps every reply at full depth.",
+        "detail": "This reply used a lighter model — Ultra's monthly allowance is twice as large, so this happens far less often.",
         "cta": "See Ultra",
         "notNow": "Not now",
         "close": "Close"
