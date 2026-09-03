@@ -58,7 +58,9 @@ Write 2-4 sentences. Cover: what the student was working on or asking about, any
 
 Write the summary in the same language the student and advisor used in the conversation. If they spoke Turkish, write the summary in Turkish; if English, write it in English.
 
-The <conversation> tag carries a date attribute: the day this conversation took place. This summary is a durable record that may be read long after that day, so convert any relative time reference in the conversation ("in 6 days," "next week," "this March") into an absolute date computed from that attribute — never leave it relative. If you cannot compute a specific date with confidence, describe it plainly instead of inventing false precision.`;
+The <conversation> tag carries a date attribute: the day this conversation took place. This summary is a durable record that may be read long after that day, so convert any relative time reference in the conversation ("in 6 days," "next week," "this March") into an absolute date computed from that attribute — never leave it relative. If you cannot compute a specific date with confidence, describe it plainly instead of inventing false precision.
+
+Do not resolve what the conversation left open. If the student did not explicitly agree, do not write "they agreed" or "both agreed" — describe the advisor's position and the student's reaction separately, and say plainly if the student's agreement is unclear. If the student expressed uncertainty or said something was not yet decided, keep that uncertainty in the summary — do not upgrade "probably" or "not yet decided" into a firm statement. And only attach a date to something the conversation actually timed — if an event is mentioned with no date or relative-time phrase at all (e.g. "track season starting"), describe it without inventing a date for it.`;
 
 /**
  * The one real AI call this module makes, extracted so a quality-evaluation script

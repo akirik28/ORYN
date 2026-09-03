@@ -236,6 +236,12 @@ describe("the summarizer prompt anchors relative dates and matches the conversat
     expect(call.prompt).toContain('date="2026-08-10"');
     expect(call.system).toContain("absolute date");
     expect(call.system).toContain("same language");
+    // docs/advisor-summary-quality-eval-2026-09-03.md addendum 3: a stability sweep found the
+    // model prefers a resolved/dated claim over an accurately hedged/undated one — false
+    // resolution of disagreement, false certainty about a stated preference, and inventing a
+    // date for an event the transcript never dated at all. This instruction is the tested fix.
+    expect(call.system).toContain('do not write "they agreed"');
+    expect(call.system).toContain("without inventing a date");
   });
 });
 

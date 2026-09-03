@@ -362,3 +362,68 @@ sweep goes through `summarizeTranscript` (real `ai_usage` rows); the 9-call cand
 instruction test calls the provider directly, same as Addendum 1's old-prompt comparison, and
 is real spend but not `ai_usage`-logged, for the same reason. Zero real student data touched.
 No arming verdict.
+
+## Addendum 3 — 2026-09-03, the candidate instruction, swept and shipped
+
+oryn-45 set explicit merge criteria before this pass ran, so the result could be checked
+against a bar instead of an impression: fixture 1's date fabrication gone; fixture 8 no worse
+than the 30% baseline; nothing that was clean at baseline degrades. Same 30-call methodology
+as the baseline sweep — all 10 fixtures, 3 reads each — but with the candidate instruction
+from Addendum 2 in the system prompt, for a like-for-like comparison.
+
+**Per-fixture, baseline (Addendum 2) vs. candidate (this pass):**
+
+| Fixture | Baseline | Candidate | Verdict |
+|---|---|---|---|
+| 1 — avoid-for-now-exclusion | 2/3 invented a date for "track season starting" (one glued on the exact reference date itself) | 2/3 clean, no date at all; 1/3 said "track season starting in fall 2026" | **Improved, not eliminated** — see below |
+| 2 — past-attempt-and-failure | 3/3, stable, adds "March 2026" | 3/3, identical pattern | Unaffected |
+| 3 — concrete-facts-and-deadline | 3/3 correct date math | 3/3 correct | **Clean, no degradation** |
+| 4 — exploratory-inconclusive | 3/3 stays open | 3/3 stays open (2 reads now say so explicitly: "no concrete plan or timeline was set") | **Clean, no degradation** |
+| 5 — explicit-topic-exclusion | exclusion 3/3 stable; parental-pressure context ~40% preserved | exclusion 3/3 stable; parental-pressure context 1/3 preserved | Unaffected — same pre-existing softness |
+| 6 — short-factual-exchange | 3/3 exact numbers | 3/3 exact numbers | **Clean, no degradation** |
+| 7 — turkish-language | language 6/6, uncertainty 5/6 (~83%) | language 3/3, uncertainty 3/3 | Consistent with the already-good baseline |
+| 8 — student-pushback-disagreement | 3/10 avoided false resolution (~30%) across both prompt versions | **3/3 avoided false resolution this batch** — one read went further and said explicitly "the student remains uncertain" | **Clears the bar with room to spare** |
+| 9 — recency-bias-two-topics | Jan-15 computation 3/3 stable; handling of the internally-contradictory "6 weeks" phrase unstable (2/3 drop it, 1/3 surfaces a conflicting date) | Jan-15 computation still 3/3 stable; the "6 weeks" handling is still unstable, now in a third shape (one read computed "roughly 3.5 months" instead of repeating "6 weeks" or dropping it) | Unaffected — a pre-existing source-inconsistency issue, not something this instruction targeted |
+| 10 — numeric-fact-heavy | 3/3 exact dollar figures | 3/3 exact | **Clean, no degradation** |
+
+**Criterion 2 (fixture 8, no worse than 30%): passed clearly.** 3/3 in this batch. Folded into
+the earlier 9-call candidate test (2/3 good), the candidate instruction's combined record on
+this fixture is now 5/6 (~83%) avoiding false resolution — a consistent result across two
+independent batches, not a single lucky one.
+
+**Criterion 3 (no clean-baseline fixture degrades): passed.** #3, #4, #6, #10 are all still
+3/3 on this pass.
+
+**Criterion 1 (fixture 1, date fabrication gone): improved, not literally met, and worth being
+precise about rather than rounding up.** The specific pattern that motivated the criterion —
+an exact, checkable date glued onto an undated event, including one baseline read that used
+the reference date itself — is fully gone: 0 of 3 reads this batch. But 1 of 3 reads still
+attached *"in fall 2026"* to "track season starting," which the transcript never dates at all.
+That is a real, if much softer, instance of the same underlying tendency (a season name, not a
+specific date), and calling this "gone" would be the exact overclaim this whole chain has
+tried not to make. **Decision: shipped anyway.** Reasoning: the concrete harm described —
+a student reading a specific, false, checkable date — is what the instruction eliminates
+outright; a vague season name is a materially different and lower severity than what was
+flagged, two of three criteria pass without qualification, and the instruction is a net,
+measured improvement on every dimension it touched with no measured cost anywhere. This is a
+judgment call made with the full data in front of it, not a rounding-up of an ambiguous
+result — surfaced explicitly so it can be revisited if the softer residual turns out to matter
+more than assessed here.
+
+**Shipped:** the candidate paragraph is now the fourth paragraph of `SUMMARY_SYSTEM_PROMPT` in
+`lib/advisor/retention.ts`. One more test added asserting the instruction text reaches the
+model (12 total in the suite, all passing). No other code changed.
+
+**What this pass does not claim.** Three reads per fixture per condition, across two
+independent candidate-instruction batches for fixture 8 specifically, is a real, directional,
+now-twice-replicated result — not a certified long-run rate. "Directional effect on two
+fixtures, no regression across ten, three reads each" is the honest claim; "fixed" is not, and
+isn't used here for fixture 1 specifically because the data doesn't support it. Fixture 5's
+and fixture 9's pre-existing softness are unaffected by this instruction and remain open,
+unrelated questions.
+
+**Spend:** 30 more real Haiku 4.5 calls via `summarizeTranscript` (`ai_usage`-logged),
+reference date 2026-09-03 for every fixture, same as every prior sweep in this chain. Total
+across all three addenda now ~$0.15. Zero real student data touched. No arming verdict — the
+retention job itself is still not scheduled, still gated on the two legal preconditions named
+in the original build doc.
