@@ -18,6 +18,14 @@
  * see docs/job-scheduling-decision-2026-09-02.md §4 and
  * docs/weekly-plan-aggregate-budget-2026-09-02.md for the full cost analysis and the still-
  * open aggregate-spend-ceiling gap that decision depends on closing first.
+ *
+ * A tenth route, `scheduled-review`, also deliberately has no entry here as of 2026-09-03 —
+ * see lib/scoring/scheduled-review.ts's own header for the full reasoning. It was briefly
+ * armed here and in vercel.json without that file's own founder-sign-off requirement being
+ * checked first; pulled back out, not because of anything wrong with the job itself (8
+ * students, no AI cost, correct per-item error handling — see
+ * docs/job-dry-run-audit-2026-09-03.md), purely because the gate it names hadn't been
+ * confirmed cleared. Stays out until the founder says otherwise.
  */
 
 export const ONE_HOUR_MS = 60 * 60 * 1000;
@@ -43,7 +51,6 @@ export const JOB_DEFINITIONS: readonly JobDefinition[] = [
   { jobName: "deadline_reminders", label: "Deadline reminders", expectedIntervalMs: ONE_DAY_MS },
   { jobName: "detect_stale_data", label: "Stale data detection", expectedIntervalMs: ONE_DAY_MS },
   { jobName: "refresh_admission_outlooks", label: "Admission outlook refresh", expectedIntervalMs: ONE_WEEK_MS },
-  { jobName: "scheduled_review", label: "Scheduled profile review", expectedIntervalMs: ONE_MONTH_MS },
 ];
 
 /**
