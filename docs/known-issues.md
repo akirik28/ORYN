@@ -271,14 +271,30 @@ itself.
   scheduled. Not a recommendation-safety issue (a separate, independent read-time check
   still excludes all 7 from "For you" regardless of the stale label); it only undercounts
   Browse's own "Closed" filter option by 7. `docs/opportunity-deadline-coverage-2026-09-02.md`.
-- **The real fix, `opportunity_reverification` (live Tavily re-fetch, combining Job B +
+- **Update, 2026-09-03: built.** `opportunity_reverification` (live Tavily/browser-UA
+  re-fetch, combining Job B + Job E for opportunities specifically, migration 0103) now
+  exists — `lib/opportunities/reverification/`, route at
+  `app/api/jobs/opportunity-reverification/`, built to
+  `docs/opportunity-reverification-job-design-2026-08-23.md`'s spec (CEO dispatch: three
+  confirmed live instances of the shape it closes — Stanford Anesthesia, ISSYP, Kadir Has).
+  `opportunities.source_verified_at` starts null everywhere (design doc §8.6, no backfill)
+  and only fills in one P1 outcome at a time once the job actually runs. **Still not
+  scheduled** — same founder-gated-unarmed pattern as every other Phase 30 job, and demotion
+  ships hard-disabled (`REVERIFY_ALLOW_DEMOTION` unset) pending the §10 dry run this build
+  did not include (a natural next step, not a gap in what shipped). One deliberate, honestly
+  degrading gap: §7.3 rung 4 (PDF text extraction) isn't implemented — a PDF-primary row
+  (6 in the corpus, 2 of them miscategorized faculty CVs per the design doc's own §7.0) fails
+  the content-floor guard and correctly lands on `p2_unreadable`/`reached_unusable` rather
+  than being silently misparsed. Below is the original pre-build framing, left for the
+  historical record rather than rewritten:
+  ~~The real fix, `opportunity_reverification` (live Tavily re-fetch, combining Job B +
   Job E for opportunities specifically), is fully designed
-  (`docs/opportunity-reverification-job-design-2026-08-23.md`) but not built** — deliberately
+  (`docs/opportunity-reverification-job-design-2026-08-23.md`) but not built~~ — deliberately
   out of Job E's own scope, since Job E is stored-data-only and structurally cannot confirm
   liveness. The job that *is* built (`discover_opportunities`) cannot substitute: a
   rediscovered duplicate is discarded outright, never merged back to refresh the existing
-  stale row. Even if built, would not run yet — no deployment, same as every other job.
-  `docs/opportunity-deadline-coverage-2026-09-02.md`.
+  stale row. Even unscheduled, this closes the missing mechanism — see
+  `docs/opportunity-deadline-coverage-2026-09-02.md` for the original gap analysis.
 
 ### Real, named gaps — scoring and progress
 

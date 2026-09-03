@@ -37,7 +37,7 @@ import { tryCreateAdminClient } from "@/lib/supabase/admin";
  *       spend, not a new invention for this file.
  */
 
-export type JobBudgetFeature = "opportunity_extraction" | "requirement_extraction";
+export type JobBudgetFeature = "opportunity_extraction" | "requirement_extraction" | "opportunity_reverification";
 
 function envBudgetUsd(envVar: string, defaultUsd: number): number {
   const raw = process.env[envVar];
@@ -72,10 +72,25 @@ function envBudgetUsd(envVar: string, defaultUsd: number): number {
  * $0.50/$1.00 are — once either job has actually run, check the real
  * `ai_usage.estimated_cost` sum against these before assuming they're still the right
  * number.
+ *
+ * opportunity_reverification: a deliberate third tag, not a share of opportunity_extraction's
+ * $25 — docs/opportunity-reverification-job-design-2026-08-23.md §5.4 argues this at length
+ * (that bucket is already ~60% claimed by Job A's discovery pipeline; sharing it would make
+ * per-feature spend attribution unanswerable for either job, and would couple
+ * re-verification's availability to an unrelated job's spend or growth). The LLM side of
+ * this job only ever adjudicates a *disagreement* between the deterministic fetch-ladder
+ * result and stored data (§5.1) — never the common path — so its usage is genuinely smaller
+ * by design than either existing feature: ~$0.0105/adjudication call (2K in + 300 out,
+ * Sonnet 5 pricing) × an assumed ~55 calls/full corpus pass (20% disagreement rate,
+ * unmeasured — Assumption A2) ≈ $0.58/pass, ≈$1.30–1.50/month at the offered non-binding
+ * daily cadence, ≤$3.50/month even doubling every input. $5 is ~3–4× that estimate — the
+ * same "headroom for the number to be wrong without moving the ceiling" reasoning already
+ * used for the other two, sized down to match this job's genuinely smaller usage.
  */
 export const JOB_BUDGET_USD: Record<JobBudgetFeature, number> = {
   opportunity_extraction: envBudgetUsd("AI_JOB_BUDGET_OPPORTUNITY_EXTRACTION_USD", 25),
   requirement_extraction: envBudgetUsd("AI_JOB_BUDGET_REQUIREMENT_EXTRACTION_USD", 15),
+  opportunity_reverification: envBudgetUsd("AI_JOB_BUDGET_OPPORTUNITY_REVERIFICATION_USD", 5),
 };
 
 export type JobBudgetReason = "under_budget" | "over_budget" | "unknown_cost_this_month" | "usage_unavailable";

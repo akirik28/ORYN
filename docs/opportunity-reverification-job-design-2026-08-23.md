@@ -51,6 +51,60 @@ it documents.
 > data-derived (§4.2's own point: "when #146 deleted the special population, no line of §4.1
 > needed editing") and that held again, ten days and twelve rows later.
 
+> **Implementation note, 2026-09-03.** CEO-assigned build ("build `source_verified_at`" —
+> three confirmed live instances of the gap this closes: Stanford Anesthesia, ISSYP, Kadir
+> Has). Built to this document as read, not redesigned — every section number, every
+> invariant, every precondition below is implemented as specified. Migration 0103
+> (`opportunities.source_verified_at`, `opportunity_verification_runs` per §8.2, plus one
+> Postgres view, `opportunity_verification_latest`, needed to express "latest run per
+> opportunity" through this app's PostgREST-only access — the one schema addition this
+> document didn't anticipate, since it's pure infrastructure for a query §2.1 already
+> requires). Code lives in `lib/opportunities/reverification/`, route at
+> `app/api/jobs/opportunity-reverification/route.ts`. Every flagged item in §12 was also
+> applied: the `machine_checked_at` → `source_verified_at` rename in `lifecycle.ts`, the
+> `discover.ts` `last_verified_at` stamp removed, `JobBudgetFeature` gained
+> `opportunity_reverification` at $5/month.
+>
+> **One assumption in this document turned out to be wrong, corrected during the build:**
+> §7.2's closing line ("`tavilyProvider.extract` already surfaces `failed_results` … so the
+> P2 signal is available without new plumbing") was checked against the real code, not
+> trusted — `extract()`'s success path returned only `results`, silently discarding
+> `failed_results` even though its own Zod schema already parsed it. Fixed in
+> `lib/providers/tavily.ts` (confirmed zero existing callers before changing the return
+> shape); §7.3's corroboration ladder needed this signal and would otherwise have had no way
+> to read it.
+>
+> **The lease mechanism (§2.2) is a transient run row, not a lock** — "an equivalent
+> conditional update" to `FOR UPDATE SKIP LOCKED`, the specific alternative this section
+> itself offers, adapted to what this app's service-role PostgREST client can actually
+> express. A new `lease_claimed` outcome value, excluded from every real-outcome
+> aggregation, is this implementation's own addition to make it work; see the migration's own
+> comment for the full reasoning.
+>
+> **Deliberately deferred, not silently skipped:**
+> - §7.3 rung 4 (PDF text extraction) — a PDF-primary row fails the content-floor guard and
+>   correctly lands on `p2_unreadable`/`reached_unusable`, the honest degradation §7.5's own
+>   table already defines, not a misparse. Affects 6 corpus rows, 2 already miscategorized
+>   faculty CVs per this document's own §7.0.
+> - §7.4's P3 (secondary-source flagging when the official read fails) — the outcome value
+>   exists in the schema; nothing in this pass actively searches for a secondary source on a
+>   P2. A human reviewing the retirement queue (§6.4) can do this today; automating it is a
+>   real follow-up, not a v1 requirement (P3 "writes no production column" regardless).
+> - §10's dry run itself — not run. `runReverificationPass` (the same function the route
+>   calls) is directly callable from a future script exactly as §10.2 describes, so nothing
+>   about this build makes the dry run harder to add; it simply wasn't part of this pass.
+>
+> **Ships exactly as §9.6 and §2.4 specify: demotion disabled (`REVERIFY_ALLOW_DEMOTION`
+> unset), scheduler off (not added to `vercel.json`).** Arming either is a founder/CEO
+> decision, not this pass's to make.
+>
+> Gates: `npm run typecheck` / `npm run lint` — both green. Full suite green (336 files /
+> 5285 tests as of this pass), including 98 new tests across the five pure-logic modules
+> (`priority.ts`, `ttl.ts`, `classify.ts`, `demotion.ts`, `corroborate.ts`) plus the
+> `lifecycle.ts` rename's own updated coverage. `run-job.ts`'s orchestration itself is
+> exercised end-to-end only by composing those already-tested pieces plus the full gate —
+> genuine integration testing against a real corpus is what the (not-yet-run) dry run is for.
+
 ---
 
 ## 0. Summary

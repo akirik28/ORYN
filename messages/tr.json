@@ -1827,6 +1827,7 @@
         "description": "Bu takvim ayındaki gerçek harcamanın her işin kendi bütçesine karşı durumu — bir işin durmak üzere olduğunu gösteren grafik.",
         "opportunity_extraction": "Fırsat çıkarımı",
         "requirement_extraction": "Gereklilik çıkarımı",
+        "opportunity_reverification": "Fırsat yeniden doğrulama",
         "status": "Bu ay {budget} bütçesinin {spent} kadarı kullanıldı",
         "unknown": "Bu ayki harcama bilinmiyor — aşağıya bakın.",
         "neverRun": "Bu ay kayıtlı çağrı yok.",

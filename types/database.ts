@@ -1650,6 +1650,12 @@ export interface Opportunity {
    * pattern as eligible_citizenships/0047. Never set without an official-source
    * statement; false is the honest default, not a claim of restriction. */
   country_eligibility_confirmed_open: boolean;
+  /** Migration 0103. See that migration's own column comment for the full semantic
+   * contract (design doc §8.5) — written only by a P1 reverification outcome, never
+   * backfilled, never read as staleness. Distinct from verified_at/last_verified_at above:
+   * see lib/opportunities/lifecycle.ts's OpportunityVerificationFacts for why neither of
+   * those can support this claim. */
+  source_verified_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -1686,6 +1692,14 @@ export type OpportunityInsert = Insertable<
   | "image_url"
   | "image_source_url"
   | "image_attribution"
+  // Migration 0103 — nullable, no default; never set at insert time (design doc §8.6, no
+  // backfill). Only ever written later by a P1 reverification outcome via an update.
+  | "source_verified_at"
+  // lib/opportunities/discover.ts (2026-09-03) stopped stamping this at insert time — design
+  // doc §1.2a's flagged hazard, an unattended Tavily search hit reading as "verified" to
+  // anything trusting the column. Nullable already; now genuinely omittable rather than
+  // always supplied.
+  | "last_verified_at"
 >;
 export type OpportunityUpdate = Updatable<Opportunity, "id" | "created_at" | "updated_at">;
 
@@ -1701,6 +1715,73 @@ export interface OpportunitySource {
   created_at: string;
 }
 export type OpportunitySourceInsert = Insertable<OpportunitySource, "id" | "created_at" | "retrieved_at" | "confidence">;
+
+/** Migration 0103 (design doc §8.2) — see that migration's own table/column comments for
+ * the full contract. Outcome/evidence/failure-class string unions are intentionally not
+ * narrowed here (this file mirrors the DB's own `check` constraints, which already enforce
+ * the real vocabulary) — lib/opportunities/reverification/types.ts owns the narrowed
+ * application-level types and is the single place those unions are spelled out. */
+export interface OpportunityVerificationRun {
+  id: string;
+  opportunity_id: string;
+  run_id: string | null;
+  attempted_url: string;
+  final_url: string | null;
+  fetch_method: string | null;
+  fetch_attempts: unknown[];
+  outcome: string;
+  evidence_class: string | null;
+  failure_class: string | null;
+  http_status: number | null;
+  matched_excerpt: string | null;
+  detected_deadline: string | null;
+  detected_cycle_signal: string | null;
+  proposed_change: Record<string, unknown> | null;
+  applied: boolean;
+  consecutive_failures: number;
+  next_check_at: string | null;
+  error: string | null;
+  created_at: string;
+}
+/** One row of the `opportunity_verification_latest` view (migration 0103) — see that
+ * migration's own comment. Read-only; there is no writer, only opportunity_verification_runs
+ * inserts underneath it. */
+export interface OpportunityVerificationLatestRow {
+  opportunity_id: string;
+  latest_run_id: string;
+  outcome: string;
+  evidence_class: string | null;
+  next_check_at: string | null;
+  consecutive_failures: number;
+  last_checked_at: string;
+}
+
+/** The one field this otherwise-append-only table (design doc §8.2) is ever updated after
+ * insert: `applied`, written back once §9's demotion envelope actually applies a proposed
+ * change — see lib/opportunities/reverification/run-job.ts's applyDemotion(). Every other
+ * column is fixed at insert time forever. */
+export type OpportunityVerificationRunUpdate = Pick<OpportunityVerificationRun, "applied">;
+
+export type OpportunityVerificationRunInsert = Insertable<
+  OpportunityVerificationRun,
+  | "id"
+  | "created_at"
+  | "run_id"
+  | "final_url"
+  | "fetch_method"
+  | "fetch_attempts"
+  | "evidence_class"
+  | "failure_class"
+  | "http_status"
+  | "matched_excerpt"
+  | "detected_deadline"
+  | "detected_cycle_signal"
+  | "proposed_change"
+  | "applied"
+  | "consecutive_failures"
+  | "next_check_at"
+  | "error"
+>;
 
 export interface OpportunityMatch {
   id: string;
@@ -2206,6 +2287,8 @@ export interface Database {
       student_requirement_evaluations: Table<StudentRequirementEvaluation, StudentRequirementEvaluationInsert, StudentRequirementEvaluationUpdate>;
       opportunities: Table<Opportunity, OpportunityInsert, OpportunityUpdate>;
       opportunity_sources: Table<OpportunitySource, OpportunitySourceInsert, Partial<OpportunitySourceInsert>>;
+      opportunity_verification_runs: Table<OpportunityVerificationRun, OpportunityVerificationRunInsert, OpportunityVerificationRunUpdate>;
+      opportunity_verification_latest: Table<OpportunityVerificationLatestRow, never, never>;
       opportunity_matches: Table<OpportunityMatch, OpportunityMatchInsert, Partial<OpportunityMatchInsert>>;
       saved_opportunities: Table<SavedOpportunity, SavedOpportunityInsert, SavedOpportunityUpdate>;
       profile_scores: Table<ProfileScore, ProfileScoreInsert, Partial<ProfileScoreInsert>>;

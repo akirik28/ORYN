@@ -95,7 +95,20 @@ export async function discoverOpportunitiesForQuery(query: string): Promise<Disc
           end_date: candidate.endDate,
           source: "tavily",
           source_url: result.url,
-          last_verified_at: new Date().toISOString(),
+          // Deliberately NOT stamping last_verified_at here — docs/opportunity-
+          // reverification-job-design-2026-08-23.md §1.2a flagged this exact line as a
+          // latent hazard: an insert-time new Date() from an unattended Tavily search
+          // reads as "verified" to anything trusting the column, with no page ever
+          // actually read. As of §1.2a's own measurement no row yet carried source='tavily',
+          // so the hazard was latent in code rather than historical in data — fixed here
+          // before this path ever ran, per that section's own recommendation to whoever
+          // owns this file. opportunity_sources below already records what actually
+          // happened (source_type: "web_search", confidence: "medium") at the confidence
+          // it actually deserves; last_verified_at now stays null on a freshly-discovered
+          // row until either a human researches it or the re-verification job
+          // (lib/opportunities/reverification/) reads the real page and writes
+          // source_verified_at (migration 0103) — the field actually built to support this
+          // claim, see that migration's own comment.
           normalized_title: normalizeTitle(candidate.title),
         })
         .select()

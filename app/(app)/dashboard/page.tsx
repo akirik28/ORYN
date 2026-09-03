@@ -155,8 +155,11 @@ export default async function DashboardPage() {
         // needs both to tell "no evidence at all" from "written by the other pipeline" — the
         // distinction #143 got wrong. Omitting `verified_at` here would silently re-create that
         // bug for this surface alone; OpportunityVerificationFacts requires it so that omitting
-        // it fails typecheck rather than quietly hiding opportunities from the homepage.
-        .select("id, title, status, cycle_status, deadline, last_verified_at, verified_at, cost, selectivity_tier")
+        // it fails typecheck rather than quietly hiding opportunities from the homepage. Same
+        // reasoning now applies to `source_verified_at` (migration 0103) — MAX_VERIFICATION_AGE_DAYS
+        // is still null so it changes nothing live today, but the type requires it for the day
+        // that stops being true, same as verified_at above.
+        .select("id, title, status, cycle_status, deadline, last_verified_at, verified_at, source_verified_at, cost, selectivity_tier")
         .in("id", opportunityIds)
         // The enum, not just the timestamps. isOpportunitySufficientlyVerified below asks
         // "did any pipeline ever touch this row", which is a different question from "has a

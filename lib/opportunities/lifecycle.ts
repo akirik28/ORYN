@@ -299,17 +299,9 @@ export const DEADLINE_MODES_WITHOUT_A_FIXED_DATE: ReadonlySet<string> = new Set(
  * list instead of a pipeline generation). Requiring it turns that mistake into a compile error:
  * app/(app)/dashboard/page.tsx is the one narrowed select on this path, and it must list both.
  */
-export type OpportunityVerificationFacts = Pick<Opportunity, "deadline" | "last_verified_at" | "verified_at"> & {
+export type OpportunityVerificationFacts = Pick<Opportunity, "deadline" | "last_verified_at" | "verified_at" | "source_verified_at"> & {
   /** Not yet a column — see DEADLINE_MODES_WITHOUT_A_FIXED_DATE. Optional on purpose. */
   readonly deadline_mode?: string | null;
-  /**
-   * Phase 30's seam, and the ONLY field an age threshold may ever be measured against. Not a
-   * column and deliberately not proposed as one — docs/opportunity-reverification-job-design-
-   * 2026-08-23.md §8.4 keeps machine-check recency in the runs table and warns specifically
-   * against a third overlapping timestamp on `opportunities`. Supplied by a join when that job
-   * exists; absent today, so no row is age-gated.
-   */
-  readonly machine_checked_at?: string | null;
 };
 
 export function hasDeadlineCommitment(opportunity: OpportunityVerificationFacts): boolean {
@@ -348,12 +340,15 @@ export function hasAnyVerificationRecord(opportunity: OpportunityVerificationFac
  * picked today.
  *
  * Read this together with the constraint below it: when this IS eventually set, it is measured
- * against `machine_checked_at` and never against `last_verified_at` or `verified_at`. Those two
- * are majority hand-entered midnight dates; running date arithmetic over them would manufacture
- * precisely the certainty the corrected gate exists to avoid. Phase 30's design says the same
- * (§3.3): turn this on only after the re-verification job has made two full corpus passes, so a
- * stale timestamp means "the job tried and could not confirm" rather than "the job hasn't
- * reached this row yet."
+ * against `source_verified_at` (migration 0103, live as of 2026-09-03 — see that migration's
+ * own comment) and never against `last_verified_at` or `verified_at`. Those two are majority
+ * hand-entered midnight dates; running date arithmetic over them would manufacture precisely
+ * the certainty the corrected gate exists to avoid. Phase 30's design says the same (§3.3):
+ * turn this on only after the re-verification job (lib/opportunities/reverification/) has made
+ * two full corpus passes, so a stale timestamp means "the job tried and could not confirm"
+ * rather than "the job hasn't reached this row yet." The job now exists and can populate
+ * `source_verified_at` for real, but it has made zero corpus passes as of this writing — this
+ * stays null until that condition is actually met, not merely until the column exists.
  */
 export const MAX_VERIFICATION_AGE_DAYS: number | null = null;
 
@@ -381,10 +376,10 @@ export function isOpportunitySufficientlyVerified(
   // Age is measured ONLY against a real machine check. A row the job has never reached has no
   // such timestamp and must not be excluded for it — otherwise enabling the threshold would
   // mass-exclude the catalogue for the sole reason that the job is young.
-  const machineCheckedAt = opportunity.machine_checked_at;
-  if (!machineCheckedAt) return true;
+  const sourceVerifiedAt = opportunity.source_verified_at;
+  if (!sourceVerifiedAt) return true;
 
-  const checkedAtMs = Date.parse(machineCheckedAt);
+  const checkedAtMs = Date.parse(sourceVerifiedAt);
   if (Number.isNaN(checkedAtMs)) return true;
   return referenceDate.getTime() - checkedAtMs <= MAX_VERIFICATION_AGE_DAYS * 24 * 60 * 60 * 1000;
 }

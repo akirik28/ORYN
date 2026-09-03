@@ -373,7 +373,7 @@ describe("filterActionableOpportunities", () => {
 function freshnessRow(
   overrides: Partial<OpportunityVerificationFacts> = {}
 ): OpportunityVerificationFacts {
-  return { deadline: null, last_verified_at: null, verified_at: null, ...overrides };
+  return { deadline: null, last_verified_at: null, verified_at: null, source_verified_at: null, ...overrides };
 }
 
 describe("isOpportunitySufficientlyVerified", () => {
@@ -452,6 +452,7 @@ describe("Regression -- a legacy-generation row is not gated on pipeline lineage
     deadline: null,
     last_verified_at: null,
     verified_at: "2026-08-18T00:00:00Z",
+    source_verified_at: null,
   };
 
   test("a row verified through `verified_at` alone is sufficiently verified", () => {
@@ -473,7 +474,7 @@ describe("Regression -- a legacy-generation row is not gated on pipeline lineage
     // is what gives this seam a real signal.
     expect(
       isOpportunityRecommendable(
-        { status: "active" as const, cycle_status: "upcoming", deadline: null, last_verified_at: null, verified_at: null },
+        { status: "active" as const, cycle_status: "upcoming", deadline: null, last_verified_at: null, verified_at: null, source_verified_at: null },
         REFERENCE_DATE
       )
     ).toBe(false);
@@ -485,7 +486,7 @@ describe("Regression -- a legacy-generation row is not gated on pipeline lineage
     // certainty this fix exists to remove. No age rule may run against either legacy column.
     expect(MAX_VERIFICATION_AGE_DAYS).toBeNull();
     expect(
-      isOpportunitySufficientlyVerified({ deadline: null, last_verified_at: null, verified_at: "2019-01-01T00:00:00Z" })
+      isOpportunitySufficientlyVerified({ deadline: null, last_verified_at: null, verified_at: "2019-01-01T00:00:00Z", source_verified_at: null })
     ).toBe(true);
   });
 
@@ -535,16 +536,19 @@ describe("the age threshold is wired to a machine check, not to the legacy colum
         deadline: null,
         last_verified_at: null,
         verified_at: "2019-01-01T00:00:00Z",
-        machine_checked_at: "2019-01-01T00:00:00Z",
+        source_verified_at: "2019-01-01T00:00:00Z",
       })
     ).toBe(true);
   });
 
-  test("`machine_checked_at` is absent on every row today, so the seam is inert", () => {
-    // Not a column and deliberately not proposed as one (§8.4). It arrives by join when the
-    // re-verification job exists; until then no row can be age-excluded.
-    const row: OpportunityVerificationFacts = { deadline: null, last_verified_at: null, verified_at: "2026-08-18T00:00:00Z" };
-    expect(row.machine_checked_at).toBeUndefined();
+  test("`source_verified_at` is null on every row until the reverification job runs, so the seam is inert", () => {
+    // Migration 0103 -- a real, required column now (not the bolted-on optional field this
+    // used to be), but design doc §8.6's "no backfill" means it starts null on every row and
+    // stays null until lib/opportunities/reverification/'s job writes a real P1 outcome. A
+    // null here must never read as stale (§7.2a's corollary) -- pinned here even though the
+    // column is now real, because its MEANING while null is unchanged from before it existed.
+    const row: OpportunityVerificationFacts = { deadline: null, last_verified_at: null, verified_at: "2026-08-18T00:00:00Z", source_verified_at: null };
+    expect(row.source_verified_at).toBeNull();
     expect(isOpportunitySufficientlyVerified(row)).toBe(true);
   });
 });
@@ -572,7 +576,7 @@ describe("hasDeadlineCommitment -- the rolling seam", () => {
   test("an explicit rolling declaration is a commitment even with a null deadline", () => {
     // The distinction the seam exists to draw: "no deadline because there isn't one" is a
     // researched fact; "no deadline because nobody looked" is the absence of one.
-    expect(hasDeadlineCommitment({ deadline: null, last_verified_at: null, verified_at: null, deadline_mode: "rolling" })).toBe(true);
+    expect(hasDeadlineCommitment({ deadline: null, last_verified_at: null, verified_at: null, source_verified_at: null, deadline_mode: "rolling" })).toBe(true);
   });
 
   test("a verified rolling opportunity passes the freshness gate", () => {
@@ -581,6 +585,7 @@ describe("hasDeadlineCommitment -- the rolling seam", () => {
         deadline: null,
         last_verified_at: "2026-08-20T00:00:00Z",
         verified_at: null,
+        source_verified_at: null,
         deadline_mode: "rolling",
       })
     ).toBe(true);
@@ -590,13 +595,13 @@ describe("hasDeadlineCommitment -- the rolling seam", () => {
     // The two legs are independent: an explicit "there is no single date, by design" is itself
     // a researched commitment, so it passes without either timestamp.
     expect(
-      isOpportunitySufficientlyVerified({ deadline: null, last_verified_at: null, verified_at: null, deadline_mode: "rolling" })
+      isOpportunitySufficientlyVerified({ deadline: null, last_verified_at: null, verified_at: null, source_verified_at: null, deadline_mode: "rolling" })
     ).toBe(true);
   });
 
   test("an unrecognized deadline_mode is not silently treated as a commitment", () => {
-    expect(hasDeadlineCommitment({ deadline: null, last_verified_at: null, verified_at: null, deadline_mode: "sometime" })).toBe(false);
-    expect(hasDeadlineCommitment({ deadline: null, last_verified_at: null, verified_at: null, deadline_mode: null })).toBe(false);
+    expect(hasDeadlineCommitment({ deadline: null, last_verified_at: null, verified_at: null, source_verified_at: null, deadline_mode: "sometime" })).toBe(false);
+    expect(hasDeadlineCommitment({ deadline: null, last_verified_at: null, verified_at: null, source_verified_at: null, deadline_mode: null })).toBe(false);
   });
 });
 
@@ -607,6 +612,7 @@ describe("isOpportunityRecommendable -- the composed gate every recommendation p
     deadline: "2026-09-15",
     last_verified_at: "2026-08-20T00:00:00Z",
     verified_at: null,
+    source_verified_at: null,
   };
 
   test("a verified, current opportunity is recommendable", () => {
@@ -620,7 +626,7 @@ describe("isOpportunityRecommendable -- the composed gate every recommendation p
     expect(isOpportunityRecommendable({ ...verifiedAndOpen, status: "disabled" }, REFERENCE_DATE)).toBe(false);
     expect(
       isOpportunityRecommendable(
-        { status: "active" as const, cycle_status: "upcoming", deadline: null, last_verified_at: null, verified_at: null },
+        { status: "active" as const, cycle_status: "upcoming", deadline: null, last_verified_at: null, verified_at: null, source_verified_at: null },
         REFERENCE_DATE
       )
     ).toBe(false);

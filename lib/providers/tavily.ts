@@ -35,6 +35,17 @@ const ExtractResponseSchema = z.object({
 });
 
 export type TavilyExtractResult = z.infer<typeof ExtractResultSchema>;
+export type TavilyExtractFailure = { url: string; error: string };
+
+export interface TavilyExtractResponse {
+  results: TavilyExtractResult[];
+  /** Per-URL failures Tavily itself reported for this batch — dropped silently by an
+   * earlier version of `extract()` below, which returned only `results`. Needed by
+   * lib/opportunities/reverification/corroborate.ts (design doc §7.3's second corroborating
+   * signal: "Tavily's failed_results reports the same status for the URL"). Always present,
+   * empty array rather than undefined, when nothing failed. */
+  failedResults: TavilyExtractFailure[];
+}
 
 export interface TavilySearchOptions {
   maxResults?: number;
@@ -90,11 +101,22 @@ export class TavilySearchProvider {
     return { success: true, data: parsed.data.results };
   }
 
-  async extract(urls: string[]): Promise<ProviderResult<TavilyExtractResult[]>> {
+  /**
+   * `data.failedResults` is required, not optional-and-usually-empty — a caller checking
+   * corroboration (lib/opportunities/reverification/corroborate.ts) needs to distinguish
+   * "Tavily reported nothing wrong with this URL" from "I forgot to look," and an optional
+   * field invites the second reading by accident. Previously returned `TavilyExtractResult[]`
+   * directly, silently discarding `failed_results` even though ExtractResponseSchema already
+   * parsed it — found while wiring up the re-verification job's corroboration ladder
+   * (design doc §7.3), which needs exactly this signal and has no other source for it. No
+   * caller of the old shape exists in the codebase (grepped before changing this), so this is
+   * a correction, not a breaking change requiring a migration of call sites.
+   */
+  async extract(urls: string[]): Promise<ProviderResult<TavilyExtractResponse>> {
     if (!this.apiKey) {
       return { success: false, error: { type: "not_configured", message: "TAVILY_API_KEY is not set." } };
     }
-    if (urls.length === 0) return { success: true, data: [] };
+    if (urls.length === 0) return { success: true, data: { results: [], failedResults: [] } };
 
     const result = await fetchProviderJson(
       "https://api.tavily.com/extract",
@@ -113,7 +135,7 @@ export class TavilySearchProvider {
       return { success: false, error: { type: "malformed_response", message: "Tavily extract response didn't match the expected shape." } };
     }
 
-    return { success: true, data: parsed.data.results };
+    return { success: true, data: { results: parsed.data.results, failedResults: parsed.data.failed_results ?? [] } };
   }
 }
 
