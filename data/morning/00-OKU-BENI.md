@@ -22,12 +22,11 @@ canlıda doğrulandı).
 
 ## 2. Migration'ları uygula
 
-`01-migrations-2026-09-03.sql` — tamamını yapıştır, çalıştır. **On migration**, tek işlem
-içinde. Bir tanesi patlarsa hiçbiri uygulanmaz ve tekrar çalıştırmak güvenli.
+`01-migrations-2026-09-03.sql` — tamamını yapıştır, çalıştır. **On bir migration**, tek
+işlem içinde. Bir tanesi patlarsa hiçbiri uygulanmaz ve tekrar çalıştırmak güvenli.
 
-Numarada 0101 atlıyor, eksik değil: o oryn-60'ın dalında duruyor ve o oturum push
-edemiyor — kendi izin kapısı git push'u reddediyor. Sana yazdı. **Uyandığında bakman
-gereken tek engel bu**; işi bitmiş, gate'i yeşil, sadece gönderemiyor.
+Sıra kesintisiz. Bir ara 0101 eksikti — sahibi oturum push edemiyordu — ama engel kalktı
+ve iş birleşti. **Yani sabaha bekleyen bir engel kalmadı.**
 
 **Bu adım olmadan panelin yazma tarafı çalışmaz.** Ultra yapma, hediye etme, iş durdurma,
 bütçe ayarlama — hepsi bu dokuz migration'a bağlı. Panel bunları dürüstçe "kurulu değil"

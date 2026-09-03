@@ -1,18 +1,18 @@
 -- ORYN — sabah paketi 1/2: uygulanmamış migration'lar
--- Yeniden oluşturuldu: 2026-09-03 03:20, canlıya (qtcvcflzxbuagvvwahhu) okuma yaparak.
+-- Yeniden oluşturuldu: 2026-09-03 03:45. Kapsam canlıya (qtcvcflzxbuagvvwahhu) okuma
+-- yaparak belirlendi — her migration'ın kendi tablosu information_schema'da tek tek
+-- arandı, migration listesine güvenilmedi (o liste bu projede güvenilmez).
 --
--- HANGİLERİ VE NEDEN: 0083-0089, 0091, 0092 canlıda UYGULANMIŞ (her biri kendi tablosu ya
--- da sütunu information_schema'da tek tek aranarak doğrulandı; migration listesine
--- güvenilmedi). Aşağıdaki 10 tanesi uygulanmamış. 0090 ve 0093 bu geceden değil — gözden
--- kaçmışlar. 0101 burada YOK: oryn-60'ın dalında duruyor ve o oturum push edemiyor
--- (kendi izin kapısı reddediyor). O yüzden numara atlıyor; eksiklik değil.
+-- 0083-0089, 0091 ve 0092 UYGULANMIŞ. Aşağıdaki 11 tanesi uygulanmamış. 0090 ve 0093 bu
+-- geceden değil, gözden kaçmışlar. 0101 önceki sürümde eksikti çünkü sahibi oturum push
+-- edemiyordu; engel kalktı, artık burada — yani sıra artık kesintisiz.
 --
 -- TEK İŞLEM: hepsi BEGIN/COMMIT arasında. Biri patlarsa HİÇBİRİ uygulanmaz ve dosyayı
--- tekrar çalıştırmak güvenlidir. Bilerek böyle: 0095, 0096, 0099, 0100 ve 0102
--- "IF NOT EXISTS" kullanmıyor, yani yarısı uygulanmış bir durumda ikinci deneme patlardı.
--- Postgres'te DDL geri alınabilir; hiçbirinde kendi BEGIN/COMMIT'i ya da CONCURRENTLY yok.
+-- tekrar çalıştırmak güvenli olur. Bilerek: 0095, 0096, 0099, 0100 ve 0102 "IF NOT EXISTS"
+-- kullanmıyor, yani yarısı uygulanmış bir durumda ikinci deneme patlardı. Postgres'te DDL
+-- geri alınabilir; hiçbirinde kendi BEGIN/COMMIT'i ya da CONCURRENTLY yok (kontrol edildi).
 --
--- NASIL: Supabase SQL Editor'e tamamını yapıştır, Run. Sonundaki doğrulamada 10 satırın
+-- NASIL: Supabase SQL Editor'e tamamını yapıştır, Run. Sonundaki doğrulamada 11 satırın
 -- hepsi "uygulanmis = true" dönmeli.
 
 BEGIN;
@@ -511,6 +511,36 @@ alter table public.ai_model_pricing enable row level security;
 
 
 -- ══════════════════════════════════════════════════════════════════
+-- 0101_admin_dead_feature_flags.sql
+-- ══════════════════════════════════════════════════════════════════
+
+-- Admin-recorded "confirmed dead" flags for product features (growth panel, 2026-09-02).
+-- Record + display only, deliberately not enforcement -- docs/admin-panel-architecture-
+-- 2026-09-02.md's own D8 draws this line: "the panel reads and renders... enforcement
+-- lives in [the relevant library]... the rule that stops a call is never split between a
+-- screen and a library." Marking a feature here is a documented decision (who, when, why)
+-- that a human reads before building on top of that feature again -- it does not gate,
+-- disable, or otherwise change any runtime behavior.
+--
+-- `feature_key` is free text, not a foreign key or enum, deliberately: today's candidates
+-- are product_events.event_name values (e.g. "research_project_started"), but the same
+-- table should hold a judgment about any admin-legible feature identifier without a
+-- migration every time the candidate set changes.
+
+create table public.admin_dead_feature_flags (
+  feature_key text primary key,
+  marked_by uuid references public.profiles(id) on delete set null,
+  marked_at timestamptz not null default now(),
+  note text
+);
+
+-- Ops/admin-decision data, not a student's own data -- same posture as provider_health and
+-- external_sync_jobs (migration 0014): RLS enabled, zero policies, so only the admin
+-- (service_role) client can read or write it. No authenticated-user policy is added here.
+alter table public.admin_dead_feature_flags enable row level security;
+
+
+-- ══════════════════════════════════════════════════════════════════
 -- 0102_weekly_plan_budget_settings.sql
 -- ══════════════════════════════════════════════════════════════════
 
@@ -582,7 +612,7 @@ comment on column public.weekly_plan_budget_settings.updated_by is
 
 COMMIT;
 
--- ── DOĞRULAMA — ayrıca çalıştır, 10 satır da true olmalı ─────────────
+-- ── DOĞRULAMA — ayrıca çalıştır, 11 satır da true olmalı ─────────────
 select t.beklenen, (
   select count(*) from information_schema.tables it
   where it.table_schema = 'public' and it.table_name = t.beklenen
@@ -590,6 +620,7 @@ select t.beklenen, (
 from (values
   ('notification_preferences'), ('upgrade_prompt_dismissals'), ('admin_finance_settings'),
   ('job_controls'), ('quota_grants'), ('admin_action_log'), ('admin_actions'),
-  ('job_budget_overrides'), ('ai_model_pricing'), ('weekly_plan_budget_settings')
+  ('job_budget_overrides'), ('ai_model_pricing'), ('admin_dead_feature_flags'),
+  ('weekly_plan_budget_settings')
 ) as t(beklenen)
 order by uygulanmis, beklenen;
