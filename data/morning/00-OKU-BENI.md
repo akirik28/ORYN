@@ -27,6 +27,19 @@ bir kararına bağlı: **beş ülkenin 275 uygulamalı bilimler kurumu** (aşağ
 **22 kayda sınıf bilgisi** (`opportunity-eligible-grades-from-prose-2026-09-03.sql`), ve
 **Breakthrough'nun kategori düzeltmesi** (`opportunity-category-relabel-2026-09-03.sql`).
 
+**Bir tanesi ise bugün uygulanabilir, hiçbir karara bağlı değil:** Hollanda'nın eksik iki
+araştırma üniversitesi (`netherlands-wo-gaps-2026-09-03.sql`). Bunlar zaten katalogda olan
+13 Hollanda üniversitesiyle **aynı sektörden**, o yüzden yukarıdaki şema kapısına takılmıyor.
+
+DUO'nun listesinde 18 var, bizde 13 vardı. Aradaki 5'in **üçü bilerek dışarıda bırakıldı**:
+üçü de tek bir Protestan mezhebine papaz yetiştiren, sadece ilahiyat okutan kurumlar. Bu
+gruplama 6e'nin kendi yorumu değil — Hollanda sektörünün kendisi onları ayrı bir kategori
+sayıyor, bir dördüncü kurumun kendi sitesinde bu grup adıyla anılıyorlar.
+
+Bir tanesi (Open Universiteit) ise açık kayıtlı uzaktan eğitim modeli. 6e onu **dahil etti
+ama işaretledi**: "seçici üniversite" konumlandırmasına uymuyor olabilir, ama bu senin
+kararın, benimki değil dedi. İkisi de tek satırla çıkarılabilir.
+
 **Sonunda ne değişmiş olacak:**
 
 | | |
