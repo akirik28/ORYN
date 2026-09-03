@@ -240,4 +240,61 @@ describe("classifyAgainstStoredState -- the full deterministic decision tree", (
     const verdict = classifyAgainstStoredState(content, { cycleStatus: "open", deadline: null });
     expect(verdict.kind).not.toBe("agrees");
   });
+
+  describe("stateIsUnknown -- unverified/date_not_announced must not fall through to liveness_silent when a phrase matches (found 2026-09-03 via the Turkish pass, confirmed language-agnostic against the English corpus too)", () => {
+    test("disagreement, not liveness_silent: stored unverified, page has a clear opening signal -- Sabancı University shape ('Son Başvuru: 1 Ağustos 2026' + 'Hemen Başvur')", () => {
+      const content = LONG_ENOUGH("Bu Yaz Üniversiteli Oluyorsun! Son Başvuru: 1 Ağustos 2026. Hemen Başvur.");
+      const verdict = classifyAgainstStoredState(content, { cycleStatus: "unverified", deadline: null });
+      expect(verdict.kind).toBe("disagreement");
+    });
+
+    test("disagreement, not liveness_silent: stored date_not_announced, page has a clear closure signal -- Interlochen Review shape ('not open for submissions')", () => {
+      const content = LONG_ENOUGH("The Interlochen Review is currently not open for submissions. Check back in January, 2027.");
+      const verdict = classifyAgainstStoredState(content, { cycleStatus: "date_not_announced", deadline: null });
+      expect(verdict.kind).toBe("disagreement");
+    });
+
+    test("still liveness_silent when stored unverified/date_not_announced AND no phrase matches at all -- the fix adds a branch, it does not remove the fallback", () => {
+      const content = LONG_ENOUGH("This programme welcomes students from many backgrounds and has a long history.");
+      expect(classifyAgainstStoredState(content, { cycleStatus: "unverified", deadline: null }).kind).toBe("liveness_silent");
+      expect(classifyAgainstStoredState(content, { cycleStatus: "date_not_announced", deadline: null }).kind).toBe("liveness_silent");
+    });
+
+    test("known states are unaffected: stored open/closed still resolve via the pre-existing agrees/disagreement branches, not the new one", () => {
+      const opening = LONG_ENOUGH("Applications open now for the new cycle.");
+      const closure = LONG_ENOUGH("Please note that applications are closed for this year.");
+      expect(classifyAgainstStoredState(opening, { cycleStatus: "open", deadline: null }).kind).toBe("agrees");
+      expect(classifyAgainstStoredState(closure, { cycleStatus: "closed", deadline: null }).kind).toBe("agrees");
+    });
+  });
+});
+
+describe("Turkish patterns, 2026-09-03 -- each traceable to a specific real page from the 21-page Turkish-market sample, not a translation of the English list", () => {
+  test("'son başvuru' / 'son kayıt' as a deadline label -- Sabancı ('Son Başvuru: 1 Ağustos 2026'), İTÜ Lise Yaz Okulu ('SON KAYIT: 16 TEMMUZ'), Istanbul Bilgi FAQ ('Son başvuru tarihi 12 Haziran 2025')", () => {
+    expect(findOpeningPhrases("Bu Yaz Üniversiteli Oluyorsun! Son Başvuru: 1 Ağustos 2026").length).toBeGreaterThan(0);
+    expect(findOpeningPhrases("KOŞULLARI DERSLER TAKVİM SON KAYIT: 16 TEMMUZ Kayıtlar Başladı").length).toBeGreaterThan(0);
+    expect(findOpeningPhrases("Son başvuru tarihi ne zaman? Son başvuru tarihi 12 Haziran 2025").length).toBeGreaterThan(0);
+  });
+
+  test("'şimdi başvur' / 'hemen başvur' as an apply-now CTA -- ODTÜ/METU ('Şimdi Başvur'), Sabancı and GençBizzTech (both 'Hemen Başvur')", () => {
+    expect(findOpeningPhrases("Neden ODTÜ Mühendislik Yaz Okulu? Şimdi Başvur Programı İndir").length).toBeGreaterThan(0);
+    expect(findOpeningPhrases("İletişim Destek Ol Hemen Başvur Bu Yaz Üniversiteli Oluyorsun!").length).toBeGreaterThan(0);
+  });
+
+  test("'kayıtlar... kapandı' as a closure signal, tolerating the possessive suffix -- Bilkent University Summer Camp ('Kayıtlarımız kapandı.')", () => {
+    expect(findClosurePhrases("Bilkent Yaz Kampı Bilkent Üniversitesi Yaz Kampı. Kayıtlarımız kapandı. Bilkent Hakkında").length).toBeGreaterThan(0);
+  });
+
+  test("'kayıtlar başladı' as an opening signal -- İTÜ Lise Yaz Okulu ('Kayıtlar Başladı!'), the sharpest real ambiguity case: this exact banner sits against a row stored 'closed', correctly routed to disagreement rather than auto-confirmed as a reopening", () => {
+    const content = LONG_ENOUGH("HEMEN BAŞVUR DUYURULAR GALERİ İLETİŞİM Geleceğini İTÜ'de Keşfet! LİSE YAZ OKULU 2026 Kayıtlar Başladı");
+    expect(findOpeningPhrases(content).length).toBeGreaterThan(0);
+    const verdict = classifyAgainstStoredState(content, { cycleStatus: "closed", deadline: null });
+    expect(verdict.kind).toBe("disagreement");
+  });
+
+  test("does not fire on unrelated Turkish text -- short roots like 'aç' must not match via these whole-phrase patterns", () => {
+    const content = LONG_ENOUGH("Bu açıklama, açı ve açlık kelimeleriyle hiçbir ilgisi olmayan bir metindir.");
+    expect(findOpeningPhrases(content)).toEqual([]);
+    expect(findClosurePhrases(content)).toEqual([]);
+  });
 });

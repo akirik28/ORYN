@@ -157,3 +157,182 @@ filter-UI negative case. Both dry runs referenced above made real Tavily/browser
 Anthropic calls and wrote nothing (`dryRun: true` throughout) — see
 `lib/opportunities/reverification/run-job.ts`'s own dry-run guarantee and its automated
 proof test.
+
+---
+
+## Addendum, 2026-09-03: Turkish patterns, and a bigger finding underneath them
+
+**Assigned by CEO** as the direct follow-on to "not decided here, deliberately" above: "Five
+pages is too thin to derive from, so fetch more... read them, find the patterns the language
+actually uses, and mind that Turkish is agglutinative, so a 'tolerant pattern' there means
+something different than it does in English." Same discipline as the English pass: read the
+real corpus by hand before writing a pattern, measure both directions, say so if the honest
+answer is "this needs a different mechanism."
+
+**Leading with the more important result first:** the Turkish patterns themselves are a
+modest, real improvement (below). What they surfaced in the process — a structural gap in
+`classifyAgainstStoredState` that silently blocks classification for `unverified`/
+`date_not_announced` rows *regardless of language* — is the bigger finding of this pass, and
+is not Turkish-specific at all. Both are reported here because the Turkish measurement can't
+be read honestly without separating them.
+
+### What was pulled
+
+The entire Turkish-market population in the live corpus, not a further subsample of it:
+`country IN ('Turkey', 'Türkiye')` OR a `.tr`/`.com.tr`/`.gov.tr`/`.edu.tr` official URL. 21
+rows, 20 fetched with real content (one, İTÜ Tasarım Atölyesi, returned none — recorded, not
+substituted). Read in full, by hand, same as the English 49.
+
+### What real pages actually say
+
+Three constructions, each traceable to specific rows, none a translation of the English list:
+
+- **"son başvuru" / "son kayıt"** ("final application" / "final registration" — functions as
+  a deadline label, like English `"deadline:"`): Sabancı University (*"Son Başvuru: 1 Ağustos
+  2026"*), İTÜ Lise Yaz Okulu (*"SON KAYIT: 16 TEMMUZ"*), Istanbul Bilgi's FAQ (*"Son başvuru
+  tarihi 12 Haziran 2025"*) — three independent pages, near-identical phrasing.
+- **"şimdi başvur" / "hemen başvur"** ("apply now" / "apply immediately" — two different real
+  words for "now," not one word's suffix variants): ODTÜ/METU (*"Şimdi Başvur"*), Sabancı and
+  GençBizzTech (both *"Hemen Başvur"*).
+- **"kayıtlar(ımız) kapandı"** ("[our] registrations have closed"): Bilkent University Summer
+  Camp (*"Kayıtlarımız kapandı."*) — the only closure example the sample contained, so the
+  only one coded, on the same don't-guess discipline as English's "check back" removal above.
+- **"kayıtlar başladı"** ("registrations started" — an opening signal): İTÜ Lise Yaz Okulu
+  (*"Kayıtlar Başladı!"*) — sitting on a page whose own *"SON KAYIT: 16 TEMMUZ"* deadline had
+  already passed by fetch time, against a row stored `closed`. Correctly a disagreement for
+  adjudication, not an auto-confirmed reopening — stale marketing copy left up past its own
+  deadline. GençBizzTech's *"Hemen Başvur"* nav link, sitting beside content entirely about an
+  already-concluded programme, is the same shape again.
+
+**Why this is a different kind of derivation than the English one, not a translation of it:**
+English's failure mode was word *order* ("now open" vs "open now") — a handful of patterns
+covers every order because English marks tense with separate words. Turkish marks the same
+distinctions with *suffixes on a shared root* ("kapan-dı" = closed, "kapan-mıştır" = has
+closed [formal], "kapa-lı" = closed [adjective] — one concept, three endings, the third not
+even sharing the "kapan-" substring). A pattern tolerant of Turkish inflection the way the
+English ones are tolerant of word order would need to match on the bare root — and Turkish
+roots are short enough for that to be actively dangerous: "aç" (root of "to open," 2
+characters) is a substring of "açıklama" (explanation), "açı" (angle), "açlık" (hunger), none
+of which say anything about an opportunity's status. English has nothing this short and this
+ambiguous among the roots this file matches on. The response: every Turkish pattern is a
+specific, whole-phrase, directly-observed construction, never a bare root — narrower coverage
+than a fluent speaker could derive, traded deliberately for not guessing at a conjugation
+this pass never actually saw.
+
+**Bug this discipline caught, not avoided:** the first version of the closure pattern used
+`kayıtlar\w*\s+kapandı`, intending `\w*` to tolerate the observed possessive suffix
+("kayıtlar**ımız** kapandı"). It never matched — not in testing, not against the live page it
+was written for. JavaScript's `\w` is ASCII-only; it does not match "ı" (U+0131, dotless
+i), so `\w*` could not cross the suffix at all. Caught by writing a test against the literal
+cited sentence, not by manual review, which had accepted the pattern as correct — see
+`verify-turkish-matches.ts`'s output before the fix, `closureMatches: []` for Bilkent despite
+the exact cited text being present. Fixed by matching the one observed suffix literally
+(`kayıtlar(?:ımız)?\s+kapandı`) instead of a general word-character class — which is also a
+more faithful implementation of the original stated intent ("tolerates *the* possessive
+suffix... since *that specific inflection* was directly observed") than the buggy generic
+version was.
+
+**Honest, explicit gaps**, on the same don't-guess discipline: "başvuru(lar) kapandı /
+kapanmıştır" (this corpus's one closure example used "kayıt," never "başvuru," as the closing
+noun), "açıldı"/"açık" as opening signals (never observed cleanly separated from the
+short-root risk above), and any formal/evidential mood ("-mıştır") variant of any of these.
+21 pages is also a smaller sample than English's 49 — proportionally less evidence per
+pattern. This is real Turkish-language capability applied by this session, not independent
+native-speaker review — given AGENTS.md's own day-one Turkey-market commitment, that review
+is worth getting before leaning on this further.
+
+### The bigger finding: `unverified`/`date_not_announced` never reached a verdict, in any language
+
+`classifyAgainstStoredState`'s branching computed `stateImpliesOpen` (open/upcoming) and
+`stateImpliesClosed` (closed/historical/discontinued), then only ever produced `"agrees"` or
+`"disagreement"` when one of those two was true. Migration 0041's `cycle_status` check
+constraint has **seven** values, not five — `unverified` and `date_not_announced` satisfy
+neither bucket, so *any* row stored in either state fell through to `liveness_silent`
+unconditionally, no matter what the page said. Two consequences, not one: no
+`source_verified_at` write (expected — nothing was confirmed), but also no disagreement
+routed to adjudication even when the deterministic pass found an explicit, unambiguous
+signal. The gap silently capped the single largest bucket in the corpus — `unverified`, 86
+rows, larger than every other bucket combined per design doc §4.2 — at zero classification,
+regardless of phrase-set quality. §0's own opening paragraph names exactly this population as
+the reason the job exists.
+
+Found by noticing an aggregate that didn't add up: the first Turkish comparison run showed
+`old.agrees === new.agrees` (2 and 2) even though three new opening patterns had just been
+added and Sabancı's page contains an unambiguous *"Son Başvuru: 1 Ağustos 2026"* +
+*"Hemen Başvur"* pair. Sabancı is stored `unverified`. Direct inspection of
+`classifyAgainstStoredState` confirmed the fall-through; a diagnostic script
+(`verify-turkish-matches.ts`) confirmed it was live on real rows, not a theoretical gap.
+
+**Fixed** by adding a third, exhaustive bucket — `stateIsUnknown` (`unverified` /
+`date_not_announced`) — routed to `"disagreement"`, never `"agrees"`: there is no existing
+claim for a page to *confirm* when the stored state is "not yet known," so `"agrees"` is the
+wrong word for that outcome. Routing to disagreement costs nothing extra in risk or new code
+paths — `adjudicateDisagreement`'s prompt already takes `storedCycleStatus` as an opaque
+string (*"Oryn's stored cycle status: unverified"* is a perfectly answerable question for the
+model), and every downstream consumer of a disagreement verdict (the `p1_changed`/
+`p4_contradicted` split, the demotion-eligibility check) already treats the prior stored
+value as opaque, never assumes it was specifically "open" or "closed." This reuses the same
+careful, already-tested gate a real open-vs-closed contradiction goes through — it does not
+open a new, less-scrutinized write path for a bucket that previously wrote nothing at all.
+
+**Confirmed language-agnostic, not a Turkish artifact**, by isolating the state-machine
+change alone (phrase-finding held fixed) against the *English* 49-row corpus: 5 more rows
+flip from silent to disagreement — Interlochen Review (*"not open for submissions"*, stored
+`unverified`), UCSB Research Mentorship (*"APPLY NOW"*, stored `unverified`), Girl Up Project
+Awards (*"application is now closed"*, stored `date_not_announced`), BRI Student Fellowship
+(*"Applications Open October"*, stored `date_not_announced`), and EYP Türkiye (*"ARE OPEN
+NOW"* — an English match, on a Turkish-market row also present in the English stratified
+sample). Zero rows regressed (silent→classified only, no classified→silent) in either corpus.
+
+### Measured result — both directions, decomposed by fix (Turkish corpus, 20 rows with content)
+
+| | liveness-silent | agrees (P1) | disagreement (→ adjudication) |
+|---|---|---|---|
+| Old (English patterns, pre-existing state-machine gap) | 16 | 2 | 0 |
+| + Turkish patterns only (state-machine gap still present) | 14 | 2 | 2 |
+| + state-machine fix only (on top of the above) | 9 | 3 | 6 |
+
+Final: **7 of 20 rows flip from silent to classified, zero regressions.** Decomposed by
+cause: the Turkish patterns alone account for 3 of the 7 (Bilkent → `agrees`; İTÜ Lise Yaz
+Okulu and GençBizzTech → `disagreement`, both against stored `closed`); the state-machine fix
+accounts for the other 4 (ODTÜ, Sabancı, Istanbul Bilgi, EYP Türkiye — all previously
+`unverified`/`date_not_announced`). On the English 49-row corpus, the state-machine fix alone
+accounts for 5 more (above) — the combined, cross-corpus, language-agnostic effect of that one
+fix is 8 distinct rows (EYP Türkiye counted once, present in both samples).
+
+**Every flip checked by hand against its real excerpt.** A pattern worth naming: most of the
+newly-surfaced excerpts carry a **stale date** — Sabancı's *"1 Ağustos 2026"* and Istanbul
+Bilgi's *"12 Haziran 2025"* are both already past relative to today (2026-09-03); ODTÜ's
+*"30 Haziran - 11 Temmuz 2025"* and EYP Türkiye's *"2026-05-25"* likewise. This is
+reassuring, not concerning: it's exactly the shape `adjudicateDisagreement`'s prompt is
+built to catch (*"the excerpt could plausibly describe a past cycle rather than the
+current one"*), and it argues these rows were correctly routed to the careful path rather
+than being auto-confirmed as currently open. No official pipeline-level dry run (real
+Tavily/Anthropic calls) was run against this specific population this pass — the classify-level
+verification above, plus the pre-existing dry-run #2 that already exercised the identical
+`disagreement → adjudicateDisagreement → p1_changed/p4_contradicted` code path end-to-end on
+different rows, was judged sufficient given the change here is fully contained to
+`classifyAgainstStoredState`'s pure branching logic, confirmed by direct inspection to touch
+nothing downstream. Stated as a judgment call, not a settled fact.
+
+### Answering the question actually asked: does Turkish need a different mechanism?
+
+No — not for the constructions this corpus contained. Regex phrase-matching found real,
+correct Turkish signal (3 of the 7 flips), the same mechanism English uses. What Turkish
+*did* need, beyond more patterns, was attention to encoding: `\w` silently not matching
+Turkish letters is a trap English never exposed, and a linguist's "tolerant pattern" instinct
+(match the root, accept any suffix) is actively dangerous here in a way it isn't in English,
+given how short and ambiguous Turkish roots are. Both are addressed above by staying
+narrower and more literal than the English pass needed to be, not by a different mechanism.
+
+The state-machine gap this pass found is real and large, but it is not a Turkish-mechanism
+question either — it would have capped the English corpus's `unverified`/`date_not_announced`
+rows exactly the same way, and did, once isolated and checked.
+
+### Gates
+
+`npm run typecheck` / `npm run lint` — both green. Full suite green (5469 tests, 348 files).
+14 new tests: 5 for the Turkish patterns (each citing the real page that motivated it, plus a
+short-root negative case), 4 for the `stateIsUnknown` branch (both directions — a phrase match
+now reaching disagreement, and the no-match case still correctly falling to liveness_silent),
+matching this file's own citation discipline throughout.

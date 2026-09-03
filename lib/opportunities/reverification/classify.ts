@@ -116,9 +116,11 @@ const OPENING_PHRASES = ["applications open", "apply by", "deadline:"];
  * Two things this pass measured but deliberately did NOT try to fix here, because fixing
  * them is a different kind of change than a phrase-set update:
  * - A meaningful share of the sample (Turkish-market rows: İBB Genç Gönüllü, GençBizzTech,
- *   UPSHIFT, Gençlik Merkezleri, Duke of Edinburgh Türkiye) carries no English opening/
+ *   UPSHIFT, Gençlik Merkezleri, Duke of Edinburgh Türkiye) carried no English opening/
  *   closing language at all — an English-only matcher structurally cannot classify these
- *   regardless of how the English list is tuned. Real, not fixed by this pass.
+ *   regardless of how the English list is tuned. Addressed below (TURKISH_OPENING_PATTERNS/
+ *   TURKISH_CLOSURE_PATTERNS, 2026-09-03), not here — see that section's own comment for why
+ *   it is a genuinely different kind of derivation, not just "translate the English list."
  * - At least one page in the sample (Columbia's course-filter UI: literal text "Status -
  *   Any - Open Closed") shows why a BROADER bare-word match ("open" / "closed" alone,
  *   unanchored) would be actively dangerous — a filter control, not a fact about the
@@ -134,6 +136,74 @@ const OPENING_PATTERNS: RegExp[] = [
 ];
 
 const CLOSURE_PATTERNS: RegExp[] = [/\b(?:is|are|has)\s+now\s+closed\b/, /officially\s+concluded\b/, /not\s+open\s+for\s+submissions?\b/];
+
+/**
+ * Turkish patterns, 2026-09-03 (CEO dispatch, following the English pass: "extend the
+ * phrase set to Turkish, derived the same way... fetch more [than 5]... mind that Turkish
+ * is agglutinative, so a 'tolerant pattern' there means something different than it does in
+ * English"). Derived from 21 real Turkish-market opportunity pages (the entire population
+ * matching country IN ('Turkey','Türkiye') OR a .tr/.com.tr/.gov.tr/.edu.tr URL in the live
+ * corpus — not a further subsample of it), read the same way the English corpus was: in
+ * full, by hand, before writing a pattern.
+ *
+ * THIS IS A GENUINELY DIFFERENT KIND OF DERIVATION THAN THE ENGLISH ONE, not a translation
+ * of it. English's failure mode was word ORDER ("now open" vs "open now") — a handful of
+ * patterns covers every order because English marks tense/aspect with separate words.
+ * Turkish marks the same distinctions with SUFFIXES on a shared root ("kapan-dı" = closed,
+ * "kapan-mıştır" = has closed [formal], "kapa-lı" = closed [adjective] — same concept, three
+ * different endings, and the third does not even share the "kapan-" substring the other two
+ * do). A pattern tolerant of Turkish inflection the way the English patterns are tolerant of
+ * word order would need to match on the ROOT alone — and Turkish roots are short enough that
+ * this is genuinely more dangerous than in English: "aç" (the 2-letter root of "to open") is
+ * a substring of "açıklama" (explanation/statement), "açı" (angle), and "açlık" (hunger),
+ * none of which say anything about whether an opportunity is open. English has nothing this
+ * short and this ambiguous among the roots this file matches on.
+ *
+ * The response to that risk, not a workaround for it: every pattern below is a SPECIFIC,
+ * whole-phrase, directly-observed construction — never a bare root. This is deliberately
+ * NARROWER coverage than a linguist fluent in Turkish morphology could derive (see the
+ * honest gaps listed below), traded for not guessing at a conjugation this pass never
+ * actually saw on a real page. Each pattern is cited to the specific page that motivated it:
+ *
+ * - "son başvuru" / "son kayıt" (literally "final application" / "final registration",
+ *   functioning as a deadline label exactly like English "deadline:"): Sabancı University
+ *   ("Son Başvuru: 1 Ağustos 2026"), İTÜ Lise Yaz Okulu ("SON KAYIT: 16 TEMMUZ"), Istanbul
+ *   Bilgi University FAQ ("Son başvuru tarihi 12 Haziran 2025") — three independent real
+ *   pages using near-identical phrasing.
+ * - "şimdi başvur" / "hemen başvur" ("apply now" / "apply immediately" — two different real
+ *   words for "now", not a suffix variant of one): ODTÜ/METU ("Şimdi Başvur"), Sabancı
+ *   University and GençBizzTech (both "Hemen Başvur").
+ * - "kayıtlar(ımız) kapandı" ("[our] registrations have closed" — the possessive suffix
+ *   "-ımız" is matched as the literal, optional form actually observed, not a general
+ *   word-character class: JS's `\w` is ASCII-only and does not match "ı" (U+0131), so an
+ *   earlier `\w*`-based version of this pattern silently never matched the one real page it
+ *   was written for — caught by this file's own test suite, not by the informal check that
+ *   shipped it. The closing verb "kapandı" is matched as the literal form seen, not
+ *   generalized to "kapanmıştır"/"kapalı", which were not): Bilkent University Summer Camp
+ *   ("Kayıtlarımız kapandı.")
+ * - "kayıtlar başladı" ("registrations started" — an opening signal): İTÜ Lise Yaz Okulu
+ *   ("Kayıtlar Başladı!") — also the sharpest real ambiguity case in the Turkish sample: this
+ *   exact banner sits on a page whose own "SON KAYIT: 16 TEMMUZ" deadline had already passed
+ *   by the time of this fetch, against a row stored `closed` — stale marketing copy left up
+ *   past its own deadline, correctly a disagreement for adjudication to resolve, not an
+ *   auto-confirmed reopening. (GençBizzTech's "Hemen Başvur" nav link, sitting beside content
+ *   entirely about an already-concluded 2026 final, is the same shape again — an evergreen
+ *   CTA is not proof of the current cycle's status, in Turkish exactly as in English.)
+ *
+ * Honest, explicit gaps — plausible Turkish constructions that were NOT observed in this
+ * corpus and are deliberately NOT included, on the same "don't guess" discipline as the
+ * English pass: "başvuru(lar) kapandı/kapanmıştır" (application, rather than registration,
+ * closing — this corpus's one closure example used "kayıt", never "başvuru", for the closing
+ * noun), "açıldı"/"açık" as opening signals (never observed cleanly separated from the
+ * dangerous short-root problem above), and any formal/evidential mood ("-mıştır" suffix)
+ * variant of any of these. This sample (21 pages) is also smaller than the English one (49),
+ * proportionally less evidence per pattern. This is real Turkish-language capability, not
+ * independent native-speaker review — given this product's own explicit Turkey-market
+ * commitment, that review is worth getting before leaning on this further, and this pass
+ * does not substitute for it.
+ */
+const TURKISH_OPENING_PATTERNS: RegExp[] = [/son\s+(?:başvuru|kayıt)/, /(?:şimdi|hemen)\s+başvur/, /kayıtlar\s+başladı/];
+const TURKISH_CLOSURE_PATTERNS: RegExp[] = [/kayıtlar(?:ımız)?\s+kapandı/];
 
 export interface PhraseMatch {
   phrase: string;
@@ -174,11 +244,11 @@ function findPatternMatches(content: string, patterns: RegExp[]): PhraseMatch[] 
 }
 
 export function findClosurePhrases(content: string): PhraseMatch[] {
-  return [...findPhrases(content, CLOSURE_PHRASES), ...findPatternMatches(content, CLOSURE_PATTERNS)];
+  return [...findPhrases(content, CLOSURE_PHRASES), ...findPatternMatches(content, CLOSURE_PATTERNS), ...findPatternMatches(content, TURKISH_CLOSURE_PATTERNS)];
 }
 
 export function findOpeningPhrases(content: string): PhraseMatch[] {
-  return [...findPhrases(content, OPENING_PHRASES), ...findPatternMatches(content, OPENING_PATTERNS)];
+  return [...findPhrases(content, OPENING_PHRASES), ...findPatternMatches(content, OPENING_PATTERNS), ...findPatternMatches(content, TURKISH_OPENING_PATTERNS)];
 }
 
 // A conservative, explicit-format-only date extractor — design doc §5.1 step 3 ("regex date
@@ -258,6 +328,10 @@ export function classifyAgainstStoredState(
 
   const stateImpliesOpen = stored.cycleStatus === "open" || stored.cycleStatus === "upcoming";
   const stateImpliesClosed = stored.cycleStatus === "closed" || stored.cycleStatus === "historical" || stored.cycleStatus === "discontinued";
+  // The migration 0041 check constraint's remaining two values — neither implies open nor
+  // closed, they assert "not yet known." Exhaustive with the two buckets above over all seven
+  // cycle_status values.
+  const stateIsUnknown = stored.cycleStatus === "unverified" || stored.cycleStatus === "date_not_announced";
 
   const closureFound = closureMatches.length > 0;
   const openingFound = openingMatches.length > 0;
@@ -276,6 +350,31 @@ export function classifyAgainstStoredState(
   }
   if (openingFound && stateImpliesClosed) {
     return { kind: "disagreement", excerpt: openingMatches[0].excerpt, closureFound: false, openingFound: true, detectedDeadline };
+  }
+
+  // Found here 2026-09-03, via the Turkish sample, but not Turkish-specific: it silently
+  // reproduces with any English match too (this corpus's own EYP Türkiye row hit it on the
+  // English pattern "open now"). Before this branch existed, `unverified`/`date_not_announced`
+  // rows could never reach anything but liveness_silent, no matter what a page said — the
+  // final `stateImpliesOpen`/`stateImpliesClosed` checks below both require a *known* stored
+  // side, and an unknown one satisfies neither. That silently caps the largest bucket
+  // (`unverified`, 86 rows per §4.2) at zero classification — the population §0's own opening
+  // paragraph names as the reason this job exists.
+  //
+  // Routed to "disagreement", not "agrees": there is no existing claim for the page to
+  // *confirm* when the stored state is "not yet known" — "agrees" is the wrong word for that.
+  // Reusing the disagreement path costs nothing extra in risk: adjudicateDisagreement's prompt
+  // already takes storedCycleStatus as an opaque string ("Oryn's stored cycle status:
+  // unverified" is a perfectly answerable question — "does the excerpt state something more
+  // specific than unknown?"), and every downstream consumer of a "disagreement" verdict
+  // (run-job.ts's p1_changed/p4_contradicted branch, the demotion-eligibility check) already
+  // treats the prior stored value as opaque input, never assumes it was "open" or "closed"
+  // specifically. So this is the same careful, already-tested gate a real open-vs-closed
+  // contradiction goes through — not a new, less-scrutinized write path for a bucket that
+  // previously wrote nothing at all.
+  if ((closureFound || openingFound) && stateIsUnknown) {
+    const excerpt = closureFound ? closureMatches[0].excerpt : openingMatches[0].excerpt;
+    return { kind: "disagreement", excerpt, closureFound, openingFound, detectedDeadline };
   }
 
   if (closureFound && stateImpliesClosed) {
