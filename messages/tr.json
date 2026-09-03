@@ -2267,6 +2267,14 @@
     "comparing": "Karşılaştırılıyor",
     "compareLimitTooltip": "Aynı anda en fazla {max} tane karşılaştırabilirsin."
   },
+  "parent": {
+    "upgradePrompt": {
+      "detail": "Ultra, çocuğunuzun kendi hesabında neler yapabileceğini de değiştirir: iki katı büyük bir aylık yapay zekâ kotası, daha uzun ve daha detaylı danışman yanıtları, tek yerine sınırsız sohbet oturumu, daha uzun bir kalıcı talimat ve Ultra alev teması.",
+      "cta": "Ultra'ya bak",
+      "notNow": "Şimdi değil",
+      "close": "Kapat"
+    }
+  },
   "maintenance": {
     "title": "Kısa süre içinde döneceğiz",
     "description": "Proxola geçici olarak bakımda. Hesabınız veya verileriniz hakkında hiçbir şey değişmedi — birazdan tekrar kontrol edin."

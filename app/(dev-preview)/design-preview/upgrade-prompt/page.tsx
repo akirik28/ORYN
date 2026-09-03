@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { AdvisorMessage } from "@/components/proxola/advisor-message";
-import { UpgradePromptPreviewClient } from "./upgrade-prompt-preview-client";
+import { UpgradePromptPreviewClient, ParentUpgradePromptPreviewClient } from "./upgrade-prompt-preview-client";
 
 /**
  * Dedicated preview for the rebuilt upgrade prompt (2026-09-03, founder-directed restyle —
@@ -48,6 +48,15 @@ export default async function UpgradePromptPreviewPage() {
         <p className="mt-4 border-t border-border pt-3 text-sm text-ink-3">{t("degradeNote.detail")}</p>
         <UpgradePromptPreviewClient />
       </AdvisorMessage>
+
+      <div>
+        <h1 className="font-display text-2xl">Upgrade prompt — parent variant (P7)</h1>
+        <p className="mt-2 text-sm text-ink-3">
+          Same component, `namespace=&quot;parent.upgradePrompt&quot;`. No real parent panel exists yet (P3), so this renders plain rather than nested
+          inside a caller that doesn&apos;t exist — the point here is the copy and the card shape, not the surrounding chrome.
+        </p>
+      </div>
+      <ParentUpgradePromptPreviewClient />
     </div>
   );
 }

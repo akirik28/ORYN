@@ -2267,6 +2267,14 @@
     "comparing": "Comparing",
     "compareLimitTooltip": "You can compare up to {max} at a time."
   },
+  "parent": {
+    "upgradePrompt": {
+      "detail": "Ultra also changes what your child's own account can do — a monthly AI allowance twice as large, longer and more detailed advisor replies, unlimited chat sessions instead of one, a longer standing instruction, and the Ultra flame theme.",
+      "cta": "See Ultra",
+      "notNow": "Not now",
+      "close": "Close"
+    }
+  },
   "maintenance": {
     "title": "We will be back shortly",
     "description": "Proxola is temporarily down for maintenance. Nothing about your account or data has changed — check back in a little while."
