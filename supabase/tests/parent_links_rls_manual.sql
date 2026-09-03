@@ -112,6 +112,28 @@ from public.advisor_conversations where user_id = 'a1000000-0000-0000-0000-00000
 -- attempted self-activation is not reachable from THIS link (already active) -- see block 5
 -- for Dave's pending link, which is where that specific attack actually applies.
 
+-- Guard trigger, confirmed_at specifically: Bob attempts his own legitimate revoke WHILE also
+-- smuggling a confirmed_at rewrite into the same statement. This is a split expectation, not a
+-- pure denial -- the revoke half must SUCCEED (it's Bob's own allowed transition, and no other
+-- block exercises an ACTIVE parent's own revoke actually working -- block 5 only covers Dave's
+-- still-pending one), while the confirmed_at half must be silently discarded: the guard trigger
+-- only lets confirmed_at move when auth.uid() = student_user_id, and Bob is the parent, not
+-- the student.
+update public.parent_links
+set status = 'revoked', confirmed_at = '1900-01-01'::timestamptz
+where parent_user_id = 'b2000000-0000-0000-0000-000000000002' and student_user_id = 'a1000000-0000-0000-0000-000000000001';
+
+select status as bobs_status_after_revoke___expect_revoked,
+       confirmed_at as bobs_confirmed_at_after_smuggle_attempt___expect_original_setup_timestamp_not_1900
+from public.parent_links
+where parent_user_id = 'b2000000-0000-0000-0000-000000000002' and student_user_id = 'a1000000-0000-0000-0000-000000000001';
+-- If the guard held: status is 'revoked' (the legitimate half went through) and confirmed_at is
+-- still whatever block 1's setup INSERT set it to (approximately "now" at setup time) -- NOT
+-- 1900-01-01. confirmed_at showing 1900-01-01 is the failure signal.
+--
+-- NOTE: this ends Bob's link in 'revoked' state -- nothing later in this script depends on Bob
+-- still being an active parent, so this is safe to run at this point and not before.
+
 -- ---------------------------------------------------------------------------
 -- 4. As Carol (NO link to Alice at all, in either direction) — the baseline negative.
 -- ---------------------------------------------------------------------------
@@ -216,12 +238,14 @@ from public.parent_links where student_user_id = 'a1000000-0000-0000-0000-000000
 
 -- No student/parent DELETE policy exists on this table at all -- confirm directly.
 delete from public.parent_links where student_user_id = 'a1000000-0000-0000-0000-000000000001';
-select count(*) as remaining_alice_links_after_delete_attempt___expect_2
+select count(*) as remaining_alice_links_after_delete_attempt___expect_3
 from public.parent_links where student_user_id = 'a1000000-0000-0000-0000-000000000001';
--- expect 2: Bob's (active) and Carol's (now revoked) links, Dave's from block 5 already
--- revoked and still present -- so actually 3 remain if Dave's is included; adjust the
--- expected count to match whichever of Dave's/Carol's rows are still in scope when this is
--- actually run, the number itself is less important than "not zero, nothing was deleted".
+-- expect 3, all status='revoked' by this point: Bob's (revoked in block 3's guard test),
+-- Carol's (revoked in block 6's guard test), and Dave's (revoked at the end of block 5) --
+-- revoking a link never deletes its row, it only changes status, so all three are still
+-- present. The number that actually matters is "unchanged by the DELETE attempt directly
+-- above", not 3 itself -- if a future edit to this script changes how many links exist by
+-- this point, update the literal count, but the delete-attempt row count must never drop.
 
 -- ---------------------------------------------------------------------------
 -- 7. Cleanup.
@@ -263,5 +287,13 @@ from public.profiles where display_name in ('Alice','Bob','Carol','Dave') and id
 --   flips from pending to active. THIS is the single test that most directly verifies K3's
 --   "asla ama asla" — if only one mutation gets run before this branch is torn down, run
 --   this one.
+-- Block 3 (Bob cannot smuggle confirmed_at through his own revoke): remove the
+--   `if auth.uid() is distinct from old.student_user_id then new.confirmed_at := ...`
+--   branch from parent_links_guard_immutable_columns (or replace the whole function body with
+--   its pre-hardening version, which never touched confirmed_at at all) --
+--   bobs_confirmed_at_after_smuggle_attempt flips from the original setup timestamp to
+--   1900-01-01. Lower stakes than block 5 (no access changes hands either way, since
+--   is_active_parent_of() never reads confirmed_at) but the same "closed, not just narrow"
+--   standard applies to every column in this table, not only the ones that gate access.
 -- Block 6 (guard trigger): drop trigger parent_links_00_guard_immutable_columns --
 --   parent_user_id_after_smuggled_repoint_attempt flips to Dave's id instead of Carol's.
