@@ -1,6 +1,5 @@
 import "server-only";
 
-import { getTranslations } from "next-intl/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { createClient } from "@/lib/supabase/server";
@@ -328,6 +327,20 @@ export function resolveMatchConfidence(
 }
 
 /**
+ * Inline, not routed through the message catalog — same shape as app/(app)/advisor/actions.ts's
+ * quotaExhaustedMessage/alreadyGeneratingMessage: this string is produced by a background write
+ * path, not a React-tree render, so next-intl's request-scoped getTranslations() has nothing to
+ * attach to (it throws outside a real Next.js request regardless of an explicit locale arg).
+ * This is the i18n half of the same no-request-context problem refreshOpportunityMatches's own
+ * Supabase client was already fixed for on 2026-09-02 (see that function's header comment) — one
+ * function later in this same file, closed six weeks apart. Values copied verbatim from
+ * messages/en.json / messages/tr.json's real `notifications.newOpportunityMatch` key.
+ */
+function newOpportunityMatchTitle(locale: Locale, name: string): string {
+  return locale === "tr" ? `Yeni eşleşme: ${name}` : `New match: ${name}`;
+}
+
+/**
  * Phase 24's `new_opportunity` category, wired up for the first time — previously declared
  * in `NotificationCategory` with no writer anywhere (see
  * docs/handoffs/notification-categories-audit-2026-09-01.md). Deliberately its own function
@@ -370,7 +383,6 @@ export async function notifyNewlyEligibleMatches(
 
   const opportunityById = new Map(opportunities.map((o) => [o.id, o]));
   const locale = toLocale(preferredLanguage);
-  const t = await getTranslations({ locale, namespace: "notifications" });
 
   for (const match of newlyEligible) {
     const opportunity = opportunityById.get(match.opportunity_id);
@@ -401,7 +413,7 @@ export async function notifyNewlyEligibleMatches(
     await createNotification({
       userId,
       category: "new_opportunity",
-      title: t("newOpportunityMatch", { name: opportunity.title }),
+      title: newOpportunityMatchTitle(locale, opportunity.title),
       link,
     });
   }
