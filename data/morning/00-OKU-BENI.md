@@ -1,6 +1,7 @@
 # Sabah — 3 Eylül 2026
 
-Uyandığında sırayla bunlar. Yedi adım, tahminen 15 dakika — beşi kopyala-yapıştır.
+Uyandığında sırayla bunlar. **Dokuz bölüm, tahminen 25 dakika.** Yedisi kopyala-yapıştır
+(Supabase SQL Editor'e), biri terminalde altı komut, sonuncusu sadece bakmak.
 
 **Sonunda ne değişmiş olacak:**
 
@@ -39,11 +40,14 @@ SELECT id, is_admin FROM public.profiles
 WHERE id = 'ccf2161e-4992-49ce-88b4-a76293f1dc1d';
 ```
 
-Hesabın **2 Eylül 22:18'den beri zaten admin** — gece panelleri denerken açılmış.
-Yani bu adım muhtemelen boşa çalışacak, ki zararsız; yine de çalıştır, çünkü tek
-doğrulanmış yol bu. `is_admin` **true** dönmeli. `SET ROLE service_role` satırı şart — onsuz `UPDATE 1` der
-ve hiçbir şey değiştirmez (`profiles_00_guard_protected_columns` trigger'ı geri alır,
-canlıda doğrulandı).
+`is_admin` **true** dönmeli.
+
+`SET ROLE service_role` satırı şart — onsuz `UPDATE 1` der ve hiçbir şey değiştirmez
+(`profiles_00_guard_protected_columns` trigger'ı sessizce geri alır, canlıda doğrulandı).
+
+Not: hesabın **2 Eylül 22:18'den beri zaten admin** — gece panelleri denerken açılmış. Yani
+bu adım büyük ihtimalle hiçbir şeyi değiştirmeyecek, ki zararsız. Yine de çalıştır: panelin
+açılması buna bağlı ve emin olmanın tek yolu sorgunun kendisi.
 
 ## 2. Migration'ları uygula
 
