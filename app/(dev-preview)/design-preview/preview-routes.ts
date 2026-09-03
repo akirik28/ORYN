@@ -35,6 +35,7 @@ export const OTHER_PREVIEW_ROUTES: readonly PreviewRoute[] = [
   { href: "/design-preview/university-detail", label: "University detail" },
   { href: "/design-preview/compare", label: "Compare universities" },
   { href: "/design-preview/counselor", label: "Advisor" },
+  { href: "/design-preview/upgrade-prompt", label: "Upgrade prompt" },
   { href: "/design-preview/journey", label: "Profile" },
   { href: "/design-preview/portfolio", label: "Portfolio" },
   { href: "/design-preview/plan", label: "Plan" },
