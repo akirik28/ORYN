@@ -1938,7 +1938,8 @@
       "moderationDescription": "Reported messages and posts, waiting on a decision.",
       "systemDescription": "Whether the machinery is healthy — providers, jobs, and AI response quality.",
       "catalogDescription": "Opportunities awaiting review, and the description cleanup pass.",
-      "spendDescription": "AI spend, budgets, and remaining credit."
+      "spendDescription": "AI spend, budgets, and remaining credit.",
+      "studentsDescription": "Every student, their plan tier, and when they last showed up."
     },
     "growth": {
       "signups": {

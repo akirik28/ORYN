@@ -1938,7 +1938,8 @@
       "moderationDescription": "Şikayet edilen mesajlar ve gönderiler, karar bekliyor.",
       "systemDescription": "Altyapı sağlıklı mı — sağlayıcılar, işler ve AI yanıt kalitesi.",
       "catalogDescription": "İncelenmeyi bekleyen fırsatlar ve açıklama temizlik geçişi.",
-      "spendDescription": "AI harcaması, bütçeler ve kalan kredi."
+      "spendDescription": "AI harcaması, bütçeler ve kalan kredi.",
+      "studentsDescription": "Her öğrenci, plan katmanı ve son ne zaman göründüğü."
     },
     "growth": {
       "signups": {
