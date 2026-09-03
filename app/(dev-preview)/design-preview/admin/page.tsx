@@ -8,6 +8,7 @@ import { SpendSummarySection } from "@/features/admin/sections/spend-summary-sec
 import { SpendPerUserSection } from "@/features/admin/sections/spend-per-user-section";
 import { RemainingCreditSection } from "@/features/admin/sections/remaining-credit-section";
 import { BudgetWarningsSection } from "@/features/admin/sections/budget-warnings-section";
+import { WeeklyPlanBudgetSection } from "@/features/admin/sections/weekly-plan-budget-section";
 import { ProviderHealthSection } from "@/features/admin/sections/provider-health-section";
 import { ScheduledJobsSection } from "@/features/admin/sections/scheduled-jobs-section";
 import { ReportsSection } from "@/features/admin/sections/reports-section";
@@ -37,6 +38,16 @@ import { PreviewToolbar } from "../preview-toolbar";
  * bypass. This route already renders the real sections without that gate, so it is the
  * one place the claim is falsifiable. Default stays dark so the existing tone is still
  * what you get without asking.
+ *
+ * WeeklyPlanBudgetSection added 2026-09-03: the real app/(app)/admin/page.tsx renders it,
+ * this route hadn't, and it was never migrated onto any /kumanda/* page either — the one
+ * section genuinely unreachable from any no-auth preview, found auditing proactive-disable
+ * coverage for its own isWeeklyPlanBudgetSettingsTableLive check. Not a full resync with
+ * the real page's current section list — several sections added since this route was first
+ * built (AiFeatureShapeSection, JobBudgetSection, DegradeStandingSection, growth-tab
+ * sections, etc.) are already viewable via /design-preview/kumanda instead, so this stays a
+ * targeted fix for the one section with no preview coverage anywhere, not a staleness
+ * cleanup of this whole route.
  */
 export default async function AdminDesignPreviewPage({ searchParams }: { searchParams: Promise<{ tone?: string }> }) {
   if (process.env.NODE_ENV === "production") notFound();
@@ -79,6 +90,9 @@ export default async function AdminDesignPreviewPage({ searchParams }: { searchP
           </Suspense>
           <Suspense fallback={<SectionSkeleton rows={2} />}>
             <BudgetWarningsSection />
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton rows={2} />}>
+            <WeeklyPlanBudgetSection />
           </Suspense>
         </TabsContent>
 
