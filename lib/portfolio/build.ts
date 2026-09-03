@@ -3,13 +3,25 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import type { PortfolioItem, PortfolioSkill } from "./types";
+import { readOr } from "@/lib/supabase/safe-read";
 
 /** Read-only aggregation across every achievement table into one common shape (Phase 20).
  * "Leadership" is presented as its own section here even though it's stored as
  * `activities.is_leadership_role = true` — a portfolio-display distinction only, not a
- * schema one (see DATABASE.md for why they share one table). */
+ * schema one (see DATABASE.md for why they share one table).
+ *
+ * 2026-09-03 (tier 2, docs/okuma-hatasi-vs-bos-sonuc-karari-2026-09-03.md): every read below
+ * was `x.data ?? []` with no visibility -- a failed read for one category (say, every award
+ * this student ever entered) rendered identically to "no awards," on the one page whose
+ * whole job is showing a student everything they've built. Contained fix: log which
+ * category failed, by name; the return type and every existing caller
+ * (app/(app)/profile/portfolio/page.tsx, app/(app)/profile/cv/page.tsx) are unchanged.
+ * Surfacing "this section may be incomplete" in the UI itself would mean widening this
+ * function's return shape and touching both call sites plus their view components --
+ * a real option, flagged rather than built here, since this package stays contained to one
+ * file per this session's own tier-2 convention. */
 export async function buildPortfolio(supabase: SupabaseClient<Database>, userId: string): Promise<PortfolioItem[]> {
-  const [education, activities, sports, research, projects, awards, certifications, volunteering, work] = await Promise.all([
+  const [educationRes, activitiesRes, sportsRes, researchRes, projectsRes, awardsRes, certificationsRes, volunteeringRes, workRes] = await Promise.all([
     supabase.from("education_records").select("*").eq("user_id", userId),
     supabase.from("activities").select("*").eq("user_id", userId),
     supabase.from("sports_experiences").select("*").eq("user_id", userId),
@@ -21,9 +33,19 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
     supabase.from("work_experiences").select("*").eq("user_id", userId),
   ]);
 
+  const education = readOr("buildPortfolio.education", educationRes, [], { userId });
+  const activities = readOr("buildPortfolio.activities", activitiesRes, [], { userId });
+  const sports = readOr("buildPortfolio.sports", sportsRes, [], { userId });
+  const research = readOr("buildPortfolio.research", researchRes, [], { userId });
+  const projects = readOr("buildPortfolio.projects", projectsRes, [], { userId });
+  const awards = readOr("buildPortfolio.awards", awardsRes, [], { userId });
+  const certifications = readOr("buildPortfolio.certifications", certificationsRes, [], { userId });
+  const volunteering = readOr("buildPortfolio.volunteering", volunteeringRes, [], { userId });
+  const work = readOr("buildPortfolio.work", workRes, [], { userId });
+
   const items: PortfolioItem[] = [];
 
-  for (const record of education.data ?? []) {
+  for (const record of education) {
     items.push({
       id: record.id,
       category: "education",
@@ -40,7 +62,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
     });
   }
 
-  for (const record of activities.data ?? []) {
+  for (const record of activities) {
     items.push({
       id: record.id,
       category: record.is_leadership_role ? "leadership" : "activities",
@@ -56,7 +78,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
     });
   }
 
-  for (const record of sports.data ?? []) {
+  for (const record of sports) {
     items.push({
       id: record.id,
       category: "sports",
@@ -74,7 +96,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
     });
   }
 
-  for (const record of research.data ?? []) {
+  for (const record of research) {
     items.push({
       id: record.id,
       category: "research",
@@ -90,7 +112,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
     });
   }
 
-  for (const record of projects.data ?? []) {
+  for (const record of projects) {
     items.push({
       id: record.id,
       category: "projects",
@@ -106,7 +128,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
     });
   }
 
-  for (const record of awards.data ?? []) {
+  for (const record of awards) {
     items.push({
       id: record.id,
       category: "awards",
@@ -122,7 +144,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
     });
   }
 
-  for (const record of certifications.data ?? []) {
+  for (const record of certifications) {
     items.push({
       id: record.id,
       category: "certifications",
@@ -138,7 +160,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
     });
   }
 
-  for (const record of volunteering.data ?? []) {
+  for (const record of volunteering) {
     items.push({
       id: record.id,
       category: "volunteering",
@@ -154,7 +176,7 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
     });
   }
 
-  for (const record of work.data ?? []) {
+  for (const record of work) {
     items.push({
       id: record.id,
       category: "work",
@@ -180,6 +202,8 @@ export async function buildPortfolio(supabase: SupabaseClient<Database>, userId:
  * table on this page before). Sorted by category then name for a stable, scannable order —
  * matches how the live data actually groups (technical/analytical/communication/leadership). */
 export async function getPortfolioSkills(supabase: SupabaseClient<Database>, userId: string): Promise<PortfolioSkill[]> {
-  const { data } = await supabase.from("skills").select("id, name, category").eq("user_id", userId);
-  return (data ?? []).slice().sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+  const result = await supabase.from("skills").select("id, name, category").eq("user_id", userId);
+  return readOr("getPortfolioSkills", result, [], { userId })
+    .slice()
+    .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
 }
