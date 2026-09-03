@@ -707,6 +707,38 @@ const REGISTRY: AdmissionSystemEntry[] = [
     },
     sources: [DOC("czechia.md")],
   },
+  {
+    countryNames: ["Belgium", "België", "Belgique", "Belgien"],
+    // No country-level admissions body at all -- Flanders and the French Community run
+    // genuinely separate legislation, not just separate institutions. Recorded as
+    // academic_threshold because BOTH were independently checked and confirmed to converge on
+    // the same general shape (credential/equivalence-based, no ranking, no essay) -- unlike
+    // Czechia, this is a confirmed convergence, not an assumption carried across communities.
+    // See docs/research/admissions-systems/belgium.md §A-D for why the Community-level nuance
+    // (differing restricted-fields lists, only the French Community's centralized quota
+    // confirmed) isn't represented beyond the one shared "medicine" fieldOverride.
+    domestic: {
+      shape: "academic_threshold",
+      mechanism:
+        "Belgium has no country-level admissions body — Flanders and the French Community run separate legislation — but both were independently confirmed to admit on diploma/equivalence alone for most programmes, with no ranking against other applicants and no essay or interview.",
+    },
+    international: {
+      shape: "academic_threshold",
+      mechanism:
+        "The same threshold mechanism applies once a foreign diploma's equivalence to the relevant Community's secondary certificate is recognized (or, in the French Community, an entrance exam is passed in its place) — no ranking, no essay, no interview either way.",
+    },
+    fieldOverrides: [
+      {
+        field: "medicine",
+        system: {
+          shape: "academic_rank_competitive",
+          mechanism:
+            "Medicine is a confirmed restricted exception in both Communities, though the mechanism specifics differ: the French Community runs a single centralized, genuinely competitive exam (ARES, same day for every university) with non-resident admission capped at 15% of places — the clearer-sourced case. Flanders also requires a mandatory entrance exam for medicine, but this pass could not independently confirm whether it is rank-competitive or pass/fail. Check the specific target university's own Community.",
+        },
+      },
+    ],
+    sources: [DOC("belgium.md")],
+  },
 ];
 
 // ---------------------------------------------------------------------------

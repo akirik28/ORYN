@@ -47,7 +47,7 @@ describe("resolveAdmissionSystem — the three shapes the research actually foun
   });
 
   test("every resolved entry carries at least one traceable source document", () => {
-    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland", "Denmark", "Hungary", "Austria", "Czechia"]) {
+    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland", "Denmark", "Hungary", "Austria", "Czechia", "Belgium"]) {
       const result = resolveAdmissionSystem({ targetCountry: country, studentCountry: "Turkey" });
       expect(result.sources.length, country).toBeGreaterThan(0);
       expect(result.mechanism, country).not.toBeNull();
@@ -524,6 +524,45 @@ describe("resolveAdmissionSystem — Czechia (2026-09-03, confirmed divergence, 
   test("Czechia traces to its own research document, not an invented source", () => {
     const result = resolveAdmissionSystem({ targetCountry: "Czechia", studentCountry: "Czechia" });
     expect(result.sources).toContain("docs/research/admissions-systems/czechia.md");
+  });
+});
+
+describe("resolveAdmissionSystem — Belgium (2026-09-03, two legal systems confirmed to converge, not assumed)", () => {
+  // Flanders and the French Community were each independently checked (belgium.md §B-C) and
+  // both confirmed academic_threshold — a genuine convergence finding, unlike Czechia where the
+  // checked institution actually diverged within itself.
+  test("Belgium is threshold, not competitive, for both pathways despite having no country-level admissions body", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Belgium", studentCountry: "Belgium" });
+    const international = resolveAdmissionSystem({ targetCountry: "Belgium", studentCountry: "Turkey" });
+    expect(domestic.shape).toBe("academic_threshold");
+    expect(international.shape).toBe("academic_threshold");
+    expect(reviewsNonAcademicEvidence(domestic.shape)).toBe(false);
+  });
+
+  // Medicine is confirmed restricted in BOTH communities (belgium.md §B-C), even though the
+  // exact mechanism (centralized ARES exam + 15% non-resident cap) is only confirmed for the
+  // French Community — the fieldOverride's own mechanism text says so rather than presenting
+  // one community's specifics as if they were universal.
+  test("Medicine flips Belgium from threshold to rank-competitive, honestly hedged on which community's specifics apply", () => {
+    const general = resolveAdmissionSystem({ targetCountry: "Belgium", studentCountry: "Turkey" });
+    const medicine = resolveAdmissionSystem({ targetCountry: "Belgium", studentCountry: "Turkey", targetField: "medicine" });
+    expect(general.shape).toBe("academic_threshold");
+    expect(medicine.shape).toBe("academic_rank_competitive");
+    expect(medicine.basis).toBe("country_field");
+    expect(medicine.mechanism).toContain("15%");
+    expect(medicine.mechanism).toContain("could not independently confirm");
+  });
+
+  test("a field with no override falls back to Belgium's threshold default", () => {
+    const general = resolveAdmissionSystem({ targetCountry: "Belgium", studentCountry: "Turkey" });
+    const engineering = resolveAdmissionSystem({ targetCountry: "Belgium", studentCountry: "Turkey", targetField: "engineering" });
+    expect(engineering.shape).toBe(general.shape);
+    expect(engineering.mechanism).toBe(general.mechanism);
+  });
+
+  test("Belgium traces to its own research document, not an invented source", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Belgium", studentCountry: "Belgium" });
+    expect(result.sources).toContain("docs/research/admissions-systems/belgium.md");
   });
 });
 
