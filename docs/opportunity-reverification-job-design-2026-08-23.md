@@ -209,6 +209,53 @@ it documents.
 > question at all. Gates: typecheck/lint green, full suite green (348 files / 5469 tests), 14
 > new tests.
 
+> **The final pre-arming dry run, 2026-09-03: real pipeline, all three fixes together, a
+> representative sample.** Full detail in `docs/reverification-final-dryrun-2026-09-03.md` —
+> CEO dispatch: "run it properly... across a sample representative of the actual catalogue...
+> Report the classification distribution, the host-wall rate, how many reach adjudication, and
+> how many demotions it would propose if demotion were on." 113 real rows (65 already-known
+> from the phrase corpora + 49 genuinely fresh, stratified and weighted toward the two
+> categories that actually dominate the catalogue — `summer_program` 49%, `competition` 28% of
+> 282 active rows — rather than equal-per-category), real Tavily/browser-UA/Wayback/Anthropic
+> calls throughout, zero writes.
+>
+> **The number that answers the actual question: 3 of 113 would be demoted to `closed`, all
+> three checked by hand and genuine** (Girl Up Project Awards, Interlochen Review, Partners
+> for the Future — all unambiguous, dated closures). At this rate, §9(5)'s volume guard would
+> not block a batch this size. Rough extrapolation to the full active catalogue: ~6–8, not
+> three and not thirty — stated as an extrapolation, not a precise count.
+>
+> **The host-wall number corrects what the first dry run's headline implied.** Of 113 rows,
+> only **2 (1.8%)** are genuinely blocked (every fetch rung failed AND an independent fetcher
+> also couldn't read it). The other 54% of "unreadable" rows are readable pages that simply
+> say nothing about cycle status (§7.6, liveness-silence) — a different, evidence problem, not
+> an access problem. All 10 `transport_error` rows were falsified by Wayback (readable, our own
+> fetch just missed this once) — none are dead links.
+>
+> **Adjudication reached 16.8% of rows** (19/113), landing inside §5.1's own assumed 15–25%
+> range for the first time against a sample this size. All 13 non-confirmed reasoning strings
+> read by hand: six declined on nav-menu "Apply Now" links exactly like the LaunchX/GençBizzTech
+> shape already flagged twice before, four on a restated-but-unasserted deadline, three on
+> genuinely mixed signal — every decline cites something real and specific, never over-cautious
+> for no reason and never over-confirms on weak evidence.
+>
+> **Known-vs-fresh split, to answer whether this generalizes**: known corpus reaches a verdict
+> 39.1% of the time; genuinely never-read-before rows, 30.6%. A real ~8.5-point gap, reported
+> rather than hidden behind the blended 35.4% figure — the mechanism generalizes, just somewhat
+> less strongly on pages it wasn't tuned against.
+>
+> **Two secondary, bounded findings, neither blocking**: `findDateCandidates` scans the whole
+> page rather than the matched excerpt, so a correct closure classification can carry a real
+> but unrelated date (Girl Up: correct "closed" verdict, but the detected date came from
+> elsewhere on the page) — harmless to live data since `applyDemotion` never writes `deadline`,
+> only pollutes the audit trail. And two "open" confirmations (ODTÜ, EYP Türkiye) sit next to a
+> date that reads as stale, confirmed anyway — defensible (likely program dates, not a
+> deadline) but worth a note; bounded by §9(2) since promotion is never automatic regardless.
+>
+> Mechanism change to enable this: `RunOptions.candidateIds?: string[]` (run-job.ts) — bypasses
+> the due-set filter for a caller-supplied representative sample, additive, production callers
+> never set it. 4 new tests. Gates green throughout.
+
 ---
 
 ## 0. Summary
