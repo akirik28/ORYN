@@ -32,6 +32,7 @@ async function findExistingTarget(supabase: Awaited<ReturnType<typeof createClie
 export async function addTargetUniversity(rawUniversityId: string, programId: string | null = null): Promise<{ error?: string; targetId?: string }> {
   const session = await requireUser();
   const userId = session.userId!;
+  const locale = await resolveLocale();
   const supabase = await createClient();
 
   // The one place a university selection actually becomes permanent — every browse/search
@@ -65,9 +66,9 @@ export async function addTargetUniversity(rawUniversityId: string, programId: st
       const wonByConcurrentRequest = await findExistingTarget(supabase, userId, universityId, programId);
       if (wonByConcurrentRequest) return { targetId: wonByConcurrentRequest.id };
     }
-    return { error: "Couldn't add this university. Please try again." };
+    return { error: locale === "tr" ? "Bu üniversite eklenemedi. Lütfen tekrar dene." : "Couldn't add this university. Please try again." };
   }
-  if (!data) return { error: "Couldn't add this university. Please try again." };
+  if (!data) return { error: locale === "tr" ? "Bu üniversite eklenemedi. Lütfen tekrar dene." : "Couldn't add this university. Please try again." };
 
   await refreshAdmissionOutlook(data.id, userId);
   await logEvent(userId, "target_university_added", { universityId });
@@ -78,6 +79,7 @@ export async function addTargetUniversity(rawUniversityId: string, programId: st
 
 export async function updateTargetUniversityStatus(targetId: string, status: TargetStatus): Promise<{ error?: string }> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -86,7 +88,7 @@ export async function updateTargetUniversityStatus(targetId: string, status: Tar
     .eq("id", targetId)
     .eq("user_id", session.userId!);
 
-  if (error) return { error: "Couldn't update status." };
+  if (error) return { error: locale === "tr" ? "Durum güncellenemedi." : "Couldn't update status." };
   revalidatePath("/universities");
   revalidatePath("/dashboard");
   return {};
@@ -94,10 +96,11 @@ export async function updateTargetUniversityStatus(targetId: string, status: Tar
 
 export async function removeTargetUniversity(targetId: string): Promise<{ error?: string }> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const supabase = await createClient();
 
   const { error } = await supabase.from("target_universities").delete().eq("id", targetId).eq("user_id", session.userId!);
-  if (error) return { error: "Couldn't remove this university." };
+  if (error) return { error: locale === "tr" ? "Bu üniversite kaldırılamadı." : "Couldn't remove this university." };
 
   revalidatePath("/universities");
   revalidatePath("/dashboard");
@@ -123,6 +126,7 @@ export async function loadMoreUniversities(
   page: number
 ): Promise<{ universities: University[]; meta: Record<string, UniversityCardMeta>; savedIds: string[]; hasMore: boolean; error?: string }> {
   const session = await requireUser();
+  const locale = await resolveLocale();
   const supabase = await createClient();
 
   try {
@@ -145,7 +149,6 @@ export async function loadMoreUniversities(
       { costMap: costMap ?? undefined, qsRankMap: qsRankMap ?? undefined, depthIds }
     );
 
-    const locale = await resolveLocale();
     const [meta, targetsRes] = await Promise.all([
       getUniversityCardMeta(supabase, result.universities, categorizeAndDedupeResearchTopics, depthIds, locale),
       supabase.from("target_universities").select("university_id").eq("user_id", session.userId!),
@@ -160,6 +163,6 @@ export async function loadMoreUniversities(
   } catch {
     // Keep whatever is already on screen and offer a retry — a failed page must never blank
     // out results the student is reading.
-    return { universities: [], meta: {}, savedIds: [], hasMore: true, error: "Couldn't load more universities." };
+    return { universities: [], meta: {}, savedIds: [], hasMore: true, error: locale === "tr" ? "Daha fazla üniversite yüklenemedi." : "Couldn't load more universities." };
   }
 }

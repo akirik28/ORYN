@@ -16,13 +16,14 @@ export async function generateStoryOutlines(
   selectedIds: string[]
 ): Promise<{ data?: EssayOutlineResponse; error?: string }> {
   const session = await requireUser();
+  const locale = await resolveLocale();
+  const tr = locale === "tr";
   const trimmed = essayPrompt.trim();
 
-  if (!trimmed) return { error: "Paste the essay prompt you're answering first." };
-  if (trimmed.length > MAX_PROMPT_LENGTH) return { error: "That prompt is too long — paste just the question itself." };
+  if (!trimmed) return { error: tr ? "Önce yanıtladığın deneme sorusunu yapıştır." : "Paste the essay prompt you're answering first." };
+  if (trimmed.length > MAX_PROMPT_LENGTH) return { error: tr ? "Bu soru çok uzun — sadece sorunun kendisini yapıştır." : "That prompt is too long — paste just the question itself." };
 
   try {
-    const locale = await resolveLocale();
     await assertWithinAIRateLimit(session.userId!, "essay_story_bank", { maxCalls: 10, windowMinutes: 60 }, locale);
 
     const supabase = await createClient();
@@ -37,7 +38,11 @@ export async function generateStoryOutlines(
 
     const selected = selectedIds.length > 0 ? all.filter((e) => selectedIds.includes(e.id)) : all;
     if (selected.length === 0) {
-      return { error: "Add some experiences to your profile first — story ideas come from what you've actually done." };
+      return {
+        error: tr
+          ? "Önce profiline birkaç deneyim ekle — hikaye fikirleri gerçekten yaptığın şeylerden gelir."
+          : "Add some experiences to your profile first — story ideas come from what you've actually done.",
+      };
     }
 
     const data = await generateEssayOutlines({
@@ -54,9 +59,13 @@ export async function generateStoryOutlines(
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { error: error.message };
     if (error instanceof AIProviderNotConfiguredError) {
-      return { error: "The AI isn't configured yet, so story ideas can't be generated. See API_SETUP.md." };
+      // Same rewrite as profile/actions.ts's identical catch (2026-09-03 audit): a missing
+      // API key is a deployment fact, not student copy, and API_SETUP.md isn't something a
+      // student can open.
+      console.error("[story-bank] outline generation unavailable: AI provider not configured");
+      return { error: tr ? "Bu özellik şu anda kullanılamıyor." : "This feature isn't available right now." };
     }
     console.error("[story-bank] outline generation failed", error);
-    return { error: "Couldn't generate story ideas right now. Please try again." };
+    return { error: tr ? "Şu anda hikaye fikri üretilemedi. Lütfen tekrar dene." : "Couldn't generate story ideas right now. Please try again." };
   }
 }
