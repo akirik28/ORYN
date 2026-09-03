@@ -739,6 +739,26 @@ const REGISTRY: AdmissionSystemEntry[] = [
     ],
     sources: [DOC("belgium.md")],
   },
+  {
+    countryNames: ["Lithuania", "Lietuva"],
+    // A real mixed-mechanism finding, not a clean rank-vs-holistic split -- LAMA BPO's own
+    // competitive score has a defined, bounded motivation-assessment component (0-1.5 of a
+    // 2.5-point additional-points cap), not just academic results. Classified holistic_review
+    // on the same basis this registry already uses for the original 15's Singapore/NUS entry:
+    // a real, structured, points-weighted non-academic component still counts as a genuine
+    // channel, even inside an otherwise-scored/ranked system. See lithuania.md.
+    domestic: {
+      shape: "holistic_review",
+      mechanism:
+        "LAMA BPO computes a single competitive score for essentially all Lithuanian institutions, but that score includes a real, bounded motivation assessment — up to 1.5 of a 2.5-point additional-points cap, on top of secondary-subject results. A defined, named channel for non-academic evidence, not a subject-only formula.",
+    },
+    international: {
+      shape: "holistic_review",
+      mechanism:
+        "Non-EU/EFTA applicants generally apply direct to each university rather than through LAMA BPO. A motivational interview — live or pre-recorded — is typical, graded and folded into the overall competitive score; some universities also request a short written essay. Entrance exams are generally not required for English-taught programmes, though some fields add one.",
+    },
+    sources: [DOC("lithuania.md")],
+  },
 ];
 
 // ---------------------------------------------------------------------------

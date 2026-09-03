@@ -47,7 +47,7 @@ describe("resolveAdmissionSystem — the three shapes the research actually foun
   });
 
   test("every resolved entry carries at least one traceable source document", () => {
-    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland", "Denmark", "Hungary", "Austria", "Czechia", "Belgium"]) {
+    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland", "Denmark", "Hungary", "Austria", "Czechia", "Belgium", "Lithuania"]) {
       const result = resolveAdmissionSystem({ targetCountry: country, studentCountry: "Turkey" });
       expect(result.sources.length, country).toBeGreaterThan(0);
       expect(result.mechanism, country).not.toBeNull();
@@ -563,6 +563,33 @@ describe("resolveAdmissionSystem — Belgium (2026-09-03, two legal systems conf
   test("Belgium traces to its own research document, not an invented source", () => {
     const result = resolveAdmissionSystem({ targetCountry: "Belgium", studentCountry: "Belgium" });
     expect(result.sources).toContain("docs/research/admissions-systems/belgium.md");
+  });
+});
+
+describe("resolveAdmissionSystem — Lithuania (2026-09-03, a scored system that is still genuinely holistic)", () => {
+  // LAMA BPO's own competitive-score formula has a real, bounded motivation-assessment
+  // component (0-1.5 of a 2.5-point cap) — a defined channel, not a subject-only formula.
+  // Classified holistic_review on the same basis as the original 15's Singapore/NUS entry:
+  // a structured, points-weighted non-academic component still counts as a real channel.
+  test("Lithuania's domestic (LAMA BPO) track is holistic despite being a computed, ranked score", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Lithuania", studentCountry: "Lithuania" });
+    expect(domestic.shape).toBe("holistic_review");
+    expect(reviewsNonAcademicEvidence(domestic.shape)).toBe(true);
+    expect(domestic.mechanism).toContain("motivation assessment");
+    expect(domestic.mechanism).toContain("LAMA BPO");
+  });
+
+  test("Lithuania's international track is holistic via a graded interview, distinct mechanism text", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Lithuania", studentCountry: "Lithuania" });
+    const international = resolveAdmissionSystem({ targetCountry: "Lithuania", studentCountry: "Turkey" });
+    expect(international.shape).toBe("holistic_review");
+    expect(international.mechanism).toContain("interview");
+    expect(international.mechanism).not.toBe(domestic.mechanism);
+  });
+
+  test("Lithuania traces to its own research document, not an invented source", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Lithuania", studentCountry: "Lithuania" });
+    expect(result.sources).toContain("docs/research/admissions-systems/lithuania.md");
   });
 });
 
