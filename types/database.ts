@@ -1935,8 +1935,16 @@ export interface AdvisorConversation {
   title: string;
   created_at: string;
   updated_at: string;
+  /** Migration 0112 — written not applied. AI-generated summary written by the 24-hour
+   * retention job (lib/advisor/retention.ts) immediately before raw messages are deleted.
+   * Null until first summarized; see the migration's own column comment for the full
+   * "null summary + zero remaining messages" edge case. */
+  summary: string | null;
+  /** Migration 0112 — written not applied. Distinct from updated_at, which keeps advancing
+   * if the student resumes the conversation after summarization. */
+  summarized_at: string | null;
 }
-export type AdvisorConversationInsert = Insertable<AdvisorConversation, "id" | "created_at" | "updated_at" | "title">;
+export type AdvisorConversationInsert = Insertable<AdvisorConversation, "id" | "created_at" | "updated_at" | "title" | "summary" | "summarized_at">;
 
 export type AdvisorMessageStatus = "complete" | "failed";
 
@@ -1969,6 +1977,21 @@ export interface AdvisorGenerationLock {
   started_at: string;
 }
 export type AdvisorGenerationLockInsert = Insertable<AdvisorGenerationLock, "started_at">;
+/** Migration 0112 — written not applied. Append-only audit trail for the 24-hour retention
+ * job, one row per real action on a real conversation — see the migration's own table
+ * comment. Never contains message content. */
+export type AdvisorConversationRetentionAction = "summarized" | "messages_deleted" | "skipped_ultra";
+
+export interface AdvisorConversationRetentionRun {
+  id: string;
+  conversation_id: string;
+  run_id: string | null;
+  action: AdvisorConversationRetentionAction;
+  /** Set only on an action = "messages_deleted" row; null (not zero) otherwise. */
+  messages_deleted_count: number | null;
+  created_at: string;
+}
+export type AdvisorConversationRetentionRunInsert = Insertable<AdvisorConversationRetentionRun, "id" | "created_at" | "run_id" | "messages_deleted_count">;
 
 // ---------- Notifications ----------
 
@@ -2376,6 +2399,7 @@ export interface Database {
       // or written directly (see AdvisorGenerationLock's own comment); listed for the same
       // completeness reason opportunity_verification_latest is above despite never/never.
       advisor_generation_locks: Table<AdvisorGenerationLock, AdvisorGenerationLockInsert, never>;
+      advisor_conversation_retention_runs: Table<AdvisorConversationRetentionRun, AdvisorConversationRetentionRunInsert, never>;
       notifications: Table<Notification, NotificationInsert, Partial<Pick<Notification, "read_at">>>;
       admin_actions: Table<AdminAction, AdminActionInsert, never>;
       provider_health: Table<ProviderHealth, Partial<ProviderHealth>, Partial<ProviderHealth>>;
