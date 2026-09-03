@@ -203,7 +203,7 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
             <OutlookBadge outlook="reach" locale={locale} />
           </div>
           <p lang={locale} className="text-sm text-muted-foreground">
-            {locale === "tr" ? "Oryn tahmini:" : "Oryn estimate:"}{" "}
+            {locale === "tr" ? "Proxola tahmini:" : "Proxola estimate:"}{" "}
             <span className="font-medium text-foreground">
               {outlookEstimate.low}–{outlookEstimate.high}%
             </span>{" "}
@@ -219,7 +219,7 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
           {admissionSystemMechanism ? <p lang={locale} className="max-w-3xl text-sm text-muted-foreground">{admissionSystemMechanism}</p> : null}
           {admissionSystemSources.length > 0 ? (
             <SourceBadge
-              sourceName="Oryn's admissions-system research"
+              sourceName="Proxola's admissions-system research"
               locale={locale}
               sourceLabel={tSourceBadge("source")}
               checkedLabel={(time) => tSourceBadge("checked", { time })}
@@ -359,8 +359,8 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
                   title={locale === "tr" ? "Program kaydedilmemiş" : "Program not recorded"}
                   description={
                     locale === "tr"
-                      ? "Üniversitenin kendi sayfalarından alındı — Oryn bunların her birinin hangi programa ait olduğunu kaydetmedi."
-                      : "Sourced from the university's own pages — Oryn hasn't recorded which specific program each of these belongs to."
+                      ? "Üniversitenin kendi sayfalarından alındı — Proxola bunların her birinin hangi programa ait olduğunu kaydetmedi."
+                      : "Sourced from the university's own pages — Proxola hasn't recorded which specific program each of these belongs to."
                   }
                   items={universityWideRequirements}
                   evaluationByRequirement={FIXTURE_REQUIREMENT_EVALUATIONS}

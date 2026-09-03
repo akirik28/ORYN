@@ -17,7 +17,7 @@ const FEATURES = [
   {
     icon: "◉",
     title: "Nine profile dimensions",
-    desc: "ORYN assesses your academic, leadership, research, and extracurricular depth with evidence-backed reasoning.",
+    desc: "Proxola assesses your academic, leadership, research, and extracurricular depth with evidence-backed reasoning.",
   },
   {
     icon: "◎",
@@ -56,7 +56,7 @@ export default async function LandingPage() {
         }}
       >
         {/* Our real logo, unmodified (no recolor, no reshape) — the Figma source's own
-            OrynMark placeholder is intentionally not used; sized to sit in this nav row. */}
+            ProxolaMark placeholder is intentionally not used; sized to sit in this nav row. */}
         <Image src="/brand/logo-full.png" alt="Proxola" width={114} height={36} priority style={{ height: 36, width: "auto" }} />
         <Link
           href="/login"
