@@ -16,7 +16,7 @@ import { JOB_BUDGET_USD, checkJobBudget, type JobBudgetFeature, type JobBudgetRe
 import { checkWeeklyPlanAggregateBudget } from "@/lib/ai/limits/weekly-plan-budget";
 import type { SeriesPoint } from "@/components/oryn/charts/types";
 import { isOpportunityActionable, isOpportunitySufficientlyVerified, hasDeadlineCommitment, hasAnyVerificationRecord } from "@/lib/opportunities/lifecycle";
-import { isUndefinedColumnError, isUndefinedTableError } from "@/lib/supabase/errors";
+import { isUndefinedColumnError, isUndefinedTableError, columnExistsLive } from "@/lib/supabase/errors";
 import { ULTRA_PRICE_TRY } from "@/lib/admin/finance";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { CONTAMINATION_CLEANUP_2026_09_02 } from "@/lib/opportunities/contamination-cleanup-2026-09-02";
@@ -1526,13 +1526,11 @@ function extractMigrationColumnArtifacts(sql: string): MigrationColumnArtifact[]
  * PostgREST-native "does this table exist" signal this function can rely on without guessing at
  * an error shape that hasn't been observed against this project (the same discipline
  * `isUndefinedColumnError`'s own comment applies to `PGRST204`'s spelling).
+ *
+ * `columnExistsLive` itself moved to lib/supabase/errors.ts 2026-09-03, once student-facing
+ * onboarding/profile-edit code (curriculum_other_text) needed the identical check and
+ * importing this admin/ file from there would have been the wrong direction of dependency.
  */
-async function columnExistsLive(admin: SupabaseClient<Database>, table: string, column: string): Promise<boolean | null> {
-  const { error } = await admin.from(table as never).select(column, { head: true });
-  if (!error) return true;
-  if (isUndefinedColumnError(error, column)) return false;
-  return null;
-}
 
 export type MigrationRealityStatus = "confirmed_live" | "confirmed_partially_live" | "confirmed_missing" | "unchecked" | "indeterminate";
 

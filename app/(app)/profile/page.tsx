@@ -21,6 +21,7 @@ import { PageHeader } from "@/components/oryn/page-header";
 import { SectionHeader } from "@/components/oryn/section-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/server";
+import { isEducationRecordsCurriculumOtherTextLive } from "@/lib/profile/curriculum-other-text";
 import { ScoreRadar } from "@/features/profile/score-radar";
 import { ProfileSignal } from "@/features/dashboard/profile-signal";
 import { toProfileSignal, hasConfidentSignal, signalCoverage } from "@/lib/scoring/signal";
@@ -53,6 +54,7 @@ import {
   VOLUNTEERING_FIELDS,
   WORK_EXPERIENCE_FIELDS,
   EDUCATION_FIELDS,
+  CURRICULUM_OTHER_TEXT_FIELD,
   COURSE_FIELDS,
   COURSE_LEVEL_LABELS,
   TEST_SCORE_FIELDS,
@@ -140,6 +142,7 @@ export default async function ProfilePage() {
     featuredItems,
     profileViewCounts,
     scoringFacts,
+    curriculumOtherTextLive,
   ] = await Promise.all([
     supabase.from("profile_scores").select("*").eq("user_id", userId),
     supabase.from("activities").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
@@ -161,11 +164,22 @@ export default async function ProfilePage() {
     getFeaturedItems(userId, { isSelf: true, isPublic: false }),
     getProfileViewCounts(supabase, userId),
     assembleScoringFacts(supabase, userId),
+    // Migration 0109, proposed and not yet applied — see that migration's own header.
+    isEducationRecordsCurriculumOtherTextLive(supabase),
   ]);
 
   // Canonical opportunity titles resolved for display only — `activities` has no
   // denormalized column for them, unlike every organization_entity_id field. One batched query.
   const activities = await attachOpportunityTitles(supabase, activitiesRes.data ?? []);
+
+  // Migration 0109, proposed and not yet applied — CURRICULUM_OTHER_TEXT_FIELD is only ever
+  // in this array once the column is confirmed live (see that field's own comment in
+  // field-config.ts for why it can't just always be present with showWhen alone). Inserted
+  // right after "curriculum" by name, not by a hardcoded index, so this stays correct if
+  // EDUCATION_FIELDS is ever reordered.
+  const educationFields = curriculumOtherTextLive
+    ? EDUCATION_FIELDS.flatMap((field) => (field.name === "curriculum" ? [field, CURRICULUM_OTHER_TEXT_FIELD] : [field]))
+    : EDUCATION_FIELDS;
 
   const completenessChecklist = getCompletenessChecklist({
     ...scoringFacts,
@@ -454,7 +468,7 @@ export default async function ProfilePage() {
             // until it lands. Add it here the same way activities/awards/etc. do below,
             // once the migration is applied and types are regenerated.
             summaries={summaryMap(educationRes.data ?? [], (item) => ({ title: item.school_name, subtitle: item.country ?? undefined }))}
-            fields={EDUCATION_FIELDS}
+            fields={educationFields}
             defaultValues={educationDefaults}
             onCreate={createEducationRecord as (v: FormValues) => Promise<{ error?: string }>}
             onUpdate={updateEducationRecord as (id: string, v: FormValues) => Promise<{ error?: string }>}

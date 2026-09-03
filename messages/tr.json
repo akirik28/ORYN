@@ -669,6 +669,9 @@
         "nationalCurriculum": "Ulusal müfredat",
         "other": "Diğer"
       },
+      "curriculumOtherTextLabel": "Hangi müfredat?",
+      "curriculumOtherTextPlaceholder": "örn. Alman Abitur, İtalyan Maturità",
+      "curriculumOtherTextHint": "İsteğe bağlı — geçmişini anlamamıza yardımcı olur.",
       "interestsTitle": "Neyle ilgileniyorsun?",
       "interestsSubtitle": "Ara ya da kendi ilgi alanını ekle — bu, önerilerini şekillendirir.",
       "geographyTitle": "Nerede okumak istiyor olabilirsin?",

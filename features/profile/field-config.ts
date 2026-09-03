@@ -26,13 +26,34 @@ export const STORY_NOTES_FIELD = {
 // renders exactly `fields.filter(f => f.quickAdd)` per entity — same FieldConfig objects the
 // full Edit dialog already uses, so a label/placeholder/option list never has two copies to
 // drift apart. See that file's header comment for the full basic/advanced rationale.
+// `showWhen`, added 2026-09-03 for curriculum_other_text (migration 0109, proposed and not
+// yet applied): a general mechanism on FieldConfig/DynamicFormFields rather than a one-off
+// conditional hand-written into achievement-section.tsx/quick-add-entry.tsx. Chosen over the
+// special-case alternative because both of those are generic components shared by every
+// achievement type, not education-specific — special-casing "if this is education_records
+// and curriculum is other" into each of them would mean duplicating that logic twice, in
+// files that have no other reason to know about curriculum at all. A single optional
+// predicate, checked once in DynamicFormFields's own render loop, costs every OTHER field
+// nothing (unset = always render, today's exact behavior) and gives any future
+// value-dependent field the same mechanism for free. The trade a one-off would have avoided
+// — a second, more general-purpose primitive to maintain — is worth naming: this is the
+// bigger piece of infrastructure of the two options, not the smaller one.
 export type FieldConfig =
-  | { type: "text"; name: string; label: string; placeholder?: string; span?: "full" | "half"; quickAdd?: boolean }
-  | { type: "textarea"; name: string; label: string; placeholder?: string; quickAdd?: boolean }
-  | { type: "date"; name: string; label: string; span?: "full" | "half"; quickAdd?: boolean }
-  | { type: "number"; name: string; label: string; span?: "full" | "half"; quickAdd?: boolean }
-  | { type: "checkbox"; name: string; label: string; quickAdd?: boolean }
-  | { type: "select"; name: string; label: string; options: { value: string; label: string }[]; placeholder?: string; span?: "full" | "half"; quickAdd?: boolean }
+  | { type: "text"; name: string; label: string; placeholder?: string; span?: "full" | "half"; quickAdd?: boolean; showWhen?: (values: Record<string, string | number | boolean | null>) => boolean }
+  | { type: "textarea"; name: string; label: string; placeholder?: string; quickAdd?: boolean; showWhen?: (values: Record<string, string | number | boolean | null>) => boolean }
+  | { type: "date"; name: string; label: string; span?: "full" | "half"; quickAdd?: boolean; showWhen?: (values: Record<string, string | number | boolean | null>) => boolean }
+  | { type: "number"; name: string; label: string; span?: "full" | "half"; quickAdd?: boolean; showWhen?: (values: Record<string, string | number | boolean | null>) => boolean }
+  | { type: "checkbox"; name: string; label: string; quickAdd?: boolean; showWhen?: (values: Record<string, string | number | boolean | null>) => boolean }
+  | {
+      type: "select";
+      name: string;
+      label: string;
+      options: { value: string; label: string }[];
+      placeholder?: string;
+      span?: "full" | "half";
+      quickAdd?: boolean;
+      showWhen?: (values: Record<string, string | number | boolean | null>) => boolean;
+    }
   // Canonical Entity Autocomplete System. `name` is the existing legacy free-text column
   // (kept in sync with the linked entity's display name at selection time);
   // `entityIdField` is the nullable `*_entity_id` column that links to the canonical
@@ -51,12 +72,22 @@ export type FieldConfig =
       placeholder?: string;
       span?: "full" | "half";
       quickAdd?: boolean;
+      showWhen?: (values: Record<string, string | number | boolean | null>) => boolean;
     }
   // Canonical-suggestion text field (features/entities/suggest-input.tsx) — for a small,
   // mostly-closed vocabulary (test names, course subjects) that doesn't warrant the full
   // registry `"entity"` uses. Unlike "select", never rejects or forces a value to be one of
   // `suggestions` — a genuinely custom entry is always valid and stored as typed.
-  | { type: "suggest"; name: string; label: string; suggestions: string[]; placeholder?: string; span?: "full" | "half"; quickAdd?: boolean };
+  | {
+      type: "suggest";
+      name: string;
+      label: string;
+      suggestions: string[];
+      placeholder?: string;
+      span?: "full" | "half";
+      quickAdd?: boolean;
+      showWhen?: (values: Record<string, string | number | boolean | null>) => boolean;
+    };
 
 
 export const ACTIVITY_CATEGORY_OPTIONS = [
@@ -271,6 +302,9 @@ export const EDUCATION_FIELDS: FieldConfig[] = [
   { type: "suggest", name: "country", label: "Country", suggestions: COUNTRY_SUGGESTIONS, placeholder: "e.g. United States", span: "half" },
   { type: "select", name: "stage", label: "Stage", options: EDUCATION_STAGE_OPTIONS, span: "half", quickAdd: true },
   { type: "select", name: "curriculum", label: "Curriculum", options: CURRICULUM_FIELD_OPTIONS, span: "half" },
+  // CURRICULUM_OTHER_TEXT_FIELD (below) is deliberately NOT spliced in here — see its own
+  // comment. app/(app)/profile/page.tsx inserts it into a copy of this array only once the
+  // migration 0109 column is confirmed live.
   { type: "checkbox", name: "is_current", label: "Currently attending" },
   { type: "date", name: "start_date", label: "Start date", span: "half" },
   { type: "date", name: "end_date", label: "End date", span: "half" },
@@ -278,6 +312,26 @@ export const EDUCATION_FIELDS: FieldConfig[] = [
   { type: "number", name: "gpa_scale", label: "GPA scale (e.g. 4.0)", span: "half" },
   { type: "textarea", name: "notes", label: "Notes" },
 ];
+
+/**
+ * Migration 0109, proposed and not yet applied — free text for when `curriculum` is
+ * "other", since that value otherwise captures nothing (see that migration's own header).
+ * Exported separately from EDUCATION_FIELDS rather than included in it directly: this field
+ * must not exist in the array at all when the column isn't live yet (app/(app)/profile/
+ * page.tsx splices it in only after confirming that), which a static array entry can't
+ * express — showWhen alone only controls curriculum-value-dependent visibility, not
+ * column-existence-dependent visibility. `span: "full"` rather than pairing it with another
+ * half-width field in the grid, since a qualification name reads better on its own line than
+ * squeezed next to an unrelated field.
+ */
+export const CURRICULUM_OTHER_TEXT_FIELD: FieldConfig = {
+  type: "text",
+  name: "curriculum_other_text",
+  label: "Which qualification?",
+  placeholder: "e.g. German Abitur, Italian Maturità",
+  span: "full",
+  showWhen: (values) => values.curriculum === "other",
+};
 
 /** Mirrors migration 0003's `course_level` enum exactly — the one rigor ontology, not a
  * second parallel one. */
@@ -560,6 +614,7 @@ const FIELD_TEXT_TR: Record<string, string> = {
   "Undergraduate": "Lisans",
   "Users reached": "Ulaşılan kullanıcı sayısı",
   "Weeks per year": "Yıllık hafta",
+  "Which qualification?": "Hangi müfredat?",
   "Why did you start? What was the hardest moment? What changed? What did you learn? Who did you work with? What was the measurable outcome? Anything you don't want to forget.": "Neden başladın? En zor an neydi? Ne değişti? Neler öğrendin? Kiminle çalıştın? Ölçülebilir sonuç neydi? Unutmak istemediğin başka bir şey var mı?",
   "Your independence (e.g. led data collection)": "Bağımsızlığın (örn. veri toplamayı yönettin)",
   "Your role": "Rolün",
@@ -571,6 +626,7 @@ const FIELD_TEXT_TR: Record<string, string> = {
   "e.g. Academics, Career": "örn. Akademik, Kariyer",
   "e.g. Economics": "örn. Ekonomi",
   "e.g. Education": "örn. Eğitim",
+  "e.g. German Abitur, Italian Maturità": "örn. Alman Abitur, İtalyan Maturità",
   "e.g. English, Turkish": "örn. İngilizce, Türkçe",
   "e.g. Intermediate": "örn. Orta düzey",
   "e.g. Python, Public speaking": "örn. Python, Topluluk önünde konuşma",

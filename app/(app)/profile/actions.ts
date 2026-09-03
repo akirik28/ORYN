@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { isEducationRecordsCurriculumOtherTextLive } from "@/lib/profile/curriculum-other-text";
 import { recomputeCareerProfile } from "@/lib/scoring/persist";
 import { refineAchievementDescription, type AchievementRefinement } from "@/lib/ai/refine-achievement";
 import { resolveLocale } from "@/lib/i18n/locale";
@@ -255,11 +256,32 @@ export async function deleteWorkExperience(id: string) {
 }
 
 // ---------- Education ----------
+
+/**
+ * Migration 0109, proposed and not yet applied — see that migration's own header. Checked
+ * again here, not just once when the form rendered (app/(app)/profile/page.tsx): a client
+ * is never trusted to have correctly withheld a field the server told it to, and
+ * crudCreate/crudUpdate below insert `{ ...parsed.data }` directly, so an unstripped
+ * `curriculum_other_text` on a database where the column doesn't exist yet would fail the
+ * *entire* save with a generic error — not a silent drop, but a regression on every
+ * education-record edit, not just ones that touch this field. Stripping the key entirely
+ * (never sending `undefined`) rather than nulling it: Postgres validates an insert/update's
+ * column list before touching any row, so a payload that still names the column at all
+ * fails the same way regardless of the value.
+ */
+async function stripCurriculumOtherTextIfNotLive(input: EducationRecordFormInput): Promise<EducationRecordFormInput> {
+  const supabase = await createClient();
+  if (await isEducationRecordsCurriculumOtherTextLive(supabase)) return input;
+  const rest = { ...input };
+  delete rest.curriculum_other_text;
+  return rest;
+}
+
 export async function createEducationRecord(input: EducationRecordFormInput) {
-  return crudCreate("education_records", EducationRecordSchema, input);
+  return crudCreate("education_records", EducationRecordSchema, await stripCurriculumOtherTextIfNotLive(input));
 }
 export async function updateEducationRecord(id: string, input: EducationRecordFormInput) {
-  return crudUpdate("education_records", EducationRecordSchema, id, input);
+  return crudUpdate("education_records", EducationRecordSchema, id, await stripCurriculumOtherTextIfNotLive(input));
 }
 export async function deleteEducationRecord(id: string) {
   return crudRemove("education_records", id);

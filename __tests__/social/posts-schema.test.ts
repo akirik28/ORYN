@@ -424,7 +424,17 @@ describe("migration numbering", () => {
     // institution_type's ownership axis -- 275 staged institutions across five countries
     // wait on it. Both proposed, neither applied. Bumping this from 106 caught exactly what
     // it is for: 0108 landed while I was merging and the pin went red on the same push.
-    expect(Math.max(...numbers.map(Number))).toBe(108);
+    //
+    // 0109 (curriculum_other_text) adds two nullable text columns -- profiles and
+    // education_records -- for what a student meant by picking curriculum = "other", which
+    // had no companion field anywhere in the product before this (confirmed live: the
+    // onboarding wizard, the profile editor, and every relevant Zod schema, none of them
+    // ever had one). Motivated by the founder's own observation that Turkish residents at
+    // schools like Alman Lisesi/İtalyan Lisesi/Galatasaray/Saint-Joseph hold real foreign
+    // qualifications the fixed 6-value enum can't name -- this migration doesn't add those
+    // enum values (a separate, priced, not-yet-decided piece of work), only the free text so
+    // "other" stops being a value that captures nothing. Proposed, not applied.
+    expect(Math.max(...numbers.map(Number))).toBe(109);
   });
 });
 

@@ -137,6 +137,19 @@ export interface Profile {
   city_entity_id: string | null;
   graduation_year: number | null;
   curriculum: CurriculumType | null;
+  /** Migration 0109, written not applied — free text a student can add when `curriculum` is
+   * `"other"`, since that value otherwise captures nothing (no companion field existed
+   * anywhere in the product before this). Scoped narrowly to "which qualification" on
+   * purpose (max 100 chars, enforced in lib/validation/onboarding.ts, not here) — this is
+   * not a general notes field, and it must never become an invitation to enter a school
+   * name (school_name already exists) or any other identifying detail, for the same
+   * minor-safe data-minimization reason every other optional field in this file stays
+   * narrowly scoped. Absent on a database where 0109 hasn't applied yet, which the
+   * onboarding/profile-edit write paths degrade from (isUndefinedColumnError, via
+   * columnExistsLive) by omitting the field entirely — never a silent drop of what a
+   * student typed, because the UI itself doesn't render the field until the column is
+   * confirmed live. */
+  curriculum_other_text: string | null;
   preferred_language: string;
   timezone: string;
   /** Migration 0089 — which visual skin this student sees. A label, not a subscription
@@ -518,6 +531,11 @@ export interface EducationRecord {
   country: string | null;
   stage: EducationStage;
   curriculum: CurriculumType | null;
+  /** Migration 0109, written not applied — same field and same reasoning as
+   * Profile.curriculum_other_text; see that field's own comment. This is the copy that
+   * actually matters for a student with more than one education_records row (multiple
+   * curricula), since Profile.curriculum only ever holds the single onboarding-time value. */
+  curriculum_other_text: string | null;
   start_date: string | null;
   end_date: string | null;
   is_current: boolean;
@@ -529,7 +547,7 @@ export interface EducationRecord {
 }
 export type EducationRecordInsert = Insertable<
   EducationRecord,
-  "id" | "created_at" | "updated_at" | "stage" | "is_current" | "school_entity_id" | "country_entity_id"
+  "id" | "created_at" | "updated_at" | "stage" | "is_current" | "school_entity_id" | "country_entity_id" | "curriculum_other_text"
 >;
 export type EducationRecordUpdate = Updatable<EducationRecord, "id" | "user_id" | "created_at" | "updated_at">;
 

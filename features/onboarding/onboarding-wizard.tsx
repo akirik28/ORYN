@@ -26,6 +26,7 @@ import { meetsMinimumSignupAge } from "@/lib/legal/age-policy";
 import { InterestsStep } from "./steps/interests-step";
 import { ImportStep, type ReviewedExtractedItem } from "./steps/import-step";
 import type { CvImportReviewSkill, CvImportReviewLanguage } from "@/lib/profile/cv-import";
+import { CURRICULUM_OTHER_TEXT_MAX_LENGTH } from "@/lib/profile/curriculum-other-text-constant";
 
 const TOTAL_STEPS = 5;
 const currentYear = new Date().getFullYear();
@@ -73,7 +74,7 @@ function StepShell({ title, subtitle, children }: { title: string; subtitle?: st
   );
 }
 
-export function OnboardingWizard() {
+export function OnboardingWizard({ curriculumOtherTextLive = false }: { curriculumOtherTextLive?: boolean }) {
   const t = useTranslations("onboarding.wizard");
   const tCommon = useTranslations("common");
   // GOAL_OPTIONS has no separate stored value — the displayed string is what's persisted
@@ -122,6 +123,7 @@ export function OnboardingWizard() {
   // one has to be right — it gates every age-restricted opportunity.
   const [birthYear, setBirthYear] = useState("");
   const [curriculum, setCurriculum] = useState<CurriculumType | "">("");
+  const [curriculumOtherText, setCurriculumOtherText] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
   const [targetGeographies, setTargetGeographies] = useState<TargetGeography[]>([]);
   const [reviewedItems, setReviewedItems] = useState<ReviewedExtractedItem[]>([]);
@@ -198,6 +200,10 @@ export function OnboardingWizard() {
       graduationYear: Number(graduationYear),
       birthYear: Number(birthYear),
       curriculum: curriculum as CompleteOnboardingInput["curriculum"],
+      // Only ever sent when the field was actually rendered (curriculumOtherTextLive) and
+      // the student picked "other" -- an empty string from an untouched, unmounted field
+      // must read as "not provided", never as "provided and blank".
+      curriculumOtherText: curriculumOtherTextLive && curriculum === "other" && curriculumOtherText.trim() ? curriculumOtherText.trim() : null,
       interests,
       targetGeographies,
       extractedItems: reviewedItems
@@ -313,6 +319,25 @@ export function OnboardingWizard() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {/* Migration 0109, proposed and not yet applied -- rendered only once the
+                      column is confirmed live (curriculumOtherTextLive, checked server-side
+                      in page.tsx), never as a disabled/explained control the way the admin
+                      panel's proactive-disable pattern would: a student has no use for
+                      "this isn't set up yet", so the honest degrade here is the field simply
+                      not existing, identical to before this feature shipped. */}
+                  {curriculumOtherTextLive && curriculum === "other" ? (
+                    <div className="space-y-1.5 pt-1">
+                      <Label htmlFor="curriculumOtherText">{t("curriculumOtherTextLabel")}</Label>
+                      <Input
+                        id="curriculumOtherText"
+                        value={curriculumOtherText}
+                        onChange={(e) => setCurriculumOtherText(e.target.value)}
+                        placeholder={t("curriculumOtherTextPlaceholder")}
+                        maxLength={CURRICULUM_OTHER_TEXT_MAX_LENGTH}
+                      />
+                      <p className="text-xs text-muted-foreground">{t("curriculumOtherTextHint")}</p>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>

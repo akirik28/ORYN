@@ -1,6 +1,14 @@
 import { z } from "zod";
 import type { CurriculumType, TargetGeography } from "@/types/database";
 import { LANGUAGE_PROFICIENCY_VALUES } from "@/lib/vocabularies/languages";
+// The client-safe constant file, not lib/profile/curriculum-other-text.ts (server-only) --
+// live-verified 2026-09-03 that this file is NOT purely server-side despite being
+// validation code: features/profile/field-config.ts imports INTEREST_SUGGESTIONS from here,
+// and field-config.ts is itself consumed by client components (dynamic-form-fields.tsx,
+// the onboarding wizard's import-step.tsx), so a server-only import here broke the client
+// bundle build entirely -- caught by the build, not by tsc or lint, neither of which flags
+// a "server-only" boundary violation.
+import { CURRICULUM_OTHER_TEXT_MAX_LENGTH } from "@/lib/profile/curriculum-other-text-constant";
 
 export const GOAL_OPTIONS = [
   "Competitive universities",
@@ -83,6 +91,16 @@ export const CompleteOnboardingSchema = z.object({
     .min(currentYear - 100, { error: "Enter the year you were born." })
     .max(currentYear - 10, { error: "Enter the year you were born." }),
   curriculum: z.enum(["ap", "ib", "a_level", "turkish_curriculum", "national_curriculum", "other"]),
+  /** Migration 0109, proposed and not yet applied. Optional in every real sense — nullable,
+   *  never required even when curriculum is "other" — see that migration's own header for
+   *  why this stays a narrow "which qualification" field, not general notes. Trimmed and
+   *  capped so accidental whitespace-only input reads as empty rather than "filled". */
+  curriculumOtherText: z
+    .string()
+    .trim()
+    .max(CURRICULUM_OTHER_TEXT_MAX_LENGTH, { error: `Keep this to ${CURRICULUM_OTHER_TEXT_MAX_LENGTH} characters or fewer.` })
+    .nullable()
+    .optional(),
   interests: z.array(z.string().min(1)).max(20),
   targetGeographies: z.array(z.enum(["usa", "uk", "europe", "canada", "turkey", "not_sure"])).max(6),
   extractedItems: z

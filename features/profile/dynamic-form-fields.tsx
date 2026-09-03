@@ -37,6 +37,11 @@ export function DynamicFormFields({
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {localizedFields.map((field) => {
+        // Added 2026-09-03 for curriculum_other_text — see field-config.ts's own comment on
+        // FieldConfig for why this is a general mechanism rather than a special case. Unset
+        // (every field before this one) always renders, unchanged.
+        if (field.showWhen && !field.showWhen(values)) return null;
+
         const span = "span" in field && field.span === "half" ? "" : "sm:col-span-2";
         const value = values[field.name];
 

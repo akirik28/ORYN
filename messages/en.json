@@ -669,6 +669,9 @@
         "nationalCurriculum": "National curriculum",
         "other": "Other"
       },
+      "curriculumOtherTextLabel": "Which qualification?",
+      "curriculumOtherTextPlaceholder": "e.g. German Abitur, Italian Maturità",
+      "curriculumOtherTextHint": "Optional — helps us understand your background.",
       "interestsTitle": "What are you interested in?",
       "interestsSubtitle": "Search or add your own — this shapes your recommendations.",
       "geographyTitle": "Where might you want to study?",

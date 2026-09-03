@@ -1,5 +1,10 @@
 import { z } from "zod";
 import { LANGUAGE_PROFICIENCY_VALUES } from "@/lib/vocabularies/languages";
+// Client-safe constant file, not the server-only lib/profile/curriculum-other-text.ts --
+// see lib/validation/onboarding.ts's own comment on this exact import for why, even though
+// this file's own importers are all "use server" actions today (a live-verified failure
+// mode elsewhere, not repeated here on principle rather than because this file needs it).
+import { CURRICULUM_OTHER_TEXT_MAX_LENGTH } from "@/lib/profile/curriculum-other-text-constant";
 
 const dateField = z.string().min(1).nullable();
 const optionalText = z.string().nullable();
@@ -123,6 +128,9 @@ export const EducationRecordSchema = z.object({
   country: optionalText,
   stage: z.enum(["middle_school", "high_school", "pre_university", "undergraduate", "other"]),
   curriculum: z.enum(["ap", "ib", "a_level", "turkish_curriculum", "national_curriculum", "other"]).nullable(),
+  // Migration 0109, proposed and not yet applied -- see that migration's own header. Never
+  // required even when curriculum is "other".
+  curriculum_other_text: z.string().trim().max(CURRICULUM_OTHER_TEXT_MAX_LENGTH, { error: `Keep this to ${CURRICULUM_OTHER_TEXT_MAX_LENGTH} characters or fewer.` }).nullable().optional(),
   start_date: dateField,
   end_date: dateField,
   is_current: z.boolean(),
