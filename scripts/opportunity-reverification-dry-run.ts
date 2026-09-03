@@ -31,14 +31,24 @@
  *
  * Usage:
  *   NODE_PATH=/path/to/a/dir/containing/server-only-shim \
- *     npx tsx scripts/opportunity-reverification-dry-run.ts [--max-rows N] [--budget-ms N]
+ *     npx tsx scripts/opportunity-reverification-dry-run.ts [--max-rows N] [--budget-ms N] [--ids-file path.json]
  *
  * Bounded by default (--max-rows 20) — enough to be representative of the priority-ranked
  * queue without meaningful Tavily/AI spend (checkJobBudget's own $5/month ceiling on
  * opportunity_reverification is the backstop regardless).
+ *
+ * --ids-file points at a JSON file containing an array of opportunity ids (a plain
+ * `string[]`, or any array of objects each carrying an `id` field — the phrase-corpus
+ * fetch scripts' own JSON shape, so a corpus file can be pointed at directly with no
+ * reformatting). When given, the run is scoped to exactly those ids (RunOptions.candidateIds
+ * — see run-job.ts's own comment for why this bypasses the due-set filter) instead of the
+ * production priority-ranked due-set — for a measurement that wants a representative
+ * cross-section of the catalogue rather than whatever the ranking would surface first.
  */
 
 export {};
+
+import * as fs from "node:fs";
 
 try {
   process.loadEnvFile(".env.local");
@@ -52,6 +62,21 @@ function parseArg(name: string, fallback: number): number {
   if (index === -1 || index + 1 >= process.argv.length) return fallback;
   const parsed = Number(process.argv[index + 1]);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function parseStringArg(name: string): string | undefined {
+  const flag = `--${name}`;
+  const index = process.argv.indexOf(flag);
+  if (index === -1 || index + 1 >= process.argv.length) return undefined;
+  return process.argv[index + 1];
+}
+
+function loadCandidateIds(path: string | undefined): string[] | undefined {
+  if (!path) return undefined;
+  const parsed = JSON.parse(fs.readFileSync(path, "utf8"));
+  if (!Array.isArray(parsed)) throw new Error(`--ids-file ${path} must contain a JSON array`);
+  const ids = parsed.map((entry) => (typeof entry === "string" ? entry : entry?.id)).filter((id): id is string => typeof id === "string" && id.length > 0);
+  return [...new Set(ids)];
 }
 
 async function main() {
@@ -71,11 +96,12 @@ async function main() {
 
   const maxRows = parseArg("max-rows", 20);
   const budgetMs = parseArg("budget-ms", 180_000);
+  const candidateIds = loadCandidateIds(parseStringArg("ids-file"));
 
-  console.log(`[dry-run] starting -- maxRows=${maxRows} budgetMs=${budgetMs} dryRun=true`);
+  console.log(`[dry-run] starting -- maxRows=${maxRows} budgetMs=${budgetMs} dryRun=true${candidateIds ? ` candidateIds=${candidateIds.length}` : ""}`);
   const startedAt = Date.now();
 
-  const result = await runReverificationPass({ maxRows, budgetMs, dryRun: true });
+  const result = await runReverificationPass({ maxRows, budgetMs, dryRun: true, ...(candidateIds ? { candidateIds } : {}) });
 
   const elapsedMs = Date.now() - startedAt;
   const rows = result.rows ?? [];

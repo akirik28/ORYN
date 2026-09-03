@@ -58,6 +58,20 @@ const CANDIDATE_ROW = {
   source_verified_at: null,
 };
 
+// A second candidate, NOT due (next_check_at 30 days out) -- exists only for the
+// candidateIds tests below, to prove candidateIds bypasses the due-set filter rather than
+// merely narrowing within it (a due-only second row couldn't distinguish the two).
+const NOT_DUE_CANDIDATE_ROW = {
+  id: "22222222-2222-2222-2222-222222222222",
+  title: "Yale Young Global Scholars",
+  organization: "Yale University",
+  official_url: "https://example.com/not-due-programme",
+  source_url: null,
+  deadline: null,
+  cycle_status: "open",
+  source_verified_at: null,
+};
+
 function chainable(result: { data: unknown; error: unknown }) {
   const chain: Record<string, unknown> = {
     eq: () => chain,
@@ -72,10 +86,14 @@ function mockAdminClient() {
   return {
     from: (table: string) => ({
       select: () => {
-        if (table === "opportunities") return chainable({ data: [CANDIDATE_ROW], error: null });
+        if (table === "opportunities") return chainable({ data: [CANDIDATE_ROW, NOT_DUE_CANDIDATE_ROW], error: null });
         if (table === "opportunity_matches") return chainable({ data: [{ opportunity_id: CANDIDATE_ROW.id, user_id: "u1", match_score: 90 }], error: null });
         if (table === "saved_opportunities") return chainable({ data: [], error: null });
-        if (table === "opportunity_verification_latest") return chainable({ data: [], error: null });
+        if (table === "opportunity_verification_latest")
+          return chainable({
+            data: [{ opportunity_id: NOT_DUE_CANDIDATE_ROW.id, next_check_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), consecutive_failures: 0 }],
+            error: null,
+          });
         return chainable({ data: [], error: null });
       },
       insert: (payload: unknown) => {
@@ -127,5 +145,43 @@ describe("runReverificationPass with dryRun: true", () => {
     await runReverificationPass({ maxRows: 5, budgetMs: 60000, dryRun: false });
 
     expect(insertMock).toHaveBeenCalled();
+  });
+});
+
+describe("runReverificationPass with candidateIds -- the representative-sample measurement affordance", () => {
+  test("without candidateIds, the not-due second row is skipped (baseline)", async () => {
+    const { runReverificationPass } = await import("@/lib/opportunities/reverification/run-job");
+
+    const result = await runReverificationPass({ maxRows: 5, budgetMs: 60000, dryRun: true });
+
+    expect(result.attempted).toBe(1);
+    expect(result.rows?.[0].opportunityId).toBe(CANDIDATE_ROW.id);
+  });
+
+  test("candidateIds bypasses the due-set filter entirely, not just narrows within it -- the NOT-due second row is attempted when explicitly listed", async () => {
+    const { runReverificationPass } = await import("@/lib/opportunities/reverification/run-job");
+
+    const result = await runReverificationPass({ maxRows: 5, budgetMs: 60000, dryRun: true, candidateIds: [NOT_DUE_CANDIDATE_ROW.id] });
+
+    expect(result.attempted).toBe(1);
+    expect(result.rows?.[0].opportunityId).toBe(NOT_DUE_CANDIDATE_ROW.id);
+  });
+
+  test("candidateIds with both real ids attempts both, regardless of due status", async () => {
+    const { runReverificationPass } = await import("@/lib/opportunities/reverification/run-job");
+
+    const result = await runReverificationPass({ maxRows: 5, budgetMs: 60000, dryRun: true, candidateIds: [CANDIDATE_ROW.id, NOT_DUE_CANDIDATE_ROW.id] });
+
+    expect(result.attempted).toBe(2);
+    expect(result.rows?.map((r) => r.opportunityId).sort()).toEqual([CANDIDATE_ROW.id, NOT_DUE_CANDIDATE_ROW.id].sort());
+  });
+
+  test("an id that matches no active opportunity is silently absent from the result, not an error", async () => {
+    const { runReverificationPass } = await import("@/lib/opportunities/reverification/run-job");
+
+    const result = await runReverificationPass({ maxRows: 5, budgetMs: 60000, dryRun: true, candidateIds: ["99999999-9999-9999-9999-999999999999"] });
+
+    expect(result.attempted).toBe(0);
+    expect(result.rows).toEqual([]);
   });
 });

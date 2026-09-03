@@ -669,6 +669,18 @@ export interface RunOptions {
    * that's the whole point: design doc §10's dry run needs real numbers, not simulated ones.
    * Defaults to false so the already-reviewed production path is byte-for-byte unchanged. */
   dryRun?: boolean;
+  /** Restricts the candidate pool to exactly these opportunity ids and bypasses the due-set
+   * filter (isDue) entirely — this is not part of §2's scheduling contract, it's a
+   * measurement affordance for "what would the pipeline do against THESE specific rows right
+   * now", independent of whether they're currently due. Still respects maxRows/budgetMs as
+   * real stopping conditions and is still priority-sorted (§4) among whichever ids resolve to
+   * a real, active candidate — an id that doesn't match an active opportunity is silently
+   * absent from the result (not an error), same as any other row this pass would never see.
+   * Production callers (the route, a future scheduler) never set this; it exists for
+   * representative-sample runs like scripts/opportunity-reverification-dry-run.ts's own
+   * --ids-file flag, so a measurement can cover a stratified cross-section of the catalogue
+   * instead of whatever the priority ranking would surface first. */
+  candidateIds?: string[];
 }
 
 export interface RunResult {
@@ -705,7 +717,9 @@ export async function runReverificationPass(options: RunOptions = {}): Promise<R
   const referenceDate = new Date();
 
   const pool = await loadCandidatePool(admin);
-  const dueCandidates = pool.candidates.filter((c) => isDue(pool.latestByOpportunity.get(c.id), referenceDate));
+  const dueCandidates = options.candidateIds
+    ? pool.candidates.filter((c) => options.candidateIds!.includes(c.id))
+    : pool.candidates.filter((c) => isDue(pool.latestByOpportunity.get(c.id), referenceDate));
   const ranked = sortByPriorityDescending(
     dueCandidates.map((c) => rankCandidate(c, { totalDistinctMatchedUsers: pool.totalDistinctMatchedUsers, effectiveTtlDays: effectiveTtlDays(c, referenceDate), referenceDate }))
   );
