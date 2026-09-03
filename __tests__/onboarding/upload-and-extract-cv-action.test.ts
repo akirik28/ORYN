@@ -12,12 +12,19 @@ import { describe, test, expect, vi, beforeEach } from "vitest";
  */
 
 const requireUser = vi.hoisted(() => vi.fn(async () => ({ userId: "user-1" })));
+// 2026-09-03, closing the Ultra tier-economics boundary: uploadAndExtractCV now also calls
+// getCurrentProfile() to resolve a real tier for extractCVData -- this mock didn't exist
+// before that change, so the call resolved to undefined() and threw, unrelated to whatever
+// each test below is actually about. Defaults to a Standard profile shape in beforeEach;
+// no test here is about tier, so every existing assertion stays about what it was already
+// about.
+const getCurrentProfile = vi.hoisted(() => vi.fn());
 const extractCVData = vi.hoisted(() => vi.fn());
 const assertWithinAIRateLimit = vi.hoisted(() => vi.fn(async () => {}));
 const logEvent = vi.hoisted(() => vi.fn());
 const storageUpload = vi.hoisted(() => vi.fn(async () => ({ error: null })));
 
-vi.mock("@/lib/security/dal", () => ({ requireUser }));
+vi.mock("@/lib/security/dal", () => ({ requireUser, getCurrentProfile }));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => ({ storage: { from: () => ({ upload: storageUpload }) } })),
 }));
@@ -46,6 +53,7 @@ function fileFormData(overrides: Partial<{ name: string; type: string; size: num
 beforeEach(() => {
   vi.clearAllMocks();
   requireUser.mockResolvedValue({ userId: "user-1" });
+  getCurrentProfile.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null });
   assertWithinAIRateLimit.mockResolvedValue(undefined);
   storageUpload.mockResolvedValue({ error: null });
 });

@@ -4,6 +4,8 @@ import { z } from "zod";
 import mammoth from "mammoth";
 import { getAIProvider } from "./index";
 import { withUsageLogging } from "./usage";
+import { selectModelForUser } from "./limits/budget";
+import type { PlanTier } from "@/types/database";
 
 const ExtractedItemSchema = z.object({
   title: z.string(),
@@ -123,12 +125,19 @@ export async function extractCVData(params: {
   userId: string;
   mimeType: string;
   buffer: Buffer;
+  /** 2026-09-03, closing the Ultra tier-economics boundary. This runs during onboarding
+   *  (app/(onboarding)/onboarding/actions.ts's uploadAndExtractCV), before
+   *  onboarding_completed is true — but a real, authenticated session and its profile row
+   *  (created at signup, Phase 2, before onboarding starts) both already exist at that
+   *  point, so a real tier is genuinely resolvable there, not merely assumed. Required, no
+   *  default, matching every other tier-threaded AI feature this build touches. */
+  tier: PlanTier;
 }): Promise<CVExtractionResult> {
   const document = await toAIDocument(params.mimeType, params.buffer);
 
   try {
     const provider = getAIProvider();
-    const result = await withUsageLogging({ userId: params.userId, feature: "cv_extraction" }, (model) =>
+    const result = await withUsageLogging({ userId: params.userId, feature: "cv_extraction", selectModel: (uid) => selectModelForUser(uid, params.tier) }, (model) =>
       provider.generateStructured({
         system: SYSTEM_PROMPT,
         prompt: "Extract every education entry, activity, award, project, research experience, work experience, skill, and language from the attached CV.",
@@ -136,6 +145,15 @@ export async function extractCVData(params: {
         schema: CVExtractionSchema,
         schemaName: "record_cv_extraction",
         schemaDescription: "Records the structured data extracted from the student's CV.",
+        // Not raised for Ultra, 2026-09-03 -- and not benchmarked either, unlike
+        // essay-outlines.ts's own maxTokens (checked live, found fine at 3000 on a rich
+        // fixture, thinking_tokens: 0 under forced tool_choice). This schema's theoretical
+        // worst case is much larger than essay-outlines' -- up to 20 activities + 20 awards +
+        // 15 projects + 10 research + 15 work + 10 education + 30 skills + 10 languages + 20
+        // unclassified strings, unverified against a real dense CV. Flagged, not fixed: this
+        // would be a Standard-tier concern too if real, not Ultra-specific, so it's out of
+        // this pass's scope -- worth the same live-benchmark method if a real truncated
+        // extraction is ever reported.
         maxTokens: 4096,
         model,
       }),

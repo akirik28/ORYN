@@ -3,8 +3,10 @@ import "server-only";
 import { z } from "zod";
 import { getAIProvider } from "./index";
 import { withUsageLogging } from "./usage";
+import { selectModelForUser } from "./limits/budget";
 import { withOutputLanguage } from "./output-language";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+import type { PlanTier } from "@/types/database";
 
 const RefinementSchema = z.object({
   improvedDescription: z
@@ -47,10 +49,13 @@ export async function refineAchievementDescription(params: {
   title: string;
   organization: string | null;
   description: string | null;
+  /** 2026-09-03, closing the Ultra tier-economics boundary — see
+   *  lib/ai/research-generator.ts's own comment on why this is required, not defaulted. */
+  tier: PlanTier;
 }): Promise<AchievementRefinement> {
   const provider = getAIProvider();
 
-  const result = await withUsageLogging({ userId: params.userId, feature: "achievement_refinement" }, (model) =>
+  const result = await withUsageLogging({ userId: params.userId, feature: "achievement_refinement", selectModel: (uid) => selectModelForUser(uid, params.tier) }, (model) =>
     provider.generateStructured({
       system: withOutputLanguage(SYSTEM_PROMPT, params.locale ?? DEFAULT_LOCALE),
       prompt: `Achievement type: ${params.achievementType}\nTitle: ${params.title}\nOrganization: ${params.organization ?? "(not given)"}\nCurrent description: ${params.description ?? "(none)"}\n\nSuggest a tightened description (or null) and up to 4 clarifying questions.`,

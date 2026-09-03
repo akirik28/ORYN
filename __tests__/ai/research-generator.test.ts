@@ -92,7 +92,7 @@ describe("generateResearchProjects — usage recording", () => {
     const { generateResearchProjects } = await import("@/lib/ai/research-generator");
     providerRef.current!.queueStructured(sampleProjectList());
 
-    await generateResearchProjects({ userId: USER_ID, interests: ["Economics"], field: "Economics" });
+    await generateResearchProjects({ userId: USER_ID, interests: ["Economics"], field: "Economics", tier: "standard" });
 
     const recorded = usageInserts();
     expect(recorded).toHaveLength(1);
@@ -106,7 +106,7 @@ describe("generateResearchProjects — grade-level context", () => {
     const { generateResearchProjects } = await import("@/lib/ai/research-generator");
     providerRef.current!.queueStructured(sampleProjectList());
 
-    await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics" });
+    await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics", tier: "standard" });
 
     const sentPrompt = providerRef.current!.structuredCalls[0]?.prompt as string;
     expect(sentPrompt).toContain(`Graduating ${graduationYearRef.current}`);
@@ -118,7 +118,7 @@ describe("generateResearchProjects — grade-level context", () => {
     const { generateResearchProjects } = await import("@/lib/ai/research-generator");
     providerRef.current!.queueStructured(sampleProjectList());
 
-    await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics" });
+    await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics", tier: "standard" });
 
     const sentPrompt = providerRef.current!.structuredCalls[0]?.prompt as string;
     expect(sentPrompt).toContain("Graduation year not on file.");

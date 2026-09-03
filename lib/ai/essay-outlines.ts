@@ -3,8 +3,10 @@ import "server-only";
 import { z } from "zod";
 import { getAIProvider } from "./index";
 import { withUsageLogging } from "./usage";
+import { selectModelForUser } from "./limits/budget";
 import { withOutputLanguage } from "./output-language";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+import type { PlanTier } from "@/types/database";
 
 /**
  * Essay Story Bank (founder-confirmed MVP scope). Deliberately NOT an essay writer: it
@@ -91,6 +93,9 @@ export async function generateEssayOutlines(params: {
   essayPrompt: string;
   experiences: StoryBankExperience[];
   goals: string[];
+  /** 2026-09-03, closing the Ultra tier-economics boundary — see
+   *  lib/ai/research-generator.ts's own comment on why this is required, not defaulted. */
+  tier: PlanTier;
 }): Promise<EssayOutlineResponse> {
   const provider = getAIProvider();
 
@@ -101,7 +106,7 @@ export async function generateEssayOutlines(params: {
   // already found and fixed in cv_extraction/achievement_refinement/weekly_plan/
   // research_generator/opportunity_extraction/requirement_extraction, just never extended
   // here. Found auditing every structured-output surface's failure path, not a live incident.
-  const result = await withUsageLogging({ userId: params.userId, feature: "essay_story_bank" }, (model) =>
+  const result = await withUsageLogging({ userId: params.userId, feature: "essay_story_bank", selectModel: (uid) => selectModelForUser(uid, params.tier) }, (model) =>
     provider.generateStructured({
       system: withOutputLanguage(SYSTEM_PROMPT, params.locale ?? DEFAULT_LOCALE),
       prompt: [
@@ -117,6 +122,18 @@ export async function generateEssayOutlines(params: {
       schema: EssayOutlineResponseSchema,
       schemaName: "essay_story_outlines",
       schemaDescription: "Records story candidates drawn from the student's own experiences, with structural outlines for each.",
+      // Not raised for Ultra, unlike advisor-chat.ts's maxTokens -- checked live, 2026-09-03,
+      // not assumed. This call forces tool_choice (generateStructured always does), and a
+      // real benchmark against a rich 3-experience fixture came back with
+      // output_tokens_details.thinking_tokens: 0 on both a 3000 and a 6000 ceiling --
+      // forced tool_choice does not appear to burn the adaptive-thinking budget the way
+      // generateText's free-form replies do, at least not observed here, contradicting this
+      // codebase's own more general "every call here" thinking comment
+      // (anthropic-provider.ts's DEFAULT_MAX_TOKENS) for this specific call shape. At 3000,
+      // the same fixture completed with stop_reason "tool_use" (not "max_tokens") and 2838
+      // output tokens -- real headroom, but only ~5%, worth another look if a genuinely
+      // denser real case is ever seen truncating; not a tier question, since a Standard
+      // student would hit the identical ceiling on the identical content.
       maxTokens: 3000,
       model,
     }),

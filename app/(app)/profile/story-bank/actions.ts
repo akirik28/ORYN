@@ -1,12 +1,13 @@
 "use server";
 
-import { requireUser } from "@/lib/security/dal";
+import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { collectStoryBankExperiences } from "@/lib/story-bank/collect";
 import { generateEssayOutlines, type EssayOutlineResponse } from "@/lib/ai/essay-outlines";
 import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { resolveLocale } from "@/lib/i18n/locale";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
 
 const MAX_PROMPT_LENGTH = 1000;
 
@@ -28,9 +29,10 @@ export async function generateStoryOutlines(
     // Re-read every experience server-side from the student's own RLS-scoped rows rather
     // than trusting anything the client sent — the client only ever supplies ids to filter
     // by, never the content that reaches the model.
-    const [all, goalsRes] = await Promise.all([
+    const [all, goalsRes, profile] = await Promise.all([
       collectStoryBankExperiences(supabase, session.userId!, locale),
       supabase.from("career_goals").select("title").eq("user_id", session.userId!),
+      getCurrentProfile(),
     ]);
 
     const selected = selectedIds.length > 0 ? all.filter((e) => selectedIds.includes(e.id)) : all;
@@ -44,6 +46,9 @@ export async function generateStoryOutlines(
       essayPrompt: trimmed,
       experiences: selected,
       goals: (goalsRes.data ?? []).map((g) => g.title),
+      // 2026-09-03, closing the Ultra tier-economics boundary -- same pattern as every
+      // other threaded feature this build touches.
+      tier: resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null }),
     });
     return { data };
   } catch (error) {
