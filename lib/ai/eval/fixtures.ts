@@ -160,6 +160,24 @@ export const BASELINE_CONTEXT: StudentAdvisorContext = {
 export const REGRESSION_CHAT_QUESTION = "Should I start another entrepreneurship club?";
 export const BASELINE_CHAT_QUESTION = "What should I focus on this week?";
 
+/**
+ * Defaults are shaped for REGRESSION_CONTEXT specifically (research `0`/`not_assessed`
+ * there, so "currently unassessed" in `why` below is true for it) — any other fixture using
+ * `rec()` must override every field whose accuracy depends on the student's own data, not
+ * just `id`/`title`. Found live 2026-09-03 (CEO, tracing a model reply back to its source
+ * rather than assuming invention): BASELINE_COUNSELOR_RESULT's only recommendation called
+ * `rec()` with just an id/title override, leaving this `why` — "currently unassessed" —
+ * sitting in the baseline prompt even though BASELINE_CONTEXT's own `profileScores` has
+ * research at `62`/`developing`, genuinely assessed. The model was faithfully repeating a
+ * false sentence that was already in its context, not fabricating one; every advisor_chat
+ * and weekly_plan case built on BASELINE_COUNSELOR_RESULT before this fix carried that
+ * contradiction (`why[0]` reaches the model directly — see opportunity-context.ts's/
+ * weekly-plan.ts's own `recommendation.why[0]` lines). `matchedGapDimensions: ["research"]`
+ * has the identical defect for the identical reason (research is one of BASELINE's
+ * *strongest* assessed dimensions, not a gap) but is never rendered into any prompt this
+ * package builds (grep confirms no caller reads it) — fixed anyway, for the same reason a
+ * data-hygiene bug is worth closing before it becomes a live one.
+ */
 function rec(overrides: Partial<CounselorRecommendation> = {}): CounselorRecommendation {
   return {
     id: "opportunity:fixture-1",
@@ -214,7 +232,20 @@ export const REGRESSION_COUNSELOR_RESULT: CounselorResult = {
 export const BASELINE_COUNSELOR_RESULT: CounselorResult = {
   scoreVersion: "counselor_ranking_v1",
   gaps: [],
-  recommendations: [rec({ id: "opportunity:fixture-2", title: "Regional Science Fair" })],
+  recommendations: [
+    rec({
+      id: "opportunity:fixture-2",
+      title: "Regional Science Fair",
+      // Accurate for THIS fixture: research is 62/developing, not unassessed, and already
+      // has an ongoing project behind it — the real reason this recommendation makes sense
+      // is independent verification, not filling an empty dimension.
+      why: ["Builds on the OECD youth-unemployment research already in progress, adding independent, verifiable recognition beyond the current self-reported evidence."],
+      // Not a gap dimension for this profile (research is 62, stronger than five other
+      // assessed dimensions) — matches REGRESSION's own avoid_for_now rec's use of [] when
+      // a recommendation doesn't correspond to a real gap.
+      matchedGapDimensions: [],
+    }),
+  ],
   profileReadiness: { completenessPercent: 68, sufficientForJudgment: true },
   // Matches BASELINE_CONTEXT.student below.
   studentIdentity: { displayName: "Ada", country: "United States", graduationYear: 2027, curriculum: "ap" },
