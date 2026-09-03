@@ -29,7 +29,7 @@ describe("computeCompleteness", () => {
     expect(computeCompleteness(emptyFacts())).toBe(0);
   });
 
-  test("is different from (not derived from) profile strength — it only measures how much Oryn knows, not how strong it is", () => {
+  test("is different from (not derived from) profile strength — it only measures how much Proxola knows, not how strong it is", () => {
     // A single, very strong leadership activity fills in almost none of the checklist.
     const facts = emptyFacts();
     facts.activities = [

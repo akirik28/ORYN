@@ -116,7 +116,7 @@ describe("getUpcomingOpportunityDeadlines — pinned current behavior", () => {
   test("a saved opportunity that has since been disabled is not counted down to", async () => {
     // The other half of the same 2026-08-31 leak: a student can save an opportunity that is
     // later pulled, and the deadline engine would keep counting down to it. Being saved is
-    // not a reason to keep surfacing a record Oryn has withdrawn.
+    // not a reason to keep surfacing a record Proxola has withdrawn.
     const supabase = makeSupabase({
       saved_opportunities: [{ opportunity_id: "opp-1", user_id: USER_ID, status: "saved" }],
       opportunities: [

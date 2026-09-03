@@ -51,7 +51,7 @@ describe("inspectCycleLabel", () => {
     ["researchDate", LIVE.researchDate],
     ["atVerification", LIVE.atVerification],
     ["pagesFetched", LIVE.pagesFetched],
-  ])("flags %s as referring to Oryn's own research process", (_name, label) => {
+  ])("flags %s as referring to Proxola's own research process", (_name, label) => {
     expect(inspectCycleLabel(label).map((f) => f.defect)).toContain("research_process_reference");
   });
 

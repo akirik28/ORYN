@@ -52,8 +52,8 @@ describe("TavilySearchProvider.search — request body field set is closed", () 
   });
 });
 
-describe("OpenAlexResearchProvider.searchWorks — URL param field set is closed, mailto is Oryn's own", () => {
-  test("the request URL carries exactly the known-safe params, and mailto (if set) is Oryn's operational address, never a per-call value", async () => {
+describe("OpenAlexResearchProvider.searchWorks — URL param field set is closed, mailto is Proxola's own", () => {
+  test("the request URL carries exactly the known-safe params, and mailto (if set) is Proxola's operational address, never a per-call value", async () => {
     vi.stubEnv("OPENALEX_CONTACT_EMAIL", "oryn-ops@example.com");
     const { openAlexProvider } = await import("@/lib/providers/openalex");
 

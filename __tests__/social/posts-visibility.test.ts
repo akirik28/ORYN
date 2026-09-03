@@ -49,7 +49,7 @@ describe("canViewPost — the audience is an explicit decision, and private is t
   test("`oryn_public` is double-gated: the post's visibility AND the author's own is_public", () => {
     expect(canViewPost({ ...STRANGER, visibility: "oryn_public", authorProfileIsPublic: true })).toBe(true);
     // The whole point of the second gate: a student who never opted into a shareable
-    // profile cannot broadcast Oryn-wide by picking a visibility on one post.
+    // profile cannot broadcast Proxola-wide by picking a visibility on one post.
     expect(canViewPost({ ...STRANGER, visibility: "oryn_public", authorProfileIsPublic: false })).toBe(false);
   });
 

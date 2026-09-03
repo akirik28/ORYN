@@ -181,7 +181,7 @@ describe("PROFILE_VIEWS_EXPORT_COLUMNS — never exposes viewer identity", () =>
  *
  * It reads the migrations rather than a hand-kept list, and asserts that every table
  * carrying a `user_id` is either exported or explicitly excluded with a reason. That is
- * exactly how the previous gap happened: five tables holding what Oryn concluded *about*
+ * exactly how the previous gap happened: five tables holding what Proxola concluded *about*
  * a student (opportunity_matches, student_requirement_evaluations, ai_recommendations,
  * ai_usage, rate_limit_events) matched EXPORT_TABLES' own stated rule and were simply
  * never added, with nothing anywhere recording a decision either way.

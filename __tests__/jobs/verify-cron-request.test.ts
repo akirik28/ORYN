@@ -14,7 +14,7 @@ import { NextRequest } from "next/server";
  * topic "Cron Jobs authentication headers CRON_SECRET") before writing anything here —
  * Vercel's own recommended Route Handler snippet is functionally identical to this file:
  * `if (!cronSecret || authHeader !== \`Bearer ${cronSecret}\`) return 401`. This suite pins
- * that ORYN's actual implementation matches that contract, not just that it "looks right."
+ * that PROXOLA's actual implementation matches that contract, not just that it "looks right."
  *
  * `env.cron.secret` is read once at module scope (`lib/env.ts`'s `export const env = {...}`),
  * so testing both "secret set" and "secret unset" needs `vi.stubEnv` + `vi.resetModules()` +

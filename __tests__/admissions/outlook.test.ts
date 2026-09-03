@@ -157,7 +157,7 @@ describe("computeAdmissionOutlook", () => {
       expect(withGate.notApplicableReason).toBeNull();
     });
 
-    test("an unresearched country changes nothing — Oryn never acts on a guessed mechanism", () => {
+    test("an unresearched country changes nothing — Proxola never acts on a guessed mechanism", () => {
       const withoutGate = computeAdmissionOutlook({ ...base });
       const unknown = computeAdmissionOutlook({
         ...base,
@@ -333,7 +333,7 @@ describe("computeAdmissionOutlook — locale: tr", () => {
 
   // The honesty check specifically requested for this slice: the hedge must still admit the
   // same limit the English does, not read as more certain.
-  test("the rank-competitive hedge still says Oryn won't guess the cutoff, not just that it can't see it", () => {
+  test("the rank-competitive hedge still says Proxola won't guess the cutoff, not just that it can't see it", () => {
     const result = computeAdmissionOutlook(
       { ...base, admissionSystem: resolveAdmissionSystem({ targetCountry: "Turkey", studentCountry: "Turkey" }, "tr") },
       "tr"

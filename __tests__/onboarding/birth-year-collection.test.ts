@@ -6,7 +6,7 @@ import { CompleteOnboardingSchema } from "@/lib/validation/onboarding";
  * profile, not settings. Measured on the live project 2026-08-31, 6 of 11 accounts had it
  * null and 5 of those had completed onboarding — while 139 of the 276 active opportunities
  * carry an age limit that `lib/counselor/eligibility.ts` will not guess at, so those
- * accounts saw "this has an age requirement Oryn can't check" on every one of them.
+ * accounts saw "this has an age requirement Proxola can't check" on every one of them.
  *
  * These lock the collection contract, which is the part that was missing. The eligibility
  * logic downstream already worked and has its own coverage.

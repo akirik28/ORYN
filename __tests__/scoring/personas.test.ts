@@ -118,7 +118,7 @@ describe("persona: sparse new student", () => {
 });
 
 describe("persona: reasonably complete Grade 10 student", () => {
-  test("Oryn assesses what it was told about and stays quiet on the rest", () => {
+  test("Proxola assesses what it was told about and stays quiet on the rest", () => {
     const signal = signalFor(GRADE_10);
     const coverage = signalCoverage(signal);
     expect(coverage.assessed).toBeGreaterThan(0);

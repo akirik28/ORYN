@@ -253,7 +253,7 @@ describe("generateCandidateActions — requirement actions", () => {
     expect(candidates.some((c) => c.source.kind === "requirement_action")).toBe(false);
   });
 
-  test("does not generate a candidate for needs_manual_review (not Oryn-actionable data entry)", () => {
+  test("does not generate a candidate for needs_manual_review (not Proxola-actionable data entry)", () => {
     const candidates = generateCandidateActions(
       state({ requirementCandidateInputs: [{ ...baseInput, evaluation: { status: "needs_manual_review", reasoning: "Depends on submitted material." } }] })
     );
@@ -325,7 +325,7 @@ describe("generateCandidateActions — locale: tr", () => {
     expect(req!.title).toBe("Kontrol için gerekli bilgiyi ekle: SAT score (Test University)");
   });
 
-  // No requirement.title on file — falls through to the category label, which IS Oryn's
+  // No requirement.title on file — falls through to the category label, which IS Proxola's
   // own copy and so is the one part of this title genuinely translated.
   test("falls back to the Turkish category label when the requirement has no title", () => {
     const noTitle: RequirementCandidateInput = { ...baseInput, requirement: requirement({ title: null, requirement_type: "english_proficiency" }) };

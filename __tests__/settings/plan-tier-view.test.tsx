@@ -114,7 +114,7 @@ describe("PlanTierView — no buy button", () => {
 // low-stakes, worth collecting), drop the specific forward-looking commitment. Pinned here
 // so a future copy edit can't quietly reintroduce a promise nothing backs.
 describe("PlanTierView — the interest CTA never promises a specific future contact", () => {
-  test("neither the pre-click description nor the post-click confirmation claims Oryn will reach out", () => {
+  test("neither the pre-click description nor the post-click confirmation claims Proxola will reach out", () => {
     renderView("standard");
     for (const unfulfillable of [/we'll tell you/i, /we'll (let you know|notify|reach out|contact you)/i, /we will (tell|notify|reach out|contact)/i]) {
       expect(screen.queryByText(unfulfillable)).not.toBeInTheDocument();

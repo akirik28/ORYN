@@ -404,7 +404,7 @@ describe("Case 1 — recency rules that run backwards (METU)", () => {
   });
 
   test("Ankara's TR-YÖS 'valid for 2 years from the exam date' is never resolved to `met`", () => {
-    // REQ-2026-08-21-9323. The window is measured at the point of application and Oryn does
+    // REQ-2026-08-21-9323. The window is measured at the point of application and Proxola does
     // not know when the student will apply, so even a recorded exam date does not settle it.
     const facts: RequirementFacts = { ...EMPTY_FACTS, testScores: [{ testName: "TR-YÖS", score: "300", maxScore: "500", testDate: "2026-05-01" }] };
     const result = evaluateRequirement(
@@ -496,7 +496,7 @@ describe("Case 3 — mutually incomparable scales inside one TR-YÖS cycle", () 
   });
 
   test("METU's TR-YÖS 'first 5th percentile' is a rank, and a stored score is never compared to it", () => {
-    // REQ-2026-08-21-9330. Resolving it needs the cycle's national distribution, which Oryn
+    // REQ-2026-08-21-9330. Resolving it needs the cycle's national distribution, which Proxola
     // does not hold and cannot derive; a student who knows their score cannot self-assess.
     const result = evaluateRequirement("entrance_exam", { kind: "test_score", testName: "TR-YÖS", minPercentileRank: 5 }, STUDENT_TR_YOS);
     expect(result.status).toBe("needs_manual_review");
@@ -598,7 +598,7 @@ describe("Case 5 — TU Dublin's age bar is unevaluable from birth year alone", 
   });
 
   test("TU Dublin's age bar explains the birth-year limitation instead of blaming the student's data", () => {
-    // Phase 68: Oryn should say when it does not know enough. The privacy commitment
+    // Phase 68: Proxola should say when it does not know enough. The privacy commitment
     // (AGENTS.md Phase 2, birth year only) is the reason, and the student is told so.
     const result = evaluateRequirement("international_requirement", null, EMPTY_FACTS, TU_DUBLIN_AGE_BAR);
     expect(result.reasoning).toMatch(/birth year/i);

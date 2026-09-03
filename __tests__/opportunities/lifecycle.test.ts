@@ -231,7 +231,7 @@ describe("nonActionableOpportunityReason", () => {
 
     test("names a hidden/moderated row in Turkish without blaming the student or the programme", () => {
       const reason = nonActionableOpportunityReason(row({ status: "disabled", cycle_status: "open" }), "tr");
-      expect(reason).toBe("Oryn bu fırsatı şu anda göstermiyor.");
+      expect(reason).toBe("Proxola bu fırsatı şu anda göstermiyor.");
     });
   });
 });

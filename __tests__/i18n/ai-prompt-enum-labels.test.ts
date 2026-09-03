@@ -4,7 +4,7 @@ import { join, relative } from "node:path";
 import * as ts from "typescript";
 
 /**
- * A value typed as one of ORYN's closed DB enums must never reach an AI prompt template
+ * A value typed as one of PROXOLA's closed DB enums must never reach an AI prompt template
  * literal without going through its label accessor first — the same class
  * `docs/i18n-coverage.md`'s "six confirmed instances, 2026-09-02" section fixed by hand,
  * now checked by a machine instead of the next person's memory.

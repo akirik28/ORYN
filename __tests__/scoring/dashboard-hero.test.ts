@@ -6,7 +6,7 @@ import type { ProfileDimension } from "@/types/database";
 /**
  * Regression coverage for the hero-state bug found live during Gate 2
  * (docs/handoffs/gate2-ai-counselor-report-2026-08-24.md §18): `canClaimGap` answers two
- * different questions at once — "does the profile have real signal at all" and "can Oryn
+ * different questions at once — "does the profile have real signal at all" and "can Proxola
  * name *this specific* dimension as the gap" — so a rich profile whose literal weakest
  * dimension happened to be unassessed used to fall through to the same "nothing recorded"
  * state as a genuinely empty profile. `computeDashboardHeroState` (lib/scoring/dashboard-
@@ -92,7 +92,7 @@ describe("computeDashboardHeroState", () => {
     // dimensions as assessed.
     expect(stat("Areas assessed")).toBe(3);
     expect(stat("Already strong")).toBe(1);
-    // Everything Oryn cannot stand behind — `not_assessed` *and* `limited_evidence`. The
+    // Everything Proxola cannot stand behind — `not_assessed` *and* `limited_evidence`. The
     // old code printed only the 3 limited-evidence ones under this label.
     expect(stat("No evidence yet")).toBe(6);
   });
