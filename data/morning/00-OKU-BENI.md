@@ -402,9 +402,9 @@ düzelttiğimiz "veri yok ama kendinden emin etiket" hatasını yirmi katına ç
 Üç seçenek: koridoru genişlet, kapsam dışını çıkar, ya da kalsınlar ama etiketsiz. **Şu an
 üçüncüsünün yarısındayız.**
 
-**İki ülke için de dosyalar hazır bekliyor**, ikisi de denendi ve geri alındı, ikisi de
+**Üç ülke için de dosyalar hazır bekliyor**, üçü de denendi ve geri alındı, üçü de
 bilerek sabah paketine adım olarak konmadı — aşağıdaki şema kararı verilmeden uygulanırlarsa
-228 kurum eksik etiketle girer:
+250 kurum eksik etiketle girer:
 
 - **Hollanda: 36 hogeschool**, DUO'nun resmî listesinden —
   `netherlands-hbo-2026-09-03.sql`. Mevcut 13 Hollanda kaydıyla sıfır çakışma. Web adresi
@@ -412,6 +412,15 @@ bilerek sabah paketine adım olarak konmadı — aşağıdaki şema kararı veri
 - **Almanya: 192 Fachhochschule/HAW**, HRK'nın kendi arama sisteminden —
   `germany-haw-2026-09-03.sql`. 16 eyaletin hepsi temsil ediliyor, mevcut 49 Alman kaydıyla
   sıfır çakışma.
+
+- **Finlandiya: 22 ammattikorkeakoulu**, Vipunen (Milli Eğitim Bakanlığı'nın kendi
+  istatistik portalı) ve sektörün kendi ortak başvuru portalı UASinfo — ikisi bağımsız
+  olarak aynı 22 ismi verdi —  `finland-amk-2026-09-03.sql`. **Yirmi ikisinin de web
+  adresi tek tek tarayıcıda açılıp doğrulandı**, satır satır. Bu üç partinin en sağlamı.
+
+  Ve senin için muhtemelen en önemlisi bu: 3f'in araştırmasına göre Finlandiya'da
+  **sınav çilesi olmadan kapı açan sektör tam olarak bu.** Katalog bugün o sektörden
+  hiçbir kurum içermiyor.
 
 Almanya'da bir tavizi bilmen gerekiyor: **web adresi 192'nin sadece 10'unda var.** Sebebi
 şu — HRK'nın sitesi toplu erişimi bot koruması ile engelliyor. Bunu aşmaya çalışmadık:
