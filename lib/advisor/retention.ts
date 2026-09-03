@@ -56,6 +56,36 @@ const SUMMARY_SYSTEM_PROMPT = `You are compressing one student's conversation wi
 
 Write 2-4 sentences. Cover: what the student was working on or asking about, anything the advisor and student agreed on or decided, and anything left unresolved. Never invent a fact, a number, a deadline, or a recommendation that isn't actually in the conversation — an inaccurate summary is worse than a short one.`;
 
+/**
+ * The one real AI call this module makes, extracted so a quality-evaluation script
+ * (scripts/eval-advisor-summaries.ts) exercises the EXACT production prompt/schema/model
+ * rather than a second copy that could drift from what actually ships — the same
+ * one-source-of-truth reasoning lib/ai/pricing.ts's resolveModelCostUsd comment gives for
+ * cost specifically, applied here to prompt content. Budget-gated identically whether called
+ * from the real job or an eval script — a synthetic-fixture eval run still costs real,
+ * accounted-for cents against the same monthly ceiling, deliberately (an eval that bypassed
+ * the budget check could no longer promise the real job's own spend is what it claims).
+ */
+export async function summarizeTranscript(transcript: string): Promise<{ summary: string; usage: { inputTokens: number; outputTokens: number }; model: string }> {
+  await assertWithinJobBudget("advisor_conversation_retention");
+
+  const provider = getAIProvider();
+  const result = await withUsageLogging(
+    { userId: null, feature: "advisor_conversation_retention", selectModel: async () => ({ model: SUMMARY_MODEL, degraded: false, reason: "no_user", monthToDateSpendUsd: null }) },
+    (model) =>
+      provider.generateStructured({
+        system: SUMMARY_SYSTEM_PROMPT,
+        prompt: `<conversation>\n${transcript.slice(0, 40_000)}\n</conversation>`,
+        schema: SummarySchema,
+        schemaName: "summarize_advisor_conversation",
+        schemaDescription: "A short, non-fabricated summary of a student's advisor conversation for data-minimization retention.",
+        maxTokens: 512,
+        model,
+      })
+  );
+  return { summary: result.data.summary, usage: result.usage, model: result.model };
+}
+
 interface RetentionCandidateRow {
   id: string;
   user_id: string;
@@ -155,27 +185,11 @@ async function processOneConversation(admin: SupabaseClient<Database>, candidate
     // run-job.ts's "stop, don't degrade" job-budget policy) while still letting
     // already-summarized candidates later in the batch proceed to deletion, since that step
     // is unpaid and unaffected by this exact budget.
-    await assertWithinJobBudget("advisor_conversation_retention");
-
     const transcript = (messages ?? [])
       .map((m) => `${m.role === "user" ? "Student" : "Advisor"}: ${m.content ?? "[no content]"}`)
       .join("\n\n");
-
-    const provider = getAIProvider();
-    const result = await withUsageLogging(
-      { userId: null, feature: "advisor_conversation_retention", selectModel: async () => ({ model: SUMMARY_MODEL, degraded: false, reason: "no_user", monthToDateSpendUsd: null }) },
-      (model) =>
-        provider.generateStructured({
-          system: SUMMARY_SYSTEM_PROMPT,
-          prompt: `<conversation>\n${transcript.slice(0, 40_000)}\n</conversation>`,
-          schema: SummarySchema,
-          schemaName: "summarize_advisor_conversation",
-          schemaDescription: "A short, non-fabricated summary of a student's advisor conversation for data-minimization retention.",
-          maxTokens: 512,
-          model,
-        })
-    );
-    summaryText = result.data.summary;
+    const result = await summarizeTranscript(transcript);
+    summaryText = result.summary;
     wroteSummaryThisPass = true;
   }
 
