@@ -257,6 +257,24 @@ kategoriye göre üretilmiş görseller yapılıyor.
 
 ---
 
+## Deploy edersen: ilk on dakikada bak
+
+`docs/environment-variables.md` — her değişken, olmazsa ne bozulur, **ve nasıl anlarsın.**
+
+En sinsi ikisi: **`SUPABASE_SECRET_KEY` ve `CRON_SECRET`.** Bunlar eksikse iş rotası daha
+kayıt açmadan patlıyor — yani panelde o iş için **hiç satır görünmüyor.** "Hiç çalışmadı"
+ile "çalıştı ve patladı" ayırt edilemiyor. Tek görünür yer Vercel'in kendi logları.
+
+Tavily/College Scorecard anahtarları eksikse durum daha iyi: iş çalışıyor ve panel sarı bir
+uyarı gösteriyor. Bu gece düzeltildi.
+
+`npm run check:integrations` gerçek API çağrıları yapıyor, "OK" derse güvenilir. Ama **her
+satırı oku** — eksik anahtarı "hata" saymıyor, sona atlarsan kaçırırsın. Ve iş gövdesini hiç
+çalıştırmadığı için yukarıdaki sessiz durumu yakalayamaz.
+
+Asıl kontrol şu: dört işi panelden birer kez tetikle ve Sistem bölümüne bak. Satır çıkıyorsa
+kayıt yolu sağlam demektir.
+
 ## Ürünün kendi döngüsü — iyi haber ve eksik halka
 
 **Senin kendi iki planın gerçek.** İlki "profilin boş" diyor, altı gün sonrakisi gerçek
