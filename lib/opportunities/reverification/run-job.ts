@@ -12,7 +12,7 @@ import { effectiveTtlDays } from "./ttl";
 import { runFetchLadder } from "./fetch-ladder";
 import { checkContentGuards, classifyAgainstStoredState, hasValidExcerpt, isFabricatedPlusOneYear } from "./classify";
 import { corroborateUnreadable, type CorroborationResult } from "./corroborate";
-import { adjudicateDisagreement } from "./adjudicate";
+import { adjudicateDisagreementWithMajority } from "./adjudicate";
 import { isDemotionEligible, volumeGuardBlocksRun } from "./demotion";
 import type { ReverificationCandidate, RealVerificationOutcome, EvidenceClass, FailureClass, FetchAttempt } from "./types";
 
@@ -518,13 +518,22 @@ async function processOneRow(
 
   // verdict.kind === "disagreement" — the one path §5.1 reserves for the model: "adjudicating
   // disagreement only... never asked 'when is the deadline for X', which is precisely the
-  // shape that fabricates."
-  const adjudication = await adjudicateDisagreement({
+  // shape that fabricates." Majority-of-N (2, escalating to 3 only on disagreement) rather
+  // than a single call — docs/opportunity-verdict-stability-measurement-2026-09-03.md found
+  // this exact call is the one place in the pipeline that isn't deterministic, and measured
+  // the fix's own cost (13 of 15 rows need only 2 reads) directly rather than assuming it.
+  const adjudication = await adjudicateDisagreementWithMajority({
     storedCycleStatus: candidate.cycleStatus,
     storedDeadline: candidate.deadline,
     excerpt: verdict.excerpt,
     opportunityTitle: candidate.title,
   });
+  // Only worth a note on the audit trail when the vote actually mattered — the common (2/2)
+  // case would just be noise appended to every single p4_contradicted reasoning string.
+  const adjudicationNote =
+    adjudication.reads === 3
+      ? ` [majority of 3 reads, 2/3 agreed; dissenting read: "${adjudication.allVerdicts.find((v) => v.cycleStateConfirmedChanged !== adjudication.verdict.cycleStateConfirmedChanged)?.reasoning}"]`
+      : "";
 
   if (!adjudication.verdict.cycleStateConfirmedChanged) {
     // Not confirmed — p4_contradicted (an answer, just an ambiguous one; §6.1). Routes
@@ -532,6 +541,7 @@ async function processOneRow(
     // never writes source_verified_at, never a candidate for demotion.
     const newConsecutiveFailures = priorConsecutiveFailures + 1;
     const retired = newConsecutiveFailures >= RETIREMENT_THRESHOLD;
+    const errorNote = adjudication.verdict.reasoning + adjudicationNote;
     await writeRun(
       admin,
       {
@@ -550,14 +560,14 @@ async function processOneRow(
         proposedChange: null,
         consecutiveFailures: newConsecutiveFailures,
         nextCheckAt: retired ? null : backoffNextCheckAt(newConsecutiveFailures),
-        error: adjudication.verdict.reasoning,
+        error: errorNote,
       },
       dryRun
     );
     return {
       outcome: "p4_contradicted",
       proposedDemotion: null,
-      report: { ...baseReport, outcome: "p4_contradicted", evidenceClass: "P4", failureClass: null, corroboration: null, reachedAdjudication: true, matchedExcerpt: verdict.excerpt, detectedDeadline: null, proposedChange: null, wouldWriteSourceVerifiedAt: false, wouldProposeDemotion: false, error: adjudication.verdict.reasoning },
+      report: { ...baseReport, outcome: "p4_contradicted", evidenceClass: "P4", failureClass: null, corroboration: null, reachedAdjudication: true, matchedExcerpt: verdict.excerpt, detectedDeadline: null, proposedChange: null, wouldWriteSourceVerifiedAt: false, wouldProposeDemotion: false, error: errorNote },
     };
   }
 
@@ -570,7 +580,11 @@ async function processOneRow(
   // snake_case keys, matching the actual opportunities columns this describes (cycle_status,
   // deadline) -- a jsonb audit blob, not consumed programmatically by anything in this
   // codebase, but a human reading it later should see the real column names.
-  const proposedChange = { cycle_status: proposedCycleStatus, deadline: detectedDeadline };
+  // adjudication_reads/agreement record how many independent adjudication calls this verdict
+  // took to settle -- 2 is the common case; 3 means the first two disagreed and this was the
+  // tiebreak. A human deciding whether to trust a p1_changed row can now see that directly
+  // instead of assuming every verdict here rests on a single, unrepeated call.
+  const proposedChange = { cycle_status: proposedCycleStatus, deadline: detectedDeadline, adjudication_reads: adjudication.reads, adjudication_agreement: adjudication.agreement };
 
   const runId = await writeRun(
     admin,

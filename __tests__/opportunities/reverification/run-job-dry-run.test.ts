@@ -36,9 +36,18 @@ vi.mock("@/lib/opportunities/reverification/fetch-ladder", () => ({
 }));
 
 vi.mock("@/lib/opportunities/reverification/adjudicate", () => ({
-  adjudicateDisagreement: vi.fn(async () => ({
+  // run-job.ts calls adjudicateDisagreementWithMajority, not adjudicateDisagreement directly
+  // (see docs/opportunity-verdict-stability-measurement-2026-09-03.md) -- mocked here as a
+  // stable 2/2 agreement so this file's own tests (about write-suppression and candidateIds,
+  // not about the majority-vote logic itself) don't have to think about escalation.
+  adjudicateDisagreementWithMajority: vi.fn(async () => ({
     verdict: { cycleStateConfirmedChanged: true, reasoning: "The excerpt unambiguously states applications are closed." },
-    usage: { inputTokens: 100, outputTokens: 20 },
+    reads: 2,
+    agreement: "2/2",
+    allVerdicts: [
+      { cycleStateConfirmedChanged: true, reasoning: "The excerpt unambiguously states applications are closed." },
+      { cycleStateConfirmedChanged: true, reasoning: "The excerpt unambiguously states applications are closed." },
+    ],
   })),
 }));
 
@@ -183,5 +192,57 @@ describe("runReverificationPass with candidateIds -- the representative-sample m
 
     expect(result.attempted).toBe(0);
     expect(result.rows).toEqual([]);
+  });
+});
+
+describe("run-job.ts propagates the majority-vote outcome onto the audit trail", () => {
+  test("a 2/2 verdict's read count and agreement land on proposedChange for a p1_changed row", async () => {
+    const { runReverificationPass } = await import("@/lib/opportunities/reverification/run-job");
+
+    const result = await runReverificationPass({ maxRows: 5, budgetMs: 60000, dryRun: true });
+
+    expect(result.rows?.[0].outcome).toBe("p1_changed");
+    expect(result.rows?.[0].proposedChange).toMatchObject({ adjudication_reads: 2, adjudication_agreement: "2/2" });
+  });
+
+  test("a 2/3 escalated verdict notes the dissenting read on the p4_contradicted error string", async () => {
+    const adjudicateModule = await import("@/lib/opportunities/reverification/adjudicate");
+    vi.mocked(adjudicateModule.adjudicateDisagreementWithMajority).mockResolvedValueOnce({
+      verdict: { cycleStateConfirmedChanged: false, reasoning: "Majority read: still ambiguous." },
+      reads: 3,
+      agreement: "2/3",
+      allVerdicts: [
+        { cycleStateConfirmedChanged: true, reasoning: "Outlier read: looked confirmed." },
+        { cycleStateConfirmedChanged: false, reasoning: "Majority read: still ambiguous." },
+        { cycleStateConfirmedChanged: false, reasoning: "Majority read: still ambiguous." },
+      ],
+    });
+
+    const { runReverificationPass } = await import("@/lib/opportunities/reverification/run-job");
+    const result = await runReverificationPass({ maxRows: 5, budgetMs: 60000, dryRun: true });
+
+    expect(result.rows?.[0].outcome).toBe("p4_contradicted");
+    expect(result.rows?.[0].error).toContain("Majority read: still ambiguous.");
+    expect(result.rows?.[0].error).toContain("majority of 3 reads, 2/3 agreed");
+    expect(result.rows?.[0].error).toContain("Outlier read: looked confirmed.");
+  });
+
+  test("a 2/2 verdict's p4_contradicted error string carries no majority note -- the common case stays uncluttered", async () => {
+    const adjudicateModule = await import("@/lib/opportunities/reverification/adjudicate");
+    vi.mocked(adjudicateModule.adjudicateDisagreementWithMajority).mockResolvedValueOnce({
+      verdict: { cycleStateConfirmedChanged: false, reasoning: "Both reads agreed: still ambiguous." },
+      reads: 2,
+      agreement: "2/2",
+      allVerdicts: [
+        { cycleStateConfirmedChanged: false, reasoning: "Both reads agreed: still ambiguous." },
+        { cycleStateConfirmedChanged: false, reasoning: "Both reads agreed: still ambiguous." },
+      ],
+    });
+
+    const { runReverificationPass } = await import("@/lib/opportunities/reverification/run-job");
+    const result = await runReverificationPass({ maxRows: 5, budgetMs: 60000, dryRun: true });
+
+    expect(result.rows?.[0].outcome).toBe("p4_contradicted");
+    expect(result.rows?.[0].error).toBe("Both reads agreed: still ambiguous.");
   });
 });

@@ -281,6 +281,71 @@ it documents.
 > context vs. §5.1's own fishing-expedition risk), left as a founder/CEO-level call, not
 > decided here.
 
+> **Majority-of-N adjudication, 2026-09-03: §5.1's one non-deterministic call, made stable.**
+> CEO dispatch, direct chain from three same-day measurements: `docs/opportunity-stale-
+> identity-measurement-2026-09-03.md` found the direction-asymmetry (`canAutoApplyPromotion`
+> can never fire, so the opening direction is unmeasured by this job's own reporting) then
+> `docs/opportunity-hidden-live-records-measurement-2026-09-03.md` found `TAVILY_API_KEY` had
+> been an empty string all night, invisible to `provider_health`, then `docs/opportunity-rung1-
+> delta-measurement-2026-09-03.md`, re-run once the founder added a real key, found 28.3% of
+> rows changed outcome and all three of the session's "solid" opening-direction findings
+> degraded or conflicted, then `docs/opportunity-verdict-stability-measurement-2026-09-03.md`
+> isolated why: 13 of 15 rows returned a byte-identical excerpt AND identical verdict across
+> three independent reads; the other 2 returned the identical excerpt every time but split
+> 2-1 on how `adjudicateDisagreement` classified it. **The fetch is not the defect, proven
+> stable even on the disagreeing rows. The adjudication call is, and it's small and
+> majority-resolvable.**
+>
+> Built exactly the fix that evidence supports, nothing broader: `adjudicateDisagreement`
+> (§5.1) is unchanged, still the single-call primitive. A new
+> `adjudicateDisagreementWithMajority` (`lib/opportunities/reverification/adjudicate.ts`)
+> re-adjudicates the SAME already-fetched excerpt, never re-fetches (the stability
+> measurement's own evidence is that a pinned rung returns identical text, so a re-fetch would
+> spend a real Tavily call for zero additional information), and escalates from 2 reads to 3
+> only when the first two disagree — the measured base rate (13/15 agree at 2) means most rows
+> never pay for a third call. `run-job.ts`'s disagreement branch calls this instead of the
+> single-call version; `singleRead` is dependency-injected (default: the real
+> `adjudicateDisagreement`) specifically because `vi.mock` cannot intercept a call from one
+> function to a sibling exported from the same module — the only way to unit-test the
+> escalation policy without a real AI provider. `proposedChange`'s jsonb blob gains
+> `adjudication_reads`/`adjudication_agreement` for every `p1_changed` row; `p4_contradicted`'s
+> `error` string gains a bracketed note of the dissenting read, but only when reads is 3 — the
+> common 2/2 case stays exactly as terse as before. 9 new tests (6 on the escalation policy in
+> isolation, 3 proving `run-job.ts` actually threads the metadata onto what gets written).
+>
+> **This is the "pin the rung" fix in the narrow sense the evidence supports, not a broader
+> one.** It does not change `runFetchLadder`'s own fallback behavior (rung 2/3 still exist,
+> still matter — the hidden-live measurement's own Netherlands/XLAB cases showed both a
+> genuine host-block a pinned rung 1 alone would not fix, and a genuine rescue rung 1 alone
+> provided); it only guarantees that WITHIN one row's own majority-vote sequence, every read
+> comes from the one excerpt already fetched, never a mix of what different rungs happened to
+> return on different calls. A broader cross-run guarantee (comparing today's rung against
+> whichever rung answered on the LAST real pass) was considered and left undone: `fetch_method`
+> is already recorded per run (§8.2, unchanged), so the information needed for that comparison
+> already exists if a future pass wants to build on it — this one didn't, to keep the change to
+> what today's evidence actually supports.
+>
+> **`canAutoApplyPromotion` (§9.2) is untouched, still a hardcoded `false`.** This makes the
+> job's opening-direction signal more trustworthy if it's ever read; it does not turn anything
+> on. Arming, either direction, stays the founder's decision alone.
+>
+> **What this does not fix, stated plainly so it isn't assumed away:** Summer at Stanford
+> Program for High School has now been missed three times by the same wrong-sentence excerpt
+> match — rung 2, rung 3, and rung 1 (working) all landed on "Summer Session 2024 Apply Now"
+> instead of the "program runs June 20-August 16, 2026" sentence on the same page. Pinning
+> the rung and majority-voting the adjudication call do nothing for this case, because the
+> excerpt reaching the adjudicator is wrong before adjudication ever runs -- `findDateCandidates`
+> and the phrase-match excerpt window (§5.1, already noted above as scanning the whole page
+> rather than being reliably anchored to the strongest evidence) is a different, unfixed
+> problem. Stability is not the same claim as correctness on every row, and this session's own
+> measurements are the proof: a row can return the identical wrong excerpt, stably, three times
+> in a row.
+>
+> Gates: `npm run typecheck` / `npm run lint` -- both green. Full suite green (367 files / 5668
+> tests, 2 expected-fail unrelated to this change). No migration -- `proposedChange` was already
+> jsonb, `fetch_method` already existed. `REVERIFY_ALLOW_DEMOTION` and the scheduler remain off,
+> unchanged by this pass.
+
 ---
 
 ## 0. Summary

@@ -70,3 +70,56 @@ export async function adjudicateDisagreement(input: AdjudicationInput): Promise<
 
   return { verdict: result.data, usage: result.usage };
 }
+
+export interface MajorityAdjudicationVerdict {
+  verdict: AdjudicationVerdict;
+  /** 2 for the common case (first two reads agreed), 3 only when they didn't. */
+  reads: 2 | 3;
+  /** "2/2" or "2/3" -- always exactly this shape, since cycleStateConfirmedChanged is
+   * binary: three votes with no 2-way tie among the first two can only split 2-1. */
+  agreement: "2/2" | "2/3";
+  /** Every individual verdict, in read order -- for the audit trail on the rows where the
+   * vote actually mattered (reads: 3), a human reviewing why a row went one way should see
+   * the dissenting read too, not just the winner's reasoning. */
+  allVerdicts: AdjudicationVerdict[];
+}
+
+/**
+ * Design doc §5.1's adjudication call is the one path with no deterministic backstop, and it
+ * measurably isn't stable on its own: docs/opportunity-verdict-stability-measurement-
+ * 2026-09-03.md ran the SAME already-fetched excerpt through adjudicateDisagreement three
+ * times, independently, for 15 rows -- 13 agreed on every read, but 2 split (2-1, once in
+ * each risk direction, on a byte-identical excerpt both times). The same measurement also
+ * showed the fetch itself is not the source of that instability -- a pinned rung returns the
+ * identical excerpt on repeated fetches -- so this re-adjudicates the excerpt ALREADY IN
+ * `input`, never re-fetching: re-fetching would spend a real Tavily call for zero additional
+ * information, per that same evidence.
+ *
+ * Escalates from 2 reads to 3 only when the first two disagree (13 of 15 rows in the
+ * measurement needed only 2; escalating every row to 3 would triple cost for a 2-in-15 case).
+ * `singleRead` defaults to the real `adjudicateDisagreement` and exists so a caller (a test)
+ * can inject a controllable stand-in directly -- vi.mock cannot intercept a call from one
+ * function to a sibling exported from the same module, so dependency injection is the only
+ * way to unit-test the escalation logic in isolation without a real AI provider.
+ */
+export async function adjudicateDisagreementWithMajority(
+  input: AdjudicationInput,
+  singleRead: (input: AdjudicationInput) => ReturnType<typeof adjudicateDisagreement> = adjudicateDisagreement
+): Promise<MajorityAdjudicationVerdict> {
+  const first = await singleRead(input);
+  const second = await singleRead(input);
+
+  if (first.verdict.cycleStateConfirmedChanged === second.verdict.cycleStateConfirmedChanged) {
+    return { verdict: first.verdict, reads: 2, agreement: "2/2", allVerdicts: [first.verdict, second.verdict] };
+  }
+
+  // The first two disagree -- exactly one of them said "changed". A third read breaks the
+  // tie one way or the other; three binary votes with no 2-way agreement among the first two
+  // can only resolve 2-1, never a fresh tie.
+  const third = await singleRead(input);
+  const votes = [first.verdict, second.verdict, third.verdict];
+  const changedCount = votes.filter((v) => v.cycleStateConfirmedChanged).length;
+  const majorityChanged = changedCount >= 2;
+  const winner = votes.find((v) => v.cycleStateConfirmedChanged === majorityChanged)!;
+  return { verdict: winner, reads: 3, agreement: "2/3", allVerdicts: votes };
+}
