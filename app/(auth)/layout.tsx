@@ -24,7 +24,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
       style={{ background: "linear-gradient(145deg, #DDDAF5 0%, #D4DBF0 100%)" }}
     >
       <Link href="/" className="relative mb-8">
-        <Image src="/brand/logo-full.png" alt="Proxola" width={135} height={44} priority className="h-11 w-auto" />
+        <Image src="/brand/logo-full.png" alt="Proxola" width={139} height={44} priority className="h-11 w-auto" />
       </Link>
       <div
         className={`${inter.className} relative w-full max-w-sm rounded-[24px] p-10`}

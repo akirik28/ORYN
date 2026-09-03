@@ -42,7 +42,7 @@ export default async function ConfirmAgeLayout({ children }: { children: React.R
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,var(--brand-primary-subtle),transparent_55%)]"
       />
       <div className="relative flex items-center px-6 py-5">
-        <Image src="/brand/logo-full.png" alt="Proxola" width={122} height={40} priority className="h-10 w-auto" />
+        <Image src="/brand/logo-full.png" alt="Proxola" width={126} height={40} priority className="h-10 w-auto" />
       </div>
       <div className="relative flex flex-1 items-start justify-center px-4 pb-16">
         <div className="w-full max-w-xl rounded-2xl border bg-card p-8 shadow-sm">{children}</div>

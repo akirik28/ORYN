@@ -20,7 +20,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
         className="relative flex flex-col items-center overflow-hidden px-4 py-12"
         style={{ background: "linear-gradient(145deg, #DDDAF5 0%, #D4DBF0 100%)" }}
       >
-        <Image src="/brand/logo-full.png" alt="Proxola" width={135} height={44} className="relative mb-8 h-11 w-auto" />
+        <Image src="/brand/logo-full.png" alt="Proxola" width={139} height={44} className="relative mb-8 h-11 w-auto" />
         <div
           className={`${inter.className} relative w-full max-w-sm rounded-[24px] p-10`}
           style={{ background: "rgba(255,255,255,0.85)", backdropFilter: "blur(24px)", boxShadow: "0 24px 80px rgba(61,53,232,0.12)" }}
