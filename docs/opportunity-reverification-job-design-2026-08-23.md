@@ -105,6 +105,50 @@ it documents.
 > exercised end-to-end only by composing those already-tested pieces plus the full gate —
 > genuine integration testing against a real corpus is what the (not-yet-run) dry run is for.
 
+> **§10's dry run, run for real, 2026-09-03 (CEO dispatch: "run it... tell me what it would
+> have done").** Added `dryRun: true` to `RunOptions` — suppresses claimLease/writeRun/
+> writeSourceVerifiedAt/applyDemotion unconditionally (automated proof:
+> `__tests__/opportunities/reverification/run-job-dry-run.test.ts`, which forces
+> `REVERIFY_ALLOW_DEMOTION=true` to test the SUPPRESSION specifically, not an
+> already-off switch, and separately confirms the identical mocked pipeline DOES write when
+> `dryRun` is false — a test that can't fail is not a proof). The route
+> (`dry_run: true` in the body) bypasses `runWithTracking` entirely for a dry run rather than
+> threading the flag through it — that wrapper writes a real `external_sync_jobs` row on
+> every call, and "no writes" should mean exactly that, not "no writes except the job's own
+> tracking metadata." `scripts/opportunity-reverification-dry-run.ts` also exists per §10.2's
+> own preference, requiring a one-line no-op shim for `server-only` on the module path (that
+> package is bundled inside Next.js, not a resolvable standalone dependency for a plain
+> `tsx` process — its real implementation is already a no-op outside a browser, so the shim
+> changes nothing about behavior, only resolvability).
+>
+> **Confirmed directly, not assumed, before running anything: migration 0103 is genuinely
+> unapplied on the real database** (`qtcvcflzxbuagvvwahhu`/`oryn-qa-scratch`) — direct
+> `information_schema` probe, zero rows for the table, the view, or the column. This also
+> surfaced a real bug fixed before the run: `loadCandidatePool`'s `.select()` NAMED
+> `source_verified_at` explicitly, and per this codebase's own documented rule
+> (`lib/supabase/errors.ts`, "wildcard vs. named select, not read vs. write") a named column
+> that doesn't exist yet fails the WHOLE query, not just that field — an unguarded version
+> would have silently reported zero due candidates for a reason having nothing to do with
+> what's actually due. Fixed with the same `isUndefinedColumnError`-retry pattern this
+> codebase already uses elsewhere.
+>
+> **Bounded run: 20 rows, real Tavily/browser-UA/Wayback/Anthropic calls, zero writes.**
+> Full numbers and analysis in the completion report to CEO; the headline finding is NOT the
+> one this dispatch asked about — corroboration itself checked out well (2/2 unreadable
+> fetches this run were falsified by a healthy Wayback capture, though n=2 is far too small
+> to call a rate) — it's that **16 of 20 rows (80%) landed on `p2_unreadable`/
+> `reached_unusable` via §7.6's liveness-silent path**, meaning the exact §5.1 phrase set
+> this document specifies (`"applications open"` / `"apply by"` / `"deadline:"` for opening;
+> five closure phrases) essentially never matches real programme pages, which phrase their
+> calls to action in ways the fixed list doesn't anticipate ("Apply Now", "Enrollment open",
+> "Register today", etc.). Zero P1 outcomes of either kind occurred in this sample —
+> `source_verified_at` would not have been written once across 20 real, successfully-fetched
+> pages. This directly answers Assumption A12 ("liveness-silent P1 rate is unproven... if
+> high, §7.6 mechanism 1 is the job's primary value, not a safeguard") — measured high, not
+> merely possible. Implemented exactly as this document specifies; not a bug in this pass,
+> a now-measured property of the design's own phrase-matching approach that needs a decision
+> before arming produces any real value.
+
 ---
 
 ## 0. Summary
