@@ -11,13 +11,15 @@ import { runScheduledReview } from "@/lib/scoring/scheduled-review";
  * and monthly-review baseline don't silently go stale even when nothing they did
  * triggered a recompute.
  *
- * Armed in vercel.json and lib/jobs/schedule.ts's JOB_DEFINITIONS (0 14 1 * *, 2026-09-03) —
- * flagged, not silently left, in docs/job-dry-run-audit-2026-09-03.md: this paragraph
- * originally documented arming as deliberately left for founder sign-off specifically
- * (matching generate-weekly-plans' own precedent), and that reasoning is unchanged — this
- * job's own cost profile was never the reason for the gate, so being cheap doesn't settle
- * whether the gate was actually cleared before arming. Confirm rather than assume. Real and
- * safe to trigger manually in the meantime:
+ * NOT wired into vercel.json and NOT added to lib/jobs/schedule.ts's JOB_DEFINITIONS —
+ * both deliberately left for whoever turns this on, matching generate-weekly-plans' (Job D)
+ * own precedent: anything that changes production behavior on deploy is founder-gated.
+ * Briefly armed anyway on 2026-09-03 without that check happening first, caught by
+ * docs/job-dry-run-audit-2026-09-03.md, and pulled back out the same day — see that doc and
+ * lib/jobs/schedule.ts's own comment above JOB_DEFINITIONS for the full account. Nothing
+ * about the job itself was the problem (8 students, no AI cost, correct per-item error
+ * handling); the gate this paragraph names just hadn't been cleared yet. Stays out until the
+ * founder says otherwise. Real and safe to trigger manually in the meantime:
  *   curl -X POST /api/jobs/scheduled-review -H "Authorization: Bearer $CRON_SECRET"
  *
  * Intended cadence: monthly — matching lib/scoring/monthly-review.ts's own

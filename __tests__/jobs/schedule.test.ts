@@ -67,13 +67,17 @@ describe("isRunStuck", () => {
 });
 
 describe("JOB_DEFINITIONS", () => {
-  it("covers exactly the eight scheduled job_name strings runWithTracking is actually called with", () => {
-    // Nine real runWithTracking("...") call sites exist today (grepped directly across
-    // app/api/jobs/**/route.ts and app/(app)/admin/actions.ts, 2026-09-03) — eight belong
-    // here; generate_weekly_plans is the deliberate exception (Phase 30 Job D / Phase 9),
+  it("covers exactly the seven scheduled job_name strings runWithTracking is actually called with", () => {
+    // Ten real runWithTracking("...") call sites exist today (grepped directly across
+    // app/api/jobs/**/route.ts and app/(app)/admin/actions.ts, 2026-09-03) — seven belong
+    // here. generate_weekly_plans is the deliberate exception (Phase 30 Job D / Phase 9),
     // left out of JOB_DEFINITIONS the same way it's left out of vercel.json, since arming
     // it is a founder tier/budget decision, not a scheduling one — see
-    // docs/job-scheduling-decision-2026-09-02.md §4.
+    // docs/job-scheduling-decision-2026-09-02.md §4. scheduled_review is the second
+    // exception, as of 2026-09-03: briefly both armed here and in vercel.json, then pulled
+    // back out of both — see lib/jobs/schedule.ts's own comment above JOB_DEFINITIONS and
+    // docs/job-dry-run-audit-2026-09-03.md for why (a founder sign-off named in that job's
+    // own file hadn't been confirmed before it was armed, not a problem with the job).
     const names = JOB_DEFINITIONS.map((d) => d.jobName).sort();
     expect(names).toEqual([
       "deadline_reminders",
@@ -82,7 +86,6 @@ describe("JOB_DEFINITIONS", () => {
       "discover_requirements",
       "notify_university_changes",
       "refresh_admission_outlooks",
-      "scheduled_review",
       "sync_us_universities",
     ]);
   });

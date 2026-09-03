@@ -78,7 +78,9 @@ async function reviewOneStudent(userId: string, admin: ReturnType<typeof createA
  * vercel.json) per this repo's standing rule that anything changing production behavior on
  * deploy is founder-gated -- not because of its own cost, which is negligible (bounded
  * DB read/write volume, no external calls), but because the rule itself doesn't carve out
- * an exception for a cheap job.
+ * an exception for a cheap job. (Briefly armed anyway on 2026-09-03 without that check
+ * happening first, caught the same day, pulled back out -- see
+ * docs/job-dry-run-audit-2026-09-03.md.)
  */
 export async function runScheduledReview(): Promise<ScheduledReviewResult[]> {
   const admin = createAdminClient();
