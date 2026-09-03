@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { requireAdmin } from "@/lib/security/require-admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { discoverOpportunitiesForQuery, DEFAULT_DISCOVERY_QUERIES } from "@/lib/opportunities/discover";
@@ -397,12 +398,23 @@ export async function updateFinanceSettings(input: { usdTryRate?: number; ultraP
  * "every field optional, whichever provided" contract updateFinanceSettings above already
  * established -- SignupsToggle, MaintenanceModeToggle and TrialPeriodForm each call this
  * with only their own one field.
+ *
+ * Error strings route through getTranslations (2026-09-03, kumanda sweep) rather than being
+ * hardcoded English, like every other `return { error: "..." }` in this file still is (65
+ * occurrences, confirmed by grep -- flagged to oryn-a7 as its own, much larger finding, not
+ * attempted wholesale here). Fixed just this one function because it's the one directly
+ * reachable from the Ayarlar screen this sweep covers; the invalidDays/productSettingsNotSetUp
+ * wording already existed as real, tested catalog keys
+ * (admin.control.settings.trial.invalidDays / .productSettingsNotSetUp) that the client-side
+ * form already uses for its own validation -- this server-side re-validation was a second,
+ * separately-hardcoded, English-only copy of the exact same message, not a new one.
  */
 export async function updateProductSettings(input: { signupsEnabled?: boolean; maintenanceMode?: boolean; trialPeriodDays?: number }): Promise<{ error?: string }> {
   const adminProfile = await requireAdmin();
+  const t = await getTranslations("admin.control.settings");
   if (input.signupsEnabled === undefined && input.maintenanceMode === undefined && input.trialPeriodDays === undefined) return {};
   if (input.trialPeriodDays !== undefined && (!Number.isInteger(input.trialPeriodDays) || input.trialPeriodDays <= 0)) {
-    return { error: "Enter a whole number of days, at least 1." };
+    return { error: t("trial.invalidDays") };
   }
 
   const admin = createAdminClient();
@@ -417,10 +429,10 @@ export async function updateProductSettings(input: { signupsEnabled?: boolean; m
 
   if (error) {
     if (isUndefinedTableError(error, "admin_product_settings")) {
-      return { error: "Product settings aren't set up in the database yet — migration 0105 needs to be applied first." };
+      return { error: t("productSettingsNotSetUp") };
     }
     console.error("[admin] failed to update product settings", { code: error.code, message: error.message });
-    return { error: "Couldn't save that. Please try again." };
+    return { error: t("saveError") };
   }
 
   revalidatePath("/admin");

@@ -6,7 +6,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getReports } from "@/lib/admin/queries";
 import { ReportReviewControl } from "@/features/admin/report-review-control";
 import { PostRemovalControl } from "@/features/admin/post-removal-control";
-import { REPORTED_POST_MISSING_LABEL } from "@/lib/social/posts-moderation";
 import { StatusBadge } from "./status-badge";
 
 export async function ReportsSection() {
@@ -43,7 +42,7 @@ export async function ReportsSection() {
               {report.recommendationPreview ? <p className="rounded-md bg-muted px-3 py-1.5 text-xs italic text-muted-foreground">{report.recommendationPreview}</p> : null}
               {report.postId ? (
                 <div className="space-y-2">
-                  <p className="rounded-md bg-muted px-3 py-1.5 text-xs italic text-muted-foreground">{report.postBody ?? REPORTED_POST_MISSING_LABEL}</p>
+                  <p className="rounded-md bg-muted px-3 py-1.5 text-xs italic text-muted-foreground">{report.postBody ?? t("postMissing")}</p>
                   {report.postStillExists ? <PostRemovalControl postId={report.postId} isRemoved={report.postIsRemoved} /> : null}
                 </div>
               ) : null}

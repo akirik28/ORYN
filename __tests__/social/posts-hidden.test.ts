@@ -43,12 +43,17 @@ const SOCIAL_MODULES = [...STUDENT_FACING_MODULES, "lib/social/posts-moderation.
  * report written into a table nobody ever acts on. The allowlist is exact rather than a
  * directory prefix so it cannot quietly grow.
  */
-// app/(app)/admin/page.tsx -> features/admin/sections/reports-section.tsx, 2026-09-02
-// (docs/admin-panel-architecture-2026-09-02.md, D1: page.tsx is composition-only now, and
-// REPORTED_POST_MISSING_LABEL is applied where the report's post preview is actually
-// rendered, not in the query layer — see lib/admin/queries.ts's AdminReportRow.postBody
-// doc comment for why the label resolution was deliberately kept out of that module).
-const MODERATION_IMPORT_ALLOWLIST = ["app/(app)/admin/actions.ts", "features/admin/sections/reports-section.tsx"];
+// app/(app)/admin/actions.ts imports buildPostRemovalUpdate/buildPostRestoreUpdate/
+// ModerationInputError for the removal Server Action below.
+//
+// features/admin/sections/reports-section.tsx used to import REPORTED_POST_MISSING_LABEL
+// for the same "post preview is gone" case messageMissing/recommendationMissing already
+// handled via a translated string — found untranslated (always English, regardless of
+// locale) during 2026-09-03's kumanda sweep and fixed by switching it to t("postMissing"),
+// the same t() the section already had, matching the other two rather than importing a raw
+// constant for the third case only. Dropped from this allowlist accordingly — the module no
+// longer has a second real importer.
+const MODERATION_IMPORT_ALLOWLIST = ["app/(app)/admin/actions.ts"];
 
 /** Every source file under the given directories, recursively. */
 function sourceFiles(dirs: string[]): string[] {
