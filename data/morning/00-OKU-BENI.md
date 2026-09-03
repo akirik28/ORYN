@@ -91,6 +91,15 @@ kendi sol rayı, 12 bölüm. Şu an sadece iskelet: ray çalışıyor, tema çal
 ekranı duruyor. İçerik bölümleri sıradaki adım — mevcut 14 bölüm buraya taşınacak, yeniden
 yazılmayacak.
 
+**İçeri girince ilk yapılacak şey: Ayarlar'dan USD/TRY kurunu gir.** Kâr & Zarar ekranı
+kuru bilmeden hesap yapamaz ve şu an dürüstçe `—` "kur ayarlanmamış" gösteriyor. Kuru
+girdiğin an gelir, maliyet, kâr ve başabaş noktası canlanıyor. Fiyatı da orada
+değiştirebilirsin; hesap anında güncelleniyor.
+
+Migration'ları uyguladıktan sonra bazı ekranlar "tablo var ama içi boş" durumuna geçecek —
+bu beklenen hal, hata değil. Kontrol ettim: hepsi bunu sessizce "ayarlanmamış" diye
+gösteriyor, boş bir sayfa ya da hata değil.
+
 `/admin` yerinde duruyor ve çalışmaya devam ediyor. İkisini yan yana görüp karar ver:
 `/kumanda` doğru yolsa `/admin`'i oraya yönlendiririz.
 
