@@ -494,7 +494,17 @@ function applyAvoidSignals(
   near: boolean,
   avoid: DismissalAvoidSignals | undefined
 ): { score: number; avoidReasons: AvoidReason[] } {
-  if (!avoid) return { score: baseScore, avoidReasons: [] };
+  // clampScore on BOTH paths, not just the penalised one. baseScore is
+  // `(matched / total) * 100 + boost` — a division, so it is routinely fractional
+  // (1 of 3 interests plus the proximity boost is 48.33333333333333, the exact value in
+  // the live error below). The early return used to hand that straight back, and
+  // `relevance_score`/`match_score` are `integer` columns (migration 0008), so
+  // persist-matches.ts's upsert failed for the whole batch with
+  // `invalid input syntax for type integer: "48.33333333333333"` — not one bad row, the
+  // entire student's matches never persisted. Only students WITH dismissal signals took
+  // the clamped path below and worked, which is why this survived: the failure needed an
+  // absence, not a value.
+  if (!avoid) return { score: clampScore(baseScore), avoidReasons: [] };
 
   let score = baseScore;
   const avoidReasons: AvoidReason[] = [];
