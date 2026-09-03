@@ -1725,7 +1725,15 @@
     },
     "cleanup": {
       "sectionTitle": "Description cleanup",
-      "sectionDescription": "35 opportunity descriptions carrying research process-notes instead of student-facing text. Each row is checked against the live description before anything is written.",
+      "sectionDescription": "Some opportunity descriptions carry research process-notes instead of student-facing text. The list below is the rows with a prepared fix — each is checked against the live description before anything is written.",
+      "liveSummary": "{total} active rows currently carry at least one of: {kinds}. {ready} of those are ready to fix (below), {pending} have not been researched yet.",
+      "liveSummaryUnknown": "The live count could not be checked right now — the 35-row list below is still accurate, but the total defective count is unknown.",
+      "defectLabel": {
+        "multi_program_concatenation": "multiple programmes concatenated together",
+        "restates_title": "description restates its own title verbatim",
+        "embedded_url": "raw URL embedded in the description",
+        "truncated": "text cut off mid-sentence"
+      },
       "previewSummary": "{total} rows staged — {passing} currently match their guard and will apply.",
       "appliedSummary": "{applied} of {total} rows applied.",
       "applyButton": "Apply all {count}",
@@ -2001,7 +2009,9 @@
       "attention": {
         "sectionTitle": "Waiting on a decision",
         "openReports": "Open moderation reports",
-        "pendingCleanup": "Opportunity descriptions still contaminated",
+        "descriptionQuality": "Opportunity descriptions with a defect",
+        "descriptionQualityCount": "{ready} ready to fix, {pending} not yet",
+        "descriptionQualityUnknown": "Unknown — live check failed",
         "degradedStudents": "Students who hit the AI degrade point this month",
         "count": "{count}",
         "countOfTotal": "{count} of {total}",

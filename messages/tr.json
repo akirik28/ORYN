@@ -1725,7 +1725,15 @@
     },
     "cleanup": {
       "sectionTitle": "Açıklama temizliği",
-      "sectionDescription": "35 fırsat açıklaması, öğrenciye yönelik metin yerine araştırma süreci notları taşıyor. Her satır, herhangi bir şey yazılmadan önce canlı açıklamayla karşılaştırılıyor.",
+      "sectionDescription": "Bazı fırsat açıklamaları öğrenciye yönelik metin yerine araştırma süreci notları taşıyor. Aşağıdaki liste hazır düzeltmesi olan satırlar için — her biri, herhangi bir şey yazılmadan önce canlı açıklamayla karşılaştırılıyor.",
+      "liveSummary": "Şu an {total} aktif kayıt canlı olarak şunlardan en az birini taşıyor: {kinds}. {ready} tanesi hazır (aşağıda), {pending} tanesi henüz araştırılmadı.",
+      "liveSummaryUnknown": "Canlı sayı şu an kontrol edilemedi — aşağıdaki 35 satırlık liste hâlâ doğru, ama toplam kusurlu sayısı bilinmiyor.",
+      "defectLabel": {
+        "multi_program_concatenation": "birden çok programın birleştirilmesi",
+        "restates_title": "başlığın aynen tekrarı",
+        "embedded_url": "açıklama içine gömülü URL",
+        "truncated": "cümle ortasında kesilmiş metin"
+      },
       "previewSummary": "{total} satır hazır — {passing} tanesi şu anda kendi koruma koşuluyla eşleşiyor ve uygulanacak.",
       "appliedSummary": "{total} satırdan {applied} tanesi uygulandı.",
       "applyButton": "{count} satırın tümünü uygula",
@@ -2001,7 +2009,9 @@
       "attention": {
         "sectionTitle": "Karar bekleyen",
         "openReports": "Açık moderasyon raporları",
-        "pendingCleanup": "Hâlâ kirli fırsat açıklamaları",
+        "descriptionQuality": "Kusurlu fırsat açıklamaları",
+        "descriptionQualityCount": "{ready} hazır, {pending} henüz yok",
+        "descriptionQualityUnknown": "Bilinmiyor — canlı kontrol başarısız oldu",
         "degradedStudents": "Bu ay yapay zekâ düşüş noktasına ulaşan öğrenciler",
         "count": "{count}",
         "countOfTotal": "{total} kişiden {count}",
