@@ -330,8 +330,13 @@ gürültünün etkisinde kalırdı.
 
 ## Gece ne oldu
 
-8 lane, **90 dal birleşti**, **5497 test yeşil.** Kumanda merkezi tasarımı iki kez elden
-geçti, sonra gerçekten kuruldu: on iki bölüm, kendi kabuğu, açık yeşil zemin.
+8 lane. Dün 18:00'den bu sabah 08:00'e kadar ana dala **121 birleştirme**, **5.566 test
+yeşil** (359 dosya; 2 tanesi bilerek başarısız sayılan test). Bu sayıları 08:00'de
+kendim çalıştırdım — gece boyunca yazılmış eski bir sayıyı taşımıyorum.
+
+Kumanda merkezi tasarımı iki kez elden geçti, sonra gerçekten kuruldu: on iki bölüm, kendi
+kabuğu, açık yeşil zemin — ve on iki ekranın on ikisi de yazıldı, hepsini tarayıcıda açıp
+gördüm.
 
 Sabah paketinin ikisi de **baştan sona deneme çalıştırıldı** (6e): 224 korumalı ifadenin
 224'ü çalışıyor, sıfır sessiz atlama. O çalıştırma benim kendi dosyalarımda üç hata buldu
