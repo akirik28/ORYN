@@ -19,6 +19,25 @@
 -- KORUMA: kurum doldurmanın her UPDATE'ine "AND (organization IS NULL OR btrim = '')"
 -- eklendi; kaynak dosyalarda yoktu. İkinci çalıştırma 0 satır günceller — hata değil.
 --
+-- ═══ SIRA DOĞRULANDI (varsayılmadı) ═══
+-- Dosyayı kurduktan sonra taradım: 192 kayda organization yazılıyor ve bunların 75'ine
+-- İKİ FARKLI DEĞER yazılıyor. Örnek: "Prequel" (JSONL'den) vs "Prequel, Inc. (formerly
+-- BETA Camp)" (sayfası açılarak doğrulanmış). Yedi beşinin hepsinde son yazan, tek tek
+-- doğrulanmış olan — yani sıralama amaçlandığı gibi çalışıyor.
+--
+-- Winchester kaydı (483c0af4) özellikle kontrol edildi, çünkü üç dosya ona dokunuyor ve
+-- ikisi çelişiyordu: bir dosya "Winchester College" diyor, iki bağımsız araştırma ise
+-- "Discovery Summer — Winchester sadece mekân" diyor. Bu sırada doğru olan kazanıyor.
+--
+-- KORUMA SÖZDİZİMİ de canlıda doğrulandı: 60 korumalı UPDATE'in WHERE ifadesi salt-okunur
+-- çalıştırıldı, 60/60 eşleşti. Yani hem sözdizimi geçerli hem de o satırlar gerçekten
+-- güncellenecek.
+--
+-- DOĞRULAMADIĞIM ŞEY, açıkça: dosyanın tamamını begin/rollback ile deneme çalıştırmadım.
+-- Tek tek kaynak dosyaların her biri kendi lane'i tarafından öyle doğrulandı; benim
+-- eklediğim şeyler (korumalar, sıra, işlem komutlarının çıkarılması) yukarıdaki üç yolla
+-- kontrol edildi, bütünsel bir deneme çalıştırmayla değil.
+--
 -- BURADA OLMAYAN: 35 satırlık açıklama temizliği (panelin önizle-uygula ekranından geçecek)
 -- ve tek tek kayıt düzeltmeleri (03-firsat-kayit-duzeltmeleri).
 
