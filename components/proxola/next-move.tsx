@@ -13,17 +13,17 @@ export interface NextMoveEvidence {
   label: string;
   value: ReactNode;
   unit?: string;
-  /** `missing` for evidence Oryn looked for and did not find — that absence is the point. */
+  /** `missing` for evidence Proxola looked for and did not find — that absence is the point. */
   tone?: "neutral" | "positive" | "missing";
 }
 
 /**
- * NEXT MOVE — Oryn's signature pattern (UI-V3 § 9).
+ * NEXT MOVE — Proxola's signature pattern (UI-V3 § 9).
  *
  * The anatomy is fixed because the argument is the product: what to do, why now, **what
- * evidence Oryn used**, and what it's worth. The evidence row is the part that makes this
+ * evidence Proxola used**, and what it's worth. The evidence row is the part that makes this
  * different from a recommendation widget — it shows the student the actual basis for the
- * claim, including the things Oryn looked for and didn't find, so the advice can be argued
+ * claim, including the things Proxola looked for and didn't find, so the advice can be argued
  * with rather than just accepted.
  *
  * Appears on Home, Profile Analysis, Counselor, university positioning and opportunity fit.

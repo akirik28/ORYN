@@ -80,7 +80,7 @@ const CONFIDENCE_LABEL_TR: Record<"high" | "medium" | "low", string> = {
 
 
 // Without this, every university detail page shared the layout's generic default title —
-// the browser tab and history both just said "Oryn" regardless of which of 1,000+
+// the browser tab and history both just said "Proxola" regardless of which of 1,000+
 // universities was open. Deliberately a second, lighter query (name only) rather than
 // hoisting the page's own full select("*") into a shared cached fetcher — that's a larger
 // refactor than this fix calls for.
@@ -364,12 +364,12 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       {university.description ? <p className="max-w-3xl text-muted-foreground">{university.description}</p> : null}
 
       {/* Phase 43/36/37/71: a page with no facts has nothing for SourceBadge to badge, so
-          per-fact provenance doesn't cover this case. Absence of Oryn's data is not absence
-          of the institution -- this only says Oryn hasn't researched it deeply, same
+          per-fact provenance doesn't cover this case. Absence of Proxola's data is not absence
+          of the institution -- this only says Proxola hasn't researched it deeply, same
           restrained, non-alarming register as lib/scoring/signal.ts's not_assessed state
-          ("Oryn is not making a judgement, because it cannot"), reused here for an
+          ("Proxola is not making a judgement, because it cannot"), reused here for an
           institution rather than a student. No action prop: there is no student action to
-          offer for a gap that's Oryn's to close, not theirs. */}
+          offer for a gap that's Proxola's to close, not theirs. */}
       {lacksDepth ? <EmptyState icon={FileSearch} title={t("notResearchedTitle")} description={t("notResearchedDescription")} /> : null}
 
       {rankingsRes.data && rankingsRes.data.length > 0 ? (
@@ -427,7 +427,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
                 : `(${outlookEstimate.confidence} confidence). This is not a guarantee or an official university probability.`}
             </p>
           ) : null}
-          {/* Phase 16.2's explanation is mandatory, and for a target Oryn declined to rate, the
+          {/* Phase 16.2's explanation is mandatory, and for a target Proxola declined to rate, the
               explanation IS the reason — the sourced mechanism sentence, not a strengths/gaps
               grid describing a review step this system doesn't have. Before this, the reason was
               computed in full and dropped on the floor. */}
@@ -693,7 +693,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       {/* Was `{requirements.length > 0 ? <section>...</section> : null}` — for 89% of
           universities (measured 2026-09-03) this section simply didn't exist, no
           different from having scrolled past where it would be. The outlook section
-          above already tells a student when Oryn can't rate a target
+          above already tells a student when Proxola can't rate a target
           (`notApplicableReason`); this section told them nothing. Same fix, same
           register: the section always renders, and an empty result says so rather
           than disappearing. Deliberately NOT `lacksResearchDepth`'s EmptyState

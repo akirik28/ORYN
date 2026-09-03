@@ -50,13 +50,13 @@ describe("EvidenceSignal", () => {
 });
 
 describe("AdvisorMessage", () => {
-  test("oryn variant's default attribution mark defaults to lang=en, text 'Proxola'", () => {
+  test("proxola variant's default attribution mark defaults to lang=en, text 'Proxola'", () => {
     const { container, getByText } = render(<AdvisorMessage>Some counsel.</AdvisorMessage>);
     expect(getByText("Proxola")).toHaveAttribute("lang", "en");
     expect(container.querySelector('[lang="en"]')).toBeInTheDocument();
   });
 
-  test("oryn variant under locale=tr still renders 'Proxola' (brand name, not translated) with lang=tr", () => {
+  test("proxola variant under locale=tr still renders 'Proxola' (brand name, not translated) with lang=tr", () => {
     const { getByText } = render(<AdvisorMessage locale="tr">Bazı tavsiyeler.</AdvisorMessage>);
     expect(getByText("Proxola")).toHaveAttribute("lang", "tr");
   });

@@ -14,7 +14,7 @@ import {
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /**
- * Profile Signal (UI-V3 § 11) — how Oryn reads the shape of a student's profile.
+ * Profile Signal (UI-V3 § 11) — how Proxola reads the shape of a student's profile.
  *
  * Deliberately not six progress bars and deliberately not percentages. A bar implies a
  * track with an end, which tells a student the goal is to fill it; the goal is actually to
@@ -23,7 +23,7 @@ import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
  * the marks are there to let the eye compare rows at a glance, not to be counted.
  *
  * `limited_evidence` renders as an open marker rather than a filled one anywhere on the
- * scale, because it isn't a position on the scale: it means Oryn hasn't been told enough
+ * scale, because it isn't a position on the scale: it means Proxola hasn't been told enough
  * to place this dimension at all. Showing it as a low fill would be a quiet lie.
  */
 const STATE_STEP: Record<EvidenceState, number> = {
@@ -143,7 +143,7 @@ export function ProfileSignal({
               {showScores ? dimensionLabel(row.dimension, locale) : dimensionLabelShort(row.dimension, locale)}
             </span>
             <span className="flex min-w-0 items-center gap-2.5">
-              {/* Only for states Oryn actually assessed. Printing "0" beside "Not enough
+              {/* Only for states Proxola actually assessed. Printing "0" beside "Not enough
                   evidence yet" asserts a measurement that never happened — the same
                   confusion between absence and weakness this whole model exists to end. */}
               {showScores && isAssessed(row.state) ? (
