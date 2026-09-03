@@ -361,8 +361,33 @@ fiyatı araştırılmış ve biliniyor — 2 hafta $4.055'ten 8 hafta $10.205'e 
 alanı tek bir sayı; beş kademe sığmıyor. Araştırmacı bilgiyi `current_cycle_label`'a
 yazmış, yani hiçbir fiyat kontrolünün bakmadığı yere. Ayrıca aynı kavram için **iki ayrı
 sütun** var: elle araştırma `financial_aid_available`'ı, otomatik çıkarım
-`funding_available`'ı yazıyor — ikisi asla birlikte dolmuyor. İkisi de migration gerektiren
-şema kararları, o yüzden sana bırakıldı.
+`funding_available`'ı yazıyor. **Bu ikisi ölçüldü ve cevap net:** `financial_aid_available`
+366 kaydın 102'sinde dolu, `funding_available` sadece 10'unda — ve o 10'un **hepsinde**
+diğeri de dolu. Yani otomatik sütun bugüne kadar **bir kez bile** tek başına bilgi
+taşımamış. Bugünkü hâliyle sıfır özgün bilgi içeriyor; yeni bir sütun değil, bir karar
+gerekiyor.
+
+**Maliyet alanı da ölçüldü, ve tek bir "boş" altında altı farklı şey var:**
+
+- **Gerçekten hiç araştırılmamış** — örneklemin ~%56'sı. Sıradan iş yükü, şema sorunu değil.
+- **Kademeli fiyat** — Summer Discovery'nin kendi kaydı zaten *"$2.499-$16.999… tek bir
+  rakama indirgemeyin"* diye yazıyor. Tanglewood tek örnek değilmiş.
+- **Farklı para birimi** — Koç Üniversitesi "TRY 80.000" diyor. Bu kademelenmeden **ayrı**
+  bir eksik: `cost` sadece sayı tutuyor, yanında para birimi alanı yok.
+- **Kurum ödüyor, öğrenci değil** — Kimya Olimpiyatı'nda masrafı ülke karşılıyor. Boş olması
+  **doğru**, doldurulacak bir boşluk değil.
+- **Kavram hiç geçerli değil** — burslar, ücretli roller (Girl Up 750 dolar *ödüyor*).
+- **Açıkça ücretsiz ama boş** — ve **en can alıcısı bu.**
+
+Sonuncusunun neden önemli olduğu şurada: tüm katalogda İngilizce anahtar kelimeyle tarayınca
+**1 tane** çıkıyor. Ama 34 kaydı elle okuyunca **4 tane** çıktı — SPINWIP, Koç'un KUSRP'si
+(*"ücretsiz bir programdır"* diyor, Türkçe), bir sanal fuar kaydı, ve Blue Ocean. Yani
+anahtar kelime taraması bunu **ciddi biçimde eksik sayıyor**, ve bunlar zaten elimizde olan
+metinden doldurulabilir.
+
+Bir de sınırlı ve doldurulabilir 28 kayıt var: maliyeti boş ama "burs var" işaretli. LaunchX
+bunun en net örneği — gerçek fiyatı ("$1.995+") bu gece başka bir araştırma sırasında zaten
+bulunmuş, sadece bu kayda yazılmamış.
 
 **Ve bu ikisi aslında tek bir sorunun iki yüzü — üçüncüsü de bu sabah çıktı.** `deadline`
 alanı da aynı şekilde tek değerli: "sürekli açık, son tarih yok" ile "dönem henüz
