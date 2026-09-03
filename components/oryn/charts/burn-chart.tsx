@@ -22,15 +22,33 @@ const PAD = { top: 12, right: 16, bottom: 24, left: 44 };
  * `{ y: null }`, not `{ y: 0 }`, and renders as a break in the line, same as every other
  * chart here.
  */
+/** Kills float-precision noise (0.13630000000000003) in both the visible ceiling label and
+ *  the default sr-only description below — found during 2026-09-03's Turkish pass, where
+ *  every *visible* dollar figure elsewhere on the job-budget section was already formatted
+ *  to cents via money(), but this chart's own raw `${value}` interpolation wasn't. Rounds
+ *  regardless of locale; the caller-supplied `a11y.description` path (job-budget-section.tsx)
+ *  bypasses this in favor of its own already-correct money() formatting -- this only
+ *  protects the fallback, for a caller (or a future one) that doesn't supply its own. */
+function round2(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
 export function BurnChart({
   actual,
   budget,
   a11y,
+  budgetLabel = "budget",
   ...size
 }: {
   actual: SeriesPoint[];
   budget: number;
   a11y: ChartA11yProps;
+  /** Word placed before the ceiling figure, both on the dashed reference line and in the
+   *  default sr-only description ("budget 25" / "25 bütçe"). Defaults to the English word
+   *  for a caller that hasn't been updated to pass a translated one (design-preview's own
+   *  demo, currently) -- found untranslated on the real job-budget section during 2026-09-03's
+   *  Turkish pass and fixed there by passing t("axisBudgetLabel"). */
+  budgetLabel?: string;
 } & ChartSizeProps) {
   const innerWidth = VB_WIDTH - PAD.left - PAD.right;
   const innerHeight = VB_HEIGHT - PAD.top - PAD.bottom;
@@ -54,8 +72,8 @@ export function BurnChart({
   const description =
     a11y.description ??
     (latest !== undefined
-      ? `${a11y.title}: ${latest} of ${budget} budget${overBudget ? ", over budget" : ""}`
-      : `${a11y.title}: no spend recorded yet, budget ${budget}`);
+      ? `${a11y.title}: ${round2(latest)} of ${round2(budget)} ${budgetLabel}${overBudget ? ", over budget" : ""}`
+      : `${a11y.title}: no spend recorded yet, ${budgetLabel} ${round2(budget)}`);
 
   return (
     <ChartA11y title={a11y.title} description={description} className={size.className} style={size.height ? { height: size.height } : undefined}>
@@ -77,7 +95,7 @@ export function BurnChart({
             visually with the actual line for "which one is the data." */}
         <line x1={PAD.left} x2={VB_WIDTH - PAD.right} y1={yScale(budget)} y2={yScale(budget)} stroke="var(--admin-ink-3)" strokeWidth={1.5} strokeDasharray="4 3" />
         <text x={VB_WIDTH - PAD.right} y={yScale(budget) - 4} textAnchor="end" fontSize={9} fill="var(--admin-ink-3)">
-          budget {budget}
+          {budgetLabel} {round2(budget)}
         </text>
 
         {buildAreaSegments(actual, xScale, yScale, xForIndex, baseline).map((d, i) => (

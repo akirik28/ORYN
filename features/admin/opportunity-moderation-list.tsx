@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { formatDistanceToNow } from "date-fns";
+import { tr as trLocale } from "date-fns/locale";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,10 @@ const STATUS_KEY: Record<AdminOpportunityRow["status"], "statusActive" | "status
  */
 export function OpportunityModerationList({ initialRows }: { initialRows: AdminOpportunityRow[] }) {
   const t = useTranslations("admin.opportunities");
+  // Found bare (no locale) during 2026-09-03's Turkish pass, same class as
+  // user-list-section.tsx — client-side equivalent (useLocale) of that file's resolveLocale().
+  const locale = useLocale();
+  const dateFnsLocale = locale === "tr" ? { locale: trLocale } : undefined;
   const [rows, setRows] = useState(initialRows);
   const [query, setQuery] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -73,7 +78,13 @@ export function OpportunityModerationList({ initialRows }: { initialRows: AdminO
               <div className="min-w-0">
                 <p className="truncate font-medium">{row.title}</p>
                 <p className="truncate text-xs text-muted-foreground">
-                  {row.organization ?? "—"} · {formatDistanceToNow(new Date(row.createdAt), { addSuffix: true })}
+                  {/* A null organization is omitted, not shown as a dash — matching every
+                      other render of this same field (saved-opportunity-row.tsx,
+                      opportunity-card.tsx, etc.). Found during 2026-09-03's Turkish pass:
+                      "International Environmental Olympiad (IEnvO) · — · 10 days ago" read
+                      as a value rather than an absence, the one place in the codebase that
+                      did. */}
+                  {[row.organization, formatDistanceToNow(new Date(row.createdAt), { addSuffix: true, ...dateFnsLocale })].filter(Boolean).join(" · ")}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">

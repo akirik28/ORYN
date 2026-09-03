@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { formatDistanceToNow } from "date-fns";
+import { tr as trLocale } from "date-fns/locale";
 import { toast } from "sonner";
 import { Eye, EyeOff, Flag, Loader2, Plus, Quote, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,11 @@ export function RecommendationsSection({
 }) {
   const t = useTranslations("common");
   const tRec = useTranslations("profile.recommendations");
+  // Found bare (no locale) during 2026-09-03's Turkish pass — same class of bug as
+  // features/admin/sections/user-list-section.tsx, found there first via oryn-a7's live
+  // /kumanda walkthrough, then swept for elsewhere per their own instruction.
+  const locale = useLocale();
+  const dateFnsLocale = locale === "tr" ? { locale: trLocale } : undefined;
   const RELATIONSHIP_OPTIONS: { value: RecommendationRelationship; label: string }[] = [
     { value: "teacher", label: tRec("relationships.teacher") },
     { value: "mentor", label: tRec("relationships.mentor") },
@@ -169,6 +175,7 @@ export function RecommendationsSection({
                   <span>
                     {formatDistanceToNow(new Date(item.createdAt), {
                       addSuffix: true,
+                      ...dateFnsLocale,
                     })}
                   </span>
                   {item.status === "hidden" ? (

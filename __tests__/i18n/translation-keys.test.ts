@@ -231,8 +231,14 @@ describe("every statically-resolvable t() key exists in the catalog", () => {
     // stable count is expected; a fast-growing one would mean either a lot of new
     // cross-function translator-passing (worth knowing) or a real regression in scope
     // resolution (worth fixing).
+    // 2026-09-03: bumped 40 → 41. design-preview/university-detail/page.tsx's own
+    // formatRecurringDate(month, day, locale, t) now takes the same t: Translator parameter
+    // app/(app)/universities/[id]/page.tsx:787's real formatRecurringDate already did (this
+    // preview used to hardcode its own English lookup table instead of the real catalog —
+    // see that file's own header comment) — one more instance of an already-accepted
+    // pattern, not a new one, per this test's own stated reasoning above.
     const report = skipped.map((s) => `${s.file}:${s.line} ${s.call}`).join("\n");
-    expect(skipped.length, `unresolvable calls (nearest binding is a parameter):\n${report}`).toBeLessThan(40);
+    expect(skipped.length, `unresolvable calls (nearest binding is a parameter):\n${report}`).toBeLessThan(41);
   });
 
   test("no call resolves to a key en.json does not have", () => {

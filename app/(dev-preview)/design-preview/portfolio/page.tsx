@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { heroGradientStyle } from "@/components/oryn/hero-gradient";
 import { PortfolioView } from "@/features/profile/portfolio-view";
 import { FIXTURE_PORTFOLIO_ITEMS, FIXTURE_PORTFOLIO_SKILLS, FIXTURE_PROFILE_SIGNAL } from "@/lib/dev/fixtures";
@@ -19,6 +20,12 @@ export default async function PortfolioPreviewPage({ searchParams }: { searchPar
 
   const { tier: tierParam } = await searchParams;
   const tier = tierParam === "ultra" ? "ultra" : "standard";
+  // Reads the real oryn_locale cookie rather than hardcoding English — see
+  // design-preview/dashboard/page.tsx's own comment on this exact class of bug. This hero's
+  // three strings were plain JSX literals with no translation mechanism at all, found during
+  // 2026-09-03's Turkish pass.
+  const t = await getTranslations("profile");
+  const tPortfolio = await getTranslations("profile.portfolio");
 
   return (
     <PreviewShell signal={FIXTURE_PROFILE_SIGNAL} tier={tier}>
@@ -34,10 +41,10 @@ export default async function PortfolioPreviewPage({ searchParams }: { searchPar
           />
           <div className="relative">
             <Link href="/design-preview/journey" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="size-3.5" /> Back to profile
+              <ArrowLeft className="size-3.5" /> {t("backToProfile")}
             </Link>
-            <h1 className="mt-2 font-display text-2xl tracking-tight md:text-3xl">My portfolio</h1>
-            <p className="mt-1 text-muted-foreground">Everything you&rsquo;ve added, in one place.</p>
+            <h1 className="mt-2 font-display text-2xl tracking-tight md:text-3xl">{tPortfolio("title")}</h1>
+            <p className="mt-1 text-muted-foreground">{tPortfolio("description")}</p>
           </div>
         </div>
         <PortfolioView items={FIXTURE_PORTFOLIO_ITEMS} skills={FIXTURE_PORTFOLIO_SKILLS} />

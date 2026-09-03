@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Scale } from "lucide-react";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { PageHeader } from "@/components/oryn/page-header";
 import { SourceBadge } from "@/components/oryn/source-badge";
 import { heroGradientStyle } from "@/components/oryn/hero-gradient";
 import { deriveTuitionContext } from "@/lib/universities/counseling-adapter";
+import { resolveLocale } from "@/lib/i18n/locale";
 import {
   FIXTURE_UNIVERSITY,
   FIXTURE_UNIVERSITY_2,
@@ -52,6 +54,14 @@ export default async function ComparePreviewPage({ searchParams }: { searchParam
   // which this reads straight back out.
   const { tier: tierParam } = await searchParams;
   const tier = tierParam === "ultra" ? "ultra" : "standard";
+  // Reads the real oryn_locale cookie rather than hardcoding "en" — see dashboard/page.tsx's
+  // own comment on this exact class of bug, fixed the same way across every preview page
+  // that had it during 2026-09-03's Turkish pass. The row labels below were still hardcoded
+  // English until this same pass — locale threading alone wasn't enough, since these were
+  // plain string literals rather than translated content.
+  const locale = await resolveLocale();
+  const t = await getTranslations("universities.comparePage");
+  const tSourceBadge = await getTranslations("sourceBadge");
 
   const ordered: University[] = [FIXTURE_UNIVERSITY, FIXTURE_UNIVERSITY_2, FIXTURE_UNIVERSITY_3];
   const statsByUniId = new Map(FIXTURE_COMPARE_STATISTICS.map((s) => [s.university_id, s]));
@@ -72,41 +82,41 @@ export default async function ComparePreviewPage({ searchParams }: { searchParam
   );
 
   const rows: { label: string; render: (u: University) => ReactNode }[] = [
-    { label: "Location", render: (u) => [u.city, u.country].filter(Boolean).join(", ") || NA },
-    { label: "QS ranking", render: (u) => (rankByUniId.get(u.id) ? `#${rankByUniId.get(u.id)}` : NA) },
-    { label: "Institution type", render: (u) => u.institution_type ?? NA },
-    { label: "Students", render: (u) => (u.student_size != null ? u.student_size.toLocaleString("en-US") : NA) },
+    { label: t("location"), render: (u) => [u.city, u.country].filter(Boolean).join(", ") || NA },
+    { label: t("qsRanking"), render: (u) => (rankByUniId.get(u.id) ? `#${rankByUniId.get(u.id)}` : NA) },
+    { label: t("institutionType"), render: (u) => u.institution_type ?? NA },
+    { label: t("students"), render: (u) => (u.student_size != null ? u.student_size.toLocaleString("en-US") : NA) },
     {
-      label: "Cost of attendance",
+      label: t("costOfAttendance"),
       render: (u) => {
         const s = statsByUniId.get(u.id);
         if (s?.cost_of_attendance == null) return NA;
         const currency = s.cost_currency === "USD" || !s.cost_currency ? "$" : `${s.cost_currency} `;
-        return `${currency}${s.cost_of_attendance.toLocaleString("en-US")}/yr`;
+        return t("costPerYear", { value: `${currency}${s.cost_of_attendance.toLocaleString("en-US")}` });
       },
     },
     {
       // Deliberately never fed costOfAttendance — this row exists specifically for the
       // tuition-only concept, so a US university's cost of attendance (already its own row
       // above) can't also surface here under a different label.
-      label: "Tuition",
+      label: t("tuition"),
       render: (u) => {
         const intl = internationalTuitionByUniId.get(u.id) ?? null;
         const dom = domesticTuitionByUniId.get(u.id) ?? null;
         if (!intl && !dom) return NA;
-        const ctx = deriveTuitionContext({ costOfAttendance: null, internationalTuition: intl, domesticTuition: dom }, "en");
+        const ctx = deriveTuitionContext({ costOfAttendance: null, internationalTuition: intl, domesticTuition: dom }, locale);
         return ctx.displayValue ?? NA;
       },
     },
     {
-      label: "Admission rate",
+      label: t("admissionRate"),
       render: (u) => {
         const s = statsByUniId.get(u.id);
         return s?.admission_rate != null ? `${Math.round(s.admission_rate * 100)}%` : NA;
       },
     },
     {
-      label: "Statistics source",
+      label: t("statisticsSource"),
       render: (u) => {
         const s = statsByUniId.get(u.id);
         return s?.source ? (
@@ -114,19 +124,19 @@ export default async function ComparePreviewPage({ searchParams }: { searchParam
             sourceName={s.source}
             checkedAt={s.updated_at}
             confidence={s.data_confidence ?? undefined}
-            locale="en"
-            sourceLabel="Source"
-            checkedLabel={(time) => `Checked ${time}`}
-            viewSourceLabel="View source"
+            locale={locale}
+            sourceLabel={tSourceBadge("source")}
+            checkedLabel={(time) => tSourceBadge("checked", { time })}
+            viewSourceLabel={tSourceBadge("viewSource")}
           />
         ) : (
           NA
         );
       },
     },
-    { label: "Application system", render: (u) => u.application_system ?? NA },
+    { label: t("applicationSystem"), render: (u) => u.application_system ?? NA },
     {
-      label: "Research strengths",
+      label: t("researchStrengths"),
       render: (u) => {
         const topics = topicsByUniId.get(u.id) ?? [];
         if (topics.length === 0) return NA;
@@ -146,7 +156,7 @@ export default async function ComparePreviewPage({ searchParams }: { searchParam
   return (
     <PreviewShell signal={FIXTURE_PROFILE_SIGNAL} tier={tier}>
       <div className="dark space-y-6 rounded-[28px] p-4 text-foreground md:p-8" style={heroGradientStyle(tier)}>
-        <PageHeader title="Compare universities" description={`Side by side · ${ordered.length} universities`} />
+        <PageHeader title={t("title")} description={t("sideBySide", { count: ordered.length })} />
 
         <div className="glass-card overflow-x-auto rounded-2xl border border-white/65 bg-white/45 backdrop-blur-2xl">
           <table className="w-full min-w-[640px] border-collapse text-sm">
@@ -181,11 +191,11 @@ export default async function ComparePreviewPage({ searchParams }: { searchParam
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-white/40 bg-white/10 p-4">
             <p className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">Fewer than 2 selected</p>
-            <EmptyState icon={Scale} title="Nothing to compare yet" description="Pick at least 2 universities from Explore to see them side by side." />
+            <EmptyState icon={Scale} title={t("nothingYetTitle")} description={t("nothingYetDescription")} />
           </div>
           <div className="rounded-2xl border border-white/40 bg-white/10 p-4">
             <p className="mb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">Selection resolved to fewer than 2</p>
-            <EmptyState icon={Scale} title="Not enough of these to compare" description="One or more of your selected universities couldn't be found." />
+            <EmptyState icon={Scale} title={t("notEnoughTitle")} description={t("notEnoughDescription")} />
           </div>
         </div>
 
