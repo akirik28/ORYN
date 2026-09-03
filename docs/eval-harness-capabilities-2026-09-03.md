@@ -122,6 +122,32 @@ second read," or "would this look this good on a fixture nobody wrote yet." All 
 mattered tonight. None of them were the harness's job to answer on its own — they needed a
 human (or a lane standing in for one) to ask them on purpose.
 
+## Addendum — 2026-09-03, the standard path itself smoke-tested after tonight's changes
+
+The observation above — that nothing tonight's ranking chain did went through `ALL_CASES`/
+`runEval`/the gated CLI, only bespoke scripts reusing its pure pieces — prompted the obvious
+follow-up: after three passes changed `student-context.ts` and a fourth rewrote parts of
+`fixtures.ts`, does the harness's own actual entry point still run at all? Not a measurement —
+a smoke test, run once against merged `b498c73b`.
+
+`npm run eval:ai -- --live --confirm-spend` (no `--judge`, to keep this a smoke test rather
+than a full qualitative pass): all 12 cases in `ALL_CASES` assembled and ran. 11 completed
+clean, zero deterministic findings on any of them. One — `weekly_plan/en/baseline` — failed
+schema validation ("actions: Invalid input: expected array, received undefined"). Before
+calling that a regression, checked it against `harness.ts`'s own header, which already
+documents this exact failure shape as pre-existing: *"the model omitted a required field
+twice, which anthropic-provider.ts's own retry comment documents as a known, pre-existing
+model behaviour."* Re-ran that one case three more times immediately after: 3/3 succeeded.
+Transient, matching the documented pattern — not something tonight's changes broke.
+
+**Answer to "does it still run": yes.** The standard path assembles all 12 cases without
+throwing, the two deterministic checks execute correctly against real output with no false
+positives across 14 total completed runs (11 + 3 recheck), and the one failure observed is the
+harness's own already-documented flakiness, confirmed transient by immediate re-run rather than
+assumed. Real spend: ~$0.27 for the 12-case pass plus a few cents for the 3-case recheck,
+`ai_usage`-logged normally (a real CLI run, not a direct provider call like this session's own
+comparison scripts).
+
 ## What this pass does not do
 
 No code changed — `student-context.ts` and `fixtures.ts` are untouched, per CEO's explicit
