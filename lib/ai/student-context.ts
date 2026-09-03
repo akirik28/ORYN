@@ -238,7 +238,7 @@ export interface StudentAdvisorContext {
      * second time. Not used in prompt text — a model has no business reasoning about which
      * tier is paying for the call it's making. */
     tier: PlanTier;
-    /** Migration 0109, özelleşme piece 1. The student's own standing instruction to the
+    /** Migration 0111, özelleşme piece 1. The student's own standing instruction to the
      * advisor — unlike every other field on this object, this one IS rendered verbatim into
      * the prompt (see formatContextForPrompt's closing line), by design: it's the one piece
      * of context the student authored themselves specifically to reach the model, not a
@@ -805,7 +805,7 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
    * the one line in this whole function the student wrote to reach the model directly, not a
    * profile fact the model reasons about — and it should read as the closing word, not one
    * more bullet buried among two dozen others. Quoted verbatim (this is exactly what
-   * migration 0109's column is for), with an explicit carve-out rather than an unqualified
+   * migration 0111's column is for), with an explicit carve-out rather than an unqualified
    * "always follow this": a raw instruction could otherwise be used to suppress the honest,
    * evidence-based counsel this product's whole advisor character depends on (AGENTS.md
    * Phase 8's "opportunity cost" mandate, Phase 57's "avoid excessive praise") — e.g. "always

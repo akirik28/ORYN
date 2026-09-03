@@ -1193,6 +1193,13 @@
       "ultraLocked": "Ultra gives longer, more thorough answers — part of Oryn Ultra.",
       "ultraLockedLink": "Learn more"
     },
+    "instructions": {
+      "label": "Your standing instructions",
+      "description": "A permanent note to Oryn, applied to every reply — for example \"keep it short\" or \"don't suggest medicine.\"",
+      "placeholder": "e.g. Keep answers short. Don't suggest medical fields. Focus on Europe.",
+      "saved": "Saved",
+      "ultraUpsell": "Ultra allows up to {limit} characters."
+    },
     "strategyPanel": {
       "ariaLabel": "What Oryn is working from",
       "whereYouStand": "Where you stand",

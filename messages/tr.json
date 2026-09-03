@@ -1193,6 +1193,13 @@
       "ultraLocked": "Ultra, daha uzun ve detaylı yanıtlar verir — Oryn Ultra'nın bir parçası.",
       "ultraLockedLink": "Daha fazla bilgi"
     },
+    "instructions": {
+      "label": "Kalıcı talimatların",
+      "description": "Oryn'e kalıcı bir not — her yanıtta geçerli olur. Örneğin \"kısa yaz\" ya da \"tıp önerme\".",
+      "placeholder": "örn. Kısa cevaplar ver. Tıp alanlarını önerme. Avrupa'ya odaklan.",
+      "saved": "Kaydedildi",
+      "ultraUpsell": "Ultra'da en fazla {limit} karakter yazabilirsin."
+    },
     "strategyPanel": {
       "ariaLabel": "Oryn'ın üzerinden çalıştığı bilgiler",
       "whereYouStand": "Şu anda durumun",

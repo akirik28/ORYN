@@ -52,6 +52,7 @@ export const REGRESSION_CONTEXT: StudentAdvisorContext = {
     birthYear: 2010,
     citizenshipCountries: ["Turkey"],
     tier: "standard",
+    advisorInstructions: null,
   },
   profileScores: [
     { dimension: "leadership", score: 88, confidence: "high", state: "strong" },
@@ -111,6 +112,7 @@ export const BASELINE_CONTEXT: StudentAdvisorContext = {
     birthYear: 2009,
     citizenshipCountries: ["United States"],
     tier: "standard",
+    advisorInstructions: null,
   },
   profileScores: [
     { dimension: "academics", score: 85, confidence: "high", state: "strong" },

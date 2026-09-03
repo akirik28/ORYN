@@ -460,6 +460,13 @@ describe("migration numbering", () => {
     // (0109, the one they were told to keep) is already spoken for twice over.
     // lib/advisor/generation-lock.ts fails open (never blocks a reply) until 0110 lands.
     //
+    // 0111 (advisor_instructions, this lane, landing where the comment above predicted):
+    // CEO serialized numbering after this exact 0109/0110 double-collision -- 0111 assigned
+    // directly rather than left to another race. profiles.advisor_instructions, the tier-
+    // capped 500/2000-char persistent instruction string from özelleşme piece 1.
+    // lib/tier/advisor-instructions.ts's resolveAdvisorInstructions defaults an absent/
+    // unreadable value to null (no instruction set) until this lands everywhere.
+    //
     // 0112 (advisor_conversation_retention) -- claimed 0109 first, on the belief a different
     // lane (piece 1 of the same özelleşme spec, advisor_instructions on profiles) had already
     // taken it; rebasing here found the real 0109 was this curriculum column pair instead,

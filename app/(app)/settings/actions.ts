@@ -298,7 +298,7 @@ export async function updateResponseMode(mode: ResponseMode): Promise<{ error?: 
  * Server Action is directly callable with any argument regardless of what UI called it, and
  * a plan_tier downgrade after an Ultra-length instruction was saved must not let that
  * instruction silently keep costing Ultra-sized tokens on a Standard-priced call), and the
- * same isUndefinedColumnError handling for migration 0109 being written but not yet applied
+ * same isUndefinedColumnError handling for migration 0111 being written but not yet applied
  * everywhere this runs.
  */
 export async function updateAdvisorInstructions(text: string): Promise<{ error?: string }> {

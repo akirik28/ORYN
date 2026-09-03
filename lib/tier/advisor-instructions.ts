@@ -16,7 +16,7 @@ export function advisorInstructionsMaxLength(tier: PlanTier): number {
 
 /**
  * Mirrors lib/tier/response-mode.ts's resolveResponseMode exactly, for the same reason:
- * migration 0109 (profiles.advisor_instructions) is written, not applied — house pattern.
+ * migration 0111 (profiles.advisor_instructions) is written, not applied — house pattern.
  * `select("*")` on `profiles` omits an unknown-to-cache column rather than erroring, so on an
  * environment where the column doesn't exist yet `profile.advisor_instructions` is
  * `undefined`, not `null` — this is the one place that gap gets closed, defaulting to "no
