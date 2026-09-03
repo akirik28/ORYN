@@ -1,5 +1,15 @@
 # Homepage strip top-5 quality — measured against the real catalogue, 2026-09-03
 
+**Correction, 2026-09-03, same day**: the "Blue Ocean's deadline" data-quality defect named
+below was wrong. The deadline (2027-02-21) is correct and directly sourced —
+`blueoceancompetition.org/submit/` states *"Deadline to submit your pitch: February 21,
+2027 at 23:59 your local time"* (checked 2026-08-21). The row's *description* was the stale
+artifact, from an earlier research pass that predated that finding — not the deadline. Full
+evidence and 11 more rows with the same shape are in
+[the deadline contradiction audit](opportunity-deadline-contradiction-audit-2026-09-03.md).
+This does not change this doc's other findings (the caveat-suppression gap, Persona D's
+mismatch, the matchedGapDimensions gap for Persona A) — only the one Blue Ocean claim below.
+
 Scope: measure what the planned homepage opportunity strip (oryn-ab, plan-page/homepage
 redesign) would actually show, for three of the canonical QA personas, using the real
 production matching path against the real live catalogue. **Doc only — no homepage
@@ -129,15 +139,15 @@ application URL:
   wildly-mismatched prestige tier, real orgs, real fields, three of five carry
   `matchedGapDimensions` that plausibly connect to the stated weak dimensions
   (`career_exploration`, `awards_distinction`).
-- **One concrete data-quality defect, worth fixing on its own**: **Blue Ocean Competition**
-  (`id cb4a1030-d035-4c1f-8579-37c458a88b0e`) has a structured `deadline` of **2027-02-21**,
-  while its own `description_snippet` — verified the same day (2026-08-23) — reads *"Site
-  invites registration for the next cycle but **no deadline/dates published yet**."* One of
-  these two fields is wrong, on a currently-recommended row, in the exact field
-  (`deadline`) a homepage strip would use for urgency messaging
-  (`dashboard-view.tsx` already has a `DeadlineBadge` for this). This is a small, concrete
-  instance of the thing AGENTS.md Phase 34 explicitly warns against ("never silently
-  manufacture a value") — flagging by id for a data-side fix, not touching it here.
+- ~~One concrete data-quality defect, worth fixing on its own: Blue Ocean Competition
+  (`id cb4a1030-d035-4c1f-8579-37c458a88b0e`) has a structured `deadline` of 2027-02-21,
+  while its own `description_snippet` reads "no deadline/dates published yet." One of these
+  two fields is wrong.~~ **Corrected 2026-09-03: this was backwards.** The deadline is
+  correct and directly sourced (`blueoceancompetition.org/submit/`, checked 2026-08-21,
+  quoted in full in the [deadline audit](opportunity-deadline-contradiction-audit-2026-09-03.md)).
+  The `description_snippet` was the stale field, from a research pass that predated the
+  submit-page finding. Left struck through rather than deleted so this doc's own error is
+  traceable, not silently disappeared.
 - Deadline coverage is otherwise thin here too (4 of 5 `date_not_announced`), consistent with
   the catalogue-wide base rate below, not a targeting problem.
 
@@ -198,8 +208,8 @@ actually-strong profile.
 
 ## Bottom line
 
-- **Persona B** (developed, on-topic profile): strip works as intended, modulo one
-  data-quality fix (Blue Ocean's deadline).
+- **Persona B** (developed, on-topic profile): strip works as intended. (No data-quality fix
+  needed here after all — see the correction at the top of this doc.)
 - **Persona A** (developed but off-target-dimension profile): topically fine, low
   actionability today, and the "addresses your gap" story doesn't actually hold for any of
   its top 5 — worth knowing if strip copy claims gap-relevance.
