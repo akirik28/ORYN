@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { tr as trLocale } from "date-fns/locale";
 import { Send, ShieldOff, ShieldCheck, Flag, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,6 +50,11 @@ export function ConversationThread({
 }) {
   const t = useTranslations("messaging.thread");
   const tCommon = useTranslations("common");
+  // Found bare (no locale) during 2026-09-03's Turkish pass — same class of bug as
+  // features/admin/sections/user-list-section.tsx, found there first via oryn-a7's live
+  // /kumanda walkthrough, then swept for elsewhere per their own instruction.
+  const locale = useLocale();
+  const dateFnsLocale = locale === "tr" ? { locale: trLocale } : undefined;
   const [messages, setMessages] = useState(initialMessages);
   // Reconciles local state with the server's authoritative list whenever
   // router.refresh() lands new props — adjusted during render (React's documented
@@ -224,7 +230,7 @@ export function ConversationThread({
                   {m.body}
                 </div>
                 <div className="mt-1 flex items-center gap-2 px-1 text-xs text-muted-foreground">
-                  <span>{formatDistanceToNow(new Date(m.created_at), { addSuffix: true })}</span>
+                  <span>{formatDistanceToNow(new Date(m.created_at), { addSuffix: true, ...dateFnsLocale })}</span>
                   {!mine && !m.id.startsWith("optimistic-") ? (
                     // Always visible, not hover-revealed — a hover-only affordance has no
                     // touch equivalent, and Report is a moderation action that must stay

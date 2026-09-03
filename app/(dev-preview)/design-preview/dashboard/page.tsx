@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import { DashboardView } from "@/features/dashboard/dashboard-view";
 import { UltraAmbient } from "@/features/app-shell/ultra-ambient";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { PreviewShell } from "../preview-shell";
+import { greeting } from "@/lib/dashboard/greeting";
 import {
   FIXTURE_STUDENT,
   FIXTURE_BIGGEST_GAP,
@@ -39,6 +41,15 @@ export default async function DashboardPreviewPage({ searchParams }: { searchPar
 
   const { tier: tierParam } = await searchParams;
   const tier = tierParam === "ultra" ? "ultra" : "standard";
+  // Reads the real oryn_locale cookie (lib/i18n/locale.ts) rather than hardcoding "en" —
+  // this preview is the only way to check Turkish rendering without a live account
+  // (migration 0089 unapplied, same reason UltraAmbient earns its place here). Was
+  // hardcoded to "en" before 2026-09-03's Turkish pass, which silently made every
+  // getTranslations({locale, ...}) call in DashboardView (This week/Due soon/One thing not
+  // to do/etc. — see that file's own header comment) render English regardless of what a
+  // real student's cookie said, even though <html lang> and every OTHER component on this
+  // exact page were already correctly Turkish.
+  const locale = await resolveLocale();
 
   return (
     <>
@@ -47,8 +58,8 @@ export default async function DashboardPreviewPage({ searchParams }: { searchPar
         <DashboardView
           displayName={FIXTURE_STUDENT.displayName}
           tier={tier}
-          greeting="Good evening"
-          locale="en"
+          greeting={greeting(locale, "Europe/Istanbul")}
+          locale={locale}
           biggestGap={FIXTURE_BIGGEST_GAP}
           profileChange={FIXTURE_PROFILE_CHANGE}
           profileSignal={FIXTURE_PROFILE_SIGNAL}

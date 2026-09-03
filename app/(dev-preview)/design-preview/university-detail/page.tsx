@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { MapPin, Users, DollarSign, GraduationCap, ExternalLink, Trophy, Target, TrendingUp } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { heroGradientStyle } from "@/components/oryn/hero-gradient";
 import { explainOutlook, type DimensionScoreInput } from "@/lib/admissions/explain";
 import { OutlookBadge } from "@/features/universities/outlook-badge";
@@ -12,6 +13,7 @@ import { StatusBadge } from "@/components/oryn/status-badge";
 import { formatTuition, tuitionQualifier } from "@/lib/universities/tuition-format";
 import { formatNumber } from "@/lib/i18n/format";
 import { formatAbsoluteDate } from "@/lib/i18n/date";
+import { resolveLocale } from "@/lib/i18n/locale";
 import {
   FIXTURE_UNIVERSITY,
   FIXTURE_UNIVERSITY_STATISTICS,
@@ -44,34 +46,40 @@ import type { UniversityRequirement } from "@/types/database";
  * FIXTURE_UNIVERSITY_REQUIREMENTS_EMPTY — one link apart rather than a second route, since
  * the two states need to stay trivially easy to compare side by side while 6e's own change
  * lands. Default (no param) shows the populated state, since that's the common case.
+ *
+ * i18n note (2026-09-03, corrected during the Turkish pass): this preview used to define its
+ * own local `t()` with a hardcoded English lookup table instead of threading a real
+ * translator through — the exact same anti-pattern already found and fixed in this file's
+ * opportunity-detail sibling, just bigger (this page also had several plain JSX string
+ * literals — "Your outlook", "Strengths"/"Gaps"/"Unknowns", "Non-binding"/"Binding" — that
+ * never went through `t()` at all, not even the broken kind). Threading `locale` through
+ * earlier in the same pass fixed every *child component's* own translations but left this
+ * page's own text untouched, which is exactly the "confirmed in Turkish" trap oryn-a7 flagged
+ * — a page can look locale-aware because of what's around it while its own copy stays
+ * English. Now mirrors app/(app)/universities/[id]/page.tsx's own calls and ternaries
+ * directly (`universities.detail`, `universities.bindingPolicy`, `sourceBadge`), including
+ * its outlook panel's `locale === "tr" ? ... : ...` pattern — that panel predates the
+ * catalog-based `getTranslations` convention and the real page still uses it deliberately
+ * (see that file's own CONFIDENCE_LABEL_TR comment), so this matches it rather than
+ * introducing a third pattern.
  */
 
-const t = (key: string, values?: Record<string, string | number>): string => {
-  const table: Record<string, string> = {
-    studentSize: "Student size",
-    admissionRate: "Admission rate",
-    costOfAttendance: "Cost of attendance",
-    internationalTuition: "International tuition",
-    testScores: "Test scores",
-    graduationRate: "Graduation rate",
-    unavailable: "Unavailable",
-    programsTitle: "Programs",
-    requirementCheckTitle: "Requirement check",
-    requirementCheckDescription: "What Oryn can tell about your fit against this university's own stated requirements.",
-    importantDatesTitle: "Important dates",
-    upcoming: "Upcoming",
-    recurringTitle: "Recurring, no fixed date on file",
-    recurringAnnually: `${values?.date ?? ""}, annually`,
-    recurringBadge: "Recurring",
-    sourcesHeading: "Sources",
-    visitWebsite: "Visit website",
-    admissions: "Admissions",
-    domesticRateCaption: `Domestic: ${values?.rate ?? ""}`,
-    optional: "optional",
-    sourceLink: "Source",
-    programSpecific: "Programme-specific",
-  };
-  return table[key] ?? key;
+type Translator = (key: string, values?: Record<string, string | number>) => string;
+
+/** Mirrors app/(app)/universities/[id]/page.tsx's own CONFIDENCE_LABEL_TR — page-local there
+ * since nothing else on that page renders it; same reasoning applies here. */
+const CONFIDENCE_LABEL_TR: Record<"high" | "medium" | "low", string> = {
+  high: "yüksek",
+  medium: "orta",
+  low: "düşük",
+};
+
+/** Mirrors the real page's BINDING_POLICY_LABEL_KEYS — catalog-key indirection so the
+ * (deliberately) untranslated raw `binding_policy` column value never reaches the UI. */
+const BINDING_POLICY_LABEL_KEYS: Record<string, string> = {
+  binding: "binding",
+  restrictive_single_choice: "restrictive",
+  non_binding: "nonBinding",
 };
 
 function StatCard({ icon: Icon, label, value, caption }: { icon: typeof Users; label: string; value: string; caption?: string }) {
@@ -92,7 +100,7 @@ function StatCard({ icon: Icon, label, value, caption }: { icon: typeof Users; l
 function formatDeadlineDate(dateString: string, locale: Locale): string {
   return formatAbsoluteDate(new Date(`${dateString}T00:00:00`), locale);
 }
-function formatRecurringDate(month: number, day: number, locale: Locale): string {
+function formatRecurringDate(month: number, day: number, locale: Locale, t: Translator): string {
   const date = formatAbsoluteDate(new Date(Date.UTC(2000, month - 1, day)), locale, { month: "long", day: "numeric", timeZone: "UTC" });
   return t("recurringAnnually", { date });
 }
@@ -100,13 +108,21 @@ function humanizeDeadlineType(type: string): string {
   const spaced = type.replace(/_/g, " ");
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
+function bindingPolicyLabel(policy: string, tBindingPolicy: Translator): string {
+  return policy in BINDING_POLICY_LABEL_KEYS ? tBindingPolicy(BINDING_POLICY_LABEL_KEYS[policy]) : policy;
+}
 
 export default async function UniversityDetailPreviewPage({ searchParams }: { searchParams: Promise<{ tier?: string; requirements?: string }> }) {
   if (process.env.NODE_ENV === "production") notFound();
 
   const { tier: tierParam, requirements: requirementsParam } = await searchParams;
   const tier = tierParam === "ultra" ? "ultra" : "standard";
-  const locale: Locale = "en";
+  // Reads the real oryn_locale cookie rather than hardcoding "en" — see
+  // design-preview/dashboard/page.tsx's own comment on this exact class of bug.
+  const locale: Locale = await resolveLocale();
+  const t = (await getTranslations("universities.detail")) as Translator;
+  const tSourceBadge = (await getTranslations("sourceBadge")) as Translator;
+  const tBindingPolicy = (await getTranslations("universities.bindingPolicy")) as Translator;
 
   const university = FIXTURE_UNIVERSITY;
   const stats = FIXTURE_UNIVERSITY_STATISTICS;
@@ -176,35 +192,59 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
 
         {/* The outlook panel — a real "Reach" verdict with real strengths/gaps/unknowns,
             not the not_applicable branch (that one's a single EmptyState-shaped block,
-            already well covered elsewhere in this app's own tests). */}
+            already well covered elsewhere in this app's own tests). Mirrors the real page's
+            own locale === "tr" ternaries exactly — see this file's header comment on why
+            that pattern (not getTranslations) is correct here. */}
         <section className="space-y-4 rounded-2xl border border-brand-primary-border bg-brand-primary-subtle p-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-lg font-medium">Your outlook</h2>
+            <h2 lang={locale} className="text-lg font-medium">
+              {locale === "tr" ? "Kabul görünümün" : "Your outlook"}
+            </h2>
             <OutlookBadge outlook="reach" locale={locale} />
           </div>
-          <p className="text-sm text-muted-foreground">
-            Oryn estimate: <span className="font-medium text-foreground">{outlookEstimate.low}–{outlookEstimate.high}%</span> ({outlookEstimate.confidence} confidence). This is not a
-            guarantee or an official university probability.
+          <p lang={locale} className="text-sm text-muted-foreground">
+            {locale === "tr" ? "Oryn tahmini:" : "Oryn estimate:"}{" "}
+            <span className="font-medium text-foreground">
+              {outlookEstimate.low}–{outlookEstimate.high}%
+            </span>{" "}
+            {locale === "tr"
+              ? `(${CONFIDENCE_LABEL_TR[outlookEstimate.confidence]} güven). Bu bir garanti veya resmi bir üniversite olasılığı değildir.`
+              : `(${outlookEstimate.confidence} confidence). This is not a guarantee or an official university probability.`}
           </p>
-          {admissionSystemMechanism ? <p className="max-w-3xl text-sm text-muted-foreground">{admissionSystemMechanism}</p> : null}
+          {/* admissionSystemMechanism/admissionSystemSources: rebased in from origin/main's
+              own surfacing-audit-2026-09-03.md work, landed after this file's Turkish-pass
+              rewrite -- merged by hand rather than picking a side, so this SourceBadge gets
+              the same tSourceBadge fix as every other one on this page instead of
+              reintroducing the hardcoded-English props that predated the fix. */}
+          {admissionSystemMechanism ? <p lang={locale} className="max-w-3xl text-sm text-muted-foreground">{admissionSystemMechanism}</p> : null}
           {admissionSystemSources.length > 0 ? (
-            <SourceBadge sourceName="Oryn's admissions-system research" locale={locale} sourceLabel="Source" checkedLabel={(time) => `Checked ${time}`} viewSourceLabel="View source" />
+            <SourceBadge
+              sourceName="Oryn's admissions-system research"
+              locale={locale}
+              sourceLabel={tSourceBadge("source")}
+              checkedLabel={(time) => tSourceBadge("checked", { time })}
+              viewSourceLabel={tSourceBadge("viewSource")}
+            />
           ) : null}
-          <div className="grid gap-4 text-sm sm:grid-cols-3">
+          <div lang={locale} className="grid gap-4 text-sm sm:grid-cols-3">
             <div>
-              <p className="font-medium text-success">Strengths</p>
+              <p className="font-medium text-success">{locale === "tr" ? "Güçlü Yönler" : "Strengths"}</p>
               <ul className="mt-1 space-y-0.5 text-muted-foreground">
-                {explanation.strengths.length > 0 ? explanation.strengths.map((s) => <li key={s}>+ {s}</li>) : <li>Add more profile data to see this.</li>}
+                {explanation.strengths.length > 0 ? (
+                  explanation.strengths.map((s) => <li key={s}>+ {s}</li>)
+                ) : (
+                  <li>{locale === "tr" ? "Bunu görmek için profiline daha fazla bilgi ekle." : "Add more profile data to see this."}</li>
+                )}
               </ul>
             </div>
             <div>
-              <p className="font-medium text-warning">Gaps</p>
+              <p className="font-medium text-warning">{locale === "tr" ? "Boşluklar" : "Gaps"}</p>
               <ul className="mt-1 space-y-0.5 text-muted-foreground">
-                {explanation.gaps.length > 0 ? explanation.gaps.map((g) => <li key={g}>− {g}</li>) : <li>None obvious yet.</li>}
+                {explanation.gaps.length > 0 ? explanation.gaps.map((g) => <li key={g}>− {g}</li>) : <li>{locale === "tr" ? "Henüz belirgin bir şey yok." : "None obvious yet."}</li>}
               </ul>
             </div>
             <div>
-              <p className="font-medium text-muted-foreground">Unknowns</p>
+              <p className="font-medium text-muted-foreground">{locale === "tr" ? "Bilinmeyenler" : "Unknowns"}</p>
               <ul className="mt-1 space-y-0.5 text-muted-foreground">
                 {explanation.unknowns.map((u) => (
                   <li key={u}>? {u}</li>
@@ -222,7 +262,7 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
             icon={Users}
             label={t("studentSize")}
             value={formatNumber(university.student_size!)}
-            caption={undergradCount != null && postgradCount != null ? `${formatNumber(undergradCount)} undergraduate, ${formatNumber(postgradCount)} postgraduate` : undefined}
+            caption={undergradCount != null && postgradCount != null ? t("undergradPostgradCaption", { undergrad: formatNumber(undergradCount), postgrad: formatNumber(postgradCount) }) : undefined}
           />
           <StatCard icon={GraduationCap} label={t("admissionRate")} value={stats.admission_rate != null ? `${Math.round(stats.admission_rate * 100)}%` : t("unavailable")} />
           {internationalTuition != null ? (
@@ -241,7 +281,7 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
           ) : (
             <StatCard icon={DollarSign} label={t("costOfAttendance")} value={t("unavailable")} />
           )}
-          <StatCard icon={Target} label="Test scores" value="Unavailable" />
+          <StatCard icon={Target} label={t("testScores")} value={t("unavailable")} />
           <StatCard icon={TrendingUp} label={t("graduationRate")} value={stats.graduation_rate != null ? `${Math.round(stats.graduation_rate * 100)}%` : t("unavailable")} />
         </div>
 
@@ -251,34 +291,37 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
             checkedAt={stats.updated_at}
             confidence={stats.data_confidence}
             locale={locale}
-            sourceLabel="Source"
-            checkedLabel={(time) => `Checked ${time}`}
-            viewSourceLabel="View source"
+            sourceLabel={tSourceBadge("source")}
+            checkedLabel={(time) => tSourceBadge("checked", { time })}
+            viewSourceLabel={tSourceBadge("viewSource")}
           />
         ) : null}
         {/* The tuition-specific badge added 2026-09-03 — university_profile_metrics'
-            own source_url, previously computed and never rendered. */}
+            own source_url, previously computed and never rendered. Rebased in from
+            origin/main after this file's own Turkish-pass rewrite; sourceLabel/checkedLabel/
+            viewSourceLabel switched to tSourceBadge to match every other SourceBadge on this
+            page rather than keep the hardcoded English props that predated the fix. */}
         {!stats.cost_of_attendance && internationalTuition != null ? (
           <SourceBadge
             sourceName={internationalTuitionMetric!.source_type!}
             checkedAt={internationalTuitionMetric!.verified_at}
             url={internationalTuitionMetric!.source_url!}
             locale={locale}
-            sourceLabel="Source"
-            checkedLabel={(time) => `Checked ${time}`}
-            viewSourceLabel="View source"
+            sourceLabel={tSourceBadge("source")}
+            checkedLabel={(time) => tSourceBadge("checked", { time })}
+            viewSourceLabel={tSourceBadge("viewSource")}
           />
         ) : null}
 
         <section className="space-y-5">
-          <SectionHeader title={t("programsTitle")} description="Verified, current programmes." />
+          <SectionHeader title={t("programsTitle")} description={t("programsDescription")} />
           <ul className="grid gap-2 sm:grid-cols-2">
             {programs.map((program) => (
               <li key={program.id} className="space-y-1 rounded-lg border p-3 text-sm">
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-medium">{program.name}</p>
                   {program.official_program_url ? (
-                    <a href={program.official_program_url} target="_blank" rel="noopener noreferrer" className="shrink-0 text-muted-foreground hover:text-brand-primary" aria-label={`Official page for ${program.name}`}>
+                    <a href={program.official_program_url} target="_blank" rel="noopener noreferrer" className="shrink-0 text-muted-foreground hover:text-brand-primary" aria-label={t("officialPageAriaLabel", { name: program.name })}>
                       <ExternalLink className="size-3.5" />
                     </a>
                   ) : null}
@@ -291,7 +334,7 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
 
         {researchTopics.length > 0 ? (
           <section className="space-y-3">
-            <SectionHeader title="Research strengths" description="Recent publication activity, via OpenAlex." />
+            <SectionHeader title={t("researchStrengthsTitle")} description={t("researchStrengthsDescription")} />
             <div className="flex flex-wrap gap-2">
               {researchTopics.map((topic) => (
                 <span key={topic} className="rounded-full border bg-muted/50 px-3 py-1 text-xs text-muted-foreground">
@@ -304,15 +347,21 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
 
         {/* Requirement Check — the section 6e is about to change the empty-on-file
             rendering for. ?requirements=empty shows that state directly rather than
-            leaving it to be discovered live once the change lands. */}
+            leaving it to be discovered live once the change lands. The dev-nav link back
+            to the populated state is preview-only chrome (no real-page equivalent), so it
+            stays English like this file's other "← All previews"-style links. */}
         <section className="space-y-4">
           <SectionHeader title={t("requirementCheckTitle")} description={t("requirementCheckDescription")} />
           {requirements.length > 0 ? (
             <>
               {universityWideRequirements.length > 0 ? (
                 <RequirementGroup
-                  title="Program not recorded"
-                  description="Sourced from the university's own pages — Oryn hasn't recorded which specific program each of these belongs to."
+                  title={locale === "tr" ? "Program kaydedilmemiş" : "Program not recorded"}
+                  description={
+                    locale === "tr"
+                      ? "Üniversitenin kendi sayfalarından alındı — Oryn bunların her birinin hangi programa ait olduğunu kaydetmedi."
+                      : "Sourced from the university's own pages — Oryn hasn't recorded which specific program each of these belongs to."
+                  }
                   items={universityWideRequirements}
                   evaluationByRequirement={FIXTURE_REQUIREMENT_EVALUATIONS}
                   locale={locale}
@@ -320,18 +369,18 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
                 />
               ) : null}
               {[...requirementsByProgram.entries()].map(([programId, items]) => (
-                <RequirementGroup key={programId} title={programNameById.get(programId) ?? "Program"} items={items} evaluationByRequirement={FIXTURE_REQUIREMENT_EVALUATIONS} locale={locale} t={t} />
+                <RequirementGroup key={programId} title={programNameById.get(programId) ?? t("programFallback")} items={items} evaluationByRequirement={FIXTURE_REQUIREMENT_EVALUATIONS} locale={locale} t={t} />
               ))}
             </>
           ) : (
-            <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
-              Oryn hasn&rsquo;t researched this university&rsquo;s specific requirements yet. <a href="?requirements=populated" className="text-brand-primary hover:underline">See the populated state →</a>
+            <p lang={locale} className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+              {t("requirementCheckEmptyMessage")} <a href="?requirements=populated" className="text-brand-primary hover:underline">See the populated state →</a>
             </p>
           )}
         </section>
 
         <section className="space-y-4">
-          <SectionHeader title={t("importantDatesTitle")} description="Sourced directly from the university's own pages." />
+          <SectionHeader title={t("importantDatesTitle")} description={t("importantDatesDescription")} />
           {datedDeadlines.length > 0 ? (
             <div className="space-y-2">
               <h3 className="text-sm font-medium text-muted-foreground">{t("upcoming")}</h3>
@@ -344,7 +393,7 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
                         {d.cycle_label ? <span className="ml-2 text-xs text-muted-foreground">· {d.cycle_label}</span> : null}
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
-                        {d.binding_policy ? <StatusBadge label={d.binding_policy === "non_binding" ? "Non-binding" : "Binding"} tone="neutral" /> : null}
+                        {d.binding_policy ? <StatusBadge label={bindingPolicyLabel(d.binding_policy, tBindingPolicy)} tone="neutral" /> : null}
                         <DeadlineBadge date={d.deadline_date!} locale={locale} />
                       </div>
                     </div>
@@ -367,11 +416,11 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
                         {d.program_id ? <span className="ml-2 text-xs text-muted-foreground">{programNameById.get(d.program_id) ?? t("programSpecific")}</span> : null}
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
-                        {d.binding_policy ? <StatusBadge label={d.binding_policy === "binding" ? "Binding" : "Non-binding"} tone="neutral" /> : null}
+                        {d.binding_policy ? <StatusBadge label={bindingPolicyLabel(d.binding_policy, tBindingPolicy)} tone="neutral" /> : null}
                         <StatusBadge label={t("recurringBadge")} tone="neutral" />
                       </div>
                     </div>
-                    <p className="text-muted-foreground">{formatRecurringDate(d.recurrence_month!, d.recurrence_day!, locale)}</p>
+                    <p className="text-muted-foreground">{formatRecurringDate(d.recurrence_month!, d.recurrence_day!, locale, t)}</p>
                   </li>
                 ))}
               </ul>

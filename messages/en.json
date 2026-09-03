@@ -1842,6 +1842,7 @@
         "opportunity_extraction": "Opportunity extraction",
         "requirement_extraction": "Requirement extraction",
         "opportunity_reverification": "Opportunity re-verification",
+        "axisBudgetLabel": "budget",
         "status": "{spent} of {budget} this month",
         "unknown": "Spend unknown this month — see below.",
         "neverRun": "No calls recorded this month.",

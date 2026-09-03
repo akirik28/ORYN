@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { ExternalLink, MapPin, Wallet, Calendar, Users2 } from "lucide-react";
 import { differenceInCalendarDays } from "date-fns";
 import {
@@ -19,6 +20,7 @@ import { NextMove } from "@/components/oryn/next-move";
 import { OpportunityActions } from "@/features/opportunities/opportunity-actions";
 import { formatMoney } from "@/lib/i18n/format";
 import { urgencyLabel } from "@/components/oryn/deadline-badge";
+import { resolveLocale } from "@/lib/i18n/locale";
 import { FIXTURE_OPPORTUNITY_DETAIL, FIXTURE_OPPORTUNITY_MATCH, FIXTURE_OPPORTUNITY_SOURCES, FIXTURE_PROFILE_SIGNAL } from "@/lib/dev/fixtures";
 import { PreviewShell } from "../preview-shell";
 import type { Locale } from "@/lib/i18n/config";
@@ -37,44 +39,25 @@ import type { ConfidenceLevel } from "@/components/oryn/confidence-indicator";
  * markup changes without this one being updated — flagged here rather than left implicit,
  * same as this file's sibling previews.
  *
- * i18n note: the real page pulls copy through next-intl (`getTranslations`); this preview
- * is a plain synchronous component (matching every other file in this directory) and
- * hardcodes the English strings instead of threading a translator through — visual review
- * only, not a locale check.
+ * i18n note (2026-09-03, corrected during the Turkish pass): this preview used to hardcode
+ * English strings in a local lookup table instead of threading a real translator through —
+ * "visual review only, not a locale check." That's exactly what blocked checking Turkish
+ * rendering on this exact surface: mixed-language output ("Checked 6 gün önce" next to
+ * still-English "What you'll need"/"Eligibility notes") that would have read as broken to
+ * anyone who tried. Now uses the same `getTranslations` namespaces/keys the real page does
+ * (`opportunities.detailPage`, `opportunities.fitTier`, `sourceBadge`, `opportunities.card`)
+ * — confirmed by reading app/(app)/opportunities/[id]/page.tsx's own calls directly, not
+ * guessed, so this also fixes several spots where the hardcoded English text had quietly
+ * drifted from the real catalog's own wording (e.g. "Deadline" vs. the real "Deadline:").
  */
 
-const t = (key: string, values?: Record<string, string | number>): string => {
-  const table: Record<string, string> = {
-    orynsTake: "Oryn's take",
-    fit: "Fit",
-    selectivity: "Selectivity",
-    urgency: "Urgency",
-    cantConfirmPrefix: "Oryn can't confirm eligibility: ",
-    deadlineLabel: "Deadline",
-    currencyNotRecorded: " (currency not recorded)",
-    financialAidAvailableSuffix: " · financial aid available",
-    financialAidAvailable: "Financial aid available",
-    agesRange: `Ages ${values?.min ?? ""}–${values?.max ?? ""}`,
-    any: "any",
-    gradesSuffix: ` · Grades: ${values?.grades ?? ""}`,
-    whatYoullNeed: "What you'll need",
-    eligibilityNotesHeading: "Eligibility notes",
-    citizenshipLabel: `Citizenship: ${values?.text ?? ""}`,
-    residencyLabel: `Residency: ${values?.text ?? ""}`,
-    sourcesHeading: "Sources",
-    visitOfficialPage: "Visit official page",
-  };
-  return table[key] ?? key;
-};
-const tTier = (key: string) => ({ exceptional: "Exceptional match", strong: "Strong match", worth_a_look: "Worth a look", low: "Low match" })[key] ?? key;
-const tCard = (key: string, values?: Record<string, string | number>) =>
-  ({ eligibilityUnknown: "Eligibility unknown", currentCycleLabelPrefix: `Current cycle: ${values?.label ?? ""}` })[key] ?? key;
+type Translator = (key: string, values?: Record<string, string | number>) => string;
 
 function humanize(value: string): string {
   return value.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
 }
 
-function fitLabel(score: number): string {
+function fitLabel(score: number, tTier: Translator): string {
   return tTier(matchTierKey(score));
 }
 
@@ -85,10 +68,18 @@ const TAKE_SENTENCES: Record<string, string> = {
     "It sits in a field you've told Oryn you're pursuing, which makes it easier to sustain and more coherent alongside the rest of your record.",
 };
 
-export default function OpportunityDetailPreviewPage() {
+export default async function OpportunityDetailPreviewPage() {
   if (process.env.NODE_ENV === "production") notFound();
 
-  const locale: Locale = "en";
+  // Reads the real oryn_locale cookie rather than hardcoding "en" — see
+  // design-preview/dashboard/page.tsx's own comment on this exact class of bug. Note this
+  // page also doesn't thread ?tier= to PreviewShell at all (defaults to "standard", no
+  // toggle effect) — a separate, pre-existing gap, out of scope for this fix.
+  const locale: Locale = await resolveLocale();
+  const t = (await getTranslations("opportunities.detailPage")) as Translator;
+  const tTier = (await getTranslations("opportunities.fitTier")) as Translator;
+  const tSourceBadge = (await getTranslations("sourceBadge")) as Translator;
+  const tCard = (await getTranslations("opportunities.card")) as Translator;
   const opportunity = FIXTURE_OPPORTUNITY_DETAIL;
   const match = FIXTURE_OPPORTUNITY_MATCH;
 
@@ -120,7 +111,7 @@ export default function OpportunityDetailPreviewPage() {
             surface
             locale={locale}
             eyebrow={t("orynsTake")}
-            headline={fitLabel(match.match_score)}
+            headline={fitLabel(match.match_score, tTier)}
             why={
               <div className="space-y-2.5">
                 {takeReasons.map((line) => (
@@ -129,7 +120,7 @@ export default function OpportunityDetailPreviewPage() {
               </div>
             }
             facts={[
-              { term: t("fit"), value: fitLabel(match.match_score) },
+              { term: t("fit"), value: fitLabel(match.match_score, tTier) },
               ...(selectivityLabel(opportunity.selectivity_tier, locale) ? [{ term: t("selectivity"), value: selectivityLabel(opportunity.selectivity_tier, locale)! }] : []),
               ...(daysUntilDeadline !== null && daysUntilDeadline >= 0 ? [{ term: t("urgency"), value: urgencyLabel(daysUntilDeadline, locale) }] : []),
             ]}
@@ -233,9 +224,9 @@ export default function OpportunityDetailPreviewPage() {
                   url={source.source_url}
                   confidence={source.confidence as ConfidenceLevel}
                   locale={locale}
-                  sourceLabel="Source"
-                  checkedLabel={(time) => `Checked ${time}`}
-                  viewSourceLabel="View source"
+                  sourceLabel={tSourceBadge("source")}
+                  checkedLabel={(time) => tSourceBadge("checked", { time })}
+                  viewSourceLabel={tSourceBadge("viewSource")}
                 />
               ))}
             </div>

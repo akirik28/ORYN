@@ -7,13 +7,18 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getProductActivity } from "@/lib/admin/queries";
 
 /**
- * All ten known product_events names (AGENTS.md Phase 52) plus the two below-minimum-age
+ * Every KNOWN_PRODUCT_EVENT_NAMES entry (lib/admin/queries.ts) plus the two below-minimum-age
  * names, which also appear in this section's general counts -- listed here, not hidden here;
  * age-gate-flags-section.tsx is where they get a dedicated, prominent surface. Hand-rolled
  * per-locale maps rather than a next-intl namespace, mirroring status-badge.tsx's own
  * statusLabel: next-intl needs a statically-known key, not a name read back from a database
  * row, and a plain Record with a raw-string fallback handles an unrecognized future event
- * name gracefully instead of throwing.
+ * name gracefully instead of throwing -- which is exactly what happened to
+ * ultra_interest_registered until 2026-09-03's Turkish pass: present in
+ * KNOWN_PRODUCT_EVENT_NAMES (so the census counted it) but missing from both maps below (so
+ * it rendered as the raw event name, in every locale, until oryn-a7 caught it live in
+ * /kumanda). __tests__/admin/event-label-coverage.test.ts now guards this pair against that
+ * list so a future new event name can't drift the same way silently.
  */
 const EVENT_LABELS: Record<string, string> = {
   onboarding_completed: "Onboarding completed",
@@ -26,6 +31,7 @@ const EVENT_LABELS: Record<string, string> = {
   weekly_action_completed: "Weekly action completed",
   research_project_started: "Research project started",
   application_updated: "Application updated",
+  ultra_interest_registered: "Ultra interest registered",
   birth_year_backfill_below_minimum_age: "Below-minimum-age signup (confirmed)",
   birth_year_settings_update_below_minimum_age: "Below-minimum-age signup (settings)",
 };
@@ -40,6 +46,7 @@ const EVENT_LABELS_TR: Record<string, string> = {
   weekly_action_completed: "Haftalık eylem tamamlandı",
   research_project_started: "Araştırma projesi başlatıldı",
   application_updated: "Başvuru güncellendi",
+  ultra_interest_registered: "Ultra ilgisi kaydedildi",
   birth_year_backfill_below_minimum_age: "Asgari yaşın altında kayıt (onay)",
   birth_year_settings_update_below_minimum_age: "Asgari yaşın altında kayıt (ayarlar)",
 };

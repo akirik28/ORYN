@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Landmark, Search } from "lucide-react";
 import { heroGradientStyle } from "@/components/oryn/hero-gradient";
 import { PageHeader } from "@/components/oryn/page-header";
@@ -37,12 +38,15 @@ export default async function UniversitiesPreviewPage({ searchParams }: { search
 
   const { tier: tierParam } = await searchParams;
   const tier = tierParam === "ultra" ? "ultra" : "standard";
+  // Reads the real oryn_locale cookie rather than hardcoding "en" — see
+  // design-preview/dashboard/page.tsx's own comment on this exact class of bug.
+  const t = await getTranslations("universities.browsePage");
   const universities: University[] = [FIXTURE_UNIVERSITY, FIXTURE_UNIVERSITY_2, FIXTURE_UNIVERSITY_3];
 
   return (
     <PreviewShell signal={FIXTURE_PROFILE_SIGNAL} tier={tier}>
       <div className="dark space-y-8 rounded-[28px] p-4 text-foreground md:p-8" style={heroGradientStyle(tier)}>
-        <PageHeader eyebrow="Explore" title="Universities" description="Every university Oryn tracks, filterable by what actually matters to you." />
+        <PageHeader eyebrow={t("eyebrow")} title={t("title")} description={t("description")} />
 
         <div className="glass-card-fast flex flex-col gap-3 rounded-2xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -53,7 +57,7 @@ export default async function UniversitiesPreviewPage({ searchParams }: { search
             <form className="flex w-full min-w-0 gap-2 sm:w-auto">
               <UniversitySearchBox />
               <Button type="submit" variant="outline" size="sm" className="shrink-0">
-                <Search className="size-3.5" /> Search
+                <Search className="size-3.5" /> {t("search")}
               </Button>
             </form>
             <FilterSheet

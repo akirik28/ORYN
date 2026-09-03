@@ -49,7 +49,22 @@ export async function JobBudgetSection() {
               {status.isOverridden ? <span className="ml-1">· {t("overridden")}</span> : null}
             </p>
             {status.dailyCumulativeUsd.length > 0 ? (
-              <BurnChart actual={status.dailyCumulativeUsd} budget={status.budgetUsd} a11y={{ title: t(status.feature) }} aspectRatio={480 / 220} />
+              <BurnChart
+                actual={status.dailyCumulativeUsd}
+                budget={status.budgetUsd}
+                budgetLabel={t("axisBudgetLabel")}
+                // An explicit description, reusing the exact phrase already shown in the
+                // status line just above (t("status")/t("unknown")) rather than
+                // BurnChart's own raw-number fallback -- found untranslated and
+                // float-precision-noisy ("0.13630000000000003 of 5 budget") during
+                // 2026-09-03's Turkish pass. Same money()-formatted values as that line, so
+                // the sr-only description and the visible text agree exactly.
+                a11y={{
+                  title: t(status.feature),
+                  description: status.monthToDateSpendUsd === null ? t("unknown") : t("status", { spent: money(status.monthToDateSpendUsd), budget: money(status.budgetUsd) }),
+                }}
+                aspectRatio={480 / 220}
+              />
             ) : (
               <p className="text-xs text-muted-foreground">{t("neverRun")}</p>
             )}
