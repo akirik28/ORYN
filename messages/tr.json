@@ -1934,7 +1934,9 @@
       "overviewTitle": "Bugün neye bakman gerekiyor",
       "overviewDescription": "Her şeyi değil — sadece karar bekleyenleri.",
       "overviewPlaceholder": "Dikkat listesi ve özet kartlar buraya gelecek. Bu ekran bilerek kısa: diğer her alanın raydaki kendi yeri var, üst üste yığılmıyorlar.",
-      "ledgerDescription": "Her admin işlemi, tek listede — hangi tabloya yazıldığından bağımsız."
+      "ledgerDescription": "Her admin işlemi, tek listede — hangi tabloya yazıldığından bağımsız.",
+      "moderationDescription": "Şikayet edilen mesajlar ve gönderiler, karar bekliyor.",
+      "systemDescription": "Altyapı sağlıklı mı — sağlayıcılar, işler ve AI yanıt kalitesi."
     },
     "growth": {
       "signups": {
