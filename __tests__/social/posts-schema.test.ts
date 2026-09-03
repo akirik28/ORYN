@@ -502,7 +502,20 @@ describe("migration numbering", () => {
     // migration discards them to '[]'::jsonb rather than guessing -- the next real page view
     // recomputes them correctly, the same recompute-on-read mechanism this table already
     // relies on for everything else. See docs/eligibility-notes-codes-2026-09-03.md.
-    expect(Math.max(...numbers.map(Number))).toBe(115);
+    //
+    // 0116 (parent_accounts) -- P1 of the founder's parent-account feature (docs/veli-hesabi-
+    // spec-2026-09-04.md), the shared schema contract five other lanes build against:
+    // profiles.account_role/parent_invite_email, the parent_links state machine (pending ->
+    // active -> revoked, K3's double confirmation -- the student's own activation is the
+    // only path to "active," a parent can only ever move their own link toward "revoked"),
+    // is_active_parent_of() as the single gate every parent-read policy/function goes
+    // through, and three curated SECURITY DEFINER functions (never a raw policy on profiles
+    // itself) so K1's exclusions -- advisor_instructions chief among them, a plain column on
+    // profiles a row-level policy cannot hide -- are a whitelist's own column list rather
+    // than a policy author's discipline. Migration number assigned by CEO directly, not
+    // self-picked -- four collisions already happened tonight. Still unapplied; the founder
+    // runs it in the morning.
+    expect(Math.max(...numbers.map(Number))).toBe(116);
   });
 });
 
