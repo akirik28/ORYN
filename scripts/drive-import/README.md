@@ -6,7 +6,7 @@ Two stages, both Python 3 standard library only (no `pip install` needed):
 
 1. `parse.py` — reads raw Drive spreadsheet exports (see below) and produces clean,
    validated JSON in `parsed/`.
-2. `generate_sql.py <output.sql>` — turns that JSON into a Postgres file matching ORYN's
+2. `generate_sql.py <output.sql>` — turns that JSON into a Postgres file matching Proxola's
    real schema, filtered to rows the corpus itself marked `Verified`/`2026 cycle confirmed`
    (rows it marked `Review` or `Rejected` are excluded, never silently included).
 

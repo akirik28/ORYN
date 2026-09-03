@@ -100,7 +100,7 @@ interface ScorecardRow {
 }
 
 function downloadAndParse(): ScorecardRow[] {
-  const dir = mkdtempSync(join(tmpdir(), "oryn-scorecard-"));
+  const dir = mkdtempSync(join(tmpdir(), "proxola-scorecard-"));
   try {
     console.log(`Downloading ${SOURCE_LABEL} bulk file...`);
     execSync(`curl -sL -o data.zip "${BULK_FILE_URL}"`, { cwd: dir, stdio: "inherit" });

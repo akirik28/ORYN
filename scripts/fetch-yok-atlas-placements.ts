@@ -36,7 +36,7 @@ const TARGET_UNIVERSITIES = [
   "Sabancı University",
 ] as const;
 
-// Oryn's own `universities.name` values are the display forms used in the product's own
+// Proxola's own `universities.name` values are the display forms used in the product's own
 // research corpus (often English or ASCII-folded), not YOK Atlas's own Turkish institution
 // names -- e.g. "Middle East Technical University" here vs. "ORTA DOĞU TEKNİK ÜNİVERSİTESİ
 // (ANKARA)" in the source. Mapped by hand after inspecting the live universiteler list once

@@ -98,7 +98,7 @@ async function main(): Promise<void> {
   console.log(`  Display-safe: ${displaySafeTotal}/${live.length}`);
   console.log(`  Real verified image:  ${displayCounts.real_verified}`);
   console.log(`  Official logo fallback: ${displayCounts.logo_fallback}`);
-  console.log(`  ORYN branded fallback:  ${displayCounts.oryn_fallback}`);
+  console.log(`  PROXOLA branded fallback:  ${displayCounts.oryn_fallback}`);
   console.log(`  Broken: 0 (every write is HEAD-verified before being stored — see verifyPublicUrlServes)\n`);
 
   console.log(`PIPELINE STATUS (internal — what still needs follow-up work):`);
