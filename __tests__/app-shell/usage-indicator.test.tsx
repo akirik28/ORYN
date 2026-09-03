@@ -140,3 +140,31 @@ describe("UsageIndicator — prefers-reduced-motion: one frame, not a loop, live
     expect(ctx.clearRect).toHaveBeenCalled();
   });
 });
+
+describe("UsageIndicator — the animated path paints before its first RAF frame lands", () => {
+  // 2026-09-04, live bug: `beforeEach` above mocks `requestAnimationFrame` to `() => 1` --
+  // it schedules nothing and never invokes its callback, which is exactly what a browser
+  // does to a backgrounded tab (throttled or suspended entirely) and exactly what this
+  // Browser-pane tool did when the founder reported a solid black box where the flame
+  // should be. Before this fix, `paint()` was only ever called from inside the RAF
+  // callback (or once, synchronously, on the reduced-motion path above) -- so with RAF
+  // mocked this way, the canvas was cleared/drawn to zero times, the same as it would be
+  // on a real backgrounded tab whose first frame hasn't landed yet. This test asserts the
+  // fix: a synchronous paint happens before `requestAnimationFrame` is even called, so the
+  // canvas already has real content regardless of whether or when the browser ever honors
+  // the scheduled frame.
+  test("ultra + normal, motion allowed: the canvas is painted even though the mocked RAF never invokes its callback", () => {
+    const ctx = mockContext();
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(ctx as unknown as CanvasRenderingContext2D);
+
+    renderIndicator({ tier: "ultra", quota: quota() });
+
+    // The loop is still scheduled (unchanged behavior)...
+    expect(window.requestAnimationFrame).toHaveBeenCalled();
+    // ...but painting must not depend on that scheduled callback ever actually running --
+    // the mock never invokes it, so any call recorded here happened synchronously, in the
+    // same tick as mount.
+    expect(ctx.clearRect).toHaveBeenCalled();
+    expect(ctx.arc).toHaveBeenCalled();
+  });
+});
