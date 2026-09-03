@@ -100,7 +100,7 @@ geri alınabilir.
 
 ## 5. Üniversite giriş gereksinimleri
 
-`04-universite-gereksinimleri-2026-09-03.sql` — **14 kurum, 192 satır.** Oxford, Cambridge,
+`04-universite-gereksinimleri-2026-09-03.sql` — **14 kurum, 210 satır** (Caltech'in 19 satırı, uzlaştırılmış 37 satırla değiştirildi). Oxford, Cambridge,
 Imperial, Warwick, MIT, Caltech, Harvard, Princeton, Bocconi, TU Delft, ODTÜ, Boğaziçi,
 Koç, Sabancı. Bu kurumlar 141 satırdan 333'e çıkıyor.
 
