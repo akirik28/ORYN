@@ -20,7 +20,7 @@ import { logAdminAction } from "@/lib/admin/log";
 import { tavilyProvider } from "@/lib/providers/tavily";
 import { collegeScorecardProvider } from "@/lib/providers/college-scorecard";
 import { openAlexProvider } from "@/lib/providers/openalex";
-import { getAIProvider, isAIConfigured, AIProviderNotConfiguredError } from "@/lib/ai";
+import { getAIProvider, AIProviderNotConfiguredError } from "@/lib/ai";
 import { getOrCreateWeeklyPlan } from "@/lib/plan/persist";
 import { RateLimitExceededError } from "@/lib/ai/rate-limit";
 import { aiServiceFailureMessage } from "@/lib/ai/service-failure";
@@ -187,13 +187,17 @@ export interface ProviderRecheckResult {
  * path (lib/providers/fetch-json.ts, or lib/ai/anthropic-provider.ts for Anthropic) that
  * already records provider_health on every real call the app makes organically — this
  * doesn't write provider_health itself, it just gives an admin a way to make one happen on
- * demand instead of waiting for real traffic. A provider with no API key configured is
- * reported as `notConfigured`, not attempted and not recorded as a failure — Tavily/College
- * Scorecard/Anthropic's own `isConfigured()`/`isAIConfigured()` checks already short-circuit
- * before ever reaching provider_health for exactly this reason (see lib/providers/tavily.ts,
- * lib/providers/college-scorecard.ts, lib/ai/anthropic-provider.ts's own comments): a
- * missing key is a deployment fact, not a live health signal, and recording it as a failure
- * would make the panel read "degraded" when the honest statement is "never configured".
+ * demand instead of waiting for real traffic.
+ *
+ * No separate `isConfigured()`/`isAIConfigured()` pre-check here (removed 2026-09-03) — the
+ * duplicate short-circuit was itself the bug: it meant an admin clicking "recheck" on an
+ * unconfigured provider hit an EARLIER return than the one lib/providers/tavily.ts,
+ * college-scorecard.ts, and anthropic-provider.ts's getClient() now record to
+ * provider_health as `not_configured`, so the button's own path never wrote anything even
+ * after those files were fixed. Calling straight into the provider method and reading its
+ * `error.type`/thrown-error-type instead means there is exactly one place a provider
+ * decides "not configured" — recording and this button's return value can no longer drift
+ * apart the way they did before.
  */
 export async function recheckProvider(provider: string): Promise<ProviderRecheckResult> {
   await requireAdmin();
@@ -201,20 +205,23 @@ export async function recheckProvider(provider: string): Promise<ProviderRecheck
   try {
     switch (provider) {
       case "anthropic": {
-        if (!isAIConfigured()) return { notConfigured: true };
         await getAIProvider().generateText({ prompt: "Reply with the single word OK.", maxTokens: 8 });
         break;
       }
       case "tavily": {
-        if (!tavilyProvider.isConfigured()) return { notConfigured: true };
         const result = await tavilyProvider.search("test", { maxResults: 1 });
-        if (!result.success) return { error: result.error.message };
+        if (!result.success) {
+          if (result.error.type === "not_configured") return { notConfigured: true };
+          return { error: result.error.message };
+        }
         break;
       }
       case "college_scorecard": {
-        if (!collegeScorecardProvider.isConfigured()) return { notConfigured: true };
         const result = await collegeScorecardProvider.searchByName("test", 1);
-        if (!result.success) return { error: result.error.message };
+        if (!result.success) {
+          if (result.error.type === "not_configured") return { notConfigured: true };
+          return { error: result.error.message };
+        }
         break;
       }
       case "openalex": {
@@ -228,10 +235,15 @@ export async function recheckProvider(provider: string): Promise<ProviderRecheck
         return { error: "Unknown provider." };
     }
   } catch (error) {
-    // Anthropic's generateText throws rather than returning a ProviderResult — the two
-    // failure shapes (AIResponseIncompleteError with usage attached, or a plain transport
-    // error) are both already recorded to provider_health inside anthropic-provider.ts
-    // itself before this catches them; this only needs to turn the throw into a message.
+    // Anthropic's generateText throws AIProviderNotConfiguredError for a missing key
+    // (recorded to provider_health inside getClient() itself before it throws) — mapped to
+    // the same `notConfigured` shape the other two providers return directly, so this
+    // action's own return type doesn't leak the fact that Anthropic's failure mode is
+    // structurally different from theirs. Its other two failure shapes (AIResponseIncomplete
+    // Error with usage attached, or a plain transport error) are both already recorded to
+    // provider_health inside anthropic-provider.ts itself before this catches them; this
+    // only needs to turn the throw into a message.
+    if (error instanceof AIProviderNotConfiguredError) return { notConfigured: true };
     return { error: error instanceof Error ? error.message : "Check failed." };
   }
 

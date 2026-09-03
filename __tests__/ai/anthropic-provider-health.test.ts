@@ -8,10 +8,11 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
  * as __tests__/ai/anthropic-provider-thinking.test.ts (no live model call, ever).
  */
 
-const { createMock, recordSuccessMock, recordFailureMock, reportErrorMock } = vi.hoisted(() => ({
+const { createMock, recordSuccessMock, recordFailureMock, recordNotConfiguredMock, reportErrorMock } = vi.hoisted(() => ({
   createMock: vi.fn(),
   recordSuccessMock: vi.fn().mockResolvedValue(undefined),
   recordFailureMock: vi.fn().mockResolvedValue(undefined),
+  recordNotConfiguredMock: vi.fn().mockResolvedValue(undefined),
   reportErrorMock: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -28,6 +29,7 @@ vi.mock("@/lib/env", () => ({
 vi.mock("@/lib/providers/health", () => ({
   recordProviderSuccess: recordSuccessMock,
   recordProviderFailure: recordFailureMock,
+  recordProviderNotConfigured: recordNotConfiguredMock,
 }));
 
 vi.mock("@/lib/monitoring", () => ({

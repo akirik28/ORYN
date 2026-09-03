@@ -19,9 +19,31 @@ function makeRow(overrides: Partial<ProviderHealth>): ProviderHealth {
 }
 
 describe("summarizeProviderHealth — a provider with no row at all", () => {
-  it("reads as unknown/never_called, not absent — the gap this module exists to close", () => {
+  it("reads as never_attempted/never_called, not absent — the gap this module exists to close", () => {
     const summary = summarizeProviderHealth(DEF, null, NOW);
-    expect(summary).toMatchObject({ provider: "anthropic", status: "unknown", freshness: "never_called", lastSuccessAt: null, sinceLastSuccessMs: null });
+    expect(summary).toMatchObject({ provider: "anthropic", status: "never_attempted", freshness: "never_called", lastSuccessAt: null, sinceLastSuccessMs: null });
+  });
+});
+
+describe("summarizeProviderHealth — not_configured, 2026-09-03", () => {
+  it("a row whose last_error carries the not-configured marker reads as its own synthetic status, not the raw stored 'degraded'", () => {
+    const row = makeRow({
+      status: "degraded",
+      last_success_at: null,
+      last_failure_at: NOW.toISOString(),
+      last_error: "Not configured — TAVILY_API_KEY is not set.",
+    });
+    const summary = summarizeProviderHealth(DEF, row, NOW);
+    expect(summary.status).toBe("not_configured");
+    // last_failure_at is real (the attempt happened, it just skipped before reaching the
+    // provider) — freshness/lastFailureAt aren't overridden, only `status` is reinterpreted.
+    expect(summary.lastFailureAt).toBe(NOW.toISOString());
+  });
+
+  it("a row with a real failure message (no marker) is left as the raw stored status — not every degraded row is not_configured", () => {
+    const row = makeRow({ status: "degraded", last_success_at: null, last_failure_at: NOW.toISOString(), last_error: "Tavily rejected the API credential (HTTP 401)." });
+    const summary = summarizeProviderHealth(DEF, row, NOW);
+    expect(summary.status).toBe("degraded");
   });
 });
 
@@ -61,7 +83,7 @@ describe("summarizeProviderHealth — freshness tiers", () => {
 });
 
 describe("PROVIDER_DEFINITIONS", () => {
-  it("covers all four external providers this product actually calls", () => {
-    expect(PROVIDER_DEFINITIONS.map((d) => d.provider).sort()).toEqual(["anthropic", "college_scorecard", "openalex", "tavily"]);
+  it("covers all five external providers this product actually calls — internet_archive added 2026-09-03, found live-reporting with no entry here", () => {
+    expect(PROVIDER_DEFINITIONS.map((d) => d.provider).sort()).toEqual(["anthropic", "college_scorecard", "internet_archive", "openalex", "tavily"]);
   });
 });
