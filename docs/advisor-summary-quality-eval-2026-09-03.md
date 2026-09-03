@@ -427,3 +427,49 @@ reference date 2026-09-03 for every fixture, same as every prior sweep in this c
 across all three addenda now ~$0.15. Zero real student data touched. No arming verdict — the
 retention job itself is still not scheduled, still gated on the two legal preconditions named
 in the original build doc.
+
+## Addendum 4 — 2026-09-03, what fixture 1's residual actually is
+
+oryn-45's question after merging the shipped fix: is *"track season starting in fall 2026"* a
+correct inference from the `<conversation date>` attribute stated as though the transcript
+said it (the hedging failure this whole chain has been chasing), or an invented association
+with "track season" independent of context (a different defect, meaning the fix narrowed the
+shape without closing the mechanism)? Those have different implications, so this was tested,
+not reasoned about.
+
+**Method:** the same fixture 1 transcript, through the real shipped `summarizeTranscript()`,
+at three reference dates in three other seasons — winter (2026-01-15), spring (2026-04-15),
+summer (2026-07-15) — 3 reads each (9 calls). If any attached season/date tracks the actual
+reference date, that is inference. If it stays fixed regardless of the date, that is invention.
+
+**Result: it tracks the date, and mostly doesn't attach anything at all.**
+
+- Winter (Jan): 0 of 3 reads attached any season or date — "once track season begins."
+- Spring (Apr): 2 of 3 attached nothing; 1 of 3 said *"track season (which is starting around
+  mid-April 2026)"* — matching the actual reference date (April 15) precisely, and matching
+  real-world US track & field season (a spring sport) as a bonus.
+- Summer (Jul): 0 of 3 attached any season or date — "once track season starts."
+
+**Answer: inference, not invention.** Across this batch, only 1 of 9 reads attached anything
+at all, and the one that did derived it correctly from the actual reference date supplied —
+the same mechanism fixtures 2 and 6 already showed (using the reference date to fill a gap
+next to something time-shaped), just applied here to an event with no relative-time phrase at
+all rather than an existing one like "last month." Combined with the original batch (1 of 3 at
+the September reference date, itself a defensible "fall" label for a US school context), the
+combined rate is **2 of 12 reads (~17%) attach any temporal marker to this undated event, and
+every attached value tracked the actual reference date rather than defaulting to a fixed
+guess.**
+
+**What this means for the fix.** This is the hedging/resolution failure, not a separate
+fabrication mechanism — the model has a real, legitimate anchor (the reference date, supplied
+specifically so it CAN convert genuine relative-time phrases) and is occasionally extending
+that same reasoning to an event that gave it no relative-time phrase to convert, stating the
+result as fact rather than acknowledging the transcript never said when. The fix didn't close
+a separate hole; it reduced the frequency and severity of the same one the rest of this chain
+already targets. Whether ~17% (12 reads, still not a certified rate) is low enough to leave
+as-is is a product call, not something this note is resolving — it's here so whoever looks at
+this residual next knows which defect they're looking at.
+
+**Spend:** 9 more real Haiku 4.5 calls via `summarizeTranscript` (`ai_usage`-logged). Total
+across all four addenda now ~$0.16. Zero real student data touched. No code changed this
+pass — measurement only.
