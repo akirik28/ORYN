@@ -56,6 +56,23 @@ interface CanonicalHit {
  * Relevance-ordered university rows for a text query, optionally narrowed to a set of
  * countries. Returns `[]` (not "everything") when nothing matches, so a caller can tell
  * "no results" apart from "no query".
+ *
+ * 2026-09-03 (tier 2, docs/okuma-hatasi-vs-bos-sonuc-karari-2026-09-03.md): a genuinely
+ * failed RPC call used to log and then return this same `[]` -- indistinguishable from "no
+ * results" to every caller, in a product whose search box exists specifically to find a
+ * university. Now throws instead, matching lib/search/index.ts's own unwrap() convention
+ * (same file, same night, already the house pattern for every OTHER global-search source) --
+ * a caller that wants that failure to look like "no results" catches it locally and says so
+ * explicitly, rather than this shared function deciding silently for every caller at once.
+ * lib/universities/browse-page.ts's loadUniversityBrowsePage is exactly that caller: its
+ * text-search path is one of three ways into one page that also serves filter-browsing and
+ * plain browsing through the same function, so a search-specific failure propagating
+ * uncaught would take the whole page down to app/(app)/error.tsx's generic boundary, losing
+ * filters and country counts too -- confirmed by reading that boundary and that page's call
+ * site before deciding, not assumed. Its own try/catch (see that file) restores the
+ * identical tolerant behavior this function used to provide internally; global search
+ * (lib/search/index.ts's searchUniversities, no try/catch around this call) gets the
+ * propagate-and-say-so behavior its own file already established for every sibling source.
  */
 export async function searchUniversityRows(
   supabase: SupabaseClient<Database>,
@@ -74,8 +91,7 @@ export async function searchUniversityRows(
   });
 
   if (error) {
-    console.error("[universities] canonical search failed", { code: error.code, message: error.message });
-    return [];
+    throw new Error(`University search failed: ${error.message}`);
   }
 
   const ordered = ((hits ?? []) as CanonicalHit[]).map((hit) => hit.entity_id);

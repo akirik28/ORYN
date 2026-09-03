@@ -70,7 +70,20 @@ export async function loadUniversityBrowsePage(
 
   // ---- Path 1: text search -------------------------------------------------
   if (q) {
-    const raw = await searchUniversityRows(supabase, q, { limit: UNIVERSITY_PAGE_SIZE, countries: scopedCountries });
+    // searchUniversityRows throws on a genuine RPC failure as of 2026-09-03 (see its own
+    // header) -- global search wants that to propagate, but this function serves filter-
+    // browsing and plain browsing too, all through the same call site. Letting a search-
+    // specific failure take the whole page down to the generic app/(app)/error.tsx
+    // boundary -- losing filters and country counts along with it -- would be a worse
+    // result than this path's own prior behavior. Caught here, restoring exactly that
+    // prior behavior (log, treat as no matches) rather than a new one.
+    let raw: Awaited<ReturnType<typeof searchUniversityRows>>;
+    try {
+      raw = await searchUniversityRows(supabase, q, { limit: UNIVERSITY_PAGE_SIZE, countries: scopedCountries });
+    } catch (error) {
+      console.error("[universities] browse-page text search failed, showing no matches for this query", error);
+      raw = [];
+    }
     const typeFiltered = raw.filter((u) => matchesInstitutionType(u.institution_type, type));
     const { matched, sizeUnknown, costUnknown } = applyRangeFilters(typeFiltered, rangeFilters, rangeData);
     return { universities: matched, total: matched.length, sizeUnknownCount: sizeUnknown, costUnknownCount: costUnknown };
