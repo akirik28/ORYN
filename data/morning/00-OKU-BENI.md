@@ -291,6 +291,19 @@ sütun** var: elle araştırma `financial_aid_available`'ı, otomatik çıkarım
 `funding_available`'ı yazıyor — ikisi asla birlikte dolmuyor. İkisi de migration gerektiren
 şema kararları, o yüzden sana bırakıldı.
 
+**Ve bu ikisi aslında tek bir sorunun iki yüzü — üçüncüsü de bu sabah çıktı.** `deadline`
+alanı da aynı şekilde tek değerli: "sürekli açık, son tarih yok" ile "dönem henüz
+açıklanmadı" ile "biz bakmadık" arasında ayrım yapamıyor. Ölçüldü: 282 aktif fırsatın
+205'inde tarih yok, ama bu boşluğun büyük kısmı **araştırmayla kapanmıyor.** 61 sayfa elle
+okundu — küçük bir grup gerçekten sayfada duran, doldurulmayı bekleyen tarih; küçük bir
+grup açıkça ve doğru olarak tarihsiz ("yıl boyu başvuru alınır"); **en büyük grup ise tek
+bir sayfa okumasından anlaşılamıyor** — okunabilir sayfaların %38'inde ne bir tarih ne de
+"son başvuru" gibi bir kelime geçiyor.
+
+Yani aynı desen üç alanda birden: `eligible`, `cost`, `deadline`. Üçünde de **"bilmiyoruz"
+diyecek yer yok**, ve üçünde de sistem bunu "sorun yok" diye okuyor. Ayrı ayrı üç migration
+mı, yoksa tek bir "bu alan için ne biliyoruz" deseni mi — bu, mimari bir karar ve seninki.
+
 **Yeniden doğrulama işi: silahlandıralım mı?** Gece boyunca kuruldu, ölçüldü, düzeltildi
 ve son olarak **113 gerçek kayıtla** çalıştırıldı — hiçbir yazma yapmadan.
 
