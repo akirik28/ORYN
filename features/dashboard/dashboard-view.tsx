@@ -367,6 +367,25 @@ export async function DashboardView({
           ((app)/layout.tsx now renders these once for every page, not per-page). */}
       <div className="relative z-[1] -mx-4 px-4 pt-10 pb-4 md:-mx-8 md:px-8">
         <div className="mx-auto max-w-[860px] space-y-10">
+          {/* Rotating opportunity strip (2026-09-03, founder dispatch) -- additive to the
+              small text preview further down, not a replacement for it: that panel stays
+              for a fast, quiet glance; this is the richer, prominent surface the founder
+              asked for. Full-width, its own section rather than squeezed into the paired
+              grid below, so it is not fighting a half-width column for space.
+
+              Moved ABOVE the paired grid on the founder's own instruction the
+              same evening -- first "daha yukariya koy", then "bu haftalik odagin ustune
+              al firsatlari". It had been the last section on the page; one move up put it
+              under the focus grid, and he asked for it above. See opportunity-strip.tsx for
+              the empty/thin/full-state handling, the motion mechanism, and the sponsored
+              slot seam. */}
+          <section>
+            <SectionHeader title={t("newOpportunities")} />
+            <div className="mt-5">
+              <OpportunityStrip opportunities={opportunityStrip} locale={locale} />
+            </div>
+          </section>
+
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:gap-8">
             <section style={glassCard} className="glass-card min-w-0 p-6 md:p-7">
               <SectionHeader
@@ -451,24 +470,6 @@ export async function DashboardView({
             </aside>
           </div>
 
-          {/* Rotating opportunity strip (2026-09-03, founder dispatch) -- additive to the
-              small text preview below, not a replacement for it: that panel stays for a
-              fast, quiet glance; this is the richer, prominent surface the founder asked
-              for. Full-width, its own section rather than squeezed into the paired grid
-              above, so it is not fighting a half-width column for space.
-
-              Moved directly under the paired grid on the founder's own instruction the
-              same evening ("daha yukarıya koy"): it had been the last section on the page,
-              below every panel, which is the wrong place for the surface he intends to
-              sell placement in. See features/dashboard/opportunity-strip.tsx for the
-              empty/thin/full-state handling, the motion mechanism, and the sponsored-slot
-              seam. */}
-          <section>
-            <SectionHeader title={t("newOpportunities")} />
-            <div className="mt-5">
-              <OpportunityStrip opportunities={opportunityStrip} locale={locale} />
-            </div>
-          </section>
 
           {avoidRecommendation ? (
             <InsightCard variant="avoid" eyebrow={t("oneThingNotToDo")} title={avoidRecommendation.title} locale={locale}>
