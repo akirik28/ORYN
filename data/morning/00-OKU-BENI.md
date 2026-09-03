@@ -78,6 +78,14 @@ karşılaştırılamıyor**):
 | Sadece `active` | 282 | 66 | 205 | 218 |
 | `active` + `under_review` | 394 | 172 | 314 | 330 |
 
+Bir sayıyı ayrıca söylemem gerek, çünkü tablodaki "son tarih yok" sütunundan daha kötü:
+**282 aktif fırsatın sadece 37'sinin son tarihi gelecekte.** Kalan 245'in ya hiç tarihi yok
+ya da tarihi geçmiş. Yani panonun "yaklaşan son tarihler" bölümü, haftalık plandaki aciliyet
+sıralaması ve eşleştirmedeki aciliyet katsayısı — üçü de katalogun **%13'ünden** besleniyor.
+Bu gece bir şerit tam olarak bunu ölçüyor: hangileri gerçekten tarihsiz (sürekli açık,
+dönem açıklanmamış), hangilerinin tarihi kaynak sayfasında duruyor ama bize hiç geçmemiş.
+İkisi ayrı sorun ve sadece birincisi araştırmayla kapanır.
+
 Paket **190** kaydın kurum adını dolduruyor (hepsi hâlâ boş, tek tek doğrulandı). Toplamda
 197 boş var. O 7 farkın ne olduğuna baktım ve beklediğim şey çıkmadı: **7'sinin de kurum
 adı eksik değil, 7'si de geçerli fırsat kaydı değil.** İkisi dizin sayfası, biri üniversite
@@ -309,9 +317,16 @@ Hindistan 37, Güney Kore 31, Malezya 25, Japonya 22. Koridor içinde kalan ise 
 Finlandiya 9, sonra Litvanya 4, Estonya 3, Kıbrıs 3. Yani "en çok kurum" ile "bu ürün için
 en önemli" ters yönü gösteriyor.
 
-*Kurum tarafı — bu daha çarpıcı:* katalog **bütün bir tabakayı görmüyor.** Almanya'da 243
+*Kurum tarafı — bu daha çarpıcı:* katalog **bütün bir tabakayı görmüyor.** Almanya'da 192
 uygulamalı bilimler üniversitesinin **sıfırı** kayıtlı, ve DAAD'ın kendi rakamıyla Alman
-öğrencilerin **%37'si** o sektörde okuyor. Hollanda'da **36** hogeschool'un sıfırı — ve HBO
+öğrencilerin **%37'si** o sektörde okuyor.
+
+(Bu sayı da düzeltildi: daha önce sana 243 yazmıştım. Kaynağı arandığında DAAD'a
+çıkmıyor — üçüncü taraf bir siteye çıkıyor ve o site DAAD'a atıf yapıyor ama DAAD'ın kendi
+sayfasında böyle bir rakam yok; DAAD "200'den fazla" diyor. 192, HRK'nın —Alman
+üniversitelerinin kendi ulusal birliğinin— resmî kurum arama sisteminden, bugün canlı
+sorgulanarak. Ayrıca 9 tane de Verwaltungshochschule var, ayrı bir kategori; onlar bu
+sayının dışında.) Hollanda'da **36** hogeschool'un sıfırı — ve HBO
 orada **daha büyük** sektör (462.130 öğrenci, WO'da 340.179). Avusturya 0/21, İsviçre 1,
 İrlanda 1/5.
 
