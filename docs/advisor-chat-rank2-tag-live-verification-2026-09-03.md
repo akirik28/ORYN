@@ -95,3 +95,47 @@ design call than a follow-up pass should make unilaterally — flagging it rathe
 
 7 + 1 (prompt-text check, no model call) `claude-sonnet-5` calls, direct provider calls, roughly
 $0.15-0.25. Zero real student data.
+
+## Addendum — 2026-09-03, oryn-80's independent corroboration
+
+05 flagged this for the harness owner's own read rather than asserting their hypothesis as
+final. Verified independently rather than accepted: fresh worktree at 05's exact commit
+(`dfe05642`, not a description), full gate re-run myself (typecheck/lint clean, 83/83 in the
+touched file, full suite 384/5,852 green — matches 05's own numbers exactly), the rendered
+prompt printed independently before trusting any output (identical to 05's own printed
+snippet — Awards `— weakest`, Entrepreneurship `— second-weakest`, Career Exploration
+untagged), then 5 more real `claude-sonnet-5` reads, same fixture and question, run fresh from
+a different session.
+
+**Result: corroborates 05's rate almost exactly.** Of 5 fresh reads, 1 correctly used the
+tag verbatim on the right dimension (*"I'd leave Entrepreneurship alone for now too — it's
+your second-weakest dimension"*) and 4 reproduced the original error — either an explicit
+"two weakest" claim naming Career Exploration, or an explicit *"Career Exploration...
+your second-weakest area"* misstatement quoting the tag's own language onto the wrong
+dimension. Combined with 05's 7 reads (1/5 comparable-and-correct), two independent sessions
+now land at essentially the same ~1-in-5 to ~1-in-6 rate on this fixture.
+
+**A striking, specific replication, not just a similar rate.** One of these 5 fresh reads
+independently said *"Career Exploration — your fourth-weakest dimension"* — the exact same
+wrong ordinal (true rank: third) that 05's own read 4 produced, in a completely separate
+sample. Two independent runs landing on the identical specific mislabel is stronger evidence
+this is a real, reproducible failure mode of the untagged positions specifically (the model
+sometimes invents a plausible-sounding ordinal for a dimension it has no tag for, and gets it
+wrong in a consistent direction) rather than arbitrary noise.
+
+**Harness owner's verdict, as asked for directly:** confirmed, not merely plausible — the
+rank-2 tag is a real, correct, safe, measurably-partial improvement that does not close the
+symptom it was built to close, at a rate corroborated by two independent sessions rather than
+one party's own self-check. 05's instinct not to force compliance with a stronger instruction
+was right, for the same reason 05 gave: a ~1-in-5 miss rate against an already-explicit,
+correctly-placed tag doesn't look like a phrasing gap. On the bigger structural option 05
+named (a deterministic, pre-composed "your two/three weakest are X, Y[, Z]" line the model
+quotes rather than reasons about): worth trying, and the most direct answer to the exact
+question shape that keeps failing — but it's a real scope jump (this is the third pass on one
+rendering function tonight), and it deserves the same measure-before-build discipline as
+everything else in this chain, not a build on my own say-so. Recommending it as the likely
+next step, not building it — that decision belongs to oryn-45.
+
+**Spend:** 5 more real `claude-sonnet-5` calls (direct provider, not `ai_usage`-logged, same
+declared pattern as every comparison call tonight), roughly $0.10-0.15. Zero real student
+data.
