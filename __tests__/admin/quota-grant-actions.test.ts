@@ -105,6 +105,13 @@ describe("grantQuota", () => {
     expect(result.error).toBeDefined();
     expect(revalidatePath).not.toHaveBeenCalled();
   });
+
+  test("migration 0096 unapplied: a specific 'not set up' message, not the generic save failure", async () => {
+    insertMock.mockResolvedValueOnce({ error: { code: "PGRST205", message: `Could not find the table 'public.quota_grants' in the schema cache` } });
+    const result = await grantQuota(STUDENT_ID, 1);
+    expect(result.error).toContain("0096");
+    expect(result.error).not.toBe("Couldn't save that grant. Please try again.");
+  });
 });
 
 describe("resetQuotaThisMonth — grants exactly the remaining effective spend", () => {
@@ -165,6 +172,16 @@ describe("resetQuotaThisMonth — grants exactly the remaining effective spend",
     const result = await resetQuotaThisMonth("not-a-uuid");
     expect(result.error).toBeDefined();
     expect(insertMock).not.toHaveBeenCalled();
+  });
+
+  test("migration 0096 unapplied: a specific 'not set up' message, not the generic reset failure", async () => {
+    aiUsageRef.current = { data: [{ estimated_cost: 0.8 }], error: null };
+    insertMock.mockResolvedValueOnce({ error: { code: "PGRST205", message: `Could not find the table 'public.quota_grants' in the schema cache` } });
+
+    const result = await resetQuotaThisMonth(STUDENT_ID);
+
+    expect(result.error).toContain("0096");
+    expect(result.error).not.toBe("Couldn't reset that student's month. Please try again.");
   });
 
   test("an ai_usage read failure returns an error rather than granting a wrong or zero amount", async () => {

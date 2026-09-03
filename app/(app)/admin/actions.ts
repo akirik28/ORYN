@@ -500,6 +500,9 @@ export async function markFeatureDead(featureKey: string, note?: string): Promis
     note: note?.trim().slice(0, 500) || null,
   });
   if (error) {
+    if (isUndefinedTableError(error, "admin_dead_feature_flags")) {
+      return { error: "Dead-feature flags aren't set up in the database yet — migration 0101 needs to be applied first." };
+    }
     console.error("[admin] failed to mark feature dead", { featureKey, code: error.code, message: error.message });
     return { error: "Couldn't save that. Please try again." };
   }
@@ -525,6 +528,9 @@ export async function setJobBudgetOverride(feature: JobBudgetFeature, budgetUsd:
   const admin = createAdminClient();
   const { error } = await admin.from("job_budget_overrides").upsert({ feature, budget_usd: budgetUsd, updated_by: adminProfile.id });
   if (error) {
+    if (isUndefinedTableError(error, "job_budget_overrides")) {
+      return { error: "Job budget overrides aren't set up in the database yet — migration 0099 needs to be applied first." };
+    }
     console.error("[admin] failed to set job budget override", { code: error.code, message: error.message });
     return { error: "Couldn't save that. Please try again." };
   }
@@ -815,6 +821,9 @@ export async function unmarkFeatureDead(featureKey: string): Promise<{ error?: s
   const admin = createAdminClient();
   const { error } = await admin.from("admin_dead_feature_flags").delete().eq("feature_key", featureKey);
   if (error) {
+    if (isUndefinedTableError(error, "admin_dead_feature_flags")) {
+      return { error: "Dead-feature flags aren't set up in the database yet — migration 0101 needs to be applied first." };
+    }
     console.error("[admin] failed to unmark feature dead", { featureKey, code: error.code, message: error.message });
     return { error: "Couldn't save that. Please try again." };
   }
@@ -833,6 +842,9 @@ export async function clearJobBudgetOverride(feature: JobBudgetFeature): Promise
   const admin = createAdminClient();
   const { error } = await admin.from("job_budget_overrides").delete().eq("feature", feature);
   if (error) {
+    if (isUndefinedTableError(error, "job_budget_overrides")) {
+      return { error: "Job budget overrides aren't set up in the database yet — migration 0099 needs to be applied first." };
+    }
     console.error("[admin] failed to clear job budget override", { code: error.code, message: error.message });
     return { error: "Couldn't clear that. Please try again." };
   }
@@ -861,6 +873,9 @@ export async function grantQuota(userId: string, amountUsd: number, reason?: str
     granted_by: adminProfile.id,
   });
   if (error) {
+    if (isUndefinedTableError(error, "quota_grants")) {
+      return { error: "Quota grants aren't set up in the database yet — migration 0096 needs to be applied first." };
+    }
     console.error("[admin] failed to grant quota", { code: error.code, message: error.message });
     return { error: "Couldn't save that grant. Please try again." };
   }
@@ -906,6 +921,9 @@ export async function resetQuotaThisMonth(userId: string): Promise<{ error?: str
     granted_by: adminProfile.id,
   });
   if (error) {
+    if (isUndefinedTableError(error, "quota_grants")) {
+      return { error: "Quota grants aren't set up in the database yet — migration 0096 needs to be applied first." };
+    }
     console.error("[admin] failed to reset quota", { code: error.code, message: error.message });
     return { error: "Couldn't reset that student's month. Please try again." };
   }
@@ -938,6 +956,9 @@ export async function setModelPricing(model: string, inputRatePerMillion: number
     updated_by: adminProfile.id,
   });
   if (error) {
+    if (isUndefinedTableError(error, "ai_model_pricing")) {
+      return { error: "Model pricing overrides aren't set up in the database yet — migration 0100 needs to be applied first." };
+    }
     console.error("[admin] failed to set model pricing", { code: error.code, message: error.message });
     return { error: "Couldn't save that. Please try again." };
   }
