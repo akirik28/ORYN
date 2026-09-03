@@ -19,6 +19,7 @@ import { integrationStatus } from "@/lib/env";
 import { toProfileSignal } from "@/lib/scoring/signal";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { DEV_TIER_PREVIEW_COOKIE, isDevTierPreviewAllowed, resolveDevTierPreviewOverride } from "@/lib/tier/dev-preview";
+import { getAccountRole } from "@/lib/auth/account-role";
 
 // Every route under this layout is per-user and auth-gated — never a candidate for
 // static prerendering. Also sidesteps a real build failure: without this, `next build`
@@ -47,6 +48,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const profile = await requireProfile();
   const session = await verifySession();
+
+  // Parent-account routing (P2, docs/veli-hesabi-spec-2026-09-04.md). Checked before the
+  // onboarding/age-gate redirects below on purpose -- a parent account never goes through
+  // student onboarding, so routing it there first would be wrong even transiently. This is
+  // routing convenience only, not the access boundary: a parent role landing here gets
+  // sent to their own surface, but nothing about this check is what stops a parent from
+  // reading or writing student data -- that's 44's RLS, enforced at the database regardless
+  // of which layout a request happened to render through. See lib/auth/account-role.ts's
+  // own header for why a missing account_role column reads as "student", not as an error.
+  const accountRole = await getAccountRole(session.userId!);
+  if (accountRole === "parent") {
+    redirect("/parent");
+  }
 
   if (!profile.onboarding_completed) {
     redirect("/onboarding");
