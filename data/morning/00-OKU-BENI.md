@@ -86,9 +86,14 @@ Bir sayıyı ayrıca söylemem gerek, çünkü tablodaki "son tarih yok" sütunu
 **282 aktif fırsatın sadece 37'sinin son tarihi gelecekte.** Kalan 245'in ya hiç tarihi yok
 ya da tarihi geçmiş. Yani panonun "yaklaşan son tarihler" bölümü, haftalık plandaki aciliyet
 sıralaması ve eşleştirmedeki aciliyet katsayısı — üçü de katalogun **%13'ünden** besleniyor.
-Bu gece bir şerit tam olarak bunu ölçüyor: hangileri gerçekten tarihsiz (sürekli açık,
-dönem açıklanmamış), hangilerinin tarihi kaynak sayfasında duruyor ama bize hiç geçmemiş.
-İkisi ayrı sorun ve sadece birincisi araştırmayla kapanır.
+Ölçüldü, ve cevap "araştırıp doldururuz" değil: 61 sayfa elle okundu. Küçük bir grupta
+tarih gerçekten sayfada duruyor, doldurulmayı bekliyor. Küçük bir grup açıkça ve doğru
+olarak tarihsiz ("yıl boyu başvuru alınır", ya da programın kendi deyimiyle "tarih henüz
+belli değil"). **En büyük grup ise tek bir sayfa okumasıyla anlaşılamıyor** — okunabilir
+sayfaların %38'inde ne bir tarih ne de "son başvuru" gibi bir kelime geçiyor.
+
+Yani bu boşluğun büyük kısmı araştırma eksikliği değil; kaynağın kendisi söylemiyor.
+Ayrıntı: `docs/opportunity-deadline-coverage-measurement-2026-09-03.md`.
 
 Paket **190** kaydın kurum adını dolduruyor (hepsi hâlâ boş, tek tek doğrulandı). Toplamda
 197 boş var. O 7 farkın ne olduğuna baktım ve beklediğim şey çıkmadı: **7'sinin de kurum
