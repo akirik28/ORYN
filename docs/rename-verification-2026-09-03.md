@@ -17,12 +17,22 @@ own go-ahead status banner was stamped on).
 question. `oryn_global_id`, `oryn_public`, the three `ORYN_ENABLE_*` constants,
 `ORYN-PRG-`, the fleet's own `oryn-XX`/`ORYN-CEO` style codenames: exact-string line
 counts captured on `main` before any lane landed, re-checked against each lane's diff.
-A count that moves at all is a finding — these aren't down-weighted by authorization,
-per oryn-45: "No amount of founder authorization makes those safe." Kept as a scratch
-shell helper (not part of this commit — a one-off checker doesn't belong beside the
-repo's TypeScript acquisition scripts), reproducible from the raw commands under
-"Baseline capture" below: for each forbidden string, `git grep -Fc '<string>' <ref> --
-.` on `main` vs. the lane branch; any line whose count differs is a finding.
+Kept as a scratch shell helper (not part of this commit — a one-off checker doesn't
+belong beside the repo's TypeScript acquisition scripts), reproducible from the raw
+commands under "Baseline capture" below: for each forbidden string, `git grep -Fc
+'<string>' <ref> -- .` on `main` vs. the lane branch.
+
+**Correction after Lane 5**: a raw count delta is a *lead*, not a verdict — it isn't
+down-weighted by authorization (per oryn-45: "No amount of founder authorization makes
+those safe"), but it also isn't self-interpreting once any file discusses the rename in
+prose. Lane 5's merge moved every forbidden-string count by 1-5, which first read as a
+wall of violations; every single one turned out to be this report's own methodology
+section naming the strings, plus Lane 5's own Turkish SQL comments explaining *why*
+`oryn_global_id`/`oryn_public`/`ORYN-PRG-` were correctly left alone (confirmed by
+reading each hit's actual line — every occurrence is on a `--` comment line, zero on an
+executable `ALTER`/`RENAME` statement). The check from here on is: read what each
+delta's line actually says before recording it as a finding, not just whether the count
+moved.
 
 **2. Collision survival** — `storyNotes`/`storyNotesCount`/`hasStoryNotes` (contain
 "oryN") and `categoryNavAriaLabel` (contains "goryN") are a closed set per the
@@ -99,8 +109,34 @@ Not yet pushed.
 ### Lane a4 — internals + disclosure files
 Not yet pushed.
 
-### Lane 05 — database SQL
-Not yet pushed.
+### Lane 05 — database SQL — merged `e03becc4` — CLEAN
+
+Two new files: `data/morning/08-isim-degisikligi-veri-2026-09-03.sql` (the staged
+`replace()` backfill, idempotent by construction) and a founder-facing brief,
+`data/morning/08-OKU-BENI-isim-degisikligi.md`. No code file touched.
+
+- **Forbidden-touch**: every one of the 7 pattern counts that moved (oryn_global_id,
+  oryn_public, ORYN-PRG-, oryn-45, oryn-d0, oryn-a7, oryn-d5, ORYN-CEO) resolved to
+  either this report's own prose or a SQL `--` comment. Read every changed line by hand
+  rather than trusting the count: `oryn_global_id` and `oryn_public` each appear twice
+  in the SQL, both times in comments stating the file does *not* touch them ("bu
+  dosyanın işi değil" / "bu dosyanın kapsamı dışında" — not this file's job / outside
+  this file's scope). No `ALTER TABLE`, `ALTER TYPE`, or `RENAME` statement anywhere in
+  the file.
+- **Collision survival**: unaffected — neither `story-bank.tsx` nor
+  `opportunity-filter-bar.tsx` nor either message catalog appears in this diff, so the
+  four collision identifiers were structurally not at risk from this lane.
+- **Scope**: matches its own commit message — six tables of AI-generated student-facing
+  text (112 `student_requirement_evaluations.reasoning` rows plus weekly_actions,
+  weekly_plans, notifications, ai_recommendations, opportunities.description), staged
+  as idempotent `replace()`, both casings handled, the ~750 provenance/audit rows and
+  the `oryn_global_id`/`oryn_public`/`ORYN-PRG-NNNN` identifiers explicitly excluded.
+  Consistent with Bucket 3/4 of the inventory.
+- **Side note, not this lane's doing**: the founder-brief doc records that oryn-45
+  independently closed the open "is there a separate production Supabase project"
+  question from the inventory's Bucket 4 (checked all three projects on the account;
+  only `oryn-qa-scratch` is this product). Worth knowing for the final reconciliation —
+  the database-layer scope is fully accounted for, not partially unknown.
 
 ## Whole-tree reconciliation (after all lanes land)
 
