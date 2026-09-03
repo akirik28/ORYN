@@ -356,21 +356,30 @@ describe("migration numbering", () => {
     // queries.ts) -- the schema split stays real underneath, a founder reading "recent
     // activity" never has to know it exists. Still unapplied.
     //
-    // Ceiling is 100, not 98: 0098 and 0100 were written by two lanes in parallel and
-    // merged together, and this guard pins the true maximum on disk rather than the highest
-    // number any one branch knew about.
+    // Ceiling was 100, not 98, before this branch's own addition below: 0098 and 0100 were
+    // written by two lanes in parallel and merged together, and this guard pins the true
+    // maximum on disk rather than the highest number any one branch knew about.
     //
-    // 0101 remained claimed-but-unpushed as of this pass (checked every remote branch, not
-    // just main, same discipline as every entry above) -- skipped rather than waited on, the
-    // same call this file's own 0096-0100 stretch already made once tonight. 0102
-    // (weekly_plan_budget_settings) is the aggregate spend ceiling for generate-weekly-plans
-    // -- the prerequisite oryn-a7 and oryn-f5 agreed must exist before that job can be armed
-    // on a schedule; see that migration's own header and
-    // docs/weekly-plan-aggregate-budget-2026-09-02.md for the full reasoning. An earlier
-    // version of this paragraph (written against an older snapshot of main, before 0096/
-    // 0098/0099/0100 had actually landed) claimed nothing above 0099 existed anywhere real --
-    // superseded by the ceiling-100 narrative directly above once the rebase caught up,
-    // corrected here rather than left standing as two conflicting counts of the same thing.
+    // admin_dead_feature_flags (record + display only for the growth panel's feature census,
+    // docs/admin-panel-architecture-2026-09-02.md's own D8 read/act boundary — RLS enabled,
+    // zero policies, same posture as provider_health/external_sync_jobs, migration 0014,
+    // since this is operational decision data, not a student's own data) first claimed 0094,
+    // colliding with admin_finance_settings above -- both lanes read main's own max (93) as
+    // the next free number, which is a lower bound on what's claimed, not the claim itself:
+    // 0094-0100 were all separately taken on other unmerged branches by the time this
+    // rebased (0098 admin_actions, 0099 job_budget_overrides, 0100 ai_model_pricing) -- same
+    // lesson oryn-f5 already applied claiming 0100. Renumbered to 0101, the actual next-free
+    // number checked against every remote branch, not just main, at rebase time. Only this
+    // branch's own migration is present in THIS worktree, so the max on disk here is 101,
+    // not 94-100 (those files live on other branches, not this one) -- if a future session
+    // finds this assertion failing against a lower actual max, that's this branch merging
+    // behind others that claimed 94-100, not a bug in this test.
+    //
+    // 0102 (weekly_plan_budget_settings) landed on main while this branch was held by a
+    // session-level permission gate on git push, so the ceiling is 102 rather than this
+    // branch's own 101. Neither number was wrong when written -- which is the whole reason
+    // this guard pins the maximum actually on disk instead of the highest number any one
+    // branch knew about.
     expect(Math.max(...numbers.map(Number))).toBe(102);
   });
 });

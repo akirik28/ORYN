@@ -233,6 +233,13 @@ describe("ICU plural counts that bypass formatNumber are deliberate", () => {
     // with `#`. It is not in the list because the merge rewrote it to interpolate {count}
     // instead — an entry that no longer applies is worse than no entry, since it reads as a
     // reviewed exemption for something that isn't exempt.
+    //
+    // How many distinct product_events.event_name strings appeared in the data but aren't
+    // in KNOWN_PRODUCT_EVENT_NAMES (lib/admin/queries.ts) — bounded by the number of
+    // distinct event-name categories that will ever exist, a small, human-curated set (13
+    // today), the same shape as the DIMENSION_ORDER-bounded entries above, not a row count
+    // that grows with the user base.
+    "admin.growth.featureCensus.unknownWarning",
   ];
 
   test("no un-reviewed `#` inside a plural block", () => {

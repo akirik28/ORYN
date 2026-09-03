@@ -1679,7 +1679,8 @@
       "spend": "Harcama",
       "system": "Sistem",
       "people": "Kullanıcılar",
-      "catalog": "Katalog"
+      "catalog": "Katalog",
+      "growth": "Büyüme"
     },
     "activityLog": {
       "sectionTitle": "Son işlemler",
@@ -1933,6 +1934,62 @@
       "overviewTitle": "Bugün neye bakman gerekiyor",
       "overviewDescription": "Her şeyi değil — sadece karar bekleyenleri.",
       "overviewPlaceholder": "Dikkat listesi ve özet kartlar buraya gelecek. Bu ekran bilerek kısa: diğer her alanın raydaki kendi yeri var, üst üste yığılmıyorlar."
+    },
+    "growth": {
+      "signups": {
+        "sectionTitle": "Kayıtlar",
+        "totalLabel": "Toplam {count} kayıt",
+        "chartTitle": "Güne göre kayıtlar",
+        "chartDescription": "Her çubuk bir UTC takvim günü — trend çizgisi yok, çünkü bir çizgi bu verinin göstermediği bir hızı ima eder.",
+        "seedCohortNotice": "Şimdiye kadarki tüm kayıtlar {firstDate} ile {lastDate} arasında, o tarihten beri hiç yeni kayıt yok ({daysSinceLast} gün önce) — bunu bir büyüme eğilimi değil, başlangıç grubu olarak okuyun."
+      },
+      "activation": {
+        "sectionTitle": "Aktivasyon",
+        "signedUp": "Kayıt oldu",
+        "completedOnboarding": "Katılımı tamamladı",
+        "reachedCvExtraction": "CV çıkarımına ulaştı",
+        "twoStageNotice": "Katılım süreci bugün beş ekran değil, iki gerçek kontrol noktasından oluşuyor — hiçbir şey ekran başına kaydedilmiyor, bu yüzden tamamlamayan bir öğrencinin hangi ekranda kaldığı izlenemiyor.",
+        "cvCaveat": "Yapay zekâ çıkarımının başarılı olduğunu ölçer, CV içe aktarmanın onaylandığını değil — gerçek kayıt daha sonra, katılım tamamlandığında gerçekleşir."
+      },
+      "featureCensus": {
+        "sectionTitle": "Özellik kullanımı",
+        "eventColumn": "Etkinlik",
+        "countColumn": "Sayı",
+        "categoryColumn": "Kategori",
+        "categoryProduct": "Ürün",
+        "categorySafetyNet": "Güvenlik ağı — sıfır olması doğru",
+        "markDead": "Ölü olarak işaretle",
+        "unmark": "İşareti kaldır",
+        "deadBadge": "Ölü olarak onaylandı",
+        "markedBy": "{time} işaretlendi",
+        "notePlaceholder": "Neden? (opsiyonel)",
+        "unknownWarning": "{count, plural, one {# etkinlik adı} other {# etkinlik adı}} veride görüldü ama bilinen listede yok — bu döküm yakın zamanda eklenmiş bir özelliği eksik gösteriyor olabilir.",
+        "saveError": "Kaydedilemedi. Lütfen tekrar deneyin."
+      },
+      "loopClosing": {
+        "sectionTitle": "Döngünün kapanması",
+        "fraction": "Önerilen aksiyonların {completed} / {total} tanesi tamamlandı",
+        "notEnoughData": "Tavsiyenin işe yarayıp yaramadığını söylemek için henüz yeterli tamamlanma geçmişi yok — bu bir oran değil, bir sayım.",
+        "planCount": "{count, plural, one {{formatted} haftalık plan} other {{formatted} haftalık plan}} üzerinden"
+      },
+      "retention": {
+        "sectionTitle": "Elde tutma",
+        "activeToday": "Bugün aktif",
+        "activeThisWeek": "Bu hafta aktif",
+        "stale": "Durgun (7+ gün)",
+        "neverSignedIn": "Hiç giriş yapmadı",
+        "notACohortNotice": "Bu, her öğrencinin en son ne zaman görüldüğüdür, bir geri dönüş geçmişi değil — gerçek kohort elde tutma oranı şu anda kaydedilen verilerden hesaplanamıyor."
+      },
+      "studentActions": {
+        "sectionTitle": "Öğrenci işlemleri",
+        "studentColumn": "Öğrenci",
+        "regeneratePlan": "Planı yeniden oluştur",
+        "regenerateConfirm": "Bu, {name} adlı öğrencinin bu haftaki planını, tamamlanmış olarak işaretlediği aksiyonlar dahil olmak üzere değiştirir. Devam edilsin mi?",
+        "resetOnboarding": "Katılımı sıfırla",
+        "resetOnboardingConfirm": "{name}, bir sonraki ziyaretinde katılım sihirbazını yeniden görecek. Daha önce girdiği hiçbir bilgi silinmez. Devam edilsin mi?",
+        "exportCohort": "Grubu dışa aktar (CSV)",
+        "actionError": "Yapılamadı. Lütfen tekrar deneyin."
+      }
     }
   },
   "saved": {

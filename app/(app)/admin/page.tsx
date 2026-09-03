@@ -22,6 +22,12 @@ import { ActivitySection } from "@/features/admin/sections/activity-section";
 import { AgeGateFlagsSection } from "@/features/admin/sections/age-gate-flags-section";
 import { AdminActivitySection } from "@/features/admin/sections/admin-activity-section";
 import { DescriptionCleanupSection } from "@/features/admin/sections/description-cleanup-section";
+import { GrowthSignupsSection } from "@/features/admin/sections/growth-signups-section";
+import { GrowthActivationSection } from "@/features/admin/sections/growth-activation-section";
+import { GrowthFeatureCensusSection } from "@/features/admin/sections/growth-feature-census-section";
+import { GrowthLoopClosingSection } from "@/features/admin/sections/growth-loop-closing-section";
+import { GrowthRetentionSection } from "@/features/admin/sections/growth-retention-section";
+import { GrowthStudentActionsSection } from "@/features/admin/sections/growth-student-actions-section";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("admin");
@@ -55,6 +61,7 @@ export default async function AdminPage() {
           <TabsTrigger value="system">{t("tabs.system")}</TabsTrigger>
           <TabsTrigger value="people">{t("tabs.people")}</TabsTrigger>
           <TabsTrigger value="catalog">{t("tabs.catalog")}</TabsTrigger>
+          <TabsTrigger value="growth">{t("tabs.growth")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="spend" className="space-y-10 pt-2">
@@ -117,6 +124,27 @@ export default async function AdminPage() {
           </Suspense>
           <Suspense fallback={<SectionSkeleton rows={3} />}>
             <DescriptionCleanupSection />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="growth" className="space-y-10 pt-2">
+          <Suspense fallback={<SectionSkeleton />}>
+            <GrowthSignupsSection />
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton />}>
+            <GrowthActivationSection />
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton rows={2} />}>
+            <GrowthLoopClosingSection />
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton />}>
+            <GrowthRetentionSection />
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton rows={4} />}>
+            <GrowthFeatureCensusSection />
+          </Suspense>
+          <Suspense fallback={<SectionSkeleton />}>
+            <GrowthStudentActionsSection />
           </Suspense>
         </TabsContent>
       </Tabs>

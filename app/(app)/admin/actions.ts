@@ -11,7 +11,7 @@ import { runWithTracking } from "@/lib/jobs/run-with-tracking";
 import { isJobDisabled, setJobDisabled } from "@/lib/jobs/job-controls";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { buildPostRemovalUpdate, buildPostRestoreUpdate, ModerationInputError } from "@/lib/social/posts-moderation";
-import { ADMIN_FINANCE_SETTINGS_ID, getAdminOpportunityList, type AdminOpportunityRow } from "@/lib/admin/queries";
+import { ADMIN_FINANCE_SETTINGS_ID, getAdminOpportunityList, type AdminOpportunityRow, KNOWN_PRODUCT_EVENT_NAMES } from "@/lib/admin/queries";
 import { isValidExchangeRate, isValidPrice } from "@/lib/admin/finance";
 import { isUndefinedTableError } from "@/lib/supabase/errors";
 import { WEEKLY_PLAN_BUDGET_SETTINGS_ID } from "@/lib/ai/limits/weekly-plan-budget";
@@ -20,7 +20,10 @@ import { logAdminAction } from "@/lib/admin/log";
 import { tavilyProvider } from "@/lib/providers/tavily";
 import { collegeScorecardProvider } from "@/lib/providers/college-scorecard";
 import { openAlexProvider } from "@/lib/providers/openalex";
-import { getAIProvider, isAIConfigured } from "@/lib/ai";
+import { getAIProvider, isAIConfigured, AIProviderNotConfiguredError } from "@/lib/ai";
+import { getOrCreateWeeklyPlan } from "@/lib/plan/persist";
+import { RateLimitExceededError } from "@/lib/ai/rate-limit";
+import { aiServiceFailureMessage } from "@/lib/ai/service-failure";
 import { JOB_BUDGET_USD, type JobBudgetFeature } from "@/lib/ai/limits/job-budget";
 import { getMonthlyGrantsUsd } from "@/lib/ai/limits/grants";
 import { CONTAMINATION_CLEANUP_2026_09_02 } from "@/lib/opportunities/contamination-cleanup-2026-09-02";
@@ -377,6 +380,99 @@ export async function updateFinanceSettings(input: { usdTryRate?: number; ultraP
   return {};
 }
 
+// ---------------------------------------------------------------------------------------------
+// Growth tab actions (docs/admin-growth-panel-2026-09-02.md)
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Regenerates one student's current-week plan on an admin's behalf — the support-path
+ * version of the student's own `regenerateWeeklyPlan` (app/(app)/plan/actions.ts), for a
+ * student who can't reach or use their own button. Same `force: true` call the student's
+ * button makes — lib/plan/generate-for-active-students.ts's own comment confirms that flag
+ * is meant to stay reserved for a deliberate, manual trigger like this one, never an
+ * automated path. **Real consequence, not just a retry**: force:true replaces the student's
+ * current-week plan and its actions, including any already marked completed — the section
+ * this ships in must warn about that before the button is clickable, not just here.
+ *
+ * MUST thread the admin client through explicitly. getOrCreateWeeklyPlan's own doc comment
+ * documents a confirmed-live bug: called with the default session-scoped client from a
+ * context with no student session (exactly what an admin action is), the AI call still
+ * fires and gets billed, then the save fails RLS silently — real money, nothing persisted,
+ * every time. `admin` below is what avoids that, not an optional hardening.
+ */
+export async function regenerateStudentWeeklyPlan(userId: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  if (!isUuidLike(userId)) return { error: "Invalid student." };
+
+  const admin = createAdminClient();
+  try {
+    await getOrCreateWeeklyPlan(userId, { force: true, supabaseClient: admin });
+  } catch (error) {
+    if (error instanceof RateLimitExceededError) return { error: error.message };
+    if (error instanceof AIProviderNotConfiguredError) {
+      return { error: "The AI Advisor isn't configured yet, so weekly plans can't be generated. See API_SETUP.md." };
+    }
+    console.error("[admin] failed to regenerate student weekly plan", { userId, error });
+    const serviceMessage = aiServiceFailureMessage(error, "The plan generator");
+    if (serviceMessage) return { error: serviceMessage };
+    return { error: "Something went wrong generating that plan. Please try again." };
+  }
+
+  revalidatePath("/admin");
+  return {};
+}
+
+/**
+ * The honest, smaller action in place of a literal "re-run onboarding" (which doesn't
+ * exist — no server path can re-submit a student's own answers for them,
+ * docs/admin-growth-panel-2026-09-02.md's own finding). This only clears the completed
+ * flag so the *student* can walk the wizard again themselves; it does not touch any field
+ * onboarding previously wrote (country, interests, CV-imported items, etc.) — a student
+ * redoing onboarding sees the wizard, not a blank profile.
+ */
+export async function resetStudentOnboarding(userId: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  if (!isUuidLike(userId)) return { error: "Invalid student." };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("profiles").update({ onboarding_completed: false }).eq("id", userId);
+  if (error) {
+    console.error("[admin] failed to reset onboarding", { userId, code: error.code, message: error.message });
+    return { error: "Couldn't reset that. Please try again." };
+  }
+
+  revalidatePath("/admin");
+  return {};
+}
+
+/**
+ * Record + display only (docs/admin-panel-architecture-2026-09-02.md D8) — marking a
+ * feature here changes nothing about whether its code path runs; it's a dated, attributed
+ * decision a human reads before building on top of that feature again. `featureKey` is
+ * restricted to KNOWN_PRODUCT_EVENT_NAMES (lib/admin/queries.ts) rather than accepting
+ * arbitrary text from the client, since this table has no other validation on that column.
+ */
+export async function markFeatureDead(featureKey: string, note?: string): Promise<{ error?: string }> {
+  const adminProfile = await requireAdmin();
+  const knownNames: readonly string[] = KNOWN_PRODUCT_EVENT_NAMES;
+  if (!knownNames.includes(featureKey)) return { error: "Unknown feature." };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("admin_dead_feature_flags").upsert({
+    feature_key: featureKey,
+    marked_by: adminProfile.id,
+    marked_at: new Date().toISOString(),
+    note: note?.trim().slice(0, 500) || null,
+  });
+  if (error) {
+    console.error("[admin] failed to mark feature dead", { featureKey, code: error.code, message: error.message });
+    return { error: "Couldn't save that. Please try again." };
+  }
+
+  revalidatePath("/admin");
+  return {};
+}
+
 const JOB_BUDGET_FEATURES: readonly JobBudgetFeature[] = Object.keys(JOB_BUDGET_USD) as JobBudgetFeature[];
 
 /**
@@ -589,6 +685,19 @@ export async function searchAdminOpportunities(q?: string): Promise<{ rows: Admi
     console.error("[admin] opportunity search failed", { q, error });
     return { rows: [], error: "Couldn't search opportunities. Please try again." };
   }
+}
+
+export async function unmarkFeatureDead(featureKey: string): Promise<{ error?: string }> {
+  await requireAdmin();
+  const admin = createAdminClient();
+  const { error } = await admin.from("admin_dead_feature_flags").delete().eq("feature_key", featureKey);
+  if (error) {
+    console.error("[admin] failed to unmark feature dead", { featureKey, code: error.code, message: error.message });
+    return { error: "Couldn't save that. Please try again." };
+  }
+
+  revalidatePath("/admin");
+  return {};
 }
 
 /** Deletes the override row so the job falls back to JOB_BUDGET_USD's own default —

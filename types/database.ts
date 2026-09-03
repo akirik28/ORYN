@@ -2040,6 +2040,16 @@ export interface DeadlineNotificationLog {
 }
 export type DeadlineNotificationLogInsert = Insertable<DeadlineNotificationLog, "id" | "notified_at">;
 
+/** Admin-recorded "confirmed dead" flag for a product feature (migration 0101) — record +
+ * display only, never a runtime gate. See docs/admin-panel-architecture-2026-09-02.md D8. */
+export interface AdminDeadFeatureFlag {
+  feature_key: string;
+  marked_by: string | null;
+  marked_at: string;
+  note: string | null;
+}
+export type AdminDeadFeatureFlagInsert = Insertable<AdminDeadFeatureFlag, "marked_at">;
+
 /** 'university' (universities.last_changed_at, a core fact differed) | 'requirement'
  * (university_requirements.created_at, a brand-new row appeared) | 'deadline'
  * (university_deadlines.created_at, a brand-new deadline row appeared -- NOT an existing
@@ -2222,6 +2232,7 @@ export interface Database {
       deadline_notification_log: Table<DeadlineNotificationLog, DeadlineNotificationLogInsert, never>;
       university_notification_log: Table<UniversityNotificationLog, UniversityNotificationLogInsert, never>;
       admin_action_log: Table<AdminActionLog, AdminActionLogInsert, never>;
+      admin_dead_feature_flags: Table<AdminDeadFeatureFlag, AdminDeadFeatureFlagInsert, never>;
     };
   };
 }
