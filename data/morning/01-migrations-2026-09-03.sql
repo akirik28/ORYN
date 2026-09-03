@@ -1,9 +1,9 @@
 -- ORYN — sabah paketi 1/2: uygulanmamış migration'lar
--- Yeniden oluşturuldu: 2026-09-03 05:10. Kapsam canlıya (qtcvcflzxbuagvvwahhu) okuma
--- yaparak belirlendi — her migration'ın kendi tablosu information_schema'da tek tek
+-- Yeniden oluşturuldu: 2026-09-03 06:00. Kapsam canlıya (qtcvcflzxbuagvvwahhu) okuma
+-- yaparak belirlendi — her migration'ın kendi tablosu/sütunu information_schema'da tek tek
 -- arandı, migration listesine güvenilmedi (bu projede o liste güvenilmez).
 --
--- 0083-0089, 0091 ve 0092 UYGULANMIŞ. Aşağıdaki 12 tanesi uygulanmamış. 0090 ve 0093 bu
+-- 0083-0089, 0091 ve 0092 UYGULANMIŞ. Aşağıdaki 13 tanesi uygulanmamış. 0090 ve 0093 bu
 -- geceden değil, gözden kaçmışlar; kalanı gece boyunca yazıldı.
 --
 -- TEK İŞLEM: hepsi BEGIN/COMMIT arasında. Biri patlarsa HİÇBİRİ uygulanmaz ve dosyayı
@@ -11,17 +11,18 @@
 -- yarısı uygulanmış bir durumda ikinci deneme patlardı. Postgres'te DDL geri alınabilir;
 -- hiçbirinde kendi BEGIN/COMMIT'i ya da CONCURRENTLY yok (kontrol edildi).
 --
--- 0103 yeni bir işi kurar ama ONU ÇALIŞTIRMAZ: yeniden doğrulama işi zamanlayıcısı kapalı
--- ve kayıt düşürme kapalı geliyor. Tablo ve sütun oluşur, kendiliğinden hiçbir şey olmaz.
+-- 0103 yeni bir işi KURAR ama ÇALIŞTIRMAZ: zamanlayıcı kapalı, kayıt düşürme kapalı.
+-- 0104 paneldeki "1 hafta Ultra hediye et" düğmesinin dayandığı sütun — o olmadan düğme
+-- görünür ama iş görmez.
 --
--- NASIL: Supabase SQL Editor'e tamamını yapıştır, Run. Sonundaki doğrulamada 12 satır da
+-- NASIL: Supabase SQL Editor'e tamamını yapıştır, Run. Sonundaki doğrulamada 13 satır da
 -- "uygulanmis = true" dönmeli.
 
 BEGIN;
 
 
 -- ══════════════════════════════════════════════════════════════════
--- 0090_notification_preferences.sql
+-- MIGRATION 0090_notification_preferences.sql
 -- ══════════════════════════════════════════════════════════════════
 
 -- Phase 24 gap, found live: nothing anywhere let a student turn a notification category off.
@@ -100,7 +101,7 @@ comment on column public.profiles.notify_message is
 
 
 -- ══════════════════════════════════════════════════════════════════
--- 0093_upgrade_prompt_dismissal.sql
+-- MIGRATION 0093_upgrade_prompt_dismissal.sql
 -- ══════════════════════════════════════════════════════════════════
 
 -- Upgrade-prompt dismissal state (Phase 24-adjacent, but this is a prompt a student
@@ -171,7 +172,7 @@ comment on column public.profiles.upgrade_prompt_dismissed_forever is
 
 
 -- ══════════════════════════════════════════════════════════════════
--- 0094_admin_finance_settings.sql
+-- MIGRATION 0094_admin_finance_settings.sql
 -- ══════════════════════════════════════════════════════════════════
 
 -- Admin finance dashboard's editable settings (CEO's course correction, 2026-09-02: the
@@ -244,7 +245,7 @@ comment on column public.admin_finance_settings.updated_by is
 
 
 -- ══════════════════════════════════════════════════════════════════
--- 0095_job_controls.sql
+-- MIGRATION 0095_job_controls.sql
 -- ══════════════════════════════════════════════════════════════════
 
 -- Per-job "disable future runs" flag for the admin panel's operational-health section
@@ -288,7 +289,7 @@ comment on table public.job_controls is
 
 
 -- ══════════════════════════════════════════════════════════════════
--- 0096_quota_grants.sql
+-- MIGRATION 0096_quota_grants.sql
 -- ══════════════════════════════════════════════════════════════════
 
 -- Append-only admin top-up/reset ledger for a student's shared monthly AI allowance
@@ -330,7 +331,7 @@ create policy "select own quota grants" on public.quota_grants for select using 
 
 
 -- ══════════════════════════════════════════════════════════════════
--- 0097_admin_action_log.sql
+-- MIGRATION 0097_admin_action_log.sql
 -- ══════════════════════════════════════════════════════════════════
 
 -- Admin action log (2026-09-02): the shared "log it" infrastructure oryn-a7 asked to hold
@@ -392,7 +393,7 @@ alter table public.admin_action_log enable row level security;
 
 
 -- ══════════════════════════════════════════════════════════════════
--- 0098_admin_actions.sql
+-- MIGRATION 0098_admin_actions.sql
 -- ══════════════════════════════════════════════════════════════════
 
 -- The admin panel's course correction, 2026-09-02: founder wants a control panel, not a report
@@ -446,7 +447,7 @@ create policy "admins can read admin_actions" on public.admin_actions
 
 
 -- ══════════════════════════════════════════════════════════════════
--- 0099_job_budget_overrides.sql
+-- MIGRATION 0099_job_budget_overrides.sql
 -- ══════════════════════════════════════════════════════════════════
 
 -- Live-adjustable per-feature job budgets (lib/ai/limits/job-budget.ts), admin-only.
@@ -480,7 +481,7 @@ alter table public.job_budget_overrides enable row level security;
 
 
 -- ══════════════════════════════════════════════════════════════════
--- 0100_ai_model_pricing.sql
+-- MIGRATION 0100_ai_model_pricing.sql
 -- ══════════════════════════════════════════════════════════════════
 
 -- Live-adjustable per-token model pricing (lib/ai/pricing.ts), admin-only.
@@ -513,7 +514,7 @@ alter table public.ai_model_pricing enable row level security;
 
 
 -- ══════════════════════════════════════════════════════════════════
--- 0101_admin_dead_feature_flags.sql
+-- MIGRATION 0101_admin_dead_feature_flags.sql
 -- ══════════════════════════════════════════════════════════════════
 
 -- Admin-recorded "confirmed dead" flags for product features (growth panel, 2026-09-02).
@@ -543,7 +544,7 @@ alter table public.admin_dead_feature_flags enable row level security;
 
 
 -- ══════════════════════════════════════════════════════════════════
--- 0102_weekly_plan_budget_settings.sql
+-- MIGRATION 0102_weekly_plan_budget_settings.sql
 -- ══════════════════════════════════════════════════════════════════
 
 -- The aggregate spend ceiling for generate-weekly-plans (Job D), the prerequisite oryn-a7
@@ -613,7 +614,7 @@ comment on column public.weekly_plan_budget_settings.updated_by is
 
 
 -- ══════════════════════════════════════════════════════════════════
--- 0103_opportunity_verification_runs.sql
+-- MIGRATION 0103_opportunity_verification_runs.sql
 -- ══════════════════════════════════════════════════════════════════
 
 -- source_verified_at + opportunity_verification_runs -- the field docs/opportunity-
@@ -762,17 +763,53 @@ comment on view public.opportunity_verification_latest is
 alter table public.opportunity_verification_runs enable row level security;
 
 
+-- ══════════════════════════════════════════════════════════════════
+-- MIGRATION 0104_ultra_gift.sql
+-- ══════════════════════════════════════════════════════════════════
+
+-- The founder's own named prototype item: one button on a student's admin row that grants
+-- seven days of Ultra. A single nullable timestamp, not a boolean -- it has to answer two
+-- different questions over the student's lifetime, not one:
+--
+--   1. "Has this student ever received the gift?" (once per person, forever -- checked by
+--      is-non-null, never cleared, even once the seven days have passed. A boolean reset to
+--      false after expiry would let a second grant through, which is exactly the "silent
+--      pricing leak" the founder's own framing warned against from the other direction.)
+--   2. "Is the gift still active right now?" (granted_at + 7 days > now -- computed at read
+--      time in lib/tier/plan-tier.ts's resolvePlanTier, the one place every Ultra-aware
+--      surface already goes through; see that file's own comment for why storing an
+--      explicit ultra_gift_expires_at column would be redundant rather than clearer, and
+--      for why nothing here is a scheduled job.)
+--
+-- No granted_by column, matching profiles.plan_tier's own convention (migration 0089 /
+-- setUserPlanTier): who did it lives in admin_action_log via logAdminAction, not duplicated
+-- as a column on the target row.
+--
+-- Enforced once-per-person at the application layer (grantUltraGift, app/(app)/admin/
+-- actions.ts) via read-then-check-then-write, the same pattern setUserPlanTier already uses
+-- for its own no-op case -- not a DB constraint, because the invariant being protected is
+-- "don't overwrite a non-null value," which a CHECK constraint can't express on its own; a
+-- unique constraint doesn't fit either, since every granted row's value is a distinct
+-- timestamp, not a shared flag.
+alter table public.profiles add column ultra_gift_granted_at timestamptz;
+
+
 COMMIT;
 
--- ── DOĞRULAMA — ayrıca çalıştır, 12 satır da true olmalı ─────────────
-select t.beklenen, (
-  select count(*) from information_schema.tables it
+-- ── DOĞRULAMA — ayrıca çalıştır, 13 satır da true olmalı ─────────────
+select t.beklenen, coalesce((
+  select count(*) > 0 from information_schema.tables it
   where it.table_schema = 'public' and it.table_name = t.beklenen
-) > 0 as uygulanmis
+), false) as uygulanmis
 from (values
   ('notification_preferences'), ('upgrade_prompt_dismissals'), ('admin_finance_settings'),
   ('job_controls'), ('quota_grants'), ('admin_action_log'), ('admin_actions'),
   ('job_budget_overrides'), ('ai_model_pricing'), ('admin_dead_feature_flags'),
   ('weekly_plan_budget_settings'), ('opportunity_verification_runs')
 ) as t(beklenen)
+union all
+select 'profiles.ultra_gift_granted_at (0104)', exists(
+  select 1 from information_schema.columns
+  where table_schema = 'public' and table_name = 'profiles' and column_name = 'ultra_gift_granted_at'
+)
 order by uygulanmis, beklenen;
