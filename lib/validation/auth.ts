@@ -10,6 +10,21 @@ export const SignUpSchema = z.object({
     .regex(/[a-zA-Z]/, { error: "Include at least one letter." })
     .regex(/[0-9]/, { error: "Include at least one number." }),
   /**
+   * Optional (docs/veli-hesabi-spec-2026-09-04.md G12): a student who leaves this blank is
+   * unaffected — nothing downstream requires it. Two absent-ish shapes need normalizing to
+   * `undefined` before the `email()` check ever runs, not one: `formData.get("parentEmail")`
+   * on a FormData that never had the field set at all returns `null` (not `undefined`) — the
+   * exact shape __tests__/auth/signup-gate.test.ts's own formData() helper produces, since it
+   * predates this field — and an untouched-but-present optional text input submits `""`.
+   * `.optional()` alone only ever widens to accept `undefined`, not `null`, so the first cut
+   * of this (checking only for `""`) rejected a plain missing field as an invalid email and
+   * failed the whole signup — caught by that exact pre-existing test, not read in review.
+   */
+  parentEmail: z.preprocess(
+    (value) => (value === null || (typeof value === "string" && value.trim() === "") ? undefined : value),
+    z.email({ error: "Enter a valid email address." }).trim().optional()
+  ),
+  /**
    * Acceptance of the Terms of Use and Privacy Notice, checked on the server rather than
    * trusted from the browser — an unchecked box that still creates an account would make
    * the consent surface decorative, and a record of consent that can be bypassed is worth

@@ -18,6 +18,8 @@ import { env } from "@/lib/env";
 import { isSafeRedirectTarget } from "@/lib/security/safe-redirect";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { getLegalCopy, LEGAL_REVIEW_STATUS } from "@/lib/legal/content";
+import { setParentInviteEmail } from "@/lib/parent/links";
+import { logEvent } from "@/lib/analytics/log";
 
 async function getOrigin() {
   const originHeader = (await headers()).get("origin");
@@ -38,6 +40,7 @@ export async function signUp(_prevState: AuthFormState, formData: FormData): Pro
     displayName: formData.get("displayName"),
     email: formData.get("email"),
     password: formData.get("password"),
+    parentEmail: formData.get("parentEmail"),
     acceptedTerms: formData.get("acceptedTerms"),
   });
 
@@ -70,7 +73,7 @@ export async function signUp(_prevState: AuthFormState, formData: FormData): Pro
 
   const supabase = await createClient();
   const origin = await getOrigin();
-  const { displayName, email, password } = parsed.data;
+  const { displayName, email, password, parentEmail } = parsed.data;
 
   /**
    * A record of *what* was accepted and *when*, not just that a box was ticked. Stored on
@@ -101,6 +104,31 @@ export async function signUp(_prevState: AuthFormState, formData: FormData): Pro
     // error.message is Supabase Auth's own SDK error text, not static app copy — same
     // deliberate choice as updatePassword() below: no catalog entry, left in English.
     return { message: error.message, variant: "error" };
+  }
+
+  /**
+   * P4 (docs/veli-hesabi-spec-2026-09-04.md G12) — best-effort, and deliberately cannot fail
+   * this signup. The account this student came here to create is the important outcome;
+   * losing that because a side field about a *different* person's email couldn't be saved
+   * would be a worse failure than just logging it and moving on. Uses the admin client
+   * (setParentInviteEmail's own comment explains why): email-confirmation-required projects
+   * grant no session at this point, so an RLS-scoped write as "this new user" isn't reliably
+   * possible yet, and this write needs to succeed regardless of which mode the project is in.
+   *
+   * Nothing beyond this column write happens here — no invite link is generated or logged at
+   * signup time. See lib/parent/invite.ts's own header: the link's 14-day clock should start
+   * when the student actually goes to share it, not silently while it sits unread in
+   * Settings, so features/settings/parent-invite-section.tsx computes it fresh on render
+   * instead.
+   */
+  if (parentEmail && data.user) {
+    const admin = createAdminClient();
+    const result = await setParentInviteEmail(admin, data.user.id, parentEmail);
+    if (result.error) {
+      console.error("[signUp] failed to save parent_invite_email", { userId: data.user.id, error: result.error });
+    } else {
+      await logEvent(data.user.id, "parent_email_provided_at_signup");
+    }
   }
 
   // If email confirmations are disabled on the Supabase project, signUp returns an

@@ -57,6 +57,16 @@ export function SignUpForm({ locale }: { locale: Locale }) {
           <p className="text-sm text-destructive">{state.errors.password[0]}</p>
         ) : null}
       </div>
+      <div className="space-y-2">
+        <Label htmlFor="parentEmail" style={{ color: "#3A3A4A", fontWeight: 500 }}>
+          {t("parentEmailLabel")}
+        </Label>
+        <Input id="parentEmail" name="parentEmail" type="email" autoComplete="off" className={AUTH_INPUT_CLASS} />
+        <p className="text-xs" style={{ color: "#AAAABC" }}>{t("parentEmailHint")}</p>
+        {state?.errors?.parentEmail ? (
+          <p className="text-sm text-destructive">{state.errors.parentEmail[0]}</p>
+        ) : null}
+      </div>
       <SignUpConsent error={state?.errors?.acceptedTerms?.[0]} locale={locale} />
       {state?.message && state.variant === "error" ? (
         <p className="text-sm text-destructive">{state.message}</p>
