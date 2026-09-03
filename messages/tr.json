@@ -166,7 +166,6 @@
         }
       },
       "comparisonTitle": "Planları karşılaştır",
-      "comparisonFeatureColumn": "Özellik",
       "comparison": {
         "aiAllowance": {
           "label": "Aylık yapay zekâ kotası",

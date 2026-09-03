@@ -266,31 +266,47 @@ describe("PlanTierView — the marquee shows only genuine advantages, never a sa
 });
 
 describe("PlanTierView — Ultra text stays legible against a warm ground", () => {
-  test("neither the current-plan title nor the comparison table's Ultra header uses gradient-clipped text", () => {
+  test("no 'Ultra' label anywhere on the page uses gradient-clipped text", () => {
     // Live regression, 2026-09-02: tier-grad-text (transparent glyphs, flame gradient
     // painted through via background-clip) read fine when this page's background was
     // lavender and became unreadable -- amber text on the amber Ultra page ground -- the
     // moment the ground itself turned warm. Reported directly by the founder against the
-    // table header specifically ("ultra yazısı gözükmüyor"). Both labels are now plain
-    // text, matching standardName's own already-safe treatment, so this asserts the fix
-    // holds rather than merely that the word renders (it always rendered -- in the DOM,
-    // just invisible, which a plain toBeInTheDocument check would never have caught).
+    // table header specifically ("ultra yazısı gözükmüyor"). Every "Ultra" label on the
+    // page is plain text, matching standardName's own already-safe treatment -- checked
+    // across all of them (2026-09-04's card redesign turned the table's one Ultra column
+    // header into one per comparison card, so a single getByRole("columnheader") query no
+    // longer covers the surface this test exists to guard), not merely that the word
+    // renders (it always rendered -- in the DOM, just invisible, which a plain
+    // toBeInTheDocument check would never have caught).
     renderView("ultra");
-    const cardTitle = screen.getByText("Ultra", { selector: "[class*='text-2xl']" });
-    expect(cardTitle.className).not.toMatch(/tier-grad-text/);
-    const columnHeader = screen.getByRole("columnheader", { name: "Ultra" });
-    expect(columnHeader.className).not.toMatch(/tier-grad-text/);
+    const ultraLabels = screen.getAllByText("Ultra");
+    expect(ultraLabels.length).toBeGreaterThan(0);
+    for (const label of ultraLabels) {
+      expect(label.className).not.toMatch(/tier-grad-text/);
+    }
   });
 
-  test("comparison table cells wrap long values instead of clipping them", () => {
-    // Live regression, same report: Table's own shadcn default is whitespace-nowrap, sized
-    // for short data values -- this table's standard/ultra columns hold full sentences,
-    // and nowrap clipped them at the card's max-w-xl edge instead of wrapping. Every cell
-    // must override it, not just the ones that happened to overflow first.
+  test("comparison card values wrap long sentences instead of clipping them", () => {
+    // Live regression, same report, adapted to the 2026-09-04 card redesign: the table's
+    // own shadcn TableCell default was whitespace-nowrap (sized for short data values),
+    // and this content is full sentences -- nowrap clipped them at the card's max-w-xl
+    // edge instead of wrapping. The card markup never applies a nowrap utility to begin
+    // with (a plain <dd> wraps by default), so the failure mode this guards -- a value
+    // silently clipped instead of wrapped -- can't recur the same way; asserted directly
+    // rather than assumed from the absence of a specific class the new markup never had.
     renderView("standard");
-    for (const cell of [...screen.getAllByRole("cell"), ...screen.getAllByRole("columnheader")]) {
-      expect(cell.className).toMatch(/whitespace-normal/);
-      expect(cell.className).not.toMatch(/whitespace-nowrap/);
+    const longValue = screen.getByText(
+      /Up to 8,192 tokens per reply — twice the room, so a demanding question doesn't get cut short/,
+    );
+    expect(longValue).toBeInTheDocument();
+    // Scoped to the comparison cards' own value elements (<dl>/<dd> for differs rows, the
+    // shared-value <p> for sameByDesign rows), not the whole document -- the shadcn Button
+    // a few sections down legitimately carries whitespace-nowrap on its own label, which
+    // has nothing to do with the table-cell-clipping regression this test guards against.
+    const valueElements = [...document.querySelectorAll("dl dd"), ...document.querySelectorAll("dl dt")];
+    expect(valueElements.length).toBeGreaterThan(0);
+    for (const el of valueElements) {
+      expect(el.className).not.toMatch(/\bwhitespace-nowrap\b/);
     }
   });
 });
