@@ -166,7 +166,6 @@
         }
       },
       "comparisonTitle": "Compare plans",
-      "comparisonFeatureColumn": "Feature",
       "comparison": {
         "aiAllowance": {
           "label": "Monthly AI allowance",

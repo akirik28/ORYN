@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Sparkles, Zap, MessagesSquare, Flame, Palette } from "lucide-react";
 import { PageHeader } from "@/components/proxola/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { registerUltraInterestAction } from "@/app/(app)/settings/actions";
 import { TIER_COMPARISON_ROWS } from "@/lib/tier/comparison";
@@ -92,10 +92,36 @@ const CARD_ICONS: Record<UltraFeatureCardData["id"], typeof Zap> = {
  *
  * `tier-grad-text` (the flame-gradient-through-transparent-glyphs treatment) is
  * deliberately NOT used on either "Ultra" label (the current-plan `CardTitle` or the
- * table's own column header) — 2026-09-02 fix, still holds: that gradient reads unreadable
- * against this page's own amber ground, and the safe pattern is flame on decoration, never
- * on the thing carrying meaning. Both stay plain text, matching `standardName`'s own
- * already-safe treatment.
+ * comparison cards' own value labels) — 2026-09-02 fix, still holds: that gradient reads
+ * unreadable against this page's own amber ground, and the safe pattern is flame on
+ * decoration, never on the thing carrying meaning. Both stay plain text, matching
+ * `standardName`'s own already-safe treatment.
+ *
+ * **2026-09-04, founder-directed, relayed live: "alt kısım hala excel gibi... o yukardaki
+ * başlık kısmı var ya ultra yazan oraya mavi logo ekle ok koy kırmızı logoyu koy" (the
+ * bottom still reads as a spreadsheet; put the logo in the header, blue for Standard, red
+ * for Ultra).** Two changes:
+ *
+ * - **The current-plan header card now carries the mark** — `logo-mark.png` (blue) at
+ *   Standard, `logo-mark-flame.png` (the flame colourway) at Ultra, switched on the real
+ *   `tier` prop, not a decorative `data-tier` scope — this is the one place on the page
+ *   that should actually reflect the viewer's own plan, everything else here is "what
+ *   Ultra looks like" shown to everyone regardless of their real tier.
+ * - **The comparison table is now cards.** The four `differs` rows each get
+ *   `.plan-ultra-card` (the same flame-top-bar-plus-glow treatment the marquee cards
+ *   already use, same `data-tier="ultra"` local-scope reasoning — decorative, not the real
+ *   tier, since the point is showing every viewer what differs) with Standard's value
+ *   stacked above Ultra's inside one card, rather than two table columns. **The two
+ *   `sameByDesign` rows deliberately do NOT get that treatment** — no flame bar, no glow,
+ *   a plain dashed-border card with one shared line of italic text, visually continuous
+ *   with the table's old `colSpan={2}` "kept equal on purpose" cell rather than styled to
+ *   look like a smaller version of a differs card. The founder's own words on why this
+ *   matters: "Herkes için ilk 3 öncelik, bilinçli olarak küçük tutuluyor" — a card style
+ *   that made these look like an Ultra advantage would misrepresent the one thing this
+ *   table exists to state honestly. No color system changed to build either card style —
+ *   both reuse existing tokens (`--tier-accent-strong`, `--tier-grad-*`, `--tier-glow` via
+ *   `.plan-ultra-card`, plain `border`/`text-muted-foreground` for the same-by-design
+ *   cards), per the explicit instruction not to restyle the page's own palette.
  */
 export function PlanTierView({
   tier,
@@ -120,6 +146,7 @@ export function PlanTierView({
   const formattedStandardMaxTokens = formatNumber(standardMaxTokens);
 
   const differsRows = useMemo(() => TIER_COMPARISON_ROWS.filter((row) => row.kind === "differs"), []);
+  const sameByDesignRows = useMemo(() => TIER_COMPARISON_ROWS.filter((row) => row.kind === "sameByDesign"), []);
   const marqueeCards: UltraFeatureCardData[] = differsRows.map((row) => ({
     id: row.id,
     icon: CARD_ICONS[row.id],
@@ -150,9 +177,19 @@ export function PlanTierView({
       <PageHeader title={t("title")} description={t("description")} />
 
       <Card>
-        <CardHeader>
-          <CardDescription>{t("currentPlanLabel")}</CardDescription>
-          <CardTitle className="text-2xl">{tier === "ultra" ? t("ultraName") : t("standardName")}</CardTitle>
+        <CardHeader className="flex flex-row items-center gap-4">
+          <Image
+            src={tier === "ultra" ? "/brand/logo-mark-flame.png" : "/brand/logo-mark.png"}
+            alt=""
+            width={56}
+            height={56}
+            className="size-14 shrink-0"
+            priority
+          />
+          <div>
+            <CardDescription>{t("currentPlanLabel")}</CardDescription>
+            <CardTitle className="text-2xl">{tier === "ultra" ? t("ultraName") : t("standardName")}</CardTitle>
+          </div>
         </CardHeader>
         {tier === "ultra" ? (
           <CardContent>
@@ -165,42 +202,49 @@ export function PlanTierView({
 
       <UltraFeatureMarquee cards={marqueeCards} />
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         <h2 className="font-semibold">{t("comparisonTitle")}</h2>
-        {/* whitespace-normal on every cell, overriding Table's own shadcn default
-            (whitespace-nowrap, meant for short data values): this table's standard/ultra
-            columns hold full sentences, and nowrap forced them onto one line each, clipped
-            at the card's own edge rather than wrapped -- reported live alongside the
-            tier-grad-text bug documented above, same urgent pass. */}
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="whitespace-normal">{t("comparisonFeatureColumn")}</TableHead>
-              <TableHead className="whitespace-normal">{t("standardName")}</TableHead>
-              <TableHead className="whitespace-normal">{t("ultraName")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {TIER_COMPARISON_ROWS.map((row) =>
-              row.kind === "sameByDesign" ? (
-                <TableRow key={row.id}>
-                  <TableCell className="whitespace-normal font-medium">{t(`comparison.${row.id}.label`)}</TableCell>
-                  <TableCell colSpan={2} className="whitespace-normal text-muted-foreground italic">
-                    {t(`comparison.${row.id}.same`)}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                <TableRow key={row.id}>
-                  <TableCell className="whitespace-normal font-medium">{t(`comparison.${row.id}.label`)}</TableCell>
-                  <TableCell className="whitespace-normal text-muted-foreground">
-                    {t(`comparison.${row.id}.standard`, comparisonValues(row.id, "standard"))}
-                  </TableCell>
-                  <TableCell className="whitespace-normal">{t(`comparison.${row.id}.ultra`, comparisonValues(row.id, "ultra"))}</TableCell>
-                </TableRow>
-              ),
-            )}
-          </TableBody>
-        </Table>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {differsRows.map((row) => {
+            const Icon = CARD_ICONS[row.id];
+            return (
+              <div key={row.id} data-tier="ultra" className="plan-ultra-card rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+                <div className="flex items-center gap-2">
+                  <Icon className="size-4" style={{ color: "var(--tier-accent-strong)" }} aria-hidden="true" />
+                  <p className="text-sm font-medium">{t(`comparison.${row.id}.label`)}</p>
+                </div>
+                <dl className="mt-3 space-y-2.5">
+                  <div>
+                    <dt className="text-xs font-medium text-muted-foreground">{t("standardName")}</dt>
+                    <dd className="text-sm text-muted-foreground">
+                      {t(`comparison.${row.id}.standard`, comparisonValues(row.id, "standard"))}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium" style={{ color: "var(--tier-accent-strong)" }}>
+                      {t("ultraName")}
+                    </dt>
+                    <dd className="text-sm">{t(`comparison.${row.id}.ultra`, comparisonValues(row.id, "ultra"))}</dd>
+                  </div>
+                </dl>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Deliberately not .plan-ultra-card: no flame bar, no glow, a plain dashed border.
+            These two rows are the product stating a boundary on purpose (see this
+            component's own header comment), and the visual language has to say "not a
+            difference" as clearly as the differs cards above say "this is." */}
+        <div className="space-y-2">
+          {sameByDesignRows.map((row) => (
+            <div key={row.id} className="rounded-xl border border-dashed border-foreground/20 p-4">
+              <p className="text-sm font-medium">{t(`comparison.${row.id}.label`)}</p>
+              <p className="mt-1 text-sm text-muted-foreground italic">{t(`comparison.${row.id}.same`)}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {tier === "standard" ? (
