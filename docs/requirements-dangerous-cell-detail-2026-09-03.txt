@@ -1,0 +1,490 @@
+====================================================================================================
+DANGEROUS CELL -- REQUIREMENTS (accepted AND carries a shape the schema cannot hold)
+====================================================================================================
+
+[1] Massachusetts Institute of Technology (standardized_test) -- batch2_requirements_2026-08-23.jsonl
+    id: REQ-2026-08-23-MIT0001
+    text: "We require the SAT or the ACT for both prospective first year and transfer students." "We do not require the ACT writing or science sections or the SAT optional essay." Tests must be completed by November 30 (Early Action) or December 31 (Regular Action). MIT superscores both the SAT and ACT. Reinstated March 28, 2022 (announced by the Dean of Admissions) for the Class of 2027 onward -- MIT suspended testing only for the pandemic-affected Classes of 2025 and 2026 and never adopted an indefinite test-optional stance.
+    source: https://mitadmissions.org/apply/firstyear/tests-scores/
+    SHAPE: score_provenance
+      evidence (text_lead): egular Action). MIT superscores both the SAT and ACT. Reinstated Marc
+      loss if written: No excluded-provenance list on the rule and no provenance flag on the student's stored score. Southampton accepts One Skill Retake, Edinburgh refuses it — provenance cannot be a global property of the test.
+
+[2] Massachusetts Institute of Technology (english_proficiency) -- batch2_requirements_2026-08-23.jsonl
+    id: REQ-2026-08-23-MIT0002
+    text: Recommended (not strictly required) for non-native English speakers who have used English fewer than 5 years or don't speak it at home/school. Accepted: Cambridge English (C1 Advanced/C2 Proficiency), Duolingo English Test, IELTS, PTE Academic, TOEFL. Minimum / Recommended scores: TOEFL before 2026-01-21: 90 / 100; TOEFL from 2026-01-21: 5 / 5.5 (ETS redesigned scale); IELTS: 7 / 7.5; PTE Academic: 65 / 70; Cambridge: 185 / 190; Duolingo: 120 / 125.
+    source: https://mitadmissions.org/apply/firstyear/tests-scores/
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=dual: legacy 0-120 TOEFL scale pre-2026-01-21, new ETS scale post-2026-01-21
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[3] Ludwig-Maximilians-Universität München (english_proficiency) -- de_nl_requirements_lmu_2026-08-21.jsonl
+    id: REQ-2026-08-21-LMU0029
+    text: an academic IELTS overall band score of 6.5 points
+    source: https://www.en.master.econ.uni-muenchen.de/application/application_process/requirements/index.html
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=IELTS_0_9
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[4] University of Amsterdam (entrance_exam) -- de_nl_requirements_refresh_2026-09-01.jsonl
+    id: REQ-2026-09-01-UVA0047R
+    text: Ranking — Your ranking for the English track is determined by the total score on the selection and a lottery. When drawing lots we work with three groups: Group 1: the 110 highest-scoring applicants; Group 2: the middle group; Group 3: the low-scoring group. For group 1 this translates to ranking numbers 1 to 110; group 2 has a better chance of higher ranking numbers than group 3. With a ranking number between 1 - 330 you are immediately placed; with a ranking number 331 or higher, you have to wait until a place becomes available when a placed applicant withdraws. After your official score has been announced, you have the option to lodge an appeal against the procedure that was followed.
+    source: https://www.uva.nl/en/programmes/bachelors/psychology/application-and-admission/selection-procedure/selection-procedure.html
+    SHAPE: historical_as_current
+      evidence (structured_field): verification_state=VERIFIED_HISTORICAL
+      loss if written: university_requirements has no column marking a row closed or non-actionable, and lib/requirements/ingest.ts's UNSAFE_VERIFICATION_STATES does not list VERIFIED_HISTORICAL (its comment asserts the state 'never appears on a requirement record in this corpus' — no longer true). The row would be accepted and displayed as a current requirement.
+
+[5] University of Amsterdam (english_proficiency) -- de_nl_requirements_uva_2026-08-21.jsonl
+    id: REQ-2026-08-21-UVA0037
+    text: IELTS: You have a recent IELTS score of at least 7.0 overall (with at least 6.5 in each of the four components). Cambridge English Scale: You have a score of 190 or higher on the Cambridge English Scale (obtained via CAE [Certificate of Advanced English] or CPE [Certificate for Proficiency in English]).
+    source: https://www.auc.nl/admissions-aid/admission-requirements/english-proficiency/english-proficiency.html
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=IELTS_0_9
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[6] Vrije Universiteit Amsterdam (english_proficiency) -- de_nl_requirements_vuamsterdam_2026-08-21.jsonl
+    id: REQ-2026-08-21-VUA0043
+    text: IELTS Academic Overall score 6.5, Sub score Listening 6.0, Sub score Reading 6.0, Sub score Writing 6.0, Sub score Speaking 6.0. TOEFL IBT 92; (Sections: Reading 13, Listening 12, Speaking 18, Writing 20). New scoring TOEFL IBT 4.5 (Sections minimum 4). TOEFL ITP 580 (No minimum section score). CAE 180. CPE 180.
+    source: https://vu.nl/en/education/more-about/language-proficiency-requirements-master
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=TOEFL_IBT_1_6
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[7] Vrije Universiteit Amsterdam (english_proficiency) -- de_nl_requirements_vuamsterdam_2026-08-21.jsonl
+    id: REQ-2026-08-21-VUA0044
+    text: IELTS Academic Overall score 7, Sub score Listening 6.5, Sub score Reading 6.5, Sub score Writing 6.5, Sub score Speaking 6.5. TOEFL IBT 100; (Sections: Reading 19, Listening 20, Speaking 20, Writing 22). New scoring TOEFL IBT 5.0 (Sections minimum 4.5). TOEFL ITP 600 (No minimum section score). CAE 180. CPE 180.
+    source: https://vu.nl/en/education/more-about/language-proficiency-requirements-master
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=TOEFL_IBT_1_6
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[8] Vrije Universiteit Amsterdam (english_proficiency) -- de_nl_requirements_vuamsterdam_2026-08-21.jsonl
+    id: REQ-2026-08-21-VUA0045
+    text: IELTS Academic Overall score 6.5, Sub score Listening 6.0, Sub score Reading 6.0, Sub score Writing 6.0, Sub score Speaking 6.0. TOEFL IBT 92; (Sections: Reading 13, Listening 12, Speaking 18, Writing 21). New scoring TOEFL IBT 4.5 (Sections minimum 4). TOEFL ITP 580 (No minimum section score). CAE 180. CPE 180.
+    source: https://vu.nl/en/education/more-about/language-proficiency-requirements-master
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=TOEFL_IBT_1_6
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[9] Vrije Universiteit Amsterdam (english_proficiency) -- de_nl_requirements_vuamsterdam_2026-08-21.jsonl
+    id: REQ-2026-08-21-VUA0046
+    text: IELTS Academic Overall score 6.5, No minimum band score (Listening/Reading/Writing/Speaking). TOEFL IBT 92 (No minimum section score). New scoring TOEFL IBT 4.5 (no minimum section score). TOEFL ITP 580 (No minimum section score). CAE 180. CPE 180.
+    source: https://vu.nl/en/education/more-about/language-proficiency-requirements-master
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=TOEFL_IBT_1_6
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[10] Vrije Universiteit Amsterdam (english_proficiency) -- de_nl_requirements_vuamsterdam_2026-08-21.jsonl
+    id: REQ-2026-08-21-VUA0047
+    text: IELTS Academic Overall score 6.5, Sub score Listening 6.0, Sub score Reading 6.0, Sub score Writing 6.5, Sub score Speaking 6.5. TOEFL IBT 92 (No minimum section score). New scoring TOEFL IBT 4.0 (no minimum section score). TOEFL ITP 580 (No minimum section score). CAE 180. CPE 180.
+    source: https://vu.nl/en/education/more-about/language-proficiency-requirements-master
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=TOEFL_IBT_1_6
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[11] Vrije Universiteit Amsterdam (english_proficiency) -- de_nl_requirements_vuamsterdam_2026-08-21.jsonl
+    id: REQ-2026-08-21-VUA0048
+    text: Law (applies to students who need a visa. Students from EU/EEA do not need to provide English test for this programme). IELTS Academic Overall score 7.0, No minimum band score. TOEFL IBT 100 (No minimum section score). New scoring TOEFL IBT 5.0 (no minimum section score). TOEFL ITP 580 (No minimum section score). CAE 180. CPE 180.
+    source: https://vu.nl/en/education/more-about/language-proficiency-requirements-master
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=TOEFL_IBT_1_6
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[12] Vrije Universiteit Amsterdam (english_proficiency) -- de_nl_requirements_vuamsterdam_2026-08-21.jsonl
+    id: REQ-2026-08-21-VUA0051
+    text: IELTS Academic Overall score 7.0, Sub score Listening 6.5, Sub score Reading 6.5, Sub score Writing 6.5, Sub score Speaking 6.5. TOEFL IBT 100 (Sections minimum 22). New scoring TOEFL IBT 5.0 (Sections minimum 4.5). TOEFL ITP 600 (No minimum section score). CAE grade A or B. CPE 180.
+    source: https://vu.nl/en/education/more-about/language-proficiency-requirements-master
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=CAMBRIDGE_ENGLISH_SCALE
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[13] Aalto University (international_requirement) -- nordic_requirements_aalto_2026-08-22.jsonl
+    id: REQ-2026-08-22-FI-AALTO-005
+    text: Bachelor's programmes -- Tuition fees for rights to study beginning on or after 1 August 2025: Field of Business EUR 12 000 per academic year; Fields of Art and Architecture EUR 15 000 per academic year; Field of Technology EUR 12 000 per academic year. Master's programmes: Field of Business EUR 15 000; Fields of Art and Architecture EUR 20 000; Field of Technology EUR 17 000; Multidisciplinary programmes EUR 17 000.
+    source: https://www.aalto.fi/en/admission-services/scholarships-and-tuition-fees
+    SHAPE: inverted_recency
+      evidence (text_lead): tudy right BEGINS ('on or after 1 August 2025'), not to an application cycle. The page also
+      loss if written: A max-age field inverts this rule. METU refuses IELTS taken ON OR AFTER 24 December 2022; a max-age model tells the student their fresh certificate qualifies.
+
+[14] University of Copenhagen (curriculum) -- nordic_requirements_copenhagen_2026-08-22.jsonl
+    id: REQ-2026-08-22-DK-KU-004
+    text: If you are applying in quota 1, your application is exclusively based on your GPA from your original or first given exam certificate/diploma.
+    source: https://www.ku.dk/studies/bachelor/quota-1-and-quota-2
+    SHAPE: score_provenance
+      evidence (text_lead): ame family as Koc's superscore rule: an improved GPA from a retaken o
+      loss if written: No excluded-provenance list on the rule and no provenance flag on the student's stored score. Southampton accepts One Skill Retake, Edinburgh refuses it — provenance cannot be a global property of the test.
+
+[15] Technical University of Denmark (english_proficiency) -- nordic_requirements_dtu_2026-08-22.jsonl
+    id: REQ-2026-08-22-DK-DTU-004
+    text: IELTS Academic -- Minimum 6.5 points. ... DTU does not accept IELTS One Skill Retake results.
+    source: https://www.dtu.dk/english/education/undergraduate/general-engineering/admission-and-deadlines/admission-requirements
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=IELTS_0_9
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+    SHAPE: score_provenance
+      evidence (text_lead): es not accept IELTS One Skill Retake results. — Directly opposite to Univers
+      loss if written: No excluded-provenance list on the rule and no provenance flag on the student's stored score. Southampton accepts One Skill Retake, Edinburgh refuses it — provenance cannot be a global property of the test.
+
+[16] University of Helsinki (standardized_test) -- nordic_requirements_helsinki_2026-08-22.jsonl
+    id: REQ-2026-08-22-FI-HEL-001
+    text: If your answer is no (you have NOT completed one of the above-mentioned diplomas), you are in Admission Group 1. You must submit your application during the application period from 2 to 16 Jan 2026 (the application period closes at 15.00 UTC+2). The admission is based on the scores of your SAT or ACT tests.
+    source: https://www.helsinki.fi/en/degree-programmes/science-bachelors-programme/admissions
+    SHAPE: historical_as_current
+      evidence (structured_field): verification_state=VERIFIED_HISTORICAL
+      loss if written: university_requirements has no column marking a row closed or non-actionable, and lib/requirements/ingest.ts's UNSAFE_VERIFICATION_STATES does not list VERIFIED_HISTORICAL (its comment asserts the state 'never appears on a requirement record in this corpus' — no longer true). The row would be accepted and displayed as a current requirement.
+
+[17] KU Leuven (english_proficiency) -- nordic_requirements_kuleuven_2026-08-22.jsonl
+    id: REQ-2026-08-22-BE-KUL-005
+    text: TOEFL iBT: as of 21 January 2026, TOEFL iBT score reports use a new 1-6 scoring scale: For the test results obtained before this transition, the minimum required overall score is 94 (with no subscore below 22). For TOEFL iBT tests taken on or after 21 January 2026, the minimum required overall score is 5 (with no subscore below 4.5).
+    source: https://eng.kuleuven.be/en/study/prospective-students/degree-seeking-students/prerequisites-for-degree-seeking-students
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=TOEFL_IBT_1_6
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[18] KU Leuven (english_proficiency) -- nordic_requirements_kuleuven_2026-08-22.jsonl
+    id: REQ-2026-08-22-BE-KUL-006
+    text: IELTS -- We only accept the IELTS Academic test (including the paper, computer and online test). The minimum overall score is 6.5. We do not accept IELTS One Skill Retake scores. ... We do not accept Duolingo test scores.
+    source: https://www.kuleuven.be/english/apply/language-requirements/english-proficiency-tests
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=IELTS_0_9
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+    SHAPE: score_provenance
+      evidence (text_lead): do not accept IELTS One Skill Retake scores. ... We do not accept Duolingo t
+      loss if written: No excluded-provenance list on the rule and no provenance flag on the student's stored score. Southampton accepts One Skill Retake, Edinburgh refuses it — provenance cannot be a global property of the test.
+
+[19] KU Leuven (english_proficiency) -- nordic_requirements_kuleuven_2026-08-22.jsonl
+    id: REQ-2026-08-22-BE-KUL-007
+    text: IELTS: the minimum score required for IELTS is 7 (with no subscore under 6.5). ... Cambridge English Exam: the minimum score required for the Cambridge English Exam (CAE) is 185 (with no subscore below 176).
+    source: https://eng.kuleuven.be/en/study/prospective-students/degree-seeking-students/prerequisites-for-degree-seeking-students
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=IELTS_0_9
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[20] Lund University (english_proficiency) -- nordic_requirements_lund_2026-08-22.jsonl
+    id: REQ-2026-08-22-SE-LUND-002
+    text: IELTS (Academic) total score 6.5 (with no section less than 5.5)
+    source: https://www.lunduniversity.lu.se/study/admission-degree-studies/entry-requirements/english-requirements
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=IELTS_0_9
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[21] University of Oslo (international_requirement) -- nordic_requirements_oslo_2026-08-22.jsonl
+    id: REQ-2026-08-22-NO-UIO-002
+    text: Yearly price 2026/2027 (NOK): 204 000; Yearly price 2027/2028 (NOK): 186 000
+    source: https://www.uio.no/english/studies/admission/tuition/table-of-costs/
+    SHAPE: recency_window
+      evidence (text_lead): r attached is wrong within twelve months.
+      loss if written: No max-age column on the requirement and no date_achieved on the student-side fact, so a student meeting the number with an expired qualification is told they qualify. The anchor differs too ('prior to entry' vs 'from the start date of this programme').
+
+[22] University of Oslo (international_requirement) -- nordic_requirements_oslo_2026-08-22.jsonl
+    id: REQ-2026-08-22-NO-UIO-003
+    text: Yearly price 2026/2027 (NOK): 295 000; Yearly price 2027/2028 (NOK): 218 000
+    source: https://www.uio.no/english/studies/admission/tuition/table-of-costs/
+    SHAPE: recency_window
+      evidence (text_lead): r attached is wrong within twelve months.
+      loss if written: No max-age column on the requirement and no date_achieved on the student-side fact, so a student meeting the number with an expired qualification is told they qualify. The anchor differs too ('prior to entry' vs 'from the start date of this programme').
+
+[23] University of Oslo (international_requirement) -- nordic_requirements_oslo_2026-08-22.jsonl
+    id: REQ-2026-08-22-NO-UIO-006
+    text: Yearly price 2026/2027 (NOK): 136 000; Yearly price 2027/2028 (NOK): 124 000
+    source: https://www.uio.no/english/studies/admission/tuition/table-of-costs/
+    SHAPE: recency_window
+      evidence (text_lead): r attached is wrong within twelve months.
+      loss if written: No max-age column on the requirement and no date_achieved on the student-side fact, so a student meeting the number with an expired qualification is told they qualify. The anchor differs too ('prior to entry' vs 'from the start date of this programme').
+
+[24] London School of Economics and Political Science (standardized_test) -- uk_requirements_lse-tmua_2026-09-01.jsonl
+    id: REQ-2026-09-01-UD0090
+    text: For these two programmes for September 2027 entry taking the TMUA is mandatory – all applicants are required to take the test. BSc Economics BSc Econometrics and Mathematical Economics
+    source: https://www.lse.ac.uk/study-at-lse/Undergraduate/Prospective-Students/How-to-Apply/Test-of-Mathematics-for-University-Admission-TMUA
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=TMUA_1.0_9.0
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[25] University of Warwick (standardized_test) -- uk_requirements_warwick-baseline_2026-09-01.jsonl
+    id: REQ-2026-09-01-WAR0004
+    text: TMUA is used as part of the undergraduate admissions process at Warwick for the following subject areas: Computer Science ... All applicants will be required to take TMUA except for applicants who are eligible for a Contextual Offer.
+    source: https://warwick.ac.uk/study/undergraduate/applying/admissions-tests/
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=TMUA_1.0_9.0
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[26] University of Warwick (standardized_test) -- uk_requirements_warwick-baseline_2026-09-01.jsonl
+    id: REQ-2026-09-01-WAR0005
+    text: Applications to our Economics degrees are assessed primarily on the basis of the applicant's predicted/current grades and past academic record. Optionally, applicants are encouraged to sit the Test of Mathematics for University Admission (TMUA). TMUA scores may be used as a factor in determining which applicants receive an offer for Economics L100.
+    source: https://warwick.ac.uk/study/undergraduate/applying/admissions-tests/
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=TMUA_1.0_9.0
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[27] University of Warwick (standardized_test) -- uk_requirements_warwick-baseline_2026-09-01.jsonl
+    id: REQ-2026-09-01-WAR0006
+    text: All applicants will typically be required to take TMUA or STEP, except for applicants who are eligible for a Contextual Offer ... In the last admissions cycle (2025 entry), the majority of offers were made to applicants with a TMUA score of 5.0 and above.
+    source: https://warwick.ac.uk/study/undergraduate/applying/admissions-tests/
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=TMUA_1.0_9.0
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+[28] Massachusetts Institute of Technology (standardized_test) -- us_requirements_mit_2026-08-21.jsonl
+    id: REQ-2026-08-21-MIT0001
+    text: We require the SAT or the ACT from first year and transfer applicants. We accept both the paper and digital SAT. We do not require the ACT writing or science sections or the SAT optional essay. MIT does not have cut off or recommended scores for the ACT or SAT, as scores are evaluated within an applicant's context. If you take the same test multiple times, MIT primarily considers the highest score achieved in each section (superscore). Applicants self-report scores on the application; MIT verifies scores upon enrollment and scores cannot be redacted from an application after submission.
+    source: https://mitadmissions.org/apply/firstyear/tests-scores/
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=SAT_1600
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+    SHAPE: score_provenance
+      evidence (text_lead): ed in each section (superscore). Applicants self-report scores on the
+      loss if written: No excluded-provenance list on the rule and no provenance flag on the student's stored score. Southampton accepts One Skill Retake, Edinburgh refuses it — provenance cannot be a global property of the test.
+
+[29] Massachusetts Institute of Technology (english_proficiency) -- us_requirements_mit_2026-08-21.jsonl
+    id: REQ-2026-08-21-MIT0002
+    text: For non-native English speakers, we strongly recommend providing the results of an English proficiency exam if you have been using English for fewer than 5 years or do not speak English at home or in school, so that we may consider that information alongside the rest of your application. TOEFL (taken before January 21, 2026): Minimum 90, Recommended 100.
+    source: https://mitadmissions.org/apply/firstyear/tests-scores/
+    SHAPE: scale_qualifier_dropped
+      evidence (structured_field): test_scale=TOEFL_IBT_0_120_LEGACY
+      loss if written: university_requirements has no test_scale column, so the qualifier is discarded and the number is stored bare. ETS dual reporting ends January 2028, at which point every unqualified legacy TOEFL threshold silently becomes unmeasurable rather than merely ambiguous.
+
+TOTAL dangerous requirement records: 29
+
+====================================================================================================
+DANGEROUS CELL -- DEADLINES (accepted AND carries a shape the schema cannot hold)
+====================================================================================================
+
+[1] Aalto University (application) -- nordic_requirements_aalto_2026-08-22.jsonl
+    id: DL-2026-08-22-FI-AALTO-003
+    text: 7 January 2026 at 8am/8.00 (UTC+2) -- Application period starts
+    source: https://www.aalto.fi/en/study-at-aalto/admission-to-aalto-bachelors-programme-in-science-and-technology-bachelor-and-master-of-science-in
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+    SHAPE: historical_as_current
+      evidence (structured_field): verification_state=VERIFIED_HISTORICAL
+      loss if written: A correctly-fetched date for a cycle that has already closed. university_deadlines has no closed/non-actionable column, so a bare deadline_date sitting there reads as a live deadline.
+
+[2] Aalto University (application) -- nordic_requirements_aalto_2026-08-22.jsonl
+    id: DL-2026-08-22-FI-AALTO-004
+    text: 22 January 2026 at 3pm/15.00 (UTC+2) -- Application period ends
+    source: https://www.aalto.fi/en/study-at-aalto/admission-to-aalto-bachelors-programme-in-science-and-technology-bachelor-and-master-of-science-in
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+    SHAPE: historical_as_current
+      evidence (structured_field): verification_state=VERIFIED_HISTORICAL
+      loss if written: A correctly-fetched date for a cycle that has already closed. university_deadlines has no closed/non-actionable column, so a bare deadline_date sitting there reads as a live deadline.
+
+[3] Aalto University (document) -- nordic_requirements_aalto_2026-08-22.jsonl
+    id: DL-2026-08-22-FI-AALTO-005
+    text: 29 January 2026 at 3pm/15.00 (UTC+2) -- Applicants who have graduated, and applicants completing a qualification fulfilling the general eligibility requirements outside Finland in spring 2026: deadline to submit academic documents AND Applicants applying on the basis of the SAT/ACT test results: Deadline to submit the SAT/ACT test result report
+    source: https://www.aalto.fi/en/study-at-aalto/admission-to-aalto-bachelors-programme-in-science-and-technology-bachelor-and-master-of-science-in
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+    SHAPE: historical_as_current
+      evidence (structured_field): verification_state=VERIFIED_HISTORICAL
+      loss if written: A correctly-fetched date for a cycle that has already closed. university_deadlines has no closed/non-actionable column, so a bare deadline_date sitting there reads as a live deadline.
+
+[4] University of Copenhagen (application) -- nordic_requirements_copenhagen_2026-08-22.jsonl
+    id: DL-2026-08-22-DK-KU-001
+    text: If you have a non-Danish exam you can apply for admission via quota 1 and quota 2 before the 15 March at 12:00.
+    source: https://www.ku.dk/studies/bachelor/quota-1-and-quota-2
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[5] University of Copenhagen (document) -- nordic_requirements_copenhagen_2026-08-22.jsonl
+    id: DL-2026-08-22-DK-KU-002
+    text: You need to fulfil the admission requirements no later than the 5 July at 12:00 the year you apply.
+    source: https://www.ku.dk/studies/bachelor/quota-1-and-quota-2
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[6] University of Copenhagen (application) -- nordic_requirements_copenhagen_2026-08-22.jsonl
+    id: DL-2026-08-22-DK-KU-003
+    text: You are welcome to send your application from 1 February, when the application period at optagelse.dk starts.
+    source: https://www.ku.dk/studies/bachelor/quota-1-and-quota-2
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[7] University of Copenhagen (document) -- nordic_requirements_copenhagen_2026-08-22.jsonl
+    id: DL-2026-08-22-DK-KU-005
+    text: On 28 July you will know if you are admitted to UCPH.
+    source: https://www.ku.dk/studies/bachelor/quota-1-and-quota-2
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[8] Technical University of Denmark (application) -- nordic_requirements_dtu_2026-08-22.jsonl
+    id: DL-2026-08-22-DK-DTU-001
+    text: Applicants with an international upper secondary exam/high school exam (both EU/EEA and non-EU/EEA) -- 15 March at 12 noon
+    source: https://www.dtu.dk/english/education/undergraduate/general-engineering/admission-and-deadlines/deadlines-and-important-dates
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[9] Technical University of Denmark (application) -- nordic_requirements_dtu_2026-08-22.jsonl
+    id: DL-2026-08-22-DK-DTU-003
+    text: Applicants must submit their final grades and diploma by 5 July at noon to be part of the current year's intake (except IB / EB graduates). -- 5 July at 12 noon
+    source: https://www.dtu.dk/english/education/undergraduate/general-engineering/admission-and-deadlines/deadlines-and-important-dates
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[10] Technical University of Denmark (document) -- nordic_requirements_dtu_2026-08-22.jsonl
+    id: DL-2026-08-22-DK-DTU-005
+    text: 28 July -- Log onto UnistartDTU to find out if you have been offered admission or not
+    source: https://www.dtu.dk/english/education/undergraduate/general-engineering/admission-and-deadlines/deadlines-and-important-dates
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[11] University of Helsinki (application) -- nordic_requirements_helsinki_2026-08-22.jsonl
+    id: DL-2026-08-22-FI-HEL-001
+    text: For studies starting in autumn 2026, the application periods are 2-16 Jan 2026 (Admission group 1) OR 10-24 March 2026 (Admission group 2).
+    source: https://www.helsinki.fi/en/degree-programmes/science-bachelors-programme/admissions
+    SHAPE: historical_as_current
+      evidence (structured_field): verification_state=VERIFIED_HISTORICAL
+      loss if written: A correctly-fetched date for a cycle that has already closed. university_deadlines has no closed/non-actionable column, so a bare deadline_date sitting there reads as a live deadline.
+
+[12] University of Helsinki (application) -- nordic_requirements_helsinki_2026-08-22.jsonl
+    id: DL-2026-08-22-FI-HEL-002
+    text: 10-24 March 2026 (Admission group 2)
+    source: https://www.helsinki.fi/en/degree-programmes/science-bachelors-programme/admissions
+    SHAPE: historical_as_current
+      evidence (structured_field): verification_state=VERIFIED_HISTORICAL
+      loss if written: A correctly-fetched date for a cycle that has already closed. university_deadlines has no closed/non-actionable column, so a bare deadline_date sitting there reads as a live deadline.
+
+[13] Lund University (application) -- nordic_requirements_lund_2026-08-22.jsonl
+    id: DL-2026-08-22-SE-LUND-001
+    text: The main application period for our Bachelor's and Master's programmes is from mid-October 2025 to 15 January 2026, with programmes starting in autumn (late August/early September) 2026.
+    source: https://www.lunduniversity.lu.se/sites/www.lunduniversity.lu.se/files/2025-08/Lund-university-international-student-prospectus-26-27.pdf
+    SHAPE: historical_as_current
+      evidence (structured_field): verification_state=VERIFIED_HISTORICAL
+      loss if written: A correctly-fetched date for a cycle that has already closed. university_deadlines has no closed/non-actionable column, so a bare deadline_date sitting there reads as a live deadline.
+
+[14] Norwegian University of Science And Technology (application) -- nordic_requirements_ntnu_2026-08-22.jsonl
+    id: DL-2026-08-22-NO-NTNU-001
+    text: Non-EU/non-EEA: 1 December
+    source: https://www.ntnu.edu/studies/application
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[15] Norwegian University of Science And Technology (application) -- nordic_requirements_ntnu_2026-08-22.jsonl
+    id: DL-2026-08-22-NO-NTNU-002
+    text: EU/EEA: 1 March
+    source: https://www.ntnu.edu/studies/application
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[16] Norwegian University of Science And Technology (application) -- nordic_requirements_ntnu_2026-08-22.jsonl
+    id: DL-2026-08-22-NO-NTNU-003
+    text: Nordic/Norwegian: 15 April
+    source: https://www.ntnu.edu/studies/application
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[17] Norwegian University of Science And Technology (application) -- nordic_requirements_ntnu_2026-08-22.jsonl
+    id: DL-2026-08-22-NO-NTNU-005
+    text: Deadline: 15 January
+    source: https://www.ntnu.edu/studies/application
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[18] University of Vienna (application) -- nordic_requirements_vienna_2026-08-22.jsonl
+    id: DL-2026-08-22-AT-UNIVIE-001
+    text: Application period -- Irrespective of the applicant's citizenship, once per year: Academc year 2026/27: 2 March to 4 May 2026
+    source: https://aufnahmeverfahren.univie.ac.at/en/deadlines-and-dates
+    SHAPE: historical_as_current
+      evidence (structured_field): verification_state=VERIFIED_HISTORICAL
+      loss if written: A correctly-fetched date for a cycle that has already closed. university_deadlines has no closed/non-actionable column, so a bare deadline_date sitting there reads as a live deadline.
+
+[19] Massachusetts Institute of Technology (document) -- batch2_deadlines_2026-08-23.jsonl
+    id: DL-2026-08-23-MIT0001-EA
+    text: Testing deadline for Early Action: tests must be completed by "November 30" for scores to count.
+    source: https://mitadmissions.org/apply/firstyear/tests-scores/
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[20] Massachusetts Institute of Technology (document) -- batch2_deadlines_2026-08-23.jsonl
+    id: DL-2026-08-23-MIT0001-RA
+    text: Testing deadline for Regular Action: tests must be completed by "December 31" for scores to count.
+    source: https://mitadmissions.org/apply/firstyear/tests-scores/
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[21] Ludwig-Maximilians-Universität München (document) -- de_nl_deadlines_lmu_2026-08-21.jsonl
+    id: DL-2026-08-21-LMU0007
+    text: If you are not able to provide your TOEFL/IELTS score at the time of application you may upload an informal petition instead via our online-tool, saying that you are going to hand in your result after the application deadline via email. (Deadline: August 31st).
+    source: https://www.en.master.econ.uni-muenchen.de/application/application_process/requirements/index.html
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[22] Ludwig-Maximilians-Universität München (document) -- de_nl_deadlines_lmu_2026-08-21.jsonl
+    id: DL-2026-08-21-LMU0008
+    text: The online self-assessment must be completed until August 15 for enrolment in the upcoming winter semester.
+    source: https://www.en.gsi.uni-muenchen.de/studies/application/ba_application/index.html
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[23] University of Amsterdam (document) -- de_nl_deadlines_uva_2026-08-21.jsonl
+    id: DL-2026-08-21-UVA0024
+    text: Deadline to submit OMPT test results: 1 July. For all prospective students taking OMPT tests, you will need to submit your final results showing that you passed with the required score before 1 July if you're planning to start at AUC in September of the same year. For example, if you are applying to start at AUC in September 2026, then you will have to submit your OMPT scores showing that you passed the appropriate exam before 1 July 2026.
+    source: https://www.auc.nl/admissions-aid/admission-requirements/mathematics-requirement/mathematics-requirement.html
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[24] Massachusetts Institute of Technology (early) -- deadlines_batch1_2026-08-21.jsonl
+    id: DL-2026-08-21-0018
+    text: November 1
+    source: https://mitadmissions.org/apply/firstyear/deadlines-requirements/
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+    SHAPE: binding_semantics
+      evidence (structured_field): deadline_type=early
+      loss if written: deadline_type is free text with no binding/restriction semantics. Early Decision is a contract and Restrictive Early Action forbids other early applications, so the type governs eligibility for OTHER applications — a constraint the deadline engine cannot express and would not surface.
+
+[25] Massachusetts Institute of Technology (application) -- deadlines_batch1_2026-08-21.jsonl
+    id: DL-2026-08-21-0019
+    text: January 4
+    source: https://mitadmissions.org/apply/firstyear/deadlines-requirements/
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[26] Massachusetts Institute of Technology (application) -- deadlines_batch1_2026-08-21.jsonl
+    id: DL-2026-08-21-0020
+    text: May 1
+    source: https://mitadmissions.org/apply/firstyear/deadlines-requirements/
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[27] Harvard University (document) -- us_deadlines_harvard_2026-08-21.jsonl
+    id: DL-2026-08-21-HAR0007
+    text: Match Rankings & Match Agreement Form Deadline: October 15.
+    source: https://www.questbridge.org/apply-to-college/programs/national-college-match/apply/dates-and-deadlines
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+[28] Massachusetts Institute of Technology (document) -- us_deadlines_mit_2026-08-21.jsonl
+    id: DL-2026-08-21-MIT0007
+    text: May 1: Enrollment decision reply form for admitted students
+    source: https://mitadmissions.org/apply/firstyear/deadlines-requirements/
+    SHAPE: undated_cycle
+      evidence (structured_field): recurrence=recurring_annual_undated
+      loss if written: university_deadlines.deadline_date is a real date column and cannot represent 'this date, every year, no fixed year'. The undated convention is per-institution, not per-country — TU Berlin publishes 0% undated, Heidelberg and Stuttgart 100% — so no inference rule recovers the year without corrupting the institutions that genuinely do not publish one.
+
+TOTAL dangerous deadline records: 28
+
+GRAND TOTAL dangerous records: 57
