@@ -1,6 +1,19 @@
 # Sabah — 3 Eylül 2026
 
-Uyandığında sırayla bunlar. Tahmini süre: 10 dakika.
+Uyandığında sırayla bunlar. Yedi adım, tahminen 15 dakika — beşi kopyala-yapıştır.
+
+**Sonunda ne değişmiş olacak:**
+
+| | |
+|---|---|
+| Panelin yazma tarafı | çalışır hale gelir (15 migration) |
+| Kurum adı boş fırsat | 190 tanesi dolar |
+| İncelemedeki kayıt | 84'ü öğrencinin göreceği katalog'a geçer |
+| Üniversite gereksinimi | 14 kurumda 141 satırdan 333'e |
+| Yeni fırsat | 9 tane eklenir |
+| Kumanda merkezi | açılır ve kullanılabilir olur |
+
+Adımlar birbirinden bağımsız. Yarısında durursan kalan yarısı bozulmaz.
 
 ## 1. Kendini admin yap
 
@@ -64,7 +77,7 @@ yazılı). Biri de kapanmış bir marka: Duke TIP artık Duke Pre-College, canl�
 Ayrıntı: `docs/yedi-kapsanmayan-kayit-2026-09-03.md`. **SQL hazırlamadım** — kurum adı
 doldurmak dördü için de yanlış düzeltme olurdu. Duke'un kimliğini değiştirmek senin kararın.
 
-## 3b. Tek tek kayıt düzeltmeleri
+## 4. Tek tek kayıt düzeltmeleri
 
 `03-firsat-kayit-duzeltmeleri-2026-09-03.sql` — iki gerçek düzeltme. Google CSSI'nin adresi
 (canlı doğrulandı: `g.co/cssi`, yalnızca Google'ın oluşturabileceği bir kısa link, oraya
@@ -85,7 +98,7 @@ Yani program gerçek; bozuk olan bu kayıt. İkisi çelişmiyor ama sonuçları 
 mı, yoksa kaydı düzeltip programı katalogda tutmak mı? Bu senin kararın, ve kapatma
 geri alınabilir.
 
-## 3c. Üniversite giriş gereksinimleri
+## 5. Üniversite giriş gereksinimleri
 
 `04-universite-gereksinimleri-2026-09-03.sql` — **14 kurum, 192 satır.** Oxford, Cambridge,
 Imperial, Warwick, MIT, Caltech, Harvard, Princeton, Bocconi, TU Delft, ODTÜ, Boğaziçi,
@@ -97,7 +110,7 @@ sıfır hata. Ürünün en ince yeri burasıydı — 17.046 programın 32'si kap
 Dürüst kısmı: bu satırların hepsi **üniversite geneli**, programa bağlı değil. Yani "kaç
 program kapsanıyor" sayısı yine 32'de kalıyor. Derinlik geldi, kapsam genişliği değil.
 
-## 3d. Yeni fırsatları katalog'a al
+## 6. Yeni fırsatları katalog'a al
 
 Üç parti hazır bekliyor, **9 yeni fırsat.** Terminalden, sırayla:
 
@@ -123,7 +136,7 @@ Girecek dokuz: Forage (ücretsiz iş simülasyonları), NYAS Junior Academy, sci
 dünya çapında araştırma mentorluğu), Pivotal Essay Contest, Medicine Encompassed, CS50x,
 Zooniverse, iNaturalist, Emory Winship (sanal).
 
-## 4. İki paneli karşılaştır
+## 7. İki paneli karşılaştır
 
 **`/admin`** — bugünkü hali. Ondört bölüm, tek sayfa. Bugüne kadar hiç gerçek admin
 hesabıyla açılmadı; ilk açan sen olacaksın.
