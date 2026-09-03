@@ -144,13 +144,17 @@ export interface Profile {
    * founder applied it by hand); every read still defaults an absent/unreadable value to
    * "standard" regardless, so this stays correct on any environment where it isn't. */
   plan_tier: PlanTier;
-  /** Migration 0104, written not applied — when an admin granted this student the one-time
-   * 7-day Ultra gift, or null if never. Never cleared once set, even after the 7 days pass:
-   * this is the "once per person" record, not an "is it active right now" flag — that's
-   * computed at read time in lib/tier/plan-tier.ts's resolvePlanTier, the one place every
-   * Ultra-aware surface already goes through. An absent/unreadable value reads as "never
-   * granted," same convention as plan_tier/response_mode above. */
-  ultra_gift_granted_at: string | null;
+  /** Migration 0106 (renamed+redefined from 0104's ultra_gift_granted_at), written not
+   * applied — when this student's Ultra gift stops being active, or null if never granted.
+   * Never cleared once set, even after it passes: this is the "once per person" record, not
+   * an "is it active right now" flag — lib/tier/plan-tier.ts's resolvePlanTier compares it
+   * directly against now(), the one place every Ultra-aware surface already goes through.
+   * The duration itself lives in admin_product_settings.trial_period_days (migration 0105)
+   * and is only ever consulted at grant time (grantUltraGift) — this column stores the
+   * already-computed result, so a later change to the configured trial length never
+   * retroactively changes a gift already granted. An absent/unreadable value reads as
+   * "never granted," same convention as plan_tier/response_mode above. */
+  ultra_gift_expires_at: string | null;
   /** Migration 0091 — student preference for advisor chat's model/prompt style, overridden
    * by spend-based degrade whenever that's active (lib/ai/limits/budget.ts). Live as of
    * 2026-09-02; every read still defaults an absent/unreadable value to "balanced" — see
@@ -1991,6 +1995,18 @@ export interface AdminFinanceSettings {
   updated_at: string;
 }
 
+/** Migration 0105, singleton row at ADMIN_PRODUCT_SETTINGS_ID (lib/admin/queries.ts) --
+ *  see that migration's own header comment for why this is a table distinct from
+ *  admin_finance_settings above rather than three more columns on it. */
+export interface AdminProductSettings {
+  id: string;
+  signups_enabled: boolean;
+  maintenance_mode: boolean;
+  trial_period_days: number;
+  updated_by: string | null;
+  updated_at: string;
+}
+
 /** Migration 0102, singleton row at WEEKLY_PLAN_BUDGET_SETTINGS_ID
  *  (lib/ai/limits/weekly-plan-budget.ts) -- a separate singleton table from
  *  admin_finance_settings above, not a second row in it; see that migration's own header
@@ -2313,6 +2329,7 @@ export interface Database {
       ai_usage: Table<AiUsage, AiUsageInsert, Partial<AiUsageInsert>>;
       ai_model_pricing: Table<AiModelPricing, AiModelPricingInsert, Partial<AiModelPricingInsert>>;
       admin_finance_settings: Table<AdminFinanceSettings, Partial<AdminFinanceSettings>, Partial<AdminFinanceSettings>>;
+      admin_product_settings: Table<AdminProductSettings, Partial<AdminProductSettings>, Partial<AdminProductSettings>>;
       job_budget_overrides: Table<JobBudgetOverride, JobBudgetOverrideInsert, Partial<JobBudgetOverrideInsert>>;
       quota_grants: Table<QuotaGrant, QuotaGrantInsert, Partial<QuotaGrantInsert>>;
       weekly_plan_budget_settings: Table<WeeklyPlanBudgetSettings, Partial<WeeklyPlanBudgetSettings>, Partial<WeeklyPlanBudgetSettings>>;

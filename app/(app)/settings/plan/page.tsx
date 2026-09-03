@@ -18,7 +18,7 @@ export default async function PlanTierPage() {
   // rather than trusting the shell around it.
   await requireUser();
   const profile = await getCurrentProfile();
-  const tier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_granted_at: null });
+  const tier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
 
   return <PlanTierView tier={tier} />;
 }

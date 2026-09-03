@@ -5,6 +5,8 @@ import { requireProfile, verifySession, getProfileScores } from "@/lib/security/
 import { getMonthlyQuota } from "@/lib/ai/monthly-quota";
 import { selectModelForUser } from "@/lib/ai/limits/budget";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getProductSettings } from "@/lib/admin/queries";
 import { Sidebar } from "@/features/app-shell/sidebar";
 import { Topbar } from "@/features/app-shell/topbar";
 import { MobileNav } from "@/features/app-shell/mobile-nav";
@@ -12,6 +14,7 @@ import { RouteAmbientBlobs } from "@/features/app-shell/route-ambient-blobs";
 import { UltraAmbient } from "@/features/app-shell/ultra-ambient";
 import { DevTierPreviewToggle } from "@/features/app-shell/dev-tier-preview-toggle";
 import { NotConfiguredNotice } from "@/features/system/not-configured-notice";
+import { MaintenanceScreen } from "@/features/system/maintenance-screen";
 import { integrationStatus } from "@/lib/env";
 import { toProfileSignal } from "@/lib/scoring/signal";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
@@ -28,6 +31,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!integrationStatus.supabase) {
     const tSystem = await getTranslations("system");
     return <NotConfiguredNotice title={tSystem("notConfiguredTitle")} description={tSystem("notConfiguredDescription")} />;
+  }
+
+  // Checked before requireProfile() deliberately -- an unauthenticated visitor hitting any
+  // route under this shell during a maintenance window should see the same screen a logged-in
+  // student does, not get redirected into /login first. No admin exemption: app/(admin)/ is
+  // its own route group with its own layout, never reached through here, so the control
+  // panel's own off-switch is unaffected by construction -- see admin_product_settings'
+  // migration (0105) for the full reasoning oryn-a7 confirmed before this was built.
+  const { maintenanceMode } = await getProductSettings(createAdminClient());
+  if (maintenanceMode) {
+    const tMaintenance = await getTranslations("maintenance");
+    return <MaintenanceScreen title={tMaintenance("title")} description={tMaintenance("description")} />;
   }
 
   const profile = await requireProfile();

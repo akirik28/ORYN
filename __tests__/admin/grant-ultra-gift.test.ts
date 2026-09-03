@@ -3,19 +3,21 @@ import { describe, expect, test, vi, beforeEach } from "vitest";
 /**
  * grantUltraGift (app/(app)/admin/actions.ts) — the founder's own named prototype item.
  * What this suite actually pins: once-per-person is enforced by the update's own
- * `.is("ultra_gift_granted_at", null)` guard, not just the pre-read, so a race between two
- * near-simultaneous grants can't double-grant — and the button-facing distinction between
- * "already used" (granted: false, no error) and a genuine failure (error), which is what
- * lets UltraGiftControl show "already used" instead of a generic failure toast.
+ * `.is("ultra_gift_expires_at", null)` guard, not just the pre-read, so a race between two
+ * near-simultaneous grants can't double-grant; the button-facing distinction between
+ * "already used" (granted: false, no error) and a genuine failure (error); and that the
+ * stored expiry reflects admin_product_settings.trial_period_days at grant time (migration
+ * 0105), including the degrade to the safe 7-day default when that table doesn't exist yet.
  */
 
 vi.mock("@/lib/security/require-admin", () => ({ requireAdmin: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-const { selectMaybeSingleMock, updateIsSelectMock, insertMock } = vi.hoisted(() => ({
+const { selectMaybeSingleMock, updateIsSelectMock, insertMock, settingsSelectMock } = vi.hoisted(() => ({
   selectMaybeSingleMock: vi.fn(),
   updateIsSelectMock: vi.fn(),
   insertMock: vi.fn(),
+  settingsSelectMock: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/admin", () => ({
@@ -31,6 +33,9 @@ vi.mock("@/lib/supabase/admin", () => ({
           }),
         };
       }
+      if (table === "admin_product_settings") {
+        return { select: () => ({ eq: () => ({ maybeSingle: () => settingsSelectMock() }) }) };
+      }
       if (table === "admin_action_log") {
         return { insert: (payload: Record<string, unknown>) => insertMock(payload) };
       }
@@ -44,13 +49,19 @@ import { requireAdmin } from "@/lib/security/require-admin";
 
 const ADMIN_PROFILE = { id: "admin-1", display_name: "Ada", is_admin: true };
 const USER_ID = "11111111-1111-1111-1111-111111111111";
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 beforeEach(() => {
   vi.mocked(requireAdmin).mockResolvedValue(ADMIN_PROFILE as never);
   selectMaybeSingleMock.mockReset();
   updateIsSelectMock.mockReset();
   insertMock.mockReset();
+  settingsSelectMock.mockReset();
   insertMock.mockResolvedValue({ error: null });
+  // Table genuinely missing (migration 0105 unapplied) is the default across this suite —
+  // grantUltraGift must still work, at the safe 7-day default, per getProductSettings' own
+  // degrade. Individual tests override this to prove a configured value is actually used.
+  settingsSelectMock.mockResolvedValue({ data: null, error: { code: "PGRST205", message: `Could not find the table 'public.admin_product_settings' in the schema cache` } });
 });
 
 describe("grantUltraGift — input validation", () => {
@@ -69,19 +80,21 @@ describe("grantUltraGift — input validation", () => {
 });
 
 describe("grantUltraGift — once per person", () => {
-  test("already granted (per the pre-read): reports granted:false, never writes or logs", async () => {
-    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_granted_at: "2026-08-20T00:00:00.000Z", display_name: "Deniz" }, error: null });
+  test("already granted (per the pre-read): reports granted:false, never writes, logs, or reads settings", async () => {
+    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_expires_at: "2026-08-27T00:00:00.000Z", display_name: "Deniz" }, error: null });
 
     const result = await grantUltraGift(USER_ID);
 
     expect(result).toEqual({ granted: false });
+    expect(settingsSelectMock).not.toHaveBeenCalled();
     expect(updateIsSelectMock).not.toHaveBeenCalled();
     expect(insertMock).not.toHaveBeenCalled();
   });
 
-  test("a real grant: writes ultra_gift_granted_at guarded on IS NULL, and logs it", async () => {
-    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_granted_at: null, display_name: "Deniz" }, error: null });
+  test("a real grant with the table missing: degrades to the safe 7-day default, writes and logs it", async () => {
+    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_expires_at: null, display_name: "Deniz" }, error: null });
     updateIsSelectMock.mockResolvedValue({ data: [{ id: USER_ID }], error: null });
+    const before = Date.now();
 
     const result = await grantUltraGift(USER_ID);
 
@@ -89,9 +102,10 @@ describe("grantUltraGift — once per person", () => {
     // Call shape: update(payload).eq(col, val).is(col, val).select(col) -- payload, then
     // eq's two args, then is's two args, then select's arg.
     const [updatePayload, , , isColumn, isValue] = updateIsSelectMock.mock.calls[0];
-    expect(updatePayload).toHaveProperty("ultra_gift_granted_at");
-    expect(typeof updatePayload.ultra_gift_granted_at).toBe("string");
-    expect(isColumn).toBe("ultra_gift_granted_at");
+    const storedExpiry = new Date(updatePayload.ultra_gift_expires_at).getTime();
+    expect(storedExpiry).toBeGreaterThan(before + 6.9 * DAY_MS);
+    expect(storedExpiry).toBeLessThan(before + 7.1 * DAY_MS);
+    expect(isColumn).toBe("ultra_gift_expires_at");
     expect(isValue).toBeNull();
     expect(insertMock).toHaveBeenCalledTimes(1);
     const [logPayload] = insertMock.mock.calls[0];
@@ -100,11 +114,29 @@ describe("grantUltraGift — once per person", () => {
       action: "grant_ultra_gift",
       target_user_id: USER_ID,
       target_label: "Deniz",
+      detail: { durationDays: 7 },
     });
   });
 
+  test("a real grant with a configured trial length: stores an expiry matching the admin's own setting, not the 7-day default", async () => {
+    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_expires_at: null, display_name: "Deniz" }, error: null });
+    settingsSelectMock.mockResolvedValue({ data: { signups_enabled: true, maintenance_mode: false, trial_period_days: 14 }, error: null });
+    updateIsSelectMock.mockResolvedValue({ data: [{ id: USER_ID }], error: null });
+    const before = Date.now();
+
+    const result = await grantUltraGift(USER_ID);
+
+    expect(result).toEqual({ granted: true });
+    const [updatePayload] = updateIsSelectMock.mock.calls[0];
+    const storedExpiry = new Date(updatePayload.ultra_gift_expires_at).getTime();
+    expect(storedExpiry).toBeGreaterThan(before + 13.9 * DAY_MS);
+    expect(storedExpiry).toBeLessThan(before + 14.1 * DAY_MS);
+    const [logPayload] = insertMock.mock.calls[0];
+    expect(logPayload).toMatchObject({ detail: { durationDays: 14 } });
+  });
+
   test("a race lost at the guarded update (granted between the read and the write): reports granted:false, not an error", async () => {
-    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_granted_at: null, display_name: "Deniz" }, error: null });
+    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_expires_at: null, display_name: "Deniz" }, error: null });
     // The IS NULL guard matched zero rows -- another grant won the race in between.
     updateIsSelectMock.mockResolvedValue({ data: [], error: null });
 
@@ -115,7 +147,7 @@ describe("grantUltraGift — once per person", () => {
   });
 
   test("a real write error surfaces as an error and never logs", async () => {
-    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_granted_at: null, display_name: "Deniz" }, error: null });
+    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_expires_at: null, display_name: "Deniz" }, error: null });
     updateIsSelectMock.mockResolvedValue({ data: null, error: { code: "42501", message: "permission denied" } });
 
     const result = await grantUltraGift(USER_ID);

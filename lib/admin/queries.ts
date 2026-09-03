@@ -294,10 +294,16 @@ export interface AdminUserRow {
   signedUpAt: string;
   lastSeenAt: string | null;
   lifetimeSpendUsd: number;
-  /** Raw grant timestamp (migration 0104), not a derived boolean — the admin UI needs both
+  /** Raw expiry timestamp (migration 0106), not a derived boolean — the admin UI needs both
    *  "has this student ever received the gift" (non-null, forever) and a real date to show
-   *  next to the "used" label, which a boolean alone would throw away. */
-  ultraGiftGrantedAt: string | null;
+   *  next to the "used"/"active" label, which a boolean alone would throw away. */
+  ultraGiftExpiresAt: string | null;
+  /** Whether ultraGiftExpiresAt is still in the future, computed here rather than in
+   *  UltraGiftControl's own render — react-hooks/purity forbids calling Date.now() during a
+   *  component's render (client or server), the same rule that first showed up on
+   *  growth-signups-section.tsx's own daysSinceLastSignup. This is a plain .ts function, not
+   *  a component, so it's the correct place for the impure call to live. */
+  ultraGiftActive: boolean;
 }
 
 /**
@@ -308,12 +314,12 @@ export interface AdminUserRow {
  */
 export async function getAdminUserList(admin: SupabaseClient<Database>): Promise<AdminUserRow[]> {
   const [profilesResult, spendByUser, { data: authUsers }] = await Promise.all([
-    admin.from("profiles").select("id, display_name, created_at, plan_tier, ultra_gift_granted_at").order("created_at", { ascending: false }),
+    admin.from("profiles").select("id, display_name, created_at, plan_tier, ultra_gift_expires_at").order("created_at", { ascending: false }),
     getLifetimeSpendByUser(admin),
     admin.auth.admin.listUsers(),
   ]);
 
-  // Named select, not `*` -- migration 0104 unapplied makes this the same "PostgREST
+  // Named select, not `*` -- migration 0106 unapplied makes this the same "PostgREST
   // validates the requested column list" shape lib/supabase/errors.ts's own comment
   // documents for lib/notifications/create.ts, not the silent-omission shape resolvePlanTier
   // relies on elsewhere. Retried without the one new column rather than defaulted, because
@@ -322,9 +328,9 @@ export async function getAdminUserList(admin: SupabaseClient<Database>): Promise
   // just the gift timestamp. Confirmed live 2026-09-03: this exact query silently emptied
   // the whole admin user list against the real database before this retry existed.
   let profiles = profilesResult.data;
-  if (profilesResult.error && isUndefinedColumnError(profilesResult.error, "ultra_gift_granted_at")) {
+  if (profilesResult.error && isUndefinedColumnError(profilesResult.error, "ultra_gift_expires_at")) {
     const fallback = await admin.from("profiles").select("id, display_name, created_at, plan_tier").order("created_at", { ascending: false });
-    profiles = fallback.data?.map((p) => ({ ...p, ultra_gift_granted_at: null as string | null })) ?? null;
+    profiles = fallback.data?.map((p) => ({ ...p, ultra_gift_expires_at: null as string | null })) ?? null;
   } else if (profilesResult.error) {
     console.error("[admin] failed to read profiles for user list", { error: profilesResult.error });
   }
@@ -338,8 +344,52 @@ export async function getAdminUserList(admin: SupabaseClient<Database>): Promise
     signedUpAt: p.created_at,
     lastSeenAt: lastSeenById.get(p.id) ?? null,
     lifetimeSpendUsd: spendByUser.get(p.id) ?? 0,
-    ultraGiftGrantedAt: p.ultra_gift_granted_at ?? null,
+    ultraGiftExpiresAt: p.ultra_gift_expires_at ?? null,
+    ultraGiftActive: !!p.ultra_gift_expires_at && Date.now() < new Date(p.ultra_gift_expires_at).getTime(),
   }));
+}
+
+export const ADMIN_PRODUCT_SETTINGS_ID = "00000000-0000-0000-0000-000000000002";
+
+export interface ProductSettings {
+  signupsEnabled: boolean;
+  maintenanceMode: boolean;
+  trialPeriodDays: number;
+}
+
+/** Identical to current, pre-migration behavior in every field — see migration 0105's own
+ *  header for why that's true by construction, not a coincidence. */
+const DEFAULT_PRODUCT_SETTINGS: ProductSettings = {
+  signupsEnabled: true,
+  maintenanceMode: false,
+  trialPeriodDays: 7,
+};
+
+/**
+ * Read from three places with no admin session available: app/(app)/layout.tsx (every
+ * authenticated student, every request), app/(auth)/actions.ts's signUp() (before any
+ * session exists), and grantUltraGift (app/(app)/admin/actions.ts, an admin session, but
+ * reusing this same read rather than a fourth copy of the degrade logic). Same
+ * missing-TABLE degrade getFinanceSettings uses right above this — admin_product_settings
+ * is a whole new table (migration 0105), not an existing table gaining a column, so this is
+ * isUndefinedTableError, not isUndefinedColumnError.
+ */
+export async function getProductSettings(admin: SupabaseClient<Database>): Promise<ProductSettings> {
+  const { data, error } = await admin.from("admin_product_settings").select("*").eq("id", ADMIN_PRODUCT_SETTINGS_ID).maybeSingle();
+
+  if (error) {
+    if (!isUndefinedTableError(error, "admin_product_settings")) {
+      console.error("[admin/product-settings] failed to read admin_product_settings", error);
+    }
+    return DEFAULT_PRODUCT_SETTINGS;
+  }
+  if (!data) return DEFAULT_PRODUCT_SETTINGS;
+
+  return {
+    signupsEnabled: data.signups_enabled,
+    maintenanceMode: data.maintenance_mode,
+    trialPeriodDays: data.trial_period_days,
+  };
 }
 
 export interface AdminOpportunityRow {

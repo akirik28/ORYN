@@ -1380,7 +1380,8 @@
       "creatingAccount": "Hesap oluşturuluyor…",
       "createAccount": "Hesap oluştur",
       "checkEmailMessage": "Hesabını onaylamak ve başlamak için e-postanı kontrol et.",
-      "displayNameTooShort": "En az 2 karakter gir."
+      "displayNameTooShort": "En az 2 karakter gir.",
+      "signupsClosedMessage": "Yeni kayıtlar şu anda kapalı. Lütfen daha sonra tekrar deneyin."
     },
     "forgotPassword": {
       "headline": "Şifreni sıfırla",
@@ -1770,7 +1771,8 @@
       "giftConfirmDescription": "Sadece bir kez — 7 gün bitse bile bu öğrenciye tekrar hediye edilemez. Kalıcı plan katmanını değiştirmez.",
       "giftConfirmButton": "Hediye et",
       "giftGrantedToast": "{name} artık 7 gün boyunca Ultra'ya sahip.",
-      "giftAlreadyUsedToast": "{name} hediyesini zaten kullandı."
+      "giftAlreadyUsedToast": "{name} hediyesini zaten kullandı.",
+      "giftActive": "Ultra aktif, {time}"
     },
     "opportunities": {
       "sectionTitle": "Fırsatlar",
@@ -2017,7 +2019,7 @@
       },
       "settings": {
         "title": "Ayarlar",
-        "description": "Bugün gerçekten yapılandırılabilen ve henüz olmayan.",
+        "description": "Ürünün şu anda nasıl davrandığını belirleyen ayarlar.",
         "finance": {
           "sectionTitle": "Fiyat ve döviz kuru",
           "sectionDescription": "Bu ürünün bir yöneticinin girmesini gerektirdiği tek iki rakam — kur asla tahmin edilmez, yanlış bir kur Kâr & Zarar'daki her rakamı sessizce bozar.",
@@ -2038,11 +2040,34 @@
           "hardCeiling": "Sert tavan",
           "tokenLimit": "Görünen token kotası"
         },
-        "notYetWired": {
-          "sectionTitle": "Henüz buradan yapılandırılamıyor",
-          "signups": "Yeni kayıt kontrolü — kodda hiçbir yerde bir açma/kapama anahtarı yok; kayıtlar her zaman açık.",
-          "maintenance": "Bakım modu — böyle bir bayrak yok; açılacak bir şey yok.",
-          "trialPeriod": "Deneme süresi uzunluğu — bir ayar olarak saklanmıyor; bir denemenin bugün nasıl belirlendiği için lib/tier'e bak."
+        "signups": {
+          "sectionTitle": "Yeni kayıtlar",
+          "statusOpen": "Açık — herkes hesap oluşturabilir.",
+          "statusClosed": "Kapalı — mevcut öğrenciler etkilenmez.",
+          "enable": "Kayıtları aç",
+          "disable": "Kayıtları kapat",
+          "disableConfirmTitle": "Yeni kayıtlar durdurulsun mu?",
+          "disableConfirmBody": "Siz tekrar açana kadar kimse yeni hesap oluşturamaz. Mevcut öğrenciler normal şekilde çalışmaya devam eder.",
+          "disableConfirmAction": "Kayıtları kapat"
+        },
+        "maintenance": {
+          "sectionTitle": "Bakım modu",
+          "statusOn": "Açık — her öğrenci uygulama yerine bakım ekranı görüyor.",
+          "statusOff": "Kapalı — uygulama normal çalışıyor.",
+          "turnOff": "Kapat",
+          "turnOn": "Aç",
+          "turnOnConfirmTitle": "Uygulama bakım moduna alınsın mı?",
+          "turnOnConfirmBody": "Siz tekrar kapatana kadar her öğrenci uygulamaya erişimini kaybeder. Kumanda merkezi etkilenmez — bu düğmeye her zaman ulaşabilirsiniz.",
+          "turnOnConfirmAction": "Bakım modunu aç"
+        },
+        "trial": {
+          "sectionTitle": "Deneme süresi",
+          "sectionDescription": "Hediye edilen Ultra süresinin kaç gün süreceği. Bu değeri değiştirmek yalnızca değişiklikten sonra hediye edilenleri etkiler — zaten hediye edilmiş biri vaat edilen süreyi korur.",
+          "label": "Gün",
+          "invalidDays": "En az 1 olacak şekilde tam sayı bir gün girin.",
+          "saving": "Kaydediliyor…",
+          "save": "Kaydet",
+          "saved": "Kaydedildi."
         }
       },
       "traffic": {
@@ -2128,5 +2153,9 @@
     "compare": "Karşılaştır",
     "comparing": "Karşılaştırılıyor",
     "compareLimitTooltip": "Aynı anda en fazla {max} tane karşılaştırabilirsin."
+  },
+  "maintenance": {
+    "title": "Kısa süre içinde döneceğiz",
+    "description": "Oryn geçici olarak bakımda. Hesabınız veya verileriniz hakkında hiçbir şey değişmedi — birazdan tekrar kontrol edin."
   }
 }

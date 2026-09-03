@@ -56,7 +56,7 @@ export default async function AdvisorPage() {
   // "balanced" default resolveResponseMode itself falls back to for a genuinely missing
   // column, just handled one layer up here for a genuinely missing profile.
   const responseMode = profile ? resolveResponseMode(profile) : "balanced";
-  const planTier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_granted_at: null });
+  const planTier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
   // Derived from the same already-loaded `profile` object `planTier` above reads, not a
   // second query — see lib/advisor/upgrade-prompt.ts's own header for why this used to be
   // a separate fetch and no longer is (next build's Client Component SSR check, 2026-09-02).

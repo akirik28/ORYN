@@ -257,7 +257,7 @@ export async function updateResponseMode(mode: ResponseMode): Promise<{ error?: 
 
   if (mode === "thorough") {
     const profile = await getCurrentProfile();
-    if (resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_granted_at: null }) !== "ultra") {
+    if (resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null }) !== "ultra") {
       return { error: "Ultra isn't available on your plan, so nothing was saved." };
     }
   }
