@@ -40,9 +40,21 @@ export async function discoverOpportunitiesForQuery(query: string): Promise<Disc
   }
 
   const supabase = createAdminClient();
-  const { data: existingOpportunities } = await supabase
+  // Throws rather than degrading to `?? []`, deliberately not lib/supabase/safe-read.ts's
+  // readOr — that helper's own contract still returns the fallback on a failed read (logged,
+  // but the caller's behavior is unchanged), which is right where an empty result is a safe
+  // answer. It is not safe here: an empty comparison set doesn't mean "nothing to dedupe
+  // against," it means "every candidate below reads as new, however similar" — silently
+  // proceeding would insert duplicates of records already in the catalog, exactly the shape
+  // bd's own duplicate-record package found live instances of hours before this fix.
+  // lib/social/posts.ts's unwrapOrThrow is the closer precedent: this is a read whose
+  // failure must stop the run, not one that degrades to an empty state safely.
+  const { data: existingOpportunities, error: existingOpportunitiesError } = await supabase
     .from("opportunities")
     .select("title, organization, official_url");
+  if (existingOpportunitiesError) {
+    throw new Error(`discoverOpportunitiesForQuery: failed to load existing opportunities for dedup: ${existingOpportunitiesError.message}`);
+  }
 
   let stored = 0;
   let stoppedForBudget = false;
