@@ -16,7 +16,7 @@ import { updateFinanceSettings } from "@/app/(app)/admin/actions";
  * only invalidates the old page, not this route group -- this form's own refresh is what
  * makes /kumanda/ayarlar and /kumanda/kar-zarar show the number that was just saved.
  */
-export function FinanceSettingsForm({ currentRate, currentPriceTry }: { currentRate: number | null; currentPriceTry: number }) {
+export function FinanceSettingsForm({ currentRate, currentPriceTry, live = true }: { currentRate: number | null; currentPriceTry: number; live?: boolean }) {
   const t = useTranslations("admin.control.settings.finance");
   const router = useRouter();
   const [rate, setRate] = useState(currentRate === null ? "" : String(currentRate));
@@ -68,7 +68,8 @@ export function FinanceSettingsForm({ currentRate, currentPriceTry }: { currentR
             value={rate}
             onChange={(e) => setRate(e.target.value)}
             placeholder={t("rateNotConfigured")}
-            className="w-full rounded-lg px-3 py-2 text-sm outline-none"
+            disabled={!live}
+            className="w-full rounded-lg px-3 py-2 text-sm outline-none disabled:opacity-60"
             style={{ border: "1px solid var(--admin-border)", background: "var(--admin-bg-elevated)", color: "var(--admin-ink-1)" }}
           />
           <span className="mt-1 block text-xs" style={{ color: "var(--admin-ink-3)" }}>
@@ -86,7 +87,8 @@ export function FinanceSettingsForm({ currentRate, currentPriceTry }: { currentR
             min="0"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
-            className="w-full rounded-lg px-3 py-2 text-sm outline-none"
+            disabled={!live}
+            className="w-full rounded-lg px-3 py-2 text-sm outline-none disabled:opacity-60"
             style={{ border: "1px solid var(--admin-border)", background: "var(--admin-bg-elevated)", color: "var(--admin-ink-1)" }}
           />
         </label>
@@ -105,7 +107,7 @@ export function FinanceSettingsForm({ currentRate, currentPriceTry }: { currentR
 
       <button
         type="submit"
-        disabled={isPending}
+        disabled={isPending || !live}
         className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-opacity disabled:opacity-60"
         style={{ background: "var(--admin-accent)" }}
       >

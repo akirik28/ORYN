@@ -23,8 +23,14 @@ import { toggleJobDisabled } from "@/app/(app)/admin/actions";
  * cron and manual alike, stop until someone reverses it), re-enabling doesn't (it only ever
  * restores the job to its normal, already-expected behavior, the same direction as
  * `AlertDialogCancel` on any other confirm dialog in this app).
+ *
+ * `live` (job_controls, migration 0095): defaults to `true` rather than a required prop —
+ * every existing caller/test predates the table-liveness check, and this control has no
+ * reason to know or care whether the table exists when a caller already has (or is a test
+ * exercising confirm/cancel behavior directly). ScheduledJobsSection is the one real caller
+ * that actually threads the checked value through.
  */
-export function JobDisableToggle({ jobName, disabled }: { jobName: string; disabled: boolean }) {
+export function JobDisableToggle({ jobName, disabled, live = true }: { jobName: string; disabled: boolean; live?: boolean }) {
   const t = useTranslations("admin.jobs");
   const tCommon = useTranslations("common");
   const [isPending, startTransition] = useTransition();
@@ -42,7 +48,7 @@ export function JobDisableToggle({ jobName, disabled }: { jobName: string; disab
 
   if (disabled) {
     return (
-      <Button variant="outline" size="sm" disabled={isPending} onClick={() => run(false)}>
+      <Button variant="outline" size="sm" disabled={isPending || !live} onClick={() => run(false)}>
         {isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Play className="size-3.5" />}
         {t("enableToggle")}
       </Button>
@@ -51,7 +57,7 @@ export function JobDisableToggle({ jobName, disabled }: { jobName: string; disab
 
   return (
     <>
-      <Button variant="ghost" size="sm" disabled={isPending} onClick={() => setConfirmOpen(true)} className="text-muted-foreground hover:text-destructive">
+      <Button variant="ghost" size="sm" disabled={isPending || !live} onClick={() => setConfirmOpen(true)} className="text-muted-foreground hover:text-destructive">
         <Ban className="size-3.5" />
         {t("disableToggle")}
       </Button>

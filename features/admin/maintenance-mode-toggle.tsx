@@ -29,7 +29,7 @@ import { updateProductSettings } from "@/app/(app)/admin/actions";
  * this is on, the inverse of SignupsToggle's own asymmetry but the same underlying rule:
  * the consequential direction gets a confirm step, restoring normal behavior doesn't.
  */
-export function MaintenanceModeToggle({ active }: { active: boolean }) {
+export function MaintenanceModeToggle({ active, live = true }: { active: boolean; live?: boolean }) {
   const t = useTranslations("admin.control.settings.maintenance");
   const tCommon = useTranslations("common");
   const [isPending, startTransition] = useTransition();
@@ -47,7 +47,7 @@ export function MaintenanceModeToggle({ active }: { active: boolean }) {
 
   if (active) {
     return (
-      <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => run(false)}>
+      <Button type="button" variant="outline" size="sm" disabled={isPending || !live} onClick={() => run(false)}>
         {isPending ? <Loader2 className="size-3.5 animate-spin" /> : <ShieldCheck className="size-3.5" />}
         {t("turnOff")}
       </Button>
@@ -60,7 +60,7 @@ export function MaintenanceModeToggle({ active }: { active: boolean }) {
         type="button"
         variant="ghost"
         size="sm"
-        disabled={isPending}
+        disabled={isPending || !live}
         onClick={() => setConfirmOpen(true)}
         className="text-muted-foreground hover:text-destructive"
       >

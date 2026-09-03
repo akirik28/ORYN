@@ -1951,6 +1951,91 @@ export async function isAdminActionsTableLive(admin: SupabaseClient<Database>): 
   return false;
 }
 
+/**
+ * Shared tail for every isXTableLive check below — same interpretation
+ * isAdminActionsTableLive above already established (unrecognized error defaults to "not
+ * live", never "live"), factored out once these went from one check to nine rather than
+ * copying its five-line body nine times. Each caller still writes its own `.from(table)
+ * .select(pkColumn).limit(1)` rather than taking `table`/`column` as parameters here — the
+ * eight tables this file checks have four different primary-key column names (`id`,
+ * `job_name`, `feature_key`, `feature`, `model`), and writing each select out explicitly
+ * keeps every one of them checked against the real generated Database type instead of a
+ * column name typed as a bare `string`.
+ */
+function reportTableLiveness(error: { code?: string; message?: string } | null, table: string): boolean {
+  if (!error) return true;
+  if (!isUndefinedTableError(error, table)) {
+    console.error(`[admin] unexpected error checking ${table}`, error);
+  }
+  return false;
+}
+
+/** job_controls, migration 0095 — JobDisableToggle (ScheduledJobsSection). */
+export async function isJobControlsTableLive(admin: SupabaseClient<Database>): Promise<boolean> {
+  const { error } = await admin.from("job_controls").select("job_name").limit(1);
+  return reportTableLiveness(error, "job_controls");
+}
+
+/** admin_dead_feature_flags, migration 0101 — GrowthFeatureDeadControl's mark AND unmark
+ *  buttons both read this one check (GrowthFeatureCensusSection), not one each. */
+export async function isDeadFeatureFlagsTableLive(admin: SupabaseClient<Database>): Promise<boolean> {
+  const { error } = await admin.from("admin_dead_feature_flags").select("feature_key").limit(1);
+  return reportTableLiveness(error, "admin_dead_feature_flags");
+}
+
+/** job_budget_overrides, migration 0099 — JobBudgetEditor's set AND clear buttons both read
+ *  this one check (JobBudgetSection), not one each. */
+export async function isJobBudgetOverridesTableLive(admin: SupabaseClient<Database>): Promise<boolean> {
+  const { error } = await admin.from("job_budget_overrides").select("feature").limit(1);
+  return reportTableLiveness(error, "job_budget_overrides");
+}
+
+/** quota_grants, migration 0096 — GrantQuotaEditor's grant AND reset buttons both read this
+ *  one check (SpendPerUserSection), not one each. */
+export async function isQuotaGrantsTableLive(admin: SupabaseClient<Database>): Promise<boolean> {
+  const { error } = await admin.from("quota_grants").select("id").limit(1);
+  return reportTableLiveness(error, "quota_grants");
+}
+
+/** ai_model_pricing, migration 0100 — ModelPricingEditor (AiFeatureShapeSection). */
+export async function isModelPricingTableLive(admin: SupabaseClient<Database>): Promise<boolean> {
+  const { error } = await admin.from("ai_model_pricing").select("model").limit(1);
+  return reportTableLiveness(error, "ai_model_pricing");
+}
+
+/** admin_finance_settings, migration 0094 — FinanceSettingsForm (Ayarlar). */
+export async function isFinanceSettingsTableLive(admin: SupabaseClient<Database>): Promise<boolean> {
+  const { error } = await admin.from("admin_finance_settings").select("id").limit(1);
+  return reportTableLiveness(error, "admin_finance_settings");
+}
+
+/** admin_product_settings, migration 0105 — SignupsToggle, MaintenanceModeToggle and
+ *  TrialPeriodForm all read this one check (Ayarlar), not one each. */
+export async function isProductSettingsTableLive(admin: SupabaseClient<Database>): Promise<boolean> {
+  const { error } = await admin.from("admin_product_settings").select("id").limit(1);
+  return reportTableLiveness(error, "admin_product_settings");
+}
+
+/** weekly_plan_budget_settings, migration 0102 — WeeklyPlanBudgetForm. */
+export async function isWeeklyPlanBudgetSettingsTableLive(admin: SupabaseClient<Database>): Promise<boolean> {
+  const { error } = await admin.from("weekly_plan_budget_settings").select("id").limit(1);
+  return reportTableLiveness(error, "weekly_plan_budget_settings");
+}
+
+/**
+ * profiles.ultra_gift_expires_at, migration 0106 — UltraGiftControl (UserListSection). A
+ * column on an existing, always-present table, not a missing table — reuses
+ * `columnExistsLive` (above, already built for `getMigrationReality`) rather than the
+ * table-liveness shape every other check on this page uses. `null` (indeterminate — RLS, a
+ * transient failure, or the column check itself failing in some other way) collapses to
+ * "not live" here, the same "an unrecognized outcome defaults to not-ready" rule every other
+ * check on this page already follows — `getMigrationReality` keeps that third state visible
+ * because distinguishing it matters there; a button only ever needs the binary answer.
+ */
+export async function isUltraGiftColumnLive(admin: SupabaseClient<Database>): Promise<boolean> {
+  return (await columnExistsLive(admin, "profiles", "ultra_gift_expires_at")) === true;
+}
+
 export interface AdminActivityEntry {
   id: string;
   createdAt: string;

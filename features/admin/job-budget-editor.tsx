@@ -23,6 +23,7 @@ export function JobBudgetEditor({
   resetAction,
   saveLabel,
   resetLabel,
+  live = true,
 }: {
   feature: JobBudgetFeature;
   budgetUsd: number;
@@ -31,6 +32,7 @@ export function JobBudgetEditor({
   resetAction: (feature: JobBudgetFeature) => Promise<{ error?: string }>;
   saveLabel: string;
   resetLabel: string;
+  live?: boolean;
 }) {
   const [value, setValue] = useState(String(budgetUsd));
   const [isPending, startTransition] = useTransition();
@@ -55,7 +57,7 @@ export function JobBudgetEditor({
         step={0.01}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        disabled={isPending}
+        disabled={isPending || !live}
         className="h-7 w-20 text-xs"
         aria-label={saveLabel}
       />
@@ -63,14 +65,14 @@ export function JobBudgetEditor({
         size="sm"
         variant="outline"
         className="h-7 px-2 text-xs"
-        disabled={isPending}
+        disabled={isPending || !live}
         onClick={() => run(() => saveAction(feature, Number(value)))}
       >
         {isPending ? <Loader2 className="size-3 animate-spin" /> : null}
         {saveLabel}
       </Button>
       {isOverridden ? (
-        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" disabled={isPending} onClick={() => run(() => resetAction(feature))}>
+        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" disabled={isPending || !live} onClick={() => run(() => resetAction(feature))}>
           {resetLabel}
         </Button>
       ) : null}

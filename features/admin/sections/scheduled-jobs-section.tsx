@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { formatNumber, formatDuration } from "@/lib/i18n/format";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getJobHealth, getJobControls } from "@/lib/admin/queries";
+import { getJobHealth, getJobControls, isJobControlsTableLive } from "@/lib/admin/queries";
 import { EMPTY_STREAK_THRESHOLD } from "@/lib/jobs/job-health";
 import { JobTriggerButton } from "@/features/admin/job-trigger-button";
 import { JobDisableToggle } from "@/features/admin/job-disable-toggle";
@@ -33,7 +33,7 @@ function jobLabel(jobName: string, fallback: string, locale: Locale): string {
 export async function ScheduledJobsSection() {
   const [t, locale] = await Promise.all([getTranslations("admin.jobs"), resolveLocale()]);
   const admin = createAdminClient();
-  const [jobHealth, jobControls] = await Promise.all([getJobHealth(admin), getJobControls(admin)]);
+  const [jobHealth, jobControls, jobControlsLive] = await Promise.all([getJobHealth(admin), getJobControls(admin), isJobControlsTableLive(admin)]);
   const dateFnsLocale = locale === "tr" ? { locale: trLocale } : undefined;
   // Every job here is either never_run or stale today — ORYN has never been deployed, and
   // Vercel Cron only fires against a live deployment (docs/nothing-scheduled-has-ever-run-
@@ -51,6 +51,7 @@ export async function ScheduledJobsSection() {
       {allNeverRunOrStale ? (
         <p className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5 text-xs text-muted-foreground">{t("notDeployedNote")}</p>
       ) : null}
+      {!jobControlsLive ? <p className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">{t("jobControlsNotSetUp")}</p> : null}
       <div className="flex flex-wrap gap-2">
         <JobTriggerButton label={t("triggerOpportunityDiscovery")} action={triggerOpportunityDiscovery} />
         <JobTriggerButton label={t("triggerUniversitySync")} action={triggerUniversitySync} />
@@ -92,7 +93,7 @@ export async function ScheduledJobsSection() {
               ) : null}
               {isDisabled ? <p className="text-xs font-medium text-destructive">{t("disabledLabel")} — {t("disabledNote")}</p> : null}
               <div>
-                <JobDisableToggle jobName={job.jobName} disabled={isDisabled} />
+                <JobDisableToggle jobName={job.jobName} disabled={isDisabled} live={jobControlsLive} />
               </div>
             </li>
           );

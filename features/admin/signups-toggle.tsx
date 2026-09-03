@@ -24,7 +24,7 @@ import { updateProductSettings } from "@/app/(app)/admin/actions";
  * direction (a real visitor loses the ability to create an account) and gets a confirm
  * step; turning them back ON only restores normal behavior and doesn't.
  */
-export function SignupsToggle({ enabled }: { enabled: boolean }) {
+export function SignupsToggle({ enabled, live = true }: { enabled: boolean; live?: boolean }) {
   const t = useTranslations("admin.control.settings.signups");
   const tCommon = useTranslations("common");
   const [isPending, startTransition] = useTransition();
@@ -42,7 +42,7 @@ export function SignupsToggle({ enabled }: { enabled: boolean }) {
 
   if (!enabled) {
     return (
-      <Button type="button" variant="outline" size="sm" disabled={isPending} onClick={() => run(true)}>
+      <Button type="button" variant="outline" size="sm" disabled={isPending || !live} onClick={() => run(true)}>
         {isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Play className="size-3.5" />}
         {t("enable")}
       </Button>
@@ -55,7 +55,7 @@ export function SignupsToggle({ enabled }: { enabled: boolean }) {
         type="button"
         variant="ghost"
         size="sm"
-        disabled={isPending}
+        disabled={isPending || !live}
         onClick={() => setConfirmOpen(true)}
         className="text-muted-foreground hover:text-destructive"
       >

@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { formatCurrency } from "@/lib/i18n/format";
-import { getWeeklyPlanBudgetStatus } from "@/lib/admin/queries";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getWeeklyPlanBudgetStatus, isWeeklyPlanBudgetSettingsTableLive } from "@/lib/admin/queries";
 import { WeeklyPlanBudgetForm } from "@/features/admin/weekly-plan-budget-form";
 
 const money = (value: number) => formatCurrency(value, "USD", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
@@ -14,7 +15,7 @@ const money = (value: number) => formatCurrency(value, "USD", { minimumFractionD
  */
 export async function WeeklyPlanBudgetSection() {
   const t = await getTranslations("admin.weeklyPlanBudget");
-  const status = await getWeeklyPlanBudgetStatus();
+  const [status, settingsLive] = await Promise.all([getWeeklyPlanBudgetStatus(), isWeeklyPlanBudgetSettingsTableLive(createAdminClient())]);
 
   return (
     <section className="space-y-3">
@@ -26,7 +27,8 @@ export async function WeeklyPlanBudgetSection() {
         {status.monthToDateSpendUsd !== null ? t("status", { spend: money(status.monthToDateSpendUsd), ceiling: money(status.ceilingUsd) }) : t("spendUnavailable")}
       </p>
       {status.currentlyDegrading ? <p className="text-sm font-medium text-amber-700 dark:text-amber-400">{t("degradingNow")}</p> : null}
-      <WeeklyPlanBudgetForm currentCeilingUsd={status.ceilingUsd} />
+      {!settingsLive ? <p className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">{t("notSetUp")}</p> : null}
+      <WeeklyPlanBudgetForm currentCeilingUsd={status.ceilingUsd} live={settingsLive} />
     </section>
   );
 }

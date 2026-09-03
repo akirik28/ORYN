@@ -2,7 +2,7 @@ import { formatDistanceToNow } from "date-fns";
 import { getTranslations } from "next-intl/server";
 import { formatCurrency } from "@/lib/i18n/format";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getAdminUserList } from "@/lib/admin/queries";
+import { getAdminUserList, isUltraGiftColumnLive } from "@/lib/admin/queries";
 import { PlanTierControl } from "@/features/admin/plan-tier-control";
 import { UltraGiftControl } from "@/features/admin/ultra-gift-control";
 
@@ -11,11 +11,12 @@ const money = (value: number) => formatCurrency(value, "USD", { minimumFractionD
 export async function UserListSection() {
   const t = await getTranslations("admin.users");
   const admin = createAdminClient();
-  const users = await getAdminUserList(admin);
+  const [users, giftColumnLive] = await Promise.all([getAdminUserList(admin), isUltraGiftColumnLive(admin)]);
 
   return (
     <section className="space-y-3">
       <h2 className="font-semibold">{t("sectionTitle")}</h2>
+      {!giftColumnLive ? <p className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">{t("giftNotSetUp")}</p> : null}
       <ul className="divide-y rounded-lg border">
         {users.map((user) => (
           <li key={user.userId} className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 text-sm">
@@ -31,6 +32,7 @@ export async function UserListSection() {
                 displayName={user.displayName ?? t("unnamed")}
                 expiresAt={user.ultraGiftExpiresAt}
                 active={user.ultraGiftActive}
+                live={giftColumnLive}
               />
             </div>
           </li>

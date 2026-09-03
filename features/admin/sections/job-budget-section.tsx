@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { formatCurrency } from "@/lib/i18n/format";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getJobBudgetStatus } from "@/lib/admin/queries";
+import { getJobBudgetStatus, isJobBudgetOverridesTableLive } from "@/lib/admin/queries";
 import { BurnChart } from "@/components/oryn/charts/burn-chart";
 import { JobBudgetEditor } from "@/features/admin/job-budget-editor";
 import { setJobBudgetOverride, clearJobBudgetOverride } from "@/app/(app)/admin/actions";
@@ -25,12 +25,13 @@ const money = (value: number) => formatCurrency(value, "USD", { minimumFractionD
 export async function JobBudgetSection() {
   const t = await getTranslations("admin.aiBudget.jobBudget");
   const admin = createAdminClient();
-  const statuses = await getJobBudgetStatus(admin);
+  const [statuses, overridesLive] = await Promise.all([getJobBudgetStatus(admin), isJobBudgetOverridesTableLive(admin)]);
 
   return (
     <section className="space-y-3">
       <h2 className="font-semibold">{t("sectionTitle")}</h2>
       <p className="text-sm text-muted-foreground">{t("description")}</p>
+      {!overridesLive ? <p className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">{t("overridesNotSetUp")}</p> : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
         {statuses.map((status) => (
@@ -60,6 +61,7 @@ export async function JobBudgetSection() {
               resetAction={clearJobBudgetOverride}
               saveLabel={t("save")}
               resetLabel={t("resetToDefault")}
+              live={overridesLive}
             />
           </div>
         ))}
