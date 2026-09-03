@@ -1959,6 +1959,17 @@ export interface AdvisorMessage {
 }
 export type AdvisorMessageInsert = Insertable<AdvisorMessage, "id" | "created_at" | "status" | "error_message" | "degraded">;
 
+/** Migration 0110, written not applied. One row per user, present only while a reply is
+ * actually generating — see that migration's own header. Application code never reads or
+ * writes this table directly; both operations go through the two RPC functions below, so this
+ * Row/Insert pair exists for completeness rather than because lib/advisor/generation-lock.ts
+ * needs it. */
+export interface AdvisorGenerationLock {
+  user_id: string;
+  started_at: string;
+}
+export type AdvisorGenerationLockInsert = Insertable<AdvisorGenerationLock, "started_at">;
+
 // ---------- Notifications ----------
 
 export interface Notification {
@@ -2287,6 +2298,14 @@ export interface Database {
         Args: { p_entity_type: string; p_display_name: string; p_country_code: string | null; p_city: string | null };
         Returns: { entity_id: string; created_new: boolean; verification_state: EntityVerificationState }[];
       };
+      /** Migration 0110, written not applied. security invoker — auth.uid() is the calling
+       * session's own claim, no elevated identity. Returns the acquired lock's started_at, or
+       * null if a fresh (non-stale) lock is already held — see the migration's own header for
+       * why this is one atomic statement rather than a select-then-insert from TypeScript. */
+      acquire_advisor_generation_lock: { Args: { p_stale_after_seconds?: number }; Returns: string | null };
+      /** Migration 0110, written not applied. Matches on started_at, not just user_id — see
+       * the migration's own header for the crash-adjacent edge case that protects against. */
+      release_advisor_generation_lock: { Args: { p_started_at: string }; Returns: void };
     };
     Tables: {
       profiles: Table<Profile, Partial<Profile>, ProfileUpdate>;
@@ -2353,6 +2372,10 @@ export interface Database {
       ai_recommendations: Table<AiRecommendation, AiRecommendationInsert, AiRecommendationUpdate>;
       advisor_conversations: Table<AdvisorConversation, AdvisorConversationInsert, Partial<AdvisorConversationInsert>>;
       advisor_messages: Table<AdvisorMessage, AdvisorMessageInsert, Partial<AdvisorMessageInsert>>;
+      // Migration 0110, written not applied — see lib/advisor/generation-lock.ts. Not read
+      // or written directly (see AdvisorGenerationLock's own comment); listed for the same
+      // completeness reason opportunity_verification_latest is above despite never/never.
+      advisor_generation_locks: Table<AdvisorGenerationLock, AdvisorGenerationLockInsert, never>;
       notifications: Table<Notification, NotificationInsert, Partial<Pick<Notification, "read_at">>>;
       admin_actions: Table<AdminAction, AdminActionInsert, never>;
       provider_health: Table<ProviderHealth, Partial<ProviderHealth>, Partial<ProviderHealth>>;

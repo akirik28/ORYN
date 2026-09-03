@@ -440,8 +440,26 @@ describe("migration numbering", () => {
     // schools like Alman Lisesi/İtalyan Lisesi/Galatasaray/Saint-Joseph hold real foreign
     // qualifications the fixed 6-value enum can't name -- this migration doesn't add those
     // enum values (a separate, priced, not-yet-decided piece of work), only the free text so
-    // "other" stops being a value that captures nothing. Proposed, not applied.
-    expect(Math.max(...numbers.map(Number))).toBe(109);
+    // "other" stops being a value that captures nothing. Proposed, not applied. Landed on
+    // main first, which is what settles 0109's own identity below.
+    //
+    // 0110 (advisor_generation_locks, this lane) is part of
+    // docs/ozellesme-spec-2026-09-03.md piece 2's concurrency half -- one row per student
+    // present only while an advisor reply is actually generating, enforcing "one concurrent
+    // generation, both tiers" via two atomic Postgres functions rather than application-code
+    // read-then-write, since the one property that piece exists to guarantee is atomicity
+    // across a double-click or two open tabs. This number has a three-way history worth
+    // recording rather than smoothing over: this migration, oryn-11's advisor_instructions
+    // (piece 1, the tier-capped 500/2000-char persistent instruction string), and
+    // curriculum_other_text above all independently started as 0109. The instructions/
+    // generation-lock collision was caught and resolved directly between the two lanes before
+    // either pushed (this one moved to 0110, since the other was the smaller sweep);
+    // curriculum_other_text reached main first and is what makes 0109 unambiguous now.
+    // advisor_instructions still needs to move again -- to 0111 -- when it lands; this
+    // comment is what tells whoever does that why the number they'd naturally reach for
+    // (0109, the one they were told to keep) is already spoken for twice over.
+    // lib/advisor/generation-lock.ts fails open (never blocks a reply) until 0110 lands.
+    expect(Math.max(...numbers.map(Number))).toBe(110);
   });
 });
 

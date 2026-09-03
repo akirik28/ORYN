@@ -121,6 +121,23 @@ export const EXPORT_EXCLUDED_TABLES: Record<string, string> = {
    * EXPORT_TABLES once 0078 lands.
    */
   university_notification_log: "migration 0078 is not applied anywhere yet — would export as permanently empty until it is",
+  /**
+   * Migration 0110's advisor generation mutex (lib/advisor/generation-lock.ts) — a
+   * genuinely different kind of exclusion than every entry above, none of which turned on
+   * whether the table held real content at all. rate_limit_events above is included despite
+   * being "closer to a web server's access log" than to content, because it is still a LOG —
+   * rows accumulate and persist. This table is not a log: a row exists only while a reply is
+   * actively generating and release_advisor_generation_lock deletes it the instant that
+   * finishes, typically within seconds. By the time any export request actually runs, this
+   * table is virtually always empty for that student regardless of how much they've used the
+   * advisor; the rare row an export might catch mid-generation says only "a reply was in
+   * flight a moment ago," which is operational bookkeeping, not something a portability
+   * request exists to preserve. RLS still grants the student read access to their own row
+   * (same owner policy as every other table here) — this omission is a content judgment, not
+   * an access-control one.
+   */
+  advisor_generation_locks:
+    "a live mutex, not a log or content — rows are deleted within seconds of creation (see the migration's own header), so there is nothing durable here for an export to preserve",
 };
 
 /** Tables keyed by a participant pair rather than a plain user_id — each needs its own

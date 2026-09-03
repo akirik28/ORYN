@@ -15,6 +15,7 @@ import { formatAbsoluteDate } from "@/lib/i18n/date";
 import { resolveResponseMode } from "@/lib/tier/response-mode";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { computeNotNowUpdate, computeSoftDismissUntil } from "@/lib/advisor/upgrade-prompt";
+import { acquireAdvisorGenerationLock, releaseAdvisorGenerationLock } from "@/lib/advisor/generation-lock";
 import type { AIMessage } from "@/lib/ai/provider";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -38,6 +39,18 @@ function quotaExhaustedMessage(resetsAt: string, locale: Locale): string {
   return locale === "tr"
     ? `Bu ay Oryn'in yapay zeka hakkını kullandın. Sohbet ${date} tarihinde yenilenir. Oryn'in geri kalanı — planın, fırsatların, üniversitelerin — her zamanki gibi açık.`
     : `You've used up this month's Oryn AI allowance. Chat resets on ${date}. The rest of Oryn — your plan, opportunities, universities — stays open as always.`;
+}
+
+/**
+ * docs/ozellesme-spec-2026-09-03.md's "one concurrent generation, both tiers" rule — a rejected
+ * acquire (lib/advisor/generation-lock.ts) means this exact student already has a reply in
+ * flight elsewhere (a second tab, a fast double-send), not a quota or plan-tier concern, so this
+ * gets its own message rather than reusing quotaExhaustedMessage's.
+ */
+function alreadyGeneratingMessage(locale: Locale): string {
+  return locale === "tr"
+    ? "Danışman şu anda başka bir mesajını yanıtlıyor. Cevap gelince tekrar yazabilirsin."
+    : "The counselor is already answering another one of your messages. You can send another once that reply arrives.";
 }
 
 // Student-facing strings in this file are additive-locale-branched inline (`tr ?  : `),
@@ -186,6 +199,17 @@ export async function sendAdvisorMessage(
   }
   await logEvent(userId, "advisor_message_sent", { conversationId: convId });
 
+  // docs/ozellesme-spec-2026-09-03.md: one concurrent generation per student, both tiers —
+  // Ultra buys more conversations (piece 1), never more parallelism. Acquired here, after the
+  // user's message is already saved (so a rejection never loses what they typed) and right
+  // before the only thing this lock actually protects. A rejection is returned as a normal,
+  // typed error, the same shape as the quota/rate-limit checks above — not thrown, since a
+  // second in-flight message from the same student is an expected, non-exceptional outcome.
+  const lockStartedAt = await acquireAdvisorGenerationLock(supabase);
+  if (!lockStartedAt) {
+    return { conversationId: convId, error: alreadyGeneratingMessage(locale) };
+  }
+
   try {
     // Reuses tierProfile/planTier resolved above the quota check, not a second computation
     // — getCurrentProfile() is cache()-wrapped regardless, but there is no reason to name
@@ -252,6 +276,11 @@ export async function sendAdvisorMessage(
     }
     revalidatePath("/advisor");
     return { conversationId: convId, assistantMessageId: failedMessage?.id, error: errorMessage };
+  } finally {
+    // Every exit above (success, save-failure, or the catch block) reaches this — a released
+    // lock is what lets this same student's next message through, so it must run regardless
+    // of which return above fired.
+    await releaseAdvisorGenerationLock(supabase, lockStartedAt);
   }
 }
 
@@ -330,6 +359,13 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
     .filter((m) => m.status === "complete" && m.content !== null)
     .map((m) => ({ role: m.role, content: m.content ?? "" }));
 
+  // Same lock, same reasoning as sendAdvisorMessage's identical acquire above — a retry spends
+  // real generation capacity too, not a separate allowance from the ordinary send path.
+  const lockStartedAt = await acquireAdvisorGenerationLock(supabase);
+  if (!lockStartedAt) {
+    return { error: alreadyGeneratingMessage(locale) };
+  }
+
   try {
     // Reuses tierProfile/planTier resolved above the quota check — see sendAdvisorMessage's
     // identical comment above.
@@ -365,6 +401,8 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
     }
     revalidatePath("/advisor");
     return { error: errorMessage };
+  } finally {
+    await releaseAdvisorGenerationLock(supabase, lockStartedAt);
   }
 }
 

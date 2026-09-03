@@ -161,3 +161,31 @@ export async function columnExistsLive(admin: SupabaseClient<Database>, table: s
   if (isUndefinedColumnError(error, column)) return false;
   return null;
 }
+
+/**
+ * A missing FUNCTION, called via `.rpc()` -- the third member of this file's schema-cache-miss
+ * family, same two-code shape as the other two for the same reason: PostgREST validates an RPC
+ * call's target function against its own schema cache before any SQL runs, so a check keyed
+ * only on Postgres's own `42883` (`undefined_function`) risks being exactly as inert as a
+ * column- or table-only check was elsewhere in this file.
+ *
+ * Written for migration 0110 (`acquire_advisor_generation_lock` /
+ * `release_advisor_generation_lock`, lib/advisor/generation-lock.ts) -- the first `.rpc()` call
+ * in this codebase that needs to run correctly before its own migration is guaranteed applied;
+ * every earlier `.rpc()` caller (search_canonical_entities, create_or_resolve_user_submitted_entity,
+ * is_blocked_between, is_profile_public) was written against a function that already existed live.
+ *
+ * `PGRST202`'s exact spelling is inferred by the same reasoning that produced `PGRST204`/
+ * `PGRST205` in this file, not observed against this database -- both codes are accepted so
+ * the guard fires under either spelling, and nothing regresses if `42883` turns out to be the
+ * one that actually surfaces.
+ *
+ * Narrowed by function name, matching this file's own narrowing discipline throughout -- a
+ * different missing function should still fail loudly, not be silently treated as this one
+ * being merely unapplied.
+ */
+const UNDEFINED_FUNCTION_CODES = new Set(["42883", "PGRST202"]);
+
+export function isUndefinedFunctionError(error: { code?: string; message?: string } | null, functionName: string): boolean {
+  return !!error?.code && UNDEFINED_FUNCTION_CODES.has(error.code) && !!error.message?.includes(functionName);
+}

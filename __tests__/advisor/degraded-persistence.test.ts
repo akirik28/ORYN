@@ -29,6 +29,13 @@ function chainable(result: { data: unknown; error: unknown }) {
 
 const MISSING_DEGRADED_ERROR = { code: "PGRST204", message: "Could not find the 'degraded' column of 'advisor_messages' in the schema cache" };
 const UNRELATED_ERROR = { code: "23505", message: "duplicate key value violates unique constraint" };
+// This suite predates migration 0110 (lib/advisor/generation-lock.ts) — every client below
+// simulates it unapplied, the same "not yet, not a real failure" state MISSING_DEGRADED_ERROR
+// simulates for 0088. acquireAdvisorGenerationLock reads this as isUndefinedFunctionError and
+// fails open (proceeds), which is the only outcome that leaves this file's own actual subject
+// (the degraded-insert retry behavior) undisturbed by an unrelated mechanism.
+const MISSING_LOCK_FUNCTION_ERROR = { code: "PGRST202", message: "Could not find the function public.acquire_advisor_generation_lock in the schema cache" };
+const rpcStub = () => Promise.resolve({ data: null, error: MISSING_LOCK_FUNCTION_ERROR });
 const USER_ID = "11111111-1111-1111-1111-111111111111";
 const CONVERSATION_ID = "22222222-2222-2222-2222-222222222222";
 const FAILED_MESSAGE_ID = "33333333-3333-3333-3333-333333333333";
@@ -103,6 +110,7 @@ beforeEach(() => {
 describe("sendAdvisorMessage — the assistant-message insert degrades instead of failing outright", () => {
   function clientWithAssistantInsertSpy(assistantInsertSpy: (row: Record<string, unknown>) => unknown) {
     return {
+      rpc: rpcStub,
       from: (table: string) => {
         if (table === "advisor_conversations") {
           // No conversationId passed in these tests, so only the "create a new one" insert
@@ -181,6 +189,7 @@ describe("sendAdvisorMessage — the assistant-message insert degrades instead o
 describe("retryAdvisorMessage — the assistant-message update degrades instead of failing outright", () => {
   function clientWithRetrySpies(updateSpy: (row: Record<string, unknown>) => unknown) {
     return {
+      rpc: rpcStub,
       from: (table: string) => {
         if (table === "advisor_conversations") return chainable({ data: null, error: null });
         if (table === "advisor_messages") {
