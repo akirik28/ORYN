@@ -47,7 +47,7 @@ describe("resolveAdmissionSystem — the three shapes the research actually foun
   });
 
   test("every resolved entry carries at least one traceable source document", () => {
-    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland", "Denmark", "Hungary", "Austria", "Czechia", "Belgium"]) {
+    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland", "Denmark", "Hungary", "Austria", "Czechia", "Belgium", "Estonia"]) {
       const result = resolveAdmissionSystem({ targetCountry: country, studentCountry: "Turkey" });
       expect(result.sources.length, country).toBeGreaterThan(0);
       expect(result.mechanism, country).not.toBeNull();
@@ -563,6 +563,37 @@ describe("resolveAdmissionSystem — Belgium (2026-09-03, two legal systems conf
   test("Belgium traces to its own research document, not an invented source", () => {
     const result = resolveAdmissionSystem({ targetCountry: "Belgium", studentCountry: "Belgium" });
     expect(result.sources).toContain("docs/research/admissions-systems/belgium.md");
+  });
+});
+
+describe("resolveAdmissionSystem — Estonia (2026-09-03, first long-tail corridor entry)", () => {
+  // International (DreamApply) is confirmed holistic on primary Tallinn University evidence
+  // (a mandatory interview for every applicant, estonia.md §B). Domestic (SAIS) is unknown --
+  // a real finding, not a gap, though held to lower confidence than Czechia's parallel one.
+  test("Estonia's international track is confidently holistic — a mandatory interview, not an occasional exception", () => {
+    const international = resolveAdmissionSystem({ targetCountry: "Estonia", studentCountry: "Turkey" });
+    expect(international.shape).toBe("holistic_review");
+    expect(reviewsNonAcademicEvidence(international.shape)).toBe(true);
+    expect(international.mechanism).toContain("video interview");
+  });
+
+  test("Estonia's domestic track is honestly unknown, not defaulted to the international shape", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Estonia", studentCountry: "Estonia" });
+    expect(domestic.shape).toBe("unknown");
+    expect(reviewsNonAcademicEvidence(domestic.shape)).toBeNull();
+    expect(domestic.mechanism).toContain("riigieksam");
+    expect(domestic.mechanism).not.toBeNull();
+  });
+
+  test("Estonia's two pathways genuinely differ, not just in wording", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Estonia", studentCountry: "Estonia" });
+    const international = resolveAdmissionSystem({ targetCountry: "Estonia", studentCountry: "Turkey" });
+    expect(domestic.shape).not.toBe(international.shape);
+  });
+
+  test("Estonia traces to its own research document, not an invented source", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Estonia", studentCountry: "Estonia" });
+    expect(result.sources).toContain("docs/research/admissions-systems/estonia.md");
   });
 });
 

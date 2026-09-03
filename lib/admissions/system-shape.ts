@@ -739,6 +739,26 @@ const REGISTRY: AdmissionSystemEntry[] = [
     ],
     sources: [DOC("belgium.md")],
   },
+  {
+    countryNames: ["Estonia", "Eesti"],
+    // First entry from the long-tail corridor list (the re-measurement's own output), not the
+    // founder-supplied candidates. International (DreamApply) is holistic_review on primary
+    // Tallinn University evidence (a mandatory interview for every applicant). Domestic (SAIS)
+    // is unknown -- a real finding, held to slightly lower confidence than Czechia's parallel
+    // one since it rests on multiple sources declining to generalize rather than one source
+    // explicitly contrasting two mechanisms -- see docs/research/admissions-systems/estonia.md.
+    domestic: {
+      shape: "unknown",
+      mechanism:
+        "Estonian citizens and long-term residents apply via SAIS. State exam (riigieksam) results feed in, but specific requirements are set per institution and field, with tests, interviews or portfolios required in addition for some (unspecified) programmes. No general mechanism could be established — check the specific target programme.",
+    },
+    international: {
+      shape: "holistic_review",
+      mechanism:
+        "Non-EU/EEA applicants apply via DreamApply. Tallinn University's own admissions page states the admission exam 'always includes a video interview,' with written assignments and a CV as programme-specific additions on top — a mandatory holistic component, not an occasional exception.",
+    },
+    sources: [DOC("estonia.md")],
+  },
 ];
 
 // ---------------------------------------------------------------------------
