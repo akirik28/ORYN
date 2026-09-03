@@ -658,6 +658,36 @@ const REGISTRY: AdmissionSystemEntry[] = [
     },
     sources: [DOC("hungary.md")],
   },
+  {
+    countryNames: ["Austria", "Österreich", "Oesterreich"],
+    // Different in kind from every other country in this line: the DEFAULT posture is
+    // threshold, not competition — open access once a recognized qualification is held, the
+    // same category this registry already gives the Netherlands/Italy/Switzerland's general
+    // routes. Restriction is the named exception (Medicine/Dentistry via MedAT), recorded as a
+    // fieldOverride the same way Switzerland's EMS and Germany's NC-Medicine already are — see
+    // docs/research/admissions-systems/austria.md.
+    domestic: {
+      shape: "academic_threshold",
+      mechanism:
+        "Austria runs on freier Hochschulzugang (open access): meeting the entry qualification (Matura, IB Diploma, European Baccalaureate, or an automatically-recognized equivalent) is generally sufficient for admission on its own, with no ranking against other applicants. No essay, interview, or reference letter.",
+    },
+    international: {
+      shape: "academic_threshold",
+      mechanism:
+        "The same open-access mechanism applies, but non-EU/EEA applicants face an added eligibility step confirmed by Austria's own government portal: proof they would have a place to study the same subject in their home country. Once that and qualification-equivalence are established, admission works the same way — no ranking, no essay, no interview.",
+    },
+    fieldOverrides: [
+      {
+        field: "medicine",
+        system: {
+          shape: "academic_rank_competitive",
+          mechanism:
+            "Medicine and Dentistry are the named exception to open access: MedAT, a single nationwide entrance exam, decides admission purely by score against a fixed national quota (1,950 places for 2026/27) — roughly 17,000 applicants compete for them. At least 95% of places are reserved for EU citizens/equivalent-access holders and at least 75% for Austrian-or-equivalent-certificate holders, a quota over who competes in which pool, not a change to the score-only ranking itself.",
+        },
+      },
+    ],
+    sources: [DOC("austria.md")],
+  },
 ];
 
 // ---------------------------------------------------------------------------
