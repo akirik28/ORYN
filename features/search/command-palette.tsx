@@ -62,9 +62,30 @@ export function CommandPalette({ variant = "icon" }: { variant?: "icon" | "bar" 
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  // Cancel a pending debounced search when the palette goes away. Two separate leaks, both
+  // fixed here, both invisible to every gate:
+  //
+  // 1. Unmount. The timer below outlives the component and still calls searchAction -- a
+  //    real server action -- for a palette nobody has open. Identical to the bug fixed in
+  //    entity-combobox.tsx the same night; two components, one missing cleanup each.
+  // 2. Close. handleOpenChange(false) cleared the query and results but left the timer
+  //    running, so typing and immediately pressing Escape still fired the search a quarter
+  //    second later, against a query the user had already abandoned. That one is reachable
+  //    by hand, not just in tests.
+  //
+  // Both surfaced as an unrelated-looking flaky test under parallel load: a timer from one
+  // test firing inside the next. That is what a missing timer cleanup looks like from the
+  // outside, and it is the second time tonight it looked like exactly that.
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
   function handleOpenChange(next: boolean) {
     setOpen(next);
     if (!next) {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
       setQuery("");
       setResults([]);
       setHighlighted(0);

@@ -106,3 +106,31 @@ describe("CommandPalette — 'view all results' link to the full search page", (
     expect(link).toHaveAttribute("href", `/search?q=${encodeURIComponent("Boğaziçi & Sons")}`);
   });
 });
+
+describe("CommandPalette — pending search cancellation", () => {
+  // Regression, 2026-09-03. command-palette.tsx set a 250ms timer in onQueryChange and never
+  // cleared it on unmount, and handleOpenChange(false) cleared the query and results while
+  // leaving the timer running. Both still called searchAction -- a real server action --
+  // against a query the user had already abandoned. The close case is reachable by hand:
+  // type, press Escape, the search fires a quarter second later anyway.
+  //
+  // It surfaced as this file going red under parallel load in a test whose own behaviour was
+  // correct, because a timer from one test fired inside the next. Second component tonight
+  // with the same missing cleanup, found the same way.
+  test("a pending search is cancelled on unmount, not left to fire at a component that is gone", async () => {
+    renderPalette();
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    const input = await screen.findByPlaceholderText("Search universities, opportunities, your profile…");
+    fireEvent.change(input, { target: { value: "leaky query" } });
+    cleanup();
+    await new Promise((r) => setTimeout(r, AFTER_DEBOUNCE));
+    expect(searchAction).not.toHaveBeenCalled();
+  });
+
+  test("closing the palette cancels a search that has not fired yet", async () => {
+    const input = await openAndType("abandoned query");
+    fireEvent.keyDown(input, { key: "Escape" });
+    await new Promise((r) => setTimeout(r, AFTER_DEBOUNCE));
+    expect(searchAction).not.toHaveBeenCalled();
+  });
+});
