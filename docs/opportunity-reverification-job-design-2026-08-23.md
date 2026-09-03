@@ -169,6 +169,46 @@ it documents.
 > own course-filter UI, literal "Status - Any - Open Closed") argues against a blunter,
 > unanchored expansion.
 
+> **Update, 2026-09-03: Turkish patterns, and a state-machine gap the Turkish pass surfaced.**
+> Full detail in `docs/reverification-phrase-set-corpus-2026-09-03.md`'s addendum — CEO
+> dispatch, direct follow-on to "a real share of the corpus is Turkish" above: "fetch more...
+> mind that Turkish is agglutinative, so a 'tolerant pattern' there means something different
+> than it does in English." 21-page Turkish-market sample (the full population, not a
+> subsample), read by hand. Three constructions found and coded — "son başvuru"/"son kayıt"
+> (deadline label), "şimdi/hemen başvur" (apply-now CTA), "kayıtlar(ımız) kapandı" (closure) —
+> each narrower than a fluent speaker could derive, deliberately: Turkish's short roots
+> ("aç," 2 characters, inside unrelated words) make a bare-root pattern actively dangerous in
+> a way English's word-order problem never was, so every pattern stays a specific observed
+> phrase, never a root.
+>
+> **The bigger finding: `classifyAgainstStoredState` could never produce a verdict for
+> `unverified`/`date_not_announced` rows, in any language.** Its branching only defined
+> `stateImpliesOpen`/`stateImpliesClosed` (5 of migration 0041's 7 `cycle_status` values) —
+> the other two fell through to `liveness_silent` unconditionally, regardless of phrase
+> matches found. This silently capped `unverified` (86 rows, §4.2's largest bucket) at zero
+> classification since the deterministic pass was first built, not something the Turkish
+> patterns introduced. Found via an aggregate that didn't add up (new opening patterns added,
+> `agrees` count unchanged), confirmed by direct inspection, confirmed language-agnostic by
+> isolating the fix against the English 49-row corpus (5 more rows flip there too — Interlochen
+> Review, UCSB Research Mentorship, Girl Up Project Awards, BRI Student Fellowship, EYP
+> Türkiye). Fixed by routing unknown-state + any phrase match to `"disagreement"` (never
+> `"agrees"` — there is no existing claim to confirm), which costs nothing extra in risk:
+> `adjudicateDisagreement` already treats `storedCycleStatus` as an opaque string, and every
+> downstream consumer of a disagreement verdict already treats the prior stored value as
+> opaque. Same gate a real open/closed contradiction goes through, not a new one.
+>
+> A second bug the new test suite caught, not manual review: the closure pattern's first
+> version used `\w*` to tolerate a Turkish possessive suffix, but JS's `\w` is ASCII-only and
+> doesn't match "ı" (U+0131) — it silently never matched the one real page it was written for.
+> Fixed by matching the observed suffix literally instead of a generic word-class.
+>
+> Net, Turkish corpus (20 rows): 16→9 liveness-silent, 0→6 disagreement, 2→3 agrees, zero
+> regressions, decomposed by cause in the addendum. Turkish did not need a different
+> mechanism from English's regex approach — it needed attention to encoding and to how much
+> shorter and more ambiguous its roots are. The state-machine gap is not a Turkish-mechanism
+> question at all. Gates: typecheck/lint green, full suite green (348 files / 5469 tests), 14
+> new tests.
+
 ---
 
 ## 0. Summary
