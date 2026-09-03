@@ -76,7 +76,7 @@ export function OpportunityStripCard({
   return (
     <Link
       href={`/opportunities/${opportunity.id}`}
-      className="glass-card-fast group/strip flex w-72 shrink-0 flex-col overflow-hidden rounded-2xl ring-1 ring-border/70 transition-colors duration-(--duration-fast) focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none sm:w-80"
+      className="glass-card-fast group/strip flex w-[21rem] shrink-0 flex-col overflow-hidden rounded-2xl ring-1 ring-border/70 transition-colors duration-(--duration-fast) focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none sm:w-[26rem]"
       style={{ background: "rgba(255,255,255,0.42)", backdropFilter: "blur(14px)" }}
     >
       {opportunity.imageUrl ? (

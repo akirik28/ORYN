@@ -1152,7 +1152,7 @@
 }
 
 .opportunity-strip-track {
-  animation: opportunity-strip-scroll 55s linear infinite;
+  animation: opportunity-strip-scroll 95s linear infinite;
 }
 
 .opportunity-strip-viewport:hover .opportunity-strip-track,
