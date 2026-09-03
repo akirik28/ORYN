@@ -87,7 +87,7 @@ export function AdvisorMessageThinking({ locale = DEFAULT_LOCALE, className }: {
       className={cn("max-w-2xl border-l border-border pl-6 sm:pl-8", className)}
     >
       <p lang={locale} className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-1 uppercase">
-        {DEFAULT_ATTRIBUTION[locale].oryn}
+        {DEFAULT_ATTRIBUTION[locale].proxola}
       </p>
       <div className="mt-4 space-y-3" role="status" aria-label="Composing a response">
         <span className="block h-2.5 w-[92%] animate-pulse rounded-full bg-ink-4/20" />
