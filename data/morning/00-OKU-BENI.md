@@ -1,7 +1,12 @@
 # Sabah — 3 Eylül 2026
 
-Uyandığında sırayla bunlar. **Dokuz bölüm, tahminen 25 dakika.** Yedisi kopyala-yapıştır
-(Supabase SQL Editor'e), biri terminalde altı komut, sonuncusu sadece bakmak.
+**Güncelleme, öğleye doğru:** bu artık çoğunlukla bir kayıt, bir talimat listesi değil.
+1, 2, 3, 5 ve 7b uygulandı — sayıları aşağıdaki tabloda tek tek doğrulandı, tekrar
+okumana gerek yok. **Hâlâ senden bir şey isteyen tek adım 6.** 4 kısmen kapandı (ayrıntı
+kendi bölümünde), 7 sadece deploy edeceksen geçerli, 8 bakılacak bir şey değil zaten
+yapıldı. Aşağıdaki adım-adım anlatı olduğu gibi bırakıldı — ne yapıldığını ve neden
+öyle yapıldığını gösteriyor, ama artık "şunu çalıştır" değil "şu çalıştırıldı" olarak
+oku.
 
 ---
 
@@ -16,14 +21,14 @@ Uyandığında sırayla bunlar. **Dokuz bölüm, tahminen 25 dakika.** Yedisi ko
 | 5. Üniversite gereksinimleri | ✅ **uygulandı** — 1.325'ten **1.535**'e, tam beklenen sayı |
 | 6. Yeni fırsatlar | ⬜ **HENÜZ ÇALIŞMADI** — bugün katalog'a sıfır yeni kayıt girmiş |
 | 7. Bildirim arka doldurma | ⬜ sadece deploy edeceksen |
-| 7b. Tekrar eden öneriler | ✅ **uygulandı** — 100'den **2**'ye, 98 kopya silindi |
+| 7b. Tekrar eden öneriler | ✅ **uygulandı** — 98 kopya silindi, canlıda 1 kaldı (7b'nin kendi bölümündeki "2" düzeltmesine bak) |
 | 8. Panele bak | ✅ açtın, yedi ekran gezildi |
 
 **Tek eksik 6. adım**, ve muhtemelen sebebi şu: o adım SQL değil, terminalde altı komut. 17
 fırsat orada bekliyor.
 
 Şu an uygulanmayı bekleyen diğer şeyler — hiçbiri pakete adım olarak konmadı, hepsi senin
-bir kararına bağlı: **beş ülkenin 275 uygulamalı bilimler kurumu** (aşağıdaki şema kararı),
+bir kararına bağlı: **beş ülkenin 275 uygulamalı bilimler kurumu** (`docs/kararlar-2026-09-03.md`'deki şema kararı),
 **22 kayda sınıf bilgisi** (`opportunity-eligible-grades-from-prose-2026-09-03.sql`), ve
 **Breakthrough'nun kategori düzeltmesi** (`opportunity-category-relabel-2026-09-03.sql`).
 
@@ -63,7 +68,7 @@ Yarısında durursan kalan yarısı bozulmaz. İki sıra kuralı var:
 Gerisi gerçekten istediğin sırada: 3, 4, 5, 6, 7 ve 7b'nin dokunduğu tabloların hepsi şu an
 canlıda mevcut — tek tek kontrol ettim, varsaymadım.
 
-## 1. Kendini admin yap
+## 1. Kendini admin yap — ✅ tamamlandı, kayıt
 
 Supabase SQL Editor:
 
@@ -86,7 +91,7 @@ Not: hesabın **2 Eylül 22:18'den beri zaten admin** — gece panelleri denerke
 bu adım büyük ihtimalle hiçbir şeyi değiştirmeyecek, ki zararsız. Yine de çalıştır: panelin
 açılması buna bağlı ve emin olmanın tek yolu sorgunun kendisi.
 
-## 2. Migration'ları uygula
+## 2. Migration'ları uygula — ✅ tamamlandı, kayıt
 
 `01-migrations-2026-09-03.sql` — tamamını yapıştır, çalıştır. **On beş migration ama on
 dördü yeni** — 0090 canlıda zaten uygulanmış, dosyada duruyor çünkü tekrar çalışması
@@ -112,7 +117,7 @@ düğmesinin on biri de gerçekten pasif, sadece soluk görünmüyor.
 Standart yap). O sütun veritabanında zaten var. Yani panele girer girmez kendi hesabını
 Ultra'ya alıp öğrencinin ne gördüğünü görebilirsin.
 
-## 3. Bekleyen veriyi doldur
+## 3. Bekleyen veriyi doldur — ✅ tamamlandı, kayıt
 
 `02-veri-doldurma-2026-09-03.sql` — **377 düzeltme ifadesi, 213 tekil kayıt.** En görünür
 etkisi: kurum adı boş olan **190 kayıt dolacak**, ve 78 kayıt tek tek doğrulanmış haliyle
@@ -143,6 +148,10 @@ karşılaştırılamıyor**):
 | Sadece `active` | 282 | 66 | 205 | 218 |
 | `active` + `under_review` | 394 | 172 | 314 | 330 |
 
+*(Bu tablo 3. adımdan önceki bir an fotoğrafı — sayılar artık tarihsel. 3. adım
+uygulandıktan sonra aktif havuz 366'ya çıktı, son tarihi olmayan aktif kayıt 272 —
+`docs/kararlar-2026-09-03.md`'de canlı doğrulanmış hâliyle duruyor.)*
+
 Bir sayıyı ayrıca söylemem gerek, çünkü tablodaki "son tarih yok" sütunundan daha kötü:
 **282 aktif fırsatın sadece 37'sinin son tarihi gelecekte.** Kalan 245'in ya hiç tarihi yok
 ya da tarihi geçmiş. Yani panonun "yaklaşan son tarihler" bölümü, haftalık plandaki aciliyet
@@ -167,14 +176,14 @@ yazılı). Biri de kapanmış bir marka: Duke TIP artık Duke Pre-College, canl�
 Ayrıntı: `docs/yedi-kapsanmayan-kayit-2026-09-03.md`. **SQL hazırlamadım** — kurum adı
 doldurmak dördü için de yanlış düzeltme olurdu. Duke'un kimliğini değiştirmek senin kararın.
 
-**Bu adımın bir yan etkisini bilmen gerekiyor, çünkü aşağıdaki kararlardan birini
-etkiliyor.** İncelemedeki 112 kaydın hiçbirinde kimin başvurabileceği kayıtlı değil — ne yaş
+**Bu adımın bir yan etkisini bilmen gerekiyor, çünkü `docs/kararlar-2026-09-03.md`'deki
+kararlardan birini etkiliyor.** İncelemedeki 112 kaydın hiçbirinde kimin başvurabileceği kayıtlı değil — ne yaş
 ne sınıf. Aktife çekilen 78 kayıt oradan geliyor. Yani bu adımdan sonra, öğrencinin gördüğü
 katalogda "kimin başvurabileceğini bilmiyoruz" durumundaki kayıt sayısı **128'den ~206'ya**
-çıkıyor.
+çıkıyor. *(Adım uygulandıktan sonra gerçek sayı ölçüldü: **212** — tahmine yakın, `docs/kararlar-2026-09-03.md`'de canlı doğrulanmış hâliyle duruyor.)*
 
 Kayıtların kendisi sorunlu değil — tek tek doğrulandılar. Sorun, `eligible` alanının
-"bilmiyoruz" diyememesi (aşağıdaki kararlardan biri): sınır kaydedilmemiş bir kayda motor
+"bilmiyoruz" diyememesi (`docs/kararlar-2026-09-03.md`'deki kararlardan biri): sınır kaydedilmemiş bir kayda motor
 "uygun" diyor. Yani bu adım o kararı **daha acil** hale getiriyor, daha az değil. Adımı
 durdurmanı önermiyorum; sadece sırayı bilerek kurman için söylüyorum.
 
@@ -184,11 +193,12 @@ durdurmanı önermiyorum; sadece sırayı bilerek kurman için söylüyorum.
 128'inde bilinmiyor. Bunu 31 kendi ölçümünde yakaladı — benim verdiğim görev yanlış alanı
 sayıyordu.)*
 
-## 4. Tek tek kayıt düzeltmeleri
+## 4. Tek tek kayıt düzeltmeleri — kısmen tamamlandı, Maastricht'te yeni bir bulgu var
 
 `03-firsat-kayit-duzeltmeleri-2026-09-03.sql` — iki gerçek düzeltme. Google CSSI'nin adresi
-(canlı doğrulandı: `g.co/cssi`, yalnızca Google'ın oluşturabileceği bir kısa link, oraya
-yönleniyor) ve Maastricht kaydının kapatılması.
+**✅ uygulandı** (canlı doğrulandı: `g.co/cssi`, yalnızca Google'ın oluşturabileceği bir kısa
+link, oraya yönleniyor) ve Maastricht kaydının kapatılması **✅ uygulandı** ("University of
+Maastricht, Netherlands" kaydı canlıda `disabled`).
 
 **Benim yazdığım bir varsayım burada çürüdü ve bunu bilmen daha iyi:** Exeter kaydı için
 "doğru adres zaten kaydın kendi açıklamasında yazılı" demiştim. d0 o adresi çalıştırıp
@@ -205,7 +215,14 @@ Yani program gerçek; bozuk olan bu kayıt. İkisi çelişmiyor ama sonuçları 
 mı, yoksa kaydı düzeltip programı katalogda tutmak mı? Bu senin kararın, ve kapatma
 geri alınabilir.
 
-## 5. Üniversite giriş gereksinimleri
+**Yeni bulgu (bu denetimde, çözülmedi): katalogda üçüncü bir Maastricht kaydı var.**
+"Maastricht Summer Program" adında, `active`, adresi
+`maastricht.dreamapply.com/courses/search/id/48160-h41vq9` — ne d0'ın kapattığı kayıtla
+ne 6e'nin bulduğu `maastrichtsummerschool.nl` adresiyle aynı. Kim yazdı, ne zaman,
+yukarıdaki tartışmayla ilgisi var mı — araştırılmadı. Kapatma/düzeltme kararını verirken
+bunu da hesaba kat; taze bir bakış istiyor.
+
+## 5. Üniversite giriş gereksinimleri — ✅ tamamlandı, kayıt
 
 `04-universite-gereksinimleri-2026-09-03.sql` — **14 kurum, 210 satır** (Caltech'in 19 satırı, uzlaştırılmış 37 satırla değiştirildi). Oxford, Cambridge,
 Imperial, Warwick, MIT, Caltech, Harvard, Princeton, Bocconi, TU Delft, ODTÜ, Boğaziçi,
@@ -222,7 +239,7 @@ Deploy etmeyeceksen ikisinin de acelesi yok. Ürünün en ince yeri burasıydı 
 Dürüst kısmı: bu satırların hepsi **üniversite geneli**, programa bağlı değil. Yani "kaç
 program kapsanıyor" sayısı yine 32'de kalıyor. Derinlik geldi, kapsam genişliği değil.
 
-## 6. Yeni fırsatları katalog'a al
+## 6. Yeni fırsatları katalog'a al — ⬜ tek canlı talimat, hâlâ çalışmadı
 
 Altı parti hazır bekliyor, **17 yeni fırsat.** Terminalden, sırayla:
 
@@ -314,7 +331,7 @@ yapmıyor.
 
 Deploy etmeyeceksen acelesi yok. Edeceksen **önce bu.**
 
-## 7b. Kendi hesabındaki tekrar eden önerileri temizle
+## 7b. Kendi hesabındaki tekrar eden önerileri temizle — ✅ tamamlandı, kayıt
 
 `06-oneri-tekrar-temizligi-2026-09-03.sql`
 
@@ -332,9 +349,12 @@ Deneme çalıştırıldı: 98 satır siliniyor, en erken gösterilen gerçek ön
 Silme koşulu sadece başlığa değil, **her alana** bakıyor — gerçek bir cevap ya da not
 taşıyan bir satır hangi durumda olursa olsun kapsam dışında.
 
-Bir şeyin bilerek dışarıda bırakıldığını da söylemek gerek: başka bir hesapta aynı başlığı
-paylaşan 2 satır bulundu, ama metinleri farklı — yani tesadüfen aynı başlığı taşıyan iki
-gerçek öneri. Dokunulmadı. Sayı benziyordu, içerik benzemiyordu.
+*(Düzeltme, öğleye doğru yeniden denetlendi: burada "başka bir hesapta aynı başlığı
+paylaşan 2 satır bulundu, dokunulmadı" yazıyordu. Canlı sorgu artık bunu doğrulamıyor —
+`ai_recommendations` tablosunda "Oxbridge" geçen tek bir satır var, o da founder'ın kendi
+hesabındaki, silme sonrası kalan satır. O 2 satırlık iddia ya yazıldığı an yanlıştı ya da
+sonradan başka bir işlemle değişti; hangisi olduğu araştırılmadı. Adımın kendisi —
+98 kopyanın silinmesi — hâlâ doğru ve uygulandı, sadece bu tek cümle güncel değildi.)*
 
 ## 8. İki paneli karşılaştır
 
@@ -374,241 +394,19 @@ bile belli etmiyor. Canlıda doğrulandı.
 
 ---
 
-## Senin kararını bekleyen yedi şey
+## Kararların — artık ayrı, tek bir belgede
 
-Hiçbiri gece boyunca tek başıma karar vermediğim şeyler — hepsi ya fiyatı, ya öğrencinin
-gördüğünü, ya da bir şemayı değiştiriyor. En üsttekiler en pahalı olanlar.
+Bu bölüm burada dokuz karar olarak uzun uzun anlatılıyordu. Artık `docs/kararlar-2026-09-03.md`
+içinde — canlı veriye karşı yeniden doğrulanmış, maliyet sırasına göre dizilmiş, on karara
+çıkmış durumda (oryn-a4'ün Türkiye'deki okul-konumu bulgusu eklendi). Burada özetlenmiyor,
+çünkü bir özet üçüncü bir liste olurdu ve zamanla ilk ikisinden ayrışırdı. Karar vereceğin
+zaman oraya bak.
 
-**Max planı.** `docs/uc-katman-karari-2026-09-03.md`. **Maliyet gece boyunca üç yerden
-değişti ve yeniden ölçüldü — sonuç değişmedi:** gerçekçi durumda ~%2 oynama, 5 kat marja
-dokunmuyor. Kişi başı $0,99 tavanı da duruyor, üstelik yapısal sebeple: sistem token değil
-**dolar** sayıyor, o yüzden danışmana veri eklemek tavanı kaydıramaz — aynı $0,99 artık 73
-yerine 71 mesaj alıyor. Ayrıntı: `docs/maliyet-guncelleme-2026-09-03.md`.
-
-Opus, Sonnet'in 1,67 katı; 400/800 TL
-ikisi de maliyeti rahat karşılıyor. Karar ürün tarafında, sende.
-
-**`eligible` alanı iki durumlu.** "Doğrulandı, uygun" ile "kimse bakmadı" ayrımını yapamıyor.
-Katalogun %67'sinde yaş sınırı kayıtlı değil ve motor hepsine "uygun" diyor. Uyarı notu
-eklendi, ama alanın kendisini düzeltmek panonu, danışmanı ve öneri sıralamasını birden
-etkiler. Gece yarısı tek başıma karar vermedim.
-
-**Maliyet alanı beş kademeli fiyatı tutamıyor.** Boston University Tanglewood'un gerçek
-fiyatı araştırılmış ve biliniyor — 2 hafta $4.055'ten 8 hafta $10.205'e kadar. Ama `cost`
-alanı tek bir sayı; beş kademe sığmıyor. Araştırmacı bilgiyi `current_cycle_label`'a
-yazmış, yani hiçbir fiyat kontrolünün bakmadığı yere. Ayrıca aynı kavram için **iki ayrı
-sütun** var: elle araştırma `financial_aid_available`'ı, otomatik çıkarım
-`funding_available`'ı yazıyor. **Bu ikisi ölçüldü ve cevap net:** `financial_aid_available`
-366 kaydın 102'sinde dolu, `funding_available` sadece 10'unda — ve o 10'un **hepsinde**
-diğeri de dolu. Yani otomatik sütun bugüne kadar **bir kez bile** tek başına bilgi
-taşımamış. Bugünkü hâliyle sıfır özgün bilgi içeriyor; yeni bir sütun değil, bir karar
-gerekiyor.
-
-**Maliyet alanı da ölçüldü, ve tek bir "boş" altında altı farklı şey var:**
-
-- **Gerçekten hiç araştırılmamış** — örneklemin ~%56'sı. Sıradan iş yükü, şema sorunu değil.
-- **Kademeli fiyat** — Summer Discovery'nin kendi kaydı zaten *"$2.499-$16.999… tek bir
-  rakama indirgemeyin"* diye yazıyor. Tanglewood tek örnek değilmiş.
-- **Farklı para birimi** — Koç Üniversitesi "TRY 80.000" diyor. Bu kademelenmeden **ayrı**
-  bir eksik: `cost` sadece sayı tutuyor, yanında para birimi alanı yok.
-- **Kurum ödüyor, öğrenci değil** — Kimya Olimpiyatı'nda masrafı ülke karşılıyor. Boş olması
-  **doğru**, doldurulacak bir boşluk değil.
-- **Kavram hiç geçerli değil** — burslar, ücretli roller (Girl Up 750 dolar *ödüyor*).
-- **Açıkça ücretsiz ama boş** — ve **en can alıcısı bu.**
-
-Sonuncusunun neden önemli olduğu şurada: tüm katalogda İngilizce anahtar kelimeyle tarayınca
-**1 tane** çıkıyor. Ama 34 kaydı elle okuyunca **4 tane** çıktı — SPINWIP, Koç'un KUSRP'si
-(*"ücretsiz bir programdır"* diyor, Türkçe), bir sanal fuar kaydı, ve Blue Ocean. Yani
-anahtar kelime taraması bunu **ciddi biçimde eksik sayıyor**, ve bunlar zaten elimizde olan
-metinden doldurulabilir.
-
-Bir de sınırlı ve doldurulabilir 28 kayıt var: maliyeti boş ama "burs var" işaretli. LaunchX
-bunun en net örneği — gerçek fiyatı ("$1.995+") bu gece başka bir araştırma sırasında zaten
-bulunmuş, sadece bu kayda yazılmamış.
-
-**Ve bu ikisi aslında tek bir sorunun iki yüzü — üçüncüsü de bu sabah çıktı.** `deadline`
-alanı da aynı şekilde tek değerli: "sürekli açık, son tarih yok" ile "dönem henüz
-açıklanmadı" ile "biz bakmadık" arasında ayrım yapamıyor. Ölçüldü: 282 aktif fırsatın
-205'inde tarih yok, ama bu boşluğun büyük kısmı **araştırmayla kapanmıyor.** 61 sayfa elle
-okundu — küçük bir grup gerçekten sayfada duran, doldurulmayı bekleyen tarih; küçük bir
-grup açıkça ve doğru olarak tarihsiz ("yıl boyu başvuru alınır"); **en büyük grup ise tek
-bir sayfa okumasından anlaşılamıyor** — okunabilir sayfaların %38'inde ne bir tarih ne de
-"son başvuru" gibi bir kelime geçiyor.
-
-Yani aynı desen üç alanda birden: `eligible`, `cost`, `deadline`. Üçünde de **"bilmiyoruz"
-diyecek yer yok**, ve üçünde de sistem bunu "sorun yok" diye okuyor. Ayrı ayrı üç migration
-mı, yoksa tek bir "bu alan için ne biliyoruz" deseni mi — bu, mimari bir karar ve seninki.
-
-**Yeniden doğrulama işi: silahlandıralım mı?** Gece boyunca kuruldu, ölçüldü, düzeltildi
-ve son olarak **113 gerçek kayıtla** çalıştırıldı — hiçbir yazma yapmadan.
-
-Karar vermen için gereken sayı: **113 kaydın 3'ü kapalıya düşürülecekti.** Üçü de elle
-kontrol edildi, üçü de gerçek ("2025 başvurusu kapandı", "şu an başvuruya açık değil"),
-hiçbiri yanlış pozitif değil. Tüm katalogda tahminen 6-8 kayıt. Yani otuz değil, üç de değil.
-
-**Ve daha önce sana yazdığım bir sayı yanlıştı, düzeltiyorum:** "sayfaların çoğu okunamıyor"
-demiştim. Gerçekte **113 kaydın sadece 2'si (%1,8) gerçekten erişilemez.** Kalanı gayet
-okunuyor, sadece açık/kapalı olduğunu söylemiyor. Bu bambaşka bir sorun — erişim değil,
-kanıt sorunu. Erişilemedi sanılan 10 kaydın hepsi Internet Archive kopyasıyla kurtarıldı.
-
-Bugün ne yapardı: 27 kayıt (%24) doğrulanmış işaretlenirdi, 3'ü düşürülürdü, 63'ü "sayfa
-bir şey söylemiyor" diye bırakılırdı.
-
-**Ve sabaha karşı, kararı doğrudan etkileyen bir şey bulundu.** İş yalnızca **kapatma**
-yönünde çalışıyor — bir kaydı "artık açık değil" diye işaretleyebiliyor, ama tersini
-yapamıyor. Kodda `canAutoApplyPromotion()` sabit olarak `false` dönüyor ve karşılığı olan
-bir uygunluk kontrolü hiç yazılmamış.
-
-Sorun şu: 208 aktif kayıt tarandığında, canlı sayfayla çelişen 8 kayıt çıktı ve **8'in
-6'sı ters yönde** — yani bizde "kapalı" ya da "geçmiş" görünen ama sayfası şu an
-"başvurular açık" diyen kayıtlar. Stanford SASI bizde `closed`, sayfasında "Summer 2027 ·
-SASI Applications Now Open". Ron Brown bizde "tarih açıklanmadı", sayfasında "2027
-başvurusu açıldı".
-
-Bu, kapanma yönünden **üç kat** daha yaygın ve daha pahalı: kapandığı halde açık görünen
-bir kayıt öğrenciyi boşa uğraştırır, ama **açık olduğu halde kapalı görünen bir kayıt
-öğrenciye hiç görünmez.** Başvurabileceği bir şeyi kaçırır ve kaçırdığını bilmez.
-
-Yani "işi silahlandıralım mı" sorusunun yanında ikinci bir soru var: **iş sadece yarısını
-yapabiliyor, öbür yarısı hiç yazılmamış.** İkisi ayrı karar; ikincisi bir geliştirme işi.
-
-Bir dürüstlük notu daha: tarama mekanizmasının kendisi, bu görevi başlatan Stanford
-kaydını **kaçırdı** — sayfayı sorunsuz indirdi ama yanlış cümleyi seçti. Yani 8 bir taban,
-tavan değil.
-
-**Ve gün içinde bu soru sonuna kadar kovalandı, sonucu şu:**
-
-Önce kötü haber gibi görünen şey: aynı kayıtları ikinci kez okuyunca **"sağlam" denen üç
-bulgunun üçü de bozuldu.** Biri tarihini tamamen kaybetti, biri sinyalini, biri **farklı bir
-yıl** döndürdü — ve o yıl sayfanın kendisinden değil, aynı sitedeki bir bağış kutusundan
-geliyordu. b9 kendi "3-4 sağlam" sayısını **0-1'e** düşürdü.
-
-Sonra asıl soru soruldu: bu gürültü mü, yoksa düzeltilebilir bir şey mi? 15 kayıt, her biri
-**üç kez** okundu. **13'ü üç okumada da harfi harfine aynı cevabı verdi.** Kalan 2'si de
-**aynı metni** döndürdü — sadece o metnin nasıl sınıflandırılacağı konusunda 2'ye 1 bölündü.
-Hiçbir kayıt üç farklı cevap vermedi.
-
-Yani sorun sayfadan cümle seçmede değil — **o kısım kanıtlanmış biçimde kararlı.** Sorun bir
-kat yukarıda, sınıflandırma kararında, ve küçük (15'te 2) ve çoğunlukla çözülebilir.
-
-Önceki bulguyla da çelişmiyor, tamamlıyor: **farklı** yöntemler farklı cümleler getiriyor,
-ama **aynı** yöntem her seferinde aynı cümleyi getiriyor. Yani kararsızlığın kaynağı
-"hangi yöntem önce cevap verirse o" davranışı — temel bir gürültü değil.
-
-**Sonuç, senin kararın için:** iş açılma yönünde de otomatikleştirilebilir. İki şart var —
-kullanılacak yöntem sabitlenecek, ve sınıflandırma **üç okumadan ikisi** anlaşmadan
-uygulanmayacak. Bu, "yapılamaz" cevabından hem daha iyi hem daha ucuz.
-
-**İş şu an kapalı ve öyle duruyor.** Açmak senin kararın.
-
-**Oryn hangi kurumları bilmeli?** İki ölçüm aynı soruya çıkıyor.
-
-*Ülke tarafı:* veritabanında **481 üniversite şartnamedeki koridorun dışında** (1.019
-kurumun; koridor = ABD, İngiltere, Türkiye, Kanada ve 34 Avrupa ülkesi — sayıyı yeniden
-üretebilmen için tanımı yazıyorum, önceki 458 rakamı hiçbir tanımla tutmuyordu) — Çin 64,
-Hindistan 37, Güney Kore 31, Malezya 25, Japonya 22. Koridor içinde kalan ise ince:
-Finlandiya 9, sonra Litvanya 4, Estonya 3, Kıbrıs 3. Yani "en çok kurum" ile "bu ürün için
-en önemli" ters yönü gösteriyor.
-
-*Kurum tarafı — bu daha çarpıcı:* katalog **bütün bir tabakayı görmüyor.** Almanya'da 192
-uygulamalı bilimler üniversitesinin **sıfırı** kayıtlı, ve DAAD'ın kendi rakamıyla Alman
-öğrencilerin **%37'si** o sektörde okuyor.
-
-(Bu sayı da düzeltildi: daha önce sana 243 yazmıştım. Kaynağı arandığında DAAD'a
-çıkmıyor — üçüncü taraf bir siteye çıkıyor ve o site DAAD'a atıf yapıyor ama DAAD'ın kendi
-sayfasında böyle bir rakam yok; DAAD "200'den fazla" diyor. 192, HRK'nın —Alman
-üniversitelerinin kendi ulusal birliğinin— resmî kurum arama sisteminden, bugün canlı
-sorgulanarak. Ayrıca 9 tane de Verwaltungshochschule var, ayrı bir kategori; onlar bu
-sayının dışında.) Hollanda'da **36** hogeschool'un sıfırı — ve HBO
-orada **daha büyük** sektör (462.130 öğrenci, WO'da 340.179). Avusturya 0/21, İsviçre 1,
-İrlanda 1/5.
-
-(36 sayısı artık tahmin değil: DUO'nun — Hollanda Milli Eğitim'in yürütme kurumunun — kendi
-resmî kayıt listesinden, 54 satırın `hbo` olanları sayılarak. Önceki "40+" göz kararıydı.)
-
-Sebebi bulundu: **adında "University" geçen kurumlar girmiş, geçmeyenler girmemiş.**
-İngiltere kontrol vakası — oradaki eski politeknikler eksiksiz var, çünkü 1992'de yasayla
-o adı almışlar. Yani ayrım prestij ya da müfredat değil, isim.
-
-Ve bunun Türk öğrenciye somut bedeli var: Finlandiya'da sınavsız kapı açan sektör tam
-olarak o, ve katalog o kurumların hiçbirini içermiyor.
-
-Karşı argüman da gerçek: Hollanda'nın kendi verisi uluslararası öğrencilerin zaten diğer
-tarafa yığıldığını gösteriyor, ve 243 kurumu arkalarında veri olmadan eklemek bu gece
-düzelttiğimiz "veri yok ama kendinden emin etiket" hatasını yirmi katına çıkarır.
-
-Üç seçenek: koridoru genişlet, kapsam dışını çıkar, ya da kalsınlar ama etiketsiz. **Şu an
-üçüncüsünün yarısındayız.**
-
-**Beş ülke için de dosyalar hazır bekliyor** — ve bu artık **bir örnekleme değil, koridorun
-tamamı.** Beşi de denendi ve geri alındı, beşi de bilerek sabah paketine adım olarak
-konmadı: aşağıdaki şema kararı verilmeden uygulanırlarsa **275 kurum eksik etiketle** girer.
-
-- **Hollanda: 36 hogeschool**, DUO'nun resmî listesinden —
-  `netherlands-hbo-2026-09-03.sql`. Mevcut 13 Hollanda kaydıyla sıfır çakışma. Web adresi
-  36'nın 35'inde var, çünkü DUO onu kendi dosyasında zaten veriyor.
-- **Almanya: 192 Fachhochschule/HAW**, HRK'nın kendi arama sisteminden —
-  `germany-haw-2026-09-03.sql`. 16 eyaletin hepsi temsil ediliyor, mevcut 49 Alman kaydıyla
-  sıfır çakışma.
-
-- **Finlandiya: 22 ammattikorkeakoulu**, Vipunen (Milli Eğitim Bakanlığı'nın kendi
-  istatistik portalı) ve sektörün kendi ortak başvuru portalı UASinfo — ikisi bağımsız
-  olarak aynı 22 ismi verdi —  `finland-amk-2026-09-03.sql`. **Yirmi ikisinin de web
-  adresi tek tek tarayıcıda açılıp doğrulandı**, satır satır. Bu üç partinin en sağlamı.
-
-  Bu sektör hakkında sana daha önce yazdığım bir cümleyi **düzeltmem gerekiyor.**
-  "Finlandiya'da Türk öğrenciye sınavsız kapı açan sektör tam olarak bu" demiştim. O
-  bulgu bir arama özetinden geliyordu ve orta güvenilirlikte işaretlenmişti; ben o işareti
-  taşımadan sana yazdım. 3f bugün kaynağın kendi sayfalarını açıp baktı: **AMK'nın
-  belge-esaslı seçim listesinde Türkiye yok** — Fin matürasyonu, IB, EB, RP, DIA ve mesleki
-  diploma var. Tek bir kurum (Centria, tek bir programda) Türkiye'yi ayrıca listeliyor.
-
-  Yani sektör hâlâ katalogda hiç yok ve eklenmesi doğru; ama "Türk öğrenciye sınavsız kapı"
-  cümlesi kanıtlanmış değil. 3f kendi önceki bulgusunu, kendi aleyhine düzeltti.
-
-- **Avusturya: 21 Fachhochschule** — `austria-fh-2026-09-03.sql`. Üç bağımsız resmî kaynak
-  (bakanlık, sektörün kendi birliği, birliğin portalı) aynı 21'i verdi. Portal 22 gösteriyor
-  ama fazladan olan, kendi sayfasında "FH Vorarlberg'in sürekli eğitim şubesi" yazıyor —
-  ayrı kurum değil, çıkarıldı. **Yirmi birinin de web adresi tek tek doğrulandı.**
-- **İrlanda: 4 Teknoloji Üniversitesi** — `ireland-tu-2026-09-03.sql`. Beşincisi (TU Dublin)
-  zaten katalogda, dosya yazılmadan önce kontrol edildi. Kaynak HEA, İrlanda'nın yasal
-  yükseköğretim otoritesi.
-
-  İrlanda ayrıca 3f'in teşhisinin **kontrol vakası**: oradaki teknoloji enstitüleri yasayla
-  "üniversite" adını yeni aldı — tıpkı İngiltere'de 1992'de olduğu gibi. 6e her birleşmenin
-  hangi enstitülerden oluştuğunu tek tek canlı doğruladı, kendi bildiğine güvenmedi. Ve
-  HEA'nın listesinde hâlâ ayrı duran Dundalk Institute of Technology'yi eski isim sanıp
-  birleştirmedi — gerçekten ayrı bir kurum.
-
-Almanya'da bir tavizi bilmen gerekiyor: **web adresi 192'nin sadece 10'unda var.** Sebebi
-şu — HRK'nın sitesi toplu erişimi bot koruması ile engelliyor. Bunu aşmaya çalışmadık:
-ne başlık taklidi, ne doğrulama çözme, ne de yavaşlatıp gizlice geçme. Site kendini
-kasten koruyorsa etrafından dolaşmak doğru iş değil. 181 boş alan, 181 uydurulmuş
-adresten iyidir. Kalan adresler tek tek, elle doldurulacak bir iş.
-
-İkisi de sana kalırsa, uygulaması iki komut.
-
-**Bir kurumun "hangi tür" olduğunu tutacak yer yok.** Bu, yukarıdaki soruyu uygulamaya
-çevirince çıkan gerçek engel.
-
-`institution_type` sütunu var, ama dolu: içinde ABD'nin sahiplik sınıflandırması duruyor
-(743 "university", 217 "Public", 35 "Private not for Profit", 7 "Private nonprofit"). Bu
-bambaşka bir eksen — "kim işletiyor", "hangi akademik tür" değil. Oraya
-"University of Applied Sciences" yazmak ikisini kalıcı olarak birbirine karıştırırdı.
-
-Bu yüzden 36 kaydın hepsinde o sütun **boş bırakıldı**, HBO bilgisi `description`'a yazıldı.
-Bu çalışır ama doğru çözüm değil — geçici bir yer.
-
-Doğru çözümü tek başıma seçmedim çünkü sadece Hollanda'yı ilgilendirmiyor: Almanya
-(Fachhochschule), İrlanda (Technological University), Finlandiya (ammattikorkeakoulu),
-İsviçre (Fachhochschule) — hepsinde aynı ayrım var. Yeni bir sütun eklenirse **hepsinde
-aynı anda** tutarlı olmalı, yoksa yarısı etiketli yarısı etiketsiz bir katalog kalır ki
-etiketsiz olandan daha kötüdür. Migration kararı, senin.
-
-**Fırsat görselleri ve lisans.** 282 kaydın 218'inde görsel yok, ve **128'inin kaynak
-sayfasında zaten görsel yok** — daha çok taramak bunu çözmüyor. Üçüncü taraf görseli
-sunmanın hukuki temeli açık değil; `LEGAL_REVIEW.md`'ye eklendi. Bu arada lisans gerektirmeyen,
-kategoriye göre üretilmiş görseller yapılıyor.
+**Karar listesine girmeyen tek not — fırsat görselleri ve lisans.** 282 kaydın 218'inde
+görsel yok, ve 128'inin kaynak sayfasında zaten görsel yok — daha çok taramak bunu
+çözmüyor. Üçüncü taraf görseli sunmanın hukuki temeli açık değil; `LEGAL_REVIEW.md`'ye
+eklendi. Bu arada lisans gerektirmeyen, kategoriye göre üretilmiş görseller yapılıyor —
+senden bir karar beklemiyor, sadece bilmen gerekiyordu.
 
 ---
 
