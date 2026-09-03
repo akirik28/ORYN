@@ -111,7 +111,11 @@ export type PathwayBasis =
   /** The country has a split and Oryn has no residence on file. */
   | "undetermined";
 
-/** Which layer of the (country, pathway, institution, field) key produced the shape. */
+/** Which layer of the (country, pathway, institution, field, subdivision) key produced the
+ * shape. `subdivision`/`subdivision_field` mean an institution matched a named sub-country
+ * classification (e.g. Finland's UAS sector) below a specifically-named institution override
+ * but above the country's own default — see `SubdivisionEntry`'s own doc for why this layer
+ * exists and where it sits. */
 export type ResolutionBasis =
   | "no_entry"
   | "country"
@@ -119,6 +123,8 @@ export type ResolutionBasis =
   | "country_field"
   | "institution"
   | "institution_field"
+  | "subdivision"
+  | "subdivision_field"
   | "pathway_undetermined";
 
 export interface AdmissionSystemResolution {
@@ -176,6 +182,40 @@ interface InstitutionOverride {
   system: PathwaySystem;
 }
 
+/**
+ * A named admissions mechanism that applies to a whole *category* of institutions within a
+ * country, below the country level but above any single institution — e.g. Finland's
+ * ammattikorkeakoulut (UAS) sector, which genuinely admits differently from its research
+ * universities (`docs/research/admissions-systems/finland.md`, `subdivision-key-proposal.md`).
+ *
+ * Not the same problem `InstitutionOverride` already solves. That handles "this one, specific,
+ * individually-researched institution is an exception" (Canada's UBC, Norway's NTNU) — a
+ * `SubdivisionEntry` handles "this whole *class* of institutions, identified by name because
+ * no queryable DB field distinguishes them yet (checked live and confirmed —
+ * `subdivision-key-proposal.md`'s own "what was checked and ruled out" section),
+ * shares one mechanism that differs from the country's other institutions." The distinction
+ * matters for precedence: a specifically-researched `InstitutionOverride` for one member of a
+ * subdivision should still win over the subdivision's general answer, so institution overrides
+ * are checked first.
+ *
+ * `matchNames` works exactly like `InstitutionOverride.names` — exact-after-normalization, not
+ * fuzzy, for the same reason: a near-miss here would silently apply one category's mechanism to
+ * an institution that was never actually classified into it. An institution that matches no
+ * subdivision falls through to the country's own `domestic`/`international` — which is why a
+ * subdivision should only be added for a country whose *unclassified* population still has an
+ * honest default (see `subdivision-key-proposal.md`'s Option B discussion of why this worked for
+ * Belgium's Communities but needed more care for Finland's sectors).
+ */
+interface SubdivisionEntry {
+  /** Short, internal label for sources/debugging (e.g. "uas") — never shown to a student;
+   * `mechanism` text is what a student reads. */
+  key: string;
+  matchNames: string[];
+  domestic: PathwaySystem;
+  international: PathwaySystem;
+  fieldOverrides?: FieldOverride[];
+}
+
 interface AdmissionSystemEntry {
   /** Every name form the `universities.country` column is known to carry for this country
    * (live data holds "US" and "United States", "Türkiye" and "Turkey", "Hong Kong" and
@@ -191,6 +231,12 @@ interface AdmissionSystemEntry {
   international: PathwaySystem;
   fieldOverrides?: FieldOverride[];
   institutionOverrides?: InstitutionOverride[];
+  /** Named sub-country categories (e.g. a UAS/applied-sciences sector) whose mechanism
+   * genuinely differs from this entry's own `domestic`/`international` — see
+   * `SubdivisionEntry`'s own doc. Checked after `institutionOverrides`, before
+   * `fieldOverrides`/the country default. Optional and rare by design: only added where a
+   * research pass actually confirmed a below-country-level divergence, never speculatively. */
+  subdivisions?: SubdivisionEntry[];
   sources: string[];
 }
 
@@ -800,6 +846,73 @@ const REGISTRY: AdmissionSystemEntry[] = [
     },
     sources: [DOC("cyprus.md")],
   },
+  {
+    // Finland's two higher-education sectors run genuinely different admissions -- not a
+    // field-level exception on top of one shared default the way Belgium's medicine override
+    // is. This is the subdivisions mechanism's first real registry use: two research passes
+    // (the second, closing both shape questions the first left open) plus the applied-sciences
+    // institution batch (6e, docs/finland-amk-sector-2026-09-03.md) supplied the 22 real AMK
+    // names below. See docs/research/admissions-systems/finland.md and
+    // subdivision-key-proposal.md for why a flat country entry couldn't represent this.
+    countryNames: ["Finland", "Suomi"],
+    // The university (yliopisto) sector -- 9 of ORYN's current Finnish institutions, by name.
+    domestic: {
+      shape: "unknown",
+      mechanism:
+        "Both research passes on Finland focused on applicants without Finnish matriculation, IB, or EB credentials — neither established whether the university sector's own mechanism for matriculation/IB/EB holders is rank-competitive or threshold. Check the specific target university and programme.",
+    },
+    international: {
+      shape: "academic_rank_competitive",
+      mechanism:
+        "Applicants without Finnish matriculation, IB, or EB credentials (the group a Turkish MEB diploma holder falls into) are evaluated on SAT or ACT scores. Aalto University's own admissions page confirms this is a genuine ranking, not a pass bar: published minimum SAT/ACT thresholds exist per study option, but clearing them does not guarantee a place — 'applicants are ranked based on their SAT total scores or converted ACT scores.' University of Helsinki's own admissions page independently confirms the same separate admission group exists there too, evaluated the same way.",
+    },
+    // The AMK (ammattikorkeakoulu, university of applied sciences) sector -- named separately
+    // because its general mechanism genuinely differs, not because one field within it does.
+    // matchNames is the real 22-institution list 6e verified live, per-row, against each
+    // institution's own site (docs/finland-amk-sector-2026-09-03.md) -- deliberately excludes
+    // Högskolan på Åland and the Police University College, which that same research
+    // confirmed sit outside OKM's own AMK statistics and were not independently re-verified.
+    subdivisions: [
+      {
+        key: "uas",
+        matchNames: [
+          "Arcada University of Applied Sciences",
+          "Centria University of Applied Sciences",
+          "Diaconia University of Applied Sciences",
+          "Haaga-Helia University of Applied Sciences",
+          "HAMK University of Applied Sciences",
+          "HUMAK University of Applied Sciences",
+          "JAMK University of Applied Sciences",
+          "Kajaani University of Applied Sciences",
+          "Karelia University of Applied Sciences",
+          "LAB University of Applied Sciences",
+          "Lapland University of Applied Sciences",
+          "Laurea University of Applied Sciences",
+          "Metropolia University of Applied Sciences",
+          "Novia University of Applied Sciences",
+          "Oulu University of Applied Sciences",
+          "Satakunta University of Applied Sciences",
+          "Savonia University of Applied Sciences",
+          "Seinäjoki University of Applied Sciences",
+          "South-Eastern Finland University of Applied Sciences (Xamk)",
+          "Tampere University of Applied Sciences",
+          "Turku University of Applied Sciences",
+          "Vaasa University of Applied Sciences",
+        ],
+        domestic: {
+          shape: "academic_rank_competitive",
+          mechanism:
+            "Certificate-based selection (todistusvalinta), the AMK sector's own joint route (uasinfo.fi), scores Finnish matriculation, IB/EB, and post-2015 vocational-qualification holders on a points scale (up to 198 points) and fills a fixed, programme-specific quota against that ranking — confirmed competitive, not a pass bar, though individual institutions may also set their own minimum floor on top.",
+        },
+        international: {
+          shape: "unknown",
+          mechanism:
+            "uasinfo.fi's own certificate-based-selection pages list only Finnish matriculation, IB/EB/RP/DIA, and Finnish post-2015 vocational qualifications as eligible — a Turkish MEB diploma or other non-EU secondary qualification is not among them there. At least one AMK (Centria) separately lists a much broader set of eligible non-EU qualifications, Turkey included, on its own programme pages, so eligibility for a specific foreign qualification looks institution-dependent rather than sector-wide — check the specific target institution before assuming either outcome.",
+        },
+      },
+    ],
+    sources: [DOC("finland.md")],
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -840,7 +953,14 @@ function matchesInstitution(override: InstitutionOverride, universityName: strin
   return override.names.some((name) => normalizeEntitySearchText(name) === target);
 }
 
-function resolvePathway(entry: AdmissionSystemEntry, studentCountry: string | null): { pathway: ApplicantPathway; basis: PathwayBasis } {
+/** Narrowed to just the fields pathway resolution actually reads, so a `SubdivisionEntry` can
+ * reuse this against its own `domestic`/`international` pair without being a full
+ * `AdmissionSystemEntry` — a subdivision's pathway split (if any) is its own, potentially
+ * different from the country's own split situation, and must be resolved against the
+ * subdivision's own systems, not the country's. */
+type PathwaySplitSource = Pick<AdmissionSystemEntry, "domestic" | "international" | "countryNames" | "domesticEquivalentCountries">;
+
+function resolvePathway(entry: PathwaySplitSource, studentCountry: string | null): { pathway: ApplicantPathway; basis: PathwayBasis } {
   const isSplit = entry.domestic.shape !== entry.international.shape || entry.domestic.mechanism !== entry.international.mechanism;
   if (!isSplit) return { pathway: "domestic", basis: "not_pathway_split" };
   if (studentCountry === null || studentCountry.trim() === "") return { pathway: "unknown", basis: "undetermined" };
@@ -898,6 +1018,60 @@ export function resolveAdmissionSystem(query: AdmissionSystemQuery, locale: Loca
         pathwayBasis,
         basis: fieldScoped ? "institution_field" : "institution",
         mechanism: mechanismFor(chosen.system, locale),
+        sources: entry.sources,
+      };
+    }
+  }
+
+  // Subdivisions sit below institution overrides (a specifically-researched exception for one
+  // member still wins) and above the country/pathway default (SubdivisionEntry's own doc).
+  // Resolved as its own self-contained (domestic, international, fieldOverrides) unit, exactly
+  // the shape a country-level entry has — including re-resolving pathway against the
+  // SUBDIVISION's own systems, since its split situation (if any) may genuinely differ from
+  // the country's own. `sources` still comes from the country entry: a subdivision doesn't get
+  // its own citation array, since the country's research doc is what documents it.
+  if (universityName && entry.subdivisions) {
+    const subdivision = entry.subdivisions.find((sub) => sub.matchNames.some((name) => normalizeEntitySearchText(name) === normalizeEntitySearchText(universityName)));
+    if (subdivision) {
+      // A subdivision has no country list of its own — it's the same country as its parent
+      // entry, just a different sector within it — so pathway resolution borrows the parent's
+      // countryNames/domesticEquivalentCountries alongside the subdivision's own domestic/
+      // international systems.
+      const subPathway = resolvePathway({ domestic: subdivision.domestic, international: subdivision.international, countryNames: entry.countryNames, domesticEquivalentCountries: entry.domesticEquivalentCountries }, query.studentCountry);
+
+      if (query.targetField && subdivision.fieldOverrides) {
+        const override = subdivision.fieldOverrides.find((candidate) => candidate.field === query.targetField);
+        if (override) {
+          return {
+            shape: override.system.shape,
+            pathway: subPathway.pathway,
+            pathwayBasis: subPathway.basis,
+            basis: "subdivision_field",
+            mechanism: mechanismFor(override.system, locale),
+            sources: entry.sources,
+          };
+        }
+      }
+
+      if (subPathway.pathway === "unknown") {
+        const connector = locale === "tr" ? "Ortaöğretimini başka bir yerde tamamlayan başvuru sahipleri için ayrı bir yol geçerlidir:" : "A separate pathway applies to applicants who completed secondary school elsewhere:";
+        return {
+          shape: subdivision.domestic.shape === subdivision.international.shape ? subdivision.domestic.shape : "unknown",
+          pathway: subPathway.pathway,
+          pathwayBasis: subPathway.basis,
+          basis: "subdivision",
+          mechanism: `${mechanismFor(subdivision.domestic, locale)} ${connector} ${mechanismFor(subdivision.international, locale)}`,
+          sources: entry.sources,
+        };
+      }
+
+      const system = subPathway.pathway === "domestic" ? subdivision.domestic : subdivision.international;
+      return {
+        shape: system.shape,
+        pathway: subPathway.pathway,
+        pathwayBasis: subPathway.basis,
+        basis: "subdivision",
+        mechanism: mechanismFor(system, locale),
         sources: entry.sources,
       };
     }

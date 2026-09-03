@@ -84,20 +84,24 @@ docs — not as additional rows in the deep-comparison matrix.
 | Estonia | [`estonia.md`](./estonia.md) | 2026-09-03 | First entry from the corridor re-measurement's own long-tail list, not the founder-supplied candidates. International (DreamApply) is confidently `holistic_review` — Tallinn University's own page confirms a mandatory interview for every applicant. Domestic (SAIS) is `unknown`, held to slightly lower confidence than Czechia's parallel finding — see estonia.md §B–C. |
 | Lithuania | [`lithuania.md`](./lithuania.md) | 2026-09-03 | A genuinely mixed mechanism, not a clean rank-vs-holistic split: LAMA BPO's own competitive-score formula has a real, bounded motivation-assessment component (0–1.5 of a 2.5-point cap). Classified `holistic_review`, both pathways, on the same basis this registry already uses for the original 15's Singapore/NUS entry — see lithuania.md §A–C. |
 | Cyprus | [`cyprus.md`](./cyprus.md) | 2026-09-03 | Scoped to the Republic of Cyprus only — "Northern Cyprus" is a genuinely separate country value in ORYN's database, not represented here. The Pancyprian Examinations officially feed admission to "Public Universities of Cyprus **and Greece**" — a real structural link, confirmed `academic_rank_competitive` domestically with real allocation numbers. International is honestly `unknown`, not holistic (no essay/interview found) but not distinguishable between threshold and rank — see cyprus.md §B–C. |
+| Finland | [`finland.md`](./finland.md) | 2026-09-03 | Shipped via a new `subdivisions` key, not the plain country shape — see the note below the table. University sector confirmed `academic_rank_competitive` internationally (Aalto's own ranking language); AMK sector confirmed `academic_rank_competitive` domestically (todistusvalinta's points+quota mechanism) but honestly `unknown` internationally, after a primary-fetch pass corrected an earlier search-excerpt overclaim about sector-wide Turkish eligibility — see finland.md §B. |
 
-### Researched but not shipped: Finland
+### Finland: the subdivisions key's first shipped use
 
-[`finland.md`](./finland.md) (2026-09-03, two research passes) is **not** wired into
-`lib/admissions/system-shape.ts` — deliberately. Finland's admissions law genuinely divides by
-higher-education sector (university vs. university of applied sciences), with confirmed,
-differently-favorable treatment of a Turkish applicant depending on which sector they target, and
-this registry's `(country, pathway, institution, field)` key has no way to represent that
-honestly today. Same finding, one axis over, as Belgium's Community split above — see
-[`subdivision-key-proposal.md`](./subdivision-key-proposal.md), a design proposal (not an
-implementation) for a key general enough to cover both, written after hitting this gap twice.
+Two research passes (2026-09-03) deliberately shipped no registry entry for Finland — its
+admissions law genuinely divides by higher-education sector (university vs. university of
+applied sciences), with different mechanisms and different foreign-qualification treatment by
+sector, and the registry's `(country, pathway, institution, field)` key had no way to represent
+that honestly. [`subdivision-key-proposal.md`](./subdivision-key-proposal.md) (a design proposal,
+written after hitting this same gap on Belgium's Community split too) recommended a
+`subdivisions` key; a third pass (2026-09-03) built it, resolved the two shape questions the
+second pass left open, corrected one overclaim the second pass's search-excerpt evidence didn't
+actually support (see finland.md §B), and shipped Finland as the mechanism's first real
+registry entry, using the real 22-institution AMK name list 6e's institution research verified.
+See [`finland.md`](./finland.md) for the full account, including what's still unresolved.
 
-A side observation while writing `finland.md` — every one of ORYN's 9 Finnish institutions is a
-research university, none are UAS — turned into its own measurement:
+A side observation while writing `finland.md`'s first pass — every one of ORYN's 9 original
+Finnish institutions is a research university, none are UAS — turned into its own measurement:
 [`applied-sciences-sector-coverage.md`](./applied-sciences-sector-coverage.md) checks whether
 that's Finland-specific or a corridor-wide pattern (it is: Germany 0/243 UAS institutions by
 name, Netherlands 0/40+, Austria 0/21, and more), and whether it matters. Measurement and a

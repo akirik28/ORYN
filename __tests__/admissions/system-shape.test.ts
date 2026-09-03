@@ -660,6 +660,108 @@ describe("resolveAdmissionSystem — Cyprus (2026-09-03, structurally linked to 
   });
 });
 
+// The subdivisions mechanism's first real registry use (subdivision-key-proposal.md, Option B)
+// -- Finland's university and AMK (applied-sciences) sectors run genuinely different admissions,
+// below the country level, identified by name rather than a DB column (checked live and ruled
+// out -- finland.md §A). These tests double as the generic mechanism's own proof: precedence,
+// subdivision-level pathway resolution, and safe fallthrough for an unclassified institution.
+describe("resolveAdmissionSystem — Finland (2026-09-03, the subdivisions mechanism's first real use)", () => {
+  test("an unnamed target (or the university sector by default) resolves to the country-level entry, unknown for domestic", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Finland", studentCountry: "Finland" });
+    expect(domestic.shape).toBe("unknown");
+    expect(domestic.basis).toBe("country_pathway");
+    expect(domestic.mechanism).toContain("matriculation");
+  });
+
+  test("the university sector's international pathway is rank-competitive, confirmed via Aalto's own ranking language", () => {
+    const international = resolveAdmissionSystem({ targetCountry: "Finland", studentCountry: "Turkey" });
+    expect(international.shape).toBe("academic_rank_competitive");
+    expect(reviewsNonAcademicEvidence(international.shape)).toBe(false);
+    expect(international.mechanism).toContain("ranked");
+  });
+
+  test("a named AMK institution resolves through the subdivision, not the country default", () => {
+    const result = resolveAdmissionSystem({
+      targetCountry: "Finland",
+      studentCountry: "Finland",
+      targetUniversityName: "Metropolia University of Applied Sciences",
+    });
+    expect(result.basis).toBe("subdivision");
+    expect(result.shape).toBe("academic_rank_competitive");
+    expect(result.mechanism).toContain("todistusvalinta");
+  });
+
+  test("the AMK subdivision's domestic and international pathways genuinely differ — rank-competitive vs. honestly unknown", () => {
+    const domestic = resolveAdmissionSystem({
+      targetCountry: "Finland",
+      studentCountry: "Finland",
+      targetUniversityName: "Metropolia University of Applied Sciences",
+    });
+    const international = resolveAdmissionSystem({
+      targetCountry: "Finland",
+      studentCountry: "Turkey",
+      targetUniversityName: "Metropolia University of Applied Sciences",
+    });
+    expect(domestic.shape).toBe("academic_rank_competitive");
+    expect(international.shape).toBe("unknown");
+    expect(reviewsNonAcademicEvidence(international.shape)).toBeNull();
+    expect(international.mechanism).toContain("Centria");
+  });
+
+  test("matching is exact-after-normalization, not fuzzy — a near-miss name falls through to the country default, not a guessed subdivision", () => {
+    const result = resolveAdmissionSystem({
+      targetCountry: "Finland",
+      studentCountry: "Finland",
+      targetUniversityName: "Metropolia",
+    });
+    expect(result.basis).not.toBe("subdivision");
+    expect(result.basis).toBe("country_pathway");
+  });
+
+  test("a real Finnish research university is NOT swept into the AMK subdivision", () => {
+    const result = resolveAdmissionSystem({
+      targetCountry: "Finland",
+      studentCountry: "Turkey",
+      targetUniversityName: "Aalto University",
+    });
+    expect(result.basis).toBe("country_pathway");
+    expect(result.shape).toBe("academic_rank_competitive");
+    expect(result.mechanism).toContain("Aalto");
+  });
+
+  test("every AMK subdivision name is distinct from every other registered institution override or subdivision", () => {
+    // A cheap structural guard against a copy-paste collision inside the 22-name list itself.
+    const names = [
+      "Arcada University of Applied Sciences", "Centria University of Applied Sciences",
+      "Diaconia University of Applied Sciences", "Haaga-Helia University of Applied Sciences",
+      "HAMK University of Applied Sciences", "HUMAK University of Applied Sciences",
+      "JAMK University of Applied Sciences", "Kajaani University of Applied Sciences",
+      "Karelia University of Applied Sciences", "LAB University of Applied Sciences",
+      "Lapland University of Applied Sciences", "Laurea University of Applied Sciences",
+      "Metropolia University of Applied Sciences", "Novia University of Applied Sciences",
+      "Oulu University of Applied Sciences", "Satakunta University of Applied Sciences",
+      "Savonia University of Applied Sciences", "Seinäjoki University of Applied Sciences",
+      "South-Eastern Finland University of Applied Sciences (Xamk)",
+      "Tampere University of Applied Sciences", "Turku University of Applied Sciences",
+      "Vaasa University of Applied Sciences",
+    ];
+    expect(new Set(names).size).toBe(names.length);
+    for (const name of names) {
+      const result = resolveAdmissionSystem({ targetCountry: "Finland", studentCountry: "Finland", targetUniversityName: name });
+      expect(result.basis).toBe("subdivision");
+    }
+  });
+
+  test("Finland traces to its own research document, not an invented source", () => {
+    const result = resolveAdmissionSystem({
+      targetCountry: "Finland",
+      studentCountry: "Finland",
+      targetUniversityName: "Metropolia University of Applied Sciences",
+    });
+    expect(result.sources).toContain("docs/research/admissions-systems/finland.md");
+  });
+});
+
 describe("resolveAdmissionSystem — totality", () => {
   test("never throws and always returns a resolution, including for empty input", () => {
     expect(() => resolveAdmissionSystem({ targetCountry: null, studentCountry: null })).not.toThrow();
