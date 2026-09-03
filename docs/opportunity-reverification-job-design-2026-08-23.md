@@ -149,6 +149,26 @@ it documents.
 > a now-measured property of the design's own phrase-matching approach that needs a decision
 > before arming produces any real value.
 
+> **Update, 2026-09-03: the phrase set, derived from real pages.**
+> `docs/reverification-phrase-set-corpus-2026-09-03.md` — CEO dispatch: "derive the phrase
+> set from real pages instead of from intuition," after the finding directly above. A
+> stratified 49-page sample (all 12 categories, 6 cycle_status values, not the
+> priority-ranked due-set) read by hand found the dominant failure was word order/tense, not
+> only missing vocabulary — real pages write "is now closed," never the hardcoded
+> "applications now closed." `classify.ts`'s §5.1 phrase set is extended with 8
+> evidence-traced regex patterns (each cited to a specific real page in the file's own
+> comment) and "check back" is removed as a standalone closure trigger (a confirmed
+> false-positive source, 3 separate instances across two passes). Re-running dry run #1's
+> exact same 20-row population: **0 P1 outcomes → 8 p1_confirmed + 1 p1_changed**, the one
+> change being a genuine Stanford-Anesthesia-shape catch (USC Pre-College: stored open,
+> page says "are now closed"), confirmed by adjudication, correctly not applied. On the
+> broader 46-row sample, still 67% liveness-silent even after the fix — a real improvement,
+> not a solved problem; A12 remains answered on the pessimistic side. Two things measured
+> and deliberately not fixed here: a real share of the corpus is Turkish with zero English
+> signal (structural, not a tuning problem), and a genuine false-positive trap (Columbia's
+> own course-filter UI, literal "Status - Any - Open Closed") argues against a blunter,
+> unanchored expansion.
+
 ---
 
 ## 0. Summary

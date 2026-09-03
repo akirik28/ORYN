@@ -74,9 +74,66 @@ export function checkContentGuards(
   return null;
 }
 
-// Design doc §5.1's fixed phrase set, verbatim.
-const CLOSURE_PHRASES = ["applications are closed", "applications now closed", "no longer accepting", "deadline has passed", "check back"];
+// Design doc §5.1's original fixed phrase set, kept as literal substrings — none of these
+// were shown to cause a false positive, so none are removed, only extended below.
+// "check back" is the one exception, removed as a standalone trigger: the first live dry
+// run (2026-09-03, 20 real rows) found it fired 2/2 times on unrelated blog/photo-gallery
+// "check back for updates" text, never once on an actual closure. Its one legitimate
+// observed use (Interlochen Review: "not open for submissions... Check back in January")
+// is still caught below by the more specific NOT_OPEN_FOR_SUBMISSIONS pattern, so nothing
+// real is lost by dropping the bare trigger.
+const CLOSURE_PHRASES = ["applications are closed", "applications now closed", "no longer accepting", "deadline has passed"];
 const OPENING_PHRASES = ["applications open", "apply by", "deadline:"];
+
+/**
+ * Evidence-grounded additions, 2026-09-03 (CEO dispatch: "derive the phrase set from real
+ * pages instead of from intuition"). The literal phrases above, checked against a 49-page
+ * stratified sample (all 12 categories, 6 cycle_status values, spread across countries —
+ * not the priority-ranked due-set, which skews toward a narrower slice) found in dry run
+ * #1 to produce zero P1 outcomes across 20 rows, missed almost everything real pages
+ * actually say. The dominant failure mode was NOT missing vocabulary alone — it was word
+ * order and tense: not one real "closed" example in the sample matched the literal phrase
+ * "applications now closed" verbatim (real examples: "is now closed" ×3, "Has Officially
+ * Concluded", "not open for submissions"), and real "open" language put "now" on either
+ * side of "open" depending on the site. A literal-string list would need combinatorial
+ * variants to cover this; a handful of short, tolerant regexes covers the same ground
+ * without guessing at variants that were never observed.
+ *
+ * Every pattern below is traceable to a specific fetched page, not invented:
+ * - "apply now": Wharton M&TSI ("Apply Now!"), LaunchX ("Apply Now" nav)
+ * - "(now open | open now | now opened)": EYP Türkiye ("ARE OPEN NOW", "Officer Calls are
+ *   Now Open!"), Özyeğin ("APPLICATIONS FOR 2026 ARE NOW OPENED!")
+ * - "application(s) (is|are) (now) open": EYP, Girl Up ("are now open"), Habitat/Geleceği
+ *   Eşitle ("Applications are open to young people...")
+ * - "registration (is) open": Wall Street 101 ("Registration open for Summer 2026")
+ * - "application is available": Coca-Cola Scholars ("The 2027 ... application is available
+ *   here!")
+ * - "(is|are|has) now closed": JLI ("Registration ... is now closed"), ASSIP ("The 2026
+ *   ASSIP Application is now closed"), Girl Up Project Awards ("application is now closed")
+ * - "officially concluded": SIP ("SIP 2026 Has Officially Concluded")
+ * - "not open for submissions": Interlochen Review — see the note on "check back" above
+ *
+ * Two things this pass measured but deliberately did NOT try to fix here, because fixing
+ * them is a different kind of change than a phrase-set update:
+ * - A meaningful share of the sample (Turkish-market rows: İBB Genç Gönüllü, GençBizzTech,
+ *   UPSHIFT, Gençlik Merkezleri, Duke of Edinburgh Türkiye) carries no English opening/
+ *   closing language at all — an English-only matcher structurally cannot classify these
+ *   regardless of how the English list is tuned. Real, not fixed by this pass.
+ * - At least one page in the sample (Columbia's course-filter UI: literal text "Status -
+ *   Any - Open Closed") shows why a BROADER bare-word match ("open" / "closed" alone,
+ *   unanchored) would be actively dangerous — a filter control, not a fact about the
+ *   specific stored opportunity. Every pattern below stays anchored to an
+ *   application/registration noun or an explicit CTA phrase for exactly this reason.
+ */
+const OPENING_PATTERNS: RegExp[] = [
+  /apply\s+now/,
+  /\b(?:now\s+open|open\s+now|now\s+opened)\b/,
+  /applications?\s+(?:are|is)\s+(?:now\s+)?open\b/,
+  /registration\s+(?:is\s+)?open\b/,
+  /application\s+is\s+available\b/,
+];
+
+const CLOSURE_PATTERNS: RegExp[] = [/\b(?:is|are|has)\s+now\s+closed\b/, /officially\s+concluded\b/, /not\s+open\s+for\s+submissions?\b/];
 
 export interface PhraseMatch {
   phrase: string;
@@ -100,12 +157,28 @@ function findPhrases(content: string, phrases: string[]): PhraseMatch[] {
   return matches;
 }
 
+/** Same excerpt-extraction shape as findPhrases above, for the regex patterns — operates on
+ * lowercased content (matching findPhrases' own case-insensitivity approach) so none of the
+ * patterns need their own `i` flag. */
+function findPatternMatches(content: string, patterns: RegExp[]): PhraseMatch[] {
+  const haystack = content.toLowerCase();
+  const matches: PhraseMatch[] = [];
+  for (const pattern of patterns) {
+    const match = pattern.exec(haystack);
+    if (!match) continue;
+    const start = Math.max(0, match.index - 80);
+    const end = Math.min(content.length, match.index + match[0].length + 80);
+    matches.push({ phrase: match[0], excerpt: content.slice(start, end).trim() });
+  }
+  return matches;
+}
+
 export function findClosurePhrases(content: string): PhraseMatch[] {
-  return findPhrases(content, CLOSURE_PHRASES);
+  return [...findPhrases(content, CLOSURE_PHRASES), ...findPatternMatches(content, CLOSURE_PATTERNS)];
 }
 
 export function findOpeningPhrases(content: string): PhraseMatch[] {
-  return findPhrases(content, OPENING_PHRASES);
+  return [...findPhrases(content, OPENING_PHRASES), ...findPatternMatches(content, OPENING_PATTERNS)];
 }
 
 // A conservative, explicit-format-only date extractor — design doc §5.1 step 3 ("regex date
