@@ -1933,7 +1933,13 @@
       "footerNote": "Separate from the student app. Nothing here is reachable by a student.",
       "overviewTitle": "What needs you right now",
       "overviewDescription": "Not everything — only what is waiting on a decision.",
-      "overviewPlaceholder": "The attention list and summary cards land here next. This screen is deliberately short: every other area has its own place in the rail rather than being stacked on top of this one."
+      "overviewPlaceholder": "The attention list and summary cards land here next. This screen is deliberately short: every other area has its own place in the rail rather than being stacked on top of this one.",
+      "ledgerDescription": "Every admin action, in one list — regardless of which table recorded it.",
+      "moderationDescription": "Reported messages and posts, waiting on a decision.",
+      "systemDescription": "Whether the machinery is healthy — providers, jobs, and AI response quality.",
+      "catalogDescription": "Opportunities awaiting review, and the description cleanup pass.",
+      "spendDescription": "AI spend, budgets, and remaining credit.",
+      "studentsDescription": "Every student, their plan tier, and when they last showed up."
     },
     "growth": {
       "signups": {
