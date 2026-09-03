@@ -2307,6 +2307,53 @@ export type ParentLinkInsert = Omit<ParentLink, "id" | "confirmed_at" | "created
  * student — so this type and that trigger agree rather than one covering for the other. */
 export type ParentLinkUpdate = Partial<Pick<ParentLink, "status" | "confirmed_at">>;
 
+/** Migration 0116's three get_parent_child_* functions (§5, "curated read functions") — each
+ * `returns table`'s own column list IS the whitelist that keeps advisor_instructions/notes off
+ * a parent's read (a raw-table RLS policy can't hide one column while allowing another; a
+ * SECURITY DEFINER function whose SELECT list never mentions the excluded column can). Hand-
+ * typed here rather than left to codegen for the same reason ParentLink above is: the migration
+ * is merged but not yet applied live, so there is nothing to generate types from yet.
+ *
+ * Field shapes mirror the real Profile/TargetUniversity/Application columns exactly (nullable
+ * where the underlying column is nullable) — these are SELECT projections, not a redefinition. */
+export interface ParentChildProfileRow {
+  display_name: string | null;
+  graduation_year: number | null;
+  curriculum: CurriculumType | null;
+  country: string | null;
+  school_name: string | null;
+  plan_tier: PlanTier;
+  onboarding_completed: boolean;
+  completeness_percent: number;
+  profile_strength_score: number | null;
+}
+/** Excludes target_universities.notes — see this table's own migration comment (0116 §5) for
+ * why a free-text field a student wrote never appears in a parent-facing function. */
+export interface ParentChildTargetUniversityRow {
+  id: string;
+  university_id: string;
+  program_id: string | null;
+  status: TargetStatus;
+  academic_fit_score: number | null;
+  profile_fit_score: number | null;
+  outlook: OutlookLabel | null;
+  estimate_range_low: number | null;
+  estimate_range_high: number | null;
+  outlook_confidence: DataConfidence | null;
+  created_at: string;
+  updated_at: string;
+}
+/** Excludes applications.notes — same reasoning as ParentChildTargetUniversityRow above. */
+export interface ParentChildApplicationRow {
+  id: string;
+  target_university_id: string;
+  application_type: ApplicationType;
+  deadline: string | null;
+  status: ApplicationStatus;
+  created_at: string;
+  updated_at: string;
+}
+
 /** "application" | "opportunity" | "university_deadline" — matches lib/deadlines/scan.ts's
  * DeadlineHit["source"] exactly. Kept as a plain string in the DB (migration 0075's own
  * comment explains why), so this union exists only here and in scan.ts — not a DB enum. */
@@ -2444,6 +2491,21 @@ export interface Database {
       /** Migration 0110, written not applied. Matches on started_at, not just user_id — see
        * the migration's own header for the crash-adjacent edge case that protects against. */
       release_advisor_generation_lock: { Args: { p_started_at: string }; Returns: void };
+      /** Migration 0116, written not applied. SECURITY DEFINER (same pattern as
+       * is_profile_public above) — returns an empty array, never an error, when the caller
+       * has no active parent_links row to p_student, indistinguishable from "not found" by
+       * design. See lib/parent/child-panel.ts for why a caller needs a second, separate
+       * signal (the parent_links row itself) to tell that apart from "no data yet". */
+      get_parent_child_profile: { Args: { p_student: string }; Returns: ParentChildProfileRow[] };
+      /** Migration 0116, written not applied. Same whitelist/empty-array reasoning as
+       * get_parent_child_profile above — excludes target_universities.notes. */
+      get_parent_child_target_universities: {
+        Args: { p_student: string };
+        Returns: ParentChildTargetUniversityRow[];
+      };
+      /** Migration 0116, written not applied. Same whitelist/empty-array reasoning as
+       * get_parent_child_profile above — excludes applications.notes. */
+      get_parent_child_applications: { Args: { p_student: string }; Returns: ParentChildApplicationRow[] };
     };
     Tables: {
       profiles: Table<Profile, Partial<Profile>, ProfileUpdate>;
