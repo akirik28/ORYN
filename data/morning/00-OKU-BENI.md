@@ -22,14 +22,16 @@ canlıda doğrulandı).
 
 ## 2. Migration'ları uygula
 
-`01-migrations-2026-09-03.sql` — tamamını yapıştır, çalıştır. **On üç migration**, tek
+`01-migrations-2026-09-03.sql` — tamamını yapıştır, çalıştır. **On üç migration ama on
+ikisi yeni** — 0090 canlıda zaten uygulanmış, dosyada duruyor çünkü tekrar çalışması
+zararsız. Hepsi tek
 işlem içinde. Bir tanesi patlarsa hiçbiri uygulanmaz ve tekrar çalıştırmak güvenli.
 
 Sıra kesintisiz. Bir ara 0101 eksikti — sahibi oturum push edemiyordu — ama engel kalktı
 ve iş birleşti. **Yani sabaha bekleyen bir engel kalmadı.**
 
 **Bu adım olmadan panelin yazma tarafı çalışmaz.** Ultra yapma, hediye etme, iş durdurma,
-bütçe ayarlama — hepsi bu on üç migration'a bağlı. Panel bunları dürüstçe "kurulu değil"
+bütçe ayarlama — hepsi bu migration'lara bağlı. Panel bunları dürüstçe "kurulu değil"
 diye gösterecek, ama iş görmeyecek.
 
 ## 3. Bekleyen veriyi doldur
@@ -145,7 +147,12 @@ kategoriye göre üretilmiş görseller yapılıyor.
 
 ## Gece ne oldu
 
-8 lane, 13 dal birleşti, **5091 test yeşil.** Kumanda merkezi tasarımı iki kez elden geçti.
+8 lane, **90 dal birleşti**, **5497 test yeşil.** Kumanda merkezi tasarımı iki kez elden
+geçti, sonra gerçekten kuruldu: on iki bölüm, kendi kabuğu, açık yeşil zemin.
+
+Sabah paketinin ikisi de **baştan sona deneme çalıştırıldı** (6e): 224 korumalı ifadenin
+224'ü çalışıyor, sıfır sessiz atlama. O çalıştırma benim kendi dosyalarımda üç hata buldu
+— en kötüsü, doğrulama sorgumun her şey yolunda gitse bile iki satırda kırmızı dönmesiydi.
 
 En ciddi bulgu: eşleştirme motoru, yaş sınırı kayıtlı olmayan 189 fırsata hiçbir uyarı
 olmadan "uygun" diyordu — 14 yaşındaki biri için "21 yaş üstü" bir program ile gerçekten
