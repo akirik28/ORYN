@@ -114,7 +114,19 @@ export const COMPANY = {
   registeredAddress: unresolved("companyAddress"),
   /** KVKK: whether the controller must enrol in VERBİS depends on the entity and its size. */
   verbisRegistration: unresolved("companyVerbis", "counsel"),
-  contactEmail: unresolved("companyEmail"),
+  /**
+   * Live, verified 2026-09-03 — all six proxola.com addresses (hello/help/info/bilgi/ada/
+   * destek) forward to one inbox today. `hello@` chosen for general enquiries as the plainest
+   * of the six; no significance to picking it over the other five.
+   */
+  contactEmail: "hello@proxola.com",
+  /**
+   * NOT filled, on purpose: this is the address printed in the Privacy Notice for a
+   * data-subject request, a parent's deletion demand, or a regulator's letter — the one email
+   * with a legal clock on it — and privacy@proxola.com does not exist yet as of this commit.
+   * CEO is asking the founder to add it as one routing rule; fill this in a later commit once
+   * that's confirmed, not before. A printed address that bounces is worse than a stated gap.
+   */
   privacyContactEmail: unresolved("companyPrivacyEmail"),
   /** GDPR Art. 37 — only required for some controllers; counsel decides whether it applies. */
   dataProtectionOfficer: unresolved("companyDpo", "counsel"),
