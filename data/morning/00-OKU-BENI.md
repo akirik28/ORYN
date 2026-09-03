@@ -17,6 +17,36 @@
 > kuralı uygulanamaz, geri bildirim formu gönderemez, sayfa görüntüleme sayılmaz,
 > periyodik e-posta kime gideceğini bilemez.
 >
+> ---
+>
+> ### İkinci dosya: `08-isim-degisikligi-veri-2026-09-03.sql`
+>
+> Ürünün adı **Proxola** oluyor. Kod tarafını beş şerit hâlinde değiştiriyoruz — **ama
+> veritabanının içinde, öğrencilerin okuduğu metinlerde de 128 satır "Oryn" geçiyor**, ve kodu
+> değiştirmek onlara dokunmuyor. Bu dosya onları temizler.
+>
+> **Sırası ikinci, aceleси yok.** 07 kırık olan şeyleri düzeltiyor; 08 sadece isim.
+>
+> **Ve bu dosya sana bir seçim sunuyor:** haftalık aksiyonlar/planlar/bildirimler/öneriler
+> zaten haftalık döngüde kendiliğinden yenilenir (~1 hafta). **112 gereksinim değerlendirmesi
+> ve 4 fırsat açıklamasının böyle bir döngüsü yok — onlar bu dosya çalışmazsa sonsuza kadar
+> "Oryn" der.**
+>
+> ---
+>
+> ### ⚠️ Yapıştırırken: editörü önce tamamen boşalt
+>
+> 3 Eylül akşamı ilk deneme **satır 558'de hata verdi** — çünkü SQL editörü sekmesinde başka
+> bir dosyadan kalma içerik duruyordu ve yeni içerik onun üstüne değil, arasına yapıştı.
+> Dosyada bir sorun yoktu.
+>
+> **Her yapıştırmadan önce: `Cmd+A` → `Delete`.** Ya da sağdaki `+` ile yeni bir sekme aç.
+> **Yapıştırdıktan sonra en son satır `commit;` olmalı** ve altında hiçbir şey olmamalı.
+>
+> **Hata alırsan hiçbir şey uygulanmaz** — dosya tek işlem, ya hepsi ya hiçbiri.
+>
+> ---
+>
 > **Aşağıdaki her şey sabahki paket içindir ve büyük ölçüde tamamlanmıştır.**
 
 
