@@ -188,6 +188,32 @@ export interface OpportunityFacets {
   countries: { country: string; count: number }[];
 }
 
+// Every OpportunityCategory value, kept in sync with types/database.ts by construction
+// rather than by remembering to update a second list: a plain `OpportunityCategory[]` compiles
+// fine whether it has 12 entries or 20, so a category added to the union and not to the array
+// used to fail silently -- exactly what happened to "online_program" (2026-09-03, 6 active
+// rows with no filter chip to reach them by). Record<OpportunityCategory, true> instead
+// requires exactly one entry per union member: dropping or forgetting one is a compile error
+// in *this* file, not a gap only discoverable by comparing a live count to a UI total. See
+// __tests__/opportunities/browse-category-drift.test.ts for the same guarantee re-asserted as
+// a runtime test, independent of whether anyone happens to run typecheck.
+const CATEGORY_EXHAUSTIVENESS: Record<OpportunityCategory, true> = {
+  competition: true,
+  research: true,
+  internship: true,
+  summer_program: true,
+  fellowship: true,
+  scholarship: true,
+  volunteering: true,
+  entrepreneurship: true,
+  hackathon: true,
+  academic_program: true,
+  online_program: true,
+  conference: true,
+  student_program: true,
+};
+export const ALL_CATEGORIES: OpportunityCategory[] = Object.keys(CATEGORY_EXHAUSTIVENESS) as OpportunityCategory[];
+
 /**
  * Real, current option lists for the filter bar — never a fixed aspirational list. With
  * 11 active opportunities live today, offering e.g. "Turkey" as a country filter before
@@ -202,20 +228,6 @@ export async function getOpportunityFacets(supabase: SupabaseClient<Database>): 
   const { data } = await supabase.from("opportunities").select("category, country").eq("status", "active");
   const rows = data ?? [];
 
-  const ALL_CATEGORIES: OpportunityCategory[] = [
-    "competition",
-    "research",
-    "internship",
-    "summer_program",
-    "fellowship",
-    "scholarship",
-    "volunteering",
-    "entrepreneurship",
-    "hackathon",
-    "academic_program",
-    "conference",
-    "student_program",
-  ];
   const categoryCounts = ALL_CATEGORIES.map((category) => ({
     category,
     count: rows.filter((r) => r.category === category).length,
