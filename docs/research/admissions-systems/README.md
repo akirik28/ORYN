@@ -108,7 +108,21 @@ Half-yes: the university detail page shows the sourced mechanism sentence for th
 this line moved to `not_applicable`, but silently drops it for the 33 that got a real
 holistic/unknown-shape badge instead (plus every UK institution and every no-registry-country
 one) — and the AI advisor's context never touches any of it, for any country, either way.
-Measurement only, same discipline as the two documents above.
+Measurement only, same discipline as the two documents above. The `not_applicable`-branch half of
+that fix landed same day (`oryn/admission-mechanism-surfacing-2026-09-03`, merged); the advisor
+half is a founder-level call, not built.
+
+That fix's own `SourceBadge` was the first source citation this page's outlook panel ever had —
+which raised the obvious next question:
+[`implementation-gap/source-traceability-audit-2026-09-03.md`](./implementation-gap/source-traceability-audit-2026-09-03.md)
+walks the whole detail page, not just the outlook panel, checking every claim against Phase 36
+("important facts must support source inspection"). Five of six checked surfaces cite properly
+with a real, reachable link. The sixth — admission rate, SAT/ACT range, and graduation rate, the
+densest cluster of numeric claims on the page — names a source with no way to reach it
+(`university_statistics` has no `source_url` column at all), and a real, already-populated
+`source_url` sitting on the tuition figure's own row is never rendered, even though the identical
+field is already correctly wired one section down for a different metric on the same table.
+Measurement only; neither finding is a contained mislabel, so neither was fixed here.
 
 Each doc follows the same structure: admissions architecture, qualification eligibility
 (with a **dedicated Türkiye-applicant section** in every country), academic evidence use,
