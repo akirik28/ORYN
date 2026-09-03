@@ -191,6 +191,13 @@ export interface TuitionContext {
   kind: "cost_of_attendance" | "international" | "domestic" | "unavailable";
   displayValue: string | null;
   caption: string | null;
+  /** The same winning figure `displayValue` formats, before any qualifier/currency-symbol
+   *  text is applied — null exactly when `kind` is "unavailable". Added 2026-09-03 so the
+   *  cost-bucket browse filter can bucket on a real number through this same priority order
+   *  (cost_of_attendance -> international -> domestic) instead of re-deriving which figure
+   *  wins a second time; `displayValue` is for showing a student, this is for comparing
+   *  against a range. */
+  rawAmount: number | null;
 }
 
 export interface AdmissionOutlookSummary {
@@ -380,7 +387,7 @@ function toProgramSummary(program: CounselingProgramInput): CounselingProgramSum
  */
 export function deriveTuitionContext(tuition: CounselingTuitionInput, locale: Locale = DEFAULT_LOCALE): TuitionContext {
   if (tuition.costOfAttendance != null) {
-    return { kind: "cost_of_attendance", displayValue: formatCurrency(tuition.costOfAttendance), caption: null };
+    return { kind: "cost_of_attendance", displayValue: formatCurrency(tuition.costOfAttendance), caption: null, rawAmount: tuition.costOfAttendance };
   }
 
   if (tuition.internationalTuition != null) {
@@ -394,17 +401,17 @@ export function deriveTuitionContext(tuition: CounselingTuitionInput, locale: Lo
     } else if (q.note) {
       caption = `${q.note}— see university for your exact fee`;
     }
-    return { kind: "international", displayValue: `${q.valuePrefix}${formatTuition(intl.amount, intl.unit, locale)}`, caption };
+    return { kind: "international", displayValue: `${q.valuePrefix}${formatTuition(intl.amount, intl.unit, locale)}`, caption, rawAmount: intl.amount };
   }
 
   if (tuition.domesticTuition != null) {
     const domestic = tuition.domesticTuition;
     const q = tuitionQualifier(domestic.precisionState, locale);
     const caption = q.note ? `${q.note}International fee not separately published` : "International fee not published as a single figure — varies by course";
-    return { kind: "domestic", displayValue: `${q.valuePrefix}${formatTuition(domestic.amount, domestic.unit, locale)}`, caption };
+    return { kind: "domestic", displayValue: `${q.valuePrefix}${formatTuition(domestic.amount, domestic.unit, locale)}`, caption, rawAmount: domestic.amount };
   }
 
-  return { kind: "unavailable", displayValue: null, caption: null };
+  return { kind: "unavailable", displayValue: null, caption: null, rawAmount: null };
 }
 
 /**

@@ -410,7 +410,7 @@ describe("buildUniversityCounselingView — tuition (US cost-of-attendance never
 
   test("no tuition data at all is honestly unavailable, never fabricated", () => {
     const view = buildUniversityCounselingView(baseInput());
-    expect(view.tuition).toEqual({ kind: "unavailable", displayValue: null, caption: null });
+    expect(view.tuition).toEqual({ kind: "unavailable", displayValue: null, caption: null, rawAmount: null });
   });
 });
 

@@ -7,7 +7,7 @@ import { resolveLocale } from "@/lib/i18n/locale";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
 import { logEvent } from "@/lib/analytics/log";
 import { canonicalUniversityId, loadSupersessionMap, getSupersededUniversityIds } from "@/lib/universities/canonical";
-import { getAllCostOfAttendance, getAllQsListPositions, getAllResearchDepthUniversityIds } from "@/lib/universities/queries";
+import { getAllResolvedTuitionAmounts, getAllQsListPositions, getAllResearchDepthUniversityIds } from "@/lib/universities/queries";
 import { categorizeAndDedupeResearchTopics } from "@/lib/universities/research-taxonomy";
 import {
   loadUniversityBrowsePage,
@@ -133,7 +133,7 @@ export async function loadMoreUniversities(
     // "Detailed profile" card badge on every scrolled-in batch too, not just a
     // detailedOnly-filtered one.
     const [costMap, qsRankMap, depthIds] = await Promise.all([
-      params.cost.length > 0 ? getAllCostOfAttendance(supabase) : Promise.resolve(null),
+      params.cost.length > 0 ? getAllResolvedTuitionAmounts(supabase) : Promise.resolve(null),
       needsQsRankMap ? getAllQsListPositions(supabase) : Promise.resolve(null),
       getAllResearchDepthUniversityIds(supabase),
     ]);
