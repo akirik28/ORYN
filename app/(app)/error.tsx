@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { ErrorState } from "@/components/oryn/error-state";
+import { ErrorState } from "@/components/proxola/error-state";
 
 // Route-level error boundary for everything under app/(app)/** — Advisor, Applications,
 // Connections, Dashboard, Documents, Opportunities, Plan, Profile, Universities, and every
@@ -15,7 +15,7 @@ import { ErrorState } from "@/components/oryn/error-state";
 // failed Supabase query, a bad AI/provider response, etc.) fell through to Next's bare
 // built-in error page — unstyled, no way back into the app. AGENTS.md PHASE 45: errors must
 // be human-readable, never a raw error code; PHASE 8: an external/internal failure must not
-// crash the application. Reuses the existing ErrorState primitive (components/oryn/error-
+// crash the application. Reuses the existing ErrorState primitive (components/proxola/error-
 // state.tsx) rather than inventing a second one — no new hardcoded final copy, just the
 // generic "something went wrong, try again" case every route needs.
 export default function AppError({

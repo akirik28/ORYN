@@ -1,6 +1,6 @@
 import { Compass } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { ButtonLink } from "@/components/ui/button-link";
 import { OpportunityStripCard } from "@/features/opportunities/opportunity-strip-card";
 import { shouldAnimateStrip, type HomeStripOpportunity } from "@/lib/opportunities/home-strip";
@@ -37,7 +37,7 @@ type Translator = (key: string) => string;
  * so this renders a plain static row instead of the animated track — same cards, same
  * OpportunityStripCard, just no `@keyframes`, no doubling, no infinite scroll. Zero cards
  * renders EmptyState instead of an empty rotating shell, matching the product's own
- * "no bare 'no records found'" convention (components/oryn/empty-state.tsx) — a brand-new
+ * "no bare 'no records found'" convention (components/proxola/empty-state.tsx) — a brand-new
  * account with nothing recorded yet gets a real explanation and a way out, not a blank strip
  * quietly doing nothing.
  *

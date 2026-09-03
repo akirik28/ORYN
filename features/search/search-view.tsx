@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Search, SearchIcon, X } from "lucide-react";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { searchResultTypeLabel, type SearchResult } from "@/lib/search/types";
 

@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { PageHeader } from "@/components/oryn/page-header";
+import { PageHeader } from "@/components/proxola/page-header";
 import { readResearchQueue } from "@/lib/admin/research-queue";
 
 /**

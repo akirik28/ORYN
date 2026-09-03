@@ -2,7 +2,7 @@
 import { describe, test, expect, afterEach } from "vitest";
 import { render, cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
-import { Eyebrow } from "@/components/oryn/eyebrow";
+import { Eyebrow } from "@/components/proxola/eyebrow";
 
 /**
  * First direct coverage of Eyebrow -- added alongside its new `ultra` prop (Ultra visual

@@ -14,9 +14,9 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { getTranslations, getLocale } from "next-intl/server";
 import { cn } from "@/lib/utils";
-import { Eyebrow } from "@/components/oryn/eyebrow";
-import { EmptyState } from "@/components/oryn/empty-state";
-import { StatusBadge } from "@/components/oryn/status-badge";
+import { Eyebrow } from "@/components/proxola/eyebrow";
+import { EmptyState } from "@/components/proxola/empty-state";
+import { StatusBadge } from "@/components/proxola/status-badge";
 import { groupJourneyByYear, type JourneyEntry, type JourneyKind } from "@/lib/profile/journey";
 import { evidenceStatusPresentation } from "@/lib/profile/evidence-status-presentation";
 import type { Locale } from "@/lib/i18n/config";
@@ -111,7 +111,7 @@ function JourneyRow({
   locale: Locale;
   /** Pre-resolved (icon/tone/translated label) or null for self_reported — see
    * lib/profile/evidence-status-presentation.ts for why self_reported renders nothing. */
-  evidenceLabel: { tone: import("@/components/oryn/status-badge").StatusTone; icon: LucideIcon; label: string } | null;
+  evidenceLabel: { tone: import("@/components/proxola/status-badge").StatusTone; icon: LucideIcon; label: string } | null;
 }) {
   const Icon = KIND_ICON[entry.kind];
   const isStory = entry.weight === "story";

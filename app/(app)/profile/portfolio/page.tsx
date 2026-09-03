@@ -7,7 +7,7 @@ import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { createClient } from "@/lib/supabase/server";
 import { buildPortfolio, getPortfolioSkills } from "@/lib/portfolio/build";
 import { PortfolioView } from "@/features/profile/portfolio-view";
-import { heroGradientStyle } from "@/components/oryn/hero-gradient";
+import { heroGradientStyle } from "@/components/proxola/hero-gradient";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tMeta = await getTranslations("profile.portfolio");

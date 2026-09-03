@@ -1,5 +1,5 @@
 import { Check, CheckCheck, X, CircleHelp, Eye } from "lucide-react";
-import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
+import { StatusBadge, type StatusTone } from "@/components/proxola/status-badge";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { RequirementEvaluationStatus } from "@/types/database";
 

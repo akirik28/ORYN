@@ -1,5 +1,5 @@
 import { ExternalLink } from "lucide-react";
-import { ConfidenceIndicator, type ConfidenceLevel } from "@/components/oryn/confidence-indicator";
+import { ConfidenceIndicator, type ConfidenceLevel } from "@/components/proxola/confidence-indicator";
 import { formatRelativeTime } from "@/lib/i18n/date";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils";

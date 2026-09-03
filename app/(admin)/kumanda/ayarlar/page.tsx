@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { PageHeader } from "@/components/oryn/page-header";
+import { PageHeader } from "@/components/proxola/page-header";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getFinanceSettings, getProductSettings, isFinanceSettingsTableLive, isProductSettingsTableLive } from "@/lib/admin/queries";
 import { FinanceSettingsForm } from "@/features/admin/finance-settings-form";

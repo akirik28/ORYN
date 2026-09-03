@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { heroGradientStyle } from "@/components/oryn/hero-gradient";
+import { heroGradientStyle } from "@/components/proxola/hero-gradient";
 import { PortfolioView } from "@/features/profile/portfolio-view";
 import { FIXTURE_PORTFOLIO_ITEMS, FIXTURE_PORTFOLIO_SKILLS, FIXTURE_PROFILE_SIGNAL } from "@/lib/dev/fixtures";
 import { PreviewShell } from "../preview-shell";

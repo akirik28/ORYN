@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { formatCurrency, formatNumber } from "@/lib/i18n/format";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSpendSummary, isModelPricingTableLive, type AiFeatureCategory } from "@/lib/admin/queries";
-import { BarChart } from "@/components/oryn/charts/bar-chart";
+import { BarChart } from "@/components/proxola/charts/bar-chart";
 import { ModelPricingEditor } from "@/features/admin/model-pricing-editor";
 import { setModelPricing } from "@/app/(app)/admin/actions";
 

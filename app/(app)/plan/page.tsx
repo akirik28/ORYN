@@ -5,8 +5,8 @@ import { requireUser } from "@/lib/security/dal";
 import { getCurrentWeeklyPlan } from "@/lib/plan/persist";
 import { WeeklyFocus } from "@/features/dashboard/weekly-focus";
 import { GeneratePlanButton } from "@/features/dashboard/generate-plan-button";
-import { PageHeader } from "@/components/oryn/page-header";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { PageHeader } from "@/components/proxola/page-header";
+import { EmptyState } from "@/components/proxola/empty-state";
 
 export async function generateMetadata(): Promise<Metadata> {
   const tMeta = await getTranslations("nav");

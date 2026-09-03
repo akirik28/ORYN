@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
-import { PageHeader } from "@/components/oryn/page-header";
+import { PageHeader } from "@/components/proxola/page-header";
 import { SectionSkeleton } from "@/features/admin/sections/section-skeleton";
 import { ActivitySection } from "@/features/admin/sections/activity-section";
 import { GrowthSignupsSection } from "@/features/admin/sections/growth-signups-section";

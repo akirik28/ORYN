@@ -11,7 +11,7 @@ import { useCompare } from "@/features/universities/compare-context";
 import { resolveComparisonWidthCeiling } from "@/lib/comparison/limits";
 import { formatNumber } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
-import { MediaImage } from "@/components/oryn/media-image";
+import { MediaImage } from "@/components/proxola/media-image";
 import type { TuitionContext } from "@/lib/universities/counseling-adapter";
 import type { PlanTier, University } from "@/types/database";
 

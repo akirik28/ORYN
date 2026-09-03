@@ -20,10 +20,10 @@ afterEach(() => cleanup());
  * is the testable proxy for "will this render correctly."
  */
 
-import { Eyebrow } from "@/components/oryn/eyebrow";
-import { EvidenceSignal } from "@/components/oryn/evidence-signal";
-import { AdvisorMessage, AdvisorMessageThinking } from "@/components/oryn/advisor-message";
-import { NextMove } from "@/components/oryn/next-move";
+import { Eyebrow } from "@/components/proxola/eyebrow";
+import { EvidenceSignal } from "@/components/proxola/evidence-signal";
+import { AdvisorMessage, AdvisorMessageThinking } from "@/components/proxola/advisor-message";
+import { NextMove } from "@/components/proxola/next-move";
 
 describe("Eyebrow", () => {
   test("defaults to lang=en (today's un-migrated callers are all English)", () => {

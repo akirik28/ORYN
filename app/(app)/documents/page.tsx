@@ -6,8 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { listLinkableItems } from "@/lib/profile/list-linkable-items";
 import { UploadEvidenceDialog } from "@/features/documents/upload-evidence-dialog";
 import { EvidenceRow } from "@/features/documents/evidence-row";
-import { EmptyState } from "@/components/oryn/empty-state";
-import { PageHeader } from "@/components/oryn/page-header";
+import { EmptyState } from "@/components/proxola/empty-state";
+import { PageHeader } from "@/components/proxola/page-header";
 import { evidenceLinkableLabel, type EvidenceLinkableTable } from "@/lib/validation/evidence";
 
 export async function generateMetadata(): Promise<Metadata> {

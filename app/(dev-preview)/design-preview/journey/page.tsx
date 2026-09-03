@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { PageHeader } from "@/components/oryn/page-header";
-import { SectionHeader } from "@/components/oryn/section-header";
+import { PageHeader } from "@/components/proxola/page-header";
+import { SectionHeader } from "@/components/proxola/section-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScoreRadar } from "@/features/profile/score-radar";
 import { ProfileSignal } from "@/features/dashboard/profile-signal";

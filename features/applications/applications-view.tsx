@@ -5,12 +5,12 @@ import { NewApplicationDialog } from "@/features/applications/new-application-di
 import { RequirementChipGrid } from "@/features/applications/requirement-chip-grid";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { EmptyState } from "@/components/oryn/empty-state";
-import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
-import { DeadlineBadge } from "@/components/oryn/deadline-badge";
+import { EmptyState } from "@/components/proxola/empty-state";
+import { StatusBadge, type StatusTone } from "@/components/proxola/status-badge";
+import { DeadlineBadge } from "@/components/proxola/deadline-badge";
 import type { ApplicationReadiness } from "@/lib/applications/readiness";
 import type { ApplicationStatus, ApplicationType, RequirementStatus, PlanTier } from "@/types/database";
-import { heroGradientStyleCompact } from "@/components/oryn/hero-gradient";
+import { heroGradientStyleCompact } from "@/components/proxola/hero-gradient";
 
 const APPLICATION_STATUS_TONE: Record<ApplicationStatus, StatusTone> = {
   not_started: "neutral",

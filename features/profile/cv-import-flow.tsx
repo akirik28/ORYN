@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eyebrow } from "@/components/oryn/eyebrow";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { Eyebrow } from "@/components/proxola/eyebrow";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { cn } from "@/lib/utils";
 // Two modules on purpose — see the note in profile/import/actions.ts about why the
 // upload action is not re-exported through it.

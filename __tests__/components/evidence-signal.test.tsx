@@ -2,7 +2,7 @@
 import { describe, test, expect, afterEach } from "vitest";
 import { render, cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
-import { EvidenceSignal } from "@/components/oryn/evidence-signal";
+import { EvidenceSignal } from "@/components/proxola/evidence-signal";
 
 /**
  * Regression coverage for the semantic-loss bug oryn-3f's fleet-wide survey found: an

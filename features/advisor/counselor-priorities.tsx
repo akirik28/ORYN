@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Compass, TriangleAlert } from "lucide-react";
-import { SectionHeader } from "@/components/oryn/section-header";
-import { Eyebrow } from "@/components/oryn/eyebrow";
-import { InsightCard } from "@/components/oryn/insight-card";
-import { EmptyState } from "@/components/oryn/empty-state";
-import { DeadlineBadge } from "@/components/oryn/deadline-badge";
-import { StatusBadge } from "@/components/oryn/status-badge";
+import { SectionHeader } from "@/components/proxola/section-header";
+import { Eyebrow } from "@/components/proxola/eyebrow";
+import { InsightCard } from "@/components/proxola/insight-card";
+import { EmptyState } from "@/components/proxola/empty-state";
+import { DeadlineBadge } from "@/components/proxola/deadline-badge";
+import { StatusBadge } from "@/components/proxola/status-badge";
 import { Button } from "@/components/ui/button";
 import { resolveLocale } from "@/lib/i18n/locale";
 import type { Locale } from "@/lib/i18n/config";

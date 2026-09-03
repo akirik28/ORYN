@@ -38,7 +38,7 @@ export function EvidenceSignal({
   tone?: "neutral" | "positive" | "missing";
   /** Left hairline, for stacked evidence lists. */
   bordered?: boolean;
-  /** The actual language of `label` — see components/oryn/eyebrow.tsx's `locale` prop doc
+  /** The actual language of `label` — see components/proxola/eyebrow.tsx's `locale` prop doc
    *  for why this can't just inherit the page's `<html lang>`. */
   locale?: Locale;
   className?: string;
@@ -50,7 +50,7 @@ export function EvidenceSignal({
   // became the same flame gradient. oryn-3f's fleet-wide survey found this as the one real
   // instance of a broader principle: Ultra may add signal, it must never make two states
   // that were previously distinguishable harder to tell apart. The template is
-  // components/oryn/eyebrow.tsx's own `ultra` prop — flame goes on a purely decorative
+  // components/proxola/eyebrow.tsx's own `ultra` prop — flame goes on a purely decorative
   // element (that component's hairline rule, aria-hidden, no text), never on the thing a
   // reader actually has to read to know what's true. There is no equivalent
   // fully-decorative element here to redirect it to without inventing one, so this pass

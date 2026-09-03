@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils";
 import { requireUser, requireProfile } from "@/lib/security/dal";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
-import { heroGradientStyle } from "@/components/oryn/hero-gradient";
+import { heroGradientStyle } from "@/components/proxola/hero-gradient";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { Landmark, Search } from "lucide-react";
@@ -32,8 +32,8 @@ import {
   type SizeBucketValue,
 } from "@/lib/universities/filters";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/oryn/page-header";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { PageHeader } from "@/components/proxola/page-header";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { SortSelect } from "@/features/universities/sort-select";
 import { FilterSheet, type FilterOption } from "@/features/universities/filter-sheet";
 import { CompareBar } from "@/features/universities/compare-bar";

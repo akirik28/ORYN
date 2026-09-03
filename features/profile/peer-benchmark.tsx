@@ -2,7 +2,7 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { Users } from "lucide-react";
 import { dimensionLabel } from "@/lib/scoring/labels";
 import { MIN_COHORT_SIZE, type PeerBenchmarkSummary } from "@/lib/benchmarking";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { EmptyState } from "@/components/proxola/empty-state";
 
 /**
  * Phase 19 — deliberately shows nothing precise below MIN_COHORT_SIZE. Pre-launch, that's

@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Sparkles, Zap, MessagesSquare, Flame, Palette } from "lucide-react";
-import { PageHeader } from "@/components/oryn/page-header";
+import { PageHeader } from "@/components/proxola/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";

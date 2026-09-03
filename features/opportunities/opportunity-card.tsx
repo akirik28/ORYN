@@ -15,10 +15,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { placeholderTint } from "@/lib/ui/placeholder-tint";
-import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
-import { DeadlineBadge } from "@/components/oryn/deadline-badge";
-import { Eyebrow } from "@/components/oryn/eyebrow";
-import { MediaImage } from "@/components/oryn/media-image";
+import { StatusBadge, type StatusTone } from "@/components/proxola/status-badge";
+import { DeadlineBadge } from "@/components/proxola/deadline-badge";
+import { Eyebrow } from "@/components/proxola/eyebrow";
+import { MediaImage } from "@/components/proxola/media-image";
 import { OpportunityStandingBadge } from "./standing-badge";
 import { setOpportunityStatus } from "@/app/(app)/opportunities/actions";
 import { selectivityLabel, cycleStatusLabel, CYCLE_STATUSES_WORTH_A_DESCRIPTOR } from "@/lib/opportunities/lifecycle";

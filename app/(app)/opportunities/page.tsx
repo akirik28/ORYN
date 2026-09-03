@@ -14,10 +14,10 @@ import { OpportunityBrowseGrid } from "@/features/opportunities/opportunity-brow
 import { OpportunityFilterBar } from "@/features/opportunities/opportunity-filter-bar";
 import { integrationStatus } from "@/lib/env";
 import { formatNumber } from "@/lib/i18n/format";
-import { PageHeader } from "@/components/oryn/page-header";
-import { SectionHeader } from "@/components/oryn/section-header";
-import { EmptyState } from "@/components/oryn/empty-state";
-import { ErrorState } from "@/components/oryn/error-state";
+import { PageHeader } from "@/components/proxola/page-header";
+import { SectionHeader } from "@/components/proxola/section-header";
+import { EmptyState } from "@/components/proxola/empty-state";
+import { ErrorState } from "@/components/proxola/error-state";
 import type { Opportunity, OpportunityCategory } from "@/types/database";
 
 export async function generateMetadata(): Promise<Metadata> {

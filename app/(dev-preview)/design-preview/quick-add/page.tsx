@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { Sparkles, Trophy, Medal, FlaskConical, Briefcase, HandHeart, BookOpen, ClipboardCheck, Hammer, BadgeCheck, Dumbbell, GraduationCap } from "lucide-react";
 import { PreviewShell } from "../preview-shell";
-import { SectionHeader } from "@/components/oryn/section-header";
+import { SectionHeader } from "@/components/proxola/section-header";
 import { FIXTURE_PROFILE_SIGNAL } from "@/lib/dev/fixtures";
 import { QuickAddEntry, type QuickAddType } from "@/features/profile/quick-add-entry";
 import {
@@ -66,7 +66,7 @@ export default function QuickAddPreviewPage() {
     <PreviewShell signal={FIXTURE_PROFILE_SIGNAL}>
       <div className="max-w-2xl space-y-3">
         <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Journey — quick add (package 1)</p>
-        {/* The real SectionHeader (components/oryn/section-header.tsx), not an ad-hoc
+        {/* The real SectionHeader (components/proxola/section-header.tsx), not an ad-hoc
             wrapper — this is exactly how app/(app)/profile/page.tsx places QuickAddEntry,
             so a layout check here reflects production. */}
         <div className="rounded-2xl border p-6">

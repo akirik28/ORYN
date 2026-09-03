@@ -7,8 +7,8 @@ import { spanLabel } from "@/lib/profile/journey";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/oryn/empty-state";
-import { StatusBadge } from "@/components/oryn/status-badge";
+import { EmptyState } from "@/components/proxola/empty-state";
+import { StatusBadge } from "@/components/proxola/status-badge";
 import { evidenceStatusPresentation } from "@/lib/profile/evidence-status-presentation";
 import { PORTFOLIO_CATEGORY_LABELS, type PortfolioItem, type PortfolioCategory, type PortfolioSkill } from "@/lib/portfolio/types";
 

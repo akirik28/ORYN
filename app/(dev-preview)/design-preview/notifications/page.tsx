@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { Bell } from "lucide-react";
 import { NotificationList } from "@/features/notifications/notification-list";
-import { Pagination } from "@/components/oryn/pagination";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { Pagination } from "@/components/proxola/pagination";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { Button } from "@/components/ui/button";
 import { FILTERABLE_CATEGORIES } from "@/features/notifications/categories";
 import { FIXTURE_PROFILE_SIGNAL } from "@/lib/dev/fixtures";

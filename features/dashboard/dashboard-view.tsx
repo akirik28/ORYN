@@ -4,13 +4,13 @@ import { getTranslations } from "next-intl/server";
 import { matchTierKey } from "@/lib/opportunities/matching";
 import { CYCLE_STATUSES_WORTH_A_DESCRIPTOR, cycleStatusLabel } from "@/lib/opportunities/lifecycle";
 import { ArrowRight, Compass, FileText, Landmark, Minus, TrendingUp } from "lucide-react";
-import { Eyebrow } from "@/components/oryn/eyebrow";
-import { SectionHeader } from "@/components/oryn/section-header";
-import { InsightCard } from "@/components/oryn/insight-card";
-import { NextMove } from "@/components/oryn/next-move";
-import { EmptyState } from "@/components/oryn/empty-state";
-import { ErrorState } from "@/components/oryn/error-state";
-import { DeadlineBadge } from "@/components/oryn/deadline-badge";
+import { Eyebrow } from "@/components/proxola/eyebrow";
+import { SectionHeader } from "@/components/proxola/section-header";
+import { InsightCard } from "@/components/proxola/insight-card";
+import { NextMove } from "@/components/proxola/next-move";
+import { EmptyState } from "@/components/proxola/empty-state";
+import { ErrorState } from "@/components/proxola/error-state";
+import { DeadlineBadge } from "@/components/proxola/deadline-badge";
 import { ButtonLink } from "@/components/ui/button-link";
 import { WeeklyFocus } from "@/features/dashboard/weekly-focus";
 import { OpportunityStrip } from "@/features/dashboard/opportunity-strip";
@@ -29,7 +29,7 @@ import type { HomeStripOpportunity } from "@/lib/opportunities/home-strip";
 import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
 import type { CounselorRecommendation } from "@/lib/counselor";
 import type { ProfileDimension, Opportunity, PlanTier } from "@/types/database";
-import { heroGradientStyle } from "@/components/oryn/hero-gradient";
+import { heroGradientStyle } from "@/components/proxola/hero-gradient";
 
 const DEADLINE_SOURCE_ICONS: Record<DeadlineSource, typeof FileText> = {
   application: FileText,
@@ -39,7 +39,7 @@ const DEADLINE_SOURCE_ICONS: Record<DeadlineSource, typeof FileText> = {
 
 export interface DashboardViewProps {
   displayName: string;
-  /** Drives the hero card's background (components/oryn/hero-gradient.ts) — the only thing
+  /** Drives the hero card's background (components/proxola/hero-gradient.ts) — the only thing
    *  about this view that changes between Standard and Ultra. Optional, defaulting to
    *  "standard", so the two dev-preview harnesses that render this view with fixtures
    *  (app/(dev-preview)/design-preview — 4e's active territory tonight) don't need an

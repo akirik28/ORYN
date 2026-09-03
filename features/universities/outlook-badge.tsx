@@ -1,4 +1,4 @@
-import { StatusBadge, type StatusTone } from "@/components/oryn/status-badge";
+import { StatusBadge, type StatusTone } from "@/components/proxola/status-badge";
 import { outlookLabel, type NotApplicableKind } from "@/lib/admissions/outlook";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { OutlookLabel } from "@/types/database";

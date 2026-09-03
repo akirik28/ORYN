@@ -8,8 +8,8 @@ import { resolveConversationAccess } from "@/lib/messaging/authorization";
 import { getConnectionWith } from "@/lib/social/connections";
 import { requireMessagingEnabled } from "@/lib/messaging/messaging-feature-flag";
 import { isUuidLike } from "@/lib/validation/uuid";
-import { PageHeader } from "@/components/oryn/page-header";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { PageHeader } from "@/components/proxola/page-header";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { ConversationThread } from "@/features/messaging/conversation-thread";
 import { ShieldOff } from "lucide-react";
 

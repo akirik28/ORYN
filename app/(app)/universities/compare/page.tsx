@@ -6,14 +6,14 @@ import { requireProfile } from "@/lib/security/dal";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { resolveComparisonWidthCeiling, isComparisonQuotaExhausted } from "@/lib/comparison/limits";
 import { getMonthlyComparisonUsage, logComparisonViewed } from "@/lib/comparison/usage";
-import { heroGradientStyle } from "@/components/oryn/hero-gradient";
+import { heroGradientStyle } from "@/components/proxola/hero-gradient";
 import { createClient } from "@/lib/supabase/server";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
 import { deriveTuitionContext } from "@/lib/universities/counseling-adapter";
-import { PageHeader } from "@/components/oryn/page-header";
-import { EmptyState } from "@/components/oryn/empty-state";
-import { SourceBadge } from "@/components/oryn/source-badge";
+import { PageHeader } from "@/components/proxola/page-header";
+import { EmptyState } from "@/components/proxola/empty-state";
+import { SourceBadge } from "@/components/proxola/source-badge";
 import { Button } from "@/components/ui/button";
 import type { University } from "@/types/database";
 

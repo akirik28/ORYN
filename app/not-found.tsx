@@ -3,7 +3,7 @@ import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { EmptyState } from "@/components/proxola/empty-state";
 
 // Root not-found boundary — catches everything app/(app)/not-found.tsx can't: routes
 // outside the (app) group (typos, stale external links, anything unauthenticated) that

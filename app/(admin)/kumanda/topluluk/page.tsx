@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { PageHeader } from "@/components/oryn/page-header";
+import { PageHeader } from "@/components/proxola/page-header";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCommunityStats } from "@/lib/admin/queries";
 

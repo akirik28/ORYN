@@ -17,15 +17,15 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { getCurrentProfile, requireUser } from "@/lib/security/dal";
-import { PageHeader } from "@/components/oryn/page-header";
-import { SectionHeader } from "@/components/oryn/section-header";
+import { PageHeader } from "@/components/proxola/page-header";
+import { SectionHeader } from "@/components/proxola/section-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/server";
 import { isEducationRecordsCurriculumOtherTextLive } from "@/lib/profile/curriculum-other-text";
 import { ScoreRadar } from "@/features/profile/score-radar";
 import { ProfileSignal } from "@/features/dashboard/profile-signal";
 import { toProfileSignal, hasConfidentSignal, signalCoverage } from "@/lib/scoring/signal";
-import { InsightCard } from "@/components/oryn/insight-card";
+import { InsightCard } from "@/components/proxola/insight-card";
 import { JourneyTimeline } from "@/features/profile/journey-timeline";
 import { buildJourney } from "@/lib/profile/build-journey";
 import { dimensionLabel } from "@/lib/scoring/labels";

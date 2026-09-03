@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { StrategyPanel } from "@/features/advisor/strategy-panel";
 import { CounselorPriorities } from "@/features/advisor/counselor-priorities";
 import { AdvisorChat } from "@/features/advisor/advisor-chat";
-import { PageHeader } from "@/components/oryn/page-header";
+import { PageHeader } from "@/components/proxola/page-header";
 import { FIXTURE_PROFILE_SIGNAL } from "@/lib/dev/fixtures";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { PreviewShell } from "../preview-shell";

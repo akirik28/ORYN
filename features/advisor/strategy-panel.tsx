@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { ChevronDown } from "lucide-react";
 import { differenceInCalendarDays } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Eyebrow } from "@/components/oryn/eyebrow";
+import { Eyebrow } from "@/components/proxola/eyebrow";
 import { dimensionLabel } from "@/lib/scoring/labels";
 import { evidenceStateLabel, type DimensionSignal } from "@/lib/scoring/signal";
 import { formatNumber } from "@/lib/i18n/format";

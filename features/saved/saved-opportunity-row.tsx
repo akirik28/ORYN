@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DeadlineBadge } from "@/components/oryn/deadline-badge";
+import { DeadlineBadge } from "@/components/proxola/deadline-badge";
 import { OpportunityActions } from "@/features/opportunities/opportunity-actions";
 import { useOpportunityCompare } from "@/features/opportunities/opportunity-compare-context";
 import { resolveComparisonWidthCeiling } from "@/lib/comparison/limits";

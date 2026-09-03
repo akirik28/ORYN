@@ -2,10 +2,10 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { PageHeader } from "@/components/oryn/page-header";
+import { PageHeader } from "@/components/proxola/page-header";
 import { CvImportFlow } from "@/features/profile/cv-import-flow";
 import { isAIConfigured } from "@/lib/ai";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { FileUp } from "lucide-react";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 

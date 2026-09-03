@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { PageHeader } from "@/components/oryn/page-header";
+import { PageHeader } from "@/components/proxola/page-header";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getReports, summarizeReportsBacklog, getContaminationCleanupPreview, getDescriptionQualityLiveSignal, getDegradeStanding, getSpendSummary, getAdminUserList, getFinanceSettings, getPageViewStats, getFeedbackReportCount } from "@/lib/admin/queries";
 import { resolveLocale } from "@/lib/i18n/locale";

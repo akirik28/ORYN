@@ -1,4 +1,4 @@
-import { StatusBadge } from "@/components/oryn/status-badge";
+import { StatusBadge } from "@/components/proxola/status-badge";
 import { needsVerificationLabel } from "@/lib/opportunities/lifecycle";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 

@@ -63,7 +63,7 @@ export function NextMove({
   as?: "h1" | "h2" | "h3";
   /**
    * The actual language of `eyebrow`, `evidence[].label` and `facts[].term` — see
-   * components/oryn/eyebrow.tsx's `locale` prop doc for why this can't just inherit the
+   * components/proxola/eyebrow.tsx's `locale` prop doc for why this can't just inherit the
    * page's `<html lang>`. Also selects the language of this component's own internal
    * "What Oryn is reading" evidence-row label. A single value for the whole instance:
    * if a future caller genuinely needs to mix languages within one NextMove (e.g.
