@@ -9,6 +9,8 @@ import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
 import { toProfileSignal } from "@/lib/scoring/signal";
 import type { ProfileChange } from "@/lib/scoring/change";
 import type { MonthlyReview } from "@/lib/scoring/monthly-review";
+import type { PortfolioItem, PortfolioSkill } from "@/lib/portfolio/types";
+import type { UniversityCardMeta } from "@/lib/universities/browse-page";
 
 export const FIXTURE_STUDENT = {
   displayName: "Ada",
@@ -986,3 +988,118 @@ export const FIXTURE_DEADLINES = [
   { id: "d2", title: "LSE — Economics, personal statement", date: daysFromNow(12), href: "/applications", source: "application" as const },
   { id: "d3", title: "Erasmus Rotterdam — program deadline", date: daysFromNow(28), href: "/universities/uni-3", source: "university" as const },
 ];
+
+// ---------------------------------------------------------------------------------------
+// Portfolio + universities-browse fixtures — added 2026-09-03 for the student-app mobile
+// pass, the same reasoning as this file's own header: real, specific, plausible data, not
+// lorem, so a mobile layout defect (an overflowing table, a card grid that collapses badly)
+// shows up against content shaped like the real thing would be.
+// ---------------------------------------------------------------------------------------
+
+export const FIXTURE_PORTFOLIO_ITEMS: PortfolioItem[] = [
+  {
+    id: "port-1",
+    category: "research",
+    title: "Youth unemployment and tertiary education across OECD countries",
+    organization: null,
+    description: "Independent research project comparing youth unemployment rates against tertiary education attainment across 10 OECD countries, 2015–2025, using Eurostat and OECD.Stat public datasets.",
+    startDate: daysFromNow(-140).slice(0, 10),
+    endDate: daysFromNow(-40).slice(0, 10),
+    ongoing: false,
+    meta: "40+ hours",
+    createdAt: daysFromNow(-38),
+    evidenceStatus: "evidence_added",
+  },
+  {
+    id: "port-2",
+    category: "leadership",
+    title: "Regional Director, STEM Organization",
+    organization: "National STEM Society — Istanbul Chapter",
+    description: "Lead a 6-chapter regional network of school STEM clubs, coordinating a shared events calendar and a mentorship pairing program between senior and junior members.",
+    startDate: daysFromNow(-400).slice(0, 10),
+    endDate: null,
+    ongoing: true,
+    meta: "6 chapters · 140 members",
+    createdAt: daysFromNow(-90),
+    evidenceStatus: "verified",
+  },
+  {
+    id: "port-3",
+    category: "awards",
+    title: "National Economics Olympiad — 2nd Place",
+    organization: "Turkish Economics Society",
+    description: null,
+    startDate: daysFromNow(-200).slice(0, 10),
+    endDate: daysFromNow(-200).slice(0, 10),
+    ongoing: false,
+    meta: null,
+    createdAt: daysFromNow(-195),
+    evidenceStatus: "self_reported",
+  },
+  {
+    id: "port-4",
+    category: "projects",
+    title: "Oryn — a career-planning tool for students",
+    organization: null,
+    description: "Designed and shipped a small web app helping classmates track extracurricular activities against university application requirements. Built with Next.js and Supabase; 40 active users at the time of writing.",
+    startDate: daysFromNow(-300).slice(0, 10),
+    endDate: null,
+    ongoing: true,
+    meta: "40 active users",
+    createdAt: daysFromNow(-60),
+    evidenceStatus: "evidence_added",
+  },
+  {
+    id: "port-5",
+    category: "volunteering",
+    title: "Weekend Math Tutor",
+    organization: "Community Learning Center",
+    description: "Weekly one-on-one tutoring for two middle-school students preparing for the national math placement exam.",
+    startDate: daysFromNow(-500).slice(0, 10),
+    endDate: daysFromNow(-100).slice(0, 10),
+    ongoing: false,
+    meta: "1 hour/week",
+    createdAt: daysFromNow(-480),
+    evidenceStatus: null,
+  },
+  {
+    id: "port-6",
+    category: "education",
+    title: "IB Diploma Programme",
+    organization: "İstanbul International School",
+    description: "Higher Level: Economics, Mathematics, Physics. Predicted 42/45.",
+    startDate: daysFromNow(-700).slice(0, 10),
+    endDate: daysFromNow(120).slice(0, 10),
+    ongoing: true,
+    meta: null,
+    createdAt: daysFromNow(-700),
+    evidenceStatus: null,
+  },
+];
+
+export const FIXTURE_PORTFOLIO_SKILLS: PortfolioSkill[] = [
+  { id: "skill-1", name: "Python", category: "Technical" },
+  { id: "skill-2", name: "Statistical analysis", category: "Technical" },
+  { id: "skill-3", name: "Public speaking", category: "Communication" },
+  { id: "skill-4", name: "Turkish (native)", category: "Language" },
+  { id: "skill-5", name: "English (fluent)", category: "Language" },
+];
+
+/** LSE/Bocconi/Erasmus, reusing the same three fixture universities the compare preview
+ * already established rather than inventing a fourth set — one real, populated card
+ * (LSE: QS rank + tuition + research topics + depth badge), one partially populated
+ * (Bocconi: rank only, no tuition on file, matching the compare preview's own honesty
+ * about what's not sourced yet), one bare (Erasmus: no metadata at all, the real "we don't
+ * have this yet" state a good third of the catalogue is actually in). */
+export const FIXTURE_UNIVERSITY_CARD_META: Record<string, UniversityCardMeta> = {
+  [FIXTURE_UNIVERSITY.id]: {
+    qsRank: "45",
+    tuition: { kind: "international", displayValue: "£26,400/yr", caption: "Domestic rate: £9,535/yr", rawAmount: 26400 },
+    researchTopics: ["Behavioural economics", "Political economy", "International trade"],
+    hasResearchDepth: true,
+  },
+  [FIXTURE_UNIVERSITY_2.id]: {
+    qsRank: "158",
+  },
+  [FIXTURE_UNIVERSITY_3.id]: {},
+};

@@ -32,8 +32,8 @@ describe("buildPreviewHref", () => {
 });
 
 describe("OTHER_PREVIEW_ROUTES", () => {
-  test("lists all eleven other preview surfaces (guards against the array silently losing an entry)", () => {
-    expect(OTHER_PREVIEW_ROUTES).toHaveLength(11);
+  test("lists all eighteen other preview surfaces (guards against the array silently losing an entry)", () => {
+    expect(OTHER_PREVIEW_ROUTES).toHaveLength(18);
   });
 
   test("every route is a real design-preview path with a non-empty label", () => {
