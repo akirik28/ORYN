@@ -30,7 +30,7 @@ import { createNotification } from "@/lib/notifications/create";
 
 type NotificationRow = { id: string; user_id: string; category: string; link: string };
 
-function makeNotificationsQueryBuilder(rows: NotificationRow[]) {
+function makeNotificationsQueryBuilder(rows: NotificationRow[], error: { message: string } | null = null) {
   let filtered = [...rows];
   const builder = {
     select: vi.fn(() => builder),
@@ -39,13 +39,13 @@ function makeNotificationsQueryBuilder(rows: NotificationRow[]) {
       return builder;
     }),
     limit: vi.fn(() => builder),
-    maybeSingle: vi.fn(() => Promise.resolve({ data: filtered[0] ?? null, error: null })),
+    maybeSingle: vi.fn(() => Promise.resolve(error ? { data: null, error } : { data: filtered[0] ?? null, error: null })),
   };
   return builder;
 }
 
-function makeSupabase(existingNotifications: NotificationRow[] = []) {
-  return { from: vi.fn(() => makeNotificationsQueryBuilder(existingNotifications)) } as unknown as SupabaseClient<Database>;
+function makeSupabase(existingNotifications: NotificationRow[] = [], dedupCheckError: { message: string } | null = null) {
+  return { from: vi.fn(() => makeNotificationsQueryBuilder(existingNotifications, dedupCheckError)) } as unknown as SupabaseClient<Database>;
 }
 
 const STUDENT_ID = "student-1";
@@ -131,6 +131,19 @@ describe("notifyNewlyEligibleMatches — dedup", () => {
     const supabase = makeSupabase([{ id: "n1", user_id: STUDENT_ID, category: "new_opportunity", link: "/opportunities/some-other-opp" }]);
     await notifyNewlyEligibleMatches(supabase, STUDENT_ID, "en", [row("opp-1")], OPPORTUNITIES, [{ opportunity_id: "baseline", eligible: true }]);
     expect(createNotification).toHaveBeenCalledTimes(1);
+  });
+
+  // 2026-09-03: readOr adoption. A failed dedup read used to look identical to "genuinely
+  // no prior notification" -- same fallback (null) either way, so behavior here is
+  // unchanged (still sends, never silently swallows a real notification) -- but it's now
+  // visible, logged by name, rather than indistinguishable from the normal no-baseline case.
+  test("a failed dedup check still sends (fallback unchanged) but is logged, not silent", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const supabase = makeSupabase([], { message: "connection reset" });
+    await notifyNewlyEligibleMatches(supabase, STUDENT_ID, "en", [row("opp-1")], OPPORTUNITIES, [{ opportunity_id: "baseline", eligible: true }]);
+    expect(createNotification).toHaveBeenCalledTimes(1);
+    expect(spy.mock.calls.some(([message]) => typeof message === "string" && message.includes("existingNotification"))).toBe(true);
+    spy.mockRestore();
   });
 });
 
