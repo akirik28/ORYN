@@ -137,6 +137,11 @@ async function ForYouView({
     );
 
   if (cards.length === 0) {
+    if (!tavilyConfigured) {
+      // Student-facing copy stays generic — the real cause is server-log-only, matching the
+      // console.error convention every other "<integration> not configured" call site uses.
+      console.error("[opportunities] discovery unavailable: TAVILY_API_KEY is not set. See API_SETUP.md.");
+    }
     return (
       <EmptyState
         icon={Compass}

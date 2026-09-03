@@ -60,6 +60,16 @@ a `console.error`-free path today (they're proactive UI checks, not caught excep
 the fix also needs to add the server-side log that's currently missing, not just reword the
 client copy.
 
+**Status:** #1–#3 fixed (`oryn/dev-setup-message-split-2026-09-03`) — copy simplified to
+what the unavailability means for the student and what they can still do; #1 needed no new
+log (`app/(app)/dashboard/page.tsx` already `console.error`s the real
+`AIProviderNotConfiguredError`, whose own message carries the env var and doc pointer), #2
+and #3 each got a new `console.error("[scope] ... ANTHROPIC_API_KEY/TAVILY_API_KEY is not
+set. See API_SETUP.md.")` at the render site, matching the pattern already used by every
+`AIProviderNotConfiguredError` catch and every `SUPABASE_SECRET_KEY not configured` log
+elsewhere in the codebase — not a new mechanism. #4 (Supabase) deliberately untouched, per
+explicit founder instruction to leave it last or not at all.
+
 ### B. Internal DB code falling through to a bare, unlabelled render
 
 **One instance, currently dormant, not currently reachable, but not protected against
