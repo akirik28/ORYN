@@ -803,6 +803,7 @@
       "internationalFeeNotPublished": "International fee not published as a single figure — varies by course",
       "programsTitle": "Programs",
       "programsDescription": "Degree programs Proxola has verified against this university's own official pages.",
+      "programsEmptyMessage": "This university's degree programs aren't in Proxola's records yet — that's a gap in our research, not a confirmation that none exist.",
       "researchStrengthsTitle": "Research strengths",
       "researchStrengthsDescription": "Topics this university publishes in most, from OpenAlex's open research index.",
       "requirementCheckTitle": "Requirement check",
