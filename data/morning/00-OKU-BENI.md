@@ -117,7 +117,13 @@ bile belli etmiyor. Canlıda doğrulandı.
 Hiçbiri gece boyunca tek başıma karar vermediğim şeyler — hepsi ya fiyatı, ya öğrencinin
 gördüğünü, ya da bir şemayı değiştiriyor. En üsttekiler en pahalı olanlar.
 
-**Max planı.** `docs/uc-katman-karari-2026-09-03.md`. Opus, Sonnet'in 1,67 katı; 400/800 TL
+**Max planı.** `docs/uc-katman-karari-2026-09-03.md`. **Maliyet gece boyunca üç yerden
+değişti ve yeniden ölçüldü — sonuç değişmedi:** gerçekçi durumda ~%2 oynama, 5 kat marja
+dokunmuyor. Kişi başı $0,99 tavanı da duruyor, üstelik yapısal sebeple: sistem token değil
+**dolar** sayıyor, o yüzden danışmana veri eklemek tavanı kaydıramaz — aynı $0,99 artık 73
+yerine 71 mesaj alıyor. Ayrıntı: `docs/maliyet-guncelleme-2026-09-03.md`.
+
+Opus, Sonnet'in 1,67 katı; 400/800 TL
 ikisi de maliyeti rahat karşılıyor. Karar ürün tarafında, sende.
 
 **`eligible` alanı iki durumlu.** "Doğrulandı, uygun" ile "kimse bakmadı" ayrımını yapamıyor.
