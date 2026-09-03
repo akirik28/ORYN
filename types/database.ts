@@ -30,6 +30,17 @@ export type TimeBudget = "under_2h" | "2_5h" | "5_10h" | "10h_plus";
  * header for the full reasoning and Profile.plan_tier's comment for how a missing/unreadable
  * value degrades. */
 export type PlanTier = "standard" | "ultra";
+/** Migration 0116 (staged, not applied — docs/veli-hesabi-spec-2026-09-04.md), default
+ * "student". Never read/written by anything Ultra-tier-related: a parent's effective tier is
+ * always a lookup through parent_links to the linked student's own PlanTier, never a value
+ * stored on the parent's own row — see lib/tier/parent-tier.ts. */
+export type AccountRole = "student" | "parent";
+/** Migration 0116 (staged, not applied). Matches the DB column's own check constraint.
+ * "pending" and "revoked" both resolve to no access, no inherited tier, and no visible data —
+ * lib/tier/parent-tier.ts's resolveParentEffectiveTier is the canonical place that gate lives
+ * for tier specifically; docs/parent-account-e2e-plan-2026-09-04.md's B4/B5 checks are the
+ * same gate re-asserted for reads generally, once P1 lands. */
+export type ParentLinkStatus = "pending" | "active" | "revoked";
 /** Migration 0091. Which model/prompt style answers advisor chat, absent an active spend
  * degrade — deliberately not "standard"/"ultra" despite those being the exact founder-
  * approved UI labels for two of the three positions; see that migration's own header for
@@ -239,10 +250,44 @@ export interface Profile {
    * Null on every real account today. Drives lib/digest/build.ts's "new since last time"
    * window for opportunity matches. */
   last_digest_sent_at: string | null;
+  /** Migration 0116 (staged, not applied). Default "student" — every pre-existing row
+   * backfills to this, never "parent". Read by P2's login routing and by whichever server
+   * action needs to know which kind of account is calling; not read by lib/tier/parent-tier.ts
+   * (that module only ever needs a parent_links row's own status, not this column). */
+  account_role: AccountRole;
+  /** Migration 0116 (staged, not applied) -- the parent email address a student gave at
+   * signup (G12), source for P4's invite-email send once K6's legal gate clears. Distinct
+   * from parent_links.invited_email, which is per-link, not per-student: this column is the
+   * one the signup form writes; a parent_links row can exist without this ever having been
+   * set (an invite sent later, outside signup) and this can be set without a link existing
+   * yet (collected but never acted on). */
+  parent_invite_email: string | null;
   created_at: string;
   updated_at: string;
 }
 export type ProfileUpdate = Updatable<Profile, "id" | "created_at" | "updated_at" | "terms_accepted_at">;
+
+/** Migration 0116 (staged, not applied — docs/veli-hesabi-spec-2026-09-04.md §5). The one
+ * link between a parent account and a student account; a parent may hold more than one (the
+ * unique constraint is per (parent_user_id, student_user_id) pair, not per parent), so
+ * "effective tier" and "effective read access" are both properties of a pair, never of the
+ * parent account alone -- see lib/tier/parent-tier.ts's own header for why that rules out a
+ * flat "this parent's tier" concept entirely. */
+export interface ParentLink {
+  id: string;
+  parent_user_id: string;
+  student_user_id: string;
+  status: ParentLinkStatus;
+  /** The address the student entered (§K3's double-confirm flow) -- distinct from
+   * profiles.parent_invite_email, see that field's own comment. */
+  invited_email: string | null;
+  invited_at: string | null;
+  confirmed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+export type ParentLinkInsert = Insertable<ParentLink, "id" | "status" | "invited_at" | "confirmed_at" | "created_at" | "updated_at">;
+export type ParentLinkUpdate = Updatable<ParentLink, "id" | "parent_user_id" | "student_user_id" | "created_at">;
 
 export type ContactVisibility = "private" | "connections" | "public";
 
@@ -2370,6 +2415,7 @@ export interface Database {
     };
     Tables: {
       profiles: Table<Profile, Partial<Profile>, ProfileUpdate>;
+      parent_links: Table<ParentLink, ParentLinkInsert, ParentLinkUpdate>;
       connections: Table<Connection, ConnectionInsert, ConnectionUpdate>;
       messages: Table<Message, MessageInsert, MessageUpdate>;
       blocked_users: Table<BlockedUser, BlockedUserInsert, Partial<BlockedUserInsert>>;
