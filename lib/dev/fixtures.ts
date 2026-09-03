@@ -646,6 +646,10 @@ export const FIXTURE_OPPORTUNITY_DETAIL: Opportunity = {
   image_attribution: null,
   current_cycle_label: "Summer 2027",
   verified_at: daysFromNow(-6),
+  // Migration 0103, null deliberately — same "no backfill" rule the other FIXTURE_OPPORTUNITIES
+  // entries just picked up: written only by a real P1 reverification outcome, never claimed by
+  // a dev fixture.
+  source_verified_at: null,
   organization_entity_id: null,
   country_entity_id: null,
   access_channel: null,
