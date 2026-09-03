@@ -117,7 +117,7 @@ export async function GET() {
   return new NextResponse(JSON.stringify(payload, null, 2), {
     headers: {
       "Content-Type": "application/json",
-      "Content-Disposition": `attachment; filename="oryn-export-${session.userId}.json"`,
+      "Content-Disposition": `attachment; filename="proxola-export-${session.userId}.json"`,
     },
   });
 }

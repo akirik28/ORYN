@@ -32,7 +32,7 @@ export const JudgeVerdictSchema = z.object({
 
 export type { JudgeVerdict } from "./types";
 
-export const JUDGE_SYSTEM_PROMPT = `You are grading one reply from Oryn's AI Counselor against Oryn's own published brief for what
+export const JUDGE_SYSTEM_PROMPT = `You are grading one reply from Proxola's AI Counselor against Proxola's own published brief for what
 that counsel is supposed to sound like (spec Phase 57/8.2/8.3):
 
 Tone: specific, concise, analytical, calm, evidence-aware, action-oriented. Short sentences.

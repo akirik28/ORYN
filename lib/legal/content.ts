@@ -1,7 +1,7 @@
 import type { Locale } from "@/lib/i18n/config";
 
 /**
- * Every word of ORYN's legal surface — the three policy documents, the site footer, the
+ * Every word of Proxola's legal surface — the three policy documents, the site footer, the
  * signup consent block, and the data-processor inventory — in ONE module.
  *
  * WHY ONE FILE: this is the translation unit. `legalCopyEn`/`legalCopyTr` are two objects
@@ -101,20 +101,32 @@ export function isUnresolved(value: unknown): value is Unresolved {
 // ---------------------------------------------------------------------------
 
 /**
- * ORYN has no registered legal entity on file in this repository, and a privacy notice
+ * Proxola has no registered legal entity on file in this repository, and a privacy notice
  * naming the wrong controller is worse than one that names none. Every field here is
  * therefore unresolved until the founder supplies the real registration details. Locale-
  * invariant: which fields are missing doesn't change with language, only their rendered
  * label does (via `labelKey`, resolved from `LegalCopy.common`).
  */
 export const COMPANY = {
-  productName: "Oryn",
+  productName: "Proxola",
   legalName: unresolved("companyLegalName"),
   registrationNumber: unresolved("companyRegistration"),
   registeredAddress: unresolved("companyAddress"),
   /** KVKK: whether the controller must enrol in VERBİS depends on the entity and its size. */
   verbisRegistration: unresolved("companyVerbis", "counsel"),
-  contactEmail: unresolved("companyEmail"),
+  /**
+   * Live, verified 2026-09-03 — all six proxola.com addresses (hello/help/info/bilgi/ada/
+   * destek) forward to one inbox today. `hello@` chosen for general enquiries as the plainest
+   * of the six; no significance to picking it over the other five.
+   */
+  contactEmail: "hello@proxola.com",
+  /**
+   * NOT filled, on purpose: this is the address printed in the Privacy Notice for a
+   * data-subject request, a parent's deletion demand, or a regulator's letter — the one email
+   * with a legal clock on it — and privacy@proxola.com does not exist yet as of this commit.
+   * CEO is asking the founder to add it as one routing rule; fill this in a later commit once
+   * that's confirmed, not before. A printed address that bounces is worse than a stated gap.
+   */
   privacyContactEmail: unresolved("companyPrivacyEmail"),
   /** GDPR Art. 37 — only required for some controllers; counsel decides whether it applies. */
   dataProtectionOfficer: unresolved("companyDpo", "counsel"),
@@ -129,9 +141,9 @@ export interface DataProcessor {
   /** Stable key — also the anchor id in the rendered table. Locale-invariant. */
   id: string;
   name: string;
-  /** What the service does for ORYN, in one line. */
+  /** What the service does for Proxola, in one line. */
   role: string;
-  /** Exactly what leaves ORYN for this service. Verified against the code, not assumed. */
+  /** Exactly what leaves Proxola for this service. Verified against the code, not assumed. */
   dataSent: string;
   /** Where the processing happens. */
   location: string;
@@ -364,7 +376,7 @@ export const LAWYER_FLAGS: LawyerFlag[] = [
   {
     id: "opportunityImageLicensing",
     question:
-      "Is an organizer publishing an og:image meta tag on their own official page a sufficient basis to download, re-encode, and re-host that image on Oryn's own infrastructure — or does the product need explicit organizer permission, an editorial-use argument, or to stop re-hosting third-party images altogether?",
+      "Is an organizer publishing an og:image meta tag on their own official page a sufficient basis to download, re-encode, and re-host that image on Proxola's own infrastructure — or does the product need explicit organizer permission, an editorial-use argument, or to stop re-hosting third-party images altogether?",
     currentState:
       "scripts/acquire-opportunity-images.ts has re-hosted 65 opportunity images this way (full analysis in docs/opportunity-image-licensing.md). No organizer has granted an explicit licence; the claim rests on inferring intent from the meta tag, not on a stated permission. Every re-hosted image records the exact source page and retrieval date, and states plainly that no licence is declared and the depiction is not independently verified — that documents provenance, it does not clear rights. No takedown mechanism exists yet; removal today is a manual database query and a storage-object delete.",
   },
@@ -492,7 +504,7 @@ export const legalCopyEn: LegalCopy = {
   draftBanner: {
     label: "Draft — awaiting legal review",
     body:
-      "This document has not been reviewed or approved by a lawyer. It is written so that outside counsel has something concrete to correct, and so you can see what Oryn actually does with your information today. Treat it as a description of the product, not as a finished legal agreement.",
+      "This document has not been reviewed or approved by a lawyer. It is written so that outside counsel has something concrete to correct, and so you can see what Proxola actually does with your information today. Treat it as a description of the product, not as a finished legal agreement.",
   },
 
   processorTable: {
@@ -518,7 +530,7 @@ export const legalCopyEn: LegalCopy = {
     contactLabel: "Email",
     companyLabel: "Operated by",
     draftNotice: "Our policies are drafts awaiting legal review.",
-    copyright: (year: number) => `© ${year} Oryn`,
+    copyright: (year: number) => `© ${year} Proxola`,
     ageNotice: "Built for students aged 14–18. If you are under 18, a parent or guardian should read these documents with you.",
   },
 
@@ -530,7 +542,7 @@ export const legalCopyEn: LegalCopy = {
     checkboxRequiredError: "Please accept the Terms of Use and Privacy Notice to continue.",
     minorHeading: "If you are under 18",
     minorBody:
-      "Oryn is built for students aged 14–18, so most people reading this are minors. A parent or guardian should read the Terms of Use and Privacy Notice with you before you continue.",
+      "Proxola is built for students aged 14–18, so most people reading this are minors. A parent or guardian should read the Terms of Use and Privacy Notice with you before you continue.",
     minorPlaceholderNote:
       "We ask for your birth year during setup, just after this step. Guardian approval is not yet collected in the product — this is where it will be asked for once the requirement is confirmed with legal counsel.",
     dataSummaryHeading: "What you are agreeing to, in short",
@@ -544,7 +556,7 @@ export const legalCopyEn: LegalCopy = {
   },
 
   common: {
-    backToHome: "Back to Oryn",
+    backToHome: "Back to Proxola",
     lastDrafted: "Drafted",
     notApproved: "Not yet approved by counsel",
     onThisPage: "On this page",
@@ -571,14 +583,14 @@ export const legalCopyEn: LegalCopy = {
       slug: "privacy",
       title: "Privacy Notice",
       intro:
-        "What Oryn collects, why, where it goes, and what you can do about it. Written to describe what the product actually does today.",
+        "What Proxola collects, why, where it goes, and what you can do about it. Written to describe what the product actually does today.",
       sections: [
         {
           id: "who-we-are",
           companyDetails: "identity",
           heading: "Who is responsible for your data",
           body: [
-            "Oryn is a career and profile planning product for students. The company operating it is the data controller for the information described here.",
+            "Proxola is a career and profile planning product for students. The company operating it is the data controller for the information described here.",
             "The registered entity, address, and contact details are not yet settled and are shown as unresolved throughout this draft rather than guessed at. They must be filled in before this notice is published.",
           ],
         },
@@ -586,7 +598,7 @@ export const legalCopyEn: LegalCopy = {
           id: "what-we-collect",
           heading: "What we collect",
           body: [
-            "Only what you give us, plus a record of how you use the product. Oryn has no advertising trackers and no third-party analytics; usage events are recorded in our own database.",
+            "Only what you give us, plus a record of how you use the product. Proxola has no advertising trackers and no third-party analytics; usage events are recorded in our own database.",
           ],
           bullets: [
             "Account details: your email address, display name, and a password managed by our authentication provider. We never see your password.",
@@ -595,7 +607,7 @@ export const legalCopyEn: LegalCopy = {
             "Academic information: education history, coursework, grades, and standardized test scores you choose to enter.",
             "Documents: CVs you upload for import, and any evidence files you attach to an achievement.",
             "Your plans: target universities, applications, deadlines, weekly actions, and what you reported back after completing them.",
-            "Conversations: the messages you exchange with the Oryn advisor.",
+            "Conversations: the messages you exchange with the Proxola advisor.",
             "Usage: which product events occurred and when, and how many AI tokens a feature used. We do not store the content of your prompts in our usage log.",
           ],
         },
@@ -619,7 +631,7 @@ export const legalCopyEn: LegalCopy = {
           id: "ai",
           heading: "How your information reaches an AI model",
           body: [
-            "Oryn's analysis, weekly plans, advisor answers, and CV import all run on Anthropic's Claude API. This is the part of the product that sends your information outside our own database, so it is worth being precise about.",
+            "Proxola's analysis, weekly plans, advisor answers, and CV import all run on Anthropic's Claude API. This is the part of the product that sends your information outside our own database, so it is worth being precise about.",
             "When you use the advisor or generate a plan, we send a compact summary rather than your whole record: your display name, graduation year, curriculum, country, weekly time budget, your dimension scores, and the titles of your activities, projects, research, awards and goals. Your school name is not included in this summary.",
             "When you import a CV, the whole document is sent to Anthropic so its contents can be extracted. Whatever is in that file — including anything we would not otherwise collect — is sent with it. Nothing extracted from it is saved to your profile until you review it and confirm.",
             "AI calls happen on our servers. Our API credentials are never exposed to your browser.",
@@ -630,7 +642,7 @@ export const legalCopyEn: LegalCopy = {
           id: "processors",
           heading: "Who else receives your data",
           body: [
-            "Oryn uses a small number of external services. This is all of them, and exactly what each one receives. Several of them never receive anything that identifies you, and the table says which.",
+            "Proxola uses a small number of external services. This is all of them, and exactly what each one receives. Several of them never receive anything that identifies you, and the table says which.",
           ],
           includesProcessorTable: true,
         },
@@ -647,7 +659,7 @@ export const legalCopyEn: LegalCopy = {
           heading: "How long we keep it",
           body: [
             "Today, we keep your information until you delete it. Deleting an item removes it; deleting your account removes your data with it.",
-            "Oryn does not yet enforce an automatic retention limit — for example, for an account left unused for a long period. Stating a specific retention period here before one is actually implemented would be a promise the product does not keep, so this section records the real position instead. Setting those periods is one of the open questions for counsel.",
+            "Proxola does not yet enforce an automatic retention limit — for example, for an account left unused for a long period. Stating a specific retention period here before one is actually implemented would be a promise the product does not keep, so this section records the real position instead. Setting those periods is one of the open questions for counsel.",
           ],
         },
         {
@@ -667,7 +679,7 @@ export const legalCopyEn: LegalCopy = {
           id: "minors",
           heading: "Students under 18",
           body: [
-            "Oryn is designed for students aged 14–18, so we assume most of the people using it are minors, and the product is built accordingly: profiles are private by default, evidence is optional, we ask for a birth year rather than a full date of birth, we do not collect precise location, and there is no public student-to-student messaging.",
+            "Proxola is designed for students aged 14–18, so we assume most of the people using it are minors, and the product is built accordingly: profiles are private by default, evidence is optional, we ask for a birth year rather than a full date of birth, we do not collect precise location, and there is no public student-to-student messaging.",
             "A parent or guardian should read this notice with you. A guardian approval step is not yet built into the product; the signup form marks the place it will occupy, and the requirement is being confirmed with legal counsel for each country we launch in.",
           ],
         },
@@ -702,44 +714,44 @@ export const legalCopyEn: LegalCopy = {
       slug: "terms",
       title: "Terms of Use",
       intro:
-        "The agreement between you and Oryn — what the product does, what it does not do, and what we each owe the other.",
+        "The agreement between you and Proxola — what the product does, what it does not do, and what we each owe the other.",
       sections: [
         {
           id: "what-oryn-is",
-          heading: "What Oryn is",
+          heading: "What Proxola is",
           body: [
-            "Oryn helps you record what you have done, understand your strengths and gaps, and decide what to do next. It gives you a profile analysis, weekly priorities, opportunity matches, university information, and an AI advisor that reasons over your own record.",
-            "By creating an account you agree to these terms. If you do not agree with them, do not use Oryn.",
+            "Proxola helps you record what you have done, understand your strengths and gaps, and decide what to do next. It gives you a profile analysis, weekly priorities, opportunity matches, university information, and an AI advisor that reasons over your own record.",
+            "By creating an account you agree to these terms. If you do not agree with them, do not use Proxola.",
           ],
         },
         {
           id: "what-oryn-is-not",
-          heading: "What Oryn is not",
+          heading: "What Proxola is not",
           body: [
             "This section matters more than any other, so it comes early rather than buried at the end.",
           ],
           bullets: [
-            "Oryn does not decide admissions and has no relationship with any university's admissions office. Nothing in the product is an application, a pre-assessment, or a signal to any institution.",
-            "Your Career Profile score is Oryn's own development metric. It is not a university's assessment of you, and it is not a probability of admission. Those are different things and the product keeps them separate on purpose.",
-            "An admission outlook — \"Reach\", \"Competitive\", and so on — is Oryn's classification based on the information available to it. It is not a prediction and not a guarantee. Where an estimated range is shown, it is labelled as an estimate and deliberately avoids false precision.",
+            "Proxola does not decide admissions and has no relationship with any university's admissions office. Nothing in the product is an application, a pre-assessment, or a signal to any institution.",
+            "Your Career Profile score is Proxola's own development metric. It is not a university's assessment of you, and it is not a probability of admission. Those are different things and the product keeps them separate on purpose.",
+            "An admission outlook — \"Reach\", \"Competitive\", and so on — is Proxola's classification based on the information available to it. It is not a prediction and not a guarantee. Where an estimated range is shown, it is labelled as an estimate and deliberately avoids false precision.",
             "Application readiness measures how much of a known checklist you have completed. It says nothing about your chances.",
-            "Oryn is not a substitute for your school counsellor, a qualified admissions adviser, or your own judgement.",
+            "Proxola is not a substitute for your school counsellor, a qualified admissions adviser, or your own judgement.",
           ],
         },
         {
           id: "ai-output",
           heading: "About the AI advice",
           body: [
-            "Oryn's recommendations, explanations, and generated project ideas come from an AI model working with the information in your profile. The model can be wrong. It can misread something you entered, or reason from a gap in what it knows about you.",
-            "Where Oryn states an external fact — a deadline, an entry requirement, an eligibility rule — it shows you the source and when that source was last checked. Check anything that matters against the official page before you act on it. Sources move and deadlines change.",
+            "Proxola's recommendations, explanations, and generated project ideas come from an AI model working with the information in your profile. The model can be wrong. It can misread something you entered, or reason from a gap in what it knows about you.",
+            "Where Proxola states an external fact — a deadline, an entry requirement, an eligibility rule — it shows you the source and when that source was last checked. Check anything that matters against the official page before you act on it. Sources move and deadlines change.",
             "The advisor is built to distinguish what it verified from what it inferred, and to tell you when a recommendation is low-confidence. Take those signals seriously; they are there because the alternative is confident-sounding advice about your future that happens to be wrong.",
           ],
         },
         {
           id: "eligibility",
-          heading: "Who can use Oryn",
+          heading: "Who can use Proxola",
           body: [
-            "Oryn is built for students aged 14–18. If you are under 18, a parent or guardian should read these terms with you, and depending on where you live their approval may be required before you can use the product.",
+            "Proxola is built for students aged 14–18. If you are under 18, a parent or guardian should read these terms with you, and depending on where you live their approval may be required before you can use the product.",
             "The minimum age and the form guardian approval has to take differ by country and are being confirmed with legal counsel. Until then this section describes our intent rather than a settled rule.",
           ],
         },
@@ -753,10 +765,10 @@ export const legalCopyEn: LegalCopy = {
         },
         {
           id: "your-content",
-          heading: "What you put into Oryn",
+          heading: "What you put into Proxola",
           body: [
             "Your record stays yours. You give us permission to store and process it only to run the product for you — to calculate your scores, generate your plans, match you to opportunities, and answer your questions. Nothing more.",
-            "Only enter things that are true. Oryn treats an achievement as self-reported until evidence is attached, and attaching a file is not the same as independent verification — the product will not describe it as verified, and neither should you.",
+            "Only enter things that are true. Proxola treats an achievement as self-reported until evidence is attached, and attaching a file is not the same as independent verification — the product will not describe it as verified, and neither should you.",
             "Do not upload anything you do not have the right to share, and do not upload other people's personal information.",
           ],
         },
@@ -776,7 +788,7 @@ export const legalCopyEn: LegalCopy = {
           id: "availability",
           heading: "Availability and changes",
           body: [
-            "Oryn is under active development. Features will change, and parts of the product depend on external services that can be slow or unavailable. When that happens the product is built to tell you the data is unavailable rather than show you something invented in its place.",
+            "Proxola is under active development. Features will change, and parts of the product depend on external services that can be slow or unavailable. When that happens the product is built to tell you the data is unavailable rather than show you something invented in its place.",
             "We may change or discontinue features. If a change materially affects you, we will say so.",
           ],
         },
@@ -793,7 +805,7 @@ export const legalCopyEn: LegalCopy = {
           heading: "Liability",
           body: [
             "This section has deliberately been left for a lawyer to write. Drafting a liability limitation is not something engineering should do, and a placeholder that reads like a real clause would be worse than an honest gap.",
-            "Decisions about your education are yours. Oryn is a tool that helps you think about them.",
+            "Decisions about your education are yours. Proxola is a tool that helps you think about them.",
           ],
         },
         {
@@ -827,7 +839,7 @@ export const legalCopyEn: LegalCopy = {
           companyDetails: "identity",
           heading: "Data controller (Veri sorumlusu)",
           body: [
-            "The company operating Oryn is the data controller. Its registered name, address, and — if the obligation applies — its VERBİS registration are not yet settled and are shown as unresolved rather than guessed at.",
+            "The company operating Proxola is the data controller. Its registered name, address, and — if the obligation applies — its VERBİS registration are not yet settled and are shown as unresolved rather than guessed at.",
           ],
         },
         {
@@ -863,7 +875,7 @@ export const legalCopyEn: LegalCopy = {
           id: "collection",
           heading: "Method of collection",
           body: [
-            "All personal data is collected electronically and directly from you: through the signup form, the onboarding flow, the profile pages, documents you upload, and your use of the product. Oryn does not buy personal data or obtain it from third parties.",
+            "All personal data is collected electronically and directly from you: through the signup form, the onboarding flow, the profile pages, documents you upload, and your use of the product. Proxola does not buy personal data or obtain it from third parties.",
           ],
         },
         {
@@ -903,7 +915,7 @@ export const legalCopyEn: LegalCopy = {
           id: "minors",
           heading: "Students under 18",
           body: [
-            "Oryn is intended for students aged 14–18. The age at which a student can consent for themselves under Turkish law, and the form a guardian's approval must take, are being confirmed with counsel. The product collects a birth year during onboarding and reserves a place in the signup flow for guardian approval; the mechanism is not yet built, and this notice does not suggest otherwise.",
+            "Proxola is intended for students aged 14–18. The age at which a student can consent for themselves under Turkish law, and the form a guardian's approval must take, are being confirmed with counsel. The product collects a birth year during onboarding and reserves a place in the signup flow for guardian approval; the mechanism is not yet built, and this notice does not suggest otherwise.",
           ],
         },
       ],
@@ -919,7 +931,7 @@ export const legalCopyTr: LegalCopy = {
   draftBanner: {
     label: "Taslak — hukuki inceleme bekliyor",
     body:
-      "Bu belge henüz bir avukat tarafından incelenip onaylanmamıştır. Dış hukuk danışmanının üzerinde somut bir düzeltme yapabileceği bir metin olması ve Oryn'in bilgilerinizle bugün gerçekte ne yaptığını görebilmeniz için bu şekilde yazılmıştır. Bu metni tamamlanmış bir hukuki sözleşme değil, ürünün bir açıklaması olarak değerlendirin.",
+      "Bu belge henüz bir avukat tarafından incelenip onaylanmamıştır. Dış hukuk danışmanının üzerinde somut bir düzeltme yapabileceği bir metin olması ve Proxola'nın bilgilerinizle bugün gerçekte ne yaptığını görebilmeniz için bu şekilde yazılmıştır. Bu metni tamamlanmış bir hukuki sözleşme değil, ürünün bir açıklaması olarak değerlendirin.",
   },
 
   processorTable: {
@@ -945,7 +957,7 @@ export const legalCopyTr: LegalCopy = {
     contactLabel: "E-posta",
     companyLabel: "İşleten",
     draftNotice: "Politikalarımız, hukuki incelemeyi bekleyen taslaklardır.",
-    copyright: (year: number) => `© ${year} Oryn`,
+    copyright: (year: number) => `© ${year} Proxola`,
     ageNotice: "14-18 yaş arası öğrenciler için tasarlanmıştır. 18 yaşından küçükseniz, bu belgeleri bir ebeveyn veya vasiyle birlikte okumalısınız.",
   },
 
@@ -957,7 +969,7 @@ export const legalCopyTr: LegalCopy = {
     checkboxRequiredError: "Devam etmek için lütfen Kullanım Şartları'nı ve Gizlilik Bildirimi'ni kabul edin.",
     minorHeading: "18 yaşından küçükseniz",
     minorBody:
-      "Oryn, 14-18 yaş arası öğrenciler için tasarlanmıştır; bu nedenle bunu okuyanların çoğu reşit değildir. Devam etmeden önce Kullanım Şartları'nı ve Gizlilik Bildirimi'ni bir ebeveyn veya vasinizle birlikte okumalısınız.",
+      "Proxola, 14-18 yaş arası öğrenciler için tasarlanmıştır; bu nedenle bunu okuyanların çoğu reşit değildir. Devam etmeden önce Kullanım Şartları'nı ve Gizlilik Bildirimi'ni bir ebeveyn veya vasinizle birlikte okumalısınız.",
     minorPlaceholderNote:
       "Doğum yılınızı, bu adımdan hemen sonraki kurulum aşamasında soruyoruz. Veli onayı şu an ürün içinde toplanmamaktadır — bu, gereklilik hukuk danışmanıyla teyit edildiğinde sorulacağı yerdir.",
     dataSummaryHeading: "Kısaca neyi kabul ediyorsunuz",
@@ -971,7 +983,7 @@ export const legalCopyTr: LegalCopy = {
   },
 
   common: {
-    backToHome: "Oryn'e dön",
+    backToHome: "Proxola'ya dön",
     lastDrafted: "Taslak tarihi",
     notApproved: "Henüz hukuk danışmanınca onaylanmadı",
     onThisPage: "Bu sayfada",
@@ -998,14 +1010,14 @@ export const legalCopyTr: LegalCopy = {
       slug: "privacy",
       title: "Gizlilik Bildirimi",
       intro:
-        "Oryn'in ne topladığı, neden topladığı, bu bilgilerin nereye gittiği ve bu konuda ne yapabileceğiniz. Ürünün bugün gerçekte ne yaptığını anlatmak üzere yazılmıştır.",
+        "Proxola'nın ne topladığı, neden topladığı, bu bilgilerin nereye gittiği ve bu konuda ne yapabileceğiniz. Ürünün bugün gerçekte ne yaptığını anlatmak üzere yazılmıştır.",
       sections: [
         {
           id: "who-we-are",
           companyDetails: "identity",
           heading: "Verilerinizden kim sorumlu",
           body: [
-            "Oryn, öğrenciler için bir kariyer ve profil planlama ürünüdür. Ürünü işleten şirket, burada açıklanan bilgiler bakımından veri sorumlusudur.",
+            "Proxola, öğrenciler için bir kariyer ve profil planlama ürünüdür. Ürünü işleten şirket, burada açıklanan bilgiler bakımından veri sorumlusudur.",
             "Kayıtlı tüzel kişilik, adres ve iletişim bilgileri henüz kesinleşmemiştir; tahmin yürütülmek yerine bu taslak boyunca çözülmemiş olarak gösterilmektedir. Bu bildirim yayımlanmadan önce doldurulmaları gerekir.",
           ],
         },
@@ -1013,7 +1025,7 @@ export const legalCopyTr: LegalCopy = {
           id: "what-we-collect",
           heading: "Neleri topluyoruz",
           body: [
-            "Yalnızca bize verdikleriniz, buna ek olarak ürünü nasıl kullandığınıza dair bir kayıt. Oryn'de reklam takip araçları veya üçüncü taraf analitik yoktur; kullanım olayları kendi veritabanımızda kaydedilir.",
+            "Yalnızca bize verdikleriniz, buna ek olarak ürünü nasıl kullandığınıza dair bir kayıt. Proxola'da reklam takip araçları veya üçüncü taraf analitik yoktur; kullanım olayları kendi veritabanımızda kaydedilir.",
           ],
           bullets: [
             "Hesap bilgileri: e-posta adresiniz, görünen adınız ve kimlik doğrulama sağlayıcımız tarafından yönetilen bir şifre. Şifrenizi asla görmeyiz.",
@@ -1022,7 +1034,7 @@ export const legalCopyTr: LegalCopy = {
             "Akademik bilgiler: eğitim geçmişi, dersler, notlar ve girmeyi tercih ettiğiniz standart sınav sonuçları.",
             "Belgeler: aktarım için yüklediğiniz özgeçmişler ve bir başarıya eklediğiniz kanıt dosyaları.",
             "Planlarınız: hedef üniversiteler, başvurular, son tarihler, haftalık eylemler ve bunları tamamladıktan sonra bildirdikleriniz.",
-            "Yazışmalar: Oryn danışmanıyla yaptığınız yazışmalar.",
+            "Yazışmalar: Proxola danışmanıyla yaptığınız yazışmalar.",
             "Kullanım: hangi ürün olaylarının ne zaman gerçekleştiği ve bir özelliğin ne kadar yapay zekâ token'ı kullandığı. Kullanım kaydımızda isteklerinizin (prompt) içeriğini saklamayız.",
           ],
         },
@@ -1046,7 +1058,7 @@ export const legalCopyTr: LegalCopy = {
           id: "ai",
           heading: "Bilgileriniz bir yapay zekâ modeline nasıl ulaşır",
           body: [
-            "Oryn'in analizi, haftalık planları, danışman yanıtları ve özgeçmiş aktarımının tümü Anthropic'in Claude API'si üzerinde çalışır. Bu, ürünün bilgilerinizi kendi veritabanımızın dışına gönderdiği bölümdür; bu yüzden burada net olmakta fayda var.",
+            "Proxola'nın analizi, haftalık planları, danışman yanıtları ve özgeçmiş aktarımının tümü Anthropic'in Claude API'si üzerinde çalışır. Bu, ürünün bilgilerinizi kendi veritabanımızın dışına gönderdiği bölümdür; bu yüzden burada net olmakta fayda var.",
             "Danışmanı kullandığınızda veya bir plan oluşturduğunuzda, kaydınızın tamamını değil özet bir profil göndeririz: görünen adınız, mezuniyet yılınız, müfredatınız, ülkeniz, haftalık zaman bütçeniz, boyut puanlarınız ve etkinlik, proje, araştırma, ödül ve hedeflerinizin başlıkları. Okul adınız bu özete dahil edilmez.",
             "Bir özgeçmiş aktardığınızda, içeriğinin çıkarılabilmesi için belgenin tamamı Anthropic'e gönderilir. O dosyada ne varsa — normalde toplamayacağımız bilgiler de dahil — belgeyle birlikte gönderilir. Belgeden çıkarılan hiçbir bilgi, siz inceleyip onaylamadan profilinize kaydedilmez.",
             "Yapay zekâ çağrıları sunucularımızda gerçekleşir. API kimlik bilgilerimiz hiçbir zaman tarayıcınıza açılmaz.",
@@ -1057,7 +1069,7 @@ export const legalCopyTr: LegalCopy = {
           id: "processors",
           heading: "Verilerinizi başka kimler alıyor",
           body: [
-            "Oryn az sayıda dış servis kullanır. Aşağıdaki liste bunların tamamıdır ve her birinin tam olarak ne aldığını gösterir. Bunlardan birkaçı sizi tanımlayan hiçbir şey almaz; tablo hangilerinin olduğunu belirtir.",
+            "Proxola az sayıda dış servis kullanır. Aşağıdaki liste bunların tamamıdır ve her birinin tam olarak ne aldığını gösterir. Bunlardan birkaçı sizi tanımlayan hiçbir şey almaz; tablo hangilerinin olduğunu belirtir.",
           ],
           includesProcessorTable: true,
         },
@@ -1074,7 +1086,7 @@ export const legalCopyTr: LegalCopy = {
           heading: "Ne kadar süre sakladığımız",
           body: [
             "Bugün itibarıyla, bilgilerinizi siz silene kadar saklıyoruz. Bir öğeyi silmek onu kaldırır; hesabınızı silmek verilerinizi de beraberinde kaldırır.",
-            "Oryn, örneğin uzun süre kullanılmayan bir hesap için, henüz otomatik bir saklama süresi sınırı uygulamamaktadır. Bu, fiilen uygulanmadan önce burada belirli bir saklama süresi belirtmek ürünün tutmadığı bir söz vermek anlamına gelir; bu nedenle bu bölüm gerçek durumu kaydeder. Bu sürelerin belirlenmesi, hukuk danışmanı için açık sorulardan biridir.",
+            "Proxola, örneğin uzun süre kullanılmayan bir hesap için, henüz otomatik bir saklama süresi sınırı uygulamamaktadır. Bu, fiilen uygulanmadan önce burada belirli bir saklama süresi belirtmek ürünün tutmadığı bir söz vermek anlamına gelir; bu nedenle bu bölüm gerçek durumu kaydeder. Bu sürelerin belirlenmesi, hukuk danışmanı için açık sorulardan biridir.",
           ],
         },
         {
@@ -1094,7 +1106,7 @@ export const legalCopyTr: LegalCopy = {
           id: "minors",
           heading: "18 yaşından küçük öğrenciler",
           body: [
-            "Oryn, 14-18 yaş arası öğrenciler için tasarlanmıştır; bu nedenle kullanıcılarının çoğunun reşit olmadığını varsayarız ve ürünü buna göre kurarız: profiller varsayılan olarak özeldir, kanıt sunmak isteğe bağlıdır, tam doğum tarihi yerine yalnızca doğum yılını sorarız, hassas konum bilgisi toplamayız ve öğrenciler arasında herkese açık bir mesajlaşma bulunmaz.",
+            "Proxola, 14-18 yaş arası öğrenciler için tasarlanmıştır; bu nedenle kullanıcılarının çoğunun reşit olmadığını varsayarız ve ürünü buna göre kurarız: profiller varsayılan olarak özeldir, kanıt sunmak isteğe bağlıdır, tam doğum tarihi yerine yalnızca doğum yılını sorarız, hassas konum bilgisi toplamayız ve öğrenciler arasında herkese açık bir mesajlaşma bulunmaz.",
             "Bu bildirimi bir ebeveyn veya vasinizle birlikte okumalısınız. Veli onayı adımı henüz ürüne dahil edilmemiştir; kayıt formu bu adımın yer alacağı noktayı işaretler ve gereklilik, lansman yapacağımız her ülke için hukuk danışmanıyla teyit edilmektedir.",
           ],
         },
@@ -1129,44 +1141,44 @@ export const legalCopyTr: LegalCopy = {
       slug: "terms",
       title: "Kullanım Şartları",
       intro:
-        "Sizinle Oryn arasındaki anlaşma — ürünün ne yaptığı, ne yapmadığı ve birbirimize karşı sorumluluklarımız.",
+        "Sizinle Proxola arasındaki anlaşma — ürünün ne yaptığı, ne yapmadığı ve birbirimize karşı sorumluluklarımız.",
       sections: [
         {
           id: "what-oryn-is",
-          heading: "Oryn nedir",
+          heading: "Proxola nedir",
           body: [
-            "Oryn, yaptıklarınızı kaydetmenize, güçlü yönlerinizi ve eksiklerinizi anlamanıza ve sırada ne yapmanız gerektiğine karar vermenize yardımcı olur. Size bir profil analizi, haftalık öncelikler, fırsat eşleşmeleri, üniversite bilgileri ve kendi kaydınız üzerinden akıl yürüten bir yapay zekâ danışmanı sunar.",
-            "Bir hesap oluşturarak bu şartları kabul etmiş olursunuz. Bu şartları kabul etmiyorsanız, Oryn'i kullanmayın.",
+            "Proxola, yaptıklarınızı kaydetmenize, güçlü yönlerinizi ve eksiklerinizi anlamanıza ve sırada ne yapmanız gerektiğine karar vermenize yardımcı olur. Size bir profil analizi, haftalık öncelikler, fırsat eşleşmeleri, üniversite bilgileri ve kendi kaydınız üzerinden akıl yürüten bir yapay zekâ danışmanı sunar.",
+            "Bir hesap oluşturarak bu şartları kabul etmiş olursunuz. Bu şartları kabul etmiyorsanız, Proxola'yı kullanmayın.",
           ],
         },
         {
           id: "what-oryn-is-not",
-          heading: "Oryn ne değildir",
+          heading: "Proxola ne değildir",
           body: [
             "Bu bölüm her şeyden daha önemlidir; bu yüzden sona saklanmak yerine en başa konmuştur.",
           ],
           bullets: [
-            "Oryn kabul kararı vermez ve hiçbir üniversitenin kabul ofisiyle bir ilişkisi yoktur. Üründeki hiçbir şey bir başvuru, bir ön değerlendirme veya herhangi bir kuruma giden bir sinyal değildir.",
-            "Kariyer Profili puanınız, Oryn'in kendi gelişim ölçütüdür. Bir üniversitenin sizin hakkınızdaki değerlendirmesi değildir ve bir kabul olasılığı da değildir. Bunlar farklı şeylerdir ve ürün bu ikisini bilerek ayrı tutar.",
-            "\"Zorlayıcı\", \"Rekabetçi\" gibi bir kabul görünümü, Oryn'in erişebildiği bilgilere dayanan kendi sınıflandırmasıdır. Bir tahmin veya bir garanti değildir. Tahmini bir aralık gösterildiğinde, bu bir tahmin olarak etiketlenir ve yanıltıcı bir hassasiyetten bilerek kaçınılır.",
+            "Proxola kabul kararı vermez ve hiçbir üniversitenin kabul ofisiyle bir ilişkisi yoktur. Üründeki hiçbir şey bir başvuru, bir ön değerlendirme veya herhangi bir kuruma giden bir sinyal değildir.",
+            "Kariyer Profili puanınız, Proxola'nın kendi gelişim ölçütüdür. Bir üniversitenin sizin hakkınızdaki değerlendirmesi değildir ve bir kabul olasılığı da değildir. Bunlar farklı şeylerdir ve ürün bu ikisini bilerek ayrı tutar.",
+            "\"Zorlayıcı\", \"Rekabetçi\" gibi bir kabul görünümü, Proxola'nın erişebildiği bilgilere dayanan kendi sınıflandırmasıdır. Bir tahmin veya bir garanti değildir. Tahmini bir aralık gösterildiğinde, bu bir tahmin olarak etiketlenir ve yanıltıcı bir hassasiyetten bilerek kaçınılır.",
             "Başvuru hazırlığı, bilinen bir kontrol listesinin ne kadarını tamamladığınızı ölçer. Şansınız hakkında hiçbir şey söylemez.",
-            "Oryn; okul danışmanınızın, nitelikli bir kabul danışmanının veya kendi değerlendirmenizin yerini tutmaz.",
+            "Proxola; okul danışmanınızın, nitelikli bir kabul danışmanının veya kendi değerlendirmenizin yerini tutmaz.",
           ],
         },
         {
           id: "ai-output",
           heading: "Yapay zekâ tavsiyesi hakkında",
           body: [
-            "Oryn'in önerileri, açıklamaları ve oluşturduğu proje fikirleri, profilinizdeki bilgilerle çalışan bir yapay zekâ modelinden gelir. Model yanılabilir. Girdiğiniz bir bilgiyi yanlış okuyabilir veya hakkınızda bilmediği bir boşluktan yola çıkarak akıl yürütebilir.",
-            "Oryn dışsal bir gerçeği ifade ettiğinde — bir son tarih, bir başvuru şartı, bir uygunluk kuralı — size kaynağı ve bu kaynağın en son ne zaman kontrol edildiğini gösterir. Önemli olan her şeyi, üzerine hareket etmeden önce resmî sayfadan kontrol edin. Kaynaklar değişir, son tarihler kayar.",
+            "Proxola'nın önerileri, açıklamaları ve oluşturduğu proje fikirleri, profilinizdeki bilgilerle çalışan bir yapay zekâ modelinden gelir. Model yanılabilir. Girdiğiniz bir bilgiyi yanlış okuyabilir veya hakkınızda bilmediği bir boşluktan yola çıkarak akıl yürütebilir.",
+            "Proxola dışsal bir gerçeği ifade ettiğinde — bir son tarih, bir başvuru şartı, bir uygunluk kuralı — size kaynağı ve bu kaynağın en son ne zaman kontrol edildiğini gösterir. Önemli olan her şeyi, üzerine hareket etmeden önce resmî sayfadan kontrol edin. Kaynaklar değişir, son tarihler kayar.",
             "Danışman, doğruladığı ile çıkarım yaptığı bilgiyi ayırt edecek ve bir önerinin düşük güvenilirlikte olduğunu size söyleyecek şekilde kurulmuştur. Bu sinyalleri ciddiye alın; bunlar, alternatifin geleceğiniz hakkında kendinden emin görünen ama yanlış çıkabilecek bir tavsiye olması yüzünden oradadır.",
           ],
         },
         {
           id: "eligibility",
-          heading: "Oryn'i kimler kullanabilir",
+          heading: "Proxola'yı kimler kullanabilir",
           body: [
-            "Oryn, 14-18 yaş arası öğrenciler için tasarlanmıştır. 18 yaşından küçükseniz, bu şartları bir ebeveyn veya vasinizle birlikte okumalısınız; yaşadığınız yere bağlı olarak ürünü kullanabilmeniz için onlarının onayı gerekebilir.",
+            "Proxola, 14-18 yaş arası öğrenciler için tasarlanmıştır. 18 yaşından küçükseniz, bu şartları bir ebeveyn veya vasinizle birlikte okumalısınız; yaşadığınız yere bağlı olarak ürünü kullanabilmeniz için onlarının onayı gerekebilir.",
             "Asgari yaş ve veli onayının alması gereken şekil ülkeye göre değişir ve hukuk danışmanıyla teyit edilmektedir. Bu belirlenene kadar bu bölüm, yerleşik bir kuralı değil niyetimizi anlatmaktadır.",
           ],
         },
@@ -1180,10 +1192,10 @@ export const legalCopyTr: LegalCopy = {
         },
         {
           id: "your-content",
-          heading: "Oryn'e girdikleriniz",
+          heading: "Proxola'ya girdikleriniz",
           body: [
             "Kaydınız sizin kalır. Bize, yalnızca ürünü sizin için çalıştırmak amacıyla — puanlarınızı hesaplamak, planlarınızı oluşturmak, sizi fırsatlarla eşleştirmek ve sorularınızı yanıtlamak için — saklama ve işleme izni verirsiniz. Bundan fazlası değil.",
-            "Yalnızca doğru olan bilgileri girin. Oryn, kanıt eklenene kadar bir başarıyı beyana dayalı olarak değerlendirir; bir dosya eklemek, bağımsız bir doğrulamayla aynı şey değildir — ürün bunu doğrulanmış olarak nitelendirmez, siz de nitelendirmemelisiniz.",
+            "Yalnızca doğru olan bilgileri girin. Proxola, kanıt eklenene kadar bir başarıyı beyana dayalı olarak değerlendirir; bir dosya eklemek, bağımsız bir doğrulamayla aynı şey değildir — ürün bunu doğrulanmış olarak nitelendirmez, siz de nitelendirmemelisiniz.",
             "Paylaşma hakkınız olmayan hiçbir şeyi yüklemeyin ve başkalarının kişisel bilgilerini yüklemeyin.",
           ],
         },
@@ -1203,7 +1215,7 @@ export const legalCopyTr: LegalCopy = {
           id: "availability",
           heading: "Erişilebilirlik ve değişiklikler",
           body: [
-            "Oryn aktif olarak geliştirilmektedir. Özellikler değişecektir ve ürünün bazı bölümleri yavaş kalabilecek veya erişilemez olabilecek dış servislere bağlıdır. Bu durumda ürün, yerine bir şey uydurmak yerine verinin şu an erişilemez olduğunu söyleyecek şekilde kurulmuştur.",
+            "Proxola aktif olarak geliştirilmektedir. Özellikler değişecektir ve ürünün bazı bölümleri yavaş kalabilecek veya erişilemez olabilecek dış servislere bağlıdır. Bu durumda ürün, yerine bir şey uydurmak yerine verinin şu an erişilemez olduğunu söyleyecek şekilde kurulmuştur.",
             "Özellikleri değiştirebilir veya kaldırabiliriz. Bir değişiklik sizi önemli ölçüde etkiliyorsa, bunu belirteceğiz.",
           ],
         },
@@ -1220,7 +1232,7 @@ export const legalCopyTr: LegalCopy = {
           heading: "Sorumluluk",
           body: [
             "Bu bölüm, bilinçli olarak bir avukatın yazması için boş bırakılmıştır. Bir sorumluluk sınırlaması taslağı hazırlamak mühendisliğin yapması gereken bir iş değildir; gerçek bir madde gibi görünen ama öyle olmayan bir yer tutucu, dürüst bir boşluktan daha kötü olurdu.",
-            "Eğitiminizle ilgili kararlar size aittir. Oryn, bu kararlar üzerine düşünmenize yardımcı olan bir araçtır.",
+            "Eğitiminizle ilgili kararlar size aittir. Proxola, bu kararlar üzerine düşünmenize yardımcı olan bir araçtır.",
           ],
         },
         {
@@ -1254,7 +1266,7 @@ export const legalCopyTr: LegalCopy = {
           companyDetails: "identity",
           heading: "Veri sorumlusu",
           body: [
-            "Oryn'i işleten şirket, veri sorumlusudur. Ticaret unvanı, adresi ve — yükümlülük uygulanıyorsa — VERBİS kaydı henüz kesinleşmemiş olup, tahmin yürütülmek yerine çözülmemiş olarak gösterilmektedir.",
+            "Proxola'yı işleten şirket, veri sorumlusudur. Ticaret unvanı, adresi ve — yükümlülük uygulanıyorsa — VERBİS kaydı henüz kesinleşmemiş olup, tahmin yürütülmek yerine çözülmemiş olarak gösterilmektedir.",
           ],
         },
         {
@@ -1290,7 +1302,7 @@ export const legalCopyTr: LegalCopy = {
           id: "collection",
           heading: "Toplama yöntemi",
           body: [
-            "Tüm kişisel veriler elektronik ortamda ve doğrudan sizden toplanır: kayıt formu, katılım (onboarding) süreci, profil sayfaları, yüklediğiniz belgeler ve ürünü kullanımınız aracılığıyla. Oryn, kişisel veri satın almaz veya üçüncü taraflardan temin etmez.",
+            "Tüm kişisel veriler elektronik ortamda ve doğrudan sizden toplanır: kayıt formu, katılım (onboarding) süreci, profil sayfaları, yüklediğiniz belgeler ve ürünü kullanımınız aracılığıyla. Proxola, kişisel veri satın almaz veya üçüncü taraflardan temin etmez.",
           ],
         },
         {
@@ -1330,7 +1342,7 @@ export const legalCopyTr: LegalCopy = {
           id: "minors",
           heading: "18 yaşından küçük öğrenciler",
           body: [
-            "Oryn, 14-18 yaş arası öğrenciler için tasarlanmıştır. Türk hukukuna göre bir öğrencinin kendi adına rıza gösterebileceği yaş ve veli onayının alması gereken şekil, hukuk danışmanıyla teyit edilmektedir. Ürün, katılım (onboarding) sırasında doğum yılını toplar ve kayıt akışında veli onayına bir yer ayırır; mekanizma henüz kurulmamıştır ve bu bildirim aksini ima etmemektedir.",
+            "Proxola, 14-18 yaş arası öğrenciler için tasarlanmıştır. Türk hukukuna göre bir öğrencinin kendi adına rıza gösterebileceği yaş ve veli onayının alması gereken şekil, hukuk danışmanıyla teyit edilmektedir. Ürün, katılım (onboarding) sırasında doğum yılını toplar ve kayıt akışında veli onayına bir yer ayırır; mekanizma henüz kurulmamıştır ve bu bildirim aksini ima etmemektedir.",
           ],
         },
       ],

@@ -84,7 +84,7 @@ describe("unresolved placeholders", () => {
   });
 
   test("ordinary strings are not mistaken for placeholders", () => {
-    expect(isUnresolved("Oryn Teknoloji A.Ş.")).toBe(false);
+    expect(isUnresolved("Proxola Teknoloji A.Ş.")).toBe(false);
     expect(isUnresolved(null)).toBe(false);
     expect(isUnresolved(undefined)).toBe(false);
     expect(isUnresolved({})).toBe(false);
@@ -279,8 +279,8 @@ describe("legal documents: EN/TR structural parity", () => {
   });
 
   test("copyright() renders the same format with the product name in both languages", () => {
-    expect(legalCopyEn.footer.copyright(2027)).toBe("© 2027 Oryn");
-    expect(legalCopyTr.footer.copyright(2027)).toBe("© 2027 Oryn");
+    expect(legalCopyEn.footer.copyright(2027)).toBe("© 2027 Proxola");
+    expect(legalCopyTr.footer.copyright(2027)).toBe("© 2027 Proxola");
   });
 });
 

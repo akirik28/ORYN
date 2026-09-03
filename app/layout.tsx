@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Editorial display face. Used *selectively* — only where Oryn is making a statement to
+// Editorial display face. Used *selectively* — only where Proxola is making a statement to
 // the student (page titles, the greeting, the score, a Next Move headline), never for UI
 // chrome. Card/dialog/sheet titles are deliberately sans; a product where every heading is
 // serif reads as a template, not as editorial.
@@ -38,11 +38,11 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   title: {
-    default: "Oryn — Your Personal Career Operating System",
-    template: "%s — Oryn",
+    default: "Proxola — Your Personal Career Operating System",
+    template: "%s — Proxola",
   },
   description:
-    "Oryn helps students capture their achievements, understand their strengths and gaps, and know exactly what to do next to improve their future opportunities.",
+    "Proxola helps students capture their achievements, understand their strengths and gaps, and know exactly what to do next to improve their future opportunities.",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

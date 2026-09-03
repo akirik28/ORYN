@@ -70,7 +70,7 @@ export const CVExtractionSchema = z.object({
 export type CVExtractionResult = z.infer<typeof CVExtractionSchema>;
 export type ExtractedItem = z.infer<typeof ExtractedItemSchema>;
 
-const SYSTEM_PROMPT = `You extract structured achievement data from a student's CV or resume for Oryn, a
+const SYSTEM_PROMPT = `You extract structured achievement data from a student's CV or resume for Proxola, a
 career-planning product for students aged roughly 14-18.
 
 Rules:

@@ -7,7 +7,7 @@ type Kind = NonNullable<LegalSection["companyDetails"]>;
 
 /**
  * The company's own particulars — the fields a privacy notice is legally required to name
- * and which ORYN does not have yet. Every one of them currently renders as an `Unconfirmed`
+ * and which Proxola does not have yet. Every one of them currently renders as an `Unconfirmed`
  * chip; the component handles resolved strings too, so filling `COMPANY` in later is the
  * only change needed here.
  */

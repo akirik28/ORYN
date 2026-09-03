@@ -74,7 +74,7 @@ describe("runEvalCase — advisor_chat", () => {
     expect(provider.textCalls).toHaveLength(1);
     expect(provider.textCalls[0].prompt).toBe("Should I start another entrepreneurship club?");
     expect(provider.textCalls[0].system).toContain("Deniz");
-    expect(provider.textCalls[0].system).toContain("Oryn Advisor");
+    expect(provider.textCalls[0].system).toContain("Proxola Advisor");
   });
 
   test("locale: tr appends the output-language instruction to the system prompt", async () => {
