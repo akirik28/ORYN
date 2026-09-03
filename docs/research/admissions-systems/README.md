@@ -93,6 +93,14 @@ honestly today. Same finding, one axis over, as Belgium's Community split above 
 [`subdivision-key-proposal.md`](./subdivision-key-proposal.md), a design proposal (not an
 implementation) for a key general enough to cover both, written after hitting this gap twice.
 
+A side observation while writing `finland.md` — every one of ORYN's 9 Finnish institutions is a
+research university, none are UAS — turned into its own measurement:
+[`applied-sciences-sector-coverage.md`](./applied-sciences-sector-coverage.md) checks whether
+that's Finland-specific or a corridor-wide pattern (it is: Germany 0/243 UAS institutions by
+name, Netherlands 0/40+, Austria 0/21, and more), and whether it matters. Measurement and a
+recommendation only — no ingestion, no new rows; a catalogue-composition question for the
+founder, not an admissions-mechanism finding for this registry.
+
 Each doc follows the same structure: admissions architecture, qualification eligibility
 (with a **dedicated Türkiye-applicant section** in every country), academic evidence use,
 predicted grades, conditional/unconditional admission, subject prerequisites, standardized
