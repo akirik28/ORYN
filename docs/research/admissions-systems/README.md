@@ -82,6 +82,17 @@ docs — not as additional rows in the deep-comparison matrix.
 | Czechia | [`czechia.md`](./czechia.md) | 2026-09-03 | No central body AND confirmed divergence, not just decentralization — Charles University's own page states its mechanism varies by *programme within one institution*, finer-grained than Canada's confirmed institution-level split. Recorded `unknown`, both pathways, deliberately — see czechia.md §A–B. |
 | Belgium | [`belgium.md`](./belgium.md) | 2026-09-03 | Flanders and the French Community run genuinely separate legislation — checked independently, both confirmed `academic_threshold`, a real convergence rather than an assumption. Medicine is a shared `fieldOverride` exception; the French Community's 15% non-resident quota is confirmed, Flanders' exact exam mechanism is not — see belgium.md §B–D. |
 
+### Researched but not shipped: Finland
+
+[`finland.md`](./finland.md) (2026-09-03, two research passes) is **not** wired into
+`lib/admissions/system-shape.ts` — deliberately. Finland's admissions law genuinely divides by
+higher-education sector (university vs. university of applied sciences), with confirmed,
+differently-favorable treatment of a Turkish applicant depending on which sector they target, and
+this registry's `(country, pathway, institution, field)` key has no way to represent that
+honestly today. Same finding, one axis over, as Belgium's Community split above — see
+[`subdivision-key-proposal.md`](./subdivision-key-proposal.md), a design proposal (not an
+implementation) for a key general enough to cover both, written after hitting this gap twice.
+
 Each doc follows the same structure: admissions architecture, qualification eligibility
 (with a **dedicated Türkiye-applicant section** in every country), academic evidence use,
 predicted grades, conditional/unconditional admission, subject prerequisites, standardized
