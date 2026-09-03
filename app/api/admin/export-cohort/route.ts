@@ -18,7 +18,7 @@ export async function GET() {
   const admin = createAdminClient();
   const users = await getAdminUserList(admin);
   const csv = buildCohortCsv(users);
-  const filename = `oryn-cohort-${new Date().toISOString().slice(0, 10)}.csv`;
+  const filename = `proxola-cohort-${new Date().toISOString().slice(0, 10)}.csv`;
 
   return new NextResponse(csv, {
     headers: {
