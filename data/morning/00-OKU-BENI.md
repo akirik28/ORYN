@@ -455,9 +455,9 @@ düzelttiğimiz "veri yok ama kendinden emin etiket" hatasını yirmi katına ç
 Üç seçenek: koridoru genişlet, kapsam dışını çıkar, ya da kalsınlar ama etiketsiz. **Şu an
 üçüncüsünün yarısındayız.**
 
-**Üç ülke için de dosyalar hazır bekliyor**, üçü de denendi ve geri alındı, üçü de
-bilerek sabah paketine adım olarak konmadı — aşağıdaki şema kararı verilmeden uygulanırlarsa
-250 kurum eksik etiketle girer:
+**Beş ülke için de dosyalar hazır bekliyor** — ve bu artık **bir örnekleme değil, koridorun
+tamamı.** Beşi de denendi ve geri alındı, beşi de bilerek sabah paketine adım olarak
+konmadı: aşağıdaki şema kararı verilmeden uygulanırlarsa **275 kurum eksik etiketle** girer.
 
 - **Hollanda: 36 hogeschool**, DUO'nun resmî listesinden —
   `netherlands-hbo-2026-09-03.sql`. Mevcut 13 Hollanda kaydıyla sıfır çakışma. Web adresi
@@ -474,6 +474,20 @@ bilerek sabah paketine adım olarak konmadı — aşağıdaki şema kararı veri
   Ve senin için muhtemelen en önemlisi bu: 3f'in araştırmasına göre Finlandiya'da
   **sınav çilesi olmadan kapı açan sektör tam olarak bu.** Katalog bugün o sektörden
   hiçbir kurum içermiyor.
+
+- **Avusturya: 21 Fachhochschule** — `austria-fh-2026-09-03.sql`. Üç bağımsız resmî kaynak
+  (bakanlık, sektörün kendi birliği, birliğin portalı) aynı 21'i verdi. Portal 22 gösteriyor
+  ama fazladan olan, kendi sayfasında "FH Vorarlberg'in sürekli eğitim şubesi" yazıyor —
+  ayrı kurum değil, çıkarıldı. **Yirmi birinin de web adresi tek tek doğrulandı.**
+- **İrlanda: 4 Teknoloji Üniversitesi** — `ireland-tu-2026-09-03.sql`. Beşincisi (TU Dublin)
+  zaten katalogda, dosya yazılmadan önce kontrol edildi. Kaynak HEA, İrlanda'nın yasal
+  yükseköğretim otoritesi.
+
+  İrlanda ayrıca 3f'in teşhisinin **kontrol vakası**: oradaki teknoloji enstitüleri yasayla
+  "üniversite" adını yeni aldı — tıpkı İngiltere'de 1992'de olduğu gibi. 6e her birleşmenin
+  hangi enstitülerden oluştuğunu tek tek canlı doğruladı, kendi bildiğine güvenmedi. Ve
+  HEA'nın listesinde hâlâ ayrı duran Dundalk Institute of Technology'yi eski isim sanıp
+  birleştirmedi — gerçekten ayrı bir kurum.
 
 Almanya'da bir tavizi bilmen gerekiyor: **web adresi 192'nin sadece 10'unda var.** Sebebi
 şu — HRK'nın sitesi toplu erişimi bot koruması ile engelliyor. Bunu aşmaya çalışmadık:
