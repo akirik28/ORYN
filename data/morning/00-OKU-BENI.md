@@ -29,13 +29,14 @@ Sıra kesintisiz. Bir ara 0101 eksikti — sahibi oturum push edemiyordu — ama
 ve iş birleşti. **Yani sabaha bekleyen bir engel kalmadı.**
 
 **Bu adım olmadan panelin yazma tarafı çalışmaz.** Ultra yapma, hediye etme, iş durdurma,
-bütçe ayarlama — hepsi bu dokuz migration'a bağlı. Panel bunları dürüstçe "kurulu değil"
+bütçe ayarlama — hepsi bu on bir migration'a bağlı. Panel bunları dürüstçe "kurulu değil"
 diye gösterecek, ama iş görmeyecek.
 
 ## 3. Bekleyen veriyi doldur
 
-`02-veri-doldurma-2026-09-03.sql` — 254 satır düzeltme. En görünür etkisi: **kurum adı
-boş olan 190 kayıt dolacak.**
+`02-veri-doldurma-2026-09-03.sql` — **347 düzeltme ifadesi, 212 tekil kayıt.** En görünür
+etkisi: kurum adı boş olan **190 kayıt dolacak**, ve 84 kayıt tek tek doğrulanmış haliyle
+`under_review`'dan `active`'e geçecek — yani öğrencinin göreceği katalog büyüyecek.
 
 Şu anki durum (2026-09-03 02:40, canlı ölçüm — **kapsam yazılı, çünkü kapsamsız sayı
 karşılaştırılamıyor**):
