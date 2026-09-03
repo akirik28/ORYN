@@ -84,3 +84,111 @@ A next pass aiming to add more should likely continue in this direction — spec
 platforms and formats rather than broad scholarship-aggregator searches — and could also
 verify the two `unverified`-flagged records (Fountainhead, Anthem) directly once aynrand.org
 is reachable, and pursue the MIT PRIMES Circle naming lead with a more targeted search.
+
+## Update: the ingest gate ran, and it agreed with the abstentions
+
+The CEO ran `ingest:opportunities` (dry run, then applied) against all three JSONL batches
+staged this session — the first time any of them had gone through the actual script rather
+than sitting as reviewed-but-unrun files. **9 of 12 records landed; 3 didn't: Fountainhead,
+Anthem, and Young Scientists Journal — exactly the three staged above as
+`retrieval_method: "search_summary"`.**
+
+That's not a coincidence, and it's worth recording precisely why, since it changes what
+"corroborated, not confirmed" should mean going forward. `lib/opportunities/ingest.ts`
+calls `judgeRetrievalEvidence()` (`lib/acquisition/retrieval-method.ts`) before anything else
+runs, and that function hard-fails any record declaring `retrieval_method: "search_summary"`,
+unconditionally, with exactly this message: *"a search result is discovery evidence, not
+verification — the page itself was never read."* There's no partial credit for two
+independent secondary sources agreeing, no exception for corroborating quotes that read like
+verbatim official rules — the gate doesn't evaluate the corroboration's quality at all, it
+just checks the declared retrieval method.
+
+This means the honest disclosure this doc already made (staging those three as
+`search_summary`/`unverified` rather than upgrading them to `official_primary` because the
+underlying facts were probably true) was the exact thing that let the gate do its job — a
+record honestly self-reporting "I never actually read this page" is legible to an automated
+check in a way a record that quietly claims `official_primary` on the strength of a
+confident-sounding secondary source is not. Two independently-arrived-at judgments agreeing
+— mine from reading the sources by hand, the gate's from a structural field check — is a
+stronger signal than either alone. **The lesson for future batches: `retrieval_method` isn't
+a nicety for the paper trail, it's the actual admission gate. Anything short of a real
+`live_fetch` (or `browser_render`) of the organiser's own current page will not land, no
+matter how well-corroborated the underlying fact is.** If a page can't be reached directly,
+the honest move is exactly what happened here — stage it flagged, don't force an upgrade —
+and treat it as a lead for a later pass once the page becomes reachable, not as a finished
+record.
+
+## Continuing the format-specific seam
+
+Same brief, continued: the conversion-rate jump (15% → 27%) came from switching to
+platform- and format-specific searches. That angle wasn't exhausted — virtual/remote-first
+*formats* are structurally the ones that clear the no-travel filter, and only a few format
+categories had been tried. This pass tried three more: online hackathons, MOOC-adjacent
+platforms (folded into the prior batch), and virtual Model UN. Hackathons in particular
+turned out to be a genuinely empty category in the live catalog (zero rows under
+`category = 'hackathon'` before this batch) despite being a real, well-established, mostly-
+free, mostly-international format for this exact age group.
+
+`data/research/opportunities/batch-catalog-format-seam-2026-09-03.jsonl` — 3 more records,
+all `retrieval_method: "live_fetch"` (a direct, successful fetch of the organiser's own
+current page for every one, learning from the section above):
+
+| Record | Category | Why it passes the filter |
+|---|---|---|
+| **Hack Club** | hackathon | Official page: "free for every teenager, forever," "for all teens aged 13-18... anywhere on Earth." Real, established nonprofit (20,000+ members, 1,500+ school clubs) running a continuous slate of online hackathons/coding challenges. One specific named event (Snowglobe) is in-person/US-only — noted in the record rather than silently folded into the "no travel" claim, since this record covers the organisation's broader online activity, not that one event. |
+| **Global Appathon** | hackathon | Official page: free, "open to anyone in the world" except named U.S.-embargoed countries/regions (Iran, Cuba, Syria, North Korea, parts of Ukraine) — Turkey is not among them. MIT App Inventor-affiliated, most recent cycle drew 2,176 participants from 141 countries, with a dedicated 13-17 age category. |
+| **Discover Model United Nations (DMUN)** | conference | Official page: "a non-profit initiative dedicated to providing free, high-quality online Model UN experiences," describing its events as "free, online, and accessible to all youths." |
+
+## Search shapes: what reliably yields, and what reliably doesn't
+
+Written down so the next pass doesn't have to rediscover this by repeating the same dead
+ends. Based on roughly 45 candidates checked across three passes, plus this format-seam
+continuation:
+
+**Shapes that reliably yield:**
+- **Named platforms/organizations with a stated global mission**, not a search for a generic
+  activity type. "Forage," "Hack Club," "sci-MI," "the Global Appathon" as direct name
+  searches (once you know the name exists) out-perform "free international internship" —
+  the latter mostly returns aggregator blog posts *about* the former, several links deep from
+  the organiser's own claims.
+- **Format-specific + "worldwide"/"international" + "free" together**, e.g. "free virtual
+  hackathon international," "free online research mentorship worldwide," "free online Model
+  UN international." Naming the *format* (hackathon, mentorship, journal, essay contest,
+  conference) narrows toward genuinely internet-native programs that were built to not
+  require a physical seat, rather than toward physical programs with an "international
+  applicants welcome" footnote bolted on.
+- **Student-run or recently-founded organizations** (sci-MI, Medicine Encompassed, Young
+  Scientists Journal, Hack Club) skew more genuinely open than century-old institutional
+  ones — a program built by students for students has less institutional machinery (a
+  specific university's admissions office, a specific national funder) creating an implicit
+  domestic-only default.
+- **Citizen-science / crowdsourced-research platforms** (Zooniverse, iNaturalist from
+  earlier passes) as a format class: free-by-construction, since the whole model depends on
+  volunteer global participation.
+
+**Shapes that reliably don't, and can stop being re-tried:**
+- **"International scholarship [for] high school students"** as a bare query. Four passes
+  running now, this phrasing keeps returning the same three buckets: study-abroad/relocation
+  scholarships (UWC, Kennedy-Lugar YES, boarding-school full-rides) that fail "no travel"
+  outright; U.S.-domestic scholarship-aggregator platforms (Bold.org, Scholarships360-style
+  "no-essay" scholarships) that are structurally built around U.S. college enrollment despite
+  "open to all" marketing copy; and scholarships this session had already found and rejected
+  in an earlier pass, resurfacing under slightly different query wording.
+- **Any program whose selling point is prestige-by-association with a single famous
+  university** (Stanford, MIT flagship programs specifically, not MIT-adjacent independent
+  nonprofits like the App Inventor Foundation) — these are exactly the ones most likely to
+  gate on U.S. citizenship, a U.S. address, or physical presence at that campus, because the
+  university's own admissions/liability apparatus sits behind them. The Turkey-exclusion
+  audit found this pattern independently (Clark Scholars, MIT PRIMES, CMU SAMS, MITES all
+  confirmed citizen/resident-only); this pass's AIMI-Stanford rejection is the same pattern
+  from the sourcing side.
+- **A "financial aid available" claim without a stated aid rate.** Ladder Internships
+  advertises full financial aid "to eliminate financial barriers," but its own reporting
+  puts the real aid rate at 10-20% of applicants — meaning the sticker price ($2,990-$7,400)
+  is what the large majority of applicants actually face. Treat an aid claim as real only
+  when the organiser states who gets it, not just that it exists.
+- **A "was fully funded" or past-tense funding claim.** United Planet's one free virtual-
+  internship track (the Global Citizen Leader Internship Program) is described everywhere
+  in past tense and appears to no longer run — the organisation's current live offerings are
+  paid. A funding claim needs a present-tense source, not a program page that still ranks in
+  search results after the funding ended.
