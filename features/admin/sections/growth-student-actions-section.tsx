@@ -46,7 +46,18 @@ export async function GrowthStudentActionsSection() {
                         label={t("regeneratePlan")}
                         confirmTitle={t("regeneratePlan")}
                         confirmDescription={t("regenerateConfirm", { name })}
-                        action={() => regenerateStudentWeeklyPlan(student.userId)}
+                        // .bind, not an arrow closure. GrowthConfirmActionButton is a client
+                        // component and RSC cannot serialize a function created here -- an arrow
+                        // wrapping the action is a plain closure, not a server action, and the render
+                        // throws "Functions cannot be passed directly to Client Components" at runtime.
+                        // .bind produces a genuine bound server action with the same no-argument
+                        // signature the prop type already declares, so nothing else changes.
+                        //
+                        // It typechecked because `() => Promise<{error?: string}>` is satisfied by both
+                        // forms, and next build never executes the render. Found 2026-09-03 the first
+                        // time anything rendered this page: /kumanda/trafik sits behind requireAdmin()
+                        // and no account has is_admin, so it had never once been drawn.
+                        action={regenerateStudentWeeklyPlan.bind(null, student.userId)}
                         variant="destructive"
                         errorMessage={t("actionError")}
                       />
@@ -54,7 +65,7 @@ export async function GrowthStudentActionsSection() {
                         label={t("resetOnboarding")}
                         confirmTitle={t("resetOnboarding")}
                         confirmDescription={t("resetOnboardingConfirm", { name })}
-                        action={() => resetStudentOnboarding(student.userId)}
+                        action={resetStudentOnboarding.bind(null, student.userId)}
                         errorMessage={t("actionError")}
                       />
                     </div>
