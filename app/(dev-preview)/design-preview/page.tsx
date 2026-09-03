@@ -10,6 +10,7 @@ import { EvidenceRow } from "@/features/documents/evidence-row";
 import { SearchView } from "@/features/search/search-view";
 import { ApplicationsView } from "@/features/applications/applications-view";
 import { PreviewShell } from "./preview-shell";
+import { OTHER_PREVIEW_ROUTES, buildPreviewHref } from "./preview-routes";
 import {
   FIXTURE_STUDENT,
   FIXTURE_BIGGEST_GAP,
@@ -29,50 +30,6 @@ import {
 // copy of the markup. Hard 404s outside development regardless of env vars, so it can
 // never ship. See /docs/design-system.md.
 const FIXTURE_COUNTRY_COUNTS = SUPPORTED_COUNTRIES.map((c, i) => ({ country: c.name, count: [12, 8, 5, 4, 3][i % 5] ?? 1 }));
-
-/**
- * Every other design-preview route, for the entry-point nav section below. Founder asked
- * ("bana bir premium hesaba önizleme aç") to open and walk around a premium-account
- * preview; this page had real preview routes for all twelve app surfaces already, but zero
- * links to any of them (confirmed: the rendered DOM had no anchors to a single one) — the
- * mechanism (`DevPreviewTierStamp` stamping `data-tier` from `?tier=`) already worked, the
- * gap was purely navigational. `href` is a function of the current tier, not a fixed
- * string, so every link below carries whichever tier is currently selected forward rather
- * than silently dropping back to Standard the moment the founder clicks anywhere.
- *
- * `map` alone also needs `?country=United+Kingdom` — its own page has no country selected
- * by default (see that file's own harness note), and an empty map proves nothing about the
- * Ultra pin treatment it exists to preview.
- */
-interface PreviewRoute {
-  href: string;
-  label: string;
-  extraParams?: string;
-}
-
-export const OTHER_PREVIEW_ROUTES: readonly PreviewRoute[] = [
-  { href: "/design-preview/dashboard", label: "Dashboard" },
-  { href: "/design-preview/opportunities", label: "Opportunities" },
-  { href: "/design-preview/map", label: "University map", extraParams: "country=United+Kingdom" },
-  { href: "/design-preview/counselor", label: "Advisor" },
-  { href: "/design-preview/journey", label: "Profile" },
-  { href: "/design-preview/notifications", label: "Notifications" },
-  { href: "/design-preview/onboarding", label: "Onboarding" },
-  { href: "/design-preview/features", label: "Features" },
-  { href: "/design-preview/admin", label: "Admin" },
-  { href: "/design-preview/auth", label: "Sign in / sign up" },
-  { href: "/design-preview/quick-add", label: "Quick add" },
-];
-
-/** Pure, exported for direct testing rather than only through a full page render — the one
- * piece of real logic on this page: carry the route's own extra params (map's `?country=`)
- * plus the current tier, never dropping either. */
-export function buildPreviewHref(route: PreviewRoute, tier: "standard" | "ultra"): string {
-  const params = new URLSearchParams(route.extraParams ?? "");
-  if (tier === "ultra") params.set("tier", "ultra");
-  const query = params.toString();
-  return query ? `${route.href}?${query}` : route.href;
-}
 
 export default async function DesignPreviewPage({ searchParams }: { searchParams: Promise<{ tier?: string }> }) {
   if (process.env.NODE_ENV === "production") notFound();

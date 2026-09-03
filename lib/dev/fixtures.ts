@@ -3,7 +3,7 @@
 // outside development. See lib/dev/fixtures.ts's sibling README note in
 // /docs/design-system.md for why this exists: this sandbox has no Supabase/Docker, so
 // authenticated pages can't be rendered against real data during design work.
-import type { ImpactLevel, OutlookLabel, Opportunity, ProfileDimension, University, WeeklyAction } from "@/types/database";
+import type { ImpactLevel, OutlookLabel, Opportunity, ProfileDimension, University, UniversityProgram, UniversityRequirement, UniversityStatistic, WeeklyAction } from "@/types/database";
 import type { TargetUniversityWithDetails } from "@/lib/universities/queries";
 import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
 import { toProfileSignal } from "@/lib/scoring/signal";
@@ -266,6 +266,431 @@ export const FIXTURE_UNIVERSITY: University = {
   created_at: daysFromNow(-400),
   updated_at: daysFromNow(-2),
 };
+
+// ---------------------------------------------------------------------------------------
+// University detail + compare fixtures, 2026-09-03. Built for the three design-preview
+// routes the visual QA pass couldn't reach live (no QA credentials configured) —
+// oryn-a7's own priority list: the cost caveat, the eligibility/requirement-check empty
+// state 6e is about to change, and the tuition row f5 is wiring into compare. Real
+// figures where a real figure exists (LSE's actual UCAS code, actual subjects, an actual
+// current tuition band), not lorem — same standard this file's own header states.
+// ---------------------------------------------------------------------------------------
+
+export const FIXTURE_UNIVERSITY_STATISTICS: UniversityStatistic = {
+  id: "stat-1",
+  university_id: FIXTURE_UNIVERSITY.id,
+  stat_year: 2025,
+  admission_rate: 0.09,
+  sat_range_low: null,
+  sat_range_high: null,
+  act_range_low: null,
+  act_range_high: null,
+  graduation_rate: 0.97,
+  // Deliberately null, not a guessed dollar figure — cost_of_attendance is IPEDS-sourced and
+  // US-only (this page's own comment on the StatCard branch); LSE's real figure lives in
+  // FIXTURE_UNIVERSITY_PROFILE_METRICS's tuition_international_annual instead, exercising
+  // the *other* branch of that same conditional.
+  cost_of_attendance: null,
+  cost_currency: null,
+  source: "LSE official statistics, Key Facts 2025",
+  data_confidence: "high" as const,
+  retrieved_at: daysFromNow(-10),
+  last_changed_at: daysFromNow(-70),
+  created_at: daysFromNow(-200),
+  updated_at: daysFromNow(-10),
+};
+
+export const FIXTURE_UNIVERSITY_PROGRAMS: UniversityProgram[] = [
+  {
+    id: "prog-1",
+    university_id: FIXTURE_UNIVERSITY.id,
+    name: "BSc Economics",
+    normalized_name: "bsc economics",
+    degree_level: "Bachelor / first-cycle",
+    degree_type: "BSc",
+    faculty_or_school: "Department of Economics",
+    field: "Economics",
+    subject_taxonomy: "economics",
+    secondary_subject_tags: [],
+    duration_years: 3,
+    tuition_amount: null,
+    tuition_currency: null,
+    language_of_instruction: "English",
+    campus: "Houghton Street, London",
+    delivery_mode: "in_person",
+    full_time_part_time: "full_time",
+    international_eligible: true,
+    official_program_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Degree-programmes-2026/BSc-Economics",
+    admissions_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Applying-to-LSE",
+    source_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Degree-programmes-2026/BSc-Economics",
+    source_type: "official_primary",
+    verification_state: "verified_current",
+    verified_at: daysFromNow(-10),
+    notes: null,
+    data_confidence: "high",
+    created_at: daysFromNow(-200),
+    updated_at: daysFromNow(-10),
+    kilavuz_kodu: null,
+    ucas_code: "L100",
+  },
+  {
+    id: "prog-2",
+    university_id: FIXTURE_UNIVERSITY.id,
+    name: "BSc Government and Economics",
+    normalized_name: "bsc government and economics",
+    degree_level: "Bachelor / first-cycle",
+    degree_type: "BSc",
+    faculty_or_school: "Department of Government",
+    field: "Politics",
+    subject_taxonomy: "political_science",
+    secondary_subject_tags: ["economics"],
+    duration_years: 3,
+    tuition_amount: null,
+    tuition_currency: null,
+    language_of_instruction: "English",
+    campus: "Houghton Street, London",
+    delivery_mode: "in_person",
+    full_time_part_time: "full_time",
+    international_eligible: true,
+    official_program_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Degree-programmes-2026/BSc-Government-and-Economics",
+    admissions_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Applying-to-LSE",
+    source_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Degree-programmes-2026/BSc-Government-and-Economics",
+    source_type: "official_primary",
+    verification_state: "verified_current",
+    verified_at: daysFromNow(-10),
+    notes: null,
+    data_confidence: "high",
+    created_at: daysFromNow(-200),
+    updated_at: daysFromNow(-10),
+    kilavuz_kodu: null,
+    ucas_code: "LL12",
+  },
+  {
+    id: "prog-3",
+    university_id: FIXTURE_UNIVERSITY.id,
+    name: "LLB Laws",
+    normalized_name: "llb laws",
+    degree_level: "Bachelor / first-cycle",
+    degree_type: "LLB",
+    faculty_or_school: "Law School",
+    field: "Law",
+    subject_taxonomy: "law",
+    secondary_subject_tags: [],
+    duration_years: 3,
+    tuition_amount: null,
+    tuition_currency: null,
+    language_of_instruction: "English",
+    campus: "Houghton Street, London",
+    delivery_mode: "in_person",
+    full_time_part_time: "full_time",
+    international_eligible: true,
+    official_program_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Degree-programmes-2026/LLB-Laws",
+    admissions_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Applying-to-LSE",
+    source_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Degree-programmes-2026/LLB-Laws",
+    source_type: "official_primary",
+    verification_state: "verified_current",
+    verified_at: daysFromNow(-10),
+    notes: null,
+    data_confidence: "high",
+    created_at: daysFromNow(-200),
+    updated_at: daysFromNow(-10),
+    kilavuz_kodu: null,
+    ucas_code: "M100",
+  },
+];
+
+/** One shared stub, all the columns `RequirementGroup` itself never reads defaulted to
+ * null/false — see that component's own doc comment for the exact subset it touches
+ * (title, requirement_type, is_required, requirement_detail, source_url). Kept local
+ * rather than exported generally: only this file's own requirement fixtures below use it. */
+function stubRequirement(
+  id: string,
+  overrides: Partial<UniversityRequirement> & Pick<UniversityRequirement, "requirement_type" | "title">
+): UniversityRequirement {
+  return {
+    id,
+    university_id: FIXTURE_UNIVERSITY.id,
+    program_id: null,
+    requirement_detail: null,
+    is_required: true,
+    structured_rule: null,
+    data_confidence: "high",
+    data_status: "fresh",
+    scope: null,
+    verification_state: "verified_current",
+    verified_at: daysFromNow(-10),
+    requirement_group_id: null,
+    group_role: null,
+    is_exclusion: false,
+    clause_ref: null,
+    test_scale: null,
+    scale_ambiguity: null,
+    recency_rule: null,
+    excluded_provenances: null,
+    evaluation_gate: null,
+    conflict_group_id: null,
+    research_record_id: null,
+    unmet_consequence: null,
+    calendar_bound_fact_class: null,
+    source_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Applying-to-LSE",
+    retrieved_at: daysFromNow(-10),
+    last_checked_at: daysFromNow(-10),
+    created_at: daysFromNow(-30),
+    updated_at: daysFromNow(-10),
+    ...overrides,
+  };
+}
+
+/** Requirement Check, populated — university-wide English proficiency plus two
+ * programme-specific A-level conditions, exercising three of RequirementEvaluationBadge's
+ * five real states (met/not_met/needs_manual_review) rather than one repeated everywhere. */
+export const FIXTURE_UNIVERSITY_REQUIREMENTS: UniversityRequirement[] = [
+  stubRequirement("req-1", {
+    requirement_type: "english_proficiency",
+    title: "IELTS Academic, overall band 7.0",
+    requirement_detail: "Minimum 7.0 overall, with no individual component below 6.0. A recognised equivalent (TOEFL iBT 107+) is also accepted.",
+  }),
+  stubRequirement("req-2", {
+    program_id: "prog-1",
+    requirement_type: "minimum_grade",
+    title: "A-levels: A*AA including Mathematics",
+    requirement_detail: "Mathematics at A-level (or equivalent) is required for entry to BSc Economics specifically.",
+  }),
+  stubRequirement("req-3", {
+    program_id: "prog-1",
+    requirement_type: "essay",
+    title: "Personal statement",
+    is_required: true,
+  }),
+  stubRequirement("req-4", {
+    program_id: "prog-3",
+    requirement_type: "entrance_exam",
+    title: "LNAT (Law National Aptitude Test)",
+    requirement_detail: "Required for all Law School undergraduate applicants, sat before the UCAS deadline.",
+  }),
+];
+
+/** The empty state 6e is changing what the Requirement Check section renders for. Not
+ * imported by the preview's default render — the page component below reads a `?requirements=empty`
+ * query param so both states are one link apart rather than two separate routes to keep in sync. */
+export const FIXTURE_UNIVERSITY_REQUIREMENTS_EMPTY: UniversityRequirement[] = [];
+
+/** { requirement_id -> evaluation }, matching student_requirement_evaluations' own shape —
+ * met/not_met/needs_manual_review represented, `unknown` deliberately left absent from any
+ * row (RequirementEvaluationBadge's own distinct "no entry at all" case, see that
+ * component and RequirementGroup's shared doc comment on why absence is never met/not_met). */
+export const FIXTURE_REQUIREMENT_EVALUATIONS = new Map<string, { status: "met" | "likely_met" | "not_met" | "unknown" | "needs_manual_review"; reasoning: string }>([
+  ["req-1", { status: "met", reasoning: "Your recorded English proficiency (IELTS 7.5) clears this threshold." }],
+  ["req-2", { status: "needs_manual_review", reasoning: "Your predicted grades (A*A*A) clear this, but Oryn can't confirm Mathematics is one of your three A-levels from what's on file." }],
+  ["req-3", { status: "not_met", reasoning: "No personal statement is recorded on your profile yet." }],
+  // req-4 deliberately has no entry — the "no evaluation recorded" case, distinct from any status.
+]);
+
+export const FIXTURE_UNIVERSITY_DEADLINES = [
+  {
+    id: "deadline-1",
+    program_id: null,
+    deadline_type: "ucas_equal_consideration",
+    deadline_date: daysFromNow(120).slice(0, 10),
+    recurrence: "dated_specific",
+    recurrence_month: null,
+    recurrence_day: null,
+    cycle_label: "2027 entry",
+    verification_state: "verified_current",
+    deadline_text_verbatim: "UCAS applications must be received by 18:00 (UK time) on the deadline date to be given equal consideration.",
+    source_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Applying-to-LSE",
+    binding_policy: "non_binding",
+  },
+  {
+    id: "deadline-2",
+    program_id: "prog-3",
+    deadline_type: "lnat_registration",
+    deadline_date: null,
+    recurrence: "recurring_annual_undated",
+    recurrence_month: 1,
+    recurrence_day: 20,
+    cycle_label: null,
+    verification_state: "verified_current",
+    deadline_text_verbatim: null,
+    source_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Applying-to-LSE",
+    binding_policy: "binding",
+  },
+];
+
+export const FIXTURE_UNIVERSITY_RANKINGS = [
+  { ranking_provider: "QS", ranking_edition: "2026", rank_display: "45", source_url: "https://www.topuniversities.com/university-rankings/world-university-rankings/2026", verified_at: daysFromNow(-30), data_quality_flag: null },
+];
+
+export const FIXTURE_UNIVERSITY_PROFILE_METRICS = [
+  { metric_code: "research_topics_top5", value_numeric: null, value_text: "Behavioural economics | Political economy | International trade | Public policy | Econometrics", unit: null, source_url: "https://openalex.org", source_type: "openalex", verified_at: daysFromNow(-15), precision_state: null, data_quality_flag: null },
+  { metric_code: "undergraduate_students", value_numeric: 5100, value_text: null, unit: "students", source_url: null, source_type: null, verified_at: daysFromNow(-10), precision_state: null, data_quality_flag: null },
+  { metric_code: "postgraduate_students", value_numeric: 6900, value_text: null, unit: "students", source_url: null, source_type: null, verified_at: daysFromNow(-10), precision_state: null, data_quality_flag: null },
+  // The branch this exercises on the detail page: no cost_of_attendance (US-only), a real
+  // international tuition figure instead — LSE's own published 2025/26 international
+  // undergraduate fee, a single exact figure (precision_state "exact"), not a range.
+  { metric_code: "tuition_international_annual", value_numeric: 26400, value_text: null, unit: "GBP", source_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Fees-and-funding", source_type: "official_primary", verified_at: daysFromNow(-10), precision_state: "exact", data_quality_flag: null },
+  { metric_code: "tuition_domestic_annual", value_numeric: 9535, value_text: null, unit: "GBP", source_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Fees-and-funding", source_type: "official_primary", verified_at: daysFromNow(-10), precision_state: "exact", data_quality_flag: null },
+];
+
+/** DimensionScoreInput[], reusing FIXTURE_SCORES rather than a second hand-typed list —
+ * same reasoning as this file's own header: one source of truth per fixture concept. */
+export const FIXTURE_DIMENSION_SCORES: { dimension: ProfileDimension; score: number; confidence: "high" | "medium" | "low" }[] = FIXTURE_SCORES.map((s) => ({
+  dimension: s.dimension,
+  score: s.score,
+  confidence: s.confidence,
+}));
+
+/** A second and third university, real institutions with real-shaped (not lorem)
+ * descriptive fields, for the compare preview — comparing one university against itself
+ * proves nothing about the table's own layout logic. */
+export const FIXTURE_UNIVERSITY_2: University = {
+  ...stubUniversity("uni-1", "Bocconi University", "Italy", "Milan"),
+  institution_type: "Private research university",
+  website_url: "https://www.unibocconi.it",
+  application_system: "Bocconi International Admission Test",
+  description: "Italy's leading institution for economics, management and law, with English-taught undergraduate programmes.",
+  student_size: 14500,
+  data_confidence: "high",
+};
+
+export const FIXTURE_UNIVERSITY_3: University = {
+  ...stubUniversity("uni-3", "Erasmus University Rotterdam", "Netherlands", "Rotterdam"),
+  institution_type: "Public research university",
+  website_url: "https://www.eur.nl",
+  application_system: "Studielink",
+  description: "A research university built around six specialised schools, including the Rotterdam School of Management and Erasmus School of Economics.",
+  student_size: 32000,
+  data_confidence: "medium",
+};
+
+export const FIXTURE_COMPARE_STATISTICS = [
+  FIXTURE_UNIVERSITY_STATISTICS,
+  { id: "stat-2", university_id: FIXTURE_UNIVERSITY_2.id, stat_year: 2025, admission_rate: 0.12, sat_range_low: null, sat_range_high: null, act_range_low: null, act_range_high: null, graduation_rate: 0.95, cost_of_attendance: null, cost_currency: null, source: "Bocconi official admissions data", data_confidence: "high" as const, retrieved_at: daysFromNow(-12), last_changed_at: daysFromNow(-80), created_at: daysFromNow(-200), updated_at: daysFromNow(-12) },
+  // Deliberately no statistics row for Erasmus — the compare table's own "—" cells (the NA
+  // constant) are only a real state if at least one column in the fixture actually hits it.
+];
+
+export const FIXTURE_COMPARE_RANKINGS = [
+  ...FIXTURE_UNIVERSITY_RANKINGS.map((r) => ({ university_id: FIXTURE_UNIVERSITY.id, rank_display: r.rank_display })),
+  { university_id: FIXTURE_UNIVERSITY_2.id, rank_display: "158" },
+  // Erasmus again deliberately absent — no QS rank on file is a real, current state for a
+  // real share of the catalogue, not a fixture gap to paper over.
+];
+
+/** Matches the real compare page's own post-2026-09-03 query shape (metric_code IN
+ * [research_topics_top5, tuition_domestic_annual, tuition_international_annual]) now that
+ * f5's tuition-row change has landed on main — see this file's own comment on
+ * FIXTURE_UNIVERSITY_PROFILE_METRICS for LSE's real figures, reused verbatim rather than
+ * re-typed. Bocconi and Erasmus deliberately carry no tuition rows: real published,
+ * confidently-sourced figures for either weren't in hand to add honestly, and "not yet on
+ * file" is itself the real, common state for most of the 173-row rollout — exercising the
+ * new column's NA case is as legitimate as exercising its populated one.
+ */
+export const FIXTURE_COMPARE_PROFILE_METRICS = [
+  { university_id: FIXTURE_UNIVERSITY.id, metric_code: "research_topics_top5", value_text: "Behavioural economics | Political economy | International trade", value_numeric: null, unit: null, precision_state: null },
+  { university_id: FIXTURE_UNIVERSITY_2.id, metric_code: "research_topics_top5", value_text: "Quantitative finance | Marketing analytics | Public policy", value_numeric: null, unit: null, precision_state: null },
+  { university_id: FIXTURE_UNIVERSITY.id, metric_code: "tuition_international_annual", value_text: null, value_numeric: 26400, unit: "GBP", precision_state: "exact" as const },
+  { university_id: FIXTURE_UNIVERSITY.id, metric_code: "tuition_domestic_annual", value_text: null, value_numeric: 9535, unit: "GBP", precision_state: "exact" as const },
+];
+
+/** A richer opportunity than Browse's own fixtures need — the detail page's cost caveat
+ * and eligibility-notes sections only render with real values in these specific fields, so
+ * a fixture reused from FIXTURE_OPPORTUNITIES (all null on both) would leave those two
+ * sections invisible in exactly the review oryn-a7 asked for. Local to this file's detail-
+ * page fixtures rather than folded into FIXTURE_OPPORTUNITIES, for the same single-purpose
+ * reasoning the counselor preview's own fixture already uses. */
+export const FIXTURE_OPPORTUNITY_DETAIL: Opportunity = {
+  id: "opp-detail-1",
+  title: "Erasmus Summer Institute in Economics",
+  organization: "Erasmus University Rotterdam",
+  description:
+    "A three-week pre-university programme covering microeconomics, macroeconomics, and applied econometrics, taught by Erasmus School of Economics faculty alongside current undergraduates.",
+  category: "summer_program",
+  official_url: "https://www.eur.nl/en/education/pre-university/summer-institute-economics",
+  application_url: "https://www.eur.nl/en/education/pre-university/summer-institute-economics/apply",
+  country: "Netherlands",
+  remote_allowed: false,
+  minimum_age: 16,
+  maximum_age: 18,
+  eligible_countries: [],
+  fields: ["Economics", "Econometrics"],
+  cost: 2450,
+  funding_available: true,
+  deadline: daysFromNow(35).slice(0, 10),
+  start_date: daysFromNow(210).slice(0, 10),
+  end_date: daysFromNow(231).slice(0, 10),
+  source: "Erasmus University Rotterdam",
+  source_url: "https://www.eur.nl/en/education/pre-university/summer-institute-economics",
+  source_confidence: "high",
+  last_verified_at: daysFromNow(-6),
+  status: "active",
+  normalized_title: "erasmus summer institute in economics",
+  cycle_status: "open",
+  selectivity_tier: "selective",
+  verification_state: "verified_current",
+  application_open_date: daysFromNow(-20).slice(0, 10),
+  eligible_grades: [],
+  // The eligibility-notes section: a real, specific restriction, not a placeholder string.
+  citizenship_restrictions: null,
+  residency_restrictions: "Open to students residing anywhere in the EU/EEA or holding a Dutch residence permit; non-EU/EEA applicants require a separate visa-eligibility check before applying.",
+  eligible_citizenships: [],
+  location_mode: "in_person",
+  // The cost caveat's own two branches: a real, non-zero figure AND financial_aid_available
+  // both true at once, so the "· financial aid available" suffix actually renders next to a
+  // real amount rather than only being exercisable against Free/$0.
+  financial_aid_available: true,
+  application_requirements: ["transcript", "personal_statement", "teacher_recommendation"],
+  languages_of_instruction: ["English"],
+  image_url: null,
+  image_source_url: null,
+  image_attribution: null,
+  current_cycle_label: "Summer 2027",
+  verified_at: daysFromNow(-6),
+  // Migration 0103, null deliberately — same "no backfill" rule the other FIXTURE_OPPORTUNITIES
+  // entries just picked up: written only by a real P1 reverification outcome, never claimed by
+  // a dev fixture.
+  source_verified_at: null,
+  organization_entity_id: null,
+  country_entity_id: null,
+  access_channel: null,
+  country_eligibility_confirmed_open: true,
+  created_at: daysFromNow(-25),
+  updated_at: daysFromNow(-6),
+};
+
+export const FIXTURE_OPPORTUNITY_MATCH = {
+  id: "match-detail-1",
+  user_id: "fixture-user",
+  opportunity_id: FIXTURE_OPPORTUNITY_DETAIL.id,
+  eligible: true,
+  eligibility_notes: null,
+  relevance_score: 88,
+  profile_need_score: 74,
+  effort_estimate: "medium",
+  match_score: 91,
+  reason_codes: ["addresses_a_current_gap", "matches_your_interests"],
+  calculated_at: daysFromNow(-1),
+  match_confidence: "strong" as const,
+};
+
+export const FIXTURE_OPPORTUNITY_SOURCES = [
+  {
+    id: "opp-source-1",
+    opportunity_id: FIXTURE_OPPORTUNITY_DETAIL.id,
+    source_url: "https://www.eur.nl/en/education/pre-university/summer-institute-economics",
+    source_domain: "eur.nl",
+    confidence: "high",
+    retrieved_at: daysFromNow(-6),
+  },
+  {
+    id: "opp-source-2",
+    opportunity_id: FIXTURE_OPPORTUNITY_DETAIL.id,
+    source_url: "https://www.eur.nl/en/education/pre-university/summer-institute-economics/apply",
+    source_domain: "eur.nl",
+    confidence: "high",
+    retrieved_at: daysFromNow(-6),
+  },
+];
 
 export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: number; reasonCodes: string[] }[] = [
   {

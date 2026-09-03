@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { OTHER_PREVIEW_ROUTES, buildPreviewHref } from "@/app/(dev-preview)/design-preview/page";
+import { OTHER_PREVIEW_ROUTES, buildPreviewHref } from "@/app/(dev-preview)/design-preview/preview-routes";
 
 /**
  * The index's own real logic, tested directly rather than only through a full page render
