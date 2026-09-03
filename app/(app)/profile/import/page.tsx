@@ -25,6 +25,14 @@ export default async function CvImportPage() {
   await requireUser();
   const profile = await getCurrentProfile();
 
+  const aiConfigured = isAIConfigured();
+  if (!aiConfigured) {
+    // Student-facing copy below stays generic (Phase 72's "clear developer setup state" is
+    // for developers, not the student reading the page) — the real cause goes here instead,
+    // matching every AIProviderNotConfiguredError catch's own console.error convention.
+    console.error("[profile/import] CV scanning unavailable: ANTHROPIC_API_KEY is not set. See API_SETUP.md.");
+  }
+
   return (
     <div className="max-w-3xl space-y-10">
       <div>
@@ -37,7 +45,7 @@ export default async function CvImportPage() {
         <PageHeader className="mt-3" eyebrow={t("eyebrow")} title={t("title")} description={t("description")} />
       </div>
 
-      {isAIConfigured() ? (
+      {aiConfigured ? (
         <CvImportFlow country={profile?.country ?? null} />
       ) : (
         // Phase 72: say what's missing rather than showing a button that can't work.
