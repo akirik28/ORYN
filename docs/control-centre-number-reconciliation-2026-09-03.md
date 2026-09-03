@@ -69,6 +69,53 @@ rule out the more tempting, wrong substitute (a profile *edit* timestamp, which 
 function's own comment says was deliberately rejected as "staler" and different in kind).
 Matches "when they last showed up" honestly.
 
+## Addendum — two specific reconciliation checks oryn-a7 asked for after reading the live panel
+
+### Does the $3.89 total agree with the sum of its own parts?
+
+Yes, exactly, to four decimal places: per-student spend (`user_id IS NOT NULL`) is
+**$3.7304**; unattributed spend (`user_id IS NULL`) is **$0.1625**; the two sum to
+**$3.8929**, matching the all-time total precisely. The three views the panel shows —
+all-time, per-feature, per-student — do reconcile.
+
+The live-read "$3.53" for per-student doesn't correspond to any number the code actually
+computes: `SpendPerUserSection` never renders an aggregate per-student total, only a
+per-row `lifetime` figure for each student — there is nothing in that UI to sum to $3.53
+from. Most likely assembled by hand while reading rows off the screen, not a defect.
+
+One thing the "$0.1363 gap" assumption missed, worth having precisely: the unattributed
+total isn't purely `opportunity_reverification` ($0.1363, 22 calls). There's one more
+unattributed row — **$0.0262, feature `weekly_plan`** — which is genuinely odd:
+`weekly_plan` calls are supposed to always carry a real `userId` (Job D attributes spend to
+the student it generated a plan for, per `docs/ai-cost-at-scale-2026-09-02.md`'s own
+finding). A null-user `weekly_plan` row is either a real edge case in that attribution path
+or directly-inserted fixture data bypassing it. Not chased to a root cause this pass —
+flagged precisely rather than folded into "close enough."
+
+### Is "Bugün $0.1625" the same figure as "Arka plan işleri $0.1625" by coincidence or by one sourcing the other?
+
+Genuine coincidence, confirmed two ways rather than asserted: today's per-student spend is
+exactly **$0** (zero calls with a real `user_id` today), and every unattributed call in the
+table's *entire history* was created **today** (earliest at 00:54 UTC, none before). Two
+textually and logically different queries — one scoped by calendar day
+(`created_at >= today`), one scoped by `user_id IS NULL` with no time bound at all — landing
+on an identical number because, as of right now, today's whole recorded total happens to be
+this morning's background-job batch and nothing else. Confirmed against the actual code
+too: `todayUsd` (`getSpendSummary`) and `unattributedUsd` (accumulated in the same
+function's per-row loop) are computed from genuinely separate logic, not one derived from
+the other.
+
+### Bonus, found while in the pricing data: the "3 calls, unpriced model" disclosure
+
+Count is accurate (3 rows, `estimated_cost IS NULL`), but all three are `model:
+"claude-sonnet-5"` — a model the *current* pricing table (`lib/ai/pricing.ts`) prices
+without issue. `estimated_cost` is computed once, at write time, never backfilled — so
+these three rows were written before the table covered that exact string (or under some
+now-resolved mismatch), and stayed `NULL` permanently. The disclosure's count is right; its
+implied "not currently priced" framing is stale for `claude-sonnet-5` specifically. Worth a
+one-line caveat if this disclosure is ever quoted to the founder as a live statement about
+today's model rather than a historical artifact.
+
 ## What this pass did not cover
 
 `/kumanda/arastirma`, `/ayarlar`, `/defter`, `/kar-zarar`, `/moderasyon`, `/topluluk`, and
