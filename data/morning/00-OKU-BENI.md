@@ -85,6 +85,18 @@ Yani program gerçek; bozuk olan bu kayıt. İkisi çelişmiyor ama sonuçları 
 mı, yoksa kaydı düzeltip programı katalogda tutmak mı? Bu senin kararın, ve kapatma
 geri alınabilir.
 
+## 3c. Üniversite giriş gereksinimleri
+
+`04-universite-gereksinimleri-2026-09-03.sql` — **14 kurum, 192 satır.** Oxford, Cambridge,
+Imperial, Warwick, MIT, Caltech, Harvard, Princeton, Bocconi, TU Delft, ODTÜ, Boğaziçi,
+Koç, Sabancı. Bu kurumlar 141 satırdan 333'e çıkıyor.
+
+Diğerlerinden bağımsız, istediğin zaman çalıştırabilirsin. Canlıda deneme çalıştırıldı,
+sıfır hata. Ürünün en ince yeri burasıydı — 17.046 programın 32'si kapsanıyordu.
+
+Dürüst kısmı: bu satırların hepsi **üniversite geneli**, programa bağlı değil. Yani "kaç
+program kapsanıyor" sayısı yine 32'de kalıyor. Derinlik geldi, kapsam genişliği değil.
+
 ## 4. İki paneli karşılaştır
 
 **`/admin`** — bugünkü hali. Ondört bölüm, tek sayfa. Bugüne kadar hiç gerçek admin
