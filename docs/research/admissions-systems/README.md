@@ -480,6 +480,34 @@ Same source-priority standard, same per-claim `source_url` requirement, same hon
 `data/research/admissions-systems/program-requirements/*.json` for the fully structured
 version (one file per family, same repo location pattern as the country fragments).
 
+## A different axis: qualification origin vs. residence
+
+Every entry above keys `pathway` off `studentCountry` (residence). Founder-flagged, 2026-09-03:
+some Turkey-based schools issue *another* country's own school-leaving qualification — Deutsche
+Schule Istanbul's Abitur, Liceo Italiano di Istanbul's maturità, and (named but not yet
+researched) French-track and Austrian schools.
+[`foreign-curriculum-schools-in-turkey-2026-09-03.md`](./foreign-curriculum-schools-in-turkey-2026-09-03.md)
+checked Germany and Italy, and found this isn't a new problem — it's the same structural gap
+Turkey's own entry already has, undiscovered until now: `turkey.md` §B confirms pathway there is
+meant to be gated by *schooling location* (with three narrow named exceptions decoupled even
+from that), not the residence field `resolvePathway` actually reads, but that finding was never
+wired into the shipped mechanism text or the resolver. Germany and Turkey are two instances of
+one gap, in opposite directions — Turkey: a foreign curriculum delivered *inside* the target
+country mostly doesn't change the pathway; Germany: the target country's *own* qualification,
+delivered *outside* it (Bildungsinländer status), does. Confirmed real and material for Germany
+specifically — it changes which pool an Abitur/DIA holder from a recognized Auslandsschule
+competes in for the NC-quota system, the highest-stakes case the founder's framing pointed at.
+Italy answers differently: a Liceo Italiano di Istanbul maturità plausibly eases general
+admission but does not appear to move the holder out of the non-EU-resident-abroad reserved pool
+for numero chiuso Medicine — residence, not the diploma's issuing authority, is what "equiparato"
+status turns on there. A genuine divergence, not two versions of one answer. France and Austria
+remain open. No mechanism was built, even though the two-independent-instances bar that
+justified `subdivision-key-proposal.md` is arguably now met — France/Austria could still change
+the shape needed, a proper fix plausibly touches Turkey's own shipped entry too, and the
+profile's own `CurriculumType` enum has no field that could hold "Abitur" or "maturità" even if
+a resolver existed to read it. All stated as founder decisions in the document's own §D–E, not
+worked around.
+
 ## Full source list
 
 Every claim above traces to a specific `source_url` with a `source_type`, scope label,
