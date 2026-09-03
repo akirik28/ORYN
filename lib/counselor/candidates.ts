@@ -80,8 +80,10 @@ function profileTaskCandidates(state: CounselorState, locale: Locale): Candidate
  * Counselor Core Phase E — three verified/deterministic sources only, combined into one
  * list. No LLM involvement, no invented candidates (docs/counselor-core-plan.md §6):
  *   - opportunities: from state.eligibleOpportunityMatches, already restricted to
- *     opportunity_matches.eligible = true and opportunities.verification_state =
- *     'verified_current' upstream (see lib/counselor/state.ts).
+ *     opportunity_matches.eligible = true, opportunities.verification_state =
+ *     'verified_current', and lifecycle-actionable (status/cycle_status/deadline, via
+ *     isOpportunityActionable) upstream (see lib/counselor/state.ts). Pay-to-enroll is NOT
+ *     filtered upstream — that's this file's own job, immediately below.
  *   - requirement_action: a not_met or evaluable-unknown university_requirements row for
  *     one of the student's active target universities.
  *   - profile_task: any incomplete item from the profile-completeness checklist.

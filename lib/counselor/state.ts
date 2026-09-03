@@ -13,6 +13,7 @@ import { evaluateRequirement } from "@/lib/requirements/evaluate";
 import { INFORMATIONAL_CATEGORIES } from "@/lib/requirements/types";
 import { NON_ACTIONABLE_REQUIREMENT_VERIFICATION_STATES } from "@/lib/requirements/ingest";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
+import { isOpportunityActionable } from "@/lib/opportunities/lifecycle";
 import { ACTIVE_TARGET_STATUSES } from "@/lib/deadlines/upcoming";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import { toDimensionScoreRows } from "./gaps";
@@ -220,9 +221,29 @@ export async function getCounselorState(
   const opportunities = readOr("getCounselorState.opportunities", opportunitiesRes, [], { userId });
   const opportunityById = new Map(opportunities.map((o) => [o.id, o]));
 
+  // `isOpportunityActionable`, not the SQL filters above, is what actually enforces cycle_status
+  // and deadline — this file had status/verification_state covered but neither of those (CEO,
+  // 2026-09-03): 269 of 1,556 rows (17.3%) passing the two `.eq()`s above are closed/historical
+  // cycles or already past deadline, across all 8 accounts — the same half-a-rule gap
+  // lifecycle.ts's own header documents happening to eligibility.ts, mirrored (that file kept
+  // the cycle half and lost the deadline half; this one had neither). Deliberately
+  // `isOpportunityActionable`, not the full `isOpportunityRecommendable`: this file's own
+  // `verification_state = 'verified_current'` SQL filter above already enforces a *stricter*
+  // verification bar than isOpportunityRecommendable's evidence-only half would, so adding that
+  // half here would only ever loosen what's already correct — the missing piece was lifecycle,
+  // not verification.
+  //
+  // No `competesInCoreRecommendations` here, deliberately — this is the advisor's context
+  // assembler, not a recommendation feed. lib/counselor/candidates.ts already applies it at the
+  // point where eligibleOpportunityMatches becomes a pushed candidate action, which is the right
+  // layer for a rule about what gets *proposed*. Excluding pay-to-enroll rows this early would
+  // hide them from the advisor's reasoning entirely — a student who already asked about a
+  // pay-to-enroll programme should still get a real answer about it; the ruling was never that
+  // the advisor can't discuss one, only that Oryn shouldn't be the one bringing it up.
   const eligibleOpportunityMatches = matches
     .map((match) => ({ match, opportunity: opportunityById.get(match.opportunity_id) }))
-    .filter((entry): entry is { match: OpportunityMatch; opportunity: Opportunity } => entry.opportunity !== undefined);
+    .filter((entry): entry is { match: OpportunityMatch; opportunity: Opportunity } => entry.opportunity !== undefined)
+    .filter(({ opportunity }) => isOpportunityActionable(opportunity));
 
   // StudentAdvisorContext's targetUniversities.status is typed as plain string (it's only
   // ever interpolated into prompt text there) — narrowed here since target_universities.status
