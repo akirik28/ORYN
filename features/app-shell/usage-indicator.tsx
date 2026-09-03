@@ -200,6 +200,15 @@ function FlameFill({ fraction }: { fraction: number }) {
       // paint call, no RAF started at all.
       paint(start);
     } else {
+      // Paint once, synchronously, before the loop starts — not just inside `tick`.
+      // Without this, the near-black container (#100D1B) shows through as a solid,
+      // unpainted block for however long the first `requestAnimationFrame` takes to fire,
+      // and browsers throttle or suspend RAF entirely in a backgrounded tab: a student who
+      // opens the app in one tab and switches to it later would see this exact block until
+      // the tab regains focus and the first frame lands. The reduced-motion branch above
+      // already proves a single synchronous paint is the right degrade target — this makes
+      // the animated path degrade to that, instead of to nothing.
+      paint(start);
       const tick = (now: number) => {
         paint(now);
         raf = requestAnimationFrame(tick);
