@@ -1256,3 +1256,49 @@
     background: white;
   }
 }
+
+/* Parent-role theme (2026-09-04, docs/veli-hesabi-spec-2026-09-04.md K5) -- the same
+   mechanism as the Ultra tier theme above (an attribute on <html>, custom-property
+   overrides scoped to that attribute, a Tailwind variant so any component can write
+   `parent:...` utilities directly, same as `dark:...`/`ultra:...`), applied to a different
+   axis: WHO is looking (student vs. parent), not WHAT they're paying for. Deliberately a
+   separate token namespace from --tier-*, not a reuse of it: a parent's effective plan tier
+   is inherited from their linked child (spec K4), so [data-tier="ultra"] and
+   [data-role="parent"] can both be present on <html> at once, and neither should be able to
+   silently repaint the other.
+
+   Brown, chosen to sit clearly outside two hue ranges this codebase already learned to
+   avoid the hard way: --destructive sits at ~22-25 degrees OKLCH (see that token above),
+   and dashboard-hero.ts/profile-signal.tsx's own history is a warning-amber that read as
+   alarming for a state that isn't a problem. Every value below is a desaturated,
+   yellow-leaning walnut/taupe brown -- not a terracotta or amber -- specifically to stay
+   away from both.
+
+   Set on <html> by features/app-shell/parent-ambient.tsx, same lifecycle as
+   ultra-ambient.tsx's data-tier effect (mount-time set, unmount-time cleanup). No canvas or
+   animation here: "veli sadece gozlemleyebilmeli" (a parent only ever observes) -- a calm,
+   still theme fits a read-only view better than a second animated flourish, and this view
+   has no AI and no premium visual budget to begin with (spec G5/K1). */
+@custom-variant parent (&:is([data-role="parent"] *));
+
+:root {
+  --role-accent: var(--brand-primary);
+  --role-accent-strong: var(--brand-primary-strong);
+  --role-glow: transparent;
+  --role-page-bg-1: #DDDAF5;
+  --role-page-bg-2: #D8DFF5;
+  --role-page-bg-3: #DDD8F2;
+  --role-page-bg-4: #D4DBF0;
+  --role-surface-border: rgba(61, 53, 232, 0.1);
+}
+
+[data-role="parent"] {
+  --role-accent: #8a6240;
+  --role-accent-strong: #5c4028;
+  --role-glow: rgba(138, 98, 64, 0.28);
+  --role-page-bg-1: #f2e9dd;
+  --role-page-bg-2: #eee3d2;
+  --role-page-bg-3: #f0e6d6;
+  --role-page-bg-4: #e9dcc8;
+  --role-surface-border: rgba(92, 64, 40, 0.14);
+}
