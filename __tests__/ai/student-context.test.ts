@@ -648,3 +648,109 @@ describe("formatContextForPrompt — student's own standing instruction", () => 
     expect(text.trim().endsWith('"Europe only."')).toBe(true);
   });
 });
+
+/**
+ * 2026-09-03 — guards LEGAL_REVIEW.md §2's own claim about what reaches Anthropic (corrected
+ * this pass; see docs/legal-review-s2-duzeltme-2026-09-03.md for the full before/after). This
+ * is not a generic content test — each assertion below names the exact fact a real legal
+ * document currently asserts is (or is not) sent, and a failure here means that document's own
+ * §2 paragraph has just become wrong again, the same way it did on 2026-09-03 without anyone
+ * noticing until this file was audited directly against the packet. A green run proves the
+ * claim holds TODAY, against this test's own fixture — it says nothing about history, and
+ * whoever "fixes" a red run here must update §2's own text in the same change, not just this
+ * assertion, or the document goes stale again in the other direction.
+ *
+ * Deliberately not exhaustive of every field `StudentAdvisorContext` carries — see the
+ * "confirmed NOT rendered" block below for the fields this test protects in the opposite
+ * direction: fetched into the object, but never reaching the model, so §2 must not claim them.
+ */
+describe("formatContextForPrompt — LEGAL_REVIEW.md §2 boundary claims (Anthropic)", () => {
+  test("school name IS sent — both via the student line and via education records (§2's old 'school name is not sent' claim is false)", () => {
+    const text = formatContextForPrompt(
+      baseContext({
+        student: { ...baseContext().student, schoolName: "Robert College" },
+        educationRecords: [{ schoolName: "Robert College", overallGpa: null, gpaScale: null }],
+      }),
+    );
+    expect(text).toContain("Robert College");
+    // Both the summary line and the Education line carry it — asserted separately so a future
+    // change that drops only one of the two paths still fails this test.
+    expect(text).toMatch(/Student:.*Robert College/);
+    expect(text).toMatch(/Education \(1\): Robert College/);
+  });
+
+  test("GPA IS sent, with scale, when present on an education record", () => {
+    const text = formatContextForPrompt(baseContext({ educationRecords: [{ schoolName: "Test High", overallGpa: 3.82, gpaScale: 4.0 }] }));
+    expect(text).toContain("GPA 3.82/4");
+  });
+
+  test("standardized test scores ARE sent, including per-section subscores", () => {
+    const text = formatContextForPrompt(
+      baseContext({ testScores: [{ testName: "SAT", score: "1520", maxScore: "1600", subscores: { math: 780, reading_writing: 740 } }] }),
+    );
+    expect(text).toContain("SAT: 1520/1600");
+    expect(text).toContain("math: 780");
+    expect(text).toContain("reading writing: 740");
+  });
+
+  test("certification issuing organizations ARE sent, not just titles", () => {
+    const text = formatContextForPrompt(baseContext({ certifications: [{ title: "AWS Certified", organization: "Amazon Web Services", evidenceStatus: "self_reported" }] }));
+    expect(text).toContain("Amazon Web Services");
+  });
+
+  test("work-experience organizations ARE sent, not just titles — §2's 'titles only' framing is false for this category", () => {
+    const text = formatContextForPrompt(
+      baseContext({ workExperiences: [{ title: "Intern", organization: "Acme Corp", employmentType: "internship", ongoing: false, paid: true, evidenceStatus: "self_reported" }] }),
+    );
+    expect(text).toContain("Acme Corp");
+  });
+
+  test("sports achievement free-text notes ARE sent — not named in the six-category commit, found reading the formatter directly", () => {
+    const text = formatContextForPrompt(
+      baseContext({ sports: [{ sport: "Fencing", level: "Varsity", isCaptain: true, hoursPerWeek: 6, ongoing: true, achievements: "State finalist, personal best at Regionals" }] }),
+    );
+    expect(text).toContain("State finalist, personal best at Regionals");
+  });
+
+  test("a student's own free-text reflection note on a completed action IS sent — the most personal item found this pass", () => {
+    const text = formatContextForPrompt(
+      baseContext({
+        recentActionOutcomes: [
+          { title: "Apply to Economics Challenge", status: "completed", reflectionOutcome: "completed_successfully", reflectionNote: "I tried this and it didn't go how I expected because the deadline moved" },
+        ],
+      }),
+    );
+    expect(text).toContain("I tried this and it didn't go how I expected because the deadline moved");
+  });
+
+  test("the full interests list IS sent, not a count or a summary", () => {
+    const text = formatContextForPrompt(baseContext({ interests: ["Economics", "Youth Employment"] }));
+    expect(text).toContain("Economics, Youth Employment");
+  });
+
+  /**
+   * The opposite direction: fields the interface fetches (so a careless future §2 rewrite
+   * could plausibly claim they're sent) that `formatContextForPrompt` confirmed does NOT
+   * render. §2's corrected text does not claim these — this guards that omission staying
+   * intentional, not accidental permissiveness in the document going the other way.
+   */
+  test("project outcomeSummary, research field/outputType, and award level are NOT sent — fetched but never rendered", () => {
+    const text = formatContextForPrompt(
+      baseContext({
+        projects: [{ title: "App Project", outcomeSummary: "PRIVATE_OUTCOME_TEXT_SHOULD_NOT_APPEAR", ongoing: false, evidenceStatus: "self_reported" }],
+        research: [{ title: "Econ Paper", field: "PRIVATE_FIELD_SHOULD_NOT_APPEAR", outputType: "PRIVATE_OUTPUT_TYPE_SHOULD_NOT_APPEAR", ongoing: false, evidenceStatus: "self_reported" }],
+        awards: [{ title: "Regional Award", level: "PRIVATE_LEVEL_SHOULD_NOT_APPEAR", evidenceStatus: "self_reported" }],
+      }),
+    );
+    expect(text).not.toContain("PRIVATE_OUTCOME_TEXT_SHOULD_NOT_APPEAR");
+    expect(text).not.toContain("PRIVATE_FIELD_SHOULD_NOT_APPEAR");
+    expect(text).not.toContain("PRIVATE_OUTPUT_TYPE_SHOULD_NOT_APPEAR");
+    expect(text).not.toContain("PRIVATE_LEVEL_SHOULD_NOT_APPEAR");
+  });
+
+  test("birthYear and citizenshipCountries are NOT sent as raw values in prompt text, despite being fetched into the context object", () => {
+    const text = formatContextForPrompt(baseContext({ student: { ...baseContext().student, birthYear: 2009, citizenshipCountries: ["Turkey"] } }));
+    expect(text).not.toContain("2009");
+    expect(text).not.toContain("Turkey");
+  });
+});
