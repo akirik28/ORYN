@@ -8,6 +8,7 @@ import { assertSocialFeedEnabled } from "@/lib/social/posts-feature-flag";
 import { resolveRepostRender, type EmbeddedOriginal, type RepostRender } from "@/lib/social/posts-visibility";
 import { resolvePostModerationRender, type PostModerationRender } from "@/lib/social/posts-moderation";
 import { feedAuthorScope, orderFeedPage, nextFeedCursor, FEED_PAGE_SIZE, type FeedCursor } from "@/lib/social/posts-feed";
+import { isUndefinedTableError } from "@/lib/supabase/errors";
 
 /**
  * Supabase-touching reads for the social layer. The decisions live in the pure modules
@@ -22,7 +23,44 @@ import { feedAuthorScope, orderFeedPage, nextFeedCursor, FEED_PAGE_SIZE, type Fe
  * RLS is the authorization boundary throughout. Nothing here re-implements the visibility
  * rules as a query filter: a post the caller may not see simply does not come back. The
  * `.in()` on author ids is the feed's PRODUCT scope (see posts-feed.ts), not its security.
+ *
+ * 2026-09-02 (tier 2, docs/okuma-hatasi-vs-bos-sonuc-karari-2026-09-03.md): every read
+ * below was `x.data ?? []`/bare `{ data }`, no error check at all. This file's own kill
+ * switch already establishes the house philosophy for "this feature can't do its job right
+ * now" -- throw, don't silently degrade -- so a genuinely failed read gets the same
+ * treatment via unwrapOrThrow/unwrapSingleOrThrow below, not lib/supabase/safe-read.ts's
+ * usual log-and-[] shape (that shape is for a feature that should keep working with a
+ * gap; this one is switched off by design, and a caller reaching these functions at all
+ * already expects "may throw"). `posts`/`post_likes` (migration 0058) are written but not
+ * applied on oryn-qa-scratch as of this pass -- confirmed live building /kumanda/topluluk
+ * the same night, not assumed from this file's own table names -- so a table-missing error
+ * gets its own distinct message rather than folding into "some read failed," the exact
+ * distinction this session caught itself almost losing once already.
  */
+
+function unwrapOrThrow<T>(table: string, result: { data: T[] | null; error: { code?: string; message: string } | null }): T[] {
+  if (result.error) {
+    if (isUndefinedTableError(result.error, table)) {
+      throw new Error(`Social feed table "${table}" is not set up yet.`);
+    }
+    throw new Error(`Social feed read failed (${table}): ${result.error.message}`);
+  }
+  return result.data ?? [];
+}
+
+function unwrapSingleOrThrow<T>(table: string, result: { data: T | null; error: { code?: string; message: string } | null }): T | null {
+  if (result.error) {
+    if (isUndefinedTableError(result.error, table)) {
+      throw new Error(`Social feed table "${table}" is not set up yet.`);
+    }
+    throw new Error(`Social feed read failed (${table}): ${result.error.message}`);
+  }
+  // A genuinely absent row (no error) stays `null`, unchanged -- getPost's own contract
+  // ("not found" and "not visible to this viewer" are deliberately the same state) never
+  // meant to also swallow a real query failure into that same null; this only widens what
+  // *doesn't* reach that point, it doesn't touch what a clean miss returns.
+  return result.data;
+}
 
 export interface FeedItem {
   post: Post;
@@ -81,8 +119,7 @@ export async function getFeedPage(
     query = query.or(`created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`);
   }
 
-  const { data } = await query;
-  const posts = orderFeedPage(data ?? []);
+  const posts = orderFeedPage(unwrapOrThrow("posts", await query));
   if (posts.length === 0) return { items: [], nextCursor: null };
 
   const originalIds = Array.from(
@@ -93,7 +130,7 @@ export async function getFeedPage(
   const [originalsRes, profilesRes, likesRes] = await Promise.all([
     originalIds.length > 0
       ? supabase.from("posts").select("*").in("id", originalIds)
-      : Promise.resolve({ data: [] as Post[] }),
+      : Promise.resolve({ data: [] as Post[], error: null }),
     supabase.from("public_profiles").select("*").in("id", authorProfileIds),
     supabase
       .from("post_likes")
@@ -105,9 +142,9 @@ export async function getFeedPage(
       ),
   ]);
 
-  const originalById = new Map((originalsRes.data ?? []).map((p) => [p.id, toEmbeddedOriginal(p)]));
-  const profileById = new Map((profilesRes.data ?? []).map((p) => [p.id, p]));
-  const likedPostIds = new Set((likesRes.data ?? []).map((row) => row.post_id));
+  const originalById = new Map(unwrapOrThrow("posts", originalsRes).map((p) => [p.id, toEmbeddedOriginal(p)]));
+  const profileById = new Map(unwrapOrThrow("public_profiles", profilesRes).map((p) => [p.id, p]));
+  const likedPostIds = new Set(unwrapOrThrow("post_likes", likesRes).map((row) => row.post_id));
 
   const items: FeedItem[] = posts.map((post) => ({
     post,
@@ -126,8 +163,7 @@ export async function getFeedPage(
 export async function getPost(supabase: SupabaseClient<Database>, postId: string): Promise<Post | null> {
   assertSocialFeedEnabled();
   if (!isUuidLike(postId)) return null;
-  const { data } = await supabase.from("posts").select("*").eq("id", postId).maybeSingle();
-  return data;
+  return unwrapSingleOrThrow("posts", await supabase.from("posts").select("*").eq("id", postId).maybeSingle());
 }
 
 /**
@@ -142,8 +178,8 @@ export async function getLikedPostIds(
   assertSocialFeedEnabled();
   const ids = postIds.filter(isUuidLike);
   if (ids.length === 0) return new Set();
-  const { data } = await supabase.from("post_likes").select("post_id").eq("user_id", userId).in("post_id", ids);
-  return new Set((data ?? []).map((row) => row.post_id));
+  const result = await supabase.from("post_likes").select("post_id").eq("user_id", userId).in("post_id", ids);
+  return new Set(unwrapOrThrow("post_likes", result).map((row) => row.post_id));
 }
 
 /**
