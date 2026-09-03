@@ -1829,7 +1829,7 @@
         "callsCount": "{count} çağrı",
         "unpricedTitle": "Fiyatlandırılmamış çağrılar",
         "unpricedNone": "Fiyatlandırılan her çağrı fiyat tablosunda — kayıtlı fiyatlandırılmamış çağrı yok.",
-        "unpricedAlert": "{count} çağrı henüz fiyat tablosunda olmayan bir model kullandı, bu yüzden gerçek maliyetleri bilinmiyor — o modele fiyat eklenene kadar yukarıdaki tüm toplamlar kesin değil, alt sınırdır.",
+        "unpricedAlert": "{count} çağrı, kullandıkları model için bir fiyat kaydedilmeden önce loglandı, bu yüzden gerçek maliyetleri bilinmiyor ve yeniden hesaplanmadı — yukarıdaki toplamlar bu belirli çağrılar için kesin değil, alt sınırdır.",
         "unpricedByModel": "{model}: {count} çağrı",
         "inputRatePlaceholder": "$/M giriş",
         "outputRatePlaceholder": "$/M çıkış",
