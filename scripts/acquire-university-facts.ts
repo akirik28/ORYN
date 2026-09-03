@@ -225,7 +225,7 @@ async function fetchOpenAlexByRor(rorId: string): Promise<OpenAlexInstitution | 
     return null;
   }
 
-  const url = `https://api.openalex.org/institutions/${encodeURIComponent(rorId)}?mailto=oryn-data@oryn.app`;
+  const url = `https://api.openalex.org/institutions/${encodeURIComponent(rorId)}?mailto=hello@proxola.com`;
   const response = await fetch(url, { headers: { "User-Agent": USER_AGENT } }).catch(() => null);
   if (!response) {
     sourceOutcomes.openalex.failed += 1;

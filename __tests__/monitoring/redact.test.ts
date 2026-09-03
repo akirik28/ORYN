@@ -17,8 +17,8 @@ describe("redactPath", () => {
 
 describe("redactHeaders", () => {
   it("keeps only allow-listed headers", () => {
-    const result = redactHeaders({ "user-agent": "curl/8", referer: "https://oryn.app/x", "content-type": "application/json" });
-    expect(result).toEqual({ "user-agent": "curl/8", referer: "https://oryn.app/x", "content-type": "application/json" });
+    const result = redactHeaders({ "user-agent": "curl/8", referer: "https://proxola.com/x", "content-type": "application/json" });
+    expect(result).toEqual({ "user-agent": "curl/8", referer: "https://proxola.com/x", "content-type": "application/json" });
   });
 
   it("never forwards credentials, cookies or session headers", () => {
@@ -40,7 +40,7 @@ describe("redactHeaders", () => {
   });
 
   it("skips a present-but-valueless header (Next's Dict allows undefined)", () => {
-    expect(redactHeaders({ "user-agent": undefined, referer: "https://oryn.app" })).toEqual({ referer: "https://oryn.app" });
+    expect(redactHeaders({ "user-agent": undefined, referer: "https://proxola.com" })).toEqual({ referer: "https://proxola.com" });
   });
 });
 
