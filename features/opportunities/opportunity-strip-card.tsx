@@ -29,9 +29,10 @@ type Translator = (key: string) => string;
  * lib/opportunities/home-strip.ts's own comment on the same decision from the data side.
  *
  * What DOES still show — the one thing that makes the honesty guarantee real — is the
- * eligibility caveat: a warning badge whenever `eligibilityNotes` is non-null, exactly like
- * Browse's own OpportunityCard does and the OLD homepage preview (dashboard-view.tsx, this
- * card's direct predecessor, per the same doc above) never did at all.
+ * eligibility caveat: a warning badge whenever `eligibilityNotes` is true (a presence flag,
+ * not the note text itself — see HomeStripOpportunity's own comment), exactly like Browse's
+ * own OpportunityCard does and the OLD homepage preview (dashboard-view.tsx, this card's
+ * direct predecessor, per the same doc above) never did at all.
  *
  * A plain server component — no client interactivity lives here (the whole card is a
  * `<Link>`), so unlike the plan-page marquee's cards this needs no "use client" and no

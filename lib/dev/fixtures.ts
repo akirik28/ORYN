@@ -1017,32 +1017,31 @@ const FIXTURE_MATCH_STUDENT: StudentMatchProfile = {
  * is never checked here (all five fixtures are `active`/eligible by construction) — only
  * `eligibilityNotes` is computed, via the real computeEligibility rather than a hand-typed
  * guess, so "opp-2"'s deliberately-unconfirmed `country_eligibility_confirmed_open: false`
- * (see that fixture's own comment) exercises OpportunityStripCard's real caveat badge with
- * the product's actual current copy, not a fixture author's paraphrase of it that could
- * silently go stale the moment eligibilityMessages' wording changes.
+ * (see that fixture's own comment) exercises OpportunityStripCard's real caveat badge exactly
+ * like a real non-empty note list would.
+ *
+ * `locale` is accepted but no longer used here (2026-09-03, the eligibility_notes -> codes
+ * fix) — HomeStripOpportunity.eligibilityNotes is a presence flag now, not rendered text, so
+ * there's nothing left in this function that's locale-dependent. Kept as a parameter so this
+ * function's own callers don't need a matching edit for a change with no visible effect.
  */
-export function buildFixtureHomeStrip(locale: Locale = DEFAULT_LOCALE): HomeStripOpportunity[] {
+export function buildFixtureHomeStrip(_locale: Locale = DEFAULT_LOCALE): HomeStripOpportunity[] {
   return FIXTURE_OPPORTUNITIES.map(({ opportunity }) => {
-    const { notes } = computeEligibility(
-      FIXTURE_MATCH_STUDENT,
-      {
-        category: opportunity.category,
-        minimumAge: opportunity.minimum_age,
-        maximumAge: opportunity.maximum_age,
-        eligibleCountries: opportunity.eligible_countries,
-        eligibleCitizenships: opportunity.eligible_citizenships ?? [],
-        eligibleGrades: opportunity.eligible_grades ?? [],
-        countryEligibilityConfirmedOpen: opportunity.country_eligibility_confirmed_open ?? false,
-        citizenshipRestrictions: opportunity.citizenship_restrictions,
-        residencyRestrictions: opportunity.residency_restrictions,
-        fields: opportunity.fields,
-        country: opportunity.country,
-        cost: opportunity.cost,
-        locationMode: opportunity.location_mode,
-      },
-      null,
-      locale
-    );
+    const { notes } = computeEligibility(FIXTURE_MATCH_STUDENT, {
+      category: opportunity.category,
+      minimumAge: opportunity.minimum_age,
+      maximumAge: opportunity.maximum_age,
+      eligibleCountries: opportunity.eligible_countries,
+      eligibleCitizenships: opportunity.eligible_citizenships ?? [],
+      eligibleGrades: opportunity.eligible_grades ?? [],
+      countryEligibilityConfirmedOpen: opportunity.country_eligibility_confirmed_open ?? false,
+      citizenshipRestrictions: opportunity.citizenship_restrictions,
+      residencyRestrictions: opportunity.residency_restrictions,
+      fields: opportunity.fields,
+      country: opportunity.country,
+      cost: opportunity.cost,
+      locationMode: opportunity.location_mode,
+    });
     return {
       id: opportunity.id,
       title: opportunity.title,
@@ -1053,7 +1052,7 @@ export function buildFixtureHomeStrip(locale: Locale = DEFAULT_LOCALE): HomeStri
       cycleStatus: opportunity.cycle_status,
       currentCycleLabel: opportunity.current_cycle_label,
       selectivityTier: opportunity.selectivity_tier,
-      eligibilityNotes: notes,
+      eligibilityNotes: notes.length > 0,
     };
   });
 }

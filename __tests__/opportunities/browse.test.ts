@@ -78,7 +78,7 @@ function match(overrides: Partial<OpportunityMatch> = {}): OpportunityMatch {
     user_id: "student-1",
     opportunity_id: "opp-1",
     eligible: true,
-    eligibility_notes: null,
+    eligibility_notes: [],
     relevance_score: 50,
     profile_need_score: 50,
     effort_estimate: null,
@@ -123,7 +123,7 @@ describe("browseOpportunities — pinned current behavior", () => {
   test("an opportunity with a real match row is returned exactly as computed, unaffected by this package", async () => {
     const supabase = makeSupabase({
       opportunities: [opportunity("opp-1")],
-      opportunity_matches: [match({ opportunity_id: "opp-1", eligible: true, eligibility_notes: null, match_score: 77 })],
+      opportunity_matches: [match({ opportunity_id: "opp-1", eligible: true, eligibility_notes: [], match_score: 77 })],
     });
 
     const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
@@ -137,7 +137,7 @@ describe("browseOpportunities — pinned current behavior", () => {
   test("a real match row carrying an unknown-eligibility note passes it through unchanged", async () => {
     const supabase = makeSupabase({
       opportunities: [opportunity("opp-1")],
-      opportunity_matches: [match({ opportunity_id: "opp-1", eligible: true, eligibility_notes: "Restricted by country — add your country to check." })],
+      opportunity_matches: [match({ opportunity_id: "opp-1", eligible: true, eligibility_notes: [{ code: "country_unknown" }] })],
     });
 
     const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
@@ -158,7 +158,7 @@ describe("browseOpportunities — stale match row on a non-actionable opportunit
   test("a match row saying eligible: true does not survive its opportunity's cycle closing", async () => {
     const supabase = makeSupabase({
       opportunities: [opportunity("opp-closed", { cycle_status: "closed" })],
-      opportunity_matches: [match({ opportunity_id: "opp-closed", eligible: true, eligibility_notes: null, match_score: 77 })],
+      opportunity_matches: [match({ opportunity_id: "opp-closed", eligible: true, eligibility_notes: [], match_score: 77 })],
     });
 
     const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
@@ -177,7 +177,7 @@ describe("browseOpportunities — stale match row on a non-actionable opportunit
   test("a stale eligible row on a past-deadline opportunity is caught even when cycle_status is still a legitimately-actionable value", async () => {
     const supabase = makeSupabase({
       opportunities: [opportunity("opp-genius", { cycle_status: "date_not_announced", deadline: "2026-03-07" })],
-      opportunity_matches: [match({ opportunity_id: "opp-genius", eligible: true, eligibility_notes: null, match_score: 68 })],
+      opportunity_matches: [match({ opportunity_id: "opp-genius", eligible: true, eligibility_notes: [], match_score: 68 })],
     });
 
     const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
@@ -191,7 +191,7 @@ describe("browseOpportunities — stale match row on a non-actionable opportunit
     const supabase = makeSupabase({
       opportunities: [opportunity("opp-historical", { cycle_status: "historical" })],
       opportunity_matches: [
-        match({ opportunity_id: "opp-historical", eligible: true, eligibility_notes: "Restricted by country — add your country to check." }),
+        match({ opportunity_id: "opp-historical", eligible: true, eligibility_notes: [{ code: "country_unknown" }] }),
       ],
     });
 
@@ -204,7 +204,7 @@ describe("browseOpportunities — stale match row on a non-actionable opportunit
   test("a match row saying eligible: false on a non-actionable opportunity stays ineligible", async () => {
     const supabase = makeSupabase({
       opportunities: [opportunity("opp-discontinued", { cycle_status: "discontinued" })],
-      opportunity_matches: [match({ opportunity_id: "opp-discontinued", eligible: false, eligibility_notes: "Not currently open to students in Turkey." })],
+      opportunity_matches: [match({ opportunity_id: "opp-discontinued", eligible: false, eligibility_notes: [{ code: "country_not_eligible", params: { studentCountry: "Turkey" } }] })],
     });
 
     const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
@@ -222,8 +222,8 @@ describe("browseOpportunities — stale match row on a non-actionable opportunit
         opportunity("opp-open-ineligible", { cycle_status: "upcoming", deadline: null }),
       ],
       opportunity_matches: [
-        match({ id: "m1", opportunity_id: "opp-open-eligible", eligible: true, eligibility_notes: null, match_score: 90 }),
-        match({ id: "m2", opportunity_id: "opp-open-ineligible", eligible: false, eligibility_notes: "Not currently open to students in Turkey.", match_score: 10 }),
+        match({ id: "m1", opportunity_id: "opp-open-eligible", eligible: true, eligibility_notes: [], match_score: 90 }),
+        match({ id: "m2", opportunity_id: "opp-open-ineligible", eligible: false, eligibility_notes: [{ code: "country_not_eligible", params: { studentCountry: "Turkey" } }], match_score: 10 }),
       ],
     });
 
@@ -234,7 +234,7 @@ describe("browseOpportunities — stale match row on a non-actionable opportunit
     expect(open.eligible).toBe(true);
     expect(open.eligibilityNotes).toBeNull();
     expect(ineligible.eligible).toBe(false);
-    expect(ineligible.eligibilityNotes).toBe("Not currently open to students in Turkey.");
+    expect(ineligible.eligibilityNotes).toBe("Not currently open to students from Turkey.");
   });
 });
 
@@ -307,7 +307,7 @@ describe("browseOpportunities — missing match row (Package 8 fix)", () => {
   test("a mix of matched and unmatched opportunities only changes the unmatched rows", async () => {
     const supabase = makeSupabase({
       opportunities: [opportunity("opp-matched", { cycle_status: "open" }), opportunity("opp-closed", { cycle_status: "closed" })],
-      opportunity_matches: [match({ opportunity_id: "opp-matched", eligible: true, eligibility_notes: null, match_score: 90 })],
+      opportunity_matches: [match({ opportunity_id: "opp-matched", eligible: true, eligibility_notes: [], match_score: 90 })],
     });
 
     const { rows, total } = await browseOpportunities(supabase, USER_ID, {}, 1);
@@ -337,7 +337,7 @@ describe("browseOpportunities — insufficient verification is labelled, never h
   test("a never-verified, deadline-less opportunity is flagged needsVerification but stays visible and eligible", async () => {
     const supabase = makeSupabase({
       opportunities: [opportunity("opp-stanford", { cycle_status: "upcoming", deadline: null, last_verified_at: null })],
-      opportunity_matches: [match({ opportunity_id: "opp-stanford", eligible: true, eligibility_notes: null, match_score: 82 })],
+      opportunity_matches: [match({ opportunity_id: "opp-stanford", eligible: true, eligibility_notes: [], match_score: 82 })],
     });
 
     const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
@@ -352,7 +352,7 @@ describe("browseOpportunities — insufficient verification is labelled, never h
   test("the note it carries names verification as the reason", async () => {
     const supabase = makeSupabase({
       opportunities: [opportunity("opp-stanford", { cycle_status: "upcoming", deadline: null, last_verified_at: null })],
-      opportunity_matches: [match({ opportunity_id: "opp-stanford", eligible: true, eligibility_notes: null })],
+      opportunity_matches: [match({ opportunity_id: "opp-stanford", eligible: true, eligibility_notes: [] })],
     });
 
     const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
@@ -362,7 +362,7 @@ describe("browseOpportunities — insufficient verification is labelled, never h
   test("a verified opportunity is not flagged, and its stored note is untouched", async () => {
     const supabase = makeSupabase({
       opportunities: [opportunity("opp-verified", { cycle_status: "open", deadline: null, last_verified_at: "2026-08-20T00:00:00Z" })],
-      opportunity_matches: [match({ opportunity_id: "opp-verified", eligible: true, eligibility_notes: null, match_score: 60 })],
+      opportunity_matches: [match({ opportunity_id: "opp-verified", eligible: true, eligibility_notes: [], match_score: 60 })],
     });
 
     const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
@@ -390,7 +390,7 @@ describe("browseOpportunities — insufficient verification is labelled, never h
   test("a closed cycle still wins the explanation -- the freshness note never displaces #140/#141 wording", async () => {
     const supabase = makeSupabase({
       opportunities: [opportunity("opp-closed", { cycle_status: "closed", deadline: null, last_verified_at: null })],
-      opportunity_matches: [match({ opportunity_id: "opp-closed", eligible: true, eligibility_notes: null })],
+      opportunity_matches: [match({ opportunity_id: "opp-closed", eligible: true, eligibility_notes: [] })],
     });
 
     const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
@@ -417,8 +417,8 @@ describe("browseOpportunities — a notActionable row is demoted in sort, same a
         opportunity("opp-open-low-score", { cycle_status: "open", deadline: "2026-12-01", last_verified_at: "2026-08-20T00:00:00Z" }),
       ],
       opportunity_matches: [
-        match({ opportunity_id: "opp-closed-high-score", eligible: true, eligibility_notes: null, match_score: 95 }),
-        match({ opportunity_id: "opp-open-low-score", eligible: true, eligibility_notes: null, match_score: 40 }),
+        match({ opportunity_id: "opp-closed-high-score", eligible: true, eligibility_notes: [], match_score: 95 }),
+        match({ opportunity_id: "opp-open-low-score", eligible: true, eligibility_notes: [], match_score: 40 }),
       ],
     });
 
@@ -433,8 +433,8 @@ describe("browseOpportunities — a notActionable row is demoted in sort, same a
         opportunity("opp-future-deadline-low-score", { cycle_status: "open", deadline: "2026-12-01", last_verified_at: "2026-08-20T00:00:00Z" }),
       ],
       opportunity_matches: [
-        match({ opportunity_id: "opp-past-deadline-high-score", eligible: true, eligibility_notes: null, match_score: 90 }),
-        match({ opportunity_id: "opp-future-deadline-low-score", eligible: true, eligibility_notes: null, match_score: 30 }),
+        match({ opportunity_id: "opp-past-deadline-high-score", eligible: true, eligibility_notes: [], match_score: 90 }),
+        match({ opportunity_id: "opp-future-deadline-low-score", eligible: true, eligibility_notes: [], match_score: 30 }),
       ],
     });
 
@@ -445,7 +445,7 @@ describe("browseOpportunities — a notActionable row is demoted in sort, same a
   test("the row keeps its place in the catalogue -- demoted, never hidden", async () => {
     const supabase = makeSupabase({
       opportunities: [opportunity("opp-closed", { cycle_status: "closed" })],
-      opportunity_matches: [match({ opportunity_id: "opp-closed", eligible: true, eligibility_notes: null, match_score: 99 })],
+      opportunity_matches: [match({ opportunity_id: "opp-closed", eligible: true, eligibility_notes: [], match_score: 99 })],
     });
 
     const { rows, total } = await browseOpportunities(supabase, USER_ID, {}, 1);
@@ -460,7 +460,7 @@ describe("browseOpportunities — a stored eligibility note and the verification
     const supabase = makeSupabase({
       opportunities: [opportunity("opp-both", { cycle_status: "open", deadline: null, last_verified_at: null })],
       opportunity_matches: [
-        match({ opportunity_id: "opp-both", eligible: true, eligibility_notes: "Restricted by country — add your country to check." }),
+        match({ opportunity_id: "opp-both", eligible: true, eligibility_notes: [{ code: "country_unknown" }] }),
       ],
     });
 
@@ -488,7 +488,7 @@ describe("browseOpportunities — a legacy-generation row is neither demoted nor
   test("verified through `verified_at` alone: not flagged, not caveated", async () => {
     const supabase = makeSupabase({
       opportunities: [opportunity("opp-legacy", legacyGeneration)],
-      opportunity_matches: [match({ opportunity_id: "opp-legacy", eligible: true, eligibility_notes: null, match_score: 82 })],
+      opportunity_matches: [match({ opportunity_id: "opp-legacy", eligible: true, eligibility_notes: [], match_score: 82 })],
     });
 
     const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);
@@ -518,7 +518,7 @@ describe("browseOpportunities — a legacy-generation row is neither demoted nor
     // genuinely applies. Never "closed", never "not eligible".
     const supabase = makeSupabase({
       opportunities: [opportunity("opp-no-evidence", { cycle_status: "upcoming", deadline: null, last_verified_at: null, verified_at: null })],
-      opportunity_matches: [match({ opportunity_id: "opp-no-evidence", eligible: true, eligibility_notes: null, match_score: 82 })],
+      opportunity_matches: [match({ opportunity_id: "opp-no-evidence", eligible: true, eligibility_notes: [], match_score: 82 })],
     });
 
     const { rows } = await browseOpportunities(supabase, USER_ID, {}, 1);

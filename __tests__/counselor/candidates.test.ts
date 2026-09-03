@@ -64,7 +64,7 @@ function match(overrides: Partial<OpportunityMatch> = {}): OpportunityMatch {
     user_id: "user-1",
     opportunity_id: "opp-1",
     eligible: true,
-    eligibility_notes: null,
+    eligibility_notes: [],
     relevance_score: 60,
     profile_need_score: 60,
     effort_estimate: null,

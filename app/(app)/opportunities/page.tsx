@@ -7,6 +7,8 @@ import { requireUser } from "@/lib/security/dal";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
+import { renderEligibilityNotes, type EligibilityNote } from "@/lib/opportunities/matching";
+import type { Locale } from "@/lib/i18n/config";
 import { browseOpportunities, getOpportunityFacets } from "@/lib/opportunities/browse";
 import { isOpportunityActionable, isOpportunitySufficientlyVerified } from "@/lib/opportunities/lifecycle";
 import { OpportunityCard } from "@/features/opportunities/opportunity-card";
@@ -84,7 +86,7 @@ export default async function OpportunitiesPage({
       {isBrowse ? (
         <BrowseAllView supabase={supabase} userId={userId} params={params} />
       ) : (
-        <ForYouView supabase={supabase} userId={userId} tavilyConfigured={integrationStatus.tavily} />
+        <ForYouView supabase={supabase} userId={userId} tavilyConfigured={integrationStatus.tavily} locale={locale} />
       )}
     </div>
   );
@@ -94,10 +96,12 @@ async function ForYouView({
   supabase,
   userId,
   tavilyConfigured,
+  locale,
 }: {
   supabase: Awaited<ReturnType<typeof createClient>>;
   userId: string;
   tavilyConfigured: boolean;
+  locale: Locale;
 }) {
   const t = await getTranslations("opportunities.browsePage");
   const [matchesRes, savedRes] = await Promise.all([
@@ -155,6 +159,11 @@ async function ForYouView({
   // than hides — an unverified row keeps its place and loses its match tier. The
   // counselor's ranked top-3 is the surface that excludes; see lib/counselor/eligibility.ts
   // for why the two differ.
+  // Rendered here, not passed raw (2026-09-03, the eligibility_notes -> codes fix): this is
+  // the app's primary recommendation surface, and unlike browse.ts/the detail page it never
+  // had an established "English only" precedent to preserve — it simply displayed whatever
+  // locale happened to be active when the row was last computed, which is the exact bug this
+  // fix closes. `locale` here is the real one this render actually needs.
   const renderCard = (
     { match, opportunity }: (typeof cards)[number],
     featured: boolean,
@@ -165,7 +174,7 @@ async function ForYouView({
       matchScore={match.match_score}
       reasonCodes={match.reason_codes as string[]}
       eligible={match.eligible}
-      eligibilityNotes={match.eligibility_notes}
+      eligibilityNotes={renderEligibilityNotes((match.eligibility_notes as EligibilityNote[] | null) ?? [], locale)}
       needsVerification={!isOpportunitySufficientlyVerified(opportunity!)}
       initialStatus={statusById.get(match.opportunity_id) ?? null}
       featured={featured}

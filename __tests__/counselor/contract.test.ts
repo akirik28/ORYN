@@ -92,7 +92,7 @@ function match(opportunityId: string, overrides: Partial<OpportunityMatch> = {})
     user_id: "user-1",
     opportunity_id: opportunityId,
     eligible: true,
-    eligibility_notes: null,
+    eligibility_notes: [],
     relevance_score: 50,
     profile_need_score: 50,
     effort_estimate: null,

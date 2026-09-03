@@ -256,38 +256,36 @@ describe("insufficientVerificationReason", () => {
  * before a cycle closed persists indefinitely -- 74 opportunities across 259 (student,
  * opportunity) pairs live on 2026-08-23.
  */
+// 2026-09-03 (eligibility_notes -> codes): `stored.notes` is EligibilityNote[] now, not
+// arbitrary prose -- `resolveStoredEligibility`'s actionable branch renders it via
+// renderEligibilityNotes/eligibilityMessages, so these assertions check real, predictable
+// rendered output for a real code, not a hand-typed string the function used to pass through
+// untouched. `referenceDate` stays positional arg 3, unchanged -- `locale` was added after it,
+// not before, specifically so every call here keeps working with no argument-order edit.
 describe("resolveStoredEligibility", () => {
   test("passes an actionable opportunity's stored eligible verdict through untouched", () => {
-    const resolved = resolveStoredEligibility(
-      row({ cycle_status: "open", deadline: "2026-09-15" }),
-      { eligible: true, notes: null },
-      REFERENCE_DATE
-    );
+    const resolved = resolveStoredEligibility(row({ cycle_status: "open", deadline: "2026-09-15" }), { eligible: true, notes: [] }, REFERENCE_DATE);
     expect(resolved).toEqual({ eligible: true, notes: null, notActionable: false });
   });
 
-  test("passes an actionable opportunity's stored INELIGIBLE verdict through untouched -- the gate only ever removes a claim", () => {
+  test("renders an actionable opportunity's stored INELIGIBLE verdict -- the gate only ever removes a claim, it doesn't rewrite a real one", () => {
     const resolved = resolveStoredEligibility(
       row({ cycle_status: "open", deadline: "2026-09-15" }),
-      { eligible: false, notes: "Not currently open to students in Turkey." },
+      { eligible: false, notes: [{ code: "country_not_eligible", params: { studentCountry: "Turkey" } }] },
       REFERENCE_DATE
     );
-    expect(resolved).toEqual({ eligible: false, notes: "Not currently open to students in Turkey.", notActionable: false });
+    expect(resolved).toEqual({ eligible: false, notes: "Not currently open to students from Turkey.", notActionable: false });
   });
 
-  test("preserves an actionable opportunity's unknown-eligibility note", () => {
-    const resolved = resolveStoredEligibility(
-      row({ cycle_status: "upcoming", deadline: null }),
-      { eligible: true, notes: "Restricted by country -- add your country to check." },
-      REFERENCE_DATE
-    );
+  test("renders an actionable opportunity's unknown-eligibility note from its stored code", () => {
+    const resolved = resolveStoredEligibility(row({ cycle_status: "upcoming", deadline: null }), { eligible: true, notes: [{ code: "country_unknown" }] }, REFERENCE_DATE);
     expect(resolved.eligible).toBe(true);
-    expect(resolved.notes).toBe("Restricted by country -- add your country to check.");
+    expect(resolved.notes).toBe("Restricted by country — add your country to check.");
   });
 
   for (const cycleStatus of ["closed", "historical", "discontinued"] as const) {
     test(`overrides a stale eligible: true once the cycle is '${cycleStatus}'`, () => {
-      const resolved = resolveStoredEligibility(row({ cycle_status: cycleStatus }), { eligible: true, notes: null }, REFERENCE_DATE);
+      const resolved = resolveStoredEligibility(row({ cycle_status: cycleStatus }), { eligible: true, notes: [] }, REFERENCE_DATE);
       expect(resolved.eligible).toBe(false);
       expect(resolved.notes).toBe(`This opportunity's current cycle is ${cycleStatus}.`);
       expect(resolved.notActionable).toBe(true);
@@ -295,30 +293,22 @@ describe("resolveStoredEligibility", () => {
   }
 
   test("overrides a stale eligible: true once the deadline has passed, even with an actionable cycle_status", () => {
-    const resolved = resolveStoredEligibility(
-      row({ cycle_status: "date_not_announced", deadline: "2026-03-07" }),
-      { eligible: true, notes: null },
-      REFERENCE_DATE
-    );
+    const resolved = resolveStoredEligibility(row({ cycle_status: "date_not_announced", deadline: "2026-03-07" }), { eligible: true, notes: [] }, REFERENCE_DATE);
     expect(resolved.eligible).toBe(false);
     expect(resolved.notes).toBe("This opportunity's application deadline has passed.");
     expect(resolved.notActionable).toBe(true);
   });
 
   test("replaces a stale per-student note with the lifecycle reason rather than showing both", () => {
-    const resolved = resolveStoredEligibility(
-      row({ cycle_status: "closed" }),
-      { eligible: true, notes: "Restricted by country -- add your country to check." },
-      REFERENCE_DATE
-    );
+    const resolved = resolveStoredEligibility(row({ cycle_status: "closed" }), { eligible: true, notes: [{ code: "country_unknown" }] }, REFERENCE_DATE);
     expect(resolved.notes).toBe("This opportunity's current cycle is closed.");
   });
 
   test("marks notActionable only for the lifecycle case, so a genuine per-student mismatch still reads as 'not eligible'", () => {
-    const lifecycle = resolveStoredEligibility(row({ cycle_status: "closed" }), { eligible: true, notes: null }, REFERENCE_DATE);
+    const lifecycle = resolveStoredEligibility(row({ cycle_status: "closed" }), { eligible: true, notes: [] }, REFERENCE_DATE);
     const perStudent = resolveStoredEligibility(
       row({ cycle_status: "open", deadline: "2026-09-15" }),
-      { eligible: false, notes: "Restricted to grades 11, 12." },
+      { eligible: false, notes: [{ code: "grade_not_eligible", params: { eligibleGrades: "11, 12", currentGrade: 10 } }] },
       REFERENCE_DATE
     );
     expect(lifecycle.notActionable).toBe(true);
@@ -327,9 +317,9 @@ describe("resolveStoredEligibility", () => {
 
   test("agrees with isOpportunityActionable on the deadline boundary -- still eligible through the end of the deadline day", () => {
     const sameDay = new Date("2026-08-22T23:00:00");
-    expect(resolveStoredEligibility(row({ cycle_status: "open", deadline: "2026-08-22" }), { eligible: true, notes: null }, sameDay).eligible).toBe(true);
+    expect(resolveStoredEligibility(row({ cycle_status: "open", deadline: "2026-08-22" }), { eligible: true, notes: [] }, sameDay).eligible).toBe(true);
     const dayAfter = new Date("2026-08-23T00:00:01");
-    expect(resolveStoredEligibility(row({ cycle_status: "open", deadline: "2026-08-22" }), { eligible: true, notes: null }, dayAfter).eligible).toBe(false);
+    expect(resolveStoredEligibility(row({ cycle_status: "open", deadline: "2026-08-22" }), { eligible: true, notes: [] }, dayAfter).eligible).toBe(false);
   });
 });
 

@@ -81,6 +81,15 @@ const MAX_NEW_MATCH_NOTIFICATIONS_PER_REFRESH = 3;
  * building an unauthenticated one. Every existing caller (the opportunities pages, the
  * dashboard, `getCounselorState`'s two real-session callers) omits it and keeps
  * today's exact behavior.
+ *
+ * `locale` is now unused inside this function (2026-09-03, the eligibility_notes -> codes
+ * fix): its only consumer, computeOpportunityMatch below, stopped accepting a locale the
+ * same day, since a request's locale freezing into a stored row was the bug. Kept as a
+ * parameter rather than removed — this function has four external callers (three page
+ * renders, lib/counselor/state.ts) that would all need a one-line edit for a change with no
+ * behavioral upside, during a night with several other lanes active in page-render code this
+ * fix's own territory doesn't cover. See lib/opportunities/matching.ts's renderEligibilityNotes
+ * for where locale actually matters now: read time, not compute time.
  */
 export async function refreshOpportunityMatches(userId: string, locale: Locale = DEFAULT_LOCALE, client?: SupabaseClient<Database>): Promise<{ refreshed: boolean }> {
   const admin = tryCreateAdminClient();
@@ -246,7 +255,7 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
       cost: opportunity.cost,
       locationMode: opportunity.location_mode,
     };
-    const match = computeOpportunityMatch(studentProfile, forMatching, savedStatusByOpportunityId.get(opportunity.id) ?? null, locale);
+    const match = computeOpportunityMatch(studentProfile, forMatching, savedStatusByOpportunityId.get(opportunity.id) ?? null);
     const matchConfidence = resolveMatchConfidence(match.matchedGapDimensions, evidenceStateByDimension);
 
     return {
