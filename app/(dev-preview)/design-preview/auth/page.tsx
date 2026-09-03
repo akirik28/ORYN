@@ -47,7 +47,7 @@ export default function AuthPreviewPage() {
           </div>
           <LoginForm />
           <p className="text-center text-[13px]" style={{ color: "#AAAABC" }}>
-            New to ORYN? <span className="font-semibold" style={{ color: "#3D35E8" }}>Create an account</span>
+            New to Proxola? <span className="font-semibold" style={{ color: "#3D35E8" }}>Create an account</span>
           </p>
         </div>
       </Card>
