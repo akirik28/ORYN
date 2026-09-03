@@ -22,8 +22,12 @@ canlıda doğrulandı).
 
 ## 2. Migration'ları uygula
 
-`01-migrations-2026-09-03.sql` — tamamını yapıştır, çalıştır. Dokuz migration, tek işlem
+`01-migrations-2026-09-03.sql` — tamamını yapıştır, çalıştır. **On migration**, tek işlem
 içinde. Bir tanesi patlarsa hiçbiri uygulanmaz ve tekrar çalıştırmak güvenli.
+
+Numarada 0101 atlıyor, eksik değil: o oryn-60'ın dalında duruyor ve o oturum push
+edemiyor — kendi izin kapısı git push'u reddediyor. Sana yazdı. **Uyandığında bakman
+gereken tek engel bu**; işi bitmiş, gate'i yeşil, sadece gönderemiyor.
 
 **Bu adım olmadan panelin yazma tarafı çalışmaz.** Ultra yapma, hediye etme, iş durdurma,
 bütçe ayarlama — hepsi bu dokuz migration'a bağlı. Panel bunları dürüstçe "kurulu değil"
@@ -54,10 +58,21 @@ yazılı). Biri de kapanmış bir marka: Duke TIP artık Duke Pre-College, canl�
 Ayrıntı: `docs/yedi-kapsanmayan-kayit-2026-09-03.md`. **SQL hazırlamadım** — kurum adı
 doldurmak dördü için de yanlış düzeltme olurdu. Duke'un kimliğini değiştirmek senin kararın.
 
-## 4. /admin adresine gir
+## 4. İki paneli karşılaştır
 
-Ondört bölüm bugüne kadar hiç gerçek admin hesabıyla açılmadı. İlk açan sen olacaksın.
-Gördüklerini söyle.
+**`/admin`** — bugünkü hali. Ondört bölüm, tek sayfa. Bugüne kadar hiç gerçek admin
+hesabıyla açılmadı; ilk açan sen olacaksın.
+
+**`/kumanda`** — onayladığın tasarımın gerçek hali. Ayrı uygulama kabuğu, açık yeşil zemin,
+kendi sol rayı, 12 bölüm. Şu an sadece iskelet: ray çalışıyor, tema çalışıyor, genel bakış
+ekranı duruyor. İçerik bölümleri sıradaki adım — mevcut 14 bölüm buraya taşınacak, yeniden
+yazılmayacak.
+
+`/admin` yerinde duruyor ve çalışmaya devam ediyor. İkisini yan yana görüp karar ver:
+`/kumanda` doğru yolsa `/admin`'i oraya yönlendiririz.
+
+Not: ikisi de admin olmayana **404** veriyor, yönlendirme değil — panelin var olduğunu
+bile belli etmiyor. Canlıda doğrulandı.
 
 ---
 
