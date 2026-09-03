@@ -3,6 +3,30 @@
 Uyandığında sırayla bunlar. **Dokuz bölüm, tahminen 25 dakika.** Yedisi kopyala-yapıştır
 (Supabase SQL Editor'e), biri terminalde altı komut, sonuncusu sadece bakmak.
 
+---
+
+### Nerede kaldın — 3 Eylül 10:30 itibarıyla canlı veritabanından okundu
+
+| Adım | Durum |
+|---|---|
+| 1. Admin | ✅ zaten öyleydi |
+| 2. Migration'lar | ✅ **uygulandı** — on tablonun onu da yerinde, 0104→0106 yeniden adlandırma dahil |
+| 3. Veri doldurma | ✅ **uygulandı** — kurum adı boş 197'den **6**'ya, incelemedeki 112'den **27**'ye |
+| 4. Kayıt düzeltmeleri | ✅ uygulandı |
+| 5. Üniversite gereksinimleri | ✅ **uygulandı** — 1.325'ten **1.535**'e, tam beklenen sayı |
+| 6. Yeni fırsatlar | ⬜ **HENÜZ ÇALIŞMADI** — bugün katalog'a sıfır yeni kayıt girmiş |
+| 7. Bildirim arka doldurma | ⬜ sadece deploy edeceksen |
+| 7b. Tekrar eden öneriler | ✅ **uygulandı** — 100'den **2**'ye, 98 kopya silindi |
+| 8. Panele bak | ✅ açtın, yedi ekran gezildi |
+
+**Tek eksik 6. adım**, ve muhtemelen sebebi şu: o adım SQL değil, terminalde altı komut. 17
+fırsat orada bekliyor.
+
+Şu an uygulanmayı bekleyen diğer şeyler — hiçbiri pakete adım olarak konmadı, hepsi senin
+bir kararına bağlı: **beş ülkenin 275 uygulamalı bilimler kurumu** (aşağıdaki şema kararı),
+**22 kayda sınıf bilgisi** (`opportunity-eligible-grades-from-prose-2026-09-03.sql`), ve
+**Breakthrough'nun kategori düzeltmesi** (`opportunity-category-relabel-2026-09-03.sql`).
+
 **Sonunda ne değişmiş olacak:**
 
 | | |
