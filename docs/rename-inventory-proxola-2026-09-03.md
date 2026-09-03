@@ -1,5 +1,19 @@
 # ORYN → Proxola rename inventory (2026-09-03)
 
+> **STATUS UPDATE, same evening, after this document was written: the founder gave the go.**
+> He bought `proxola.com`, delivered logo assets to `ORYN Logo/`, and instructed the rename
+> directly — *"her ismi oryn olan proxolayla değiştirmeni istiyorum ... orynı temizle her
+> yerden."* Execution is running in five scoped lanes against the buckets below, with a
+> separate verifier. **The paragraph beneath this one was true when written and stopped being
+> true within the hour** — left in place rather than rewritten, because it is why the buckets
+> are framed as a recommendation, and because quietly editing it would be the exact
+> stale-prose-beside-fresh-state defect this fleet spent the night chasing. It already cost one
+> lane a correct, well-reasoned stop.
+>
+> **What did NOT change with the go-ahead: everything in Bucket 3 and Bucket 4.** The
+> forbidden list is not a scoping suggestion, it is a list of things that break live behaviour,
+> and it holds regardless of authorization.
+
 Research only. **Nothing in this repository or the database was edited.** The founder is
 buying `proxola.com` tonight but has not said go on the rename itself — this is the count,
 the risk map, and a recommendation on what to do with it, not an execution.
