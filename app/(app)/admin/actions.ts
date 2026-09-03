@@ -86,7 +86,17 @@ export async function triggerOpportunityDiscovery(): Promise<JobRunResult> {
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Job failed." };
   }
-  revalidatePath("/admin");
+  // /admin now permanently redirects to /kumanda (next.config.ts) -- revalidatePath operates
+  // on route file structure, not the browser-visible URL (this function's own docs are
+  // explicit: with a redirect/rewrite in front of a route, pass the destination path, not the
+  // source), so revalidating "/admin" was invalidating a route nobody ever actually renders
+  // anymore, while every real /kumanda/* page kept serving stale data after every admin
+  // action in this file -- all 25 call sites had the same bug, not just this one. `"layout"`
+  // invalidates app/(admin)/layout.tsx and everything nested under it in one call, matching
+  // the same "revalidate the whole admin experience" breadth the old single-path call had
+  // back when /admin was one page, rather than narrowing to one /kumanda sub-route each
+  // action might not fully cover.
+  revalidatePath("/kumanda", "layout");
   return await readLatestRunStats("discover_opportunities");
 }
 
@@ -107,7 +117,7 @@ export async function triggerUniversitySync(): Promise<JobRunResult> {
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Job failed." };
   }
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return await readLatestRunStats("sync_us_universities");
 }
 
@@ -124,7 +134,7 @@ export async function triggerDeadlineScan(): Promise<JobRunResult> {
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Job failed." };
   }
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return await readLatestRunStats("deadline_reminders");
 }
 
@@ -145,7 +155,7 @@ export async function triggerRequirementDiscovery(): Promise<JobRunResult> {
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Job failed." };
   }
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return await readLatestRunStats("discover_requirements");
 }
 
@@ -174,7 +184,7 @@ export async function toggleJobDisabled(jobName: string, disabled: boolean): Pro
     detail: { jobName },
   });
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -248,7 +258,7 @@ export async function recheckProvider(provider: string): Promise<ProviderRecheck
     return { error: error instanceof Error ? error.message : "Check failed." };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -284,7 +294,7 @@ export async function updateReportReview(
     return { error: "Couldn't save that. Please try again." };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -331,7 +341,7 @@ export async function removeReportedPost(postId: string, reason: string): Promis
     return { error: "Couldn't remove that post. Please try again." };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -348,7 +358,7 @@ export async function restoreReportedPost(postId: string): Promise<{ error?: str
     return { error: "Couldn't restore that post. Please try again." };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -389,7 +399,7 @@ export async function updateFinanceSettings(input: { usdTryRate?: number; ultraP
     return { error: "Couldn't save that. Please try again." };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -435,7 +445,7 @@ export async function updateProductSettings(input: { signupsEnabled?: boolean; m
     return { error: t("saveError") };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -477,7 +487,7 @@ export async function regenerateStudentWeeklyPlan(userId: string): Promise<{ err
     return { error: "Something went wrong generating that plan. Please try again." };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -500,7 +510,7 @@ export async function resetStudentOnboarding(userId: string): Promise<{ error?: 
     return { error: "Couldn't reset that. Please try again." };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -531,7 +541,7 @@ export async function markFeatureDead(featureKey: string, note?: string): Promis
     return { error: "Couldn't save that. Please try again." };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -559,7 +569,7 @@ export async function setJobBudgetOverride(feature: JobBudgetFeature, budgetUsd:
     return { error: "Couldn't save that. Please try again." };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -597,7 +607,7 @@ export async function updateWeeklyPlanBudgetCeiling(ceilingUsd: number): Promise
     detail: { ceilingUsd },
   });
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -673,7 +683,7 @@ export async function setUserPlanTier(userId: string, tier: PlanTier): Promise<S
     detail: { from: fromTier, to: tier },
   });
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return { changed: true, fromTier };
 }
 
@@ -752,7 +762,7 @@ export async function grantUltraGift(userId: string): Promise<GrantUltraGiftResu
     detail: { expiresAt, durationDays: trialPeriodDays },
   });
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return { granted: true };
 }
 
@@ -818,7 +828,7 @@ export async function setOpportunityDisabled(opportunityId: string, disabled: bo
     detail: { from: before.status, to: targetStatus, reason: trimmedReason ?? null, opportunityId },
   });
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return { changed: true };
 }
 
@@ -852,7 +862,7 @@ export async function unmarkFeatureDead(featureKey: string): Promise<{ error?: s
     return { error: "Couldn't save that. Please try again." };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -873,7 +883,7 @@ export async function clearJobBudgetOverride(feature: JobBudgetFeature): Promise
     return { error: "Couldn't clear that. Please try again." };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -904,7 +914,7 @@ export async function grantQuota(userId: string, amountUsd: number, reason?: str
     return { error: "Couldn't save that grant. Please try again." };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -952,7 +962,7 @@ export async function resetQuotaThisMonth(userId: string): Promise<{ error?: str
     return { error: "Couldn't reset that student's month. Please try again." };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -987,7 +997,7 @@ export async function setModelPricing(model: string, inputRatePerMillion: number
     return { error: "Couldn't save that. Please try again." };
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return {};
 }
 
@@ -1077,6 +1087,6 @@ export async function applyContaminationCleanup(): Promise<ContaminationCleanupO
     outcomes.push({ id: entry.id, title: entry.title, applied: true });
   }
 
-  revalidatePath("/admin");
+  revalidatePath("/kumanda", "layout");
   return outcomes;
 }

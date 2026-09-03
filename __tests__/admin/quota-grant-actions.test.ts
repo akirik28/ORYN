@@ -86,7 +86,7 @@ describe("grantQuota", () => {
 
     expect(result).toEqual({});
     expect(insertMock).toHaveBeenCalledWith({ user_id: STUDENT_ID, amount_usd: 0.5, reason: "goodwill top-up", granted_by: ADMIN_ID });
-    expect(revalidatePath).toHaveBeenCalledWith("/admin");
+    expect(revalidatePath).toHaveBeenCalledWith("/kumanda", "layout");
   });
 
   test("an empty/whitespace-only reason is stored as null, not an empty string", async () => {

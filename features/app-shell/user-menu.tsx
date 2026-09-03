@@ -46,10 +46,16 @@ export function UserMenu({
    *  Same dropdown, same real data either way — only the trigger's size/layout changes. */
   variant?: "compact" | "sidebar";
   /** D6, docs/admin-panel-architecture-2026-09-02.md: the only place an admin surface is
-   *  discoverable in the product at all — /admin has never been linked from anywhere, so an
-   *  admin with the flag set had no way to find it short of typing the URL. Never in the
-   *  main sidebar nav itself (spec Phase 42 caps that list deliberately); this dropdown,
-   *  gated on the flag, is additive to that cap rather than a hole in it. */
+   *  discoverable in the product at all. Never in the main sidebar nav itself (spec Phase 42
+   *  caps that list deliberately); this dropdown, gated on the flag, is additive to that cap
+   *  rather than a hole in it.
+   *
+   *  Points at /kumanda directly, not /admin -- /admin is a real, working 307 redirect to
+   *  here (next.config.ts, "admin ve kumanda aynı şey değil mi, öyle olmalı"), so the old
+   *  href would still have worked, just with an extra round trip through a route this menu
+   *  itself doesn't need to send anyone through. This was the one and only place that old
+   *  href was ever written, so fixing it here closes the loop rather than leaving a stale
+   *  link pointed at a route the redirect exists specifically to carry people away from. */
   isAdmin?: boolean;
 }) {
   const tNav = useTranslations("nav");
@@ -120,7 +126,7 @@ export function UserMenu({
         {isAdmin ? (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem render={<Link href="/admin" />}>
+            <DropdownMenuItem render={<Link href="/kumanda" />}>
               <ShieldCheck className="size-4" /> {tMenu("adminPanel")}
             </DropdownMenuItem>
           </>
