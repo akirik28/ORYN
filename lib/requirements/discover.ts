@@ -48,10 +48,20 @@ export async function discoverRequirementsForUniversity(params: { universityId: 
   }
 
   const admin = createAdminClient();
-  const { data: existingRows } = await admin
+  // Throws rather than degrading to `?? []` -- same reasoning as
+  // lib/opportunities/discover.ts's identical fix, not lib/supabase/safe-read.ts's readOr:
+  // an empty comparison set here isn't a safe fallback, it's every candidate below reading
+  // as new regardless of whether it already exists, which inserts duplicates silently. No
+  // caller between here and discoverRequirementsForUncoveredUniversities' own per-university
+  // loop catches this -- a throw stops the rest of this batch too, the same conservative
+  // shape as the sibling fix, not just this one university.
+  const { data: existingRows, error: existingRowsError } = await admin
     .from("university_requirements")
     .select("title, requirement_type, program_id")
     .eq("university_id", params.universityId);
+  if (existingRowsError) {
+    throw new Error(`discoverRequirementsForUniversity: failed to load existing requirements for dedup (${params.universityId}): ${existingRowsError.message}`);
+  }
   const existing = (existingRows ?? [])
     .filter((r): r is { title: string; requirement_type: RequirementCategory; program_id: string | null } => r.title !== null)
     .map((r) => ({ category: r.requirement_type, title: r.title, programId: r.program_id }));
