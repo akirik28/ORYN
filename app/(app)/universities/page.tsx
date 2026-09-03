@@ -199,7 +199,7 @@ export default async function UniversitiesPage({
 
   // Same batched per-card metadata the infinite-scroll action uses, so an appended page's
   // cards carry exactly the fields the first page's do.
-  const cardMeta = await getUniversityCardMeta(supabase, universities, categorizeAndDedupeResearchTopics, depthIds);
+  const cardMeta = await getUniversityCardMeta(supabase, universities, categorizeAndDedupeResearchTopics, depthIds, locale);
 
   const scopeLabel = country ?? (region ? regionLabel(region, locale) : null);
 

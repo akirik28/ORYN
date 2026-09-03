@@ -10,6 +10,7 @@ import { heroGradientStyle } from "@/components/oryn/hero-gradient";
 import { createClient } from "@/lib/supabase/server";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
+import { deriveTuitionContext } from "@/lib/universities/counseling-adapter";
 import { PageHeader } from "@/components/oryn/page-header";
 import { EmptyState } from "@/components/oryn/empty-state";
 import { SourceBadge } from "@/components/oryn/source-badge";
@@ -25,9 +26,14 @@ const NA = <span className="text-muted-foreground">—</span>;
 
 /**
  * Minimal, real comparison view (P0H) — a plain table, not a new design system. Every cell
- * that has no verified data reads "—", never a guessed or averaged figure (cost_of_attendance
- * coverage is US-only today; a university outside that set legitimately has nothing to show
- * here yet, and the table says so plainly rather than leaving the cell looking broken).
+ * that has no verified data reads "—", never a guessed or averaged figure.
+ *
+ * Cost of attendance and tuition are separate rows, never merged (2026-09-03) — they are
+ * different concepts (US all-in sticker price vs. tuition-only) and the founder's own rule
+ * is not to collapse them. Cost of attendance stays US-only (127/131 US universities);
+ * tuition now reads `university_profile_metrics` (173 non-US universities, domestic and
+ * international) rather than showing "—" for every one of them, the same fix applied to the
+ * browse card the same night — see that card's own comment for the stale-premise history.
  *
  * Tier-gated (2026-09-02, founder directive relayed through oryn-a7): Standard is capped at
  * `widthCeiling` items (2) and a shared 5-comparisons/month allowance with opportunities;
@@ -69,7 +75,11 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
     supabase.from("universities").select("*").in("id", requestedIds),
     supabase.from("university_statistics").select("*").in("university_id", requestedIds),
     supabase.from("university_rankings").select("university_id, rank_display").eq("ranking_provider", "QS").in("university_id", requestedIds),
-    supabase.from("university_profile_metrics").select("university_id, metric_code, value_text").in("university_id", requestedIds).eq("metric_code", "research_topics_top5"),
+    supabase
+      .from("university_profile_metrics")
+      .select("university_id, metric_code, value_text, value_numeric, unit, precision_state")
+      .in("university_id", requestedIds)
+      .in("metric_code", ["research_topics_top5", "tuition_domestic_annual", "tuition_international_annual"]),
   ]);
 
   // Preserve the order the student picked them in (requestedIds), not whatever order the DB
@@ -126,7 +136,18 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
 
   const statsByUniId = new Map((stats ?? []).map((s) => [s.university_id, s]));
   const rankByUniId = new Map((rankings ?? []).map((r) => [r.university_id, r.rank_display]));
-  const topicsByUniId = new Map((metrics ?? []).map((m) => [m.university_id, m.value_text?.split(" | ").filter(Boolean).slice(0, 3) ?? []]));
+  const topicRows = (metrics ?? []).filter((m) => m.metric_code === "research_topics_top5");
+  const topicsByUniId = new Map(topicRows.map((m) => [m.university_id, m.value_text?.split(" | ").filter(Boolean).slice(0, 3) ?? []]));
+  const internationalTuitionByUniId = new Map(
+    (metrics ?? [])
+      .filter((m) => m.metric_code === "tuition_international_annual" && m.value_numeric != null)
+      .map((m) => [m.university_id, { amount: m.value_numeric!, unit: m.unit, precisionState: m.precision_state }])
+  );
+  const domesticTuitionByUniId = new Map(
+    (metrics ?? [])
+      .filter((m) => m.metric_code === "tuition_domestic_annual" && m.value_numeric != null)
+      .map((m) => [m.university_id, { amount: m.value_numeric!, unit: m.unit, precisionState: m.precision_state }])
+  );
 
   const rows: { label: string; render: (u: University) => React.ReactNode }[] = [
     { label: t("location"), render: (u) => [u.city, u.country].filter(Boolean).join(", ") || NA },
@@ -140,6 +161,19 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
         if (s?.cost_of_attendance == null) return NA;
         const currency = s.cost_currency === "USD" || !s.cost_currency ? "$" : `${s.cost_currency} `;
         return t("costPerYear", { value: `${currency}${s.cost_of_attendance.toLocaleString("en-US")}` });
+      },
+    },
+    {
+      // Deliberately never fed costOfAttendance — this row exists specifically for the
+      // tuition-only concept, so a US university's cost of attendance (already its own row
+      // above) can't also surface here under a different label.
+      label: t("tuition"),
+      render: (u) => {
+        const intl = internationalTuitionByUniId.get(u.id) ?? null;
+        const dom = domesticTuitionByUniId.get(u.id) ?? null;
+        if (!intl && !dom) return NA;
+        const ctx = deriveTuitionContext({ costOfAttendance: null, internationalTuition: intl, domesticTuition: dom }, locale);
+        return ctx.displayValue ?? NA;
       },
     },
     {

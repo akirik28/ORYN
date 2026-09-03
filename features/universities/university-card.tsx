@@ -12,6 +12,7 @@ import { resolveComparisonWidthCeiling } from "@/lib/comparison/limits";
 import { formatNumber } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 import { MediaImage } from "@/components/oryn/media-image";
+import type { TuitionContext } from "@/lib/universities/counseling-adapter";
 import type { PlanTier, University } from "@/types/database";
 
 // Larger, calmer card (founder direction: "fewer larger cards ... not a dense database
@@ -25,7 +26,7 @@ export function UniversityCard({
   university,
   isSaved,
   qsRank,
-  cost,
+  tuition,
   researchTopics,
   imageUrl,
   hasResearchDepth,
@@ -37,11 +38,24 @@ export function UniversityCard({
   isSaved: boolean;
   /** QS 2027 rank_display for this university, when it has one (e.g. "1", "=2", "601-610"). */
   qsRank?: string | null;
-  /** From university_statistics.cost_of_attendance — labeled plainly as "cost of
-   * attendance" (not "tuition") since that's what this column actually is: the source's
-   * own published all-in estimate, not a tuition-only figure. Currently US-only coverage
-   * (128/1019) — omitted entirely, not shown as "Unavailable", everywhere else. */
-  cost?: { amount: number; currency: string | null };
+  /**
+   * Resolved by `deriveTuitionContext` (lib/universities/counseling-adapter.ts) — US
+   * `cost_of_attendance` (an all-in sticker-price estimate) when it exists, else
+   * `university_profile_metrics`' international or domestic tuition-only figure, else
+   * `kind: "unavailable"`. Labeled plainly by which one it actually is — "cost of
+   * attendance" is never used as a stand-in label for a tuition-only figure, since they are
+   * different concepts (the founder's own "never collapse different cost concepts" rule).
+   *
+   * FIXED 2026-09-03 — this used to say "Currently US-only coverage (128/1019) — omitted
+   * entirely, not shown as Unavailable, everywhere else." That was accurate when written;
+   * it stopped being true the moment 173 non-US universities' tuition rows landed in
+   * `university_profile_metrics`, and the comment kept asserting the old premise anyway —
+   * the same shape as a stale cycle label. `kind: "unavailable"` still renders nothing on
+   * this compact card (a deliberate, narrower call than the detail page's explicit
+   * "Unavailable" text, which has room for it) — that omission is the one part of the old
+   * behavior this pass keeps, not a leftover of the coverage gap.
+   */
+  tuition?: TuitionContext;
   /** Up to 3 short research category labels (e.g. "Physics", "Computer Science"), derived
    * from OpenAlex's research_topics_top5 via lib/universities/research-taxonomy.ts and
    * de-duplicated by the caller — a card is not the place for raw, long OpenAlex topic
@@ -144,12 +158,17 @@ export function UniversityCard({
           <span className="w-fit rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground">{university.institution_type}</span>
         ) : null}
 
-        {cost ? (
+        {tuition && tuition.kind !== "unavailable" ? (
           <p className="flex items-center gap-1 text-sm font-medium">
             <DollarSign className="size-3.5 shrink-0 text-muted-foreground" />
-            {cost.currency === "USD" || !cost.currency ? "$" : `${cost.currency} `}
-            {cost.amount.toLocaleString("en-US")}
-            <span className="font-normal text-muted-foreground">{t("costOfAttendanceSuffix")}</span>
+            {tuition.displayValue}
+            <span className="font-normal text-muted-foreground">
+              {tuition.kind === "cost_of_attendance"
+                ? t("costOfAttendanceSuffix")
+                : tuition.kind === "international"
+                  ? t("internationalTuitionSuffix")
+                  : t("domesticTuitionSuffix")}
+            </span>
           </p>
         ) : null}
 

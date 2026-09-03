@@ -8,6 +8,8 @@ import {
   type InstitutionTypeFilter,
   type RankTierValue,
 } from "@/lib/universities/filters";
+import { deriveTuitionContext, type TuitionContext, type CounselingTuitionFigure } from "@/lib/universities/counseling-adapter";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { Database, University } from "@/types/database";
 
 export const UNIVERSITY_PAGE_SIZE = 48;
@@ -149,10 +151,19 @@ export async function loadUniversityBrowsePage(
   return { universities: data ?? [], total: count ?? 0 };
 }
 
-/** Per-card metadata for a page of universities — QS rank, cost, research topics, image. */
+/** Per-card metadata for a page of universities — QS rank, tuition, research topics, image. */
 export interface UniversityCardMeta {
   qsRank?: string;
-  cost?: { amount: number; currency: string | null };
+  /**
+   * Resolved through the same `deriveTuitionContext` priority order the detail page and the
+   * counseling view use (cost_of_attendance -> international -> domestic -> unavailable),
+   * not a raw figure — this used to be a bare `cost_of_attendance`-shaped field (2026-09-03:
+   * replaced, not added alongside, per the founder's "never collapse different cost
+   * concepts" rule already enforced at render time by `deriveTuitionContext`'s own `kind`).
+   * `kind: "unavailable"` is a real, present value here, not an absent key — the card
+   * decides for itself whether to render that state.
+   */
+  tuition?: TuitionContext;
   researchTopics?: string[];
   imageUrl?: string;
   /** True only for the minority with real program/requirement/source/statistics depth —
@@ -170,13 +181,23 @@ export interface UniversityCardMeta {
  * `depthIds` is the caller's already-fetched global set (getAllResearchDepthUniversityIds),
  * not re-fetched here — it's the same one-page-worth-of-universities-at-a-time function
  * that gets called on every infinite-scroll batch, and that global set doesn't change
- * page to page the way qsRank/cost do.
+ * page to page the way qsRank/tuition do.
+ *
+ * Tuition metrics (2026-09-03): reads `tuition_domestic_annual`/`tuition_international_annual`
+ * from `university_profile_metrics` alongside `cost_of_attendance`, the same two annual-only
+ * codes the detail page itself queries (per-credit variants — ~10 universities' only tuition
+ * figure — are out of scope here too, matching that existing precedent rather than
+ * introducing a new per-credit-labeled-as-annual bug `formatTuition`'s hardcoded "/yr" suffix
+ * would produce). `locale` is threaded through to `deriveTuitionContext` so the qualifier
+ * text ("From "/"Up to "/"~") renders correctly on the Turkish browse page too, not just the
+ * detail page.
  */
 export async function getUniversityCardMeta(
   supabase: SupabaseClient<Database>,
   universities: University[],
   categorizeTopics: (raw: string[]) => string[],
-  depthIds: Set<string>
+  depthIds: Set<string>,
+  locale: Locale = DEFAULT_LOCALE
 ): Promise<Record<string, UniversityCardMeta>> {
   if (universities.length === 0) return {};
   const ids = universities.map((u) => u.id);
@@ -185,28 +206,54 @@ export async function getUniversityCardMeta(
     supabase.from("university_statistics").select("university_id, cost_of_attendance, cost_currency").in("university_id", ids).not("cost_of_attendance", "is", null),
     supabase
       .from("university_profile_metrics")
-      .select("university_id, metric_code, value_text")
-      .in("metric_code", ["research_topics_top5", "primary_image_url"])
+      .select("university_id, metric_code, value_text, value_numeric, unit, precision_state")
+      .in("metric_code", ["research_topics_top5", "primary_image_url", "tuition_domestic_annual", "tuition_international_annual"])
       .in("university_id", ids),
   ]);
 
   const meta: Record<string, UniversityCardMeta> = {};
   const entry = (id: string) => (meta[id] ??= {});
+  const costOfAttendanceById = new Map<string, number>();
+  const internationalTuitionById = new Map<string, CounselingTuitionFigure>();
+  const domesticTuitionById = new Map<string, CounselingTuitionFigure>();
+
   for (const r of rankings ?? []) entry(r.university_id).qsRank = r.rank_display;
   for (const s of stats ?? []) {
-    if (s.cost_of_attendance != null) entry(s.university_id).cost = { amount: s.cost_of_attendance, currency: s.cost_currency };
+    if (s.cost_of_attendance != null) costOfAttendanceById.set(s.university_id, s.cost_of_attendance);
   }
   for (const m of metrics ?? []) {
-    if (!m.value_text) continue;
     if (m.metric_code === "research_topics_top5") {
+      if (!m.value_text) continue;
       const categories = categorizeTopics(m.value_text.split(" | ").filter(Boolean));
       if (categories.length > 0) entry(m.university_id).researchTopics = categories;
     } else if (m.metric_code === "primary_image_url") {
+      if (!m.value_text) continue;
       entry(m.university_id).imageUrl = m.value_text;
+    } else if (m.metric_code === "tuition_international_annual") {
+      if (m.value_numeric == null) continue;
+      internationalTuitionById.set(m.university_id, { amount: m.value_numeric, unit: m.unit, precisionState: m.precision_state });
+    } else if (m.metric_code === "tuition_domestic_annual") {
+      if (m.value_numeric == null) continue;
+      domesticTuitionById.set(m.university_id, { amount: m.value_numeric, unit: m.unit, precisionState: m.precision_state });
     }
   }
   for (const u of universities) {
     if (depthIds.has(u.id)) entry(u.id).hasResearchDepth = true;
+  }
+  // Every university with at least one of the three tuition signals gets a resolved
+  // TuitionContext — not only the ones with a positive result, so "unavailable" is a real,
+  // present value a caller can act on rather than an absent key indistinguishable from
+  // "never checked."
+  const tuitionRelevantIds = new Set([...costOfAttendanceById.keys(), ...internationalTuitionById.keys(), ...domesticTuitionById.keys()]);
+  for (const id of tuitionRelevantIds) {
+    entry(id).tuition = deriveTuitionContext(
+      {
+        costOfAttendance: costOfAttendanceById.get(id) ?? null,
+        internationalTuition: internationalTuitionById.get(id) ?? null,
+        domesticTuition: domesticTuitionById.get(id) ?? null,
+      },
+      locale
+    );
   }
   return meta;
 }

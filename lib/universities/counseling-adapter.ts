@@ -364,31 +364,44 @@ function toProgramSummary(program: CounselingProgramInput): CounselingProgramSum
  * JSX, using the same pure formatters (`formatTuition`/`tuitionQualifier`) the page itself
  * already uses. The page isn't migrated to call this — see this module's header comment —
  * so keep the two in sync if either branch's rule changes.
+ *
+ * Exported and `locale`-aware (2026-09-03) — the browse card and compare page reuse this
+ * exact priority order (cost_of_attendance -> international -> domestic -> unavailable) so a
+ * third and fourth copy of it never has to be written; both now source `internationalTuition`/
+ * `domesticTuition` from the same 173 real `university_profile_metrics` rows the detail page
+ * already reads, closing a real gap — the browse card's own prop comment used to say tuition
+ * coverage was "US-only," which was accurate when written and had gone stale underneath it,
+ * the same shape as a cycle label describing a cancelled cycle as current. `locale` defaults
+ * to English, same as `tuitionQualifier`/`formatTuition` themselves — this function's own
+ * pre-existing caller (`buildUniversityCounselingView`) already receives a real `locale` and
+ * simply wasn't passing it through; that was a latent i18n gap in the counseling view itself,
+ * fixed as a side effect of making this reusable, not a new behavior invented for the new
+ * callers.
  */
-function deriveTuitionContext(tuition: CounselingTuitionInput): TuitionContext {
+export function deriveTuitionContext(tuition: CounselingTuitionInput, locale: Locale = DEFAULT_LOCALE): TuitionContext {
   if (tuition.costOfAttendance != null) {
     return { kind: "cost_of_attendance", displayValue: formatCurrency(tuition.costOfAttendance), caption: null };
   }
 
   if (tuition.internationalTuition != null) {
     const intl = tuition.internationalTuition;
-    const q = tuitionQualifier(intl.precisionState);
+    const q = tuitionQualifier(intl.precisionState, locale);
     const domestic = tuition.domesticTuition;
     let caption: string | null = null;
     if (domestic != null) {
-      const domesticQ = tuitionQualifier(domestic.precisionState);
-      caption = `${q.note}Domestic rate: ${domesticQ.valuePrefix}${formatTuition(domestic.amount, domestic.unit)}`;
+      const domesticQ = tuitionQualifier(domestic.precisionState, locale);
+      caption = `${q.note}Domestic rate: ${domesticQ.valuePrefix}${formatTuition(domestic.amount, domestic.unit, locale)}`;
     } else if (q.note) {
       caption = `${q.note}— see university for your exact fee`;
     }
-    return { kind: "international", displayValue: `${q.valuePrefix}${formatTuition(intl.amount, intl.unit)}`, caption };
+    return { kind: "international", displayValue: `${q.valuePrefix}${formatTuition(intl.amount, intl.unit, locale)}`, caption };
   }
 
   if (tuition.domesticTuition != null) {
     const domestic = tuition.domesticTuition;
-    const q = tuitionQualifier(domestic.precisionState);
+    const q = tuitionQualifier(domestic.precisionState, locale);
     const caption = q.note ? `${q.note}International fee not separately published` : "International fee not published as a single figure — varies by course";
-    return { kind: "domestic", displayValue: `${q.valuePrefix}${formatTuition(domestic.amount, domestic.unit)}`, caption };
+    return { kind: "domestic", displayValue: `${q.valuePrefix}${formatTuition(domestic.amount, domestic.unit, locale)}`, caption };
   }
 
   return { kind: "unavailable", displayValue: null, caption: null };
@@ -526,7 +539,7 @@ export function buildUniversityCounselingView(input: UniversityCounselingViewInp
   const manualReviewItems = rollup.filter((item) => item.status === "needs_manual_review" && MANUAL_REVIEW_CATEGORIES.includes(item.category));
 
   const programFocus = deriveProgramFocus(input);
-  const tuition = deriveTuitionContext(input.tuition);
+  const tuition = deriveTuitionContext(input.tuition, locale);
   const targetField = deriveTargetField(input, programFocus);
   const outlook = deriveOutlook(input, targetField.stated, locale);
 
