@@ -14,6 +14,7 @@ import {
   SKILL_ENDORSEMENTS_EXPORT_OWN_COLUMN,
   PROFILE_VIEWS_EXPORT_COLUMNS,
 } from "@/lib/export/tables";
+import { readOr } from "@/lib/supabase/safe-read";
 
 /** Full data export (Phase 12 minor-safe requirement) — every table the student's own
  * data lives in, RLS-scoped via the normal request client (never the admin client).
@@ -78,19 +79,38 @@ export async function GET() {
       .eq("viewed_user_id", userId),
   ]);
 
+  // Tier 2 (docs/okuma-hatasi-vs-bos-sonuc-karari-2026-09-03.md): a read that renders a
+  // list must not let "couldn't load" look like "nothing here" -- for a downloaded file
+  // there's no page to show a banner on, so the file's own `meta` block is where that
+  // honesty has to live instead. readOr's fallback keeps every table's shape unchanged
+  // ([] on failure, same as before) and additionally names which tables it happened to,
+  // so a student (or a parent reading this file for a real access request) can tell
+  // "I genuinely have nothing here" from "this export is missing something."
+  const incompleteTables: string[] = [];
+  const trackedReadOr = <T,>(table: string, result: { data: T[] | null; error?: { message?: string } | null }): T[] => {
+    if (result.error) incompleteTables.push(table);
+    return readOr(`export-data.${table}`, result, [], { userId });
+  };
+
   const payload = {
     exportedAt: new Date().toISOString(),
     userId: session.userId,
     data: {
-      profiles: profileResult.data ?? [],
-      ...Object.fromEntries(EXPORT_TABLES.map((table, i) => [table, tableResults[i]?.data ?? []])),
-      messages: messagesRes.data ?? [],
-      connections: connectionsRes.data ?? [],
-      blocked_users: blockedRes.data ?? [],
-      message_reports: reportsRes.data ?? [],
-      recommendations: recommendationsRes.data ?? [],
-      skill_endorsements: skillEndorsementsRes.data ?? [],
-      profile_views: profileViewsRes.data ?? [],
+      profiles: trackedReadOr("profiles", profileResult),
+      ...Object.fromEntries(EXPORT_TABLES.map((table, i) => [table, trackedReadOr(table, tableResults[i])])),
+      messages: trackedReadOr("messages", messagesRes),
+      connections: trackedReadOr("connections", connectionsRes),
+      blocked_users: trackedReadOr("blocked_users", blockedRes),
+      message_reports: trackedReadOr("message_reports", reportsRes),
+      recommendations: trackedReadOr("recommendations", recommendationsRes),
+      skill_endorsements: trackedReadOr("skill_endorsements", skillEndorsementsRes),
+      profile_views: trackedReadOr("profile_views", profileViewsRes),
+    },
+    meta: {
+      // `true` only when every table was read successfully -- a genuinely empty table
+      // (a real [], no error) never counts against this, only a read that actually failed.
+      complete: incompleteTables.length === 0,
+      incompleteTables,
     },
   };
 
