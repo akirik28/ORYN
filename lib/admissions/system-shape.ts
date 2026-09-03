@@ -640,6 +640,24 @@ const REGISTRY: AdmissionSystemEntry[] = [
     },
     sources: [DOC("denmark.md")],
   },
+  {
+    countryNames: ["Hungary", "Magyarország"],
+    // Splits by funding/residence eligibility, not a wording-only difference — see
+    // docs/research/admissions-systems/hungary.md §A. domestic maps onto the state-financed
+    // Felvi.hu route (citizens and Hungary-registered residents only); international maps onto
+    // the self-funded, direct-to-institution route everyone else actually uses.
+    domestic: {
+      shape: "academic_rank_competitive",
+      mechanism:
+        "The Felvi.hu route scores up to 400 points from secondary grades and school-leaving exam results plus up to 100 institution-set points, out of 500. The minimum score per programme is not fixed — an algorithm recomputes it each cycle from the number of applicants, their scores, and free places — and candidates are admitted to their highest-ranked choice their score clears. No essay, interview, or reference letter.",
+    },
+    international: {
+      shape: "holistic_review",
+      mechanism:
+        "Applicants without Hungarian citizenship or registered residence compete only for self-funded places, evaluated directly by each institution rather than through Felvi.hu. Hungary's own Tempus Public Foundation education-promotion site lists a CV, a letter of motivation, and two academic reference letters as generally required, alongside GPA — some courses add an entrance exam on top. Exact requirements vary by institution, but the holistic pattern itself is consistently confirmed.",
+    },
+    sources: [DOC("hungary.md")],
+  },
 ];
 
 // ---------------------------------------------------------------------------

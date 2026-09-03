@@ -47,7 +47,7 @@ describe("resolveAdmissionSystem — the three shapes the research actually foun
   });
 
   test("every resolved entry carries at least one traceable source document", () => {
-    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland", "Denmark"]) {
+    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland", "Denmark", "Hungary"]) {
       const result = resolveAdmissionSystem({ targetCountry: country, studentCountry: "Turkey" });
       expect(result.sources.length, country).toBeGreaterThan(0);
       expect(result.mechanism, country).not.toBeNull();
@@ -419,6 +419,40 @@ describe("resolveAdmissionSystem — Denmark (2026-09-03, the first shape that g
   test("Denmark traces to its own research document, not an invented source", () => {
     const result = resolveAdmissionSystem({ targetCountry: "Denmark", studentCountry: "Denmark" });
     expect(result.sources).toContain("docs/research/admissions-systems/denmark.md");
+  });
+});
+
+describe("resolveAdmissionSystem — Hungary (2026-09-03, a real funding-status split, both shapes confident)", () => {
+  // Felvi.hu is the state-financed route (citizens + Hungary-registered residents); everyone
+  // else competes for self-funded places evaluated per-institution — hungary.md §A. Unlike
+  // Denmark, both sides here resolve to a confident shape, not an honest unknown.
+  test("Hungary's domestic (Felvi.hu) track is rank-competitive with a floating, algorithmic cutoff", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Hungary", studentCountry: "Hungary" });
+    expect(domestic.shape).toBe("academic_rank_competitive");
+    expect(reviewsNonAcademicEvidence(domestic.shape)).toBe(false);
+    expect(domestic.mechanism).toContain("Felvi.hu");
+  });
+
+  // Confirmed via Hungary's own Tempus Public Foundation education-promotion page (hungary.md
+  // §C) — an official source, not only secondary study-abroad guides, for the motivation-letter
+  // and reference-letter requirement.
+  test("Hungary's international track is holistic, confirmed from an official government source", () => {
+    const international = resolveAdmissionSystem({ targetCountry: "Hungary", studentCountry: "Turkey" });
+    expect(international.shape).toBe("holistic_review");
+    expect(reviewsNonAcademicEvidence(international.shape)).toBe(true);
+    expect(international.mechanism).toContain("letter of motivation");
+    expect(international.mechanism).toContain("reference letters");
+  });
+
+  test("Hungary's domestic and international pathways flip shape, not just wording", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Hungary", studentCountry: "Hungary" });
+    const international = resolveAdmissionSystem({ targetCountry: "Hungary", studentCountry: "Turkey" });
+    expect(domestic.shape).not.toBe(international.shape);
+  });
+
+  test("Hungary traces to its own research document, not an invented source", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Hungary", studentCountry: "Hungary" });
+    expect(result.sources).toContain("docs/research/admissions-systems/hungary.md");
   });
 });
 
