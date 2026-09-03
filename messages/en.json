@@ -2023,7 +2023,7 @@
           "sectionDescription": "The only two figures this product needs an admin to enter — the rate is never guessed, and a wrong one would silently falsify every dollar figure in Profit & Loss.",
           "rateLabel": "USD/TRY rate (TL per $1)",
           "rateNotConfigured": "Not configured",
-          "rateHint": "Leave blank to keep it unconfigured — break-even and margin figures show — until it's set.",
+          "rateHint": "Leave blank to keep it unconfigured — break-even and margin figures stay unavailable until it's set.",
           "priceLabel": "Ultra price (TL/month)",
           "invalidRate": "Enter a positive exchange rate.",
           "invalidPrice": "Enter a positive price.",
