@@ -77,18 +77,34 @@ Bir e-posta yazım hatası yabancı birine çocuğun profilini açmasın diye.
 
 ## Dürüst olmam gereken iki şey
 
-**1. Bu paket canlı veritabanında prova edilmedi.**
+**1. Bu paket canlı veritabanında prova edilmedi — ama yerelde gerçekten uygulandı,
+ve bu sayede paketi bozacak bir hata bulundu.**
+
 07 numaralı paketi uygulamadan önce `begin/rollback` ile prova etmiştim. Bu sefer
 edemedim — canlı veritabanına okuma erişimim bu oturumda engellendi ve **bunu
 dolanmadım, başkasından da istemedim.**
 
-Onun yerine **yerel bir Postgres'te tüm 618 satırı ayrıştırdım**: sıfır sözdizimi
-hatası. Bu, yapıştırma bozulmasını ve tırnak hatalarını yakalar — 3 Eylül'de yaşanan
-sorunun sınıfını. **Yakalamadığı şey:** gerçek şemaya karşı anlamsal doğruluk.
-4. bölümdeki doğrulama bloğu bunun için var, ve eksik bir şey bulursa her şeyi geri alır.
+İlk kontrolüm sadece **ayrıştırmaydı**: 618 satır, sıfır sözdizimi hatası. Bunun
+yakalamadığı bir şey vardı ve **44 numaralı oturum onu yakaladı** — migration zincirini
+gerçek bir Postgres'e uygulayarak, benim yaptığımdan daha güçlü bir kontrolle.
 
-Kontrolün gerçekten çalıştığını da ayrıca kanıtladım — bilerek bozuk SQL verip
-hatayı yakaladığını gördüm. Yoksa "temiz" sonucu bir şey ifade etmezdi.
+**Bulunan hata:** 0115, `eligibility_notes` sütununun tipini değiştirmeye çalışıyordu
+ama sütuna bağlı trigger'ı **sonra** siliyordu. Postgres buna izin vermez:
+
+```
+ERROR: cannot alter type of a column used in a trigger definition
+```
+
+**Bu olsaydı ne olurdu:** 0115 patlar, işlem geri alınır, **0116 hiç uygulanmaz.**
+Yani veli hesabı sabaha yetişmezdi.
+
+**Düzeltildi** — sadece sıra değişti, tek satır yer değiştirdi, hiçbir mantık
+değişmedi. Sonra iki yönlü doğruladım: aynı fixture'a **eski sıra hata veriyor ve
+sütun `text` kalıyor**, **yeni sıra temiz geçiyor ve sütun `jsonb NOT NULL` oluyor.**
+Kontrolün gerçekten kırmızıya dönebildiğini görmeden "temiz" demedim.
+
+**Hâlâ yakalanmayan:** gerçek şemaya karşı geri kalan anlamsal doğruluk. 4. bölümdeki
+doğrulama bloğu bunun için var — eksik bir nesne bulursa **her şeyi geri alır.**
 
 **2. RLS politikalarının testi yazıldı ama çalıştırılmadı.**
 `supabase/tests/parent_links_rls_manual.sql` — 339 satır, her engellemenin

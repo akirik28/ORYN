@@ -46,6 +46,13 @@ ledger... no record of 0038/0039 despite the columns genuinely existing"). Bunun
 
 ### ⚠️ Gerçek boşluk: `academic_tier` — canlı, dolu, görünmez
 
+> **DÜZELTME (CEO, 4 Eylül gece):** Aşağıdaki "277 kurum" sayısı **yanlış.** b9 canlı tabloyu
+> kendisi sorguladı: `academic_tier` **1019/1019 NULL** — hiç backfill uygulanmamış.
+> 277, uygulanmamış bir dosyanın satır sayısı. Bulgunun kendisi (sıfır okuma noktası)
+> doğru ve bağımsız olarak teyit edildi; **etkilenen kurum sayısı iddiası doğru değil.**
+> Yani durum yazılandan daha kötü: sütun sadece okunmuyor, aynı zamanda boş.
+
+
 Bu **sürpriz değil** — `docs/kararlar-2026-09-03.md` §E bunu tam olarak önceden söylemiş:
 migration onaylanıp koridor/görünürlük kararı ertelenirse, 277 kurum sınıflı ama görünmez
 kalır. **Bugün tam olarak bu oldu:** migration `main`'e uygulandı (277 kurum — 275 uygulamalı

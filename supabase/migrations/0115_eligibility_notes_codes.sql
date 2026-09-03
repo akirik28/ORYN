@@ -27,6 +27,16 @@
 -- works for any type), so it needs no change here -- only restated via CREATE OR REPLACE so a
 -- reader of this file in isolation sees the full protected-column list, not a narrowed one.
 
+-- MUST precede the ALTER below. Postgres tracks a catalog dependency between a trigger's
+-- `before update OF <column list>` and each named column, and refuses ALTER COLUMN TYPE while
+-- any trigger still depends on that column -- regardless of whether the trigger's own body
+-- cares about the type. The comment above is right that the FUNCTION is type-agnostic; it is
+-- the trigger DEFINITION that blocks this, which is a different object. Verified against a
+-- real Postgres: with the drop after the ALTER, this file fails outright with
+-- "cannot alter type of a column used in a trigger definition". The CREATE TRIGGER at the
+-- bottom re-resolves the column by name afterwards, so it is unaffected by the type change.
+drop trigger if exists opportunity_matches_00_guard_computed_columns on public.opportunity_matches;
+
 alter table public.opportunity_matches
   alter column eligibility_notes type jsonb using '[]'::jsonb,
   alter column eligibility_notes set default '[]'::jsonb,
@@ -53,7 +63,6 @@ begin
 end;
 $$;
 
-drop trigger if exists opportunity_matches_00_guard_computed_columns on public.opportunity_matches;
 create trigger opportunity_matches_00_guard_computed_columns
   before update of eligible, eligibility_notes, relevance_score, profile_need_score, match_score, effort_estimate, reason_codes, calculated_at, match_confidence on public.opportunity_matches
   for each row execute function public.opportunity_matches_guard_computed_columns();

@@ -22,7 +22,7 @@ const RefinementSchema = z.object({
 export type AchievementRefinement = z.infer<typeof RefinementSchema>;
 
 const SYSTEM_PROMPT = `You help a student strengthen a single achievement entry (an activity, project, award, or
-similar) in their Oryn profile.
+similar) in their Proxola profile.
 
 Rules — these are absolute:
 - NEVER invent or assume a number, outcome, organization name, or any other fact the student didn't provide.
