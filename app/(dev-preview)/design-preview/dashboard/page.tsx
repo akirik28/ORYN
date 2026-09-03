@@ -14,6 +14,7 @@ import {
   FIXTURE_TARGET_UNIVERSITIES,
   FIXTURE_OPPORTUNITIES,
   FIXTURE_PROFILE_SIGNAL,
+  buildFixtureHomeStrip,
 } from "@/lib/dev/fixtures";
 
 // Dedicated single-purpose Dashboard preview — the combined ../page.tsx stacks six
@@ -36,11 +37,16 @@ import {
 // still earns its place here rather than being redundant with DevPreviewTierStamp — that
 // component deliberately stamps the attribute only, no ambient glow/ember canvas, since a
 // component harness (e.g. the map preview) doesn't want it; a full-page Dashboard preview does.
-export default async function DashboardPreviewPage({ searchParams }: { searchParams: Promise<{ tier?: string }> }) {
+export default async function DashboardPreviewPage({ searchParams }: { searchParams: Promise<{ tier?: string; matches?: string }> }) {
   if (process.env.NODE_ENV === "production") notFound();
 
-  const { tier: tierParam } = await searchParams;
+  const { tier: tierParam, matches: matchesParam } = await searchParams;
   const tier = tierParam === "ultra" ? "ultra" : "standard";
+  // ?matches=0|1|2 previews the rotating strip's empty/thin states (this task's own
+  // highest-priority deliverable, per the founder dispatch) without needing three separate
+  // real accounts to reach each one. Omitted/anything else shows the full five, same as a
+  // student with plenty of eligible matches would actually see.
+  const stripCount = matchesParam !== undefined ? Math.max(0, Math.min(5, Number(matchesParam) || 0)) : 5;
   // Reads the real oryn_locale cookie (lib/i18n/locale.ts) rather than hardcoding "en" —
   // this preview is the only way to check Turkish rendering without a live account
   // (migration 0089 unapplied, same reason UltraAmbient earns its place here). Was
@@ -75,6 +81,7 @@ export default async function DashboardPreviewPage({ searchParams }: { searchPar
             deadline: o.opportunity.deadline ?? null,
             cycleStatus: o.opportunity.cycle_status ?? null,
           }))}
+          opportunityStrip={buildFixtureHomeStrip(locale).slice(0, stripCount)}
           opportunityMatchesRefreshed={true}
           showUltraWelcome={tier === "ultra"}
         />

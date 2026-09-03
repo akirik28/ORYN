@@ -1128,6 +1128,44 @@
   }
 }
 
+/* Home page opportunity strip (2026-09-03, founder dispatch: "ana sayfaya... otomatik dönen
+   ... en iyi 5 fırsatın döndüğü bir şey"). Identical mechanism to .plan-marquee-* immediately
+   above -- doubled track, -50% loop, pause on hover/focus, reduced-motion turns the
+   animation off (component-side motion-reduce:hidden handles the duplicate copy, same split
+   as the marquee). Kept as its own named keyframe/classes rather than reusing
+   .plan-marquee-* directly: that name and duration were tuned for small w-64 stat cards on
+   one specific page, this is full opportunity cards (w-72/w-80, real images) on a different
+   one, and a future change to either shouldn't have to consider whether it's silently also
+   changing the other's speed.
+
+   55s, slower than the plan marquee's 32s: these cards carry more to actually read (title,
+   organisation, tier, descriptors) than a small stat card, and pausing to read closely is
+   the intended way to consume this, but the ambient pace while NOT paused should still let a
+   card's text register before it's gone. */
+@keyframes opportunity-strip-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.opportunity-strip-track {
+  animation: opportunity-strip-scroll 55s linear infinite;
+}
+
+.opportunity-strip-viewport:hover .opportunity-strip-track,
+.opportunity-strip-viewport:focus-within .opportunity-strip-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .opportunity-strip-track {
+    animation: none;
+  }
+}
+
 /* A card's own flame treatment -- a top accent bar in the same flow gradient
    .tier-flow-bar uses, plus the same small box-shadow glow .tier-glow-sm already uses on
    the current-plan badge (small-element glow, not a second ambient light source -- see

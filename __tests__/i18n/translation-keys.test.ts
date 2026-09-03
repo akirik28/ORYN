@@ -237,8 +237,12 @@ describe("every statically-resolvable t() key exists in the catalog", () => {
     // preview used to hardcode its own English lookup table instead of the real catalog —
     // see that file's own header comment) — one more instance of an already-accepted
     // pattern, not a new one, per this test's own stated reasoning above.
+    // 2026-09-03: bumped 41 → 42. features/opportunities/opportunity-strip-card.tsx's own
+    // `t: Translator` parameter (the home page rotating strip's compact card) — same
+    // dashboard-view.tsx/opportunity-card.tsx TS-generic workaround already accepted twice
+    // over in this project, threaded through one more file for the identical reason.
     const report = skipped.map((s) => `${s.file}:${s.line} ${s.call}`).join("\n");
-    expect(skipped.length, `unresolvable calls (nearest binding is a parameter):\n${report}`).toBeLessThan(41);
+    expect(skipped.length, `unresolvable calls (nearest binding is a parameter):\n${report}`).toBeLessThan(42);
   });
 
   test("no call resolves to a key en.json does not have", () => {
