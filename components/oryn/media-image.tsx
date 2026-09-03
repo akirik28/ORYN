@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Image from "next/image";
-import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { placeholderTint } from "@/lib/ui/placeholder-tint";
 
@@ -34,7 +33,7 @@ export function MediaImage({
   fallbackSrc,
   alt,
   monogram,
-  icon: Icon,
+  icon,
   sizes = "100vw",
   priority = false,
   tintKey,
@@ -48,8 +47,22 @@ export function MediaImage({
   alt: string;
   /** Initials for the designed fallback. Trimmed to two characters. */
   monogram?: string | null;
-  /** Shown instead of a monogram when there's no sensible name to reduce. */
-  icon?: LucideIcon;
+  /** Shown instead of a monogram when there's no sensible name to reduce (or when
+   * `monogram` produces no initials -- null/empty). A pre-rendered element
+   * (`<Compass className="..." aria-hidden="true" />`), not a component reference --
+   * this component is itself "use client", and a bare component/function passed as a prop
+   * cannot cross the server->client boundary when a Server Component is the caller.
+   * Confirmed live 2026-09-03: features/opportunities/opportunity-strip-card.tsx crashed
+   * production passing `icon={Compass}` for exactly this reason (fixed there same day with
+   * `monogram={opportunity.organization}` instead) -- widened here, rather than left
+   * `LucideIcon`-typed, so a future Server Component caller can still use the icon tier as
+   * a real fallback instead of either hitting the same crash again or silently losing the
+   * tier (an opportunity with a real image and no organization on file would otherwise
+   * fall through monogram-empty straight to nothing rendered -- 0 live rows today, but not
+   * a case the type system should leave unrepresentable). Callers own the icon's styling
+   * now, not this component -- keeps this file from needing to know what element type it
+   * received. */
+  icon?: ReactNode;
   sizes?: string;
   priority?: boolean;
   /**
@@ -121,11 +134,8 @@ export function MediaImage({
         >
           {initials}
         </span>
-      ) : Icon ? (
-        <Icon
-          className="size-[clamp(1rem,32cqmin,2rem)] text-brand-primary-strong/55"
-          aria-hidden="true"
-        />
+      ) : icon ? (
+        icon
       ) : null}
     </div>
   );

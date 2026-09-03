@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { differenceInCalendarDays } from "date-fns";
+import { Compass } from "lucide-react";
 import { placeholderTint } from "@/lib/ui/placeholder-tint";
 import { StatusBadge } from "@/components/oryn/status-badge";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
@@ -52,6 +53,15 @@ type Translator = (key: string) => string;
  *
  * The no-image branch below renders its category glyph as JSX, which crosses nothing and
  * was always correct; only this image branch was passing a component as a prop.
+ *
+ * `icon` restored alongside `monogram` (2026-09-03 follow-up): MediaImage's own fallback
+ * chain treats monogram and icon as two different tiers on purpose (monogram when there's
+ * a name to reduce, icon when there isn't) -- the crash fix above swapped one tier for the
+ * other rather than fixing icon's own type, which meant a real image failing to load for a
+ * record with no `organization` on file would render nothing at all (0 live rows hit this
+ * today -- confirmed against the live catalogue -- but the type shouldn't leave it
+ * unrepresentable). `icon` is passed as a pre-rendered element now, not a bare component
+ * reference, so it no longer crosses the boundary either -- see MediaImage's own comment.
  */
 export function OpportunityStripCard({
   opportunity,
@@ -86,6 +96,7 @@ export function OpportunityStripCard({
           src={opportunity.imageUrl}
           alt={`${opportunity.title}${opportunity.organization ? ` — ${opportunity.organization}` : ""}`}
           monogram={opportunity.organization}
+          icon={<Compass className="size-[clamp(1rem,32cqmin,2rem)] text-brand-primary-strong/55" aria-hidden="true" />}
           sizes="320px"
         />
       ) : (

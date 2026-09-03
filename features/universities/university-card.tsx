@@ -101,7 +101,7 @@ export function UniversityCard({
         fallbackSrc={university.logo_url}
         alt={`Campus of ${university.name}`}
         monogram={university.name}
-        icon={Landmark}
+        icon={<Landmark className="size-[clamp(1rem,32cqmin,2rem)] text-brand-primary-strong/55" aria-hidden="true" />}
         sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw"
       />
 
