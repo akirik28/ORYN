@@ -257,6 +257,24 @@ kategoriye göre üretilmiş görseller yapılıyor.
 
 ---
 
+## Ürünün kendi döngüsü — iyi haber ve eksik halka
+
+**Senin kendi iki planın gerçek.** İlki "profilin boş" diyor, altı gün sonrakisi gerçek
+puanları anıyor — Akademik 43/100, Entelektüel Merak 12/100 — ve üç iş tam da o iki
+adlandırılmış boşluğa denk geliyor. Şablon değil, senin verinden çıkmış.
+
+**Eksik halka şu:** bir işi bitirip "ne oldu" dediğinde, bir sonraki planın bunun yüzünden
+değişip değişmediği **hiç gerçek veriyle kanıtlanmadı.** Yazma tarafı kanıtlı, okuma tarafı
+kanıtlı — ama arada henüz kimse geçmemiş. İki yakası da test edilmiş bir köprü.
+
+İki plandan fazlası olan dört hesabın hepsinde ikinci plan, birinci plandaki hiçbir iş
+başlamamışken üretilmiş. Bu bir hata değil, sadece **henüz olmamış bir şey.**
+
+**Ve senin hesabında temizlenecek bir şey var:** 100 mükerrer "bunu önerme" kaydı duruyor,
+sadece 2 farklı başlıktan. Yazma tarafındaki hata düzeltildi ama eski satırlara dokunmuyor.
+Bugün sana bir plan üretilse, "bunu tekrar önerme" sinyali gerçek geçmişin değil, bu
+gürültünün etkisinde kalırdı.
+
 ## Gece ne oldu
 
 8 lane, **90 dal birleşti**, **5497 test yeşil.** Kumanda merkezi tasarımı iki kez elden
