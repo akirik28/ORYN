@@ -128,6 +128,13 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
   // academic_threshold shape Netherlands/Erasmus-style systems take.
   const explanation = explainOutlook(dimensionScores, "holistic_review", stats.admission_rate != null, locale);
   const outlookEstimate = { low: 15, high: 25, confidence: "medium" as const };
+  // Real sentence + source from tonight's Greece entry (lib/admissions/system-shape.ts) —
+  // exercises the exact branch surfacing-audit-2026-09-03.md found computed and discarded:
+  // a real (non-not_applicable) outlook whose mechanism/sources now render below the badge
+  // instead of only reaching the not_applicable branch.
+  const admissionSystemMechanism =
+    "The Panhellenic exams score four subjects against each faculty's own published weighting factors into a 0–20,000 point total. Each faculty separately sets a minimum admission grade that only qualifies you to list it as a preference — final placement is strict descending-score order on the computerized preference form. No essay, interview, or reference letter.";
+  const admissionSystemSources = ["docs/research/admissions-systems/greece.md"];
 
   const metricByCode = new Map(FIXTURE_UNIVERSITY_PROFILE_METRICS.map((m) => [m.metric_code, m]));
   const researchTopicsMetric = metricByCode.get("research_topics_top5");
@@ -179,6 +186,10 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
             Oryn estimate: <span className="font-medium text-foreground">{outlookEstimate.low}–{outlookEstimate.high}%</span> ({outlookEstimate.confidence} confidence). This is not a
             guarantee or an official university probability.
           </p>
+          {admissionSystemMechanism ? <p className="max-w-3xl text-sm text-muted-foreground">{admissionSystemMechanism}</p> : null}
+          {admissionSystemSources.length > 0 ? (
+            <SourceBadge sourceName="Oryn's admissions-system research" locale={locale} sourceLabel="Source" checkedLabel={(time) => `Checked ${time}`} viewSourceLabel="View source" />
+          ) : null}
           <div className="grid gap-4 text-sm sm:grid-cols-3">
             <div>
               <p className="font-medium text-success">Strengths</p>

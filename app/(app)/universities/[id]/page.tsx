@@ -263,6 +263,17 @@ export default async function UniversityDetailPage({ params }: { params: Promise
           }
         : null;
   const notApplicableReason = outlook?.notApplicableReason ?? null;
+  // Only for the branch that currently renders a real reach/competitive/likely badge:
+  // `notApplicableReason` above already concatenates this same sentence for the
+  // not_applicable branch (outlook.ts's own mechanism + reason join), so repeating it here
+  // too would show the identical sentence twice on that branch. `resolveAdmissionSystem`
+  // computes this on every branch regardless — the entries researched under
+  // docs/research/admissions-systems/ (Greece's four-subject weighting, Denmark's two
+  // tracks, and the rest) were reaching every OTHER branch's calculation and then being
+  // discarded before render (docs/research/admissions-systems/implementation-gap/
+  // surfacing-audit-2026-09-03.md).
+  const admissionSystemMechanism = notApplicableReason ? null : (outlook?.admissionSystemMechanism ?? null);
+  const admissionSystemSources = notApplicableReason ? [] : (outlook?.sources ?? []);
   // The mechanism's own unknown ("where this cycle's cutoff lands") is worth showing for a real
   // admission that simply doesn't read profiles. It is not worth showing when the finding is
   // that the degree doesn't exist at this level — there is no cycle and no cutoff to wonder
@@ -429,52 +440,73 @@ export default async function UniversityDetailPage({ params }: { params: Promise
               </div>
             ) : null
           ) : (
-            <div lang={locale} className="grid gap-4 text-sm sm:grid-cols-3">
-              <div>
-                <p className="font-medium text-success">{locale === "tr" ? "Güçlü Yönler" : "Strengths"}</p>
-                <ul className="mt-1 space-y-0.5 text-muted-foreground">
-                  {explanation.strengths.length > 0 ? (
-                    explanation.strengths.map((s) => <li key={s}>+ {s}</li>)
-                  ) : (
-                    <li>
-                      {locale === "tr"
-                        ? explanation.insufficientData
-                          ? "Bu konuda henüz yeterince bilgimiz yok."
-                          : "Bunu görmek için profiline daha fazla bilgi ekle."
-                        : explanation.insufficientData
-                          ? "We don't know enough about this yet."
-                          : "Add more profile data to see this."}
-                    </li>
-                  )}
-                </ul>
+            <>
+              {/* Same sourced-mechanism sentence the not_applicable branch above already
+                  shows (concatenated into notApplicableReason there) — this is the branch
+                  that was computing it and discarding it before render. Same register: a
+                  plain muted paragraph, not folded into the strengths/gaps/unknowns grid,
+                  since it describes the admissions MECHANISM, not this student's profile. */}
+              {admissionSystemMechanism ? (
+                <p lang={locale} className="max-w-3xl text-sm text-muted-foreground">
+                  {admissionSystemMechanism}
+                </p>
+              ) : null}
+              {admissionSystemSources.length > 0 ? (
+                <SourceBadge
+                  sourceName={locale === "tr" ? "Oryn'ın kabul sistemi araştırması" : "Oryn's admissions-system research"}
+                  locale={locale}
+                  sourceLabel={tSourceBadge("source")}
+                  checkedLabel={(time) => tSourceBadge("checked", { time })}
+                  viewSourceLabel={tSourceBadge("viewSource")}
+                />
+              ) : null}
+              <div lang={locale} className="grid gap-4 text-sm sm:grid-cols-3">
+                <div>
+                  <p className="font-medium text-success">{locale === "tr" ? "Güçlü Yönler" : "Strengths"}</p>
+                  <ul className="mt-1 space-y-0.5 text-muted-foreground">
+                    {explanation.strengths.length > 0 ? (
+                      explanation.strengths.map((s) => <li key={s}>+ {s}</li>)
+                    ) : (
+                      <li>
+                        {locale === "tr"
+                          ? explanation.insufficientData
+                            ? "Bu konuda henüz yeterince bilgimiz yok."
+                            : "Bunu görmek için profiline daha fazla bilgi ekle."
+                          : explanation.insufficientData
+                            ? "We don't know enough about this yet."
+                            : "Add more profile data to see this."}
+                      </li>
+                    )}
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-medium text-warning">{locale === "tr" ? "Boşluklar" : "Gaps"}</p>
+                  <ul className="mt-1 space-y-0.5 text-muted-foreground">
+                    {explanation.gaps.length > 0 ? (
+                      explanation.gaps.map((g) => <li key={g}>− {g}</li>)
+                    ) : (
+                      <li>
+                        {locale === "tr"
+                          ? explanation.insufficientData
+                            ? "Bu konuda henüz yeterince bilgimiz yok."
+                            : "Henüz belirgin bir şey yok."
+                          : explanation.insufficientData
+                            ? "We don't know enough about this yet."
+                            : "None obvious yet."}
+                      </li>
+                    )}
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-medium text-muted-foreground">{locale === "tr" ? "Bilinmeyenler" : "Unknowns"}</p>
+                  <ul className="mt-1 space-y-0.5 text-muted-foreground">
+                    {explanation.unknowns.map((u) => (
+                      <li key={u}>? {u}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-              <div>
-                <p className="font-medium text-warning">{locale === "tr" ? "Boşluklar" : "Gaps"}</p>
-                <ul className="mt-1 space-y-0.5 text-muted-foreground">
-                  {explanation.gaps.length > 0 ? (
-                    explanation.gaps.map((g) => <li key={g}>− {g}</li>)
-                  ) : (
-                    <li>
-                      {locale === "tr"
-                        ? explanation.insufficientData
-                          ? "Bu konuda henüz yeterince bilgimiz yok."
-                          : "Henüz belirgin bir şey yok."
-                        : explanation.insufficientData
-                          ? "We don't know enough about this yet."
-                          : "None obvious yet."}
-                    </li>
-                  )}
-                </ul>
-              </div>
-              <div>
-                <p className="font-medium text-muted-foreground">{locale === "tr" ? "Bilinmeyenler" : "Unknowns"}</p>
-                <ul className="mt-1 space-y-0.5 text-muted-foreground">
-                  {explanation.unknowns.map((u) => (
-                    <li key={u}>? {u}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+            </>
           )}
         </section>
       ) : null}
