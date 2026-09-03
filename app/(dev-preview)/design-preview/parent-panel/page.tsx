@@ -6,13 +6,16 @@ import type { ParentPanelData } from "@/lib/parent/panel-data";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /**
- * Design-preview mirror for P3 (docs/veli-hesabi-spec-2026-09-04.md) -- no real parent
- * account or parent_links row exists yet (migration 0116 is staged, not applied), so this is
- * the only way to look at the panel before P1/P2/P4 land. Deliberately NOT wrapped in
- * PreviewShell: that renders the student app-shell's Sidebar/Topbar/MobileNav, which a
- * parent never sees (spec's own scope is one consolidated view, not a multi-page nav).
+ * Design-preview mirror for P3 (docs/veli-hesabi-spec-2026-09-04.md). Real end-to-end
+ * verification needs a signed-in parent account with an active link, which nothing on this
+ * machine can construct through the UI yet (P4's invite flow) -- this is how the panel gets
+ * looked at until that exists. Deliberately NOT wrapped in PreviewShell: that renders the
+ * student app-shell's Sidebar/Topbar/MobileNav, which a parent never sees (spec's own scope
+ * is one consolidated view, not a multi-page nav).
  *
- * `?state=pending` shows the other real screen a parent can land on. `?locale=tr` switches
+ * `?state=pending|revoked|no_link` shows the three non-active screens a parent can land on
+ * (lib/parent/child-panel.ts's ParentChildPanelState). `?empty=1` shows the active-but-
+ * nothing-recorded-yet state, distinct from all three of those. `?locale=tr` switches
  * language, same query-param convention as this directory's other preview pages.
  */
 /** `gap.label` is locale-resolved text (see computeGap's own dimensionLabel(dimension,
@@ -52,11 +55,16 @@ export default async function ParentPanelPreviewPage({ searchParams }: { searchP
 
   const { state, locale: localeParam, empty } = await searchParams;
   const locale: Locale = localeParam === "tr" ? "tr" : DEFAULT_LOCALE;
+  const nonActiveState = state === "pending" || state === "revoked" || state === "no_link" ? state : null;
 
   return (
     <>
       <ParentAmbient role="parent" />
-      {state === "pending" ? <ParentPendingScreen locale={locale} /> : <ParentPanelView data={empty === "1" ? FIXTURE_DATA_EMPTY : fixtureReady(locale)} locale={locale} />}
+      {nonActiveState ? (
+        <ParentPendingScreen state={nonActiveState} locale={locale} />
+      ) : (
+        <ParentPanelView data={empty === "1" ? FIXTURE_DATA_EMPTY : fixtureReady(locale)} locale={locale} />
+      )}
     </>
   );
 }

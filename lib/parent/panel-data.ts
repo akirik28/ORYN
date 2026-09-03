@@ -1,8 +1,7 @@
 import "server-only";
 
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, OutlookLabel, ApplicationStatus } from "@/types/database";
-import { isUndefinedFunctionError, isUndefinedTableError } from "@/lib/supabase/errors";
+import { createClient } from "@/lib/supabase/server";
+import { getParentChildPanelState } from "@/lib/parent/child-panel";
 import { getProfileScores } from "@/lib/security/dal";
 import { toDimensionScoreRows, rankDimensionGaps } from "@/lib/counselor/gaps";
 import { toProfileSignal } from "@/lib/scoring/signal";
@@ -10,7 +9,7 @@ import { computeDashboardHeroState } from "@/lib/scoring/dashboard-hero";
 import { isOpportunityRecommendable } from "@/lib/opportunities/lifecycle";
 import { competesInCoreRecommendations } from "@/lib/opportunities/commercial";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
-import type { ParentLink } from "./types";
+import type { OutlookLabel, ApplicationStatus } from "@/types/database";
 
 export interface ParentPanelOpportunity {
   id: string;
@@ -53,66 +52,22 @@ export interface ParentPanelData {
   gap: ParentPanelGap;
 }
 
-export type ParentPanelResult =
-  | { status: "no_row" } // no parent_links row for this parent at all
-  | { status: "pending" } // link exists but hasn't been confirmed -- a4's routing owns showing the pending screen; this result exists so this function stays the single source of truth for panel state, per oryn-44/oryn-45 2026-09-04: never infer state from whether the data queries came back empty, since a revoked link and a brand-new student both legitimately return []
-  | { status: "revoked" }
-  | { status: "ready"; data: ParentPanelData };
-
 /**
- * Reads the parent's own parent_links row(s) directly -- RLS auto-scopes to
- * `parent_user_id = auth.uid() or student_user_id = auth.uid()` (oryn-44, 2026-09-04), so
- * this is a parent reading exactly their own row, not a whitelist-worthy cross-account read.
- * The one field this function exists to produce, `student_user_id`, is also the `p_student`
- * argument every whitelisted RPC below requires.
- *
- * State comes from here, never from whether a data query returns rows: an inactive link and
- * a genuinely brand-new student both make get_parent_child_target_universities/
- * _applications return `[]`, which is the correct non-error response in both cases (oryn-44).
- * Checking `status` here first, before ever calling those functions, is what tells the two
- * apart.
+ * Mirrors lib/parent/child-panel.ts's ParentChildPanelState states exactly (same names, same
+ * discriminant) -- this is a thin enrichment of that type, not a parallel vocabulary. "active"
+ * is the only state carrying data, for the same reason theirs is: there is no path through
+ * this type from "I have data" to "I have no data" that skips a real, active-status link.
  */
-async function resolveLink(supabase: SupabaseClient<Database>): Promise<ParentLink | null> {
-  const { data, error } = await supabase.from("parent_links" as never).select("*").order("updated_at" as never, { ascending: false }).limit(1).maybeSingle();
+export type ParentPanelResult = { state: "no_link" } | { state: "pending" } | { state: "revoked" } | { state: "active"; data: ParentPanelData };
 
-  if (error) {
-    // Migration 0116 not applied yet resolves to the same "no_row" state a genuinely-absent
-    // link produces -- not logged as an error, since this is an expected pre-migration state,
-    // not a failure.
-    if (isUndefinedTableError(error, "parent_links")) return null;
-    console.error("[parent] failed to read parent_links", { error: error.message });
-    return null;
-  }
-  return (data as unknown as ParentLink | null) ?? null;
-}
-
-/**
- * `profiles` reads for a parent go through a SECURITY DEFINER function with an explicit
- * 9-column whitelist (oryn-44/b9, 2026-09-04) -- `advisor_instructions` lives on this same
- * row, and RLS is row-level, so a parent granted SELECT on the row at all would receive the
- * student's private advisor instructions along with everything else. `.from("profiles")`
- * must never appear in this file for that reason; this function is the only door.
- *
- * `returns table` -- always an array, including the 0-or-1-row profile case (oryn-44) -- take
- * `[0]`, never unwrap as a single object.
- */
-async function fetchStudentProfile(supabase: SupabaseClient<Database>, studentUserId: string): Promise<{ displayName: string } | null> {
-  const { data, error } = await supabase.rpc("get_parent_child_profile" as never, { p_student: studentUserId } as never);
-  if (error) {
-    if (isUndefinedFunctionError(error, "get_parent_child_profile")) return null;
-    console.error("[parent] failed to fetch child profile", { studentUserId, error: error.message });
-    return null;
-  }
-  const row = ((data as unknown[]) ?? [])[0] as { display_name?: string } | undefined;
-  return row ? { displayName: row.display_name ?? "" } : null;
-}
-
-async function fetchOpportunities(supabase: SupabaseClient<Database>, studentUserId: string): Promise<ParentPanelOpportunity[]> {
+async function fetchOpportunities(studentUserId: string): Promise<ParentPanelOpportunity[]> {
+  const supabase = await createClient();
   // Two-step, not a nested join -- matches lib/opportunities/home-strip.ts's own established
   // pattern for this exact pair of tables (no PostgREST-discoverable relationship between
   // opportunity_matches and opportunities to join through directly). Direct table reads here
-  // are correct, not a shortcut: opportunity_matches has its own real RLS policy (oryn-45,
-  // 2026-09-04), unlike profiles/target_universities/applications.
+  // are correct, not a shortcut: opportunity_matches has its own real RLS policy (2026-09-04),
+  // unlike profiles/target_universities/applications, which is exactly why those three go
+  // through child-panel.ts's whitelisted RPCs instead of a query written here.
   const { data: matches } = await supabase
     .from("opportunity_matches")
     .select("opportunity_id, match_score")
@@ -138,86 +93,10 @@ async function fetchOpportunities(supabase: SupabaseClient<Database>, studentUse
     .map((o) => ({ id: o.id, title: o.title, category: o.category, deadline: o.deadline }));
 }
 
-/**
- * `get_parent_child_target_universities` returns `university_id`, never a `name` (oryn-44,
- * 2026-09-04 -- corrected an earlier wrong guess in this file that assumed the function
- * joined internally). `universities` is the global public catalog, not per-student data, so
- * it needs no whitelist of its own -- a direct read by `id` is the same access any
- * authenticated context already has via the university explorer.
- */
-async function fetchUniversities(supabase: SupabaseClient<Database>, studentUserId: string): Promise<ParentPanelUniversity[]> {
-  const { data, error } = await supabase.rpc("get_parent_child_target_universities" as never, { p_student: studentUserId } as never);
-  if (error) {
-    if (isUndefinedFunctionError(error, "get_parent_child_target_universities")) return [];
-    console.error("[parent] failed to fetch child target universities", { studentUserId, error: error.message });
-    return [];
-  }
-  const rows = ((data as unknown[]) ?? []) as { id: string; university_id: string; outlook: OutlookLabel | null; updated_at: string }[];
-  if (rows.length === 0) return [];
-
-  const { data: universities } = await supabase
-    .from("universities")
-    .select("id, name")
-    .in(
-      "id",
-      rows.map((r) => r.university_id)
-    );
-  const nameById = new Map((universities ?? []).map((u) => [u.id, u.name]));
-
-  return rows
-    .slice()
-    .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
-    .map((r) => ({ id: r.id, name: nameById.get(r.university_id) ?? "", outlook: r.outlook }))
-    .filter((u) => u.name !== "");
-}
-
-/**
- * `get_parent_child_applications` returns `target_university_id`, not a university name --
- * two hops to render one (oryn-44, 2026-09-04): target_university_id -> target_universities
- * .university_id -> universities.name. The middle hop reads target_universities by `id`
- * (its own primary key, already resolved as this function's input), not by `user_id`, so it
- * is not a second whitelist-worthy per-student query -- fetching known rows by id is a
- * narrower operation than the SELECT-by-owner the RPC exists to gate.
- */
-async function fetchApplications(supabase: SupabaseClient<Database>, studentUserId: string): Promise<ParentPanelApplication[]> {
-  const { data, error } = await supabase.rpc("get_parent_child_applications" as never, { p_student: studentUserId } as never);
-  if (error) {
-    if (isUndefinedFunctionError(error, "get_parent_child_applications")) return [];
-    console.error("[parent] failed to fetch child applications", { studentUserId, error: error.message });
-    return [];
-  }
-  const rows = ((data as unknown[]) ?? []) as { id: string; target_university_id: string; status: ApplicationStatus; deadline: string | null; updated_at: string }[];
-  if (rows.length === 0) return [];
-
-  const { data: targets } = await supabase
-    .from("target_universities")
-    .select("id, university_id")
-    .in(
-      "id",
-      rows.map((r) => r.target_university_id)
-    );
-  const universityIdByTargetId = new Map((targets ?? []).map((t) => [t.id, t.university_id]));
-
-  const universityIds = [...new Set([...universityIdByTargetId.values()])];
-  const { data: universities } = await supabase.from("universities").select("id, name").in("id", universityIds);
-  const nameByUniversityId = new Map((universities ?? []).map((u) => [u.id, u.name]));
-
-  return rows
-    .slice()
-    .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
-    .slice(0, 5)
-    .map((r) => {
-      const universityId = universityIdByTargetId.get(r.target_university_id);
-      const name = universityId ? (nameByUniversityId.get(universityId) ?? "") : "";
-      return { id: r.id, universityName: name, status: r.status, deadline: r.deadline };
-    })
-    .filter((a) => a.universityName !== "");
-}
-
 async function computeGap(studentUserId: string, locale: Locale): Promise<ParentPanelGap> {
-  // profile_scores has its own direct RLS policy (oryn-45, 2026-09-04) -- getProfileScores
-  // reads it exactly as the student's own dashboard does, through the identical pipeline
-  // below, so a parent gets the same honesty judgment, not a separately-computed one.
+  // profile_scores has its own direct RLS policy (2026-09-04) -- getProfileScores reads it
+  // exactly as the student's own dashboard does, through the identical pipeline below, so a
+  // parent gets the same honesty judgment, not a separately-computed one.
   const scores = await getProfileScores(studentUserId);
   const scoreRows = toDimensionScoreRows(scores);
   const biggestGap = rankDimensionGaps(scoreRows)[0] ?? null;
@@ -227,30 +106,79 @@ async function computeGap(studentUserId: string, locale: Locale): Promise<Parent
 }
 
 /**
- * The parent panel's one entry point. `resolveLink` decides *state* -- pending/revoked/no_row
- * short-circuit before any whitelisted function is ever called, per oryn-44's explicit
- * correction: an empty data result and an inactive link both look like `[]`, so the link's
- * own `status` column, not the shape of what comes back from the data functions, is what
- * this must branch on. Every subsequent read is scoped to `link.student_user_id`, run
- * through the caller's own (parent's) session client -- RLS/SECURITY DEFINER whitelists
- * decide whether each read is actually allowed. This function adds no authorization logic of
- * its own beyond resolving which student to ask about; it is not, and must never become, the
- * thing that decides a parent may see a student's data.
+ * `get_parent_child_target_universities`/`_applications` (via getParentChildPanelState)
+ * return bare FK uuids, never a joined name (44, 2026-09-04 -- corrected two wrong guesses
+ * earlier in this file's history that assumed the join happened inside the function).
+ * `universities` is the global public catalog, not per-student data, so reading it by `id`
+ * needs no whitelist of its own -- the same access any authenticated context already has via
+ * the university explorer. Applications need a second hop (target_university_id ->
+ * target_universities.university_id -> universities.name); reading target_universities here
+ * by its own primary key (already resolved as this function's input) is narrower than the
+ * SELECT-by-owner the RPC exists to gate, so it doesn't need the whitelist either.
  */
-export async function getParentPanelData(supabase: SupabaseClient<Database>, locale: Locale = DEFAULT_LOCALE): Promise<ParentPanelResult> {
-  const link = await resolveLink(supabase);
-  if (!link) return { status: "no_row" };
-  if (link.status === "revoked") return { status: "revoked" };
-  if (link.status !== "active") return { status: "pending" };
+async function enrichWithUniversityNames(
+  targetUniversities: { id: string; university_id: string; outlook: OutlookLabel | null; updated_at: string }[],
+  applications: { id: string; target_university_id: string; status: ApplicationStatus; deadline: string | null; updated_at: string }[]
+): Promise<{ universities: ParentPanelUniversity[]; applications: ParentPanelApplication[] }> {
+  const supabase = await createClient();
 
-  const studentUserId = link.student_user_id;
-  const [profile, opportunities, universities, applications, gap] = await Promise.all([
-    fetchStudentProfile(supabase, studentUserId),
-    fetchOpportunities(supabase, studentUserId),
-    fetchUniversities(supabase, studentUserId),
-    fetchApplications(supabase, studentUserId),
+  const universityIdByTargetId = new Map(targetUniversities.map((t) => [t.id, t.university_id]));
+  for (const targetId of applications.map((a) => a.target_university_id)) {
+    if (!universityIdByTargetId.has(targetId)) universityIdByTargetId.set(targetId, null as unknown as string);
+  }
+  const unresolvedTargetIds = applications.map((a) => a.target_university_id).filter((id) => !universityIdByTargetId.get(id));
+
+  if (unresolvedTargetIds.length > 0) {
+    const { data: targets } = await supabase.from("target_universities").select("id, university_id").in("id", unresolvedTargetIds);
+    for (const t of targets ?? []) universityIdByTargetId.set(t.id, t.university_id);
+  }
+
+  const allUniversityIds = [...new Set([...universityIdByTargetId.values()].filter((id): id is string => Boolean(id)))];
+  const { data: universityRows } = allUniversityIds.length > 0 ? await supabase.from("universities").select("id, name").in("id", allUniversityIds) : { data: [] };
+  const nameByUniversityId = new Map((universityRows ?? []).map((u) => [u.id, u.name]));
+
+  const universities = targetUniversities
+    .slice()
+    .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
+    .map((t) => ({ id: t.id, name: nameByUniversityId.get(t.university_id) ?? "", outlook: t.outlook }))
+    .filter((u) => u.name !== "");
+
+  const applicationRows = applications
+    .slice()
+    .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
+    .slice(0, 5)
+    .map((a) => {
+      const universityId = universityIdByTargetId.get(a.target_university_id);
+      const name = universityId ? (nameByUniversityId.get(universityId) ?? "") : "";
+      return { id: a.id, universityName: name, status: a.status, deadline: a.deadline };
+    })
+    .filter((a) => a.universityName !== "");
+
+  return { universities, applications: applicationRows };
+}
+
+/**
+ * The parent panel's one entry point. `getParentChildPanelState` (lib/parent/child-panel.ts)
+ * owns the actual authorization-relevant question -- whether an active link exists at all --
+ * and its type makes that unskippable; this function only enriches the "active" branch with
+ * the two things child-panel.ts doesn't cover (university names, which need an extra join it
+ * deliberately doesn't do, and opportunities/gap, which read different tables with their own
+ * direct RLS policies rather than a profiles-style whitelist). This function must never grow
+ * its own link-status logic -- that would be exactly the "two empty arrays collapse into one
+ * screen" mistake child-panel.ts's type exists to make unreachable.
+ */
+export async function getParentPanelData(studentUserId: string, locale: Locale = DEFAULT_LOCALE): Promise<ParentPanelResult> {
+  const state = await getParentChildPanelState(studentUserId);
+  if (state.state !== "active") return { state: state.state };
+
+  const [{ universities, applications }, opportunities, gap] = await Promise.all([
+    enrichWithUniversityNames(state.targetUniversities, state.applications),
+    fetchOpportunities(studentUserId),
     computeGap(studentUserId, locale),
   ]);
 
-  return { status: "ready", data: { studentDisplayName: profile?.displayName ?? "", opportunities, universities, applications, gap } };
+  return {
+    state: "active",
+    data: { studentDisplayName: state.profile?.display_name ?? "", opportunities, universities, applications, gap },
+  };
 }

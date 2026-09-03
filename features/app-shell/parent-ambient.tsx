@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import type { AccountRole } from "@/lib/parent/types";
+import type { AccountRole } from "@/types/database";
 
 /**
  * Sets `data-role="parent"` on `<html>` -- the single source of truth every

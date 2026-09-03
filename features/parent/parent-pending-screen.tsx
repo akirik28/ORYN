@@ -1,16 +1,47 @@
-import { MailCheck } from "lucide-react";
+import { MailCheck, ShieldOff, Link2Off } from "lucide-react";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
+type NonActiveState = "pending" | "revoked" | "no_link";
+
+const COPY: Record<NonActiveState, { icon: typeof MailCheck; title: [string, string]; body: [string, string] }> = {
+  pending: {
+    icon: MailCheck,
+    title: ["Onay bekleniyor", "Waiting for approval"],
+    body: [
+      "Bir veli bağlantısı isteği gönderildi, ama henüz onaylanmadı. Hiçbir bilgi öğrencinin onayı olmadan paylaşılmaz — bu bir hata değil, tasarım gereği böyle. Öğrenciden hesabına girip isteği onaylamasını isteyin.",
+      "A parent link request has been sent, but it hasn't been approved yet. No information is shared until the student approves it — this isn't a delay on our end, it's by design. Ask the student to sign in and approve the request.",
+    ],
+  },
+  revoked: {
+    icon: ShieldOff,
+    title: ["Erişim sona erdi", "Access has ended"],
+    body: [
+      "Öğrenci bu veli bağlantısını kaldırdı. Bu, öğrencinin herhangi bir zamanda alabileceği bir karardır ve geri getirmek yeni bir davet gerektirir.",
+      "The student has removed this parent link. That's a decision the student can make at any time, and restoring access requires a new invitation from them.",
+    ],
+  },
+  no_link: {
+    icon: Link2Off,
+    title: ["Bağlı bir öğrenci hesabı yok", "No linked student account"],
+    body: [
+      "Bu veli hesabı henüz bir öğrenciyle bağlanmadı. Bağlantı, öğrencinin kaydı sırasında veli e-postasını girmesiyle başlar.",
+      "This parent account isn't linked to a student yet. Linking starts when the student enters a parent email during their own sign-up.",
+    ],
+  },
+};
+
 /**
- * What a parent sees before their student confirms the link (spec K3: double-opt-in, no
- * data flows until then). Routing/gating is a4's (P2) -- this is the copy, which is the part
- * that has to carry the actual message: nothing is broken and no one is being made to wait
- * on Proxola, the student simply hasn't approved the link yet, which is the point of
- * requiring approval at all (an email typo shouldn't otherwise hand a stranger a child's
- * profile).
+ * The one screen a parent sees whenever the link isn't active (spec K3: double-opt-in, no
+ * data flows until confirmed) -- covers all three non-"active" states from
+ * lib/parent/child-panel.ts's ParentChildPanelState with one component, since they share the
+ * same shape (icon, title, one explanatory paragraph) and differ only in which real,
+ * non-alarming thing happened. Routing (which state reaches this screen, and where it's
+ * mounted) is P2's; this is the copy, which has to carry the actual message so "revoked"
+ * doesn't read as a bug report and "pending" doesn't read as Proxola being slow.
  */
-export function ParentPendingScreen({ locale = DEFAULT_LOCALE }: { locale?: Locale }) {
+export function ParentPendingScreen({ state, locale = DEFAULT_LOCALE }: { state: NonActiveState; locale?: Locale }) {
   const tr = locale === "tr";
+  const { icon: Icon, title, body } = COPY[state];
   return (
     <div
       className="flex min-h-svh items-center justify-center px-6"
@@ -18,19 +49,10 @@ export function ParentPendingScreen({ locale = DEFAULT_LOCALE }: { locale?: Loca
     >
       <div className="max-w-sm space-y-4 rounded-2xl border bg-card p-8 text-center" style={{ borderColor: "var(--role-surface-border)" }}>
         <span className="mx-auto flex size-11 items-center justify-center rounded-full" style={{ background: "color-mix(in oklch, var(--role-accent), transparent 88%)" }}>
-          <MailCheck className="size-5" style={{ color: "var(--role-accent)" }} />
+          <Icon className="size-5" style={{ color: "var(--role-accent)" }} />
         </span>
-        <h1 className="font-display text-lg font-semibold text-foreground">{tr ? "Onay bekleniyor" : "Waiting for approval"}</h1>
-        <p className="text-sm text-muted-foreground">
-          {tr
-            ? "Bir veli bağlantısı isteği gönderildi, ama henüz onaylanmadı. Hiçbir bilgi öğrencinin onayı olmadan paylaşılmaz — bu bir hata değil, tasarım gereği böyle."
-            : "A parent link request has been sent, but it hasn't been approved yet. No information is shared until the student approves it — this isn't a delay on our end, it's by design."}
-        </p>
-        <p className="text-sm text-muted-foreground">
-          {tr
-            ? "Öğrenciden hesabına girip isteği onaylamasını isteyin. Onaylandığında bu sayfa otomatik olarak panele dönüşecek."
-            : "Ask the student to sign in and approve the request. Once they do, this page becomes the panel automatically."}
-        </p>
+        <h1 className="font-display text-lg font-semibold text-foreground">{tr ? title[0] : title[1]}</h1>
+        <p className="text-sm text-muted-foreground">{tr ? body[0] : body[1]}</p>
       </div>
     </div>
   );
