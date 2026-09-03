@@ -144,6 +144,13 @@ export interface Profile {
    * founder applied it by hand); every read still defaults an absent/unreadable value to
    * "standard" regardless, so this stays correct on any environment where it isn't. */
   plan_tier: PlanTier;
+  /** Migration 0104, written not applied — when an admin granted this student the one-time
+   * 7-day Ultra gift, or null if never. Never cleared once set, even after the 7 days pass:
+   * this is the "once per person" record, not an "is it active right now" flag — that's
+   * computed at read time in lib/tier/plan-tier.ts's resolvePlanTier, the one place every
+   * Ultra-aware surface already goes through. An absent/unreadable value reads as "never
+   * granted," same convention as plan_tier/response_mode above. */
+  ultra_gift_granted_at: string | null;
   /** Migration 0091 — student preference for advisor chat's model/prompt style, overridden
    * by spend-based degrade whenever that's active (lib/ai/limits/budget.ts). Live as of
    * 2026-09-02; every read still defaults an absent/unreadable value to "balanced" — see

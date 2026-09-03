@@ -182,7 +182,7 @@ export async function sendAdvisorMessage(
   try {
     const profile = await getCurrentProfile();
     const responseMode = profile ? resolveResponseMode(profile) : "balanced";
-    const planTier = resolvePlanTier(profile ?? { plan_tier: "standard" });
+    const planTier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_granted_at: null });
     const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: trimmed, responseMode, planTier });
     let { data: assistantMessage, error: assistantMessageError } = await supabase
       .from("advisor_messages")
@@ -320,7 +320,7 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
   try {
     const profile = await getCurrentProfile();
     const responseMode = profile ? resolveResponseMode(profile) : "balanced";
-    const planTier = resolvePlanTier(profile ?? { plan_tier: "standard" });
+    const planTier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_granted_at: null });
     const { text: reply, degraded } = await generateAdvisorReply({ userId, history, newMessage: userMessage.content, responseMode, planTier });
     let { error: updateError } = await supabase
       .from("advisor_messages")

@@ -293,6 +293,10 @@ export interface AdminUserRow {
   signedUpAt: string;
   lastSeenAt: string | null;
   lifetimeSpendUsd: number;
+  /** Raw grant timestamp (migration 0104), not a derived boolean — the admin UI needs both
+   *  "has this student ever received the gift" (non-null, forever) and a real date to show
+   *  next to the "used" label, which a boolean alone would throw away. */
+  ultraGiftGrantedAt: string | null;
 }
 
 /**
@@ -302,11 +306,27 @@ export interface AdminUserRow {
  * staler signal than the last time someone actually opened the app.
  */
 export async function getAdminUserList(admin: SupabaseClient<Database>): Promise<AdminUserRow[]> {
-  const [{ data: profiles }, spendByUser, { data: authUsers }] = await Promise.all([
-    admin.from("profiles").select("id, display_name, created_at, plan_tier").order("created_at", { ascending: false }),
+  const [profilesResult, spendByUser, { data: authUsers }] = await Promise.all([
+    admin.from("profiles").select("id, display_name, created_at, plan_tier, ultra_gift_granted_at").order("created_at", { ascending: false }),
     getLifetimeSpendByUser(admin),
     admin.auth.admin.listUsers(),
   ]);
+
+  // Named select, not `*` -- migration 0104 unapplied makes this the same "PostgREST
+  // validates the requested column list" shape lib/supabase/errors.ts's own comment
+  // documents for lib/notifications/create.ts, not the silent-omission shape resolvePlanTier
+  // relies on elsewhere. Retried without the one new column rather than defaulted, because
+  // the alternative -- `profiles ?? []` swallowing the error, as this function used to do --
+  // loses every OTHER real field (display name, signup date, tier) for every student, not
+  // just the gift timestamp. Confirmed live 2026-09-03: this exact query silently emptied
+  // the whole admin user list against the real database before this retry existed.
+  let profiles = profilesResult.data;
+  if (profilesResult.error && isUndefinedColumnError(profilesResult.error, "ultra_gift_granted_at")) {
+    const fallback = await admin.from("profiles").select("id, display_name, created_at, plan_tier").order("created_at", { ascending: false });
+    profiles = fallback.data?.map((p) => ({ ...p, ultra_gift_granted_at: null as string | null })) ?? null;
+  } else if (profilesResult.error) {
+    console.error("[admin] failed to read profiles for user list", { error: profilesResult.error });
+  }
 
   const lastSeenById = new Map((authUsers?.users ?? []).map((u) => [u.id, u.last_sign_in_at ?? null]));
 
@@ -317,6 +337,7 @@ export async function getAdminUserList(admin: SupabaseClient<Database>): Promise
     signedUpAt: p.created_at,
     lastSeenAt: lastSeenById.get(p.id) ?? null,
     lifetimeSpendUsd: spendByUser.get(p.id) ?? 0,
+    ultraGiftGrantedAt: p.ultra_gift_granted_at ?? null,
   }));
 }
 

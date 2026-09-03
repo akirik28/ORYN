@@ -4,6 +4,7 @@ import { formatCurrency } from "@/lib/i18n/format";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAdminUserList } from "@/lib/admin/queries";
 import { PlanTierControl } from "@/features/admin/plan-tier-control";
+import { UltraGiftControl } from "@/features/admin/ultra-gift-control";
 
 const money = (value: number) => formatCurrency(value, "USD", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 
@@ -25,6 +26,7 @@ export async function UserListSection() {
               <span>{t("lastSeen")}: {user.lastSeenAt ? formatDistanceToNow(new Date(user.lastSeenAt), { addSuffix: true }) : t("never")}</span>
               <span className="font-medium text-foreground">{t("lifetimeSpend")}: {money(user.lifetimeSpendUsd)}</span>
               <PlanTierControl userId={user.userId} displayName={user.displayName ?? t("unnamed")} tier={user.tier} />
+              <UltraGiftControl userId={user.userId} displayName={user.displayName ?? t("unnamed")} grantedAt={user.ultraGiftGrantedAt} />
             </div>
           </li>
         ))}
