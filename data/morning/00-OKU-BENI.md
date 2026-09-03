@@ -385,6 +385,28 @@ kanıt sorunu. Erişilemedi sanılan 10 kaydın hepsi Internet Archive kopyasıy
 Bugün ne yapardı: 27 kayıt (%24) doğrulanmış işaretlenirdi, 3'ü düşürülürdü, 63'ü "sayfa
 bir şey söylemiyor" diye bırakılırdı.
 
+**Ve sabaha karşı, kararı doğrudan etkileyen bir şey bulundu.** İş yalnızca **kapatma**
+yönünde çalışıyor — bir kaydı "artık açık değil" diye işaretleyebiliyor, ama tersini
+yapamıyor. Kodda `canAutoApplyPromotion()` sabit olarak `false` dönüyor ve karşılığı olan
+bir uygunluk kontrolü hiç yazılmamış.
+
+Sorun şu: 208 aktif kayıt tarandığında, canlı sayfayla çelişen 8 kayıt çıktı ve **8'in
+6'sı ters yönde** — yani bizde "kapalı" ya da "geçmiş" görünen ama sayfası şu an
+"başvurular açık" diyen kayıtlar. Stanford SASI bizde `closed`, sayfasında "Summer 2027 ·
+SASI Applications Now Open". Ron Brown bizde "tarih açıklanmadı", sayfasında "2027
+başvurusu açıldı".
+
+Bu, kapanma yönünden **üç kat** daha yaygın ve daha pahalı: kapandığı halde açık görünen
+bir kayıt öğrenciyi boşa uğraştırır, ama **açık olduğu halde kapalı görünen bir kayıt
+öğrenciye hiç görünmez.** Başvurabileceği bir şeyi kaçırır ve kaçırdığını bilmez.
+
+Yani "işi silahlandıralım mı" sorusunun yanında ikinci bir soru var: **iş sadece yarısını
+yapabiliyor, öbür yarısı hiç yazılmamış.** İkisi ayrı karar; ikincisi bir geliştirme işi.
+
+Bir dürüstlük notu daha: tarama mekanizmasının kendisi, bu görevi başlatan Stanford
+kaydını **kaçırdı** — sayfayı sorunsuz indirdi ama yanlış cümleyi seçti. Yani 8 bir taban,
+tavan değil.
+
 **İş şu an kapalı ve öyle duruyor.** Açmak senin kararın.
 
 **Oryn hangi kurumları bilmeli?** İki ölçüm aynı soruya çıkıyor.
