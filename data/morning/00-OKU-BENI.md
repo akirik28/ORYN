@@ -112,7 +112,7 @@ bile belli etmiyor. Canlıda doğrulandı.
 
 ---
 
-## Senin kararını bekleyen beş şey
+## Senin kararını bekleyen altı şey
 
 Hiçbiri gece boyunca tek başıma karar vermediğim şeyler — hepsi ya fiyatı, ya öğrencinin
 gördüğünü, ya da bir şemayı değiştiriyor. En üsttekiler en pahalı olanlar.
@@ -150,6 +150,20 @@ bir kısmını kapatıyor, çoğunu değil.
 **Senin pazarın için ayrı bir sorun var:** 49 sayfanın 5'i Türkçe ve hiç İngilizce açılma/
 kapanma ifadesi taşımıyor. Yani iş bu kayıtları hiçbir yönde doğrulayamıyor. Türkçe kalıplar
 şimdi çıkarılıyor. **İş kapalı duruyor, kendiliğinden çalışmıyor.**
+
+**Veritabanında kapsamın dışında 458 üniversite var — ne yapacağız?** Gece boyunca on ülke
+eklendi ve etkisi ölçüldü: **611 kurumdan 42'si artık hiçbir seçicilik etiketi göstermiyor**
+(gerçek araştırma, "bilinmiyor"u kod yolundan tamamen çıkarıyor), 33'ü ise boş yerine
+kaynaklı bir mekanizmaya dayanıyor.
+
+Ama kalanların dağılımı bir soru soruyor. En çok bilinmeyen kurumu olan ülkeler: **Çin 64,
+Hindistan 37, Güney Kore 31, Malezya 25, Japonya 22.** Hiçbiri şartnamedeki ABD/UK/Avrupa/
+Türkiye koridorunda değil. Koridor içinde kalan ise ince: Finlandiya 9, sonra Litvanya 4,
+Estonya 3, Kıbrıs 3.
+
+Yani "en çok kurum" ile "bu ürün için en önemli" ters yönü gösteriyor. Üç seçenek: koridoru
+genişlet, o kurumları veritabanından çıkar, ya da kalsınlar ama etiketsiz. **Şu an
+üçüncüsünün yarısındayız** — duruyorlar ve dürüst bir uyarıyla etiket gösteriyorlar.
 
 **Fırsat görselleri ve lisans.** 282 kaydın 218'inde görsel yok, ve **128'inin kaynak
 sayfasında zaten görsel yok** — daha çok taramak bunu çözmüyor. Üçüncü taraf görseli
