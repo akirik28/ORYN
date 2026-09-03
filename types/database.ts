@@ -173,6 +173,14 @@ export interface Profile {
    * 2026-09-02; every read still defaults an absent/unreadable value to "balanced" — see
    * lib/tier/response-mode.ts's resolveResponseMode, the one place this fallback happens. */
   response_mode: ResponseMode;
+  /** Migration 0109, written not applied — the student's own standing instruction to the
+   * advisor ("write short", "don't suggest medicine", "Europe only"), included in every
+   * advisor_chat system prompt (lib/ai/student-context.ts's formatContextForPrompt). Null
+   * means none set, same convention as plan_tier/response_mode above. The 500 (Standard) /
+   * 2,000 (Ultra) character limit is a server-side write-time check
+   * (app/(app)/settings/actions.ts's updateAdvisorInstructions), not something this type
+   * encodes — the column itself only enforces a flat 2,000-char absolute ceiling. */
+  advisor_instructions: string | null;
   /** Migration 0092, written not applied — when this student was shown the one-time
    * "welcome to Ultra" moment (Phase 57), or null if never. See lib/tier/ultra-welcome.ts:
    * an absent/unreadable value is deliberately NOT treated the same as null here (unlike
