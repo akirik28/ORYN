@@ -122,6 +122,16 @@ const CARD_ICONS: Record<UltraFeatureCardData["id"], typeof Zap> = {
  *   both reuse existing tokens (`--tier-accent-strong`, `--tier-grad-*`, `--tier-glow` via
  *   `.plan-ultra-card`, plain `border`/`text-muted-foreground` for the same-by-design
  *   cards), per the explicit instruction not to restyle the page's own palette.
+ *
+ * **2026-09-04, later the same night, founder direct: "bir de arka planı böyle loş yeşil
+ * yapalım" — a dim green ground for this page.** Confirmed with the founder before
+ * building: scoped to this page only, no shared surface touched (`.plan-page-ground`,
+ * app/globals.css — its own header comment has the full reasoning and the measured
+ * contrast numbers). Mounted here, not in app/(app)/layout.tsx, specifically so it can
+ * only ever paint behind this one component. Fixed/full-bleed rather than sized to the
+ * `max-w-3xl` column below it, so it reads as the page's own ground rather than a boxed
+ * panel; the actual content is lifted to `z-10` in a sibling div so nothing here changes
+ * which elements the content itself sits among.
  */
 export function PlanTierView({
   tier,
@@ -173,99 +183,111 @@ export function PlanTierView({
   }
 
   return (
-    <div className="max-w-3xl space-y-8">
-      <PageHeader title={t("title")} description={t("description")} />
+    <>
+      <div aria-hidden="true" className="plan-page-ground" />
+      <div className="relative z-10 max-w-3xl space-y-8">
+        <PageHeader className="dark [&_h1]:text-foreground" title={t("title")} description={t("description")} />
 
-      <Card>
-        <CardHeader className="flex flex-row items-center gap-4">
-          <Image
-            src={tier === "ultra" ? "/brand/logo-mark-flame.png" : "/brand/logo-mark.png"}
-            alt=""
-            width={56}
-            height={56}
-            className="size-14 shrink-0"
-            priority
-          />
-          <div>
-            <CardDescription>{t("currentPlanLabel")}</CardDescription>
-            <CardTitle className="text-2xl">{tier === "ultra" ? t("ultraName") : t("standardName")}</CardTitle>
-          </div>
-        </CardHeader>
-        {tier === "ultra" ? (
-          <CardContent>
-            <Badge variant="secondary" className="tier-glow-sm gap-1">
-              <Sparkles className="size-3" /> {t("ultraBadge")}
-            </Badge>
-          </CardContent>
-        ) : null}
-      </Card>
-
-      <UltraFeatureMarquee cards={marqueeCards} />
-
-      <div className="space-y-4">
-        <h2 className="font-semibold">{t("comparisonTitle")}</h2>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          {differsRows.map((row) => {
-            const Icon = CARD_ICONS[row.id];
-            return (
-              <div key={row.id} data-tier="ultra" className="plan-ultra-card rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-                <div className="flex items-center gap-2">
-                  <Icon className="size-4" style={{ color: "var(--tier-accent-strong)" }} aria-hidden="true" />
-                  <p className="text-sm font-medium">{t(`comparison.${row.id}.label`)}</p>
-                </div>
-                <dl className="mt-3 space-y-2.5">
-                  <div>
-                    <dt className="text-xs font-medium text-muted-foreground">{t("standardName")}</dt>
-                    <dd className="text-sm text-muted-foreground">
-                      {t(`comparison.${row.id}.standard`, comparisonValues(row.id, "standard"))}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-medium" style={{ color: "var(--tier-accent-strong)" }}>
-                      {t("ultraName")}
-                    </dt>
-                    <dd className="text-sm">{t(`comparison.${row.id}.ultra`, comparisonValues(row.id, "ultra"))}</dd>
-                  </div>
-                </dl>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Deliberately not .plan-ultra-card: no flame bar, no glow, a plain dashed border.
-            These two rows are the product stating a boundary on purpose (see this
-            component's own header comment), and the visual language has to say "not a
-            difference" as clearly as the differs cards above say "this is." */}
-        <div className="space-y-2">
-          {sameByDesignRows.map((row) => (
-            <div key={row.id} className="rounded-xl border border-dashed border-foreground/20 p-4">
-              <p className="text-sm font-medium">{t(`comparison.${row.id}.label`)}</p>
-              <p className="mt-1 text-sm text-muted-foreground italic">{t(`comparison.${row.id}.same`)}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {tier === "standard" ? (
         <Card>
-          <CardHeader>
-            <CardTitle>{t("interestTitle")}</CardTitle>
-            <CardDescription>{t("interestDescription")}</CardDescription>
+          <CardHeader className="flex flex-row items-center gap-4">
+            <Image
+              src={tier === "ultra" ? "/brand/logo-mark-flame.png" : "/brand/logo-mark.png"}
+              alt=""
+              width={56}
+              height={56}
+              className="size-14 shrink-0"
+              priority
+            />
+            <div>
+              <CardDescription>{t("currentPlanLabel")}</CardDescription>
+              <CardTitle className="text-2xl">{tier === "ultra" ? t("ultraName") : t("standardName")}</CardTitle>
+            </div>
           </CardHeader>
-          <CardContent>
-            {interestRegistered ? (
-              <p className="text-sm text-muted-foreground" role="status">
-                {t("interestConfirmed")}
-              </p>
-            ) : (
-              <Button onClick={registerInterest} disabled={isPending}>
-                {t("interestButton")}
-              </Button>
-            )}
-          </CardContent>
+          {tier === "ultra" ? (
+            <CardContent>
+              <Badge variant="secondary" className="tier-glow-sm gap-1">
+                <Sparkles className="size-3" /> {t("ultraBadge")}
+              </Badge>
+            </CardContent>
+          ) : null}
         </Card>
-      ) : null}
-    </div>
+
+        <UltraFeatureMarquee cards={marqueeCards} />
+
+        <div className="space-y-4">
+          <h2 className="dark font-semibold text-foreground">{t("comparisonTitle")}</h2>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {differsRows.map((row) => {
+              const Icon = CARD_ICONS[row.id];
+              return (
+                <div key={row.id} data-tier="ultra" className="plan-ultra-card rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+                  <div className="flex items-center gap-2">
+                    <Icon className="size-4" style={{ color: "var(--tier-accent-strong)" }} aria-hidden="true" />
+                    <p className="text-sm font-medium">{t(`comparison.${row.id}.label`)}</p>
+                  </div>
+                  <dl className="mt-3 space-y-2.5">
+                    <div>
+                      <dt className="text-xs font-medium text-muted-foreground">{t("standardName")}</dt>
+                      <dd className="text-sm text-muted-foreground">
+                        {t(`comparison.${row.id}.standard`, comparisonValues(row.id, "standard"))}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-medium" style={{ color: "var(--tier-accent-strong)" }}>
+                        {t("ultraName")}
+                      </dt>
+                      <dd className="text-sm">{t(`comparison.${row.id}.ultra`, comparisonValues(row.id, "ultra"))}</dd>
+                    </div>
+                  </dl>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Deliberately not .plan-ultra-card: no flame bar, no glow, a plain dashed border.
+              These two rows are the product stating a boundary on purpose (see this
+              component's own header comment), and the visual language has to say "not a
+              difference" as clearly as the differs cards above say "this is."
+
+              `dark` here (2026-09-04, the green-ground pass) exists purely so this box's
+              already-plain colors (border-foreground/20, text-muted-foreground) resolve
+              against the same dim-green ground the differs cards sit on -- not to make
+              these rows look like anything new. The label <p> gets an explicit
+              text-foreground for the same reason PageHeader's own <h1> needed one: with no
+              color class of its own it would otherwise inherit the page's light-theme
+              foreground from a distant ancestor instead of picking up this local .dark
+              scope's value. */}
+          <div className="dark space-y-2">
+            {sameByDesignRows.map((row) => (
+              <div key={row.id} className="rounded-xl border border-dashed border-foreground/20 p-4">
+                <p className="text-sm font-medium text-foreground">{t(`comparison.${row.id}.label`)}</p>
+                <p className="mt-1 text-sm text-muted-foreground italic">{t(`comparison.${row.id}.same`)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {tier === "standard" ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("interestTitle")}</CardTitle>
+              <CardDescription>{t("interestDescription")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {interestRegistered ? (
+                <p className="text-sm text-muted-foreground" role="status">
+                  {t("interestConfirmed")}
+                </p>
+              ) : (
+                <Button onClick={registerInterest} disabled={isPending}>
+                  {t("interestButton")}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ) : null}
+      </div>
+    </>
   );
 }

@@ -1189,6 +1189,55 @@
   background: linear-gradient(90deg, var(--tier-grad-1), var(--tier-grad-2), var(--tier-grad-3));
 }
 
+/* Plan page background (2026-09-04, founder direct: "arka planı böyle loş yeşil yapalım" --
+   a dim, muted green ground). Scoped to this one class and mounted only from
+   PlanTierView's own return (features/settings/plan-tier-view.tsx), never a
+   --background/--card token redefinition and never touched from app/(app)/layout.tsx --
+   the explicit instruction was "the Plan page only, nothing global," so this can only
+   ever paint behind the one component that renders this class name.
+
+   Both a light and a .dark line even though no in-product toggle reaches .dark today --
+   app/layout.tsx's own comment: light is the sole shipped default, .dark stays fully
+   defined and unused, ready for a real toggle later. This follows that exact established,
+   deliberately-dormant-until-a-toggle-exists pattern rather than inventing a different one
+   or skipping the dark value because it isn't reachable yet.
+
+   Sits above .ultra-ambient-glow's own ember/glow layer (mounted app-wide, z-0) at a
+   higher z-index so this page reads as its own dim-green ground rather than the ambient
+   glow and the green fighting for the same visual space -- an Ultra viewer still gets the
+   ember canvas on every OTHER page; here, this ground is what's meant to read as "premium
+   and different," not the particles.
+
+   Lightness picked against the two things that have to survive it (see PlanTierView's
+   own header comment on the honesty and mark-legibility constraints): a near-white
+   bg-card (the differs cards, the current-plan header) needs to keep reading as a
+   distinct card floating on top -- unaffected by this ground either way, since those
+   cards paint their own opaque background over it. The sameByDesign rows' plain
+   border-foreground/20 + text-muted-foreground -- deliberately NOT given a bg-card, so
+   they show this ground straight through -- are the ones actually sitting on this color,
+   and their light-theme-calibrated tones were NOT legible against it unmodified (first
+   attempt, caught live rather than shipped: the page heading and both sameByDesign rows
+   read as barely-visible dark-on-dark). Fixed with the existing `.dark` scope
+   (PlanTierView's own header comment on this pass explains why: --foreground/
+   --muted-foreground already have complete, correct, already-tested dark-mode values in
+   this file's own .dark block, so this reuses them rather than inventing page-specific
+   colors), not a bespoke color, so the "quietly promoted into feeling like a feature"
+   outcome the founder warned against still doesn't apply -- these rows read exactly as
+   plain as before, just legible now. Verified live via getComputedStyle + WCAG relative
+   luminance, against both the darkest and lightest declared gradient stops: the label
+   (text-foreground) measures 14.54:1 / 10.61:1, the muted value (text-muted-foreground)
+   6.84:1 / 4.99:1 -- all four clear WCAG AA's 4.5:1 floor for normal text. */
+.plan-page-ground {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(160deg, oklch(0.34 0.05 152) 0%, oklch(0.29 0.045 155) 55%, oklch(0.25 0.04 158) 100%);
+}
+.dark .plan-page-ground {
+  background: linear-gradient(160deg, oklch(0.16 0.035 152) 0%, oklch(0.12 0.03 155) 55%, oklch(0.095 0.025 158) 100%);
+}
+
 /* CV Generator (features/profile/cv-builder.tsx): isolates .cv-print-area as the only
    visible content when printing / saving as PDF, regardless of the app shell around it. */
 @media print {
