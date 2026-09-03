@@ -417,7 +417,14 @@ describe("migration numbering", () => {
     // Storing the already-computed expiry instead keeps resolvePlanTier exactly as simple
     // and synchronous as it already was, and makes a length change affect only future
     // grants -- see that migration's own header for the full reasoning.
-    expect(Math.max(...numbers.map(Number))).toBe(106);
+    // 0107 (page_views) is the visitor-counting table the founder asked for on 2026-09-03 --
+    // written, deliberately not applied, because it was the one control-centre surface with
+    // no table behind it at all rather than a missing column. 0108 (academic_tier) is the
+    // column pair that lets an institution say what academic kind it is, distinct from
+    // institution_type's ownership axis -- 275 staged institutions across five countries
+    // wait on it. Both proposed, neither applied. Bumping this from 106 caught exactly what
+    // it is for: 0108 landed while I was merging and the pin went red on the same push.
+    expect(Math.max(...numbers.map(Number))).toBe(108);
   });
 });
 
