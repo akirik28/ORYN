@@ -132,7 +132,7 @@ const BINDING_COMMITMENT_RE =
 export function ruleAuthoringRefusal(params: { category: RequirementCategory; title?: string | null; requirementDetail?: string | null }): string | null {
   const text = [params.title, params.requirementDetail].filter(Boolean).join(" — ");
   if (BINDING_COMMITMENT_RE.test(text)) {
-    return "This requirement names a binding application round (Early Decision, Restrictive/Single-Choice Early Action). That is a commitment a student makes, not a condition Oryn can mark satisfied, so it cannot carry a structured rule — leave it blank and it will show as needing review.";
+    return "This requirement names a binding application round (Early Decision, Restrictive/Single-Choice Early Action). That is a commitment a student makes, not a condition Proxola can mark satisfied, so it cannot carry a structured rule — leave it blank and it will show as needing review.";
   }
   if (MANUAL_REVIEW_CATEGORIES.includes(params.category)) {
     return `"${params.category}" is always reviewed by hand, so a structured rule on it would never be evaluated — leave it blank rather than recording a rule that looks authoritative and is never read.`;

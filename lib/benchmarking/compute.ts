@@ -15,7 +15,7 @@ export function computePercentileRank(peerScores: number[], myScore: number): nu
 }
 
 /**
- * The single gate between "real statistic" and "not enough comparable Oryn students yet."
+ * The single gate between "real statistic" and "not enough comparable Proxola students yet."
  * `peerScores` must already exclude the student's own score — see lib/benchmarking/cohort.ts.
  */
 export function evaluateBenchmarkDimension(dimension: BenchmarkDimension, myScore: number, peerScores: number[]): BenchmarkDimensionResult {
@@ -30,5 +30,5 @@ export function describeCohort(filter: CohortFilter): string {
   const parts: string[] = [];
   if (filter.graduationYear !== null) parts.push(`the class of ${filter.graduationYear}`);
   if (filter.curriculum !== null) parts.push(CURRICULUM_LABELS[filter.curriculum]);
-  return parts.length > 0 ? `Students in ${parts.join(" following ")}` : "All Oryn students";
+  return parts.length > 0 ? `Students in ${parts.join(" following ")}` : "All Proxola students";
 }

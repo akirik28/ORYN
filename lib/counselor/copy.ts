@@ -52,18 +52,18 @@ const SEVERITY_LABEL_EN: Record<GapSeverity, string> = {
   critical: "a significant current gap",
   moderate: "a moderate current gap",
   minor: "a minor current gap",
-  insufficient_data: "an area Oryn doesn't have enough data on yet",
+  insufficient_data: "an area Proxola doesn't have enough data on yet",
 };
 
 /**
  * The "Addresses {dimension}, {severity} ({score}/100)." family from evidence.ts.
  *
  * `insufficient_data` omits the score entirely (2026-09-02, Phase 79's audit) — this
- * severity means Oryn hasn't confidently assessed the dimension at all, and the
+ * severity means Proxola hasn't confidently assessed the dimension at all, and the
  * underlying score is 0 by construction for a dimension with no evidence (same fact
  * lib/scoring/signal.ts's own EvidenceState machinery is built around). Before this fix,
  * "insufficient data (0/100)" was live on every Counselor Core card for an unassessed
- * dimension — quoting a score for a dimension Oryn admits it can't assess is exactly the
+ * dimension — quoting a score for a dimension Proxola admits it can't assess is exactly the
  * "0 reported as a real weakness" Phase 68 forbids, the same principle the dashboard's own
  * profile-signal panel already holds a few files away. `alreadyStrongWhyLine` below is not
  * a sibling instance of this bug: `whyForOpportunity` (evidence.ts) only ever calls it when
@@ -93,8 +93,8 @@ export function verifiedActiveLine(locale: Locale): string {
 
 export function missingInfoWhyLine(locale: Locale): string {
   return locale === "tr"
-    ? "Oryn bu bilgiye henüz sahip değil — güvenilir öneriler için gerekli."
-    : "Oryn doesn't have this information yet — needed for confident recommendations.";
+    ? "Proxola bu bilgiye henüz sahip değil — güvenilir öneriler için gerekli."
+    : "Proxola doesn't have this information yet — needed for confident recommendations.";
 }
 
 const REQUIREMENT_CATEGORY_LABEL_TR: Record<RequirementCategory, string> = {

@@ -106,14 +106,14 @@ export function noStructuredRuleReason(locale: Locale): string {
 
 export function unreadableQualifiersReason(locale: Locale): string {
   return locale === "tr"
-    ? "Oryn bu gerekliliğe bağlı koşulları okuyamadı, bu yüzden bir sonuç konusunda tahmin yürütmeyecek — kaynak bağlantısını doğrudan kontrol et."
-    : "Oryn couldn't read the conditions attached to this requirement, so it won't guess at a verdict — check the source link directly.";
+    ? "Proxola bu gerekliliğe bağlı koşulları okuyamadı, bu yüzden bir sonuç konusunda tahmin yürütmeyecek — kaynak bağlantısını doğrudan kontrol et."
+    : "Proxola couldn't read the conditions attached to this requirement, so it won't guess at a verdict — check the source link directly.";
 }
 
 export function submittedMaterialReason(locale: Locale): string {
   return locale === "tr"
-    ? "Bu gereklilik, Oryn'ın otomatik olarak değerlendirmediği gönderilen materyale bağlı — bunu kendin incele."
-    : "This requirement depends on submitted material Oryn doesn't evaluate automatically — review it yourself.";
+    ? "Bu gereklilik, Proxola'nın otomatik olarak değerlendirmediği gönderilen materyale bağlı — bunu kendin incele."
+    : "This requirement depends on submitted material Proxola doesn't evaluate automatically — review it yourself.";
 }
 
 export function informationalReason(locale: Locale): string {
@@ -136,46 +136,46 @@ const GATE_COPY_TR: Record<EvaluationGate, string> = {
   inverted_recency:
     "Bu üniversite, bir kesim tarihinden ÖNCE değil, o tarihten SONRA alınan sertifikaları kabul etmiyor — alışılan \"yeterince güncel olmalı\" okuması burada tam tersi. Kaynak sayfadaki tam tarihleri kendi sertifikanla karşılaştır.",
   recency_window:
-    "Bu belgenin bir geçerlilik penceresi var ve Oryn, gerçekten başvuracağın noktada seninkinin hâlâ bu pencerenin içinde olup olmadığını söyleyemez. Pencereyi kaynak sayfadaki sertifika tarihinle karşılaştır.",
+    "Bu belgenin bir geçerlilik penceresi var ve Proxola, gerçekten başvuracağın noktada seninkinin hâlâ bu pencerenin içinde olup olmadığını söyleyemez. Pencereyi kaynak sayfadaki sertifika tarihinle karşılaştır.",
   unstated_scale:
     "Yayımlanan eşik, ölçeği belirtilmemiş çıplak bir sayı — bu yüzden puanını güvenle karşılaştırabileceğin bir şey yok. Bu sayının kaç üzerinden olduğunu kaynak sayfada kontrol et.",
   incomparable_scale:
-    "Bu eşik, Oryn'ın bir puan olarak ifade edemeyeceği bir sıralama veya kesim noktası — bu yüzden senin sayın ile bu gereklilik aynı türden bir büyüklük değil. Bunları kaynak sayfada kendin karşılaştır.",
+    "Bu eşik, Proxola'nın bir puan olarak ifade edemeyeceği bir sıralama veya kesim noktası — bu yüzden senin sayın ile bu gereklilik aynı türden bir büyüklük değil. Bunları kaynak sayfada kendin karşılaştır.",
   named_exclusion:
     "Bu üniversite, sayının kendisi yeterli olsa bile bir puanı elde etmenin bazı yollarını kabul etmiyor. Sonucuna güvenmeden önce hangi varyantları kabul ettiğini kaynak sayfada kontrol et.",
   eligibility_restriction:
-    "Bu, aşılması gereken bir eşik değil, kimin uygun olduğuna dair bir kısıtlama — bu yüzden Oryn bunu hiçbir yönde puanlamaz. Kaynak sayfada oku.",
+    "Bu, aşılması gereken bir eşik değil, kimin uygun olduğuna dair bir kısıtlama — bu yüzden Proxola bunu hiçbir yönde puanlamaz. Kaynak sayfada oku.",
   age_bar:
-    "Bu, tam doğum tarihine bağlı ve Oryn yalnızca doğum yılını saklıyor — bilerek, senin hakkında elinde tuttuğu bilgiyi mümkün olduğunca az tutmak için. Yılın ikinci yarısında doğduysan, yalnızca yıl bunu belirlemeye yetmez: kesim tarihini kendi doğum gününle karşılaştır.",
+    "Bu, tam doğum tarihine bağlı ve Proxola yalnızca doğum yılını saklıyor — bilerek, senin hakkında elinde tuttuğu bilgiyi mümkün olduğunca az tutmak için. Yılın ikinci yarısında doğduysan, yalnızca yıl bunu belirlemeye yetmez: kesim tarihini kendi doğum gününle karşılaştır.",
   source_conflict:
-    "İki resmi sayfa bunu farklı şekilde belirtiyor ve hiçbiri doğru olarak belirlenmedi — bu yüzden Oryn birini seçmez. Kaynağı doğrudan kontrol et.",
+    "İki resmi sayfa bunu farklı şekilde belirtiyor ve hiçbiri doğru olarak belirlenmedi — bu yüzden Proxola birini seçmez. Kaynağı doğrudan kontrol et.",
   historical:
     "Bu bilgi, artık kapanmış bir başvuru dönemi için doğruydu — bu yüzden senin başvuracağın dönemi tarif etmiyor olabilir. Güncel sayfayı kontrol et.",
   binding_commitment:
-    "Bu bir taahhüttür, işaretlenecek bir kutu değil. Bu tur kapsamında başvurmak seni bağlar: kabul edilirsen kayıt yaptırman ve diğer başvurularını geri çekmen beklenir. Oryn bunu asla karşılanmış olarak işaretlemez. Başvurmadan önce anlaşmayı okulunun rehber öğretmeni ve ailenle birlikte eksiksiz oku.",
+    "Bu bir taahhüttür, işaretlenecek bir kutu değil. Bu tur kapsamında başvurmak seni bağlar: kabul edilirsen kayıt yaptırman ve diğer başvurularını geri çekmen beklenir. Proxola bunu asla karşılanmış olarak işaretlemez. Başvurmadan önce anlaşmayı okulunun rehber öğretmeni ve ailenle birlikte eksiksiz oku.",
 };
 
 const GATE_COPY_EN: Record<EvaluationGate, string> = {
   inverted_recency:
     "This university refuses certificates taken AFTER a cut-off date, not before one — the usual \"must be recent enough\" reading is backwards here. Check the exact dates on the source page against your own certificate.",
   recency_window:
-    "This qualification has a validity window, and Oryn can't tell whether yours still falls inside it at the point you'd actually apply. Check the window against your certificate date on the source page.",
+    "This qualification has a validity window, and Proxola can't tell whether yours still falls inside it at the point you'd actually apply. Check the window against your certificate date on the source page.",
   unstated_scale:
     "The published threshold is a bare number with no scale stated, so there is nothing safe to compare your score to. Check the source page for the maximum this number is out of.",
   incomparable_scale:
-    "This threshold is a rank or a cut-off Oryn can't express as a score, so your number and the requirement aren't the same kind of quantity. Compare them yourself on the source page.",
+    "This threshold is a rank or a cut-off Proxola can't express as a score, so your number and the requirement aren't the same kind of quantity. Compare them yourself on the source page.",
   named_exclusion:
     "This university refuses some ways of obtaining a score even when the number itself qualifies. Check the source page for which variants it accepts before relying on your result.",
   eligibility_restriction:
-    "This is a restriction on who is eligible rather than a threshold to clear, so Oryn won't score it either way. Read it on the source page.",
+    "This is a restriction on who is eligible rather than a threshold to clear, so Proxola won't score it either way. Read it on the source page.",
   age_bar:
-    "This depends on your exact date of birth, and Oryn stores only your birth year — deliberately, so it holds as little about you as it can. If you were born in the second half of the year, the year alone can't settle it: check the cut-off date against your own birthday.",
+    "This depends on your exact date of birth, and Proxola stores only your birth year — deliberately, so it holds as little about you as it can. If you were born in the second half of the year, the year alone can't settle it: check the cut-off date against your own birthday.",
   source_conflict:
-    "Two official pages state this differently and neither has been established as correct, so Oryn won't pick one. Check the source directly.",
+    "Two official pages state this differently and neither has been established as correct, so Proxola won't pick one. Check the source directly.",
   historical:
     "This was correct for an application cycle that has already closed, so it may not describe the cycle you're applying in. Check the current page.",
   binding_commitment:
-    "This is a commitment, not a box to tick. Applying under this round binds you: if you're admitted you're expected to enrol and to withdraw your other applications. Oryn will never mark it satisfied. Read the agreement in full, with your school counsellor and your family, before you apply.",
+    "This is a commitment, not a box to tick. Applying under this round binds you: if you're admitted you're expected to enrol and to withdraw your other applications. Proxola will never mark it satisfied. Read the agreement in full, with your school counsellor and your family, before you apply.",
 };
 
 export function gateCopy(gate: EvaluationGate, locale: Locale): string {
@@ -260,12 +260,12 @@ export const languageCopy = {
 export const groupCopy = {
   exclusionPresent: (locale: Locale) =>
     locale === "tr"
-      ? "Bu gerekliliğe, Oryn'ın otomatik değerlendirmediği bir hariç tutma koşulu ekli — kaynağı doğrudan incele."
-      : "This requirement has an exclusion condition attached that Oryn doesn't evaluate automatically — review the source directly.",
+      ? "Bu gerekliliğe, Proxola'nın otomatik değerlendirmediği bir hariç tutma koşulu ekli — kaynağı doğrudan incele."
+      : "This requirement has an exclusion condition attached that Proxola doesn't evaluate automatically — review the source directly.",
   qualifierPresent: (locale: Locale) =>
     locale === "tr"
-      ? "Bu gerekliliğe, Oryn'ın otomatik değerlendirmediği ek bir koşul ekli (örneğin bir güncellik penceresi) — kaynağı doğrudan incele."
-      : "This requirement has an additional condition attached (e.g. a recency window) that Oryn doesn't evaluate automatically — review the source directly.",
+      ? "Bu gerekliliğe, Proxola'nın otomatik değerlendirmediği ek bir koşul ekli (örneğin bir güncellik penceresi) — kaynağı doğrudan incele."
+      : "This requirement has an additional condition attached (e.g. a recency window) that Proxola doesn't evaluate automatically — review the source directly.",
   noAlternatives: (locale: Locale) =>
     locale === "tr"
       ? "Bu gereklilik grubunda değerlendirilecek tanınan bir alternatif yok — kaynağı doğrudan incele."
@@ -313,8 +313,8 @@ export const recencyCopy = {
       : `${capitalize(describeWindow(rule, "en"))}, and the result you've recorded (${dates}) falls outside that.`,
   unresolved: (rule: RecencyRule, locale: Locale) =>
     locale === "tr"
-      ? `Bu gerekliliğin bir geçerlilik penceresi var — ${describeWindow(rule, "tr")} — ve Oryn sonucunun bunun içinde kaldığını doğrulayamıyor, bu yüzden bunu karşılanmış olarak işaretlemeyecek. Kaynak sayfadaki tarihleri kontrol et.`
-      : `This requirement has a validity window — ${describeWindow(rule, "en")} — and Oryn can't confirm your result falls inside it, so it won't call this met. Check the dates on the source page.`,
+      ? `Bu gerekliliğin bir geçerlilik penceresi var — ${describeWindow(rule, "tr")} — ve Proxola sonucunun bunun içinde kaldığını doğrulayamıyor, bu yüzden bunu karşılanmış olarak işaretlemeyecek. Kaynak sayfadaki tarihleri kontrol et.`
+      : `This requirement has a validity window — ${describeWindow(rule, "en")} — and Proxola can't confirm your result falls inside it, so it won't call this met. Check the dates on the source page.`,
 };
 
 // ---------------------------------------------------------------------------
@@ -328,8 +328,8 @@ export const provenanceCopy = {
       : `Your score qualifies on the number, but this university doesn't accept ${names} — how the score was obtained is what rules it out here, not the result.`,
   unknownProvenance: (names: string, locale: Locale) =>
     locale === "tr"
-      ? `Bu üniversite, sayı yeterli olsa bile ${names} kabul etmiyor ve Oryn puanının nasıl elde edildiğini bilmiyor — buna güvenmeden önce seninkinin bunlardan biri olmadığını kontrol et.`
-      : `This university doesn't accept ${names} even when the number qualifies, and Oryn doesn't know how your score was obtained — check that yours isn't one of these before relying on it.`,
+      ? `Bu üniversite, sayı yeterli olsa bile ${names} kabul etmiyor ve Proxola puanının nasıl elde edildiğini bilmiyor — buna güvenmeden önce seninkinin bunlardan biri olmadığını kontrol et.`
+      : `This university doesn't accept ${names} even when the number qualifies, and Proxola doesn't know how your score was obtained — check that yours isn't one of these before relying on it.`,
 };
 
 // ---------------------------------------------------------------------------
@@ -339,24 +339,24 @@ export const provenanceCopy = {
 export const testScoreCopy = {
   bareNumberNoScale: (qualifierLabel: string, locale: Locale) =>
     locale === "tr"
-      ? `Bu ${qualifierLabel} eşiği, ölçek belirtilmemiş çıplak bir sayı olarak kayıtlı ve ${qualifierLabel} puanları ölçekler arasında karşılaştırılamaz — Oryn hangisini kastettiğini tahmin etmeyecek. Kaynak sayfayı kontrol et.`
-      : `This ${qualifierLabel} threshold is recorded as a bare number with no scale attached, and ${qualifierLabel} scores aren't comparable across scales — Oryn won't guess which one it means. Check the source page.`,
+      ? `Bu ${qualifierLabel} eşiği, ölçek belirtilmemiş çıplak bir sayı olarak kayıtlı ve ${qualifierLabel} puanları ölçekler arasında karşılaştırılamaz — Proxola hangisini kastettiğini tahmin etmeyecek. Kaynak sayfayı kontrol et.`
+      : `This ${qualifierLabel} threshold is recorded as a bare number with no scale attached, and ${qualifierLabel} scores aren't comparable across scales — Proxola won't guess which one it means. Check the source page.`,
   noScoreOnFile: (testName: string, locale: Locale) => (locale === "tr" ? `Henüz kayıtlı bir ${testName} puanı yok.` : `No ${testName} score is on file yet.`),
   unstatedStudentScale: (ruleScale: string, testName: string, locale: Locale) =>
     locale === "tr"
-      ? `Bu eşik ${ruleScale} ölçeğinde belirtilmiş ve Oryn, ${testName} sonucunun hangi ölçekte olduğunu söyleyemiyor — puanının kaç üzerinden olduğunu kaydet ya da bunu kaynak sayfada kendin karşılaştır.`
-      : `This threshold is stated on the ${ruleScale} scale, and Oryn can't tell which scale your ${testName} result is on — record the maximum your score was out of, or compare it yourself on the source page.`,
+      ? `Bu eşik ${ruleScale} ölçeğinde belirtilmiş ve Proxola, ${testName} sonucunun hangi ölçekte olduğunu söyleyemiyor — puanının kaç üzerinden olduğunu kaydet ya da bunu kaynak sayfada kendin karşılaştır.`
+      : `This threshold is stated on the ${ruleScale} scale, and Proxola can't tell which scale your ${testName} result is on — record the maximum your score was out of, or compare it yourself on the source page.`,
   incomparableStudentScale: (testName: string, studentFamily: string, ruleScale: string, locale: Locale) =>
     locale === "tr"
-      ? `${testName} sonucun, bu eşikten (${ruleScale}) farklı bir ölçekte (${studentFamily}). İkisi birbirine dönüştürülemez, bu yüzden Oryn bunları karşılaştırmayacak.`
-      : `Your ${testName} result is on a different scale (${studentFamily}) than this threshold (${ruleScale}). The two aren't convertible, so Oryn won't compare them.`,
+      ? `${testName} sonucun, bu eşikten (${ruleScale}) farklı bir ölçekte (${studentFamily}). İkisi birbirine dönüştürülemez, bu yüzden Proxola bunları karşılaştırmayacak.`
+      : `Your ${testName} result is on a different scale (${studentFamily}) than this threshold (${ruleScale}). The two aren't convertible, so Proxola won't compare them.`,
   exactOnFileNoMinScore: (testName: string, locale: Locale) => (locale === "tr" ? `Kayıtlı bir ${testName} puanı var.` : `A ${testName} score is on file.`),
   similarOnFileNoMinScore: (similarTestName: string, locale: Locale) =>
     locale === "tr" ? `Benzer adlı bir testin ("${similarTestName}") puanı kayıtlı.` : `A score for a similarly-named test ("${similarTestName}") is on file.`,
   nonNumericScore: (testName: string, locale: Locale) =>
     locale === "tr"
-      ? `Bir ${testName} puanı kayıtlı, ancak Oryn'ın karşılaştırabileceği düz bir sayı değil — elle incele.`
-      : `A ${testName} score is on file but isn't a plain number Oryn can compare — review it manually.`,
+      ? `Bir ${testName} puanı kayıtlı, ancak Proxola'nın karşılaştırabileceği düz bir sayı değil — elle incele.`
+      : `A ${testName} score is on file but isn't a plain number Proxola can compare — review it manually.`,
   belowMinScore: (testName: string, best: number, minScore: number, locale: Locale) =>
     locale === "tr" ? `En iyi ${testName} puanın (${best}) gereken ${minScore} değerinin altında.` : `Your best ${testName} score (${best}) is below the required ${minScore}.`,
   exactMeetsMinScore: (testName: string, best: number, minScore: number, locale: Locale) =>

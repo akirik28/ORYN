@@ -23,7 +23,7 @@ export async function getPeerBenchmarks(userId: string): Promise<PeerBenchmarkSu
     supabase.from("profiles").select("graduation_year, curriculum, profile_strength_score").eq("id", userId).single(),
     supabase.from("profile_scores").select("dimension, score, confidence, reason_codes").eq("user_id", userId).eq("calculation_version", CAREER_PROFILE_SCORE_VERSION),
   ]);
-  if (!profile) return { cohortDescription: "All Oryn students", results: [] };
+  if (!profile) return { cohortDescription: "All Proxola students", results: [] };
 
   const filter: CohortFilter = { graduationYear: profile.graduation_year, curriculum: profile.curriculum };
 
@@ -48,7 +48,7 @@ export async function getPeerBenchmarks(userId: string): Promise<PeerBenchmarkSu
   }
 
   // Comparing this student's own not_assessed/limited_evidence dimension against peers
-  // would offer a percentile for a signal Oryn doesn't actually have -- the identical
+  // would offer a percentile for a signal Proxola doesn't actually have -- the identical
   // "score 0 reported as a real weakness" harm Phase 68 already forbids everywhere else
   // (lib/scoring/signal.ts's isAssessed/evidenceStateFor, reused here, not reimplemented).
   // "overall" is deliberately exempt: profile_strength_score is the one product-wide
