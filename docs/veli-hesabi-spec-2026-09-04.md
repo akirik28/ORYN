@@ -166,3 +166,41 @@ profiles.parent_invite_email  text   -- öğrencinin kayıtta verdiği veli adre
 - **Migrasyon numarasını CEO verir** — bu gece dört numara çakışması oldu
 - **`git add -A` ile paylaşılan checkout'ta scratch dosya bırakma**
 - **Paylaşılan tarayıcıda kurucunun oturumu var** — `127.0.0.1` + `/design-preview/*`
+
+---
+
+## 8. Şerit durumu — 4 Eylül 01:40 itibarıyla
+
+Bu bölüm CEO tarafından güncellenir. Şeritler kendi satırını değiştirmez.
+
+| Şerit | Durum | Nerede |
+|---|---|---|
+| **P1** — migrasyon + RLS | ✅ **birleşti** | `supabase/migrations/0116_parent_accounts.sql` — **uygulanmadı**, sabah paketinde |
+| **P2** — ayrı giriş, `/parent`, `Student sign in` | ⏳ devam | 71 |
+| **P3** — veli paneli + kahverengi tema | ⏳ devam | 11 |
+| **P4** — davet akışı | ✅ **birleşti** | `lib/parent/`, `app/(parent-invite)/`, ayarlar bölümü |
+| **P5** — haftalık AI yorumu | ⏸ **başlamadı** | — |
+| **P6** — ortak premium | ✅ **birleşti** | `lib/tier/parent-tier.ts`, `parent-interest-action.ts` |
+| **P7** — yükseltme pop-up'ları | ✅ **birleşti** | `lib/parent/upgrade-prompt.ts` |
+
+**Ana dal:** `14285d8f` — 396 dosya, 5.979 test, typecheck ve lint temiz.
+
+### Uygulanana kadar geçerli olan durum
+
+`parent_links` **canlıda yok.** Yazılan her şey bunu bilerek çalışıyor:
+okuma yolları `isUndefinedTableError` / `isUndefinedFunctionError` ile
+"kullanılamıyor" durumuna düşüyor, uydurma veri üretmiyor.
+
+**Uçtan uca kontroller (B1–B12) çalıştırılmadı** — tablo olmadan çalıştırılamaz.
+"Denendi, çalıştırılamadı" olarak raporlandı; yeşil gösterilmedi.
+
+### K6'ya ek — gönderim hâlâ kapalı
+
+Davet bağlantısı **gerçek ve kopyalanabilir** (ayarlar ekranında, "henüz mail
+göndermiyoruz" uyarısıyla). **Mail gönderimi kapalı**, hukuki cevaba bağlı.
+
+### Açık kalan
+
+- **P5 hiç başlamadı** — veliye haftalık AI yorumu (G6, G11, G15)
+- **§4'teki hukuki soru cevapsız** — reşit olmayanın verisine veli erişimi
+- `LEGAL_REVIEW.md` §8 yazılmadı
