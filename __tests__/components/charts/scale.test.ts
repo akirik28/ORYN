@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { linearScale, yDomain, buildLineSegments, buildAreaSegments, niceTicks, seriesColor } from "@/components/oryn/charts/scale";
+import { linearScale, yDomain, buildLineSegments, buildAreaSegments, niceTicks, seriesColor, round2 } from "@/components/oryn/charts/scale";
 
 /**
  * Coverage for the one rule every chart in the kit shares: a `null` point is a gap, never
@@ -132,5 +132,27 @@ describe("seriesColor", () => {
     const b = seriesColor(undefined, 1);
     expect(a).not.toBe(b);
     expect(seriesColor(undefined, 0)).toBe(a); // same index, same color, every time
+  });
+});
+
+describe("round2", () => {
+  // Regression: every default a11y-description fallback in this kit interpolates a raw
+  // series value with round2() now, after oryn-a7's live /kumanda re-verification (2026-09-03)
+  // found float-precision noise in job-budget-section's chart before this existed there, then
+  // swept to bar-chart/line-area-chart/stacked-bar-chart/sparkline sharing the same pattern.
+  test("kills float-precision noise from a repeating-decimal division", () => {
+    expect(round2(0.1 + 0.2)).toBe(0.3);
+    expect(round2(1 / 3)).toBe(0.33);
+    expect(round2(0.13630000000000003)).toBe(0.14);
+  });
+
+  test("leaves a clean 2-decimal value unchanged", () => {
+    expect(round2(25)).toBe(25);
+    expect(round2(4.5)).toBe(4.5);
+    expect(round2(0)).toBe(0);
+  });
+
+  test("rounds a large accumulated sum the same way", () => {
+    expect(round2(147.01953894479044)).toBe(147.02);
   });
 });

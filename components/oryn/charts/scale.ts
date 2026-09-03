@@ -100,6 +100,22 @@ export function buildAreaSegments(data: SeriesPoint[], xScale: (x: number) => nu
   return segments;
 }
 
+/**
+ * Rounds a raw value to 2 decimal places before it reaches text — every default a11y
+ * description fallback in this kit interpolates a raw series value (`${value}`), and a
+ * float that was never meant to be displayed (a summed cost, a cumulative spend) prints as
+ * `0.13630000000000003` instead of `0.14` if nothing rounds it first. Found live during
+ * 2026-09-03's Turkish pass (burn-chart.tsx, then swept to every other chart in this kit
+ * after oryn-a7's own /kumanda re-verification caught more instances of the same class).
+ * 2 decimals, not currency-formatted or locale-aware — the caller-supplied
+ * `a11y.description` is where real formatting and translation belong (see e.g.
+ * job-budget-section.tsx, ai-feature-shape-section.tsx); this only keeps the untouched
+ * fallback from being actively broken for a caller that hasn't supplied one.
+ */
+export function round2(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
 /** "Nice" tick values for an axis — plain multiples of a power-of-ten-ish step, not a
  *  library. Good enough for admin dashboards (spend, counts, percentages), not meant to
  *  handle every edge case a general-purpose charting library would. */

@@ -1,5 +1,5 @@
 import { ChartA11y } from "./chart-a11y";
-import { linearScale, buildLineSegments, buildAreaSegments, niceTicks } from "./scale";
+import { linearScale, buildLineSegments, buildAreaSegments, niceTicks, round2 } from "./scale";
 import type { ChartA11yProps, ChartSizeProps, SeriesPoint } from "./types";
 
 const VB_WIDTH = 480;
@@ -21,18 +21,16 @@ const PAD = { top: 12, right: 16, bottom: 24, left: 44 };
  * `actual`'s own gap-honesty rule still applies in full: a day with no recorded spend is
  * `{ y: null }`, not `{ y: 0 }`, and renders as a break in the line, same as every other
  * chart here.
+ *
+ * round2 (scale.ts) kills float-precision noise (0.13630000000000003) in both the visible
+ * ceiling label and the default sr-only description below — found here first during
+ * 2026-09-03's Turkish pass, where every *visible* dollar figure elsewhere on the job-budget
+ * section was already formatted to cents via money(), but this chart's own raw `${value}`
+ * interpolation wasn't; later swept to every chart in this kit sharing the same fallback
+ * pattern. The caller-supplied `a11y.description` path (job-budget-section.tsx) bypasses
+ * this in favor of its own already-correct money() formatting -- round2 only protects the
+ * fallback, for a caller (or a future one) that doesn't supply its own.
  */
-/** Kills float-precision noise (0.13630000000000003) in both the visible ceiling label and
- *  the default sr-only description below — found during 2026-09-03's Turkish pass, where
- *  every *visible* dollar figure elsewhere on the job-budget section was already formatted
- *  to cents via money(), but this chart's own raw `${value}` interpolation wasn't. Rounds
- *  regardless of locale; the caller-supplied `a11y.description` path (job-budget-section.tsx)
- *  bypasses this in favor of its own already-correct money() formatting -- this only
- *  protects the fallback, for a caller (or a future one) that doesn't supply its own. */
-function round2(value: number): number {
-  return Math.round(value * 100) / 100;
-}
-
 export function BurnChart({
   actual,
   budget,

@@ -1,5 +1,5 @@
 import { ChartA11y } from "./chart-a11y";
-import { linearScale, yDomain, buildLineSegments } from "./scale";
+import { linearScale, yDomain, buildLineSegments, round2 } from "./scale";
 import type { ChartA11yProps, SeriesPoint } from "./types";
 
 const VB_WIDTH = 120;
@@ -25,7 +25,7 @@ export function Sparkline({ data, color = "var(--admin-accent-bright)", a11y }: 
   const last = known[known.length - 1];
   const first = known[0];
   const trend = last !== undefined && first !== undefined ? (last >= first ? "up" : "down") : "flat";
-  const description = a11y.description ?? (last !== undefined ? `Trending ${trend}, latest value ${last}` : "No data");
+  const description = a11y.description ?? (last !== undefined ? `Trending ${trend}, latest value ${round2(last)}` : "No data");
 
   return (
     <ChartA11y title={a11y.title} description={description} className="inline-block">

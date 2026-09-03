@@ -1,5 +1,5 @@
 import { ChartA11y } from "./chart-a11y";
-import { linearScale, niceTicks, seriesColor } from "./scale";
+import { linearScale, niceTicks, seriesColor, round2 } from "./scale";
 import type { ChartA11yProps, ChartSeries, ChartSizeProps } from "./types";
 
 const VB_WIDTH = 480;
@@ -76,7 +76,7 @@ export function StackedBarChart({ series, categories, a11y, ...size }: { series:
 function describeStack(series: ChartSeries[], categories: (string | number)[]): string {
   return categories
     .map((cat, i) => {
-      const parts = series.map((s) => `${s.label} ${s.data[i]?.y ?? "no data"}`).join(", ");
+      const parts = series.map((s) => `${s.label} ${s.data[i]?.y != null ? round2(s.data[i]!.y!) : "no data"}`).join(", ");
       return `${cat}: ${parts}`;
     })
     .join(". ");

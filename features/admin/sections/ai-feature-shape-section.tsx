@@ -30,9 +30,14 @@ export async function AiFeatureShapeSection() {
     <section className="space-y-3">
       <h2 className="font-semibold">{t("sectionTitle")}</h2>
 
+      {/* Explicit a11y.description rather than BarChart's own describeBars() fallback --
+          found during oryn-a7's live /kumanda re-verification (2026-09-03) interpolating raw
+          summed costUsd floats ("147.01953894479044") with no formatting at all. Same
+          money()-formatted, already-translated-label pattern as job-budget-section.tsx's own
+          BurnChart fix from earlier the same night. */}
       <BarChart
         series={{ id: "byCategory", label: t("byCategory"), data: byCategory }}
-        a11y={{ title: t("byCategory") }}
+        a11y={{ title: t("byCategory"), description: byCategory.map((row) => `${row.x}: ${money(row.y)}`).join(", ") }}
         aspectRatio={480 / 220}
       />
 
