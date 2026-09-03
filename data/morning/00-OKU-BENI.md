@@ -10,7 +10,7 @@ Uyandığında sırayla bunlar. Yedi adım, tahminen 15 dakika — beşi kopyala
 | Kurum adı boş fırsat | 190 tanesi dolar |
 | İncelemedeki kayıt | 84'ü öğrencinin göreceği katalog'a geçer |
 | Üniversite gereksinimi | 14 kurumda 141 satırdan 351'e |
-| Yeni fırsat | 9 tane eklenir |
+| Yeni fırsat | 15 tane eklenir |
 | Tekrar eden öneri | 98 kopya silinir, gerçek olan kalır |
 | Kumanda merkezi | açılır ve kullanılabilir olur |
 
@@ -129,7 +129,7 @@ program kapsanıyor" sayısı yine 32'de kalıyor. Derinlik geldi, kapsam geniş
 
 ## 6. Yeni fırsatları katalog'a al
 
-Üç parti hazır bekliyor, **9 yeni fırsat.** Terminalden, sırayla:
+Beş parti hazır bekliyor, **15 yeni fırsat.** Terminalden, sırayla:
 
 ```bash
 npm run ingest:opportunities -- data/research/opportunities/batch-category-balance-2026-09-03.jsonl --apply
@@ -140,18 +140,45 @@ npm run ingest:opportunities -- data/research/opportunities/batch-catalog-fill-2
 ```bash
 npm run ingest:opportunities -- data/research/opportunities/batch-catalog-scale-2026-09-03.jsonl --apply
 ```
+```bash
+npm run ingest:opportunities -- data/research/opportunities/batch-catalog-format-seam-2026-09-03.jsonl --apply
+```
+```bash
+npm run ingest:opportunities -- data/research/opportunities/batch-scholarship-corridor-2026-09-03.jsonl --apply
+```
 
 `--apply` olmadan çalıştırırsan sadece ne olacağını gösterir, hiçbir şey yazmaz. Üçünü de
-öyle çalıştırdım: **9 kabul, 3 red.**
+öyle çalıştırdım: **15 kabul, 3 red.**
 
 Reddedilen üçü hakkında: bd o kayıtları zaten "kaynağın kendi sitesinden doğrulanamadı,
 ikinci el kaynağa dayanıyor" diye işaretlemişti. **Kapı da bağımsız olarak aynı kararı
 verdi** — biri "arama sonucu keşif kanıtıdır, doğrulama değil" diyor. Yani sistem, insanın
 dürüst uyarısını kendi başına teyit etti. Bu üçü katalog'a girmiyor, doğrusu da bu.
 
-Girecek dokuz: Forage (ücretsiz iş simülasyonları), NYAS Junior Academy, sci-MI (ücretsiz
-dünya çapında araştırma mentorluğu), Pivotal Essay Contest, Medicine Encompassed, CS50x,
-Zooniverse, iNaturalist, Emory Winship (sanal).
+Girecek onbeş — ilk dokuz: Forage (ücretsiz iş simülasyonları), NYAS Junior Academy,
+sci-MI (ücretsiz dünya çapında araştırma mentorluğu), Pivotal Essay Contest, Medicine
+Encompassed, CS50x, Zooniverse, iNaturalist, Emory Winship (sanal).
+
+Sabaha karşı eklenen altı: Hack Club, Global Appathon, Discover MUN — ve **burs
+kategorisinden üç tane**, ki bu kategori bugün katalogda sadece 9 kayıt.
+
+Burs tarafında asıl anlatılması gereken şey **kabul edilenler değil, reddedilenler.** 13
+aday araştırıldı, 10'u elendi ve her biri ayrı bir sebeple: Elks yalnız ABD vatandaşlarına;
+DAAD, KYK, Anadolu Vakfı, Sabancı — hepsi üniversite seviyesinde, yaş bandı tutmuyor.
+Sevenoaks'ın bursu kendi sayfasına göre onursal, gerçek para desteği ise okulun Kent'teki
+çevresinde oturan gündüzlü öğrencilere ayrılmış — yani Türkiye'den erişilemiyor. Robert
+Kolej'in kendi sayfası bu dönemin hazırlık sınıfı fonunun **tükendiğini** yazıyor; eklesek
+bugün yanlış olan bir şey yazmış olurduk. Darüşşafaka ve UWC ikisi de doğru adaydı ama her
+iki sitede de otomatik erişim 403 döndü — arama özetine dayanıp yazmak yerine dışarıda
+bırakıldı.
+
+Yani burs kategorisi 9'dan 12'ye çıkıyor, 30'a değil. Tavan gerçek: bu yaş grubuna
+Türkiye'den gerçekten açık olan burs sayısı az.
+
+**Ayrıca bir tanesi zaten katalogda ama yanlış yerde:** Breakthrough Junior Challenge
+(13-18 yaş, dünya çapında, 250 bin dolarlık burs, son tarih 15 Eylül — 12 gün) `competition`
+olarak kayıtlı. Bugün "burs" diye arayan bir öğrenci onu bulamıyor. Yeni kayıt değil,
+mevcut bir kaydın kategorisi — bu yüzden yukarıdaki komutlarla düzelmiyor, ayrı bir karar.
 
 ## 7. Yayına almadan önce — sadece deploy edeceksen
 
