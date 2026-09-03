@@ -256,6 +256,31 @@ it documents.
 > the due-set filter for a caller-supplied representative sample, additive, production callers
 > never set it. 4 new tests. Gates green throughout.
 
+> **Follow-up, 2026-09-03: the date-scoping fix, and the two "open" cases resolved with real
+> evidence.** Full detail in `docs/reverification-final-dryrun-2026-09-03.md`'s own updated
+> section — CEO follow-up on the two secondary findings directly above.
+>
+> **Fixed:** `findDateCandidates` now runs on the specific excerpt each branch of
+> `classifyAgainstStoredState` returns (`deadlineFromExcerpt`), never on the whole page. Girl
+> Up Project Awards' real cached page re-run through the fixed function: `detectedDeadline`
+> is `null`, not the spurious "Dec. 2 2022" found 1,100+ characters from the actual closure
+> statement. 2 new tests (a date far from the match is no longer attributed; a date genuinely
+> near the match is still found — no loss of real signal).
+>
+> **Resolved, not just noted:** read both pages in full, not just the 80-char excerpt the
+> adjudicator saw. ODTÜ's date is exactly a programme date, confirmed by the page's own
+> hour-by-hour schedule for the identical span — but the full page also says *"[the 2026
+> edition] will be organized by Radyo ODTÜ... contact Radyo ODTÜ"*, meaning this page's own
+> "Apply Now" may not even be this year's process, a problem the excerpt-bounded adjudicator
+> structurally could not see. EYP Türkiye's date is not a programme date at all — it's the
+> **publication date of the exact headline matched on**, in a three-item news feed where every
+> entry says "OPEN NOW" in the same present tense; a national-session call open for 3+ months
+> is implausible, so this one is more likely stale than fine. Neither resolution changes what
+> gets written — both are `open` proposals and §9(2) makes promotion never-automatic — and
+> widening what the adjudicator sees to catch shapes like ODTÜ's is a real tradeoff (more
+> context vs. §5.1's own fishing-expedition risk), left as a founder/CEO-level call, not
+> decided here.
+
 ---
 
 ## 0. Summary

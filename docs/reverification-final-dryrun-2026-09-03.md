@@ -102,34 +102,66 @@ consistently, not just on the cases this session already knew to worry about:
 Zero of the 13 read as the adjudicator being fooled or over-cautious for no reason — every
 decline cites something real and specific in the excerpt it was given.
 
-## Two secondary findings from this run, both bounded, neither blocking
+## Two secondary findings — one fixed, one resolved with real evidence (CEO follow-up, 2026-09-03)
 
-**1. `findDateCandidates` scans the whole page, not the matched excerpt — so a correct
-closure classification can carry a real but unrelated date.** Girl Up Project Awards was
-correctly classified `p1_changed`/closed on *"The 2025 Project Award application is now
-closed..."*, but `detectedDeadline` picked up *"Dec. 2 2022"* — a real, literal substring of
-the page (satisfying §8.3's excerpt-or-nothing rule), just not connected to the 2025
-closure being described. Checked what this can actually affect: `applyDemotion`
-(`run-job.ts`) only ever writes `cycle_status`, never `deadline` — the mismatched date lands
-in the `opportunity_verification_runs.proposed_change` audit blob, not on the live
-`opportunities` row. Real noise in the audit trail a human reviewer would see; not a risk to
-the data itself. Worth a future fix (scope date-candidate extraction to a window around the
-matched excerpt, not the whole page) but not urgent.
+**1. FIXED. `findDateCandidates` scanned the whole page, not the matched excerpt — so a
+correct closure classification could carry a real but unrelated date.** Girl Up Project
+Awards was correctly classified `p1_changed`/closed on *"The 2025 Project Award application
+is now closed..."*, but `detectedDeadline` picked up *"Dec. 2 2022"* — a real, literal
+substring of the page (satisfying §8.3's excerpt-or-nothing rule), just from over 1,100
+characters away, nowhere near the closure statement. `applyDemotion` (`run-job.ts`) only
+ever writes `cycle_status`, never `deadline`, so this never risked live data — but it
+polluted exactly the audit trail a human reads when deciding whether to trust a proposed
+change. Fixed: `classifyAgainstStoredState` now derives `detectedDeadline` from the specific
+excerpt each branch returns (`deadlineFromExcerpt`, `classify.ts`), never from the whole
+page. Re-run against the real, cached Girl Up page: `detectedDeadline` is now `null` instead
+of the spurious 2022 date. Two new tests, one reconstructing this exact shape (date far from
+the match — not attributed) and one confirming a date genuinely near the match is still
+found (no loss of real signal, only of misattributed signal).
 
-**2. Two "open" confirmations sit next to a date that reads as stale, and the adjudicator
-confirmed anyway.** ODTÜ/METU (*"Tarih: 30 Haziran - 11 Temmuz 2025 Şimdi Başvur"*) and EYP
-Türkiye (*"...2026-05-25 DELEGATE CALLS FOR ISTANBUL ARE OPEN NOW"*) both carry a date
-several months to over a year old, sitting inside the same 80-character excerpt window the
-model saw. A defensible reading: "Tarih: 30 Haziran - 11 Temmuz 2025" is the *programme's
-own running dates*, not an application deadline, so it says nothing about whether the
-current cycle is open — the model may be reading it correctly, not ignoring a red flag. But
-it's close enough to worth naming. Bounded regardless: both are `cycle_status: "open"`
-proposals, and §9(2) makes promotion to open **never** automatic — nothing about this can
-write a wrong `cycle_status`. Worst case is `source_verified_at` getting stamped a little
-early on a row whose true current state is genuinely ambiguous.
+**2. RESOLVED, with the full page read, not just the 80-character excerpt the adjudicator
+saw.** Two "open" confirmations sat next to a date that read as stale in the excerpt alone —
+worth answering definitively rather than leaving as a note, and the two turned out to be
+different shapes, not the same one:
 
-Neither finding changes the headline numbers above or argues against arming; both are
-worth a maintainer's attention at some point, not a blocker now.
+- **ODTÜ/METU — the date itself is exactly what it looks like: a programme date, not a
+  deadline, confirmed by the page's own detailed day-by-day schedule** ("Program Takvimi...
+  Pazartesi, 30 Haziran... Salı, 1 Temmuz..." — the same June 30–July 11 span, laid out hour
+  by hour). The adjudicator wasn't wrong to treat "Tarih: 30 Haziran - 11 Temmuz 2025" as
+  unrelated to open/closed status. **But the full page surfaces a real, separate problem the
+  80-character excerpt structurally could not show it**: the page's second sentence reads
+  *"ODTÜ Mühendislik Yaz Okulu 2026'da Radyo ODTÜ tarafından düzenlenecektir. Başvuru ve
+  detaylı bilgi için Radyo ODTÜ ile iletişime geçmeniz gerekmektedir."* — *"[This programme]
+  will be organized by Radyo ODTÜ in 2026. For applications and detailed information, contact
+  Radyo ODTÜ."* This page's own "Şimdi Başvur" button is very plausibly leftover from the
+  2025 edition; the current (2026) process has moved to a different organizer entirely, and
+  nothing in the matched excerpt could reveal that. Not a bug in the fix under discussion
+  here — a real, structural limit of excerpt-bounded adjudication (deliberate, per §5.1: the
+  model sees only the matched excerpt, specifically so it can't go on a page-wide fishing
+  expedition) — but it means this particular `p1_changed`/open verdict is more likely wrong
+  than the date question alone would suggest, for a reason the date question doesn't touch.
+- **EYP Türkiye — not a programme date, and not fully resolved either.** The full page is a
+  chronological news feed (*"Latest News... stories from EYP Türkiye"*) listing three
+  announcements, each dated and each phrased in the same present tense: `2026-05-25`
+  "DELEGATE CALLS FOR ISTANBUL ARE OPEN NOW", `2026-03-10` "DELEGATE CALLS FOR ESKİŞEHİR ARE
+  OPEN NOW", `2026-02-24` "Officer Calls are Now Open!". `2026-05-25` is the **publication
+  date of the exact headline the adjudicator matched on** — not an unrelated field the way
+  ODTÜ's programme date was. A national-session delegate call realistically stays open for
+  weeks, not the 3+ months between that post and today (2026-09-03); the far more likely
+  reading is that this specific call has since closed and the post simply remains live as a
+  permanent news-feed entry, its present-tense headline no longer describing the current
+  state. This does **not** resolve the way ODTÜ's did — it's closer to evidence the
+  `p1_changed`/open verdict here is probably stale rather than probably fine.
+
+Both remain bounded the same way regardless of which reading is right: both are `cycle_status:
+"open"` proposals, and §9(2) makes promotion to open **never** automatic — neither can write
+a wrong `cycle_status`. Worst case for either is `source_verified_at` getting stamped on a
+row whose true current state is more uncertain than the deterministic pass alone could tell.
+Not fixed here — fixing it would mean widening what the adjudicator is allowed to see, which
+is a real design tradeoff (more context helps catch shapes like ODTÜ's organizer handoff, at
+the cost of the fishing-expedition risk §5.1 built the narrow excerpt specifically to avoid)
+and a founder/CEO-level call, not something to change unilaterally inside a bounded
+follow-up task.
 
 ## Sampling methodology — why these 113 rows, and what "representative" means here
 

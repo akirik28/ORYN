@@ -317,14 +317,30 @@ export type DeterministicVerdict =
  * §7.6 mechanism 2) — the "agrees" case requires the page to *positively* state something
  * about the stored cycle, not merely fail to contradict it.
  */
+/**
+ * Design doc §5.1 step 3, scoped to a single matched excerpt rather than the whole page.
+ *
+ * Found 2026-09-03, live, in the first representative-sample dry run: a full-page scan let
+ * Girl Up Project Awards' correct `p1_changed`/closed verdict (excerpt: "...application is
+ * now closed for youth in MENA...") carry a `detectedDeadline` of "Dec. 2 2022" — a real,
+ * literal substring of the page (satisfying §8.3's excerpt-or-nothing rule), just from an
+ * unrelated part of it, nowhere near the closure statement itself. Harmless to live data
+ * (run-job.ts's applyDemotion only ever writes `cycle_status`, never `deadline`), but it
+ * pollutes exactly the audit trail a human reviews when deciding whether to trust a
+ * proposed change — an unrelated date sitting next to a correct verdict reads as evidence
+ * the verdict considered, when it didn't.
+ */
+function deadlineFromExcerpt(excerpt: string): string | null {
+  const candidates = findDateCandidates(excerpt);
+  return candidates.length > 0 ? candidates[0] : null;
+}
+
 export function classifyAgainstStoredState(
   content: string,
   stored: Pick<ReverificationCandidate, "cycleStatus" | "deadline">
 ): DeterministicVerdict {
   const closureMatches = findClosurePhrases(content);
   const openingMatches = findOpeningPhrases(content);
-  const dateCandidates = findDateCandidates(content);
-  const detectedDeadline = dateCandidates.length > 0 ? dateCandidates[0] : null;
 
   const stateImpliesOpen = stored.cycleStatus === "open" || stored.cycleStatus === "upcoming";
   const stateImpliesClosed = stored.cycleStatus === "closed" || stored.cycleStatus === "historical" || stored.cycleStatus === "discontinued";
@@ -342,14 +358,17 @@ export function classifyAgainstStoredState(
   // forward-looking, decision-critical fact (design doc §9's demotion envelope separately
   // requires "no future-dated application signal on the same page" before ever demoting).
   if (closureFound && openingFound) {
-    return { kind: "agrees", excerpt: openingMatches[0].excerpt, detectedDeadline };
+    const excerpt = openingMatches[0].excerpt;
+    return { kind: "agrees", excerpt, detectedDeadline: deadlineFromExcerpt(excerpt) };
   }
 
   if (closureFound && stateImpliesOpen) {
-    return { kind: "disagreement", excerpt: closureMatches[0].excerpt, closureFound: true, openingFound: false, detectedDeadline };
+    const excerpt = closureMatches[0].excerpt;
+    return { kind: "disagreement", excerpt, closureFound: true, openingFound: false, detectedDeadline: deadlineFromExcerpt(excerpt) };
   }
   if (openingFound && stateImpliesClosed) {
-    return { kind: "disagreement", excerpt: openingMatches[0].excerpt, closureFound: false, openingFound: true, detectedDeadline };
+    const excerpt = openingMatches[0].excerpt;
+    return { kind: "disagreement", excerpt, closureFound: false, openingFound: true, detectedDeadline: deadlineFromExcerpt(excerpt) };
   }
 
   // Found here 2026-09-03, via the Turkish sample, but not Turkish-specific: it silently
@@ -374,14 +393,16 @@ export function classifyAgainstStoredState(
   // previously wrote nothing at all.
   if ((closureFound || openingFound) && stateIsUnknown) {
     const excerpt = closureFound ? closureMatches[0].excerpt : openingMatches[0].excerpt;
-    return { kind: "disagreement", excerpt, closureFound, openingFound, detectedDeadline };
+    return { kind: "disagreement", excerpt, closureFound, openingFound, detectedDeadline: deadlineFromExcerpt(excerpt) };
   }
 
   if (closureFound && stateImpliesClosed) {
-    return { kind: "agrees", excerpt: closureMatches[0].excerpt, detectedDeadline };
+    const excerpt = closureMatches[0].excerpt;
+    return { kind: "agrees", excerpt, detectedDeadline: deadlineFromExcerpt(excerpt) };
   }
   if (openingFound && stateImpliesOpen) {
-    return { kind: "agrees", excerpt: openingMatches[0].excerpt, detectedDeadline };
+    const excerpt = openingMatches[0].excerpt;
+    return { kind: "agrees", excerpt, detectedDeadline: deadlineFromExcerpt(excerpt) };
   }
 
   // Neither phrase set matched anything. The page passed every content guard (it is about

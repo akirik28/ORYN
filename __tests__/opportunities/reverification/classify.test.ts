@@ -267,6 +267,24 @@ describe("classifyAgainstStoredState -- the full deterministic decision tree", (
       expect(classifyAgainstStoredState(closure, { cycleStatus: "closed", deadline: null }).kind).toBe("agrees");
     });
   });
+
+  describe("detectedDeadline is scoped to the matched excerpt, not the whole page (fixed 2026-09-03 -- the Girl Up Project Awards shape from the first representative dry run: a correct closure verdict carried an unrelated date, 'Dec. 2 2022', found elsewhere on the page)", () => {
+    test("a date far from the matched phrase is not attributed to the verdict", () => {
+      const closureSentence = "The 2025 Project Award application is now closed for youth in several regions this cycle.";
+      const unrelatedDateFarAway = "x".repeat(200) + " An older, unrelated cohort's deadline was Dec. 2 2022, noted here for archive purposes only.";
+      const content = LONG_ENOUGH(closureSentence + unrelatedDateFarAway);
+      const verdict = classifyAgainstStoredState(content, { cycleStatus: "closed", deadline: null });
+      expect(verdict.kind).toBe("agrees");
+      if (verdict.kind === "agrees") expect(verdict.detectedDeadline).toBeNull();
+    });
+
+    test("a date genuinely close to the matched phrase is still found", () => {
+      const content = LONG_ENOUGH("Please note: applications are closed as of March 15, 2027 for this year's cycle.");
+      const verdict = classifyAgainstStoredState(content, { cycleStatus: "closed", deadline: null });
+      expect(verdict.kind).toBe("agrees");
+      if (verdict.kind === "agrees") expect(verdict.detectedDeadline).toBe("March 15, 2027");
+    });
+  });
 });
 
 describe("Turkish patterns, 2026-09-03 -- each traceable to a specific real page from the 21-page Turkish-market sample, not a translation of the English list", () => {
