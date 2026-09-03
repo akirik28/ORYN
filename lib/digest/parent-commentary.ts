@@ -7,6 +7,7 @@ import { readOr } from "@/lib/supabase/safe-read";
 import { buildDigestContent, type DigestOpportunityMatchItem } from "./build";
 import { buildProfileChange, describeProfileChange, type ProfileChange } from "@/lib/scoring/change";
 import { NOTIFIABLE_DIMENSION_DELTA } from "@/lib/scoring/profile-update-notification";
+import { resolveParentEffectiveTier } from "@/lib/tier/parent-tier";
 import { getAIProvider, AIProviderNotConfiguredError } from "@/lib/ai/index";
 import { withUsageLogging } from "@/lib/ai/usage";
 import { selectModelForUser } from "@/lib/ai/limits/budget";
@@ -306,14 +307,24 @@ export type ParentCommentaryOutcome =
 
 /**
  * The tier-aware entry point — mirrors lib/digest/run.ts's own processOneStudent exactly:
- * check entitlement first, only then spend anything building content. K4 (spec) defines a
- * parent's effective tier as their linked student's plan_tier directly, so this checks the
- * STUDENT's own profile row -- correct today, and still correct once P1 lands, since nothing
- * about tier inheritance changes when parent_links exists. What P1 adds is the ability to
- * find which studentUserIds a given parent is linked to; this function doesn't need that to
- * be correct for one already-known studentUserId. Note for whoever wires that batch runner:
- * filter to parent_links.status = 'active' before calling this at all — 'pending' grants
- * nothing (oryn-45, 2026-09-04).
+ * check entitlement first, only then spend anything building content. Tier resolved via
+ * lib/tier/parent-tier.ts's resolveParentEffectiveTier, not a raw `plan_tier` column read —
+ * an earlier version of this function did exactly that raw read, and P6 (the tier-inheritance
+ * lane, landed 2026-09-04 while this file was being corrected for the same reason) is why it
+ * didn't ship that way: a raw `plan_tier === "ultra"` check misses a currently-active Ultra
+ * *gift* (`ultra_gift_expires_at` in the future, permanent `plan_tier` still "standard") —
+ * resolveParentEffectiveTier already calls the one function (`resolvePlanTier`,
+ * lib/tier/plan-tier.ts, ~30 existing call sites) that resolves both correctly, and this
+ * routes through it rather than re-deriving the same fallback a third time.
+ *
+ * `linkStatus` is hardcoded "active" here, not read from `parent_links` — P1 isn't applied,
+ * and more importantly, this function's own contract (per its header) is "given an
+ * ALREADY-KNOWN, already-authorized studentUserId, build content" — the link-status gate
+ * belongs to the future batch runner that iterates real parent_links rows and must filter to
+ * `status = 'active'` BEFORE ever calling this function at all; a `pending` link grants
+ * nothing (oryn-45, 2026-09-04), and this function has no way to independently confirm that
+ * without parent_links, so it trusts its caller the same way processOneStudent trusts
+ * `runDigestPass`'s own candidate-loading to have already applied the opt-in filter.
  *
  * Queries `profiles` a second time (buildParentWeeklyCommentary reads its own display_name/
  * preferred_language columns independently) rather than threading a pre-fetched row through —
@@ -327,8 +338,8 @@ export async function resolveParentWeeklyCommentary(
   studentUserId: string,
   since: string | null
 ): Promise<ParentCommentaryOutcome> {
-  const { data: tierRow } = await supabase.from("profiles").select("plan_tier").eq("id", studentUserId).single();
-  const tier: PlanTier = (tierRow?.plan_tier as PlanTier | undefined) ?? "standard";
+  const { data: tierRow } = await supabase.from("profiles").select("plan_tier, ultra_gift_expires_at").eq("id", studentUserId).single();
+  const tier: PlanTier = resolveParentEffectiveTier("active", { plan_tier: (tierRow?.plan_tier as PlanTier | undefined) ?? "standard", ultra_gift_expires_at: tierRow?.ultra_gift_expires_at ?? null });
   if (tier !== "ultra") return { kind: "not_premium" };
 
   const content = await buildParentWeeklyCommentary(supabase, studentUserId, since);
