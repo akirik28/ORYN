@@ -359,10 +359,19 @@ const REGISTRY: AdmissionSystemEntry[] = [
     },
     international: {
       shape: "academic_threshold",
+      // 2026-09-03 addendum: checked directly (Nuffic's own "Higher education" page) whether
+      // this shape genuinely holds for HBO, not just the WO research this entry was originally
+      // built from -- it does. Numerus fixus applies "to some study programmes in both higher
+      // professional education [HBO] and university education [WO]" per Nuffic, and the
+      // studiekeuzecheck some HBOs run is confirmed non-binding advice, not a selection gate,
+      // for both sectors. Unlike Finland (two separate governing Acts, a genuine divergence),
+      // the Netherlands runs HBO and WO under one shared framework (WHW, Studielink, the 2023
+      // selection-method law) -- a confirmed convergence, not an assumption, so no subdivisions
+      // entry was added. See netherlands.md's HBO-specific confirmation addendum.
       mechanism:
-        "For open (non-numerus-fixus) Dutch programmes, meeting the qualification and subject requirements is effectively the decision — eligible and admitted are the same thing. Recommendation letters are not a standard requirement and there is no activities review.",
+        "For open (non-numerus-fixus) Dutch programmes, meeting the qualification and subject requirements is effectively the decision — eligible and admitted are the same thing. Recommendation letters are not a standard requirement and there is no activities review. For a Turkish Lise Diploması specifically: Nuffic's own comparison places it at 'at least a HAVO diploma' — HBO's (applied sciences) own entry bar — so HBO is often directly reachable on the Lise Diploması alone, while WO's higher VWO-equivalent bar typically needs a supplementary qualification (see netherlands.md's Tilburg/VU findings).",
       mechanismTr:
-        "Açık (numerus fixus olmayan) Hollanda programlarında, nitelik ve ders şartlarını karşılamak fiilen kabul kararının kendisidir — uygun olmak ile kabul edilmek aynı şeydir. Referans mektupları standart bir gereklilik değildir ve aktivite incelemesi yapılmaz.",
+        "Açık (numerus fixus olmayan) Hollanda programlarında, nitelik ve ders şartlarını karşılamak fiilen kabul kararının kendisidir — uygun olmak ile kabul edilmek aynı şeydir. Referans mektupları standart bir gereklilik değildir ve aktivite incelemesi yapılmaz. Türk Lise Diploması için özellikle: Nuffic'in resmi karşılaştırmasına göre bu diploma en az HAVO diploması düzeyinde kabul edilir — bu da HBO'nun (uygulamalı bilimler yüksekokulu) kendi giriş barajıdır. Bu nedenle Lise Diploması çoğunlukla tek başına HBO'ya doğrudan giriş için yeterlidir; WO'nun (araştırma üniversitesi) daha yüksek VWO-eşdeğeri barajı ise genellikle ek bir belge gerektirir (bkz. netherlands.md'deki Tilburg/VU bulguları).",
     },
     fieldOverrides: [
       {
