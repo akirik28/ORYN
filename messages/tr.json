@@ -1933,7 +1933,8 @@
       "footerNote": "Öğrenci uygulamasından ayrı. Buradaki hiçbir şeye öğrenci erişemez.",
       "overviewTitle": "Bugün neye bakman gerekiyor",
       "overviewDescription": "Her şeyi değil — sadece karar bekleyenleri.",
-      "overviewPlaceholder": "Dikkat listesi ve özet kartlar buraya gelecek. Bu ekran bilerek kısa: diğer her alanın raydaki kendi yeri var, üst üste yığılmıyorlar."
+      "overviewPlaceholder": "Dikkat listesi ve özet kartlar buraya gelecek. Bu ekran bilerek kısa: diğer her alanın raydaki kendi yeri var, üst üste yığılmıyorlar.",
+      "ledgerDescription": "Her admin işlemi, tek listede — hangi tabloya yazıldığından bağımsız."
     },
     "growth": {
       "signups": {
