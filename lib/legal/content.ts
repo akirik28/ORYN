@@ -368,6 +368,13 @@ export const LAWYER_FLAGS: LawyerFlag[] = [
     currentState:
       "scripts/acquire-opportunity-images.ts has re-hosted 65 opportunity images this way (full analysis in docs/opportunity-image-licensing.md). No organizer has granted an explicit licence; the claim rests on inferring intent from the meta tag, not on a stated permission. Every re-hosted image records the exact source page and retrieval date, and states plainly that no licence is declared and the depiction is not independently verified — that documents provenance, it does not clear rights. No takedown mechanism exists yet; removal today is a manual database query and a storage-object delete.",
   },
+  {
+    id: "feedbackReportRetention",
+    question:
+      "On account deletion, does anonymizing a feedback_reports row (nulling user_id, keeping the free-text message) satisfy an erasure right, or must the row be deleted outright — and does a student have any way to review or remove a report they already sent, short of deleting their whole account?",
+    currentState:
+      "feedback_reports.user_id is on delete set null (migration 0113, proposed, not yet applied), the same mechanism as ai_usage (aiUsageAnonymization above) — but the content is not comparable: ai_usage retains seven metering columns and no prose, while message is free text a student wrote in their own words, which can incidentally name people, schools, or situations that stay identifiable even once user_id is null. No UI lets a student view, edit, or delete a report after sending it — a select-own RLS policy exists (added so the report can be included in the account data export, lib/export/tables.ts), but nothing today reads through it for the student's own benefit. LEGAL_REVIEW.md §7 lays out three options (keep the current anonymize-in-place behavior, cascade-delete the row outright, or scrub the message text while keeping row metadata) with their costs, and notes that changing the on-delete behavior is a one-line, no-backfill edit for as long as migration 0113 stays unapplied — it is currently staged in the founder's own pending-migration package (data/morning/07-migrations-bekleyen-2026-09-03.sql) and becomes a real migration decision the moment that package runs.",
+  },
 ];
 
 // ---------------------------------------------------------------------------

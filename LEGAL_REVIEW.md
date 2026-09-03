@@ -172,6 +172,49 @@ what the product does *today*, so advice is given against reality rather than in
    takedown mechanism exists yet; removal today is a manual database query and a
    storage-object delete.
 
+9. **AI usage anonymization on deletion (new — corrects a gap in this list, not in the
+   underlying decision).** `ai_usage.user_id` is `on delete set null` (migration
+   `0013_ops.sql`), not cascade — the one exception among 41 otherwise-cascading owner
+   tables at the time of `DATA_RIGHTS_AUDIT.md`'s Part 1. Is anonymizing the row (nulling
+   `user_id`, keeping `feature`/`provider`/`model`/token counts/`cost`) sufficient to
+   satisfy an erasure right, or must the row be deleted outright?
+   *Today:* `logAIUsage()` (`lib/ai/usage.ts`) never writes prompt or response text to this
+   table, only aggregate metering columns — what survives an account deletion is usage
+   totals with no remaining identifier and no qualitative content. Engineering's own
+   (non-lawyer) read is that this is a legitimate anonymization, distinct from a retained
+   personal-data record — but that is reasoning, not a decision. This flag existed in
+   `LAWYER_FLAGS` (`lib/legal/content.ts`) before this revision; it was missing from this
+   numbered list specifically, which is what the next item's own discovery caught.
+
+10. **AI model degradation disclosure (new — same correction).** `selectModelForUser()`
+    (`lib/ai/limits/budget.ts`) silently switches every AI feature to a cheaper model once
+    a student's month-to-date spend crosses a soft threshold. Is the existing in-product
+    notice (a usage-meter note, plus a per-reply "lighter model" tag) sufficient
+    disclosure, or does the Terms/Privacy text need to name the mechanism generally?
+    *Today:* disclosed in-app in both surfaces named above, in both languages
+    (`messages/en.json`/`messages/tr.json`); neither the Terms' AI-output section nor the
+    Privacy Notice's AI section mentions it in either language. Not a false statement to
+    correct — a silence about a real, recurring behavior. Also pre-existed in
+    `LAWYER_FLAGS`, also missing from this list until now.
+
+11. **Feedback report content and account deletion (new).** On account deletion, does
+    anonymizing a `feedback_reports` row (nulling `user_id`, keeping the free-text
+    `message`) satisfy an erasure right, or must the row be deleted outright — and does a
+    student have any way to review or remove a report they already sent, short of deleting
+    their whole account?
+    *Today:* `feedback_reports.user_id` is `on delete set null` (migration 0113, proposed,
+    not yet applied), the same mechanism as `ai_usage` in item 9 above — but the content is
+    not comparable. `ai_usage` retains seven metering columns and no prose; `message` is
+    free text a student wrote in their own words, which can incidentally name people,
+    schools, or situations (*"my counselor Ahmet at [school] keeps..."*) that stay
+    identifiable even once `user_id` is null. See §7 for the full analysis, including why
+    this is currently cheap to change and will not stay that way. Separately: no UI lets a
+    student view, edit, or delete a report after sending it — a select-own RLS policy
+    exists (added so the report can be included in the account data export,
+    `lib/export/tables.ts`), but nothing today reads through it for the student's own
+    benefit. The only lever a student has over a report they regret sending is deleting
+    their entire account, which — per the question above — may not even remove it.
+
 ---
 
 ## 4. What is actually implemented
@@ -212,7 +255,7 @@ evidence, guardian consent, automated retention limits.
 - [ ] Fill in company identity in `COMPANY` (`lib/legal/content.ts`) — registered name, number, address, contact addresses. Renders correctly in both languages once filled (only the placeholder chip is bilingual; the values themselves are locale-invariant facts like a registration number).
 - [x] ~~Translate the KVKK notice into Turkish.~~ Done 2026-08-31 — along with Privacy and Terms, not KVKK alone.
 - [ ] Have a Turkish-qualified lawyer or professional legal translator review `legalCopyTr` independently of the English source review (item 7 in §3).
-- [ ] Answer the remaining six open questions in section 3; update the affected document sections in **both** `legalCopyEn` and `legalCopyTr`.
+- [ ] Answer the remaining nine open questions in section 3 (items 2-6, 8-11 — item 1 is resolved for text and item 7 has its own line above); update the affected document sections in **both** `legalCopyEn` and `legalCopyTr` where the answer changes what's published (items 9-11 are new engineering findings with no corresponding published copy yet to update).
 - [ ] Have counsel draft the liability, disclaimer, and governing-law sections, in both languages.
 - [ ] Set `LEGAL_REVIEW_STATUS.approved = true` **with** `reviewedBy` and `reviewedOn` — a test enforces this. One flag covers both languages; if English and Turkish end up needing to be approved on different dates, that's a real gap in this constant worth flagging back to whoever built it.
 - [ ] Re-verify the processor inventory against the code; add any provider introduced since, **to both `DATA_PROCESSORS_EN` and `DATA_PROCESSORS_TR`** — a test checks the two arrays' facts (id, personalData, verifiedIn) can't silently diverge, but won't catch a provider added to only one.
@@ -349,3 +392,95 @@ requires in the many countries that permit a lower age. **Whether to build per-c
 logic or adopt one conservative number is a decision for counsel, not a fact this document
 can settle** — it depends on risk tolerance and maintenance appetite as much as on the law
 itself.
+
+---
+
+## 7. Feedback report retention and deletion — a decision to make before this migration runs
+
+This section is design and analysis, not an implementation, and not a recommendation
+between the options — the same posture §6 already takes. It expands item 11 in §3.
+
+**The problem, stated precisely.** The feedback form (built 2026-09-03, per the founder's
+own request for a place to report problems or leave feedback) stores each submission as one
+row: free text the student wrote, the page they were on, their locale, and their plan
+tier — nothing else. `user_id` links it to its author. Migration 0113, which creates the
+table, sets that column `on delete set null` — the row survives its author's account
+being deleted, orphaned rather than removed. That choice was made by copying
+`admin_action_log`'s precedent (an operational audit table, migration 0097) without
+re-examining whether an audit log and a minor's own written words are the same kind of
+content. They are not: an audit log records *what an admin did*; this table records
+*what a student chose to tell Oryn, in their own sentences*, and free text has no schema
+to keep it from naming a person, a place, or a situation.
+
+### 7.1 What the code does today, verified directly
+
+| Fact | Detail |
+|---|---|
+| Deletion behavior | `feedback_reports.user_id uuid references public.profiles(id) on delete set null` (`supabase/migrations/0113_feedback_reports.sql`). Deleting an account nulls the link; the row, including `message`, is untouched. |
+| Content retained | `message` (free text, unbounded by any schema beyond a 2000-character client-side cap — `app/(app)/feedback/actions.ts`), `path`, `locale`, `plan_tier`, `created_at`. No structured fields that could be selectively redacted; the risk, if any, lives entirely inside the prose. |
+| Who can read it | The service-role admin client (`features/admin/sections/feedback-reports-section.tsx`, no student-facing surface) and, as of this migration, the report's own author via a select-own RLS policy — added specifically so the row can be included in the account data export, not so a student could review their own submission history; no UI exists that does the latter. |
+| Precedent this mirrors | `ai_usage.user_id` (item 9 in §3, migration `0013_ops.sql`) uses the identical `on delete set null` mechanism and is the one existing case where engineering's own (non-lawyer) reasoning called anonymize-in-place defensible — because what survives there is seven metering columns and zero prose. That reasoning does not transfer here; it is named as the closest precedent, not as an argument this table should get the same answer. |
+| Retention duration | No limit, same as every other table in this product (§3 item 5) — this section is about what happens *on deletion*, not about an independent time-based purge, which stays covered by the existing general question. |
+
+### 7.2 Options, with their real costs
+
+**A — Keep `on delete set null` (the current, shipped behavior).**
+- *What it costs:* if the free text ever names someone or something identifying, that
+  content outlives the account whose owner might later ask for it to be gone — an erasure
+  request that does not actually erase the thing most likely to contain personal detail.
+- *What it buys:* the report stays useful as operational history (a real bug or complaint
+  described in the student's own words) even once the reporting account no longer exists,
+  matching why `ai_usage`/`admin_action_log` chose the same shape for their own content.
+- *Engineering cost to keep:* none — this is what's already written.
+
+**B — Change to `on delete cascade`. The row is deleted outright with the account.**
+- *What it costs:* a real complaint or bug report vanishes the moment its author deletes
+  their account, even if the underlying problem it described is still live and unfixed —
+  operational memory is traded for a cleaner erasure story.
+- *What it buys:* the simplest, most defensible answer to "did deleting my account delete
+  what I told you" — yes, all of it, no exceptions to explain.
+- *Engineering cost to keep:* trivial while unapplied — see §7.3.
+
+**C — A middle path: on deletion, scrub `message` but keep the row's metadata.**
+Not something either the founder or CEO asked for; naming it because a "design options"
+document is where an unexamined middle ground should get examined, not because it's
+favored.
+- *What it buys:* keeps *"a report existed, on this page, at this time"* for operational
+  trend-watching (are certain pages generating more complaints?) while actually removing
+  the one field that could contain a person's own words about themselves.
+- *What it costs:* real engineering — a trigger or application-level scrub on deletion,
+  not a column default — and a second decision this document is even less positioned to
+  make: is a redacted stub still useful to anyone, or does it just look like erasure
+  without being simpler than B to reason about?
+- Flagging this option exists; not analyzing it further than that.
+
+### 7.3 The part that is cheap now and will not stay that way
+
+**Migration 0113 has never been applied to any database.** It is currently staged as item
+8 of 8 in the founder's own pending-migration package
+(`data/morning/07-migrations-bekleyen-2026-09-03.sql`, described in
+`data/morning/07-OKU-BENI-migrations.md`) — one transaction, run once, by the founder,
+against a table that has zero existing rows anywhere.
+
+- **If Option A stays the answer:** nothing to do. Ship as written.
+- **If B or C is chosen before that package is run:** it is a one-line edit to the `on
+  delete` clause in `supabase/migrations/0113_feedback_reports.sql`, *and* the identical
+  embedded copy inside `data/morning/07-migrations-bekleyen-2026-09-03.sql` (the two must
+  be kept in sync or the founder runs a table that doesn't match the tracked migration) —
+  no backfill, nothing to migrate, because no row has ever existed to reconcile.
+- **If the decision comes after that package is run:** it becomes a real migration against
+  however many genuine rows exist by then, and needs its own answer for what happens to
+  reports collected under the old rule — which is a strictly harder version of the same
+  question, not a new one.
+
+The founder does not need to decide this before running the rest of that package — only
+before this specific line in it, if the answer turns out to be B or C.
+
+### 7.4 What this document cannot resolve
+
+Whether free text submitted through a feedback/support channel counts as the kind of
+personal data an erasure right reaches, or as an operational business record a company may
+retain regardless of who wrote it, is a real, unsettled-here legal question — not an
+engineering judgment call, and not one this document is taking a side on by describing the
+options. That answer belongs with the founder and counsel together, the same posture §6.3
+already states for the minor-consent age threshold.
