@@ -139,37 +139,22 @@ sütun** var: elle araştırma `financial_aid_available`'ı, otomatik çıkarım
 `funding_available`'ı yazıyor — ikisi asla birlikte dolmuyor. İkisi de migration gerektiren
 şema kararları, o yüzden sana bırakıldı.
 
-**Yeniden doğrulama işi, tasarlandığı haliyle hiçbir şeyi doğrulamıyor.** b9 kurdu, sonra
-20 gerçek sayfayla deneme çalıştırdı: **20 sayfanın 16'sı temiz açıldı, doğru programa
-aitti, ve iş hiçbirini doğrulanmış işaretlemedi.** Sebep sıradan: iş "applications open",
-"apply by" gibi sabit kalıplar arıyor, gerçek sayfalar ise "Apply Now", "Register today"
-yazıyor. Bunu ancak çalıştırınca öğrenebilirdik. Şimdi kalıpları gerçek sayfalardan
-çıkardı: 49 gerçek sayfayı elle okudu ve sorunun kelime dağarcığı değil **kelime sırası**
-olduğunu buldu — iki ayrı sayfa "ARE NOW OPENED" ve "ARE OPEN NOW" yazıyor. Yeni kalıplarla
-aynı 20 satırda 0 doğrulamadan 8'e çıktı, sıfır yanlış pozitifle. **Ve iş ilk kez gerçek bir
-şey yakaladı:** USC Pre-College bizde "açık" kayıtlı, kendi sayfası "2026 başvuruları kapandı"
-diyor.
+**Yeniden doğrulama işi: silahlandıralım mı?** Gece boyunca kuruldu, ölçüldü, düzeltildi
+ve son olarak **113 gerçek kayıtla** çalıştırıldı — hiçbir yazma yapmadan.
 
-Ama dürüst olan kısım: geniş örneklemde hâlâ %67'si sessiz. Yani kalıp eşleştirme boşluğun
-bir kısmını kapatıyor, çoğunu değil.
+Karar vermen için gereken sayı: **113 kaydın 3'ü kapalıya düşürülecekti.** Üçü de elle
+kontrol edildi, üçü de gerçek ("2025 başvurusu kapandı", "şu an başvuruya açık değil"),
+hiçbiri yanlış pozitif değil. Tüm katalogda tahminen 6-8 kayıt. Yani otuz değil, üç de değil.
 
-**Senin pazarın için ayrı bir sorun var:** 49 sayfanın 5'i Türkçe ve hiç İngilizce açılma/
-kapanma ifadesi taşımıyor. Yani iş bu kayıtları hiçbir yönde doğrulayamıyor. Türkçe kalıplar
-şimdi çıkarılıyor. **İş kapalı duruyor, kendiliğinden çalışmıyor.**
+**Ve daha önce sana yazdığım bir sayı yanlıştı, düzeltiyorum:** "sayfaların çoğu okunamıyor"
+demiştim. Gerçekte **113 kaydın sadece 2'si (%1,8) gerçekten erişilemez.** Kalanı gayet
+okunuyor, sadece açık/kapalı olduğunu söylemiyor. Bu bambaşka bir sorun — erişim değil,
+kanıt sorunu. Erişilemedi sanılan 10 kaydın hepsi Internet Archive kopyasıyla kurtarıldı.
 
-**Veritabanında kapsamın dışında 458 üniversite var — ne yapacağız?** Gece boyunca on ülke
-eklendi ve etkisi ölçüldü: **611 kurumdan 42'si artık hiçbir seçicilik etiketi göstermiyor**
-(gerçek araştırma, "bilinmiyor"u kod yolundan tamamen çıkarıyor), 33'ü ise boş yerine
-kaynaklı bir mekanizmaya dayanıyor.
+Bugün ne yapardı: 27 kayıt (%24) doğrulanmış işaretlenirdi, 3'ü düşürülürdü, 63'ü "sayfa
+bir şey söylemiyor" diye bırakılırdı.
 
-Ama kalanların dağılımı bir soru soruyor. En çok bilinmeyen kurumu olan ülkeler: **Çin 64,
-Hindistan 37, Güney Kore 31, Malezya 25, Japonya 22.** Hiçbiri şartnamedeki ABD/UK/Avrupa/
-Türkiye koridorunda değil. Koridor içinde kalan ise ince: Finlandiya 9, sonra Litvanya 4,
-Estonya 3, Kıbrıs 3.
-
-Yani "en çok kurum" ile "bu ürün için en önemli" ters yönü gösteriyor. Üç seçenek: koridoru
-genişlet, o kurumları veritabanından çıkar, ya da kalsınlar ama etiketsiz. **Şu an
-üçüncüsünün yarısındayız** — duruyorlar ve dürüst bir uyarıyla etiket gösteriyorlar.
+**İş şu an kapalı ve öyle duruyor.** Açmak senin kararın.
 
 **Fırsat görselleri ve lisans.** 282 kaydın 218'inde görsel yok, ve **128'inin kaynak
 sayfasında zaten görsel yok** — daha çok taramak bunu çözmüyor. Üçüncü taraf görseli
