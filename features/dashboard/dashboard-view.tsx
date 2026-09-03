@@ -13,6 +13,7 @@ import { ErrorState } from "@/components/oryn/error-state";
 import { DeadlineBadge } from "@/components/oryn/deadline-badge";
 import { ButtonLink } from "@/components/ui/button-link";
 import { WeeklyFocus } from "@/features/dashboard/weekly-focus";
+import { OpportunityStrip } from "@/features/dashboard/opportunity-strip";
 import { CounselorWeekFallback } from "@/features/dashboard/counselor-week-fallback";
 import { GeneratePlanButton } from "@/features/dashboard/generate-plan-button";
 import { ProfileSignal } from "@/features/dashboard/profile-signal";
@@ -24,6 +25,7 @@ import { describeProfileChange, type ProfileChange } from "@/lib/scoring/change"
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
 import type { getUpcomingDeadlines, DeadlineSource } from "@/lib/deadlines/upcoming";
+import type { HomeStripOpportunity } from "@/lib/opportunities/home-strip";
 import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
 import type { CounselorRecommendation } from "@/lib/counselor";
 import type { ProfileDimension, Opportunity, PlanTier } from "@/types/database";
@@ -70,6 +72,10 @@ export interface DashboardViewProps {
   upcomingDeadlines: Awaited<ReturnType<typeof getUpcomingDeadlines>>;
   targetUniversities: Awaited<ReturnType<typeof getTargetUniversitiesWithDetails>>;
   opportunityPreview: { title: string; matchScore: number; deadline: string | null; cycleStatus: Opportunity["cycle_status"] | null }[];
+  /** The richer, full-card rotating strip (features/dashboard/opportunity-strip.tsx) --
+   * additive to opportunityPreview above, not a replacement for it. See that component's
+   * own header for the empty/thin/full-state handling and the sponsored-slot seam. */
+  opportunityStrip: HomeStripOpportunity[];
   /** False only when refreshOpportunityMatches skipped its write this render (the admin
    * client wasn't configured) -- never for "genuinely zero matches," which is its own,
    * non-stale outcome. AGENTS.md Phase 45 / Rule 4: never let a page imply this preview
@@ -108,6 +114,7 @@ export async function DashboardView({
   upcomingDeadlines,
   targetUniversities,
   opportunityPreview,
+  opportunityStrip,
   opportunityMatchesRefreshed,
   showUltraWelcome = false,
 }: DashboardViewProps) {
@@ -542,6 +549,20 @@ export async function DashboardView({
               )}
             </section>
           </div>
+
+          {/* Rotating opportunity strip (2026-09-03, founder dispatch) -- additive to the
+              small text preview two sections up, not a replacement for it: that panel stays
+              for a fast, quiet glance; this is the richer, prominent surface the founder
+              asked for. Full-width, its own section rather than squeezed into the paired
+              grid above, so it isn't fighting a half-width column for space -- see
+              features/dashboard/opportunity-strip.tsx for the empty/thin/full-state
+              handling, the motion mechanism, and the sponsored-slot seam. */}
+          <section>
+            <SectionHeader title={t("newOpportunities")} />
+            <div className="mt-5">
+              <OpportunityStrip opportunities={opportunityStrip} locale={locale} />
+            </div>
+          </section>
         </div>
       </div>
     </div>

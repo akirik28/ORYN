@@ -11,6 +11,9 @@ import type { ProfileChange } from "@/lib/scoring/change";
 import type { MonthlyReview } from "@/lib/scoring/monthly-review";
 import type { PortfolioItem, PortfolioSkill } from "@/lib/portfolio/types";
 import type { UniversityCardMeta } from "@/lib/universities/browse-page";
+import { computeEligibility, type StudentMatchProfile } from "@/lib/opportunities/matching";
+import type { HomeStripOpportunity } from "@/lib/opportunities/home-strip";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 export const FIXTURE_STUDENT = {
   displayName: "Ada",
@@ -726,7 +729,14 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       selectivity_tier: "selective",
       verification_state: "verified_current",
       application_open_date: null,
-      eligible_grades: [],
+      // ["11","12"] added 2026-09-03: computeEligibility's grade axis (lib/opportunities/
+      // matching.ts) pushes "not verified yet" whenever eligible_grades is empty, with no
+      // confirmed-open escape hatch equivalent to countryEligibilityConfirmedOpen below --
+      // this fixture's own comment two lines down claims a fully confident, caveat-free
+      // match, which needs a real, satisfied grade restriction to actually be true (not
+      // just the country one). Matches a rising junior/senior, consistent with "aged
+      // 15-18" above.
+      eligible_grades: ["11", "12"],
       citizenship_restrictions: null,
       residency_restrictions: null,
       eligible_citizenships: [],
@@ -748,7 +758,10 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       country_entity_id: null,
       access_channel: null,
       // Matches this fixture's own description ("open to students aged 15-18 worldwide") —
-      // the research-confirmed-open case, so no "not verified" note renders for it.
+      // the research-confirmed-open case, so no country "not verified" note renders for it.
+      // (Age and grade both have real bounds set above too, satisfied by
+      // FIXTURE_MATCH_STUDENT in lib/dev/fixtures.ts -- all three axes clear, so this is the
+      // one FIXTURE_OPPORTUNITIES entry that reaches a genuinely caveat-free match.)
       country_eligibility_confirmed_open: true,
       created_at: daysFromNow(-30),
       updated_at: daysFromNow(-3),
@@ -982,6 +995,69 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
     reasonCodes: [],
   },
 ];
+
+/** A representative matching-engine student, for `buildFixtureHomeStrip` below only — not
+ * the same fixture FIXTURE_STUDENT above is (that one is display-only: name/score/trend).
+ * Distinct from a real request's StudentMatchProfile in that it never changes, which is the
+ * point: a fixture that ran through the real computeEligibility should show real, current
+ * copy, not a hand-typed guess at what that copy says that silently drifts the moment the
+ * real sentences change. */
+const FIXTURE_MATCH_STUDENT: StudentMatchProfile = {
+  age: 17,
+  country: "Turkey",
+  interests: ["Economics"],
+  weakestDimensions: ["research", "awards_distinction"],
+  citizenshipCountries: ["Turkey"],
+  graduationYear: new Date().getFullYear() + 1,
+};
+
+/**
+ * Maps FIXTURE_OPPORTUNITIES into the shape features/dashboard/opportunity-strip.tsx
+ * actually renders, for app/(dev-preview)/design-preview's dashboard previews. `eligible`
+ * is never checked here (all five fixtures are `active`/eligible by construction) — only
+ * `eligibilityNotes` is computed, via the real computeEligibility rather than a hand-typed
+ * guess, so "opp-2"'s deliberately-unconfirmed `country_eligibility_confirmed_open: false`
+ * (see that fixture's own comment) exercises OpportunityStripCard's real caveat badge with
+ * the product's actual current copy, not a fixture author's paraphrase of it that could
+ * silently go stale the moment eligibilityMessages' wording changes.
+ */
+export function buildFixtureHomeStrip(locale: Locale = DEFAULT_LOCALE): HomeStripOpportunity[] {
+  return FIXTURE_OPPORTUNITIES.map(({ opportunity, matchScore }) => {
+    const { notes } = computeEligibility(
+      FIXTURE_MATCH_STUDENT,
+      {
+        category: opportunity.category,
+        minimumAge: opportunity.minimum_age,
+        maximumAge: opportunity.maximum_age,
+        eligibleCountries: opportunity.eligible_countries,
+        eligibleCitizenships: opportunity.eligible_citizenships ?? [],
+        eligibleGrades: opportunity.eligible_grades ?? [],
+        countryEligibilityConfirmedOpen: opportunity.country_eligibility_confirmed_open ?? false,
+        citizenshipRestrictions: opportunity.citizenship_restrictions,
+        residencyRestrictions: opportunity.residency_restrictions,
+        fields: opportunity.fields,
+        country: opportunity.country,
+        cost: opportunity.cost,
+        locationMode: opportunity.location_mode,
+      },
+      null,
+      locale
+    );
+    return {
+      id: opportunity.id,
+      title: opportunity.title,
+      organization: opportunity.organization,
+      category: opportunity.category,
+      imageUrl: opportunity.image_url,
+      deadline: opportunity.deadline,
+      cycleStatus: opportunity.cycle_status,
+      currentCycleLabel: opportunity.current_cycle_label,
+      selectivityTier: opportunity.selectivity_tier,
+      matchScore,
+      eligibilityNotes: notes,
+    };
+  });
+}
 
 export const FIXTURE_DEADLINES = [
   { id: "d1", title: "Apply to the Economics Challenge", date: daysFromNow(6), href: "/opportunities", source: "opportunity" as const },

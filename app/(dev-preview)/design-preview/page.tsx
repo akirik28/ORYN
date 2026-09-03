@@ -22,6 +22,7 @@ import {
   FIXTURE_OPPORTUNITIES,
   FIXTURE_PROFILE_SIGNAL,
   FIXTURE_MONTHLY_REVIEW,
+  buildFixtureHomeStrip,
 } from "@/lib/dev/fixtures";
 
 // Dev-only visual harness (AGENTS.md Phase 72 "Development Mode"). This sandbox has no
@@ -105,6 +106,7 @@ export default async function DesignPreviewPage({ searchParams }: { searchParams
           deadline: o.opportunity.deadline ?? null,
           cycleStatus: o.opportunity.cycle_status ?? null,
         }))}
+        opportunityStrip={buildFixtureHomeStrip()}
         opportunityMatchesRefreshed={true}
       />
 

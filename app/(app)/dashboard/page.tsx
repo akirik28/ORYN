@@ -11,6 +11,7 @@ import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
 import { isOpportunityRecommendable } from "@/lib/opportunities/lifecycle";
 import { competesInCoreRecommendations } from "@/lib/opportunities/commercial";
+import { getHomeOpportunityStrip } from "@/lib/opportunities/home-strip";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
 import { toProfileSignal } from "@/lib/scoring/signal";
@@ -61,7 +62,7 @@ export default async function DashboardPage() {
     return null;
   });
 
-  const [scores, snapshotsRes, recommendationRes, targetUniversities, upcomingDeadlines, matchesRes] = await Promise.all([
+  const [scores, snapshotsRes, recommendationRes, targetUniversities, upcomingDeadlines, matchesRes, opportunityStrip] = await Promise.all([
     // Shared, cache()'d — docs/performance.md §2. By the time this page runs, the layout
     // (app/(app)/layout.tsx) has almost certainly already populated the cache for this
     // request, so this call is typically free, not just deduped.
@@ -96,6 +97,12 @@ export default async function DashboardPage() {
       .eq("eligible", true)
       .order("match_score", { ascending: false })
       .limit(OPPORTUNITY_PREVIEW_CANDIDATE_POOL),
+    // Separate surface, separate query — see lib/opportunities/home-strip.ts's own header
+    // for why this doesn't share the block above (different size, different eligibility
+    // handling, its own over-fetch pool). Runs in the same Promise.all rather than after it
+    // for the identical reason every other query here does — one round trip of latency for
+    // the whole page, not one per section.
+    getHomeOpportunityStrip(supabase, userId),
   ]);
 
   const previousSnapshot = snapshotsRes.data?.[1] ?? null;
@@ -247,6 +254,7 @@ export default async function DashboardPage() {
       upcomingDeadlines={upcomingDeadlines}
       targetUniversities={targetUniversities}
       opportunityPreview={opportunityPreview}
+      opportunityStrip={opportunityStrip}
       opportunityMatchesRefreshed={opportunityMatchesRefreshed}
       showUltraWelcome={showUltraWelcome}
     />
