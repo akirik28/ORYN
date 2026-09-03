@@ -4,10 +4,13 @@ import { runWithTracking } from "@/lib/jobs/run-with-tracking";
 import { detectStaleData } from "@/lib/jobs/detect-stale-data";
 
 /**
- * Scheduled job (Phase 30, Job E — stale data detection). Not wired into vercel.json;
- * scheduling this is a deployment decision for the founder, not something this route
- * assumes. Safely inert without CRON_SECRET regardless (verifyCronRequest refuses
- * everything when it's unset). Run manually or on whatever cadence is chosen:
+ * Scheduled job (Phase 30, Job E — stale data detection). Armed in vercel.json
+ * (0 10 * * *, 2026-09-03) — see docs/job-dry-run-audit-2026-09-03.md for the pre-arm dry
+ * run of this job specifically: zero rows would flip status on its first real run against
+ * live data, and every per-row write failure throws (correctly caught by runWithTracking),
+ * so this is a low-risk job to have armed. Safely inert without CRON_SECRET regardless
+ * (verifyCronRequest refuses everything when it's unset). Run manually or on whatever
+ * cadence is chosen:
  *   curl -X POST /api/jobs/detect-stale-data -H "Authorization: Bearer $CRON_SECRET"
  *
  * Stored-data-only: recomputes `data_status` on universities, university_requirements and
