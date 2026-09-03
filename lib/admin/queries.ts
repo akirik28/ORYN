@@ -1175,11 +1175,12 @@ export async function getCostTrend(admin: SupabaseClient<Database>, days = 30): 
 // than a confident zero standing in for it.
 // ---------------------------------------------------------------------------------------------
 
-const ACTIVE_OPPORTUNITY_FACTS_SELECT = "category, cycle_status, deadline, last_verified_at, verified_at, eligible_countries, citizenship_restrictions, status";
+const ACTIVE_OPPORTUNITY_FACTS_SELECT =
+  "category, cycle_status, deadline, last_verified_at, verified_at, source_verified_at, eligible_countries, citizenship_restrictions, status";
 
 type ActiveOpportunityFacts = Pick<
   Opportunity,
-  "category" | "cycle_status" | "deadline" | "last_verified_at" | "verified_at" | "eligible_countries" | "citizenship_restrictions" | "status"
+  "category" | "cycle_status" | "deadline" | "last_verified_at" | "verified_at" | "source_verified_at" | "eligible_countries" | "citizenship_restrictions" | "status"
 >;
 
 /**
@@ -1272,7 +1273,7 @@ export async function getVerificationReality(admin: SupabaseClient<Database>): P
  * any OTHER cycle_status. Both the "narrow" and "broad" readings of that document converged on
  * this same predicate (131 recommendable either way) — there was no third reading to encode.
  */
-function wouldPassTightenedVerificationGate(opportunity: Pick<Opportunity, "cycle_status" | "deadline" | "last_verified_at" | "verified_at">): boolean {
+function wouldPassTightenedVerificationGate(opportunity: Pick<Opportunity, "cycle_status" | "deadline" | "last_verified_at" | "verified_at" | "source_verified_at">): boolean {
   if (hasDeadlineCommitment(opportunity)) return true;
   if (opportunity.cycle_status === "unverified") return false;
   return hasAnyVerificationRecord(opportunity);

@@ -1827,6 +1827,7 @@
         "description": "This calendar month's real spend against each job's own budget — the chart that shows a job about to stop.",
         "opportunity_extraction": "Opportunity extraction",
         "requirement_extraction": "Requirement extraction",
+        "opportunity_reverification": "Opportunity re-verification",
         "status": "{spent} of {budget} this month",
         "unknown": "Spend unknown this month — see below.",
         "neverRun": "No calls recorded this month.",

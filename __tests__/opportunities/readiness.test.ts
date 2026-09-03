@@ -45,6 +45,7 @@ function opportunity(overrides: Partial<Opportunity> = {}): Opportunity {
     image_attribution: null,
     current_cycle_label: null,
     verified_at: "2026-08-16T00:00:00Z",
+    source_verified_at: null,
     organization_entity_id: null,
     country_entity_id: null,
     access_channel: null,

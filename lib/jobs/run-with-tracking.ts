@@ -16,10 +16,18 @@ import { isUndefinedColumnError } from "@/lib/supabase/errors";
  * both "quiet run, nothing new tonight" and "every candidate this run tried threw" —
  * identical numbers for two facts the admin panel's empty-streak detector exists
  * specifically to tell apart, and couldn't.
+ *
+ * `fn` now receives the tracking row's own id (or null when the insert above failed) —
+ * 2026-09-03, for lib/opportunities/reverification/'s run-level linkage
+ * (opportunity_verification_runs.run_id, design doc §8.2). Additive and backward
+ * compatible: every existing caller's `fn` is declared with zero parameters
+ * (`async () => {...}`), and TypeScript does not require a callback to accept every
+ * parameter its declared type offers — the extra argument is simply never bound. No other
+ * caller needed to change for this.
  */
 export async function runWithTracking<T>(
   jobName: string,
-  fn: () => Promise<{ itemsProcessed: number; errorsEncountered: number; result: T }>
+  fn: (jobId: string | null) => Promise<{ itemsProcessed: number; errorsEncountered: number; result: T }>
 ): Promise<T> {
   const supabase = createAdminClient();
   const { data: job, error: insertError } = await supabase
@@ -35,7 +43,7 @@ export async function runWithTracking<T>(
   }
 
   try {
-    const { itemsProcessed, errorsEncountered, result } = await fn();
+    const { itemsProcessed, errorsEncountered, result } = await fn(job?.id ?? null);
     if (job) {
       const finishedAt = new Date().toISOString();
       // errors_encountered (migration 0083) is written but not applied — standing

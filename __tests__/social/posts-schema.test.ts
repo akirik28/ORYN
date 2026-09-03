@@ -380,7 +380,16 @@ describe("migration numbering", () => {
     // branch's own 101. Neither number was wrong when written -- which is the whole reason
     // this guard pins the maximum actually on disk instead of the highest number any one
     // branch knew about.
-    expect(Math.max(...numbers.map(Number))).toBe(102);
+    //
+    // 0103 (opportunity_verification_runs) is source_verified_at and its runs table -- the
+    // designed-but-unbuilt fix from docs/opportunity-reverification-job-design-2026-08-23.md
+    // §8.2/§8.5, CEO-assigned once three confirmed live instances (Stanford Anesthesia,
+    // ISSYP, Kadir Has) made it the highest-leverage next package. Confirmed against this
+    // worktree's own supabase/migrations/ directly (not assumed) that 0101
+    // (admin_dead_feature_flags) and 0102 (weekly_plan_budget_settings) are both real,
+    // on-disk files by this point in the rebase -- 0103 is the genuine next-free number,
+    // not a guess past a still-claimed one.
+    expect(Math.max(...numbers.map(Number))).toBe(103);
   });
 });
 

@@ -312,6 +312,11 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       image_attribution: null,
       current_cycle_label: "2027",
       verified_at: daysFromNow(-3),
+      // null on every fixture below, deliberately -- migration 0103's own "no backfill"
+      // rule (design doc §8.6) applies here too: a dev fixture claiming this job actually
+      // fetched a page would be exactly the fabricated-verification shape this field exists
+      // to rule out, even in fixture data nobody reads as production truth.
+      source_verified_at: null,
       organization_entity_id: null,
       country_entity_id: null,
       access_channel: null,
@@ -369,6 +374,7 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       image_attribution: null,
       current_cycle_label: "2027",
       verified_at: daysFromNow(-5),
+      source_verified_at: null,
       organization_entity_id: null,
       country_entity_id: null,
       access_channel: null,
@@ -429,6 +435,7 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       image_attribution: null,
       current_cycle_label: null,
       verified_at: daysFromNow(-8),
+      source_verified_at: null,
       organization_entity_id: null,
       country_entity_id: null,
       access_channel: null,
@@ -482,6 +489,7 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       image_attribution: null,
       current_cycle_label: null,
       verified_at: daysFromNow(-2),
+      source_verified_at: null,
       organization_entity_id: null,
       country_entity_id: null,
       access_channel: null,
@@ -535,6 +543,7 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       image_attribution: null,
       current_cycle_label: "Rolling",
       verified_at: daysFromNow(-10),
+      source_verified_at: null,
       organization_entity_id: null,
       country_entity_id: null,
       access_channel: null,

@@ -61,6 +61,7 @@ function opportunity(id: string, overrides: Partial<Opportunity> = {}): Opportun
     image_attribution: null,
     current_cycle_label: null,
     verified_at: null,
+    source_verified_at: null,
     organization_entity_id: null,
     country_entity_id: null,
     access_channel: null,
