@@ -80,7 +80,7 @@ describe("setModelPricing", () => {
 
     expect(result).toEqual({});
     expect(upsertMock).toHaveBeenCalledWith({ model: "claude-future-6", input_rate_per_million: 3.5, output_rate_per_million: 17.5, updated_by: ADMIN_ID });
-    expect(revalidatePath).toHaveBeenCalledWith("/admin");
+    expect(revalidatePath).toHaveBeenCalledWith("/kumanda", "layout");
   });
 
   test("a database error surfaces as a message, not a thrown exception", async () => {
