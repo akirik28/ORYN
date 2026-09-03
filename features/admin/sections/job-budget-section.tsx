@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { formatCurrency } from "@/lib/i18n/format";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getJobBudgetStatus, isJobBudgetOverridesTableLive } from "@/lib/admin/queries";
-import { BurnChart } from "@/components/oryn/charts/burn-chart";
+import { BurnChart } from "@/components/proxola/charts/burn-chart";
 import { JobBudgetEditor } from "@/features/admin/job-budget-editor";
 import { setJobBudgetOverride, clearJobBudgetOverride } from "@/app/(app)/admin/actions";
 

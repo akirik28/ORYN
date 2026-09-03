@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { Eyebrow } from "@/components/oryn/eyebrow";
+import { Eyebrow } from "@/components/proxola/eyebrow";
 // Short forms: this block is a scan-and-compare read, and the full
 // "Execution / Project Depth" wraps to two lines in every column width it renders in.
 import { dimensionLabel, dimensionLabelShort } from "@/lib/scoring/labels";
@@ -100,7 +100,7 @@ export function ProfileSignal({
   /** The actual language of `heading` (a caller-supplied prop this component doesn't
    *  control) and of every other string this component renders itself. Callers that pass a
    *  translated `heading` must pass the matching `locale` alongside it — see
-   *  components/oryn/eyebrow.tsx's own `locale` prop doc for why this can't just inherit
+   *  components/proxola/eyebrow.tsx's own `locale` prop doc for why this can't just inherit
    *  the page's `<html lang>`. */
   locale?: Locale;
 }) {

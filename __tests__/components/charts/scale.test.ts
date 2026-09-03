@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { linearScale, yDomain, buildLineSegments, buildAreaSegments, niceTicks, seriesColor, round2 } from "@/components/oryn/charts/scale";
+import { linearScale, yDomain, buildLineSegments, buildAreaSegments, niceTicks, seriesColor, round2 } from "@/components/proxola/charts/scale";
 
 /**
  * Coverage for the one rule every chart in the kit shares: a `null` point is a gap, never

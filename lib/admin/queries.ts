@@ -14,7 +14,7 @@ import { MONTHLY_BUDGET_TARGET_USD, MONTHLY_BUDGET_CEILING_USD } from "@/lib/ai/
 import { PER_STUDENT_AI_FEATURES } from "@/lib/ai/monthly-quota";
 import { JOB_BUDGET_USD, checkJobBudget, type JobBudgetFeature, type JobBudgetReason } from "@/lib/ai/limits/job-budget";
 import { checkWeeklyPlanAggregateBudget } from "@/lib/ai/limits/weekly-plan-budget";
-import type { SeriesPoint } from "@/components/oryn/charts/types";
+import type { SeriesPoint } from "@/components/proxola/charts/types";
 import { isOpportunityActionable, isOpportunitySufficientlyVerified, hasDeadlineCommitment, hasAnyVerificationRecord } from "@/lib/opportunities/lifecycle";
 import { isUndefinedColumnError, isUndefinedTableError, columnExistsLive } from "@/lib/supabase/errors";
 import { ULTRA_PRICE_TRY } from "@/lib/admin/finance";
@@ -980,7 +980,7 @@ function utcDateKey(iso: string): string {
 
 /**
  * One point per UTC calendar day from `sinceIso` through today (inclusive), running total —
- * the shape components/oryn/charts/burn-chart.tsx's `actual` prop wants directly. Forward-
+ * the shape components/proxola/charts/burn-chart.tsx's `actual` prop wants directly. Forward-
  * filled on purpose, not gap-honest the way that chart kit's own `y: null` convention
  * usually requires (types.ts: "a missing AI spend day and a zero-spend day are different
  * facts"): a day with zero *new* rows still has a fully known cumulative total, because

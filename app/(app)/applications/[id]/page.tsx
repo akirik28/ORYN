@@ -13,8 +13,8 @@ import { RequirementGroup } from "@/features/universities/requirement-group";
 import { ApplicationStatusControl } from "@/features/applications/status-control";
 import { NotesField } from "@/features/applications/notes-field";
 import { updateApplicationNotes } from "@/app/(app)/applications/actions";
-import { PageHeader } from "@/components/oryn/page-header";
-import { SectionHeader } from "@/components/oryn/section-header";
+import { PageHeader } from "@/components/proxola/page-header";
+import { SectionHeader } from "@/components/proxola/section-header";
 import { Progress } from "@/components/ui/progress";
 import type { RequirementEvaluationStatus } from "@/types/database";
 

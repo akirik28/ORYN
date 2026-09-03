@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ActionCard } from "@/components/oryn/action-card";
-import { DeadlineBadge } from "@/components/oryn/deadline-badge";
+import { ActionCard } from "@/components/proxola/action-card";
+import { DeadlineBadge } from "@/components/proxola/deadline-badge";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { CounselorRecommendation } from "@/lib/counselor";

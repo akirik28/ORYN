@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Landmark } from "lucide-react";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { SavedUniversityRow } from "./saved-university-row";
 import type { TargetUniversityWithDetails } from "@/lib/universities/queries";
 import type { PlanTier, TargetStatus } from "@/types/database";

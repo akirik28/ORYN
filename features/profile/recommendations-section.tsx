@@ -7,7 +7,7 @@ import { tr as trLocale } from "date-fns/locale";
 import { toast } from "sonner";
 import { Eye, EyeOff, Flag, Loader2, Plus, Quote, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -32,7 +32,7 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
-import { SectionHeader } from "@/components/oryn/section-header";
+import { SectionHeader } from "@/components/proxola/section-header";
 import {
   writeRecommendation,
   setRecommendationVisibility,

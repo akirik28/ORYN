@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { CalendarClock, ExternalLink } from "lucide-react";
-import { StatusBadge } from "@/components/oryn/status-badge";
+import { StatusBadge } from "@/components/proxola/status-badge";
 import { formatRelativeTime } from "@/lib/i18n/date";
 import { resolveLocale } from "@/lib/i18n/locale";
 import type { CalendarBoundFactDisplay } from "@/lib/requirements/calendar-bound";

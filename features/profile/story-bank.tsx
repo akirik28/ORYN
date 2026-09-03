@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { cn } from "@/lib/utils";
 import { generateStoryOutlines } from "@/app/(app)/profile/story-bank/actions";
 import type { EssayOutlineResponse } from "@/lib/ai/essay-outlines";

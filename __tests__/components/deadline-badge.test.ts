@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { urgencyLabel } from "@/components/oryn/deadline-badge";
+import { urgencyLabel } from "@/components/proxola/deadline-badge";
 
 /**
  * First direct coverage of this function -- it had none before being exported 2026-09-02

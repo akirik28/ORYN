@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/lib/security/dal";
-import { PageHeader } from "@/components/oryn/page-header";
+import { PageHeader } from "@/components/proxola/page-header";
 import { ResearchIdeaStudio } from "@/features/profile/research-idea-studio";
 
 export async function generateMetadata(): Promise<Metadata> {

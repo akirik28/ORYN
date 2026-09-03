@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Landmark, Search } from "lucide-react";
-import { heroGradientStyle } from "@/components/oryn/hero-gradient";
-import { PageHeader } from "@/components/oryn/page-header";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { heroGradientStyle } from "@/components/proxola/hero-gradient";
+import { PageHeader } from "@/components/proxola/page-header";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { SortSelect } from "@/features/universities/sort-select";
 import { FilterSheet } from "@/features/universities/filter-sheet";
 import { CompareBar } from "@/features/universities/compare-bar";

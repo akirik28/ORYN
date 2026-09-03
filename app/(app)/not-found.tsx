@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { EmptyState } from "@/components/proxola/empty-state";
 
 // Route-level not-found boundary for everything under app/(app)/** — catches the notFound()
 // calls already thrown from applications/[id], messages/[userId], opportunities/[id],

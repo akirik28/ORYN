@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { PageHeader } from "@/components/oryn/page-header";
+import { PageHeader } from "@/components/proxola/page-header";
 import { SectionSkeleton } from "@/features/admin/sections/section-skeleton";
 import { ReportsSection } from "@/features/admin/sections/reports-section";
 import { FeedbackReportsSection } from "@/features/admin/sections/feedback-reports-section";

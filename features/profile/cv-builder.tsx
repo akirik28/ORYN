@@ -6,7 +6,7 @@ import { Printer, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { spanLabel } from "@/lib/profile/journey";
 import { PORTFOLIO_CATEGORY_LABELS, type PortfolioCategory, type PortfolioItem } from "@/lib/portfolio/types";
 

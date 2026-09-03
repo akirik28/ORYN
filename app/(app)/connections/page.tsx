@@ -6,9 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getConnections } from "@/lib/social/connections";
 import { requireConnectionsEnabled } from "@/lib/social/connections-feature-flag";
 import { getPeopleYouMayKnow } from "@/lib/social/people-you-may-know-query";
-import { PageHeader } from "@/components/oryn/page-header";
-import { SectionHeader } from "@/components/oryn/section-header";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { PageHeader } from "@/components/proxola/page-header";
+import { SectionHeader } from "@/components/proxola/section-header";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { ConnectionRow, PendingRequestRow } from "@/features/connections/connection-row";
 import { PeopleYouMayKnowRow } from "@/features/connections/people-you-may-know-row";
 

@@ -1,5 +1,5 @@
 import { Paperclip, BadgeCheck, CircleDashed, type LucideIcon } from "lucide-react";
-import type { StatusTone } from "@/components/oryn/status-badge";
+import type { StatusTone } from "@/components/proxola/status-badge";
 import type { EvidenceStatus } from "@/types/database";
 
 /**

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Eyebrow } from "@/components/oryn/eyebrow";
+import { Eyebrow } from "@/components/proxola/eyebrow";
 import { toLocale } from "@/lib/i18n/config";
 import { ConnectButton } from "./connect-button";
 

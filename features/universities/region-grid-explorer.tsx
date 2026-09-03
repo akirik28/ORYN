@@ -2,7 +2,7 @@ import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { Globe2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { MAP_REGIONS, regionLabel } from "@/lib/data/regions";
 import { formatNumber } from "@/lib/i18n/format";
 import type { Locale } from "@/lib/i18n/config";

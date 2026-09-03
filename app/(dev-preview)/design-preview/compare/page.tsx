@@ -2,10 +2,10 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Scale } from "lucide-react";
-import { EmptyState } from "@/components/oryn/empty-state";
-import { PageHeader } from "@/components/oryn/page-header";
-import { SourceBadge } from "@/components/oryn/source-badge";
-import { heroGradientStyle } from "@/components/oryn/hero-gradient";
+import { EmptyState } from "@/components/proxola/empty-state";
+import { PageHeader } from "@/components/proxola/page-header";
+import { SourceBadge } from "@/components/proxola/source-badge";
+import { heroGradientStyle } from "@/components/proxola/hero-gradient";
 import { deriveTuitionContext } from "@/lib/universities/counseling-adapter";
 import { resolveLocale } from "@/lib/i18n/locale";
 import {

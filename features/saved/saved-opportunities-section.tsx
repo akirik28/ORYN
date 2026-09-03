@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Compass } from "lucide-react";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { SavedOpportunityRow } from "./saved-opportunity-row";
 import { categoryLabel } from "@/lib/opportunities/labels";
 import type { Locale } from "@/lib/i18n/config";

@@ -4,7 +4,7 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { dimensionLabel } from "@/lib/scoring/labels";
 import { evidenceStateShortLabel, isAssessed, signalCoverage } from "@/lib/scoring/signal";
 import type { MonthlyReview } from "@/lib/scoring/monthly-review";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { EmptyState } from "@/components/proxola/empty-state";
 
 function DeltaBadge({ delta }: { delta: number }) {
   if (delta === 0) {

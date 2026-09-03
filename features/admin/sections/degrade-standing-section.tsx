@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { formatNumber } from "@/lib/i18n/format";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getDegradeStanding } from "@/lib/admin/queries";
-import { BarChart } from "@/components/oryn/charts/bar-chart";
+import { BarChart } from "@/components/proxola/charts/bar-chart";
 
 const BUCKET_LABELS = ["1–20%", "21–40%", "41–60%", "61–80%", "81–100%"];
 

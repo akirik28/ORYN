@@ -38,7 +38,7 @@ export function AdvisorMessage({
   /** Quiet right-aligned metadata — a timestamp, a model note. */
   meta?: ReactNode;
   /** The actual language of `attribution` (when explicitly passed) or of the default mark
-   *  otherwise — see components/oryn/eyebrow.tsx's `locale` prop doc for why this can't
+   *  otherwise — see components/proxola/eyebrow.tsx's `locale` prop doc for why this can't
    *  just inherit the page's `<html lang>`. */
   locale?: Locale;
   children: ReactNode;

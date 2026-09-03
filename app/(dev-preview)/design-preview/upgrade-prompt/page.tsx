@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { AdvisorMessage } from "@/components/oryn/advisor-message";
+import { AdvisorMessage } from "@/components/proxola/advisor-message";
 import { UpgradePromptPreviewClient } from "./upgrade-prompt-preview-client";
 
 /**

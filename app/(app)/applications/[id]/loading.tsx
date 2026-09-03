@@ -1,4 +1,4 @@
-import { PageSkeleton } from "@/components/oryn/loading-skeleton";
+import { PageSkeleton } from "@/components/proxola/loading-skeleton";
 
 export default function Loading() {
   return <PageSkeleton variant="list" rows={4} className="max-w-2xl" />;

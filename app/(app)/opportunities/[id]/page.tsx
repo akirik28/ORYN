@@ -18,18 +18,18 @@ import {
 } from "@/lib/opportunities/lifecycle";
 import { categoryLabel } from "@/lib/opportunities/labels";
 import { OpportunityStandingBadge } from "@/features/opportunities/standing-badge";
-import { PageHeader } from "@/components/oryn/page-header";
-import { ErrorState } from "@/components/oryn/error-state";
-import { SectionHeader } from "@/components/oryn/section-header";
-import { SourceBadge } from "@/components/oryn/source-badge";
-import { StatusBadge } from "@/components/oryn/status-badge";
-import { NextMove } from "@/components/oryn/next-move";
+import { PageHeader } from "@/components/proxola/page-header";
+import { ErrorState } from "@/components/proxola/error-state";
+import { SectionHeader } from "@/components/proxola/section-header";
+import { SourceBadge } from "@/components/proxola/source-badge";
+import { StatusBadge } from "@/components/proxola/status-badge";
+import { NextMove } from "@/components/proxola/next-move";
 import { differenceInCalendarDays } from "date-fns";
 import { OpportunityActions } from "@/features/opportunities/opportunity-actions";
 import { formatMoney } from "@/lib/i18n/format";
-import { urgencyLabel } from "@/components/oryn/deadline-badge";
+import { urgencyLabel } from "@/components/proxola/deadline-badge";
 import type { Locale } from "@/lib/i18n/config";
-import type { ConfidenceLevel } from "@/components/oryn/confidence-indicator";
+import type { ConfidenceLevel } from "@/components/proxola/confidence-indicator";
 
 // Was a static "Opportunity" title on every one of these pages — technically present, but
 // no more useful than a missing one for telling tabs/history apart. Public/global data

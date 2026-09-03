@@ -16,8 +16,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { StaticImageData } from "next/image";
-import { PageHeader } from "@/components/oryn/page-header";
-import { heroGradientStyle } from "@/components/oryn/hero-gradient";
+import { PageHeader } from "@/components/proxola/page-header";
+import { heroGradientStyle } from "@/components/proxola/hero-gradient";
 import type { PlanTier } from "@/types/database";
 
 // Statically imported, not referenced by string path. Next fingerprints each file into

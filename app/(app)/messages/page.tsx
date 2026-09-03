@@ -6,8 +6,8 @@ import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { getConversations } from "@/lib/messaging/messages";
 import { requireMessagingEnabled } from "@/lib/messaging/messaging-feature-flag";
-import { PageHeader } from "@/components/oryn/page-header";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { PageHeader } from "@/components/proxola/page-header";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export async function generateMetadata(): Promise<Metadata> {

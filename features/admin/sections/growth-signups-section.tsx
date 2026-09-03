@@ -4,7 +4,7 @@ import { formatAbsoluteDate } from "@/lib/i18n/date";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSignupTimeline } from "@/lib/admin/queries";
-import { BarChart } from "@/components/oryn/charts";
+import { BarChart } from "@/components/proxola/charts";
 
 /**
  * Bar chart, not a line — deliberately. Real data checked live 2026-09-02: 11 signups, all

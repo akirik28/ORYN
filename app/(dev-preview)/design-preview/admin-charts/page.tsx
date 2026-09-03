@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { LineAreaChart, BarChart, StackedBarChart, Sparkline, RatioRing, BurnChart } from "@/components/oryn/charts";
-import type { SeriesPoint } from "@/components/oryn/charts";
+import { LineAreaChart, BarChart, StackedBarChart, Sparkline, RatioRing, BurnChart } from "@/components/proxola/charts";
+import type { SeriesPoint } from "@/components/proxola/charts";
 
 /**
  * Dev-only reference for the admin chart kit (2026-09-02) — synthetic fixture data, not a
@@ -20,7 +20,7 @@ export default function AdminChartsPreviewPage() {
   return (
     <div data-surface="admin" className="min-h-screen p-4 md:p-8">
       <p className="mb-6 rounded-lg border px-4 py-2 text-xs" style={{ borderColor: "var(--admin-border-strong)", color: "var(--admin-ink-2)" }}>
-        Dev-only reference for components/oryn/charts — synthetic data, admin theme applied
+        Dev-only reference for components/proxola/charts — synthetic data, admin theme applied
         directly on this page (real admin pages get it from app/(app)/admin/layout.tsx).
       </p>
 

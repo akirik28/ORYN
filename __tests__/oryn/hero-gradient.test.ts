@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { heroGradientStyle, heroGradientStyleCompact } from "@/components/oryn/hero-gradient";
+import { heroGradientStyle, heroGradientStyleCompact } from "@/components/proxola/hero-gradient";
 
 describe("heroGradientStyle", () => {
   it("renders the exact original literal background under standard tier, with no border or glow", () => {

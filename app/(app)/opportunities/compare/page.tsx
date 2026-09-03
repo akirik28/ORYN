@@ -12,8 +12,8 @@ import { categoryLabel } from "@/lib/opportunities/labels";
 import { cycleStatusLabel, selectivityLabel } from "@/lib/opportunities/lifecycle";
 import { formatCurrency } from "@/lib/i18n/format";
 import { formatAbsoluteDate } from "@/lib/i18n/date";
-import { PageHeader } from "@/components/oryn/page-header";
-import { EmptyState } from "@/components/oryn/empty-state";
+import { PageHeader } from "@/components/proxola/page-header";
+import { EmptyState } from "@/components/proxola/empty-state";
 import { Button } from "@/components/ui/button";
 import type { Opportunity } from "@/types/database";
 

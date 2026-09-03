@@ -2,7 +2,7 @@
 import { describe, test, expect, afterEach } from "vitest";
 import { render, cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
-import { RatioRing } from "@/components/oryn/charts/ratio-ring";
+import { RatioRing } from "@/components/proxola/charts/ratio-ring";
 
 /**
  * Pins RatioRing's own "honest about missing data" case specifically, since it's the one
