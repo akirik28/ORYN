@@ -16,24 +16,41 @@
 --
 -- Sources: DUO (confirms both are on the official 18-institution WO list) + each
 -- institution's own official site (confirms city, live website). Retrieved 2026-09-03.
+--
+-- ORDERING: this file references academic_tier, added by
+-- supabase/migrations/0108_academic_tier.sql (written not applied). Apply 0108 first --
+-- running this file before 0108 fails cleanly with 'column does not exist', which is the
+-- correct failure; it does not half-apply.
+--
+-- academic_tier = 'research_university' for both -- unambiguous, same sector as the
+-- existing 13 Dutch rows. academic_tier_local_name is left NULL here, deliberately: the
+-- column exists to carry a DISTINCT local institutional form (Fachhochschule, Hogeschool,
+-- Ammattikorkeakoulu) that a student needs alongside the shared tier -- for an ordinary
+-- research university, the generic Dutch word ("Universiteit") adds no signal beyond what
+-- academic_tier already states, unlike the applied-sciences tier where the local term is
+-- the whole point. Not populated for consistency's sake alone.
 
-insert into universities (name, country, city, website_url, institution_type, data_confidence, data_status, last_checked_at) values (
+insert into universities (name, country, city, website_url, institution_type, academic_tier, academic_tier_local_name, data_confidence, data_status, last_checked_at) values (
   'Open Universiteit',
   'Netherlands',
   'Heerlen',
   'https://www.ou.nl',
   'Public',
+  'research_university',
+  NULL,
   'high',
   'fresh',
   now()
 );
 
-insert into universities (name, country, city, website_url, institution_type, data_confidence, data_status, last_checked_at) values (
+insert into universities (name, country, city, website_url, institution_type, academic_tier, academic_tier_local_name, data_confidence, data_status, last_checked_at) values (
   'Universiteit voor Humanistiek',
   'Netherlands',
   'Utrecht',
   'https://www.uvh.nl',
   'Public',
+  'research_university',
+  NULL,
   'high',
   'fresh',
   now()
