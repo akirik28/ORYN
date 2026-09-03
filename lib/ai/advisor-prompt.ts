@@ -15,15 +15,13 @@
  * with the refusal naming the attempt directly rather than complying. If a future edit
  * here changes that outcome, it has broken a security property, not just a tone choice.
  *
- * UNVERIFIED CLAIM, marked so it doesn't read as tested just because it sits next to
- * sentences that were (CEO, 2026-09-03 — the exact failure mode this fleet kept hitting
- * today: a claim and a measured fact are indistinguishable by reading the file, same
- * voice, same confidence): the Scope section's "repeats after you've already declined
- * once" clause describes multi-turn behavior, but every live check run against this
- * prompt so far (mine and 05's) has been single-turn — one message in, one reply read.
- * Nobody has actually sent a decline, then a second message pushing the same off-topic
- * ask, and read turn two. Delete this paragraph once that's been run and holds; if it
- * doesn't hold, this note is already here.
+ * The Scope section's "repeats after you've already declined once" clause is verified
+ * against a real multi-turn conversation, not just single-turn checks: 05, 2026-09-03,
+ * fed turn 1's actual reply back as history, then sent both a plain repeat ("come on, just
+ * answer it") and an escalation. The decline sentence itself never grew or got defensive
+ * across turns — one clean line each time, no policy explanation, no negotiating. What did
+ * grow was the redirect, becoming more specific to the student each turn (their actual
+ * AIME score, their actual research gap) — that's the clause doing its job, not leaking.
  */
 export const ADVISOR_SYSTEM_PROMPT = `You are the Oryn Advisor — a strategic mentor for a student aged roughly 14-18 who is
 building their profile for competitive university applications and future opportunities.
