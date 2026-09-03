@@ -1,8 +1,28 @@
 # Sabah — 3 Eylül 2026
 
+> ## ⬜ AKŞAM EKİ — bunu okuduğunda yapılacak tek yeni şey
+>
+> **`07-migrations-bekleyen-2026-09-03.sql`** — bugün yazılan **8 yeni migrasyon**, tek dosya,
+> tek işlem. Supabase SQL Editor'e yapıştır, çalıştır. Ayrıntısı ve her birinin ne işe
+> yaradığı: **`07-OKU-BENI-migrations.md`**.
+>
+> **Bu dosyayı çalıştırıp doğruladım** — bu makinedeki yerel Postgres 17'de canlı
+> veritabanının bugünkü hâlini kurdum ve dosyanın kendisini çalıştırdım: hatasız geçti,
+> 14 nesnenin 14'ü de oluştu. Canlı veritabanına hiçbir şey yazılmadı.
+>
+> **Yapıştırmadan önce sekmeye bak:** o Supabase projesinin panelde görünen adı
+> **`oryn-qa-scratch`** — içinde ORYN geçmiyor.
+>
+> **Uygulanmazsa ne çalışmıyor:** özelleşme talimat kutusu kaydedemez, "aynı anda tek ajan"
+> kuralı uygulanamaz, geri bildirim formu gönderemez, sayfa görüntüleme sayılmaz,
+> periyodik e-posta kime gideceğini bilemez.
+>
+> **Aşağıdaki her şey sabahki paket içindir ve büyük ölçüde tamamlanmıştır.**
+
+
 **Güncelleme, öğleye doğru:** bu artık çoğunlukla bir kayıt, bir talimat listesi değil.
 1, 2, 3, 5 ve 7b uygulandı — sayıları aşağıdaki tabloda tek tek doğrulandı, tekrar
-okumana gerek yok. **Hâlâ senden bir şey isteyen tek adım 6.** 4 kısmen kapandı (ayrıntı
+okumana gerek yok. **Hâlâ senden bir şey isteyen tek adım 6** — artı yukarıdaki akşam eki (adım 7c). 4 kısmen kapandı (ayrıntı
 kendi bölümünde), 7 sadece deploy edeceksen geçerli, 8 bakılacak bir şey değil zaten
 yapıldı. Aşağıdaki adım-adım anlatı olduğu gibi bırakıldı — ne yapıldığını ve neden
 öyle yapıldığını gösteriyor, ama artık "şunu çalıştır" değil "şu çalıştırıldı" olarak
