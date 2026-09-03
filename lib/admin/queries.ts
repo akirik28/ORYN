@@ -582,9 +582,19 @@ function daysAgoIso(days: number): string {
  *  package isn't authorized to add — so this fetches the exact matching set (bounded by an
  *  explicit, honestly-labeled time window, never by an arbitrary row count) and sums in
  *  memory. Swap for a real `.sum()`/RPC if aggregates are ever enabled; the call sites below
- *  don't need to change. */
+ *  don't need to change.
+ *
+ * Excludes `model = "test-model"` (2026-09-03) — `getSpendSummary`'s own `allTimeUsd`/
+ * `byFeature`/`byModel` already filter these out (a test run's fixture rows, written
+ * directly into this live table, confirmed 2026-09-02), but this function didn't, so
+ * `todayUsd`/`last7dUsd`/`last30dUsd` and `getRemainingCredit`'s spend-against-credit figure
+ * were the odd ones out on the same summary object. Currently a no-op in practice — the
+ * three live `test-model` rows all carry a NULL `estimated_cost`, so `sumCost`'s `?? 0`
+ * already zeroes them out either way (confirmed live before this fix, not assumed) — but
+ * the inconsistency was one fixture-with-a-real-cost away from making this window disagree
+ * with `allTimeUsd` on the very same page for a reason nothing on screen would explain. */
 async function sumCostSince(admin: SupabaseClient<Database>, sinceIso: string): Promise<number> {
-  const { data } = await admin.from("ai_usage").select("estimated_cost").gte("created_at", sinceIso);
+  const { data } = await admin.from("ai_usage").select("estimated_cost").gte("created_at", sinceIso).neq("model", "test-model");
   return sumCost(data ?? []);
 }
 

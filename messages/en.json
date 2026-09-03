@@ -1829,7 +1829,7 @@
         "callsCount": "{count} calls",
         "unpricedTitle": "Unpriced calls",
         "unpricedNone": "Every priced call is in the pricing table — no unpriced calls on record.",
-        "unpricedAlert": "{count} calls used a model that isn't in the pricing table yet, so their real cost is unknown — every total above is a floor, not an exact figure, until pricing is added for that model.",
+        "unpricedAlert": "{count} calls were logged before their model had a listed price on file, so their real cost is unknown and was never recalculated — every total above is a floor for those specific calls, not an exact figure.",
         "unpricedByModel": "{model}: {count} calls",
         "inputRatePlaceholder": "$/M in",
         "outputRatePlaceholder": "$/M out",
