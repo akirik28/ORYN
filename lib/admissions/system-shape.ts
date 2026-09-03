@@ -688,6 +688,25 @@ const REGISTRY: AdmissionSystemEntry[] = [
     ],
     sources: [DOC("austria.md")],
   },
+  {
+    countryNames: ["Czechia", "Czech Republic", "Česko", "Česká republika"],
+    // No central body AND genuine divergence, not just decentralization -- Charles University's
+    // own admissions page confirms mechanism varies by PROGRAMME within one institution, a
+    // finer grain than even Canada's confirmed institution-level divergence in this registry.
+    // Recorded unknown deliberately for both pathways, same treatment as Canada's entry, not a
+    // gap -- see docs/research/admissions-systems/czechia.md §A-B.
+    domestic: {
+      shape: "unknown",
+      mechanism:
+        "Each Czech university runs its own admission process, and Charles University's own page confirms this varies even by programme within one institution: some programmes assess on submitted documents alone, others require a written exam plus an interview that explicitly weighs motivation. No single mechanism describes Czechia generally — check the specific target programme.",
+    },
+    international: {
+      shape: "unknown",
+      mechanism:
+        "Each Czech university runs its own admission process, and Charles University's own page confirms this varies even by programme within one institution: some programmes assess on submitted documents alone, others require a written exam plus an interview that explicitly weighs motivation. No single mechanism describes Czechia generally — check the specific target programme.",
+    },
+    sources: [DOC("czechia.md")],
+  },
 ];
 
 // ---------------------------------------------------------------------------
