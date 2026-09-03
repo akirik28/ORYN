@@ -5,8 +5,14 @@ import { PreviewToolbar } from "../preview-toolbar";
 import OverviewPage from "../../../(admin)/kumanda/page";
 import ProfitLossPage from "../../../(admin)/kumanda/kar-zarar/page";
 import TrafficPage from "../../../(admin)/kumanda/trafik/page";
-import CommunityPage from "../../../(admin)/kumanda/topluluk/page";
+import StudentsPage from "../../../(admin)/kumanda/ogrenciler/page";
+import SpendPage from "../../../(admin)/kumanda/harcama/page";
+import CatalogPage from "../../../(admin)/kumanda/katalog/page";
 import ResearchQueuePage from "../../../(admin)/kumanda/arastirma/page";
+import CommunityPage from "../../../(admin)/kumanda/topluluk/page";
+import ModerationPage from "../../../(admin)/kumanda/moderasyon/page";
+import SystemPage from "../../../(admin)/kumanda/sistem/page";
+import LedgerPage from "../../../(admin)/kumanda/defter/page";
 import SettingsPage from "../../../(admin)/kumanda/ayarlar/page";
 
 /**
@@ -14,16 +20,20 @@ import SettingsPage from "../../../(admin)/kumanda/ayarlar/page";
  *
  * /kumanda 404s for everyone without is_admin and no account has it, so nobody has ever
  * seen it: not the founder, not the lane that migrated fourteen sections into it, not the
- * lane that built these six screens. That is exactly where tonight's two visual defects
+ * lanes that built these screens. That is exactly where tonight's two visual defects
  * lived -- a glyph falling back to viewport height, and three elements stacked on one point
  * -- both of which passed typecheck, lint, 5000+ tests and the build, and both of which
  * failed the moment somebody rendered them.
  *
  * Two sessions independently built this file within an hour of each other and collided on
- * merge, each covering the half they owned: the real ControlRail and shell tone, and the
- * six real page components rendered against live data. Neither half is redundant, so this
- * is both. requireAdmin() lives only in app/(admin)/layout.tsx, never in the page
- * components, which is what lets them render here unauthenticated.
+ * merge, each covering the half they owned: the real ControlRail and shell tone, and (only)
+ * six of the rail's twelve real page components rendered against live data. The other six
+ * (Öğrenciler, Harcama, Katalog, Moderasyon, Sistem, Defter) existed as real routes but were
+ * never wired into this harness -- added 2026-09-03 during the first full visual pass, same
+ * pattern as the original six, ordered to match the rail's own three groups. Neither half of
+ * the original merge was redundant, so this is both, now complete. requireAdmin() lives only
+ * in app/(admin)/layout.tsx, never in the page components, which is what lets all twelve
+ * render here unauthenticated.
  *
  * Rail links point at the gated routes and will 404 from here -- this is for looking, not
  * clicking. Dev-only; the production guard is below.
@@ -62,11 +72,17 @@ export default async function KumandaPreviewPage() {
             Design preview (dev only, no requireAdmin() gate) — the real rail and the real
             screens against live data. Rail links point at the gated routes and 404 from here.
           </p>
-          <Screen label="Overview (/kumanda)"><OverviewPage /></Screen>
+          <Screen label="Genel Bakış (/kumanda)"><OverviewPage /></Screen>
           <Screen label="Kâr &amp; Zarar (/kumanda/kar-zarar)"><ProfitLossPage /></Screen>
           <Screen label="Trafik (/kumanda/trafik)"><TrafficPage /></Screen>
-          <Screen label="Topluluk (/kumanda/topluluk)"><CommunityPage /></Screen>
+          <Screen label="Öğrenciler (/kumanda/ogrenciler)"><StudentsPage /></Screen>
+          <Screen label="Harcama (/kumanda/harcama)"><SpendPage /></Screen>
+          <Screen label="Katalog (/kumanda/katalog)"><CatalogPage /></Screen>
           <Screen label="Araştırma (/kumanda/arastirma)"><ResearchQueuePage /></Screen>
+          <Screen label="Topluluk (/kumanda/topluluk)"><CommunityPage /></Screen>
+          <Screen label="Moderasyon (/kumanda/moderasyon)"><ModerationPage /></Screen>
+          <Screen label="Sistem (/kumanda/sistem)"><SystemPage /></Screen>
+          <Screen label="Defter (/kumanda/defter)"><LedgerPage /></Screen>
           <Screen label="Ayarlar (/kumanda/ayarlar)"><SettingsPage /></Screen>
         </div>
       </main>

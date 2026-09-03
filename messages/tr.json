@@ -2023,7 +2023,7 @@
           "sectionDescription": "Bu ürünün bir yöneticinin girmesini gerektirdiği tek iki rakam — kur asla tahmin edilmez, yanlış bir kur Kâr & Zarar'daki her rakamı sessizce bozar.",
           "rateLabel": "USD/TRY kuru (1$ için TL)",
           "rateNotConfigured": "Girilmedi",
-          "rateHint": "Girilmeden bırakılırsa yapılandırılmamış kalır — başabaş ve marj rakamları girilene kadar — gösterir.",
+          "rateHint": "Girilmeden bırakılırsa yapılandırılmamış kalır — kur girilene kadar başabaş ve marj rakamları görünmez.",
           "priceLabel": "Ultra fiyatı (TL/ay)",
           "invalidRate": "Pozitif bir döviz kuru gir.",
           "invalidPrice": "Pozitif bir fiyat gir.",

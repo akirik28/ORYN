@@ -30,7 +30,10 @@ export interface ContaminationCleanupEntry {
 export const CONTAMINATION_CLEANUP_2026_09_02: readonly ContaminationCleanupEntry[] = [
   {
     id: '674f46f0-b71c-4d3a-bbff-20cfa9dcfdee',
-    title: 'Girls Who Code (also: raw seed-import fragment, see header)',
+    // Original description was a raw seed-import fragment (guardPrefix below still carries
+    // its "5. " list-item numbering), not merely process-notes -- the same contamination
+    // class as the other 34, just a different specific artifact.
+    title: 'Girls Who Code',
     guardPrefix: '5. Girls Who Code | Girls Who Code is an international nonprofit organ',
     newDescription: 'Girls Who Code is an international nonprofit that works to increase the number of women in computer science and close the gender gap in computing employment. Its primary offering, Clubs, is not self-service for students: it requires an existing school or library club, or an adult becoming a background-checked facilitator, and has no single student-facing application, deadline, or cost.',
   },
@@ -84,7 +87,11 @@ export const CONTAMINATION_CLEANUP_2026_09_02: readonly ContaminationCleanupEntr
   },
   {
     id: '4a54159a-58dd-4304-a139-2b76f2a9fe38',
-    title: 'USC Pre-College Summer Programs -- updated_at moved since original read despite identical length, see header note; this guard will correctly no-op if content actually changed',
+    // This row's updated_at moved since the original SQL file was read, despite the
+    // description staying the same length -- the guardPrefix comparison is on content, not
+    // length or timestamp, so it will still correctly no-op if the content actually changed
+    // before this runs.
+    title: 'USC Pre-College Summer Programs',
     guardPrefix: 'University of Southern California (CA, USA) | USC Pre-College - USC Su',
     newDescription: 'USC Summer Programs offers high school students a range of four-week summer courses across Architecture, Business, Engineering & Information Technology, Global Studies, Communication & Journalism, Performing Arts & Music, Pre-Health & Science, Pre-Law, and Writing & Critical Thinking, with the option to earn college credit; online courses are also available. Rolling admission, no fixed deadline. Selective: requires an essay, one recommendation letter, transcript, and an $85 non-refundable application fee, plus an English-proficiency requirement. Cost is $11,570 residential or $8,130 commuter (commuter excludes international students).',
   },
@@ -204,7 +211,11 @@ export const CONTAMINATION_CLEANUP_2026_09_02: readonly ContaminationCleanupEntr
   },
   {
     id: '3f7170ba-9486-40b0-b450-42462471e88d',
-    title: 'AI Scholars (original text was fragmentary/broken; full rewrite from verified facts; short guard below, its own text hits a real \\n\\n at char 57)',
+    // Original description was fragmentary/broken, not just process-note-contaminated, so
+    // newDescription below is a full rewrite from verified facts rather than a cleanup of
+    // the existing text. guardPrefix is short because its source text hits a real \n\n at
+    // char 57 -- not truncated early by mistake.
+    title: 'AI Scholars',
     guardPrefix: 'CS Scholars: | General application info ',
     newDescription: 'AI Scholars uses a holistic application review process, selecting participants based on a combination of factors rather than automatic admission. Cost is $0 (fully funded). Open only to US citizens and green card holders.',
   },
