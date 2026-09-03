@@ -1896,6 +1896,33 @@
       "inSettings": "{name}, doğum yılını {birthYear} olarak güncelledi",
       "unnamedStudent": "Bir öğrenci",
       "none": "Asgari yaşın altında kayıt bulunmuyor."
+    },
+    "control": {
+      "navLabel": "Kumanda merkezi",
+      "brandSub": "Kumanda",
+      "group": {
+        "daily": "Günlük",
+        "content": "İçerik",
+        "infra": "Altyapı"
+      },
+      "item": {
+        "overview": "Genel Bakış",
+        "profitLoss": "Kâr & Zarar",
+        "traffic": "Trafik",
+        "students": "Öğrenciler",
+        "spend": "Harcama",
+        "catalog": "Katalog",
+        "research": "Araştırma",
+        "community": "Topluluk",
+        "moderation": "Moderasyon",
+        "system": "Sistem",
+        "ledger": "Defter",
+        "settings": "Ayarlar"
+      },
+      "footerNote": "Öğrenci uygulamasından ayrı. Buradaki hiçbir şeye öğrenci erişemez.",
+      "overviewTitle": "Bugün neye bakman gerekiyor",
+      "overviewDescription": "Her şeyi değil — sadece karar bekleyenleri.",
+      "overviewPlaceholder": "Dikkat listesi ve özet kartlar buraya gelecek. Bu ekran bilerek kısa: diğer her alanın raydaki kendi yeri var, üst üste yığılmıyorlar."
     }
   },
   "saved": {

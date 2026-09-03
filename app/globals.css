@@ -1021,6 +1021,37 @@
   color-scheme: dark;
 }
 
+/* LIGHT TONE, 2026-09-03. Founder, on the control-centre redesign: "arka plan açık yeşil
+   olacak" -- the ground is light green, the rail is dark. The block above stays exactly as
+   it is and remains the default; this only redefines the same token NAMES under one extra
+   attribute, so all fourteen section components render correctly on a light ground with no
+   component changes at all. That is the whole reason it is done as a token override rather
+   than a second component family.
+
+   The accent darkens (#16a34a -> #1f7a4d) rather than carrying over: the dark-tone accent
+   was chosen to read against #0a120e and does not clear text contrast on a light ground.
+   Same rule as above still holds and is the thing most likely to be broken here --
+   --admin-accent is chrome, never status. status-badge.tsx's hardcoded emerald/amber/red
+   is untouched and works on both grounds. */
+[data-surface="admin"][data-admin-tone="light"] {
+  --admin-bg: #e8f1e4;
+  --admin-bg-elevated: #ffffff;
+  --admin-bg-elevated-2: #f3f8f1;
+  --admin-border: rgba(31, 122, 77, 0.20);
+  --admin-border-strong: rgba(31, 122, 77, 0.38);
+  --admin-accent: #1f7a4d;
+  --admin-accent-strong: #17603c;
+  --admin-accent-bright: #2e9c63;
+  --admin-accent-glow: rgba(31, 122, 77, 0.22);
+  --admin-ink-1: #12211a;
+  --admin-ink-2: #465449;
+  --admin-ink-3: #6c7d70;
+  --admin-grid: rgba(18, 33, 26, 0.10);
+  --admin-grid-strong: rgba(18, 33, 26, 0.18);
+
+  color-scheme: light;
+}
+
 /* Small reusable pieces for the admin surface — a card/panel background one step lighter
    than the ground (same "panel lifts off the page" principle app/globals.css's own
    --card/--background pair already uses for the student product, re-derived here since

@@ -1896,6 +1896,33 @@
       "inSettings": "{name} updated their birth year to {birthYear}",
       "unnamedStudent": "A student",
       "none": "No below-minimum-age signups logged."
+    },
+    "control": {
+      "navLabel": "Control centre",
+      "brandSub": "Control",
+      "group": {
+        "daily": "Daily",
+        "content": "Content",
+        "infra": "Infrastructure"
+      },
+      "item": {
+        "overview": "Overview",
+        "profitLoss": "Profit & Loss",
+        "traffic": "Traffic",
+        "students": "Students",
+        "spend": "Spend",
+        "catalog": "Catalog",
+        "research": "Research",
+        "community": "Community",
+        "moderation": "Moderation",
+        "system": "System",
+        "ledger": "Ledger",
+        "settings": "Settings"
+      },
+      "footerNote": "Separate from the student app. Nothing here is reachable by a student.",
+      "overviewTitle": "What needs you right now",
+      "overviewDescription": "Not everything — only what is waiting on a decision.",
+      "overviewPlaceholder": "The attention list and summary cards land here next. This screen is deliberately short: every other area has its own place in the rail rather than being stacked on top of this one."
     }
   },
   "saved": {
