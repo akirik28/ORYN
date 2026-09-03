@@ -75,7 +75,7 @@ describe("extractCVData — usage recording", () => {
       unclassified: [],
     });
 
-    await extractCVData({ userId: USER_ID, mimeType: "text/plain", buffer: Buffer.from("a resume") });
+    await extractCVData({ userId: USER_ID, mimeType: "text/plain", buffer: Buffer.from("a resume"), tier: "standard" });
 
     const recorded = usageInserts();
     expect(recorded).toHaveLength(1);
@@ -88,7 +88,7 @@ describe("extractCVData — usage recording", () => {
       new AIStructuredResponseFailedError({ lastError: "education[0].title: Required", usage: { inputTokens: 5000, outputTokens: 800 }, model: "claude-sonnet-5" }),
     );
 
-    await expect(extractCVData({ userId: USER_ID, mimeType: "text/plain", buffer: Buffer.from("a resume") })).rejects.toBeInstanceOf(
+    await expect(extractCVData({ userId: USER_ID, mimeType: "text/plain", buffer: Buffer.from("a resume"), tier: "standard" })).rejects.toBeInstanceOf(
       CVExtractionFailedError,
     );
 
@@ -139,7 +139,7 @@ describe("generateEssayOutlines — usage recording", () => {
       notEnoughMaterial: null,
     });
 
-    await generateEssayOutlines({ userId: USER_ID, essayPrompt: "Describe a challenge you overcame.", experiences, goals: [] });
+    await generateEssayOutlines({ userId: USER_ID, essayPrompt: "Describe a challenge you overcame.", experiences, goals: [], tier: "standard" });
 
     const recorded = usageInserts();
     expect(recorded).toHaveLength(1);
@@ -153,7 +153,7 @@ describe("generateEssayOutlines — usage recording", () => {
     );
 
     await expect(
-      generateEssayOutlines({ userId: USER_ID, essayPrompt: "Describe a challenge you overcame.", experiences, goals: [] }),
+      generateEssayOutlines({ userId: USER_ID, essayPrompt: "Describe a challenge you overcame.", experiences, goals: [], tier: "standard" }),
     ).rejects.toBeInstanceOf(AIStructuredResponseFailedError);
 
     const recorded = usageInserts();
@@ -265,7 +265,7 @@ describe("refineAchievementDescription — usage recording", () => {
     const { refineAchievementDescription } = await import("@/lib/ai/refine-achievement");
     providerRef.current!.queueStructured({ improvedDescription: "Led weekly meetings for 12 members.", suggestedQuestions: [] });
 
-    await refineAchievementDescription({ userId: USER_ID, achievementType: "activity", title: "Club lead", organization: null, description: "ran a club" });
+    await refineAchievementDescription({ userId: USER_ID, achievementType: "activity", title: "Club lead", organization: null, description: "ran a club", tier: "standard" });
 
     const recorded = usageInserts();
     expect(recorded).toHaveLength(1);
@@ -279,7 +279,7 @@ describe("refineAchievementDescription — usage recording", () => {
     );
 
     await expect(
-      refineAchievementDescription({ userId: USER_ID, achievementType: "activity", title: "Club lead", organization: null, description: "ran a club" }),
+      refineAchievementDescription({ userId: USER_ID, achievementType: "activity", title: "Club lead", organization: null, description: "ran a club", tier: "standard" }),
     ).rejects.toBeInstanceOf(AIStructuredResponseFailedError);
 
     const recorded = usageInserts();

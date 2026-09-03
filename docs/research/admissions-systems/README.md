@@ -111,6 +111,24 @@ was extended with the one real HBO-specific fact this pass found: a Turkish Lise
 ("at least a HAVO diploma," Nuffic) clears HBO's own entry bar directly, unlike WO's higher
 VWO-equivalent one. See [`netherlands.md`](./netherlands.md)'s 2026-09-03 addendum.
 
+**Austria and Ireland checked next — one diverges, one converges, both for a structural reason.**
+Austria's 21-institution Fachhochschule sector is confirmed to genuinely diverge, the same
+shape as Finland: § 11 of its own separate statute (FHStG, distinct from the law governing
+universities) legally mandates an admission procedure with a documented interview once
+applicants exceed places — a real holistic mechanism (a multi-stage aptitude test plus a
+motivation-focused interview), not the university sector's open-access default. Shipped as a
+second `subdivisions` entry. Ireland's 5 Technological Universities converge instead — TU
+Dublin's own CAO entry-requirements page and CAO's own unified Level 8 points list both confirm
+the identical points-and-tiebreak mechanism every traditional Irish university uses, no
+TU-specific process. The structural reason tracks each result: Austria's FHStG is a parallel
+statute that keeps the FH sector legally distinct, the same pattern behind Finland's divergence;
+Ireland's Technological Universities Act 2018 *dissolved* the former Institutes of Technology
+outright rather than creating a parallel category, converting them into full universities in law,
+not just in name. No subdivision was added for Ireland — this also resolves an open question
+named directly in migration `0108`'s own comment (whether TU admissions are practically
+different from UCD's; they aren't). See [`austria.md`](./austria.md)'s and
+[`ireland.md`](./ireland.md)'s own 2026-09-03 addenda.
+
 A side observation while writing `finland.md`'s first pass — every one of ORYN's 9 original
 Finnish institutions is a research university, none are UAS — turned into its own measurement:
 [`applied-sciences-sector-coverage.md`](./applied-sciences-sector-coverage.md) checks whether

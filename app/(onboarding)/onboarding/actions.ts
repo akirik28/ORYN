@@ -1,8 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requireUser } from "@/lib/security/dal";
+import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { recomputeCareerProfile } from "@/lib/scoring/persist";
 import { insertCvImportItems, insertCvImportSkills, insertCvImportLanguages } from "@/lib/profile/cv-import";
@@ -62,7 +63,14 @@ export async function uploadAndExtractCV(formData: FormData): Promise<CVUploadRe
 
   try {
     await assertWithinAIRateLimit(session.userId!, "cv_extraction", { maxCalls: 5, windowMinutes: 60 }, await resolveLocale());
-    const extraction = await extractCVData({ userId: session.userId!, mimeType: file.type, buffer });
+    // 2026-09-03, closing the Ultra tier-economics boundary. This runs mid-onboarding, before
+    // onboarding_completed is true -- but the profile row already exists (created at signup,
+    // before onboarding starts), so a real tier is genuinely resolvable here, not just
+    // assumed "standard" because it's early in the flow. See lib/ai/cv-extraction.ts's own
+    // comment on this exact point.
+    const profile = await getCurrentProfile();
+    const tier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+    const extraction = await extractCVData({ userId: session.userId!, mimeType: file.type, buffer, tier });
     await logEvent(session.userId!, "cv_imported", {
       itemCount:
         extraction.education.length +

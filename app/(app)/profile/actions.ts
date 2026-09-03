@@ -1,12 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/lib/security/dal";
+import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { recomputeCareerProfile } from "@/lib/scoring/persist";
 import { refineAchievementDescription, type AchievementRefinement } from "@/lib/ai/refine-achievement";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { generateResearchProjects, type ResearchProject } from "@/lib/ai/research-generator";
+import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { assertWithinAIRateLimit, RateLimitExceededError } from "@/lib/ai/rate-limit";
 import { AIProviderNotConfiguredError } from "@/lib/ai";
 import { logEvent } from "@/lib/analytics/log";
@@ -342,7 +343,12 @@ export async function refineAchievement(params: {
   try {
     const locale = await resolveLocale();
     await assertWithinAIRateLimit(session.userId!, "achievement_refinement", { maxCalls: 20, windowMinutes: 30 }, locale);
-    const data = await refineAchievementDescription({ userId: session.userId!, locale, ...params });
+    // 2026-09-03, closing the Ultra tier-economics boundary -- same pattern as
+    // app/(app)/advisor/actions.ts: getCurrentProfile() is cache()'d, so this costs nothing
+    // extra even though requireUser() above already resolved the session.
+    const profile = await getCurrentProfile();
+    const tier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+    const data = await refineAchievementDescription({ userId: session.userId!, locale, tier, ...params });
     return { data };
   } catch (error) {
     if (error instanceof RateLimitExceededError) return { error: error.message };
@@ -360,11 +366,17 @@ export async function generateResearchIdeas(field: string): Promise<{ data?: Res
   try {
     await assertWithinAIRateLimit(session.userId!, "research_generator", { maxCalls: 10, windowMinutes: 60 }, await resolveLocale());
     const supabase = await createClient();
-    const { data: interests } = await supabase.from("student_interests").select("label").eq("user_id", session.userId!);
+    const [{ data: interests }, profile] = await Promise.all([
+      supabase.from("student_interests").select("label").eq("user_id", session.userId!),
+      getCurrentProfile(),
+    ]);
     const data = await generateResearchProjects({
       userId: session.userId!,
       field: field.trim(),
       interests: (interests ?? []).map((i) => i.label),
+      // 2026-09-03, closing the Ultra tier-economics boundary -- see refineAchievement
+      // above's identical pattern.
+      tier: resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null }),
     });
     return { data };
   } catch (error) {

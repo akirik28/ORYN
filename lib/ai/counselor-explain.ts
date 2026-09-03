@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 import { getAIProvider } from "./index";
 import { withUsageLogging } from "./usage";
+import { selectModelForUser } from "./limits/budget";
 import { AIProviderNotConfiguredError } from "./provider";
 import { withOutputLanguage } from "./output-language";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
@@ -10,6 +11,7 @@ import { recommendationClassLabel } from "@/lib/counselor/copy";
 import { curriculumLabel } from "@/lib/requirements/copy";
 import type { AIProvider } from "./provider";
 import type { CounselorResult } from "@/lib/counselor/types";
+import type { PlanTier } from "@/types/database";
 
 const CounselorExplanationSchema = z.object({
   summary: z.string().describe("One or two sentences narrating the student's overall situation this week"),
@@ -125,7 +127,14 @@ export async function explainCounselorRecommendations(
   userId: string,
   result: CounselorResult,
   provider: AIProvider = getAIProvider(),
-  locale: Locale = DEFAULT_LOCALE
+  locale: Locale = DEFAULT_LOCALE,
+  // 2026-09-03, closing the Ultra tier-economics boundary. Defaulted, unlike this build's
+  // other four features: this function still has zero live product callers (see this
+  // file's own header) -- its only real caller is the eval harness, which has no per-
+  // request tier to thread and shouldn't need one just to grade prompt quality. Whoever
+  // wires this to a real surface next should pass the caller's actual tier explicitly,
+  // the same way every other threaded feature does, rather than leaning on this default.
+  tier: PlanTier = "standard",
 ): Promise<CounselorExplanation | null> {
   if (result.recommendations.length === 0) return null;
 
@@ -137,13 +146,19 @@ export async function explainCounselorRecommendations(
     // surfaces tonight; this feature has zero live callers today (see docs/handoffs/
     // spend-artefact-sweep-2026-09-02.md) so the gap has never actually cost anything, but
     // the code path is real and reachable the moment something calls it.
-    const response = await withUsageLogging({ userId, feature: "counselor_explanation" }, (model) =>
+    const response = await withUsageLogging({ userId, feature: "counselor_explanation", selectModel: (uid) => selectModelForUser(uid, tier) }, (model) =>
       provider.generateStructured({
         system: withOutputLanguage(COUNSELOR_EXPLANATION_SYSTEM_PROMPT, locale),
         prompt: buildCounselorExplanationPrompt(result, locale),
         schema: CounselorExplanationSchema,
         schemaName: "record_counselor_explanation",
         schemaDescription: "Records a short overall summary and one narrative sentence per recommendation id.",
+        // Not benchmarked for Ultra, 2026-09-03 -- distinct from essay-outlines.ts's maxTokens
+        // (checked live, found fine): this feature has zero live callers (see this file's own
+        // header), so there is no real traffic to benchmark against, Ultra or Standard. Worth
+        // a real check with lib/ai/essay-outlines.ts's method whenever this is actually wired
+        // to a product surface, not assumed safe just because essay_story_bank's own
+        // forced-tool_choice call showed no thinking-token pressure.
         maxTokens: 1024,
         model,
       }),

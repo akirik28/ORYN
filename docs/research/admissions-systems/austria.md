@@ -120,6 +120,51 @@ oversubscribed fixed quota. For all non-EU/EEA applicants, confirm the current h
 eligibility-proof requirement directly with the target university, since the exact document and
 its scope were not independently verified to primary-source precision this pass.
 
+## E. The Fachhochschule (FH) sector — a confirmed second subdivision, not an assumption
+
+**2026-09-03 addendum.** Everything above describes the university (Universität) sector. Checked
+separately, prompted directly by Finland's AMK divergence and the Netherlands' HBO convergence —
+neither outcome was assumed to carry over; the question was asked fresh for Austria's own 21
+Fachhochschulen (6e's institution research, `docs/austria-fh-sector-2026-09-03.md`).
+
+**Confirmed: Austria's FH sector genuinely diverges, at the statute level, not just by
+reputation.** § 11 of the Fachhochschul-Studiengesetz (FHStG) — a separate law from the one
+governing universities — fetched directly, primary confidence: legally requires an admission
+procedure ("Aufnahmeverfahren") whenever applicants exceed places, mandates a documented,
+verifiable interview with every applicant "nach Maßgabe organisatorischer Möglichkeiten," and
+does not specify grades as the sole criterion. In practice (FH Kärnten's own applicant guide,
+fetched directly): a multi-stage aptitude test (general knowledge, logical reasoning, verbal
+comprehension) plus an admission interview explicitly built around motivation and personal fit —
+sample questions given verbatim include "Wie würdest du dich beschreiben?" and "Warum genau
+dieses Programm?" The same source states plainly that Austrian universities historically had *no*
+entrance requirement at all, naming the FH aptitude test as a defining, structural difference
+between the two sectors — not this document's own inference.
+
+**Why this reads as Finland's shape, not the Netherlands':** Austria's FH sector has its own
+governing statute (FHStG) and its own self-governance body (FHK, Österreichische
+Fachhochschul-Konferenz — the same body that supplied 6e's institution list) distinct from the
+university sector's. This is the identical structural signature — two separate governing Acts —
+that made Finland's AMK sector a genuine divergence, and the opposite of the Netherlands, where
+HBO and WO share one framework (WHW) and were confirmed to converge for exactly that reason.
+
+**Eligibility, checked separately from the selection mechanism:** oesterreich.gv.at names a
+Turkish diploma specifically as needing proof of the university entrance exam (YKS) before an FH
+application is considered — the same added-recognition-step pattern already documented for the
+university sector in §D above, layered on top of, not instead of, the FH-specific interview and
+aptitude test everyone (EU or not) goes through once eligible.
+
+**Not checked this pass:** whether the group-quota split §11 FHStG mandates for Bachelor's
+programmes (at least one group reserved for vocational/Berufsreifeprüfung-qualified applicants,
+distinct from Matura holders) materially changes an individual applicant's odds — the law
+requires the split exist, not what size it is per programme. Whether Fachhochschule für
+angewandte Militärwissenschaften's housing at the Theresian Military Academy changes anything
+about its own FHStG-governed admission procedure specifically — nothing found suggests it does,
+but it wasn't independently checked beyond confirming it's open to civilian applicants and
+appears identically to the other 20 FHs on all three of 6e's source lists.
+
+Registry entry: shipped in `lib/admissions/system-shape.ts`, `subdivisions: [{ key: "fh", ... }]`
+on Austria's existing entry, covering all 21 real institution names.
+
 ## Sources
 
 - Austrian Federal Ministry of Education, Science and Research (bmfwf.gv.at), "Access to higher
@@ -136,6 +181,19 @@ its scope were not independently verified to primary-source precision this pass.
 - Secondary corroboration only (general application-process orientation, language thresholds):
   general web search summarizing institutional guidance — not independently primary-verified for
   every specific claim this pass.
+- (§E addendum) JUSLINE Österreich, § 11 FHStG (Fachhochschul-Studiengesetz) full text —
+  `https://www.jusline.at/gesetz/fhstg/paragraf/11` — fetched directly 2026-09-03, primary
+  confidence, for the legal admission-procedure requirement.
+- (§E addendum) FH Kärnten, applicant guide to the Aufnahmeverfahren —
+  `https://fresh.fh-kaernten.at/das-aufnahmeverfahren-alles-was-du-wissen-musst/` — fetched
+  directly 2026-09-03, primary confidence, for the practical aptitude-test/interview mechanism
+  and the explicit university-sector contrast.
+- (§E addendum) oesterreich.gv.at, "Zulassung zum Fachhochschul-Studium" — search-summary sourced
+  2026-09-03, for the Turkey-specific YKS-proof eligibility requirement; not independently
+  re-fetched from the primary page.
+- (§E addendum) FHK (Österreichische Fachhochschul-Konferenz) and 6e's own institution research,
+  [`docs/austria-fh-sector-2026-09-03.md`](../../austria-fh-sector-2026-09-03.md) — source of the
+  21-institution FH identity list used in the shipped `matchNames`.
 
 ## Unresolved questions
 

@@ -3,9 +3,11 @@ import "server-only";
 import { z } from "zod";
 import { getAIProvider } from "./index";
 import { withUsageLogging } from "./usage";
+import { selectModelForUser } from "./limits/budget";
 import { openAlexProvider } from "@/lib/providers/openalex";
 import { buildStudentAdvisorContext } from "./student-context";
 import { withOutputLanguage } from "./output-language";
+import type { PlanTier } from "@/types/database";
 
 const ResearchProjectSchema = z.object({
   researchQuestion: z.string(),
@@ -42,7 +44,18 @@ topics provided as grounding for what's currently being studied in this space â€
 question being asked in the field, not the specific papers verbatim. Never fabricate a dataset, API, or
 source that doesn't actually exist publicly.`;
 
-export async function generateResearchProjects(params: { userId: string; interests: string[]; field: string }): Promise<ResearchProject[]> {
+export async function generateResearchProjects(params: {
+  userId: string;
+  interests: string[];
+  field: string;
+  /** 2026-09-03, closing the Ultra tier-economics boundary â€” see lib/ai/advisor-chat.ts's
+   *  own comment on why the untouched withUsageLogging default (tier "standard") would
+   *  otherwise silently degrade an Ultra student's calls at Standard's target. Required, no
+   *  default, for the same reason getMonthlyQuota's tier param has none: this function's one
+   *  real caller (app/(app)/profile/actions.ts) already resolves a real tier, so a default
+   *  here would only ever paper over that caller forgetting to pass it. */
+  tier: PlanTier;
+}): Promise<ResearchProject[]> {
   const context = await buildStudentAdvisorContext(params.userId);
 
   const searchQuery = [params.field, ...params.interests].filter(Boolean).join(" ");
@@ -67,7 +80,7 @@ export async function generateResearchProjects(params: { userId: string; interes
       : "Graduation year not on file.";
 
   const provider = getAIProvider();
-  const result = await withUsageLogging({ userId: params.userId, feature: "research_generator" }, (model) =>
+  const result = await withUsageLogging({ userId: params.userId, feature: "research_generator", selectModel: (uid) => selectModelForUser(uid, params.tier) }, (model) =>
     provider.generateStructured({
       system: withOutputLanguage(SYSTEM_PROMPT, context.student.preferredLanguage),
       prompt: `Student field of interest: ${params.field}\nOther interests: ${params.interests.join(", ") || "none stated"}\n${gradeContext}\nWeekly time budget: ${context.student.weeklyTimeBudget ?? "not set"}\nCurrent research score: ${context.profileScores.find((s) => s.dimension === "research")?.score ?? "unknown"}/100\n\nCurrent research literature in this space, for grounding:\n${themesContext}\n\nGenerate up to 3 achievable research project ideas.`,
