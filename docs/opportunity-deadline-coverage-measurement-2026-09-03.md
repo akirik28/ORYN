@@ -137,6 +137,45 @@ document exists to bring, not decide — matching the explicit instruction, and 
 "decision, not a research task" framing Phase 16/17 already applies to admission-outlook
 precision elsewhere in this codebase.
 
+## Addendum (2026-09-03, same day): the "has a deadline" set is weaker than it looks
+
+A second, independent gap, flagged by a peer session and confirmed live against
+`oryn-qa-scratch` before writing it here:
+
+```sql
+select
+  count(*) filter (where status = 'active') as active_total,
+  count(*) filter (where status = 'active' and deadline is not null) as active_with_deadline,
+  count(*) filter (where status = 'active' and deadline is not null and deadline >= now()) as active_future_deadline,
+  count(*) filter (where status = 'active' and deadline is not null and deadline < now()) as active_past_deadline,
+  count(*) filter (where deadline is not null) as all_status_with_deadline
+from opportunities;
+-- active_total: 282, active_with_deadline: 77, active_future_deadline: 37,
+-- active_past_deadline: 40, all_status_with_deadline: 82
+```
+
+The "82 (19%) carry a deadline" figure this document opens with is real, but it answers "is
+the column non-null," not "is the column useful." Of the 77 active rows with any deadline
+value, **40 — more than half — are already in the past.** The value is still sitting there;
+nothing has cleared or reclassified it. Only 37 active rows (13% of the 282 that reach a
+student) have a deadline that is both present and current.
+
+This is a different problem from the one this document measures, and it doesn't change any
+number above: 205/282 missing is still 205/282 missing, regardless of whether the 77 present
+ones are current. But it means the "already covered" baseline this document treats as the
+solid ground under the gap is itself softer than a raw non-null count suggests — a passed
+deadline sitting unflagged in the column is not a neutral absence the way `unverified` or
+`date_not_announced` is; it's stored data that reads as coverage. Whether any consumer of this
+column (the "due soon" dashboard surface, the deadline-reminder job, the urgency term in
+opportunity matching) filters on `deadline >= now()` before trusting the value was not
+re-checked here — that's a distinct, boundable question, not re-derived in this pass. What's
+confirmed here is only the raw count, independently, against live data.
+
+If a future fill pass touches this table, it should treat these 40 rows as part of its scope
+too — either by re-verifying the cycle has genuinely closed (in which case the row likely
+belongs in `closed`/`historical`, not still reading as "has an active deadline"), or by
+finding the next real cycle's date the same way the fillable cases above were found.
+
 ## What this measurement does not do
 
 No writes, staged or otherwise. No deadline filled. This is deliberately a stopping point,
