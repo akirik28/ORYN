@@ -47,7 +47,7 @@ describe("resolveAdmissionSystem — the three shapes the research actually foun
   });
 
   test("every resolved entry carries at least one traceable source document", () => {
-    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece"]) {
+    for (const country of ["United States", "United Kingdom", "Turkey", "Germany", "Netherlands", "Italy", "France", "Ireland", "Hong Kong", "Singapore", "Switzerland", "Spain", "Australia", "New Zealand", "Canada", "Sweden", "Norway", "Portugal", "Greece", "Poland"]) {
       const result = resolveAdmissionSystem({ targetCountry: country, studentCountry: "Turkey" });
       expect(result.sources.length, country).toBeGreaterThan(0);
       expect(result.mechanism, country).not.toBeNull();
@@ -67,6 +67,7 @@ describe("resolveAdmissionSystem — country name forms actually present in the 
     ["UK", "United Kingdom"],
     ["Sverige", "Sweden"],
     ["Norge", "Norway"],
+    ["Polska", "Poland"],
   ])("%s resolves identically to %s", (alias, canonical) => {
     const aliased = resolveAdmissionSystem({ targetCountry: alias, studentCountry: "Turkey" });
     const canonicalResult = resolveAdmissionSystem({ targetCountry: canonical, studentCountry: "Turkey" });
@@ -352,6 +353,33 @@ describe("resolveAdmissionSystem — Greece (2026-09-03, same shape both sides, 
   test("Greece traces to its own research document, not an invented source", () => {
     const result = resolveAdmissionSystem({ targetCountry: "Greece", studentCountry: "Greece" });
     expect(result.sources).toContain("docs/research/admissions-systems/greece.md");
+  });
+});
+
+describe("resolveAdmissionSystem — Poland (2026-09-03, decentralized but convergent, like New Zealand)", () => {
+  // No central body decides admission (poland.md §A) — this shape rests on two independently
+  // checked universities (Silesia, Warsaw) converging on the same mechanism, the same basis
+  // this registry already uses for New Zealand's decentralized entry, not on one institution's
+  // rule generalized outward.
+  test("Poland is rank-competitive both domestic and international, despite having no central admissions body", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Poland", studentCountry: "Poland" });
+    const international = resolveAdmissionSystem({ targetCountry: "Poland", studentCountry: "Turkey" });
+    expect(domestic.shape).toBe("academic_rank_competitive");
+    expect(international.shape).toBe("academic_rank_competitive");
+    expect(reviewsNonAcademicEvidence(domestic.shape)).toBe(false);
+    expect(domestic.mechanism).toContain("qualification points");
+  });
+
+  test("Poland's international mechanism names the matura-percentage conversion, not a copy of the domestic text", () => {
+    const domestic = resolveAdmissionSystem({ targetCountry: "Poland", studentCountry: "Poland" });
+    const international = resolveAdmissionSystem({ targetCountry: "Poland", studentCountry: "Turkey" });
+    expect(international.mechanism).toContain("100%");
+    expect(international.mechanism).not.toBe(domestic.mechanism);
+  });
+
+  test("Poland traces to its own research document, not an invented source", () => {
+    const result = resolveAdmissionSystem({ targetCountry: "Poland", studentCountry: "Poland" });
+    expect(result.sources).toContain("docs/research/admissions-systems/poland.md");
   });
 });
 

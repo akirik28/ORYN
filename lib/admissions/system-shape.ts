@@ -600,6 +600,24 @@ const REGISTRY: AdmissionSystemEntry[] = [
     },
     sources: [DOC("greece.md")],
   },
+  {
+    countryNames: ["Poland", "Polska"],
+    // No central government admissions body exists (unlike Sweden/Norway/Portugal/Greece
+    // already in this registry) — this shape is recorded because two independently-checked
+    // universities (Silesia, Warsaw) converge on the same mechanism type, the same basis this
+    // registry already uses for New Zealand's decentralized-but-convergent entry.
+    domestic: {
+      shape: "academic_rank_competitive",
+      mechanism:
+        "Each university runs its own recruitment, but converts matura results into qualification points (1% basic level = 1 point, 1% extended = 1.5, 1% bilingual = 2, weighted by subject) and admits in descending rank order off a ranking list until each programme's place limit fills. No essay, interview, or reference letter.",
+    },
+    international: {
+      shape: "academic_rank_competitive",
+      mechanism:
+        "Foreign qualifications are converted directly onto the same ranking lists — the best grade on a foreign document equals 100% of the Polish matura, the lowest positive grade equals 30%, then weighted the same way as the domestic scale. Applicants from outside the EU, EFTA and OECD may additionally face a university-set entrance exam; Türkiye's OECD membership suggests this narrower gate would not apply to a Turkish applicant, but that reading was not independently confirmed this pass.",
+    },
+    sources: [DOC("poland.md")],
+  },
 ];
 
 // ---------------------------------------------------------------------------
