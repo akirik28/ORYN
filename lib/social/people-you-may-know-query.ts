@@ -3,6 +3,7 @@ import "server-only";
 import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { isExcludedFromPeopleYouMayKnow, scorePeopleYouMayKnowCandidate, hasAnyPeopleYouMayKnowSignal, isSameSchool } from "./people-you-may-know";
 import { normalizeEntitySearchText } from "@/lib/entities/normalize";
+import { readOr } from "@/lib/supabase/safe-read";
 
 export interface PYMKResult {
   id: string;
@@ -46,28 +47,29 @@ export async function getPeopleYouMayKnow(userId: string, limit = 10): Promise<P
     admin.from("skills").select("name").eq("user_id", userId),
   ]);
 
-  const connectionRows = connectionsRes.data ?? [];
+  const connectionRows = readOr("getPeopleYouMayKnow.connections", connectionsRes, [], { userId });
   const anyConnectionIds = new Set(connectionRows.map((r) => (r.requester_id === userId ? r.recipient_id : r.requester_id)));
   const acceptedConnectionIds = new Set(
     connectionRows.filter((r) => r.status === "accepted").map((r) => (r.requester_id === userId ? r.recipient_id : r.requester_id))
   );
-  const blockedIds = new Set((blockedRes.data ?? []).map((r) => (r.blocker_id === userId ? r.blocked_id : r.blocker_id)));
-  const mySchool = myProfileRes.data?.school_name ?? null;
-  const mySchoolId = myProfileRes.data?.school_entity_id ?? null;
+  const blockedIds = new Set(readOr("getPeopleYouMayKnow.blocked", blockedRes, [], { userId }).map((r) => (r.blocker_id === userId ? r.blocked_id : r.blocker_id)));
+  const myProfile = readOr("getPeopleYouMayKnow.myProfile", myProfileRes, null, { userId });
+  const mySchool = myProfile?.school_name ?? null;
+  const mySchoolId = myProfile?.school_entity_id ?? null;
   const myNormalizedSchool = mySchool ? normalizeEntitySearchText(mySchool) : "";
-  const myInterests = new Set((myInterestsRes.data ?? []).map((r) => r.label));
-  const mySkills = new Set((mySkillsRes.data ?? []).map((r) => r.name));
+  const myInterests = new Set(readOr("getPeopleYouMayKnow.myInterests", myInterestsRes, [], { userId }).map((r) => r.label));
+  const mySkills = new Set(readOr("getPeopleYouMayKnow.mySkills", mySkillsRes, [], { userId }).map((r) => r.name));
 
   const candidateIds = new Set<string>();
 
   if (acceptedConnectionIds.size > 0) {
     const sourceIds = [...acceptedConnectionIds].slice(0, SECOND_DEGREE_SOURCE_CAP);
-    const { data: secondDegree } = await admin
+    const secondDegreeRes = await admin
       .from("connections")
       .select("requester_id, recipient_id")
       .eq("status", "accepted")
       .or(`${orInList("requester_id", sourceIds)},${orInList("recipient_id", sourceIds)}`);
-    for (const row of secondDegree ?? []) {
+    for (const row of readOr("getPeopleYouMayKnow.secondDegree", secondDegreeRes, [], { userId })) {
       candidateIds.add(row.requester_id);
       candidateIds.add(row.recipient_id);
     }
@@ -79,12 +81,12 @@ export async function getPeopleYouMayKnow(userId: string, limit = 10): Promise<P
   // should still find each other; both are candidate-*gathering* queries, and
   // isSameSchool below is what actually decides the signal.
   if (mySchoolId) {
-    const { data: linkedMates } = await admin.from("profiles").select("id").eq("school_entity_id", mySchoolId).eq("is_public", true).limit(50);
-    for (const row of linkedMates ?? []) candidateIds.add(row.id);
+    const linkedMatesRes = await admin.from("profiles").select("id").eq("school_entity_id", mySchoolId).eq("is_public", true).limit(50);
+    for (const row of readOr("getPeopleYouMayKnow.linkedMates", linkedMatesRes, [], { userId })) candidateIds.add(row.id);
   }
   if (mySchool) {
-    const { data: schoolMates } = await admin.from("profiles").select("id").eq("school_name", mySchool).eq("is_public", true).limit(50);
-    for (const row of schoolMates ?? []) candidateIds.add(row.id);
+    const schoolMatesRes = await admin.from("profiles").select("id").eq("school_name", mySchool).eq("is_public", true).limit(50);
+    for (const row of readOr("getPeopleYouMayKnow.schoolMates", schoolMatesRes, [], { userId })) candidateIds.add(row.id);
   }
 
   candidateIds.delete(userId);
@@ -102,7 +104,7 @@ export async function getPeopleYouMayKnow(userId: string, limit = 10): Promise<P
   ]);
 
   const candidateAcceptedIds = new Map<string, Set<string>>();
-  for (const row of candidateConnRes.data ?? []) {
+  for (const row of readOr("getPeopleYouMayKnow.candidateConnections", candidateConnRes, [], { userId })) {
     if (idsArr.includes(row.requester_id)) {
       const set = candidateAcceptedIds.get(row.requester_id) ?? new Set<string>();
       set.add(row.recipient_id);
@@ -116,13 +118,13 @@ export async function getPeopleYouMayKnow(userId: string, limit = 10): Promise<P
   }
 
   const candidateInterests = new Map<string, string[]>();
-  for (const row of candidateInterestsRes.data ?? []) {
+  for (const row of readOr("getPeopleYouMayKnow.candidateInterests", candidateInterestsRes, [], { userId })) {
     const list = candidateInterests.get(row.user_id) ?? [];
     list.push(row.label);
     candidateInterests.set(row.user_id, list);
   }
   const candidateSkills = new Map<string, string[]>();
-  for (const row of candidateSkillsRes.data ?? []) {
+  for (const row of readOr("getPeopleYouMayKnow.candidateSkills", candidateSkillsRes, [], { userId })) {
     const list = candidateSkills.get(row.user_id) ?? [];
     list.push(row.name);
     candidateSkills.set(row.user_id, list);
@@ -130,7 +132,7 @@ export async function getPeopleYouMayKnow(userId: string, limit = 10): Promise<P
 
   const results: (PYMKResult & { score: number })[] = [];
 
-  for (const profile of profilesRes.data ?? []) {
+  for (const profile of readOr("getPeopleYouMayKnow.profiles", profilesRes, [], { userId })) {
     if (!profile.is_public) continue;
     if (isExcludedFromPeopleYouMayKnow({ candidateId: profile.id, selfId: userId, hasAnyConnectionRecord: anyConnectionIds.has(profile.id), isBlocked: blockedIds.has(profile.id) })) {
       continue;
