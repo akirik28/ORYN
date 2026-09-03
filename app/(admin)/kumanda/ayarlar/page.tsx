@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/oryn/page-header";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getFinanceSettings, getProductSettings } from "@/lib/admin/queries";
+import { getFinanceSettings, getProductSettings, isFinanceSettingsTableLive, isProductSettingsTableLive } from "@/lib/admin/queries";
 import { FinanceSettingsForm } from "@/features/admin/finance-settings-form";
 import { SignupsToggle } from "@/features/admin/signups-toggle";
 import { MaintenanceModeToggle } from "@/features/admin/maintenance-mode-toggle";
@@ -19,7 +19,13 @@ import { MONTHLY_AI_TOKEN_LIMIT } from "@/lib/ai/monthly-quota";
  */
 export default async function SettingsPage() {
   const admin = createAdminClient();
-  const [t, settings, productSettings] = await Promise.all([getTranslations("admin.control.settings"), getFinanceSettings(admin), getProductSettings(admin)]);
+  const [t, settings, productSettings, financeLive, productSettingsLive] = await Promise.all([
+    getTranslations("admin.control.settings"),
+    getFinanceSettings(admin),
+    getProductSettings(admin),
+    isFinanceSettingsTableLive(admin),
+    isProductSettingsTableLive(admin),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -32,7 +38,10 @@ export default async function SettingsPage() {
         <p className="mb-4 text-xs" style={{ color: "var(--admin-ink-3)" }}>
           {t("finance.sectionDescription")}
         </p>
-        <FinanceSettingsForm currentRate={settings.usdTryRate?.rateTryPerUsd ?? null} currentPriceTry={settings.ultraPriceTry} />
+        {!financeLive ? (
+          <p className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">{t("finance.notSetUp")}</p>
+        ) : null}
+        <FinanceSettingsForm currentRate={settings.usdTryRate?.rateTryPerUsd ?? null} currentPriceTry={settings.ultraPriceTry} live={financeLive} />
       </div>
 
       <div className="admin-panel rounded-xl p-6">
@@ -74,8 +83,11 @@ export default async function SettingsPage() {
               {productSettings.signupsEnabled ? t("signups.statusOpen") : t("signups.statusClosed")}
             </p>
           </div>
-          <SignupsToggle enabled={productSettings.signupsEnabled} />
+          <SignupsToggle enabled={productSettings.signupsEnabled} live={productSettingsLive} />
         </div>
+        {!productSettingsLive ? (
+          <p className="mt-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">{t("productSettingsNotSetUp")}</p>
+        ) : null}
       </div>
 
       <div className="admin-panel rounded-xl p-6">
@@ -88,8 +100,11 @@ export default async function SettingsPage() {
               {productSettings.maintenanceMode ? t("maintenance.statusOn") : t("maintenance.statusOff")}
             </p>
           </div>
-          <MaintenanceModeToggle active={productSettings.maintenanceMode} />
+          <MaintenanceModeToggle active={productSettings.maintenanceMode} live={productSettingsLive} />
         </div>
+        {!productSettingsLive ? (
+          <p className="mt-3 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">{t("productSettingsNotSetUp")}</p>
+        ) : null}
       </div>
 
       <div className="admin-panel rounded-xl p-6">
@@ -99,7 +114,10 @@ export default async function SettingsPage() {
         <p className="mb-4 text-xs" style={{ color: "var(--admin-ink-3)" }}>
           {t("trial.sectionDescription")}
         </p>
-        <TrialPeriodForm currentDays={productSettings.trialPeriodDays} />
+        {!productSettingsLive ? (
+          <p className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">{t("productSettingsNotSetUp")}</p>
+        ) : null}
+        <TrialPeriodForm currentDays={productSettings.trialPeriodDays} live={productSettingsLive} />
       </div>
     </div>
   );

@@ -20,12 +20,14 @@ export function ModelPricingEditor({
   saveLabel,
   inputPlaceholder,
   outputPlaceholder,
+  live = true,
 }: {
   model: string;
   saveAction: (model: string, inputRatePerMillion: number, outputRatePerMillion: number) => Promise<{ error?: string }>;
   saveLabel: string;
   inputPlaceholder: string;
   outputPlaceholder: string;
+  live?: boolean;
 }) {
   const [inputRate, setInputRate] = useState("");
   const [outputRate, setOutputRate] = useState("");
@@ -51,7 +53,7 @@ export function ModelPricingEditor({
         step={0.01}
         value={inputRate}
         onChange={(e) => setInputRate(e.target.value)}
-        disabled={isPending}
+        disabled={isPending || !live}
         placeholder={inputPlaceholder}
         className="h-7 w-24 text-xs"
         aria-label={inputPlaceholder}
@@ -62,12 +64,12 @@ export function ModelPricingEditor({
         step={0.01}
         value={outputRate}
         onChange={(e) => setOutputRate(e.target.value)}
-        disabled={isPending}
+        disabled={isPending || !live}
         placeholder={outputPlaceholder}
         className="h-7 w-24 text-xs"
         aria-label={outputPlaceholder}
       />
-      <Button size="sm" variant="outline" className="h-7 px-2 text-xs" disabled={isPending || !inputRate || !outputRate} onClick={save}>
+      <Button size="sm" variant="outline" className="h-7 px-2 text-xs" disabled={isPending || !live || !inputRate || !outputRate} onClick={save}>
         {isPending ? <Loader2 className="size-3 animate-spin" /> : null}
         {saveLabel}
       </Button>

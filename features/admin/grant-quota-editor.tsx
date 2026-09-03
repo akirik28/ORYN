@@ -23,6 +23,7 @@ export function GrantQuotaEditor({
   resetLabel,
   amountPlaceholder,
   grantedNote,
+  live = true,
 }: {
   userId: string;
   monthToDateGrantsUsd: number;
@@ -32,6 +33,7 @@ export function GrantQuotaEditor({
   resetLabel: string;
   amountPlaceholder: string;
   grantedNote: string;
+  live?: boolean;
 }) {
   const [amount, setAmount] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -58,7 +60,7 @@ export function GrantQuotaEditor({
         step={0.01}
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
-        disabled={isPending}
+        disabled={isPending || !live}
         placeholder={amountPlaceholder}
         className="h-7 w-20 text-xs"
         aria-label={grantLabel}
@@ -67,13 +69,13 @@ export function GrantQuotaEditor({
         size="sm"
         variant="outline"
         className="h-7 px-2 text-xs"
-        disabled={isPending || !amount}
+        disabled={isPending || !live || !amount}
         onClick={() => run(() => grantAction(userId, Number(amount)))}
       >
         {isPending ? <Loader2 className="size-3 animate-spin" /> : null}
         {grantLabel}
       </Button>
-      <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" disabled={isPending} onClick={() => run(() => resetAction(userId))}>
+      <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" disabled={isPending || !live} onClick={() => run(() => resetAction(userId))}>
         {resetLabel}
       </Button>
     </div>

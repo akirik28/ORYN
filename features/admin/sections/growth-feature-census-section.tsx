@@ -4,7 +4,7 @@ import { tr as trLocale } from "date-fns/locale";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { formatNumber } from "@/lib/i18n/format";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getFeatureCensus } from "@/lib/admin/queries";
+import { getFeatureCensus, isDeadFeatureFlagsTableLive } from "@/lib/admin/queries";
 import { GrowthFeatureDeadControl } from "./growth-feature-dead-control";
 
 /**
@@ -18,12 +18,13 @@ import { GrowthFeatureDeadControl } from "./growth-feature-dead-control";
 export async function GrowthFeatureCensusSection() {
   const [t, locale] = await Promise.all([getTranslations("admin.growth.featureCensus"), resolveLocale()]);
   const admin = createAdminClient();
-  const census = await getFeatureCensus(admin);
+  const [census, deadFlagsLive] = await Promise.all([getFeatureCensus(admin), isDeadFeatureFlagsTableLive(admin)]);
   const dateFnsLocale = locale === "tr" ? { locale: trLocale } : undefined;
 
   return (
     <section className="space-y-3">
       <h2 className="font-semibold">{t("sectionTitle")}</h2>
+      {!deadFlagsLive ? <p className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">{t("deadFlagsNotSetUp")}</p> : null}
       {census.unknownEventNames.length > 0 ? (
         <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-2.5 text-xs text-amber-800 dark:text-amber-300">
           {t("unknownWarning", { count: census.unknownEventNames.length })}
@@ -52,7 +53,7 @@ export async function GrowthFeatureCensusSection() {
                         {t("deadBadge")} · {t("markedBy", { time: formatDistanceToNow(new Date(row.deadFlag.markedAt), { addSuffix: true, ...dateFnsLocale }) })}
                       </span>
                     ) : null}
-                    <GrowthFeatureDeadControl eventName={row.eventName} isDead={row.deadFlag !== null} />
+                    <GrowthFeatureDeadControl eventName={row.eventName} isDead={row.deadFlag !== null} live={deadFlagsLive} />
                   </div>
                 </td>
               </tr>

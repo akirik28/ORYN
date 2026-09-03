@@ -11,7 +11,7 @@ import { updateProductSettings } from "@/app/(app)/admin/actions";
  * after save. Feeds grantUltraGift directly — see admin_product_settings.trial_period_days'
  * own migration comment for why a change here only affects gifts granted after it.
  */
-export function TrialPeriodForm({ currentDays }: { currentDays: number }) {
+export function TrialPeriodForm({ currentDays, live = true }: { currentDays: number; live?: boolean }) {
   const t = useTranslations("admin.control.settings.trial");
   const router = useRouter();
   const [days, setDays] = useState(String(currentDays));
@@ -54,13 +54,14 @@ export function TrialPeriodForm({ currentDays }: { currentDays: number }) {
           min="1"
           value={days}
           onChange={(e) => setDays(e.target.value)}
-          className="w-24 rounded-lg px-3 py-2 text-sm outline-none"
+          disabled={!live}
+          className="w-24 rounded-lg px-3 py-2 text-sm outline-none disabled:opacity-60"
           style={{ border: "1px solid var(--admin-border)", background: "var(--admin-bg-elevated)", color: "var(--admin-ink-1)" }}
         />
       </label>
       <button
         type="submit"
-        disabled={isPending}
+        disabled={isPending || !live}
         className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-opacity disabled:opacity-60"
         style={{ background: "var(--admin-accent)" }}
       >

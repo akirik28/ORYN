@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { formatCurrency, formatNumber } from "@/lib/i18n/format";
 import { Badge } from "@/components/ui/badge";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getPerUserSpend, PER_STUDENT_MONTHLY_TARGET_USD, PER_STUDENT_MONTHLY_CEILING_USD } from "@/lib/admin/queries";
+import { getPerUserSpend, PER_STUDENT_MONTHLY_TARGET_USD, PER_STUDENT_MONTHLY_CEILING_USD, isQuotaGrantsTableLive } from "@/lib/admin/queries";
 import { GrantQuotaEditor } from "@/features/admin/grant-quota-editor";
 import { grantQuota, resetQuotaThisMonth } from "@/app/(app)/admin/actions";
 
@@ -23,7 +23,7 @@ const money = (value: number) => formatCurrency(value, "USD", { minimumFractionD
 export async function SpendPerUserSection() {
   const t = await getTranslations("admin.perUser");
   const admin = createAdminClient();
-  const users = await getPerUserSpend(admin);
+  const [users, quotaGrantsLive] = await Promise.all([getPerUserSpend(admin), isQuotaGrantsTableLive(admin)]);
 
   return (
     <section className="space-y-3">
@@ -31,6 +31,7 @@ export async function SpendPerUserSection() {
         <h2 className="font-semibold">{t("sectionTitle")}</h2>
         <span className="text-xs text-muted-foreground">{t("subtitle", { target: money(PER_STUDENT_MONTHLY_TARGET_USD), ceiling: money(PER_STUDENT_MONTHLY_CEILING_USD) })}</span>
       </div>
+      {!quotaGrantsLive ? <p className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">{t("quotaGrantsNotSetUp")}</p> : null}
 
       {users.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("none")}</p>
@@ -63,6 +64,7 @@ export async function SpendPerUserSection() {
                 resetLabel={t("resetThisMonth")}
                 amountPlaceholder={t("amountPlaceholder")}
                 grantedNote={t("alreadyGranted", { amount: money(user.monthToDateGrantsUsd) })}
+                live={quotaGrantsLive}
               />
             </li>
           ))}

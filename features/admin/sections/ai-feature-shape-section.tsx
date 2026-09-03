@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { formatCurrency, formatNumber } from "@/lib/i18n/format";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getSpendSummary, type AiFeatureCategory } from "@/lib/admin/queries";
+import { getSpendSummary, isModelPricingTableLive, type AiFeatureCategory } from "@/lib/admin/queries";
 import { BarChart } from "@/components/oryn/charts/bar-chart";
 import { ModelPricingEditor } from "@/features/admin/model-pricing-editor";
 import { setModelPricing } from "@/app/(app)/admin/actions";
@@ -19,7 +19,7 @@ const CATEGORY_ORDER: AiFeatureCategory[] = ["student_pool", "job_budgeted", "ad
 export async function AiFeatureShapeSection() {
   const t = await getTranslations("admin.aiBudget.featureShape");
   const admin = createAdminClient();
-  const summary = await getSpendSummary(admin);
+  const [summary, modelPricingLive] = await Promise.all([getSpendSummary(admin), isModelPricingTableLive(admin)]);
 
   const byCategory = CATEGORY_ORDER.map((category) => ({
     x: t(`category.${category}`),
@@ -61,6 +61,7 @@ export async function AiFeatureShapeSection() {
         {summary.unpricedCalls > 0 ? (
           <>
             <p className="text-xs text-amber-700 dark:text-amber-400">{t("unpricedAlert", { count: formatNumber(summary.unpricedCalls) })}</p>
+            {!modelPricingLive ? <p className="mt-1 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">{t("modelPricingNotSetUp")}</p> : null}
             <ul className="mt-1 space-y-1.5">
               {summary.unpricedByModel.map((row) => (
                 <li key={row.model} className="flex flex-wrap items-center justify-between gap-2">
@@ -71,6 +72,7 @@ export async function AiFeatureShapeSection() {
                     saveLabel={t("savePricing")}
                     inputPlaceholder={t("inputRatePlaceholder")}
                     outputPlaceholder={t("outputRatePlaceholder")}
+                    live={modelPricingLive}
                   />
                 </li>
               ))}

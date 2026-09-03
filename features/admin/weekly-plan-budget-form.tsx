@@ -13,7 +13,7 @@ import { updateWeeklyPlanBudgetCeiling } from "@/app/(app)/admin/actions";
 /** No confirm step — raising or lowering a spend ceiling is reversible (it only changes
  *  when future calls degrade, never anything already spent), matching ProviderRecheckButton's
  *  own reversible-action treatment rather than JobDisableToggle's confirmed one. */
-export function WeeklyPlanBudgetForm({ currentCeilingUsd }: { currentCeilingUsd: number }) {
+export function WeeklyPlanBudgetForm({ currentCeilingUsd, live = true }: { currentCeilingUsd: number; live?: boolean }) {
   const t = useTranslations("admin.weeklyPlanBudget");
   const [value, setValue] = useState(String(currentCeilingUsd));
   const [isPending, startTransition] = useTransition();
@@ -43,11 +43,11 @@ export function WeeklyPlanBudgetForm({ currentCeilingUsd }: { currentCeilingUsd:
           step="0.01"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          disabled={isPending}
+          disabled={isPending || !live}
           className="w-32"
         />
       </div>
-      <Button onClick={save} disabled={isPending || !Number.isFinite(Number(value)) || Number(value) <= 0} size="sm">
+      <Button onClick={save} disabled={isPending || !live || !Number.isFinite(Number(value)) || Number(value) <= 0} size="sm">
         {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
         {t("saveButton")}
       </Button>

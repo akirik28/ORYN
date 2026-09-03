@@ -14,7 +14,7 @@ import { markFeatureDead, unmarkFeatureDead } from "@/app/(app)/admin/actions";
  * (docs/admin-panel-architecture-2026-09-02.md D8): marking a feature here is a dated,
  * attributed decision a human reads later, not a flag that changes any runtime behavior.
  */
-export function GrowthFeatureDeadControl({ eventName, isDead }: { eventName: string; isDead: boolean }) {
+export function GrowthFeatureDeadControl({ eventName, isDead, live = true }: { eventName: string; isDead: boolean; live?: boolean }) {
   const t = useTranslations("admin.growth.featureCensus");
   const [note, setNote] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -30,7 +30,7 @@ export function GrowthFeatureDeadControl({ eventName, isDead }: { eventName: str
 
   if (isDead) {
     return (
-      <Button variant="outline" size="sm" disabled={isPending} onClick={() => run(() => unmarkFeatureDead(eventName))}>
+      <Button variant="outline" size="sm" disabled={isPending || !live} onClick={() => run(() => unmarkFeatureDead(eventName))}>
         {isPending ? <Loader2 className="size-3.5 animate-spin" /> : null}
         {t("unmark")}
       </Button>
@@ -39,8 +39,8 @@ export function GrowthFeatureDeadControl({ eventName, isDead }: { eventName: str
 
   return (
     <div className="flex items-center gap-1.5">
-      <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("notePlaceholder")} className="h-8 w-40 text-xs" disabled={isPending} />
-      <Button variant="outline" size="sm" disabled={isPending} onClick={() => run(() => markFeatureDead(eventName, note))}>
+      <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t("notePlaceholder")} className="h-8 w-40 text-xs" disabled={isPending || !live} />
+      <Button variant="outline" size="sm" disabled={isPending || !live} onClick={() => run(() => markFeatureDead(eventName, note))}>
         {isPending ? <Loader2 className="size-3.5 animate-spin" /> : null}
         {t("markDead")}
       </Button>

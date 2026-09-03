@@ -41,6 +41,7 @@ export function UltraGiftControl({
   displayName,
   expiresAt,
   active,
+  live = true,
 }: {
   userId: string;
   displayName: string;
@@ -49,6 +50,8 @@ export function UltraGiftControl({
    *  Date.now() during this component's own render trips react-hooks/purity regardless of
    *  client vs. server component. */
   active: boolean;
+  /** profiles.ultra_gift_expires_at, migration 0106 — whether the column itself exists yet. */
+  live?: boolean;
 }) {
   const t = useTranslations("admin.users");
   const tCommon = useTranslations("common");
@@ -87,7 +90,7 @@ export function UltraGiftControl({
 
   return (
     <>
-      <Button type="button" variant="outline" size="sm" onClick={() => setConfirmOpen(true)}>
+      <Button type="button" variant="outline" size="sm" disabled={isPending || !live} onClick={() => setConfirmOpen(true)}>
         {t("grantGift")}
       </Button>
 

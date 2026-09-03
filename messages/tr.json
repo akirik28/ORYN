@@ -1740,7 +1740,8 @@
       "grant": "Ekle",
       "resetThisMonth": "Bu ayı sıfırla",
       "amountPlaceholder": "$ miktar",
-      "alreadyGranted": "bu ay {amount} zaten eklendi ·"
+      "alreadyGranted": "bu ay {amount} zaten eklendi ·",
+      "quotaGrantsNotSetUp": "Henüz kurulmadı — bir öğrencinin ayını hibe etmek veya sıfırlamak için 0096 (quota_grants) migration'ının uygulanması gerekiyor."
     },
     "credit": {
       "sectionTitle": "Kalan kredi",
@@ -1772,7 +1773,8 @@
       "giftConfirmButton": "Hediye et",
       "giftGrantedToast": "{name} artık 7 gün boyunca Ultra'ya sahip.",
       "giftAlreadyUsedToast": "{name} hediyesini zaten kullandı.",
-      "giftActive": "Ultra aktif, {time}"
+      "giftActive": "Ultra aktif, {time}",
+      "giftNotSetUp": "Henüz kurulmadı — hediye verebilmek için 0106 (profiles.ultra_gift_expires_at) migration'ının uygulanması gerekiyor."
     },
     "opportunities": {
       "sectionTitle": "Fırsatlar",
@@ -1809,7 +1811,8 @@
       "degradingNow": "Tavana ulaşıldı — gelecek aya kadar her öğrenci için her haftalık plan çağrısı şu anda daha ucuz modeli kullanıyor.",
       "ceilingLabel": "Aylık tavan (USD)",
       "saveButton": "Kaydet",
-      "saved": "Tavan güncellendi."
+      "saved": "Tavan güncellendi.",
+      "notSetUp": "Henüz kurulmadı — bir tavan kaydedebilmek için 0102 (weekly_plan_budget_settings) migration'ının uygulanması gerekiyor."
     },
     "aiBudget": {
       "featureShape": {
@@ -1830,7 +1833,8 @@
         "unpricedByModel": "{model}: {count} çağrı",
         "inputRatePlaceholder": "$/M giriş",
         "outputRatePlaceholder": "$/M çıkış",
-        "savePricing": "Kaydet"
+        "savePricing": "Kaydet",
+        "modelPricingNotSetUp": "Henüz kurulmadı — bir oranı kaydedebilmek için 0100 (ai_model_pricing) migration'ının uygulanması gerekiyor."
       },
       "jobBudget": {
         "sectionTitle": "Katalog işi bütçeleri",
@@ -1849,7 +1853,8 @@
           "over_budget": "Bütçe aşıldı — gelecek aya kadar durduruldu",
           "unknown_cost_this_month": "Bu ay fiyatlandırılmamış bir çağrı oldu — tahmin etmek yerine durduruldu",
           "usage_unavailable": "Kullanım verisi okunamadı — güvenli tarafta kalınarak çalışmaya izin veriliyor"
-        }
+        },
+        "overridesNotSetUp": "Henüz kurulmadı — canlı bütçe değişikliği için 0099 (job_budget_overrides) migration'ının uygulanması gerekiyor."
       },
       "degradeStanding": {
         "sectionTitle": "Kim düşürülmüş modelle çalışıyor",
@@ -1904,7 +1909,8 @@
       "disableConfirmTitle": "Bu görevin gelecek çalıştırmaları devre dışı bırakılsın mı?",
       "disableConfirmBody": "Yeniden etkinleştirilene kadar zamanlanmış ve manuel tetiklenen çalıştırmalar engellenir. Şu anda devam eden bir çalıştırma bundan etkilenmez — bu, onu durduramaz.",
       "disableConfirmAction": "Devre dışı bırak",
-      "enableToggle": "Yeniden etkinleştir"
+      "enableToggle": "Yeniden etkinleştir",
+      "jobControlsNotSetUp": "Henüz kurulmadı — bir işi devre dışı bırakabilmek için 0095 (job_controls) migration'ının uygulanması gerekiyor."
     },
     "activity": {
       "sectionTitle": "Etkinlik",
@@ -2031,7 +2037,8 @@
           "invalidPrice": "Pozitif bir fiyat gir.",
           "saved": "Kaydedildi.",
           "saving": "Kaydediliyor…",
-          "save": "Kaydet"
+          "save": "Kaydet",
+          "notSetUp": "Henüz kurulmadı — burada kaydedebilmek için 0094 (admin_finance_settings) migration'ının uygulanması gerekiyor."
         },
         "aiCap": {
           "sectionTitle": "Yapay zekâ maliyet tavanı",
@@ -2068,7 +2075,8 @@
           "saving": "Kaydediliyor…",
           "save": "Kaydet",
           "saved": "Kaydedildi."
-        }
+        },
+        "productSettingsNotSetUp": "Henüz kurulmadı — bunun çalışması için 0105 (admin_product_settings) migration'ının uygulanması gerekiyor."
       },
       "traffic": {
         "title": "Trafik",
@@ -2106,7 +2114,8 @@
         "markedBy": "{time} işaretlendi",
         "notePlaceholder": "Neden? (opsiyonel)",
         "unknownWarning": "{count, plural, one {# etkinlik adı} other {# etkinlik adı}} veride görüldü ama bilinen listede yok — bu döküm yakın zamanda eklenmiş bir özelliği eksik gösteriyor olabilir.",
-        "saveError": "Kaydedilemedi. Lütfen tekrar deneyin."
+        "saveError": "Kaydedilemedi. Lütfen tekrar deneyin.",
+        "deadFlagsNotSetUp": "Henüz kurulmadı — bir özelliği ölü işaretleyebilmek için 0101 (admin_dead_feature_flags) migration'ının uygulanması gerekiyor."
       },
       "loopClosing": {
         "sectionTitle": "Döngünün kapanması",
