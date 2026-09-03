@@ -57,7 +57,7 @@ export function isMessagingEnabled(env: Record<string, string | undefined> = pro
 export class MessagingDisabledError extends Error {
   constructor() {
     super(
-      "Oryn's 1:1 messaging is not enabled. This feature is built but switched off; " +
+      "Proxola's 1:1 messaging is not enabled. This feature is built but switched off; " +
         "see lib/messaging/messaging-feature-flag.ts."
     );
     this.name = "MessagingDisabledError";

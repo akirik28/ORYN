@@ -122,12 +122,12 @@ export function nonActionableOpportunityReason(
   locale: Locale = DEFAULT_LOCALE
 ): string {
   // Deliberately vague, and deliberately not blamed on the student or the programme: a
-  // moderation state is Oryn's own bookkeeping ("we pulled this", "we haven't vetted it"),
+  // moderation state is Proxola's own bookkeeping ("we pulled this", "we haven't vetted it"),
   // and neither the real reason nor the record itself is something to explain to a student.
   // Surfaces should be filtering these out before any reason is ever rendered; this exists
   // so that a path which forgets to says something harmless rather than something wrong.
   if (opportunity.status !== "active") {
-    return locale === "tr" ? "Oryn bu fırsatı şu anda göstermiyor." : "Oryn isn't showing this opportunity right now.";
+    return locale === "tr" ? "Proxola bu fırsatı şu anda göstermiyor." : "Proxola isn't showing this opportunity right now.";
   }
   if (NON_ACTIONABLE_OPPORTUNITY_CYCLE_STATUSES.has(opportunity.cycle_status)) {
     if (locale === "tr") {
@@ -218,7 +218,7 @@ export function deriveCycleStatusForPassedDeadline(
  *
  * WHAT #143 GOT WRONG, AND WHY THIS READS BOTH COLUMNS
  *
- * This gate first shipped reading `last_verified_at IS NULL` as "Oryn has never verified this."
+ * This gate first shipped reading `last_verified_at IS NULL` as "Proxola has never verified this."
  * That premise was false. `opportunities` carries TWO verification timestamps:
  * `last_verified_at` (migration 0008, the original Phase 29 freshness column) and `verified_at`
  * (migration 0041, added alongside `verification_state`). Different generations of the ingest
@@ -259,7 +259,7 @@ export function deriveCycleStatusForPassedDeadline(
  * with a different one:
  *   1. It does not say the opportunity is CLOSED. Nothing has told us that. `cycle_status` is
  *      never set or implied here, and no closure is fabricated.
- *   2. It does not say the STUDENT is ineligible. This is a fact about Oryn's evidence, and a
+ *   2. It does not say the STUDENT is ineligible. This is a fact about Proxola's evidence, and a
  *      16-year-old must never be told they don't qualify because we didn't do our homework.
  *   3. It does not claim staleness. See MAX_VERIFICATION_AGE_DAYS.
  * ------------------------------------------------------------------------------------------ */
@@ -393,10 +393,10 @@ export function isOpportunitySufficientlyVerified(
  */
 export const NEEDS_VERIFICATION_LABEL = "Needs verification";
 export const INSUFFICIENT_VERIFICATION_REASON =
-  "Oryn hasn't verified this opportunity's current status and has no application dates on file, so it isn't recommended as a confident next step. Check the official page before relying on it.";
+  "Proxola hasn't verified this opportunity's current status and has no application dates on file, so it isn't recommended as a confident next step. Check the official page before relying on it.";
 
 const INSUFFICIENT_VERIFICATION_REASON_TR =
-  "Oryn bu fırsatın güncel durumunu doğrulamadı ve kayıtlı bir başvuru tarihi yok; bu nedenle güvenilir bir sonraki adım olarak önerilmiyor. Güvenmeden önce resmi sayfayı kontrol edin.";
+  "Proxola bu fırsatın güncel durumunu doğrulamadı ve kayıtlı bir başvuru tarihi yok; bu nedenle güvenilir bir sonraki adım olarak önerilmiyor. Güvenmeden önce resmi sayfayı kontrol edin.";
 
 /**
  * Locale-aware wrapper around INSUFFICIENT_VERIFICATION_REASON, added rather than changing

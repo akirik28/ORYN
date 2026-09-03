@@ -139,7 +139,7 @@ export async function createCustomEntity(
 ): Promise<CreateCustomEntityResult> {
   const definition = ENTITY_SCOPES[input.scope];
   if (!definition.customFallbackType) {
-    return { status: "error", error: "This field only accepts entries from Oryn's verified catalogue." };
+    return { status: "error", error: "This field only accepts entries from Proxola's verified catalogue." };
   }
 
   const displayName = input.displayName.trim();

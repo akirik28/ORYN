@@ -57,7 +57,7 @@ export function isConnectionsEnabled(env: Record<string, string | undefined> = p
 export class ConnectionsDisabledError extends Error {
   constructor() {
     super(
-      "Oryn's Connections feature is not enabled. This feature is built but switched off; " +
+      "Proxola's Connections feature is not enabled. This feature is built but switched off; " +
         "see lib/social/connections-feature-flag.ts."
     );
     this.name = "ConnectionsDisabledError";

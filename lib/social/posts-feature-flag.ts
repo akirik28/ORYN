@@ -49,7 +49,7 @@ export function isSocialFeedEnabled(env: Record<string, string | undefined> = pr
 export class SocialFeedDisabledError extends Error {
   constructor() {
     super(
-      "The Oryn social layer is not enabled. This feature is built but switched off; " +
+      "The Proxola social layer is not enabled. This feature is built but switched off; " +
         "see lib/social/posts-feature-flag.ts and docs/founder-blocked-backlog.md."
     );
     this.name = "SocialFeedDisabledError";
