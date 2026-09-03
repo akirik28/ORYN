@@ -278,7 +278,7 @@ export function OpportunityCard({
           tintKey={opportunity.id}
           src={imageUrl ?? opportunity.image_url}
           alt={`${opportunity.title}${opportunity.organization ? ` — ${opportunity.organization}` : ""}`}
-          icon={Compass}
+          icon={<Compass className="size-[clamp(1rem,32cqmin,2rem)] text-brand-primary-strong/55" aria-hidden="true" />}
           sizes={featured ? "(min-width: 768px) 880px, 100vw" : "(min-width: 1024px) 420px, (min-width: 640px) 50vw, 100vw"}
         />
       ) : (
