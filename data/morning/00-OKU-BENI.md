@@ -22,14 +22,14 @@ canlıda doğrulandı).
 
 ## 2. Migration'ları uygula
 
-`01-migrations-2026-09-03.sql` — tamamını yapıştır, çalıştır. **On bir migration**, tek
+`01-migrations-2026-09-03.sql` — tamamını yapıştır, çalıştır. **On iki migration**, tek
 işlem içinde. Bir tanesi patlarsa hiçbiri uygulanmaz ve tekrar çalıştırmak güvenli.
 
 Sıra kesintisiz. Bir ara 0101 eksikti — sahibi oturum push edemiyordu — ama engel kalktı
 ve iş birleşti. **Yani sabaha bekleyen bir engel kalmadı.**
 
 **Bu adım olmadan panelin yazma tarafı çalışmaz.** Ultra yapma, hediye etme, iş durdurma,
-bütçe ayarlama — hepsi bu on bir migration'a bağlı. Panel bunları dürüstçe "kurulu değil"
+bütçe ayarlama — hepsi bu on iki migration'a bağlı. Panel bunları dürüstçe "kurulu değil"
 diye gösterecek, ama iş görmeyecek.
 
 ## 3. Bekleyen veriyi doldur
