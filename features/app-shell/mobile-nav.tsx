@@ -73,7 +73,7 @@ export function MobileNav({
     <>
       <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/90 px-4 py-3 backdrop-blur-sm lg:hidden">
         <Link href="/dashboard" aria-label={t("homeLink")}>
-          <Image src="/brand/logo-full.png" alt="Oryn" width={92} height={31} className="h-7 w-auto" />
+          <Image src="/brand/logo-full.png" alt="Proxola" width={100} height={31} className="h-7 w-auto" />
         </Link>
         <div className="flex items-center gap-1">
           <CommandPalette />

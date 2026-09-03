@@ -57,7 +57,7 @@ export default async function LandingPage() {
       >
         {/* Our real logo, unmodified (no recolor, no reshape) — the Figma source's own
             OrynMark placeholder is intentionally not used; sized to sit in this nav row. */}
-        <Image src="/brand/logo-full.png" alt="Oryn" width={92} height={31} priority style={{ height: 24, width: "auto" }} />
+        <Image src="/brand/logo-full.png" alt="Proxola" width={100} height={31} priority style={{ height: 24, width: "auto" }} />
         <Link
           href="/login"
           style={{
