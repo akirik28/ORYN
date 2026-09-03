@@ -77,9 +77,48 @@ actions, `ActivitySection`) — not checked this pass. `/kumanda/sistem` was alr
 in a separate audit tonight (docs/migration-transition-audit-2026-09-03.md territory).
 Flagging the boundary rather than implying full coverage.
 
+## Resolved — the null-`user_id` `weekly_plan` call
+
+Follow-up to the addendum above (pushed separately, same doc): traced which of three things
+the `$0.0262` `weekly_plan` row with `user_id IS NULL` actually is. **None of the three as
+literally framed — a fourth, more precise answer, and the reassuring one.**
+
+Ruled out fixture/bulk-insert (no other `ai_usage` row exists within ±90 seconds of its
+timestamp — an isolated row, not a batch — and its token counts, 5,245 in / 696 out, are
+exactly the shape a real weekly-plan generation call produces, not a synthetic value).
+Ruled out every real code path that could *write* a null: Job D
+(`generateWeeklyPlansForActiveStudents`) iterates `profiles.id` directly, a `NOT NULL`
+primary key, so it cannot produce one structurally — and it has never run regardless
+(no `generate-weekly-plans` entry in `vercel.json`, confirmed same as the earlier env-var
+pass). The student-facing and admin-triggered regenerate actions both require a real,
+authenticated or explicitly validated id. The eval harness's `runWeeklyPlan` calls
+`provider.generateStructured` directly, bypassing `logAIUsage`/`withUsageLogging`
+entirely — it cannot write to `ai_usage` at all, for any feature. `logAIUsage` itself
+writes `params.userId` verbatim, no coalescing to null anywhere in that function.
+
+**The actual mechanism: `ai_usage.user_id` is a real, live foreign key with `ON DELETE SET
+NULL`** (confirmed directly against `pg_constraint`, not inferred from a migration file —
+`ai_usage_user_id_fkey`, `confdeltype = 'n'`), a documented, deliberate choice
+(`lib/legal/content.ts`'s own data-rights reasoning: deleting a student's account
+anonymizes their usage rows rather than deleting them, preserving aggregate cost history
+without retaining an erasure-eligible identifier). This row was a real, correctly-attributed
+call for a real student at the time it happened — the null appeared *afterward*, when that
+student's account was deleted.
+
+**Answering what this dispatch actually needed to know:** not a hole in the $0.99 cap's
+accounting. `selectModelForUser`'s check ran against a real `user_id` at call time and
+would have correctly counted this spend toward that student's own cap when it mattered —
+the anonymization is retroactive, on an account that no longer exists to have a cap at all.
+No other unattributed row shows this pattern (the remaining 22 are `opportunity_reverification`,
+permanently un-attributed by design, a system job). One student, one plan, account since
+deleted — not fixture noise, not a live accounting gap, not an invocation anyone forgot
+about. The schema did exactly what it was built to do.
+
 ## Bottom line
 
 Every number checked against independent SQL — spend's window, students' scope, growth's
 signup/onboarding counts — matches its own label. This is the second "checked and found
 little" result tonight; the one real thing found is a latent inconsistency with no current
-victim, not a currently-wrong number a founder would act on incorrectly this morning.
+victim, not a currently-wrong number a founder would act on incorrectly this morning. The
+one anomaly that looked like it might be a real accounting gap (the null-`user_id`
+`weekly_plan` call) resolved to a documented, working data-rights mechanism, not a defect.
