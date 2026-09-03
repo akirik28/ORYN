@@ -61,9 +61,39 @@
  * Ultra mode) — describing what's actually shipped rather than gesturing at "a visual
  * treatment." No code change here; see the catalog files.
  */
+/**
+ * **2026-09-03, two rows added — the plan-page redesign, verified against code by oryn-a4
+ * in parallel (`docs/ultra-feature-inventory-2026-09-03.md`), not re-derived from scratch
+ * here.** Both trace to the Ultra tier-economics build (`lib/ai/token-limits.ts`,
+ * `lib/ai/advisor-chat.ts`) that shipped the same day this file's own header above already
+ * describes as *not* having happened yet ("no tier-aware quota, allowance, or degrade-timing
+ * mechanism exists anywhere") — that was true when written; it stopped being true later the
+ * same day, and these two rows are what changed.
+ *
+ * `aiAllowance` and `replyCeiling` are two different axes, confirmed by oryn-a4
+ * independently rather than assumed to be one fact restated: `aiAllowance` is the whole
+ * month's shared token budget (`MONTHLY_AI_TOKEN_LIMIT`, what the usage meter already
+ * tracks) — exhausting it degrades every feature to a cheaper model for the rest of the
+ * month. `replyCeiling` is the per-message output-token cap (`advisor-chat.ts`'s
+ * `maxTokens`) — it governs whether any single reply, in any response mode, can finish
+ * without truncating, independent of how much of the month's allowance is left. A student
+ * could exhaust one without ever personally noticing the other.
+ *
+ * Both rows' `standard`/`ultra` catalog strings take ICU variables (`{limit}` /
+ * `{maxTokens}`) rather than a hardcoded number, exactly like every other real figure this
+ * build touched — see PlanTierView's own comment on why the values are computed
+ * server-side (`app/(app)/settings/plan/page.tsx`) from the same constants that actually
+ * enforce them, not retyped here or in messages/*.json.
+ *
+ * Deliberately NOT added: the underlying dollar figures (`MONTHLY_BUDGET_TARGET_USD`/
+ * `_CEILING_USD`) — oryn-a4's own explicit call: those are the backend mechanism
+ * `aiAllowance`'s token number is the honest student-facing translation of; a second row
+ * showing the dollar ceiling would read as a second feature when it's the same one fact
+ * shown twice.
+ */
 interface DiffersRow {
   kind: "differs";
-  id: "visualTheme" | "replyDepth";
+  id: "visualTheme" | "replyDepth" | "aiAllowance" | "replyCeiling";
 }
 
 interface SameByDesignRow {
@@ -74,8 +104,10 @@ interface SameByDesignRow {
 export type TierComparisonRow = DiffersRow | SameByDesignRow;
 
 export const TIER_COMPARISON_ROWS: readonly TierComparisonRow[] = [
-  { kind: "differs", id: "visualTheme" },
+  { kind: "differs", id: "aiAllowance" },
+  { kind: "differs", id: "replyCeiling" },
   { kind: "differs", id: "replyDepth" },
+  { kind: "differs", id: "visualTheme" },
   { kind: "sameByDesign", id: "weeklyPlanFocus" },
   { kind: "sameByDesign", id: "researchIdeaFocus" },
 ];

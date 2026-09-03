@@ -136,14 +136,43 @@
     },
     "plan": {
       "title": "Planın",
-      "description": "Standard ve Ultra'da neler olduğuna bak. Ultra henüz kayıtlara açık değil.",
+      "description": "Ultra'nın açtığı her şey — daha fazla yapay zekâ, daha uzun yanıtlar, kendine ait bir tema.",
       "currentPlanLabel": "Mevcut plan",
       "standardName": "Standart",
       "ultraName": "Ultra",
       "ultraBadge": "Ultra",
+      "marqueeAriaLabel": "Ultra'nın sana verdikleri, kayarak geçiyor — üzerine gelerek veya odaklanarak durdurabilirsin",
+      "marquee": {
+        "aiAllowance": {
+          "label": "Her ay yapay zekâ token'ı",
+          "description": "Standart'ın aylık kotasının iki katı, kullandığın her yapay zekâ özelliğinde geçerli."
+        },
+        "replyCeiling": {
+          "label": "Yanıtı bitirecek alan",
+          "description": "Tek bir yanıt için tavan iki katına çıkıyor, yani zorlu bir soru yarıda kesilmiyor."
+        },
+        "replyDepth": {
+          "label": "Detaylı yanıt modu",
+          "description": "Sadece daha hızlı veya daha kısa değil, daha fazla ayrıntı ve gerekçe iste."
+        },
+        "visualTheme": {
+          "label": "Kendine ait bir tema",
+          "description": "Animasyonlu bir alev; kenar çubuğunda, kullanım göstergesinde ve yanıt kaydırıcısında."
+        }
+      },
       "comparisonTitle": "Planları karşılaştır",
       "comparisonFeatureColumn": "Özellik",
       "comparison": {
+        "aiAllowance": {
+          "label": "Aylık yapay zekâ kotası",
+          "standard": "Ayda {limit} token, kullandığın her yapay zekâ özelliğinde geçerli",
+          "ultra": "Ayda {limit} token — iki katı"
+        },
+        "replyCeiling": {
+          "label": "Yanıt uzunluğu tavanı",
+          "standard": "Yanıt başına en fazla {maxTokens} token",
+          "ultra": "Yanıt başına en fazla {maxTokens} token — iki katı alan, yani zorlu bir soru yarıda kesilmiyor"
+        },
         "visualTheme": {
           "label": "Uygulama görünümü",
           "standard": "Standart tema",
@@ -164,7 +193,7 @@
         }
       },
       "interestTitle": "Ultra ile ilgileniyor musun?",
-      "interestDescription": "Ultra 399,99 TL/ay olacak, ilk hafta ücretsiz. Henüz satın alınamıyor — ilgilendiğini bildir, açıldığında sana haber verelim.",
+      "interestDescription": "Ultra henüz kayıtlara açık değil — ayda 399,99 TL olacak, ilk hafta ücretsiz. İlgilendiğini bildir, hazır olduğu anda sana haber verelim.",
       "interestButton": "İlgileniyorum",
       "interestConfirmed": "Teşekkürler — sana haber vereceğiz."
     },
@@ -669,6 +698,9 @@
         "nationalCurriculum": "Ulusal müfredat",
         "other": "Diğer"
       },
+      "curriculumOtherTextLabel": "Hangi müfredat?",
+      "curriculumOtherTextPlaceholder": "örn. Alman Abitur, İtalyan Maturità",
+      "curriculumOtherTextHint": "İsteğe bağlı — geçmişini anlamamıza yardımcı olur.",
       "interestsTitle": "Neyle ilgileniyorsun?",
       "interestsSubtitle": "Ara ya da kendi ilgi alanını ekle — bu, önerilerini şekillendirir.",
       "geographyTitle": "Nerede okumak istiyor olabilirsin?",

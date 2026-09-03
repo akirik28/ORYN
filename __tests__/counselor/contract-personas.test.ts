@@ -265,6 +265,7 @@ describe("Persona F — Turkish/international student, MEB curriculum diploma la
     country: "Turkiye",
     stage: "high_school",
     curriculum: "turkish_curriculum",
+    curriculum_other_text: null,
     start_date: "2023-09-01",
     end_date: null,
     is_current: true,

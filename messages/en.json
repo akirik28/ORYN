@@ -136,14 +136,43 @@
     },
     "plan": {
       "title": "Your plan",
-      "description": "See what's included in Standard and Ultra. Ultra isn't open for signups yet.",
+      "description": "Everything Ultra unlocks — more AI, longer replies, a theme of its own.",
       "currentPlanLabel": "Current plan",
       "standardName": "Standard",
       "ultraName": "Ultra",
       "ultraBadge": "Ultra",
+      "marqueeAriaLabel": "What Ultra gives you, scrolling — pause by hovering or focusing",
+      "marquee": {
+        "aiAllowance": {
+          "label": "AI tokens every month",
+          "description": "Twice Standard's monthly allowance, shared across every AI feature you use."
+        },
+        "replyCeiling": {
+          "label": "Room to finish the answer",
+          "description": "Twice the ceiling on any single reply, so a demanding question doesn't get cut short."
+        },
+        "replyDepth": {
+          "label": "A Thorough reply mode",
+          "description": "Ask for more detail and reasoning, not just a faster or shorter answer."
+        },
+        "visualTheme": {
+          "label": "A theme of its own",
+          "description": "An animated flame carries through the sidebar, usage meter, and reply slider."
+        }
+      },
       "comparisonTitle": "Compare plans",
       "comparisonFeatureColumn": "Feature",
       "comparison": {
+        "aiAllowance": {
+          "label": "Monthly AI allowance",
+          "standard": "{limit} tokens a month, shared across every AI feature",
+          "ultra": "{limit} tokens a month — twice as much"
+        },
+        "replyCeiling": {
+          "label": "Reply length ceiling",
+          "standard": "Up to {maxTokens} tokens per reply",
+          "ultra": "Up to {maxTokens} tokens per reply — twice the room, so a demanding question doesn't get cut short"
+        },
         "visualTheme": {
           "label": "App appearance",
           "standard": "Standard theme",
@@ -164,7 +193,7 @@
         }
       },
       "interestTitle": "Interested in Ultra?",
-      "interestDescription": "Ultra will be 399.99 TL/month, with the first week free. It isn't available to buy yet — let us know you're interested and we'll reach out when it is.",
+      "interestDescription": "Ultra isn't open for signups yet — it'll be 399.99 TL/month, with the first week free. Register your interest and we'll tell you the moment it's ready.",
       "interestButton": "I'm interested",
       "interestConfirmed": "Thanks — we'll let you know."
     },
@@ -669,6 +698,9 @@
         "nationalCurriculum": "National curriculum",
         "other": "Other"
       },
+      "curriculumOtherTextLabel": "Which qualification?",
+      "curriculumOtherTextPlaceholder": "e.g. German Abitur, Italian Maturità",
+      "curriculumOtherTextHint": "Optional — helps us understand your background.",
       "interestsTitle": "What are you interested in?",
       "interestsSubtitle": "Search or add your own — this shapes your recommendations.",
       "geographyTitle": "Where might you want to study?",

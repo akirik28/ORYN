@@ -21,6 +21,7 @@ import { toFriendlyDbErrorMessage } from "@/lib/errors/friendly-db-error";
 import { resolveEntity } from "@/lib/entities/resolve";
 import { CompleteOnboardingSchema, INTEREST_SUGGESTIONS, type CompleteOnboardingInput } from "@/lib/validation/onboarding";
 import { shouldRunOnboardingSecondaryWrites, writeStudentInterests } from "@/lib/onboarding/complete-onboarding";
+import { isProfilesCurriculumOtherTextLive, isEducationRecordsCurriculumOtherTextLive } from "@/lib/profile/curriculum-other-text";
 import { meetsMinimumSignupAge } from "@/lib/legal/age-policy";
 import { getTranslations } from "next-intl/server";
 
@@ -163,6 +164,15 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
     schoolName = resolved.canonicalName;
   }
 
+  // Migration 0109, proposed and not yet applied — checked here too, not just once in
+  // page.tsx before the wizard rendered: this is the write that actually matters, and a
+  // client is never trusted to have correctly withheld a field the server told it to. Two
+  // independent checks (not one shared probe) because they gate two different writes below.
+  const [profilesCurriculumOtherTextLive, educationRecordsCurriculumOtherTextLive] = await Promise.all([
+    isProfilesCurriculumOtherTextLive(supabase),
+    isEducationRecordsCurriculumOtherTextLive(supabase),
+  ]);
+
   const { error: profileError } = await supabase
     .from("profiles")
     .update({
@@ -172,6 +182,7 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
       graduation_year: data.graduationYear,
       birth_year: data.birthYear,
       curriculum: data.curriculum,
+      ...(profilesCurriculumOtherTextLive ? { curriculum_other_text: data.curriculumOtherText ?? null } : {}),
       target_geographies: data.targetGeographies,
       onboarding_completed: true,
       onboarding_step: "completed",
@@ -214,6 +225,7 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
         school_entity_id: schoolId,
         country: data.country,
         curriculum: data.curriculum,
+        ...(educationRecordsCurriculumOtherTextLive ? { curriculum_other_text: data.curriculumOtherText ?? null } : {}),
         start_date: null,
         end_date: null,
         overall_gpa: null,

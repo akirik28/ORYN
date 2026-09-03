@@ -432,7 +432,16 @@ describe("migration numbering", () => {
     // anywhere in the repo, any branch, or the live database before this -- confirmed all
     // three before writing this migration, not assumed. See the migration's own header for
     // why visitor_hash can never be an IP, a user agent, or a persistent identifier.
-    expect(Math.max(...numbers.map(Number))).toBe(108);
+    // 0109 (curriculum_other_text) adds two nullable text columns -- profiles and
+    // education_records -- for what a student meant by picking curriculum = "other", which
+    // had no companion field anywhere in the product before this (confirmed live: the
+    // onboarding wizard, the profile editor, and every relevant Zod schema, none of them
+    // ever had one). Motivated by the founder's own observation that Turkish residents at
+    // schools like Alman Lisesi/İtalyan Lisesi/Galatasaray/Saint-Joseph hold real foreign
+    // qualifications the fixed 6-value enum can't name -- this migration doesn't add those
+    // enum values (a separate, priced, not-yet-decided piece of work), only the free text so
+    // "other" stops being a value that captures nothing. Proposed, not applied.
+    expect(Math.max(...numbers.map(Number))).toBe(109);
   });
 });
 

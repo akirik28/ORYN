@@ -38,6 +38,16 @@ export interface AdvisorReply {
 const THOROUGH_INSTRUCTION =
   "For this reply specifically, give a more thorough answer than usual — more supporting detail and reasoning — while staying exactly as specific and evidence-based as always. Do not pad it; every added sentence should carry real information.";
 
+/**
+ * Named and exported 2026-09-03 (the /settings/plan redesign) so the plan page can derive
+ * its "longer replies" claim from the real, enforced ceiling instead of a second, hand-typed
+ * copy of 8192/4096 that could drift from what this file actually sends. See the maxTokens
+ * comment below for the full benchmark history these two numbers come from — this is a
+ * rename, not a new decision.
+ */
+export const ADVISOR_MAX_TOKENS_STANDARD = 4096;
+export const ADVISOR_MAX_TOKENS_ULTRA = 8192;
+
 export async function generateAdvisorReply(params: {
   userId: string;
   history: AIMessage[];
@@ -113,7 +123,7 @@ export async function generateAdvisorReply(params: {
       // the ceiling, landing in the same headroom band 4096 was itself benchmarked against).
       // A measured number with a stated method, same discipline as the paragraph above,
       // applied in the direction of raising it rather than only ever tightening it.
-      maxTokens: params.planTier === "ultra" ? 8192 : 4096,
+      maxTokens: params.planTier === "ultra" ? ADVISOR_MAX_TOKENS_ULTRA : ADVISOR_MAX_TOKENS_STANDARD,
     });
   });
 

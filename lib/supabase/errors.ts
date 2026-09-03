@@ -1,3 +1,6 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/database";
+
 /**
  * A written migration isn't guaranteed applied everywhere this code runs -- this project's
  * standing discipline (lib/plan/persist.ts's own note on carried_forward/migration 0077 is
@@ -137,4 +140,24 @@ const UNDEFINED_TABLE_CODES = new Set(["42P01", "PGRST205"]);
 
 export function isUndefinedTableError(error: { code?: string; message?: string } | null, tableName: string): boolean {
   return !!error?.code && UNDEFINED_TABLE_CODES.has(error.code) && !!error.message?.includes(tableName);
+}
+
+/**
+ * Moved here 2026-09-03 from lib/admin/queries.ts (built for that file's getMigrationReality)
+ * once curriculum_other_text (migration proposed, not yet applied) needed the identical
+ * check from student-facing code -- importing admin/ from onboarding/profile-edit code
+ * would have been a stranger dependency than moving the check next to the error classifier
+ * it's built on, the same reasoning this file's own header already gives for
+ * isUndefinedColumnError's original move. `head: true` is deliberately safe here, unlike the
+ * table-existence check above -- see reportTableLiveness's own callers for why a HEAD
+ * request masks a *missing table* (a false-success 204), which is a different failure mode
+ * from the missing-*column* case this function exists for: a HEAD request against a real
+ * table with a missing column still returns the real PGRST204, so head:true costs nothing
+ * here and avoids fetching a row just to check a column exists.
+ */
+export async function columnExistsLive(admin: SupabaseClient<Database>, table: string, column: string): Promise<boolean | null> {
+  const { error } = await admin.from(table as never).select(column, { head: true });
+  if (!error) return true;
+  if (isUndefinedColumnError(error, column)) return false;
+  return null;
 }

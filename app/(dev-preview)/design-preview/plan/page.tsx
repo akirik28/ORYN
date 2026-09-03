@@ -3,6 +3,8 @@ import { PlanTierView } from "@/features/settings/plan-tier-view";
 import { UltraAmbient } from "@/features/app-shell/ultra-ambient";
 import { PreviewShell } from "../preview-shell";
 import { FIXTURE_PROFILE_SIGNAL } from "@/lib/dev/fixtures";
+import { MONTHLY_AI_TOKEN_LIMIT } from "@/lib/ai/token-limits";
+import { ADVISOR_MAX_TOKENS_STANDARD, ADVISOR_MAX_TOKENS_ULTRA } from "@/lib/ai/advisor-chat";
 
 /**
  * Dedicated preview for the plan/comparison page — added 2026-09-02 verifying the live,
@@ -24,7 +26,13 @@ export default async function PlanPreviewPage({ searchParams }: { searchParams: 
     <>
       <UltraAmbient tier={tier} />
       <PreviewShell signal={FIXTURE_PROFILE_SIGNAL} tier={tier}>
-        <PlanTierView tier={tier} />
+        <PlanTierView
+          tier={tier}
+          ultraTokenLimit={MONTHLY_AI_TOKEN_LIMIT.ultra}
+          standardTokenLimit={MONTHLY_AI_TOKEN_LIMIT.standard}
+          ultraMaxTokens={ADVISOR_MAX_TOKENS_ULTRA}
+          standardMaxTokens={ADVISOR_MAX_TOKENS_STANDARD}
+        />
       </PreviewShell>
     </>
   );
