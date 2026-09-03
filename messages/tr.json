@@ -1602,6 +1602,18 @@
       "pageOf": "Sayfa {page} / {total}"
     }
   },
+  "feedback": {
+    "triggerLabel": "Geri bildirim gönder",
+    "dialogTitle": "Geri bildirim gönder",
+    "dialogDescription": "Ne olduğunu anlat — bir hata, kafa karıştıran bir şey ya da başka bir şey.",
+    "placeholder": "Ne oldu?",
+    "submit": "Gönder",
+    "successTitle": "Gönderildi",
+    "successDescription": "Teşekkürler — bu mesaj doğrudan Oryn ekibine gidiyor. Her mesajı okuyoruz, ancak buradan yanıt veremiyoruz.",
+    "done": "Tamam",
+    "errorFailed": "Gönderilemedi, tekrar dener misin?",
+    "errorNotConfigured": "Bu özellik şu anda kullanılamıyor."
+  },
   "plan": {
     "title": "Bu haftanın planı",
     "defaultDescription": "Bu hafta için öncelikli işlerin.",
@@ -1936,6 +1948,15 @@
       "messageMissing": "(bildirilen mesaj artık mevcut değil)",
       "recommendationMissing": "(bildirilen öneri artık mevcut değil)",
       "postMissing": "(bildirilen gönderi artık mevcut değil)"
+    },
+    "feedbackReports": {
+      "sectionTitle": "Geri bildirim",
+      "totalCount": "{count, plural, one {# geri bildirim} other {# geri bildirim}}",
+      "notSetUp": "Henüz kurulmadı — öğrenci geri bildirimlerinin burada görünmesi için 0113 (feedback_reports) migration'ının uygulanması gerekiyor.",
+      "noReports": "Henüz geri bildirim yok.",
+      "unnamedStudent": "Bir öğrenci",
+      "tierStandard": "Standart",
+      "tierUltra": "Ultra"
     },
     "providers": {
       "sectionTitle": "Sağlayıcı durumu",

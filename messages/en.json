@@ -1602,6 +1602,18 @@
       "pageOf": "Page {page} of {total}"
     }
   },
+  "feedback": {
+    "triggerLabel": "Send feedback",
+    "dialogTitle": "Send feedback",
+    "dialogDescription": "Tell us what happened — a bug, something confusing, or anything else.",
+    "placeholder": "What happened?",
+    "submit": "Send",
+    "successTitle": "Sent",
+    "successDescription": "Thanks — this goes straight to the Oryn team. We read every message, but we can't reply here.",
+    "done": "Done",
+    "errorFailed": "Couldn't send that — want to try again?",
+    "errorNotConfigured": "This feature isn't available right now."
+  },
   "plan": {
     "title": "This week's plan",
     "defaultDescription": "Your prioritized actions for the week.",
@@ -1936,6 +1948,15 @@
       "messageMissing": "(reported message no longer available)",
       "recommendationMissing": "(reported recommendation no longer available)",
       "postMissing": "(reported post no longer available)"
+    },
+    "feedbackReports": {
+      "sectionTitle": "Feedback",
+      "totalCount": "{count, plural, one {# report} other {# reports}}",
+      "notSetUp": "Not set up yet — migration 0113 (feedback_reports) needs to be applied before student feedback will appear here.",
+      "noReports": "No feedback yet.",
+      "unnamedStudent": "A student",
+      "tierStandard": "Standard",
+      "tierUltra": "Ultra"
     },
     "providers": {
       "sectionTitle": "Provider health",

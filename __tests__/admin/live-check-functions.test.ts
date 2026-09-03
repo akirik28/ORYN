@@ -1,14 +1,16 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
 
 /**
- * The nine isXLive() checks that gate proactive-disable across the admin panel — same
+ * The ten isXLive() checks that gate proactive-disable across the admin panel — same
  * pattern isAdminActionsTableLive already established (__tests__/admin/catalog-health-
- * queries.test.ts), extended to the eight other tables/one column oryn-a7 asked for
- * ("one is-X-live() check per table, not per control"). Parameterized across the eight
- * table-shaped checks rather than eight copy-pasted describe blocks — each one's real
+ * queries.test.ts), extended to the nine other tables/one column oryn-a7 asked for
+ * ("one is-X-live() check per table, not per control"). Parameterized across the nine
+ * table-shaped checks rather than nine copy-pasted describe blocks — each one's real
  * behavior is identical (a plain `.select(pkColumn).limit(1)`, PGRST205 -> false, no error
  * -> true, anything else -> false and logged), only the table name and primary-key column
  * differ, and those differences are exactly what a real typo would get wrong.
+ * isFeedbackReportsTableLive (migration 0113) added 2026-09-03 — same shape, this file's
+ * own parameterization is exactly why that addition is a one-line diff.
  */
 
 const { limitMock, headMock } = vi.hoisted(() => ({
@@ -58,6 +60,7 @@ const TABLE_CHECKS: { fnName: string; table: string; pkColumn: string; migration
   { fnName: "isFinanceSettingsTableLive", table: "admin_finance_settings", pkColumn: "id", migration: "0094" },
   { fnName: "isProductSettingsTableLive", table: "admin_product_settings", pkColumn: "id", migration: "0105" },
   { fnName: "isWeeklyPlanBudgetSettingsTableLive", table: "weekly_plan_budget_settings", pkColumn: "id", migration: "0102" },
+  { fnName: "isFeedbackReportsTableLive", table: "feedback_reports", pkColumn: "id", migration: "0113" },
 ];
 
 describe.each(TABLE_CHECKS)("$fnName ($table, migration $migration)", ({ fnName, table, pkColumn }) => {

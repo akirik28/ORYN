@@ -2193,6 +2193,24 @@ export interface ProductEvent {
 }
 export type ProductEventInsert = Insertable<ProductEvent, "id" | "created_at" | "metadata">;
 
+/** Migration 0113 (proposed, not yet applied as of 2026-09-03) — a student-submitted
+ * problem report or piece of feedback. See that migration's own header for why there's no
+ * category/status column and why user_id is nullable (severed, not blocked, on account
+ * deletion). */
+export interface FeedbackReport {
+  id: string;
+  user_id: string | null;
+  message: string;
+  path: string;
+  locale: string;
+  plan_tier: PlanTier;
+  created_at: string;
+}
+/** user_id/plan_tier/locale are server-derived from the session, never client-supplied —
+ * see app/(app)/feedback/actions.ts. id/created_at are DB-defaulted. No Update type: an
+ * insert-only report, same posture as ProductEvent above. */
+export type FeedbackReportInsert = Insertable<FeedbackReport, "id" | "created_at">;
+
 /** Migration 0107 (proposed, not yet applied as of 2026-09-03) — anonymous logged-out page
  * views. See that migration's own comment for why visitor_hash can never be an IP, a user
  * agent, or a persistent identifier. */
@@ -2429,6 +2447,7 @@ export interface Database {
       weekly_plan_budget_settings: Table<WeeklyPlanBudgetSettings, Partial<WeeklyPlanBudgetSettings>, Partial<WeeklyPlanBudgetSettings>>;
       rate_limit_events: Table<RateLimitEvent, RateLimitEventInsert, Partial<RateLimitEventInsert>>;
       product_events: Table<ProductEvent, ProductEventInsert, Partial<ProductEventInsert>>;
+      feedback_reports: Table<FeedbackReport, FeedbackReportInsert, never>;
       page_views: Table<PageView, PageViewInsert, never>;
       birth_year_changes: Table<BirthYearChange, never, never>;
       deadline_notification_log: Table<DeadlineNotificationLog, DeadlineNotificationLogInsert, never>;
