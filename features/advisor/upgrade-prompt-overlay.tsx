@@ -65,8 +65,30 @@ import { transition } from "@/lib/motion";
  * off the same way it already does everywhere else that class is used -- nothing new to
  * gate here, both mechanisms were already correct before this component reused them.
  */
-export function UpgradePromptOverlay({ onNotNow, onSoftDismiss }: { onNotNow: () => void; onSoftDismiss: () => void }) {
-  const t = useTranslations("advisor.chat.upgradePrompt");
+/** The two namespaces this card currently renders content from — both must share the same
+ * `detail`/`cta`/`notNow`/`close` key shape below for the same JSX to stay correct for
+ * either one. `parent.upgradePrompt` is P7's addition (features/parent/*, once P3 exists
+ * to render it) — student-facing behavior below is unchanged: `namespace` defaults to
+ * exactly what this component already hardcoded, so the advisor call site needed no edit. */
+type UpgradePromptNamespace = "advisor.chat.upgradePrompt" | "parent.upgradePrompt";
+
+export function UpgradePromptOverlay({
+  onNotNow,
+  onSoftDismiss,
+  namespace = "advisor.chat.upgradePrompt",
+  ctaHref = "/settings/plan",
+}: {
+  onNotNow: () => void;
+  onSoftDismiss: () => void;
+  /** Which translation namespace supplies `detail`/`cta`/`notNow`/`close` — see the type's
+   *  own comment just above. */
+  namespace?: UpgradePromptNamespace;
+  /** Where the CTA links. Defaults to the student settings page; a parent-side caller
+   *  should pass its own equivalent once P2/P3 build one, rather than this component
+   *  guessing a route that doesn't exist yet. */
+  ctaHref?: string;
+}) {
+  const t = useTranslations(namespace);
 
   return (
     // data-tier lives on this plain wrapper, one level above .tier-glow-sm, deliberately --
@@ -104,7 +126,7 @@ export function UpgradePromptOverlay({ onNotNow, onSoftDismiss }: { onNotNow: ()
           </div>
           {/* Equal visual weight, same row, same size -- neither reads as the "real" button. */}
           <div className="mt-3 flex flex-wrap gap-2">
-            <ButtonLink href="/settings/plan" variant="outline" size="sm">
+            <ButtonLink href={ctaHref} variant="outline" size="sm">
               {t("cta")}
             </ButtonLink>
             <Button type="button" variant="outline" size="sm" onClick={onNotNow}>
