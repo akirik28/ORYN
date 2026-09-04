@@ -37,6 +37,38 @@
 
 ---
 
+## DURUM — 4 Eylül, öğleden sonra (önce bunu oku)
+
+**Sende bekleyen beş şey. Hiçbiri şu an kimseyi durdurmuyor — hepsinin etrafından
+çalışılıyor.**
+
+| | Ne | Neden sende |
+| --- | --- | --- |
+| **A6** | **Hiçbir zamanlanmış iş hiç çalışmadı** | canlı veriye yazma; muhtemelen dağıtım yapılmamış |
+| **A2** | Şirket kaydı | unvan, sicil, adres, `privacy@` |
+| **A3** | Ödeme sağlayıcısı | kod hazır olacak, seçim senin |
+| **A5** | E-posta sağlayıcısı | altyapı **hiç yok**; veli daveti kopyala-yapıştır ile çalışıyor |
+| **A4** | Hukuki onay | araştırma bitti, öneri hazır, karar senin |
+
+**Bugün `main`'e giren:** tam ekran yükseltme kartı · veli uçtan uca doğrulama
+(26 kontrol) · aylık veli özeti · veli katalog erişimi · danışman streaming (iki
+yarısı, 11 koruma tek tek kanıtlı) · ücret tarihi etiketi · Oxford kabul oranı ·
+üniversite dolgusu 12/19 · fırsat dolgusu (görünür 34) · hukuk araştırması ·
+onboarding denetimi · ana ekran denetimi · altı ayrı ölçüm.
+
+**Bekleyen migration'lar:** 0124, 0126, 0127 (+ B1 bitince 0123, sonra 0129, 0130).
+**Uygulanmadan güvenli olduklarını tek tek kontrol ettim** — hiçbiri hata vermez.
+
+**Bugünün iki büyük bulgusu:**
+1. **Ürünün temel iddiası ilk kez doğrulandı** — 5 gerçek hesapta, 10 gerçek "bunu
+   yapma" kaydında: gerekçeler o öğrencinin gerçek verisine izlenebiliyor, jenerik
+   değil. Ve 8 boyutu sıfır olan hesap **uydurma bir puan değil, dürüst bir cümle**
+   görüyor.
+2. **Zamanlanmış işlerin hiçbiri hiç çalışmamış** (A6) — bugün ölçtüğümüz veri
+   boşluklarının bir kısmını doğrudan açıklıyor.
+
+---
+
 ## A — KURUCUDA (kimse yapamaz, sende)
 
 **A1. Migration'lar — ✅ TAMAM (4 Eylül).** Dördü de uygulandı ve canlıda
