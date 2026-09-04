@@ -1760,6 +1760,17 @@ export interface Opportunity {
    * pattern as eligible_citizenships/0047. Never set without an official-source
    * statement; false is the honest default, not a claim of restriction. */
   country_eligibility_confirmed_open: boolean;
+  /** Migration 0126 (unapplied) -- the same structured "research confirmed no gate here"
+   * shape as country_eligibility_confirmed_open above, for age specifically. false = not
+   * confirmed (the honest default; most rows are simply unresearched), never "restricted."
+   * A real bound populates minimum_age/maximum_age instead. Read defensively (`?? false`)
+   * until 0126 is applied everywhere. */
+  age_eligibility_confirmed_open: boolean;
+  /** Migration 0126 (unapplied) -- same shape as age_eligibility_confirmed_open above, for
+   * eligible_grades. false = not confirmed (the honest default), never "restricted." A real
+   * restriction populates eligible_grades instead. Read defensively (`?? false`) until 0126
+   * is applied everywhere. */
+  grade_eligibility_confirmed_open: boolean;
   /** Migration 0103. See that migration's own column comment for the full semantic
    * contract (design doc §8.5) — written only by a P1 reverification outcome, never
    * backfilled, never read as staleness. Distinct from verified_at/last_verified_at above:
@@ -1795,6 +1806,10 @@ export type OpportunityInsert = Insertable<
   | "verified_at"
   | "organization_entity_id"
   | "country_entity_id"
+  // Migration 0126 — same reason country_eligibility_confirmed_open is in this list below:
+  // both have a DB default of false, so they're omittable at insert time, not required.
+  | "age_eligibility_confirmed_open"
+  | "grade_eligibility_confirmed_open"
   | "access_channel"
   | "country_eligibility_confirmed_open"
   // Migration 0066 — array has a DB default of '{}', the three image columns are nullable.

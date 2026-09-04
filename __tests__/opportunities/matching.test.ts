@@ -92,6 +92,15 @@ describe("computeEligibility", () => {
     expect(result.notes.some((n) => n.code === "age_eligibility_unverified")).toBe(false);
   });
 
+  // Migration 0126 — same shape as the countryEligibilityConfirmedOpen pair further below,
+  // for age: proves the note actually flips off (CEO's own bar: "prove the check can go
+  // red") rather than assuming the ?? false default alone is sufficient coverage.
+  test("no age-unverified note when research confirmed no age gate exists, even with no bound on file", () => {
+    const result = computeEligibility(student(), opportunity({ ageEligibilityConfirmedOpen: true }));
+    expect(result.eligible).toBe(true);
+    expect(result.notes.map((n) => n.code)).not.toContain("age_eligibility_unverified");
+  });
+
   test("is ineligible when a citizenship restriction is known to exclude the student", () => {
     const result = computeEligibility(
       student({ citizenshipCountries: ["Canada"] }),
@@ -141,6 +150,13 @@ describe("computeEligibility", () => {
     const nextYear = new Date().getFullYear() + 1;
     const result = computeEligibility(student({ graduationYear: nextYear }), opportunity({ eligibleGrades: ["9", "10", "11", "12"] }));
     expect(result.notes.some((n) => n.code === "grade_eligibility_unverified")).toBe(false);
+  });
+
+  // Migration 0126 — same shape as the age-confirmed-open test above, for grade.
+  test("no grade-unverified note when research confirmed no grade gate exists, even with no eligible grades on file", () => {
+    const result = computeEligibility(student(), opportunity({ gradeEligibilityConfirmedOpen: true }));
+    expect(result.eligible).toBe(true);
+    expect(result.notes.map((n) => n.code)).not.toContain("grade_eligibility_unverified");
   });
 
   // Confirmed live against a real profile this session: a student's own stored country

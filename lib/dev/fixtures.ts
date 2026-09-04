@@ -660,6 +660,12 @@ export const FIXTURE_OPPORTUNITY_DETAIL: Opportunity = {
   country_entity_id: null,
   access_channel: null,
   country_eligibility_confirmed_open: true,
+  // Both false: real bounds are set above (minimum_age/maximum_age, though eligible_grades
+  // is empty here) -- migration 0126's CHECK constraints forbid claiming "confirmed open"
+  // alongside a structured age bound, and false is the honest default for the untouched
+  // grade axis regardless.
+  age_eligibility_confirmed_open: false,
+  grade_eligibility_confirmed_open: false,
   created_at: daysFromNow(-25),
   updated_at: daysFromNow(-6),
 };
@@ -764,6 +770,12 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       // FIXTURE_MATCH_STUDENT in lib/dev/fixtures.ts -- all three axes clear, so this is the
       // one FIXTURE_OPPORTUNITIES entry that reaches a genuinely caveat-free match.)
       country_eligibility_confirmed_open: true,
+      // Both false, required by migration 0126's own CHECK constraints: real bounds are set
+      // above for both age (minimum_age/maximum_age) and grade (eligible_grades), so this
+      // row satisfies the criteria the honest way -- through real structured data, not the
+      // confirmed-open escape hatch. opp-4 below is the fixture exercising that path instead.
+      age_eligibility_confirmed_open: false,
+      grade_eligibility_confirmed_open: false,
       created_at: daysFromNow(-30),
       updated_at: daysFromNow(-3),
     },
@@ -822,6 +834,12 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       // Deliberately unconfirmed — the live-common case, so dev preview exercises the
       // "Country eligibility not verified yet" advisory note on a realistic row.
       country_eligibility_confirmed_open: false,
+      // Age flag: false, required (minimum_age/maximum_age above are real, non-null bounds).
+      // Grade flag: also false, deliberately, for the same "live-common case" reasoning as
+      // country above -- eligible_grades is empty and unconfirmed, so dev preview also
+      // exercises the "Grade eligibility not verified yet" advisory note here.
+      age_eligibility_confirmed_open: false,
+      grade_eligibility_confirmed_open: false,
       created_at: daysFromNow(-20),
       updated_at: daysFromNow(-5),
     },
@@ -881,6 +899,10 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       country_entity_id: null,
       access_channel: null,
       country_eligibility_confirmed_open: false,
+      // Age flag false, required (minimum_age/maximum_age above are real bounds). Grade
+      // flag false, same "mostly unresearched" default as country above.
+      age_eligibility_confirmed_open: false,
+      grade_eligibility_confirmed_open: false,
       created_at: daysFromNow(-15),
       updated_at: daysFromNow(-8),
     },
@@ -935,6 +957,14 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       country_entity_id: null,
       access_channel: null,
       country_eligibility_confirmed_open: true,
+      // migration 0126's own fixture: minimum_age/maximum_age/eligible_grades are all
+      // already null/empty above (no structured bound to conflict with the CHECK
+      // constraints), so this is the one FIXTURE_OPPORTUNITIES entry that reaches
+      // caveat-free eligibility through the NEW confirmed-open flags specifically, rather
+      // than through real bounds the way opp-1 does -- dev preview needs at least one
+      // example of each path.
+      age_eligibility_confirmed_open: true,
+      grade_eligibility_confirmed_open: true,
       created_at: daysFromNow(-40),
       updated_at: daysFromNow(-2),
     },
@@ -989,6 +1019,10 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       country_entity_id: null,
       access_channel: null,
       country_eligibility_confirmed_open: false,
+      // Age flag false, required (minimum_age/maximum_age above are real bounds). Grade
+      // flag false, same "mostly unresearched" default as country above.
+      age_eligibility_confirmed_open: false,
+      grade_eligibility_confirmed_open: false,
       created_at: daysFromNow(-10),
       updated_at: daysFromNow(-10),
     },
@@ -1036,6 +1070,8 @@ export function buildFixtureHomeStrip(_locale: Locale = DEFAULT_LOCALE): HomeStr
       eligibleCitizenships: opportunity.eligible_citizenships ?? [],
       eligibleGrades: opportunity.eligible_grades ?? [],
       countryEligibilityConfirmedOpen: opportunity.country_eligibility_confirmed_open ?? false,
+      ageEligibilityConfirmedOpen: opportunity.age_eligibility_confirmed_open ?? false,
+      gradeEligibilityConfirmedOpen: opportunity.grade_eligibility_confirmed_open ?? false,
       citizenshipRestrictions: opportunity.citizenship_restrictions,
       residencyRestrictions: opportunity.residency_restrictions,
       fields: opportunity.fields,

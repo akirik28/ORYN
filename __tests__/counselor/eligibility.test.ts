@@ -57,6 +57,8 @@ function opportunity(overrides: Partial<Opportunity> = {}): Opportunity {
     country_entity_id: null,
     access_channel: null,
     country_eligibility_confirmed_open: false,
+    age_eligibility_confirmed_open: false,
+    grade_eligibility_confirmed_open: false,
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
     ...overrides,
@@ -115,6 +117,12 @@ const RESOLVED_GRADE_YEAR = new Date().getFullYear() + 1;
 // eligibility-not-verified safeguard for those two fields), for tests whose actual subject
 // is a different dimension entirely and shouldn't see that note as noise.
 const AGE_AND_GRADE_RESOLVED = { minimum_age: 0, maximum_age: 120, eligible_grades: ["12"] };
+// The two halves of AGE_AND_GRADE_RESOLVED above, split apart for the migration-0126 tests
+// below — each needs to isolate ONE dimension (age or grade) while keeping the OTHER
+// resolved via a real, satisfied restriction, so the confirmed-open flag under test is the
+// only thing that can produce or suppress a note.
+const GRADE_RESOLVED_VIA_REAL_RESTRICTION = { eligible_grades: ["12"] };
+const AGE_RESOLVED_VIA_REAL_BOUNDS = { minimum_age: 0, maximum_age: 120 };
 
 describe("evaluateCandidateEligibility — opportunities", () => {
   test("known_eligible when no restrictions exist and country eligibility is research-confirmed open", () => {
@@ -142,6 +150,74 @@ describe("evaluateCandidateEligibility — opportunities", () => {
   // restriction — the student must never be told they're ineligible because of it.
   test("an unverified country eligibility is never known_ineligible", () => {
     const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ country_eligibility_confirmed_open: false })));
+    expect(result.verdict).not.toBe("known_ineligible");
+  });
+
+  // Migration 0126 — the same gap 2026-09-03 named for age/grade but didn't close: an
+  // opportunity with no minimum_age/maximum_age recorded and no grade restriction recorded
+  // has always meant BOTH "confirmed no gate here" and "never researched," with no way to
+  // tell them apart. These four tests prove the new flags actually flip the warning off and
+  // back on (CEO's own bar: "prove the check can go red"), the same shape as the
+  // country-eligibility pair above.
+  test("unknown, with a not-verified note, when no age bound is set and age eligibility is NOT research-confirmed open (the default)", () => {
+    const result = evaluateCandidateEligibility(
+      opportunityCandidate(),
+      state(opportunity({ age_eligibility_confirmed_open: false, ...GRADE_RESOLVED_VIA_REAL_RESTRICTION }), 2009, {
+        advisor: { student: { birthYear: 2009, graduationYear: RESOLVED_GRADE_YEAR } } as CounselorState["advisor"],
+      })
+    );
+    expect(result.verdict).toBe("unknown");
+    expect(result.notes.join(" ")).toMatch(/age eligibility not verified yet/i);
+  });
+
+  test("the age-not-verified note DISAPPEARS once age_eligibility_confirmed_open is true — same inputs, flag flipped", () => {
+    const result = evaluateCandidateEligibility(
+      opportunityCandidate(),
+      // country_eligibility_confirmed_open: true too -- country defaults to unresolved in
+      // opportunity(), and a *different* unresolved dimension would keep the verdict
+      // "unknown" for a reason unrelated to what this test is actually proving. First draft
+      // of this test forgot this and failed for exactly that reason -- caught by the test
+      // itself going red, not assumed to pass.
+      state(opportunity({ age_eligibility_confirmed_open: true, country_eligibility_confirmed_open: true, ...GRADE_RESOLVED_VIA_REAL_RESTRICTION }), 2009, {
+        advisor: { student: { birthYear: 2009, graduationYear: RESOLVED_GRADE_YEAR } } as CounselorState["advisor"],
+      })
+    );
+    expect(result.verdict).toBe("known_eligible");
+    expect(result.notes).toEqual([]);
+  });
+
+  test("unknown, with a not-verified note, when eligible_grades is empty and grade eligibility is NOT research-confirmed open (the default)", () => {
+    const result = evaluateCandidateEligibility(
+      opportunityCandidate(),
+      state(opportunity({ grade_eligibility_confirmed_open: false, ...AGE_RESOLVED_VIA_REAL_BOUNDS }), 2009, {
+        advisor: { student: { birthYear: 2009, graduationYear: RESOLVED_GRADE_YEAR } } as CounselorState["advisor"],
+      })
+    );
+    expect(result.verdict).toBe("unknown");
+    expect(result.notes.join(" ")).toMatch(/grade eligibility not verified yet/i);
+  });
+
+  test("the grade-not-verified note DISAPPEARS once grade_eligibility_confirmed_open is true — same inputs, flag flipped", () => {
+    const result = evaluateCandidateEligibility(
+      opportunityCandidate(),
+      // country_eligibility_confirmed_open: true too -- same reason as the age test above.
+      state(opportunity({ grade_eligibility_confirmed_open: true, country_eligibility_confirmed_open: true, ...AGE_RESOLVED_VIA_REAL_BOUNDS }), 2009, {
+        advisor: { student: { birthYear: 2009, graduationYear: RESOLVED_GRADE_YEAR } } as CounselorState["advisor"],
+      })
+    );
+    expect(result.verdict).toBe("known_eligible");
+    expect(result.notes).toEqual([]);
+  });
+
+  // The same overcorrection guard as the country pair above, for both new flags: unresearched
+  // must never read as ineligible.
+  test("an unverified age eligibility is never known_ineligible", () => {
+    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ age_eligibility_confirmed_open: false })));
+    expect(result.verdict).not.toBe("known_ineligible");
+  });
+
+  test("an unverified grade eligibility is never known_ineligible", () => {
+    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ grade_eligibility_confirmed_open: false })));
     expect(result.verdict).not.toBe("known_ineligible");
   });
 
