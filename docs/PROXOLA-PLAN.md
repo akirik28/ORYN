@@ -84,6 +84,21 @@ için boş kalır ve hiçbir hata görünmez.**
 Kurucu limit dolduğu için filoyu durdurdu. **Dokuz şerit de düzenli durdu:** her
 biri işini push etti, devir notu yazdı, `.next`'ini sildi. **Kayıp yok.**
 
+**⚠️ AÇIK KALAN TEK KRİTİK İŞ: paket sıra testi hiç çalıştırılamadı.**
+14 → 15 → 16'yı ardışık, iki koşu hâlinde çalıştırma denendi ve **ilk baseline
+migration'ında patladı**; sebebi araştırılamadan disk doldu. **Statik olarak
+doğrulanan:** 0132'nin indeksi ile paket 16'nın birleştirmesi **aynı tabloya
+dokunmuyor** (paket 16 yalnızca `public.opportunities`'e yazıyor). **Ölçülemeyen:**
+Edinburgh'ün **paket 15 → 16** sırasının zararsız olduğu — Edinburgh her iki
+pakette de geçiyor. **Yeniden açıldığında ilk iş budur.**
+
+**Ve bugün üçüncü kez bir paket yorumu yanlış bir şey iddia etti:**
+`edinburgh-duplicate-row-parity-fix` **hiçbir pakette yoktu**, ama paket 16'nın
+yorumu "zaten uygulandı" varsayıyordu. Paket 15'e eklendi. (Diğer ikisi: paket
+15'in Interlochen yorumu, ve `matching.ts`'in görünmeyen ikizi "canlı doğrulanmış
+örnek" göstermesi.) **Yorumlar doğrulandıkları anın fotoğrafı; kod değişince onlar
+değişmiyor.**
+
 **Yeniden açıldığında sıra:**
 1. **Kurucunun yedi maddesi aşağıda** — ilk üçü tek oturumda biter ve en çok onlar açar.
 2. **`data/morning/14 → 15 → 16` paketleri hazır**, üçü de iki kez test edilmiş.
