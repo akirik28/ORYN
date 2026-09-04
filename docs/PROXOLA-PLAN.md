@@ -51,16 +51,24 @@
 
 ## DURUM — 4 Eylül, öğleden sonra (önce bunu oku)
 
-**Sende bekleyen beş şey. Hiçbiri şu an kimseyi durdurmuyor — hepsinin etrafından
-çalışılıyor.**
+**Sende bekleyen yedi şey. Hiçbiri şu an kimseyi durdurmuyor — hepsinin etrafından
+çalışılıyor. İlk üçü tek oturumda biter ve en çok onlar açar.**
 
-| | Ne | Neden sende |
-| --- | --- | --- |
-| **A6** | **Hiçbir zamanlanmış iş hiç çalışmadı** | canlı veriye yazma; muhtemelen dağıtım yapılmamış |
-| **A2** | Şirket kaydı | unvan, sicil, adres, `privacy@` |
-| **A3** | Ödeme sağlayıcısı | kod hazır olacak, seçim senin |
-| **A5** | E-posta sağlayıcısı | altyapı **hiç yok**; veli daveti kopyala-yapıştır ile çalışıyor |
-| **A4** | Hukuki onay | araştırma bitti, öneri hazır, karar senin |
+| | Ne | Neden sende | Ne açar |
+| --- | --- | --- | --- |
+| **A7** | **Paylaşılan tarayıcıyı QA öğrenci hesabıyla aç** | senin oturumun orada, şeritler bakamıyor | C3, mobil, giriş gerektiren her doğrulama |
+| **A6** | **Cron'ları bir kez çalıştır** | canlı veriye yazma | kabul görünümleri, veri tazeleme, bildirimler |
+| **—** | Disk: 1,7 GB'lık tek komut (aşağıda) | silme izni bende engellendi | 3,3 GB boş → ~5 GB |
+| **—** | Paket 14'ü çalıştır | canlı veriye yazma | 0124/0126/0127 + üniversite ve fırsat verisi |
+| **A3** | Ödeme sağlayıcısı | kod hazır olacak, seçim senin | B1'in son dosyası |
+| **A5** | E-posta sağlayıcısı | altyapı **hiç yok** | otomatik veli e-postası (davet zaten çalışıyor) |
+| **A2** | Şirket kaydı | unvan, sicil, adres, `privacy@` | yasal metinlerdeki dört boşluk |
+| **A4** | Hukuki onay | araştırma bitti, öneri hazır | öğrenciye pazarlama e-postası |
+
+```
+rm -rf "/Users/adasarpkirik/Desktop/Founder/ORYN-wt-outlook-test-2026-09-04/node_modules" \
+       "/Users/adasarpkirik/Desktop/Founder/ORYN-wt-b3c-parent-catalog-2026-09-04/node_modules"
+```
 
 **Bugün `main`'e giren:** tam ekran yükseltme kartı · veli uçtan uca doğrulama
 (26 kontrol) · aylık veli özeti · danışman streaming (iki yarısı, 11 koruma tek
