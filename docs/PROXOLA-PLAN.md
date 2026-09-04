@@ -51,7 +51,24 @@ Ayrıntı: `docs/kurucu-sirket-bilgileri-eksikleri-2026-09-04.md`
 **A3. Ödeme sağlayıcısı seç.** iyzico / PayTR / Stripe. Kod sağlayıcıdan
 bağımsız yazılıyor; seçince tek dosya yazılacak.
 
-**A4. Hukuki cevap.** Reşit olmayana ticari e-posta. Tüm mail gönderimi buna kilitli.
+**A4. Hukuki cevap — girdi hazır, karar sende.**
+`docs/minor-commercial-email-legal-2026-09-04.md`. Araştırma **kilidin yanlış
+kapıda olduğunu** gösterdi: veli özeti, veli daveti ve son tarih hatırlatmaları
+**pazarlama değil** — alıcı ya yetişkin, ya da mesaj hesabın zaten kullandığı bir
+özelliğe bağlı. Gerçek kapı dar: **öğrenciye pazarlama e-postası.** Öneri: her
+yerde 14+ kendi rızası, **Türkiye hariç** — Türk hukukunda net yaş eşiği yok
+(vaka bazlı "ayırt etme gücü"), o yüzden bir Türk avukat teyit edene kadar veli
+rızası. Beş madde avukata bırakıldı, uydurulmadı.
+
+**A5. E-posta sağlayıcısı seç — YENİ, ve A4'ten daha bağlayıcı.**
+Aylık veli özeti yazıldı ve **hiçbir yere gönderilmiyor**: projede e-posta
+altyapısı **hiç yok** (`package.json`'da sağlayıcı paketi yok, `.env.example`'da
+mail değişkeni yok). Yani e-postayı hukuk değil, **altyapının yokluğu**
+durduruyor. Sağlayıcı seçilince kesişim ödeme gibi sağlayıcıdan bağımsız yazılır.
+
+**Ama kurucunun isteği e-postayı beklemiyor:** *"ayda bir AI özet versin"* için
+e-posta şart değil — özet B3a'nın **gelişim** sayfasında gösterilecek. Üretim
+kodu hazır (`ff95182f`), sadece çağrılıp render edilecek.
 
 ---
 
