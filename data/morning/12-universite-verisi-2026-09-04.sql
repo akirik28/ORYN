@@ -278,8 +278,11 @@ insert into university_statistics (university_id, admission_rate_basis, source, 
 -- Technology, Nanobiology, +1) with per-department selection since 2017; the rest are
 -- open-admission subject to meeting the diploma requirement. Most of the university has no
 -- rate to report at all, not a gap in research.
+-- `source` kept short, matching every other row's style (a plain display label, never a
+-- clickable href -- app/(app)/universities/[id]/page.tsx passes it as SourceBadge's
+-- sourceName only, no url prop); the two-page derivation is in this comment, not the value.
 insert into university_statistics (university_id, admission_rate_basis, source, data_confidence, retrieved_at) values
-('b3e69141-b7fb-474a-a8df-44804aedd5f5', 'no_single_rate', 'https://www.tudelft.nl (numerus fixus programme list) + delta.tudelft.nl (2017 selection-change confirmation)', 'high', '2026-09-04T00:00:00Z');
+('b3e69141-b7fb-474a-a8df-44804aedd5f5', 'no_single_rate', 'https://www.tudelft.nl', 'high', '2026-09-04T00:00:00Z');
 
 
 -- ============================================================================================
