@@ -70,6 +70,13 @@ export interface AIStructuredResult<T> {
 export interface AIProvider {
   generateText(request: AIRequest): Promise<AITextResult>;
   generateStructured<T>(request: AIStructuredRequest<T>): Promise<AIStructuredResult<T>>;
+  /** Same request/result shape as generateText — same model selection, same maxTokens
+   * semantics, same final AITextResult — the only difference is `onDelta` is called
+   * synchronously with each piece of text as it arrives, before the returned promise
+   * resolves. Callers that don't need incremental delivery should keep using generateText;
+   * this exists for the one caller (the advisor's streaming Route Handler) that renders
+   * text as it's generated rather than waiting for the complete reply. */
+  generateTextStream(request: AIRequest, onDelta: (delta: string) => void): Promise<AITextResult>;
 }
 
 export class AIProviderNotConfiguredError extends Error {
