@@ -18,6 +18,56 @@ import { computeNotNowUpdate, computeSoftDismissUntil } from "@/lib/advisor/upgr
 import { acquireAdvisorGenerationLock, releaseAdvisorGenerationLock } from "@/lib/advisor/generation-lock";
 import type { AIMessage } from "@/lib/ai/provider";
 import type { Locale } from "@/lib/i18n/config";
+import type { PlanTier } from "@/types/database";
+
+/**
+ * docs/ozellesme-spec-2026-09-03.md §2's actual wall — Standard gets exactly one conversation,
+ * ever; Ultra gets unlimited. Extracted once (2026-09-04, CEO's own "instructions ve session
+ * şeyi de çalışmıyor" audit) so createConversation and sendAdvisorMessage's own lazy-create
+ * branch can never drift apart the way they had: createConversation enforced this from the
+ * start, but sendAdvisorMessage's lazy-create insert — the path that fires on a student's very
+ * first message, with no conversationId yet, and identically on ANY later call that happens to
+ * arrive with none — inserted unconditionally, with nothing checking tier or count at all. A
+ * Standard-tier caller who already had a conversation could get a second (or unlimited) one
+ * through that path alone, invisibly, since ordinary client behavior never triggers it once a
+ * real conversationId exists in the caller's state — exactly the shape this file's own
+ * standing discipline already names: "a Server Action is directly callable with any argument
+ * regardless of what's rendered... the button being disabled client-side is UX, not
+ * enforcement." Proved with a real test before this fix, not assumed from reading:
+ * __tests__/advisor/session-wall-lazy-create.test.ts's own "THE FINDING" case passed against
+ * the unfixed code, meaning the insert really did run unconditionally.
+ *
+ * Ultra skips the count entirely via the same short-circuit both callers already used
+ * individually — not because the count happens to allow it, but because the tier check short-
+ * circuits first, matching createConversation's own original comment on this exact point.
+ */
+async function assertConversationLimitNotExceeded(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  planTier: PlanTier,
+  locale: Locale
+): Promise<{ error?: string }> {
+  if (planTier === "ultra") return {};
+
+  const tr = locale === "tr";
+  // Same fail-closed posture as the original createConversation check: a count query failing
+  // is a real, unexpected error (advisor_conversations has existed since migration 0011), not
+  // an "unapplied migration" shape — silently letting an uncounted request through would mean
+  // the wall doesn't hold, which is the one failure mode this function exists to prevent.
+  const { count, error: countError } = await supabase.from("advisor_conversations").select("id", { count: "exact", head: true }).eq("user_id", userId);
+  if (countError) {
+    console.error("[advisor] failed to count existing conversations", { userId, error: countError.message });
+    return { error: tr ? "Yeni bir sohbet başlatılamadı." : "Couldn't start a new conversation." };
+  }
+  if ((count ?? 0) > 0) {
+    return {
+      error: tr
+        ? "Standart planda tek sohbet hakkın var, o zaten mevcut. Ayrı oturumlar Ultra'da."
+        : "Standard includes one conversation, and you already have it. Separate sessions are part of Ultra.",
+    };
+  }
+  return {};
+}
 
 /**
  * Same wording as messages/{en,tr}.json's advisor.chat.exhausted, hand-written rather than
@@ -164,6 +214,12 @@ export async function sendAdvisorMessage(
   }
 
   if (!convId) {
+    // The wall, here specifically — see assertConversationLimitNotExceeded's own header for
+    // why this line exists at all: this insert used to run unconditionally, the exact bypass
+    // of docs/ozellesme-spec-2026-09-03.md §2 the founder reported and this session found.
+    const wallCheck = await assertConversationLimitNotExceeded(supabase, userId, planTier, locale);
+    if (wallCheck.error) return { conversationId: "", error: wallCheck.error };
+
     const { data: conversation, error } = await supabase
       .from("advisor_conversations")
       .insert({ user_id: userId, title: trimmed.slice(0, 60) })
@@ -409,18 +465,14 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
 /**
  * docs/ozellesme-spec-2026-09-03.md §2: Standard gets exactly one conversation, ever; Ultra
  * gets unlimited. The "new session" button is visible to Standard too (spec's own explicit
- * choice — locked, not hidden), so this is the actual wall: a Server Action is directly
- * callable with any argument regardless of what's rendered, same discipline as every other
- * authorization check in this file (generateAdvisorReply's own planTier param above is the
- * canonical statement of it), so the button being disabled client-side is UX, not enforcement.
+ * choice — locked, not hidden), so this is one of the two places the actual wall must hold —
+ * see assertConversationLimitNotExceeded's own header for the other (sendAdvisorMessage's
+ * lazy-create) and why both now share one check rather than two that can drift.
  *
- * Counts existing conversations rather than checking "does the student already have one" as a
- * boolean: a brand-new Standard student with zero conversations (never having sent a first
- * message, which is the only other way a conversation gets created — sendAdvisorMessage's own
- * lazy-create above) can still legitimately create their one via this button; only a second
- * attempt is the wall firing. Ultra skips the count entirely, not because the count would
- * happen to allow it, but because the tier check short-circuits first — a future change to
- * how many conversations Standard gets would only need updating in one place.
+ * A brand-new Standard student with zero conversations (never having sent a first message,
+ * which is the only other way a conversation gets created) can still legitimately create their
+ * one via this button; only a second attempt is the wall firing — assertConversationLimitNotExceeded's
+ * own count-not-boolean logic is what makes that distinction.
  */
 export async function createConversation(): Promise<{ conversationId?: string; error?: string }> {
   const session = await requireUser();
@@ -432,26 +484,8 @@ export async function createConversation(): Promise<{ conversationId?: string; e
   const tierProfile = await getCurrentProfile();
   const planTier = resolvePlanTier(tierProfile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
 
-  if (planTier !== "ultra") {
-    const { count, error: countError } = await supabase.from("advisor_conversations").select("id", { count: "exact", head: true }).eq("user_id", userId);
-    // A count query failing is a real, unexpected error, not an "unapplied migration" shape
-    // (advisor_conversations has existed since migration 0011) — fails closed here rather
-    // than silently letting an uncounted request through, the opposite default from
-    // lib/advisor/generation-lock.ts's fail-open, because the two protect different things:
-    // that lock's failure mode is "a reply never returns", this one's is "the wall doesn't
-    // hold" — the second is the actual feature this function exists to provide.
-    if (countError) {
-      console.error("[advisor] failed to count existing conversations", { userId, error: countError.message });
-      return { error: tr ? "Yeni bir sohbet başlatılamadı." : "Couldn't start a new conversation." };
-    }
-    if ((count ?? 0) > 0) {
-      return {
-        error: tr
-          ? "Standart planda tek sohbet hakkın var, o zaten mevcut. Ayrı oturumlar Ultra'da."
-          : "Standard includes one conversation, and you already have it. Separate sessions are part of Ultra.",
-      };
-    }
-  }
+  const wallCheck = await assertConversationLimitNotExceeded(supabase, userId, planTier, locale);
+  if (wallCheck.error) return wallCheck;
 
   const { data: conversation, error } = await supabase
     .from("advisor_conversations")
