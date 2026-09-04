@@ -350,9 +350,22 @@ ikisini de **elle kontrol ettim:**
 **Yani acele yok.** Uygulanana kadar özellikler sadece varsayılan davranışı
 gösterir; hiçbiri hata vermez.
 
-**Paket 14 (`data/morning/14-toplu-paket-2026-09-04.sql`) hazır ve iki kez
-çalıştırılmış:** 0124 + 0126 + 0127, artı üniversite dolgusu, Caltech tarihleri,
-hedeflenen 12'nin istatistikleri, fırsat dolgusu.
+**Paket 14 ve Paket 15 hazır, ikisi de iki kez çalıştırılmış.**
+- **14** (`data/morning/14-toplu-paket-2026-09-04.sql`): 0124 + 0126 + 0127, artı
+  üniversite dolgusu, Caltech tarihleri, hedeflenen 12'nin istatistikleri.
+- **15** (`data/morning/15-toplu-paket-2026-09-04.sql`): 0129 + 0130 + 0132 + 0133,
+  artı vatandaşlık notu temizliği, uygunluk sınıflandırması, ülke dolgusu,
+  Waterloo/CEMC ayrımı.
+
+**Sıra: önce 14, sonra 15.** İkisi arasında gerçek bir çelişki vardı ve kapatıldı:
+14 bir fırsatı "kısıtlama yok doğrulandı" işaretliyordu, 15 aynı satırı daha sıkı
+ölçütle yeniden sınıflandırıyor ama **boole'yi geri almıyordu** — ve şemada bunu
+engelleyen bir kural yok, yani **hata vermeden** çelişkili durum kalacaktı.
+
+**Ve düzeltmeyi yazan şerit, benim istediğim kontrolün yetersiz olduğunu buldu:**
+0133'ün backfill'i her koşuda yeniden çalışıyor, dolayısıyla **ikinci koşuda**
+durum çelişkili olmaktan çıkıp **sessizce yanlış** hâle geliyordu — çelişki arayan
+bir kontrol bunu göremezdi. Kalıcı kontrol artık üç boyutta da bunu tarıyor.
 
 **⚠️ Paket 14'ten SONRA merge edilen, hiçbir pakette OLMAYAN:**
 - **0129** (fırsat yaş/sınıf üçüncü durumu) — `main`'de
