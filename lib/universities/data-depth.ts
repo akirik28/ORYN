@@ -58,16 +58,26 @@ export function lacksApplicationDeadline(deadlineTypes: readonly string[]): bool
  * D6's second confirmed instance of the same shape, in a different table: of the 12
  * universities on any student's real target_universities list, Oxford has exactly one
  * `university_statistics` row — and `admission_rate`, `sat_range_low`/`act_range_low`, and
- * `cost_of_attendance` are all null within it (only `stat_year`/`source`/`data_confidence`-
- * shaped bookkeeping columns are populated). A row-presence check (`hasStatistics: true`,
- * `lacksResearchDepth`'s own signal) marks Oxford as covered; the stat grid a student
- * actually reads renders four figures reading "Unavailable" — the identical rendered
- * outcome as having no row at all, which `hasStatistics` cannot distinguish.
+ * `university_statistics.cost_of_attendance` are all null within it (only `stat_year`/
+ * `source`/`data_confidence`-shaped bookkeeping columns are populated). A row-presence check
+ * (`hasStatistics: true`, `lacksResearchDepth`'s own signal) marks Oxford as covered.
  *
  * All four fields null is the bar, not "missing any one" — a university with a real
  * admission rate but no published test-score range (score-optional policies are common
  * and not a data gap) should not trip this; only a row that answers none of the headline
  * questions does.
+ *
+ * **Correction, 2026-09-04, this file's own earlier version of this comment overstated the
+ * render impact**: it claimed the detail page renders "four figures reading Unavailable" for
+ * a university like Oxford. Checked directly and that's not accurate — Oxford's cost figure
+ * comes from `university_profile_metrics` (tuition), a completely different table with its
+ * own real, populated row (£9,790 domestic / £37,380 international), which the page's cost
+ * `StatCard` already successfully falls back to regardless of what this function returns.
+ * This function is still a correct measure of whether `university_statistics` itself has any
+ * real content — the wrong claim was about what a student sees, not about what this checks.
+ * See `lacksCoreAdmissionStats` below for the narrower, cost-excluded version actually wired
+ * into the page's own empty-state decision, specifically to avoid repeating this mistake at
+ * the render site.
  */
 export function lacksAdmissionStatistics(stats: {
   admissionRate: number | null;
@@ -77,4 +87,27 @@ export function lacksAdmissionStatistics(stats: {
 } | null): boolean {
   if (!stats) return true;
   return stats.admissionRate === null && stats.satRangeLow === null && stats.actRangeLow === null && stats.costOfAttendance === null;
+}
+
+/**
+ * The version actually wired into `app/(app)/universities/[id]/page.tsx`'s own empty-state
+ * decision — deliberately narrower than `lacksAdmissionStatistics` above, excluding
+ * `costOfAttendance` on purpose. That field's own `StatCard` already has an independent
+ * fallback chain (`university_profile_metrics`'s international/domestic tuition), so a
+ * university like Oxford — `university_statistics.cost_of_attendance` null, but a real
+ * tuition figure on file elsewhere — must not have its real, correctly-sourced tuition card
+ * hidden behind a "no data" note that only the OTHER three fields actually earn. Using the
+ * 4-field function for this render decision would produce that false positive, and the
+ * opposite false negative too: a university with a real `cost_of_attendance` but nothing else
+ * would read as "fine" under the 4-field check even though admission rate, test scores, and
+ * graduation rate are all genuinely unresearched.
+ */
+export function lacksCoreAdmissionStats(stats: {
+  admissionRate: number | null;
+  satRangeLow: number | null;
+  actRangeLow: number | null;
+  graduationRate: number | null;
+} | null): boolean {
+  if (!stats) return true;
+  return stats.admissionRate === null && stats.satRangeLow === null && stats.actRangeLow === null && stats.graduationRate === null;
 }

@@ -809,6 +809,8 @@
       "testScores": "Standart sınav puanları",
       "graduationRate": "Mezuniyet oranı",
       "unavailable": "Mevcut değil",
+      "admissionStatsEmptyMessage": "Bu üniversitenin kabul oranı, sınav puanları ve mezuniyet oranı henüz Proxola'nın kayıtlarında yok — bu, düşük bir rakamın değil, araştırmamızdaki bir eksikliğin göstergesi.",
+      "applicationDeadlineUnconfirmedMessage": "Proxola bu üniversitenin başvuru son tarihini henüz doğrulamadı — güncel tarih için resmi kabul sayfasını kontrol edin.",
       "notResearchedTitle": "Proxola bu üniversiteyi henüz derinlemesine araştırmadı",
       "notResearchedDescription": "Program, gereklilik ve kabul bilgileri henüz Proxola'nın kayıtlarında yok — bu, üniversitenin değil, bizim araştırmamızdaki bir eksiklik.",
       "undergradPostgradCaption": "{undergrad} lisans · {postgrad} lisansüstü",
