@@ -44,6 +44,7 @@ const OUTLOOK_TONE: Record<OutlookLabel, StatusTone> = {
  * admissions mechanism, and a neutral truth there is better than a specific falsehood.
  */
 const NOT_APPLICABLE_LABELS: Record<NotApplicableKind, string> = {
+  no_undergraduate_pathway_for_applicant: "No admission pathway available",
   field_not_offered_at_undergraduate: "Not an undergraduate degree here",
   no_evidence_review_rank_competitive: "Not a profile-review system",
   no_evidence_review_threshold: "Not a profile-review system",
@@ -53,6 +54,7 @@ const NOT_APPLICABLE_LABELS: Record<NotApplicableKind, string> = {
 /** Only this badge renders these — unlike OUTLOOK_LABELS, no second consumer has appeared,
  *  so the Turkish stays local here rather than moving into lib/admissions/outlook.ts. */
 const NOT_APPLICABLE_LABELS_TR: Record<NotApplicableKind, string> = {
+  no_undergraduate_pathway_for_applicant: "Kabul yolu yok",
   field_not_offered_at_undergraduate: "Burada lisans programı değil",
   no_evidence_review_rank_competitive: "Profil değerlendirmeli bir sistem değil",
   no_evidence_review_threshold: "Profil değerlendirmeli bir sistem değil",
