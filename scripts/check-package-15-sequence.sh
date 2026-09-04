@@ -91,6 +91,42 @@ psql -q "$DB" -t -c "
   select 'bundled Waterloo row status: ' || status
   from public.opportunities where id = '51c4b57b-7ea1-4503-b9e6-f1468dc9f3f8';
 "
+
+# PERMANENT CHECK (CEO, 2026-09-04, found reviewing before merge): the CHECK constraint 0129/
+# 0133 add on *_basis only validates enum membership -- it does not, and structurally cannot,
+# cross-check basis against *_confirmed_open. A row can silently end up with basis =
+# 'checked_not_stated' (a careful reclassification) sitting right alongside
+# confirmed_open = true (an earlier, less careful promotion from a DIFFERENT package) with no
+# error at all -- and since lib/opportunities/matching.ts's computeEligibility reads the
+# boolean FIRST, the newer, more careful classification becomes silently inert. Found live on
+# Immerse Education (7f90019e): Package 14's own D2 fill set country_eligibility_confirmed_
+# open = true, Package 15's classification file set country_eligibility_basis =
+# 'checked_not_stated' for the same row without resetting the boolean. Fixed at the source
+# (docs/citizenship-restrictions-classification-2026-09-04.sql now also sets
+# country_eligibility_confirmed_open = false). This check makes the class of bug, not just
+# the one instance, permanently visible -- across all three dimensions, since age/grade share
+# the identical two-mechanism shape (0126's booleans, 0129/0133's basis columns).
+CONTRADICTIONS=$(psql -q "$DB" -t -c "
+  select count(*) from public.opportunities
+  where (country_eligibility_confirmed_open = true and country_eligibility_basis = 'checked_not_stated')
+     or (age_eligibility_confirmed_open = true and age_eligibility_basis = 'checked_not_stated')
+     or (grade_eligibility_confirmed_open = true and grade_eligibility_basis = 'checked_not_stated');
+" | tr -d ' ')
+echo " contradictory rows (*_confirmed_open=true WITH *_basis='checked_not_stated', any dimension): $CONTRADICTIONS"
+if [ "$CONTRADICTIONS" != "0" ]; then
+  echo "  FAILED: found $CONTRADICTIONS row(s) with a confirmed-open boolean contradicting a checked-not-stated basis"
+  psql -q "$DB" -c "
+    select id, title,
+      country_eligibility_confirmed_open, country_eligibility_basis,
+      age_eligibility_confirmed_open, age_eligibility_basis,
+      grade_eligibility_confirmed_open, grade_eligibility_basis
+    from public.opportunities
+    where (country_eligibility_confirmed_open = true and country_eligibility_basis = 'checked_not_stated')
+       or (age_eligibility_confirmed_open = true and age_eligibility_basis = 'checked_not_stated')
+       or (grade_eligibility_confirmed_open = true and grade_eligibility_basis = 'checked_not_stated');
+  "
+  exit 1
+fi
 psql -q "$DB" -t -c "
   select 'opportunities.age_eligibility_basis/grade_eligibility_basis/country_eligibility_basis columns exist: ' ||
     (select count(*) from information_schema.columns where table_name='opportunities' and column_name in ('age_eligibility_basis','grade_eligibility_basis','country_eligibility_basis'));

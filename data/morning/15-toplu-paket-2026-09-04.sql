@@ -36,9 +36,27 @@
 -- conflict ... do nothing" eklendi -- yeni bir mekanizma değil, supabase/seed_drive_
 -- batch1.sql'de zaten kanıtlanmış aynı desen. Dosyanın kendi başlığında da not var.
 --
+-- İKİNCİ DÜZELTME (CEO, merge öncesi inceleme, kaynağında yapıldı): citizenship-
+-- restrictions-classification-2026-09-04.sql, Immerse Education (7f90019e) satırını
+-- checked_not_stated'a taşırken country_eligibility_confirmed_open'ı geri almıyordu -- Paket
+-- 14'ün D2 dolgusu bu satırı zaten true yapmıştı, TERS gerekçeyle. 0133'ün CHECK kısıtı
+-- enum üyeliğini doğruluyor, boole ile çapraz kontrol etmiyor -- hata vermeden, true + 
+-- checked_not_stated aynı satırda duruyordu, ve computeEligibility boole'yi önce okuduğu
+-- için daha dikkatli yeni sınıflandırma sessizce etkisiz kalıyordu. Daha da inceliği:
+-- ikinci koşuda 0133'ün kendi backfill'i (confirmed_open=true iken çalışan) satırı
+-- confirmed_no_restriction'a GERİ yazıyordu -- checked_not_stated 13'e düşüyor, 
+-- confirmed_no_restriction 3'e çıkıyordu, hiçbir çelişki görünmeden. Boole artık
+-- basis'le birlikte sıfırlanıyor -- bu hem çelişkiyi hem ikinci koşudaki sessiz geri
+-- yazmayı kapatıyor. Sistematik kontrol: Paket 14'ün confirmed_open=true yaptığı diğer
+-- 4 satır (Penn Pre-College, Interlochen Review, TechGirls, bir sınıf-only satır) Paket
+-- 15'in hiçbir dosyasında geçmiyor -- tek çakışma buydu. scripts/check-package-15-
+-- sequence.sh'e kalıcı kontrol eklendi: iki koşu sonunda hiçbir satır confirmed_open=true
+-- ile basis='checked_not_stated' birlikte taşımamalı, üç boyutta da.
+--
 -- İKİ KEZ ÇALIŞTIRILDI, satır sayıldı: scripts/check-package-15-sequence.sh.
 
 begin;
+
 
 -- ══════════════════════════════════════════════════════════
 -- BÖLÜM 1/8 — Migration 0129: opportunity age/grade eligibility basis
@@ -552,8 +570,49 @@ where id = 'c033f1e9-4642-4a5a-94da-739efadff477'
 -- descriptive attendee makeup, not a policy statement -- the same shape as BU Tanglewood's own
 -- "from across the country and around the world" (already judged NOT sufficient for
 -- confirmed-open in the 0129/0133 pass). checked_not_stated, not confirmed_no_restriction.
+--
+-- CORRECTED 2026-09-04 (CEO, found reviewing before merging Package 15): Package 14's own
+-- D2 fill (data/morning/14-toplu-paket-2026-09-04.sql, "students aged 13-18 from around the
+-- world, plus a stated alumni base from 140+ countries -- an affirmative statement") already
+-- set country_eligibility_confirmed_open = true for this exact row, reasoning the OPPOSITE
+-- way about the same underlying fact. 0133's own CHECK constraint only validates basis
+-- against its enum, never cross-checks it against the boolean, so this UPDATE as originally
+-- written would have landed 'checked_not_stated' right alongside confirmed_open = true --
+-- self-contradictory, no error, and inert: lib/opportunities/matching.ts's computeEligibility
+-- reads the boolean first (`if (!(opportunity.countryEligibilityConfirmedOpen ?? false))`
+-- gates whether country_eligibility_basis is even consulted), so the newer, more careful
+-- checked_not_stated classification would have been silently overridden by the older,
+-- less careful confirmed-open one. The boolean is now explicitly reset alongside the basis --
+-- this UPDATE is the correction the reclassification actually requires, not a second,
+-- independent fact. Systematic cross-check against every other Package 14
+-- *_confirmed_open = true row (Penn Pre-College, Interlochen Review, TechGirls, and one
+-- further grade-only row) found none of the other four touched by any Package 15 file --
+-- this was the only overlap. Also enforced going forward: scripts/check-package-15-
+-- sequence.sh now asserts, after both runs, that no row ever holds *_confirmed_open = true
+-- together with *_basis = 'checked_not_stated', across all three dimensions.
+--
+-- SECOND, WORSE effect this same fix closes, found building that permanent check (not by
+-- inspection): 0133's own backfill (`where country_eligibility_confirmed_open = true and
+-- basis is distinct from 'confirmed_no_restriction'`) re-evaluates on every run, not once.
+-- With the boolean left at true (the bug as originally written), a first run leaves the
+-- contradictory-but-at-least-still-checked_not_stated state CEO found; a SECOND run --
+-- exactly the scenario Package 14/15's own two-run re-runnability test exists to catch,
+-- because the Supabase SQL Editor doesn't honor begin/commit as one atomic unit -- re-runs
+-- 0133's backfill BEFORE this file's own guard (which by then only matches on the now-null
+-- citizenship_restrictions, so it no longer fires), and 0133 overwrites the basis back to
+-- 'confirmed_no_restriction'. So the failure mode across two runs isn't a contradiction
+-- sitting quietly in the row -- it's the careful reclassification being silently REPLACED by
+-- the wrong one, with a clean-looking (non-contradictory) final state that a snapshot check
+-- alone would have missed entirely. Confirmed directly, two ways: reverting just this fix and
+-- running the real two-run test dropped the checked_not_stated count from 14 to 13, and a
+-- direct query of this row after both runs showed exactly the predicted wrong end state --
+-- country_eligibility_basis = 'confirmed_no_restriction', country_eligibility_confirmed_open
+-- = true -- not assumed. Clearing the boolean here removes the row from 0133's own backfill
+-- match set for every future run, which is what actually makes the fix stable across a second
+-- run, not just correct on the first one.
 update public.opportunities
 set country_eligibility_basis = 'checked_not_stated',
+    country_eligibility_confirmed_open = false,
     citizenship_restrictions = null,
     last_verified_at = now()
 where id = '7f90019e-05c7-4059-ae13-8e285ab3ea38'

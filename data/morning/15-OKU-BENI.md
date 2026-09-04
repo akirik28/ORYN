@@ -68,9 +68,9 @@ tamamlanınca kendi paketi olacak) o andan itibaren korunmuş olur; bir INSERT �
 ölçümü (canlı veride 0 çift satır, 2026-09-04) bu paket sırasında geçerliliğini koruyor
 çünkü aradaki hiçbir bölüm o tabloya dokunmuyor.
 
-## Kaynağında bulunup düzeltilen tek gerçek sorun
+## Kaynağında bulunup düzeltilen iki gerçek sorun
 
-`waterloo-cemc-split-execute-2026-09-04.sql`'in 5 INSERT'inde re-run koruması yoktu —
+**1. Waterloo/CEMC'nin 5 INSERT'inde re-run koruması yoktu** —
 `gen_random_uuid()` kullanıyorlar, ve hiçbir `ON CONFLICT` yoktu. **Kanıtlandı, sadece
 iddia değil:** korumayı geçici çıkarıp paketi tekrar çalıştırdım — ikinci koşu **açık bir
 hatayla durdu** (`duplicate key value violates unique constraint "opportunities_dedup_idx"`),
@@ -81,6 +81,41 @@ mekanizma değil, `supabase/seed_drive_batch1.sql`'de zaten kanıtlanmış aynı
 kendisinde düzeltildi** (`docs/waterloo-cemc-split-execute-2026-09-04.sql`), sadece bu paketin
 kopyasında değil — bugün 0126/D5/D8 için uygulanan aynı standart. Koruma geri konunca ikinci
 koşu temiz geçti, 5 satır kaldı (10'a çıkmadı).
+
+**2. Immerse Education'ın (id `7f90019e`) sınıflandırması, Paket 14'ün aynı satır için verdiği
+kararla çelişiyordu — CEO merge öncesi incelerken buldu, ben doğruladım ve kaynağında
+düzelttim.** Paket 14'ün D2 dolgusu bu satırı `country_eligibility_confirmed_open = true`
+yapmıştı ("140+ ülke, olumlu bir beyan" gerekçesiyle); Paket 15'in sınıflandırma dosyası aynı
+satırı `country_eligibility_basis = 'checked_not_stated'` yapıyordu ("betimleme, politika
+beyanı değil" gerekçesiyle) **ama boole'yi geri almıyordu.** 0133'ün CHECK kısıtı sadece enum
+üyeliğini doğruluyor, boole ile çapraz kontrol etmiyor — hata vermeden ikisi aynı satırda
+duruyordu, ve `computeEligibility` boole'yi önce okuduğu için daha dikkatli yeni sınıflandırma
+sessizce etkisiz kalıyordu.
+
+**Kalıcı kontrolü yazarken, sadece incelemekle değil, ikinci, daha sinsi bir etki buldum:**
+0133'ün kendi backfill'i her koşuda yeniden çalışıyor, tek seferlik değil. Boole `true` bırakılınca,
+**ikinci koşuda** 0133'ün backfill'i bu satırın basis'ini `confirmed_no_restriction`'a **geri
+yazıyordu** — sınıflandırma dosyasının kendi koruması artık `citizenship_restrictions`'ın null
+olması yüzünden tetiklenmiyordu. Sonuç: iki koşu sonunda çelişkili bir durum değil, **temiz
+görünen ama yanlış** bir durum (`checked_not_stated` yerine `confirmed_no_restriction`) —
+tam da tek-satır incelemenin kaçıracağı türden. Kanıtlandı, iki ayrı ölçümle: düzeltmeyi
+geçici çıkarıp gerçek iki-koşu testini çalıştırdım — genel `checked_not_stated` sayısı 14'ten
+13'e düştü, VE Immerse'in kendi satırını doğrudan sorguladım: iki koşu sonunda
+`country_eligibility_basis = 'confirmed_no_restriction'`, `country_eligibility_confirmed_open
+= true` — tam olarak tahmin ettiğim yanlış durum, varsayılmadı. Düzeltme (boole'yi basis'le
+birlikte sıfırlamak) bu satırı 0133'ün backfill'inin bir daha hiç eşleşmeyeceği hâle getiriyor
+— sadece ilk koşuda değil, her koşuda kararlı.
+
+**Sistematik kontrol, tek satırla sınırlı kalmadı:** Paket 14'ün `*_confirmed_open = true`
+yaptığı diğer 4 satır (Penn Pre-College, Interlochen Review, TechGirls, bir sınıf-only satır)
+tek tek `grep`lendi — hiçbiri Paket 15'in hiçbir dosyasında geçmiyor. Tek çakışma Immerse'ti.
+Yaş ve sınıf boyutları için de aynı soru soruldu: Paket 14'te `age_eligibility_confirmed_open
+= true` yapan **hiçbir satır yok** (grep ile doğrulandı), yani o boyutta çakışma imkansız.
+
+**Kalıcı kontrol eklendi** (`scripts/check-package-15-sequence.sh`): iki koşu sonunda hiçbir
+satır `*_confirmed_open = true` ile `*_basis = 'checked_not_stated'` birlikte taşımamalı, üç
+boyutta da (ülke/yaş/sınıf). Bugün bu tek satırda çıktı; bir sonraki pakette üç satırda çıkarsa
+kimse tek tek bakmayacaktı.
 
 Diğer üç veri dosyası (boilerplate temizliği, sınıflandırma, D2 ülke dolgusu) zaten her
 UPDATE'i tam metin/durum eşleşmesiyle koruyor — kendiliğinden re-run güvenli, herhangi bir
