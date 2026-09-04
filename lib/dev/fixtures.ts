@@ -1129,9 +1129,12 @@ export function buildFixtureHomeStrip(_locale: Locale = DEFAULT_LOCALE): HomeStr
 }
 
 export const FIXTURE_DEADLINES = [
-  { id: "d1", title: "Apply to the Economics Challenge", date: daysFromNow(6), href: "/opportunities", source: "opportunity" as const },
-  { id: "d2", title: "LSE — Economics, personal statement", date: daysFromNow(12), href: "/applications", source: "application" as const },
-  { id: "d3", title: "Erasmus Rotterdam — program deadline", date: daysFromNow(28), href: "/universities/uni-3", source: "university" as const },
+  { id: "d1", title: "Apply to the Economics Challenge", date: daysFromNow(6), href: "/opportunities", source: "opportunity" as const, sourceUnverified: false },
+  { id: "d2", title: "LSE — Economics, personal statement", date: daysFromNow(12), href: "/applications", source: "application" as const, sourceUnverified: false },
+  // sourceUnverified: true on purpose (2026-09-04) — the only fixture item exercising the
+  // inline "not verified from an official source" marker, so the design-preview route can
+  // render it without needing a fourth list item.
+  { id: "d3", title: "Erasmus Rotterdam — program deadline", date: daysFromNow(28), href: "/universities/uni-3", source: "university" as const, sourceUnverified: true },
 ];
 
 /** 2026-09-04: the "not yet announced" group (lib/deadlines/upcoming.ts's

@@ -138,7 +138,7 @@ function baseState(overrides: Partial<CounselorState> = {}): CounselorState {
 }
 
 const deadlines: UpcomingDeadline[] = [
-  { id: "application-1", source: "application", title: "Bocconi application", date: "2026-09-01", href: "/applications/1" },
+  { id: "application-1", source: "application", title: "Bocconi application", date: "2026-09-01", href: "/applications/1", sourceUnverified: false },
 ];
 
 describe("buildCounselorDashboardContract", () => {
