@@ -278,6 +278,21 @@ export const eligibilityMessages = {
  * compile error, not a silent blank note in production.
  */
 export function renderEligibilityNotes(notes: readonly EligibilityNote[], locale: Locale = DEFAULT_LOCALE): string | null {
+  // Migration 0115 converts opportunity_matches.eligibility_notes from rendered prose (text)
+  // to this codes+params array. Until the founder applies it, every live row still holds the
+  // OLD shape — a plain string — and the types cannot catch that: types/database.ts describes
+  // the post-migration column, so TypeScript believes this is already an array while Postgres
+  // is still returning text. That mismatch crashed /opportunities in full (founder, 2026-09-04:
+  // "notes.map is not a function"), taking out a core page rather than degrading.
+  //
+  // Pre-0115 the string WAS the rendered sentence, so handing it back verbatim is not a
+  // fallback message — it is exactly what this function would have produced, in whatever
+  // locale it was written in. Post-0115 this branch is unreachable.
+  // Cast through unknown: the declared type says this is already an array, which is exactly
+  // the belief that crashed the page. The runtime check has to outrank the type here.
+  const raw = notes as unknown;
+  if (typeof raw === "string") return raw.trim() === "" ? null : raw;
+  if (!Array.isArray(raw)) return null;
   if (notes.length === 0) return null;
   return notes.map((note) => renderEligibilityNote(note, locale)).join(" ");
 }
