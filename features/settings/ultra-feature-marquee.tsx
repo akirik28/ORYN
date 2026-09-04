@@ -4,7 +4,17 @@ import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 export interface UltraFeatureCardData {
-  id: "aiAllowance" | "replyCeiling" | "replyDepth" | "visualTheme";
+  // Deliberately its own hand-kept list, not lib/tier/comparison.ts's DiffersRow["id"]
+  // reused wholesale — tried that 2026-09-04 and reverted it: this type feeds a next-intl
+  // dynamic key (`marquee.${id}.label`) checked against the catalog at compile time, so
+  // every id here needs a real marquee.<id> entry. DiffersRow["id"] includes
+  // "comparisonWidth", which PlanTierView's marqueeCards deliberately never includes
+  // (see that file's header) -- reusing the full union would have forced a
+  // marquee.comparisonWidth catalog entry into existence that nothing ever renders, exactly
+  // the "invented capability" this whole page's design otherwise refuses to ship. The two
+  // id lists are supposed to differ; this file's own history (2026-09-02, 2026-09-03) shows
+  // keeping them in sync by hand hasn't actually been a problem in practice.
+  id: "aiAllowance" | "replyCeiling" | "replyDepth" | "visualTheme" | "comparisonQuota";
   icon: LucideIcon;
   /**
    * A code-derived stat string ("472K", "8,192") for the two cards with a real number

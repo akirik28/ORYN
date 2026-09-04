@@ -34,6 +34,12 @@ const STANDARD_MAX_TOKENS = 4096;
 // above — matches lib/admin/finance.ts's own ULTRA_PRICE_TRY, the fallback
 // getFinanceSettings degrades to in production when admin_finance_settings is unreadable.
 const ULTRA_PRICE_TRY = 399.99;
+// Same discipline again, 2026-09-04 — matches lib/comparison/limits.ts's own
+// STANDARD_COMPARE_MAX/COMPARE_MAX/MONTHLY_COMPARISON_LIMIT, what
+// app/(app)/settings/plan/page.tsx actually passes via resolveComparisonWidthCeiling.
+const STANDARD_COMPARE_MAX = 2;
+const ULTRA_COMPARE_MAX = 4;
+const MONTHLY_COMPARISON_LIMIT = 5;
 
 function renderView(tier: "standard" | "ultra") {
   return render(
@@ -45,6 +51,9 @@ function renderView(tier: "standard" | "ultra") {
         ultraMaxTokens={ULTRA_MAX_TOKENS}
         standardMaxTokens={STANDARD_MAX_TOKENS}
         ultraPriceTry={ULTRA_PRICE_TRY}
+        standardCompareMax={STANDARD_COMPARE_MAX}
+        ultraCompareMax={ULTRA_COMPARE_MAX}
+        monthlyComparisonLimit={MONTHLY_COMPARISON_LIMIT}
       />
     </NextIntlClientProvider>,
   );
@@ -212,6 +221,14 @@ describe("PlanTierView — comparison table is data-driven, not hardcoded", () =
     // instead of what was merely proposed. See lib/tier/comparison.ts's own note.
     expect(screen.getByText(/Fast or Standard replies/)).toBeInTheDocument();
     expect(screen.getByText(/Longer, more detailed replies/)).toBeInTheDocument();
+    // The two 2026-09-04 rows -- comparison gating (lib/comparison/limits.ts) that was
+    // already fully enforced but never stated on this page until the founder asked for it.
+    expect(screen.getByText("Comparison width")).toBeInTheDocument();
+    expect(screen.getByText("Up to 2 universities or opportunities at once")).toBeInTheDocument();
+    expect(screen.getByText(/Up to 4 universities or opportunities at once — twice as many/)).toBeInTheDocument();
+    expect(screen.getByText("Monthly comparisons")).toBeInTheDocument();
+    expect(screen.getByText(/5 comparisons a month, shared across universities and opportunities/)).toBeInTheDocument();
+    expect(screen.getByText(/Unlimited — compare as many as you want, whenever you want/)).toBeInTheDocument();
     // The two sameByDesign rows: one label each, one shared value spanning both columns,
     // never a separate standard/ultra pair.
     expect(screen.getByText("Weekly plan focus")).toBeInTheDocument();
@@ -225,7 +242,12 @@ describe("PlanTierView — comparison table is data-driven, not hardcoded", () =
     // Guards against a future edit accidentally reintroducing an unresearched claim --
     // these words never appear on this page today because they're not backed by shipped
     // code (docs/ultra-tier-value-2026-09-02.md, docs/ultra-feature-recommendation-2026-09-02.md).
-    for (const unresearched of ["quota", "unlimited", "priority support", "faster refresh"]) {
+    // "unlimited" removed from this list 2026-09-04: it's now a real, independently-verified
+    // claim (comparisonQuota) -- isComparisonQuotaExhausted returns false for ultra before
+    // reading usage at all, and both compare pages skip fetching usage entirely for ultra
+    // (lib/tier/comparison.ts's own header has the full citation). See the dedicated
+    // "comparison limits" describe block below for what replaced this guard for that word.
+    for (const unresearched of ["quota", "priority support", "faster refresh"]) {
       expect(screen.queryByText(new RegExp(unresearched, "i"))).not.toBeInTheDocument();
     }
     // The free-trial fact must read as a stated term, never a pressure device -- CEO's
@@ -260,6 +282,9 @@ describe("PlanTierView — the two new rows' numbers are props, not hardcoded st
           ultraMaxTokens={oddUltraMaxTokens}
           standardMaxTokens={oddStandardMaxTokens}
           ultraPriceTry={ULTRA_PRICE_TRY}
+          standardCompareMax={STANDARD_COMPARE_MAX}
+          ultraCompareMax={ULTRA_COMPARE_MAX}
+          monthlyComparisonLimit={MONTHLY_COMPARISON_LIMIT}
         />
       </NextIntlClientProvider>,
     );
@@ -278,6 +303,41 @@ describe("PlanTierView — the two new rows' numbers are props, not hardcoded st
     // numbers on the page should be the ones actually passed to this render.
     expect(screen.queryByText(new RegExp(formatTokenCount(ULTRA_TOKEN_LIMIT)))).not.toBeInTheDocument();
     expect(screen.queryByText(new RegExp(formatNumber(ULTRA_MAX_TOKENS)))).not.toBeInTheDocument();
+  });
+});
+
+describe("PlanTierView — the comparison-limit rows' numbers are props too", () => {
+  // Same methodology as the block above, applied to standardCompareMax/ultraCompareMax/
+  // monthlyComparisonLimit -- deliberately different from both the real production values
+  // (2/4/5) and each other, so a pass here can only mean the values genuinely came from
+  // props, not from a hardcoded "2"/"4"/"5" that happened to look right regardless.
+  test("the width and monthly-limit rows reflect whatever numbers are actually passed in", () => {
+    const oddStandardCompareMax = 3;
+    const oddUltraCompareMax = 9;
+    const oddMonthlyComparisonLimit = 17;
+
+    render(
+      <NextIntlClientProvider locale="en" messages={en}>
+        <PlanTierView
+          tier="standard"
+          ultraTokenLimit={ULTRA_TOKEN_LIMIT}
+          standardTokenLimit={STANDARD_TOKEN_LIMIT}
+          ultraMaxTokens={ULTRA_MAX_TOKENS}
+          standardMaxTokens={STANDARD_MAX_TOKENS}
+          ultraPriceTry={ULTRA_PRICE_TRY}
+          standardCompareMax={oddStandardCompareMax}
+          ultraCompareMax={oddUltraCompareMax}
+          monthlyComparisonLimit={oddMonthlyComparisonLimit}
+        />
+      </NextIntlClientProvider>,
+    );
+
+    expect(screen.getByText("Up to 3 universities or opportunities at once")).toBeInTheDocument();
+    expect(screen.getByText(/Up to 9 universities or opportunities at once/)).toBeInTheDocument();
+    expect(screen.getByText(/17 comparisons a month, shared across universities and opportunities/)).toBeInTheDocument();
+    // The real production values must not leak in from a stray hardcoded fallback.
+    expect(screen.queryByText("Up to 2 universities or opportunities at once")).not.toBeInTheDocument();
+    expect(screen.queryByText(/5 comparisons a month/)).not.toBeInTheDocument();
   });
 });
 
@@ -302,6 +362,20 @@ describe("PlanTierView — the marquee shows only genuine advantages, never a sa
     expect(within(marquee).getAllByText("A theme of its own").length).toBeGreaterThan(0);
     expect(within(marquee).queryByText(/weekly plan/i)).not.toBeInTheDocument();
     expect(within(marquee).queryByText(/research/i)).not.toBeInTheDocument();
+  });
+
+  // 2026-09-04, a judgment call (not a default) — see lib/tier/comparison.ts's own header
+  // for the full reasoning (fixed 32s loop, more cards means faster scroll not a longer
+  // one; "Unlimited" is a single strong claim suited to the marquee's fast pace, "2 vs 4"
+  // needs a beat to read that only the static table below gives). Pinned here so a future
+  // edit can't silently reintroduce comparisonWidth into the marquee, or silently drop
+  // comparisonQuota back out of it, without a test noticing either direction.
+  test("comparisonQuota's unlimited claim is in the marquee; comparisonWidth's width fact deliberately is not", () => {
+    renderView("standard");
+    const marquee = screen.getByRole("region", { name: /what ultra gives you/i });
+    expect(within(marquee).getAllByText("Unlimited comparisons").length).toBeGreaterThan(0);
+    expect(within(marquee).queryByText(/Comparison width/i)).not.toBeInTheDocument();
+    expect(within(marquee).queryByText(/universities or opportunities at once/i)).not.toBeInTheDocument();
   });
 
   // WCAG 2.2.2 (Pause, Stop, Hide) — the actual scroll animation can't be exercised in

@@ -7,6 +7,7 @@ import { MONTHLY_AI_TOKEN_LIMIT } from "@/lib/ai/token-limits";
 import { ADVISOR_MAX_TOKENS_STANDARD, ADVISOR_MAX_TOKENS_ULTRA } from "@/lib/ai/advisor-chat";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getFinanceSettings } from "@/lib/admin/queries";
+import { resolveComparisonWidthCeiling, MONTHLY_COMPARISON_LIMIT } from "@/lib/comparison/limits";
 
 /**
  * Dedicated preview for the plan/comparison page — added 2026-09-02 verifying the live,
@@ -39,6 +40,9 @@ export default async function PlanPreviewPage({ searchParams }: { searchParams: 
           ultraMaxTokens={ADVISOR_MAX_TOKENS_ULTRA}
           standardMaxTokens={ADVISOR_MAX_TOKENS_STANDARD}
           ultraPriceTry={ultraPriceTry}
+          standardCompareMax={resolveComparisonWidthCeiling("standard")}
+          ultraCompareMax={resolveComparisonWidthCeiling("ultra")}
+          monthlyComparisonLimit={MONTHLY_COMPARISON_LIMIT}
         />
       </PreviewShell>
     </>

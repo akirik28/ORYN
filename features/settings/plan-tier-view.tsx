@@ -3,24 +3,29 @@
 import { useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
-import { Sparkles, Zap, MessagesSquare, Flame, Palette } from "lucide-react";
+import { Sparkles, Zap, MessagesSquare, Flame, Palette, Columns2, Infinity as InfinityIcon } from "lucide-react";
 import { PageHeader } from "@/components/proxola/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { registerUltraInterestAction } from "@/app/(app)/settings/actions";
-import { TIER_COMPARISON_ROWS } from "@/lib/tier/comparison";
+import { TIER_COMPARISON_ROWS, type DiffersRow } from "@/lib/tier/comparison";
 import { formatNumber, formatTokenCount, formatPrice } from "@/lib/i18n/format";
 import { UltraFeatureMarquee, type UltraFeatureCardData } from "@/features/settings/ultra-feature-marquee";
 import { PlanGroundGlow } from "@/features/settings/plan-ground-glow";
 import type { PlanTier } from "@/types/database";
 import type { Locale } from "@/lib/i18n/config";
 
-const CARD_ICONS: Record<UltraFeatureCardData["id"], typeof Zap> = {
+// Keyed by DiffersRow["id"] (all six table rows), not UltraFeatureCardData["id"] (the
+// narrower five-id marquee subset) -- this same object is also indexed by the table's own
+// differsRows.map below, which renders every differs row regardless of marquee eligibility.
+const CARD_ICONS: Record<DiffersRow["id"], typeof Zap> = {
   aiAllowance: Zap,
   replyCeiling: MessagesSquare,
   replyDepth: Flame,
   visualTheme: Palette,
+  comparisonWidth: Columns2,
+  comparisonQuota: InfinityIcon,
 };
 
 /**
@@ -156,6 +161,31 @@ const CARD_ICONS: Record<UltraFeatureCardData["id"], typeof Zap> = {
  * child of this same `.plan-page-ground` div rather than a second positioned layer of its
  * own, so it inherits the div's positioning discipline (`absolute`, not `fixed`) instead of
  * making a second containing-block decision that could reopen the sidebar-covering trap.
+ *
+ * **2026-09-04, two more comparison rows — founder, after seeing
+ * `docs/comparison-premium-gate-audit-2026-09-04.md`: "bunu premium özelliklere eklesene"
+ * (add this to the premium features).** `comparisonWidth`/`comparisonQuota` state gating
+ * (`lib/comparison/limits.ts`) that was already fully built and enforced but never
+ * mentioned on this page — see lib/tier/comparison.ts's own header for the full reasoning,
+ * including the independently-verified "Ultra's monthly count is genuinely unlimited, not
+ * just high" claim.
+ *
+ * `standardCompareMax`/`ultraCompareMax`/`monthlyComparisonLimit` follow the same
+ * server-computed-prop pattern as the token limits above, for page-wide consistency, even
+ * though `lib/comparison/limits.ts` is technically safe to import directly here (it's
+ * deliberately plain, no `server-only`, per its own header — it already has to be
+ * client-importable for the compare pickers). Threading them as props keeps this file's own
+ * stated invariant ("every number on this page is a prop, computed server-side") literally
+ * true for every number, not true-with-an-asterisk for the two that happen not to need it.
+ *
+ * **`marqueeCards` filters out `comparisonWidth` on purpose — see lib/tier/comparison.ts's
+ * header for the full reasoning (fixed 32s loop, more cards means faster scroll not a
+ * longer one; "Unlimited" is a single strong claim the marquee already privileges via the
+ * two other stat cards, "2 vs 4" needs a beat to read that a static table suits better).**
+ * `comparisonQuota` has no `stat` (unlike aiAllowance/replyCeiling) — "Unlimited" is carried
+ * entirely by its `marquee.comparisonQuota.label`, matching how replyDepth/visualTheme
+ * already state their one fact as the label rather than a separate big number, since there
+ * is no number to show for "unlimited" that wouldn't be either blank or misleading.
  */
 export function PlanTierView({
   tier,
@@ -164,6 +194,9 @@ export function PlanTierView({
   ultraMaxTokens,
   standardMaxTokens,
   ultraPriceTry,
+  standardCompareMax,
+  ultraCompareMax,
+  monthlyComparisonLimit,
 }: {
   tier: PlanTier;
   ultraTokenLimit: number;
@@ -171,6 +204,9 @@ export function PlanTierView({
   ultraMaxTokens: number;
   standardMaxTokens: number;
   ultraPriceTry: number;
+  standardCompareMax: number;
+  ultraCompareMax: number;
+  monthlyComparisonLimit: number;
 }) {
   const t = useTranslations("settings.plan");
   const locale = useLocale() as Locale;
@@ -184,15 +220,19 @@ export function PlanTierView({
 
   const differsRows = useMemo(() => TIER_COMPARISON_ROWS.filter((row) => row.kind === "differs"), []);
   const sameByDesignRows = useMemo(() => TIER_COMPARISON_ROWS.filter((row) => row.kind === "sameByDesign"), []);
-  const marqueeCards: UltraFeatureCardData[] = differsRows.map((row) => ({
-    id: row.id,
-    icon: CARD_ICONS[row.id],
-    stat: row.id === "aiAllowance" ? formattedUltraLimit : row.id === "replyCeiling" ? formattedUltraMaxTokens : undefined,
-  }));
+  const marqueeCards: UltraFeatureCardData[] = differsRows
+    .filter((row): row is DiffersRow & { id: UltraFeatureCardData["id"] } => row.id !== "comparisonWidth")
+    .map((row) => ({
+      id: row.id,
+      icon: CARD_ICONS[row.id],
+      stat: row.id === "aiAllowance" ? formattedUltraLimit : row.id === "replyCeiling" ? formattedUltraMaxTokens : undefined,
+    }));
 
   function comparisonValues(id: string, column: "standard" | "ultra"): Record<string, string> {
     if (id === "aiAllowance") return { limit: column === "ultra" ? formattedUltraLimit : formattedStandardLimit };
     if (id === "replyCeiling") return { maxTokens: column === "ultra" ? formattedUltraMaxTokens : formattedStandardMaxTokens };
+    if (id === "comparisonWidth") return { max: formatNumber(column === "ultra" ? ultraCompareMax : standardCompareMax) };
+    if (id === "comparisonQuota" && column === "standard") return { limit: formatNumber(monthlyComparisonLimit) };
     return {};
   }
 
