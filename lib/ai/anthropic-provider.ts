@@ -37,6 +37,26 @@ const PROVIDER_NAME = "anthropic";
 const DEFAULT_MAX_TOKENS = 8192;
 
 /**
+ * Only applied to the streaming call (generateTextStream), not generateText/generateStructured
+ * — those already return or throw promptly on the SDK's own default 10-minute timeout, since
+ * nothing observes them mid-flight. A streaming reply is different: a student is watching a
+ * "thinking" placeholder the whole time, so a connection that stalls without ever closing or
+ * erroring would leave them staring at it far longer than any real call has ever taken.
+ *
+ * 120s, not the SDK's 10-minute default — chosen against the real, measured worst case
+ * (docs/advisor-latency-options-2026-09-04.md's own TTFT measurement: 57.75s for the slowest
+ * real condition observed), roughly 2x that for genuine headroom on a legitimately slow-but-
+ * real call, while stopping the wait at under half the platform's own 300s ceiling rather than
+ * only ever hitting that much later, much worse experience.
+ *
+ * maxRetries: 0 is not optional alongside this — the SDK retries a timed-out request twice by
+ * default (its own documented behavior), which would silently turn a 120s timeout into a
+ * potential 360s wait AND bill for up to three attempts instead of one, undoing the entire
+ * point of adding this. A timeout here must mean "stop and report", never "try again quietly".
+ */
+const ADVISOR_STREAM_TIMEOUT_MS = 120_000;
+
+/**
  * Async since 2026-09-03 (was sync) so the not-configured case can be recorded before it
  * throws — see recordProviderNotConfigured's own header for why this needed a distinct
  * synthetic status rather than being folded into a plain provider_health failure.
@@ -183,12 +203,15 @@ export class AnthropicProvider implements AIProvider {
     const client = await getClient();
     const model = request.model ?? env.anthropic.model;
 
-    const stream = client.messages.stream({
-      model,
-      max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
-      system: request.system,
-      messages: buildMessages(request),
-    });
+    const stream = client.messages.stream(
+      {
+        model,
+        max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
+        system: request.system,
+        messages: buildMessages(request),
+      },
+      { timeout: ADVISOR_STREAM_TIMEOUT_MS, maxRetries: 0 },
+    );
     stream.on("text", (delta) => onDelta(delta));
 
     let message: Anthropic.Message;
