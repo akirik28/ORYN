@@ -585,7 +585,17 @@ describe("migration numbering", () => {
     // lib/advisor/conversation-title.ts) -- this table's title column is what that feature
     // writes, which is what made the sweep's §3 finding directly in scope rather than a
     // detour.
-    expect(Math.max(...numbers.map(Number))).toBe(122);
+    //
+    // 0123 assigned to 11 (payment tables), not yet landed as a file here.
+    //
+    // 0124 (upgrade_interstitial_dismissal) -- dismissal-clock columns for the founder's
+    // full-screen upgrade interstitial, own columns not upgrade_prompt_*'s (0093) or
+    // parent_email_prompt_*'s (0117), same reasoning both already established. Not added to
+    // profiles_guard_protected_columns (0121): single legitimate writer, always the row's own
+    // owner, the same shape those two existing dismissal-column sets already have. Started as
+    // 0122, collided same-night with the advisor-guard migration directly above; CEO assigned
+    // 0124 (0123 already spoken for), renamed after rebasing.
+    expect(Math.max(...numbers.map(Number))).toBe(124);
   });
 });
 

@@ -1,14 +1,14 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { useTranslations, useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Sparkles, Zap, MessagesSquare, Flame, Palette, Columns2, Infinity as InfinityIcon } from "lucide-react";
 import { PageHeader } from "@/components/proxola/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { registerUltraInterestAction } from "@/app/(app)/settings/actions";
+import { startUltraCheckoutAction, type StartCheckoutResult } from "@/app/(app)/upgrade-interstitial-actions";
 import { TIER_COMPARISON_ROWS, type DiffersRow } from "@/lib/tier/comparison";
 import { formatNumber, formatTokenCount, formatPrice } from "@/lib/i18n/format";
 import { UltraFeatureMarquee, type UltraFeatureCardData } from "@/features/settings/ultra-feature-marquee";
@@ -32,11 +32,17 @@ const CARD_ICONS: Record<DiffersRow["id"], typeof Zap> = {
  * The plan page. Two hard constraints from the assignment, both load-bearing on this
  * component's shape, not just its copy:
  *
- * 1. **No buy button.** There is no payments integration (migration 0089's own header),
- *    so nothing here can look like a checkout. The only interactive control is
- *    `registerUltraInterestAction` — a plain analytics event, gated behind its own honest
- *    copy (`interestDescription`), never dressed up as an upgrade flow. An Ultra student
- *    sees no call to action at all: they have nothing to register interest in.
+ * 1. **No buy button — UNTIL 2026-09-04.** From launch through 2026-09-04 there was no
+ *    payments integration (migration 0089's own header) and the only interactive control
+ *    was `registerUltraInterestAction`, a plain analytics event. Superseded the same night,
+ *    founder direct ("ödeme sistemini bugün ekliycem" — I'll add the payment system today):
+ *    this card is now the primary checkout surface, calling `startUltraCheckoutAction`
+ *    (11's provider-agnostic interface, app/(app)/upgrade-interstitial-actions.ts). What
+ *    survives unchanged from the original constraint, because it was never about the
+ *    checkout's absence: no fabricated success, no card fields anywhere in this app (every
+ *    provider redirects to its own hosted payment page), and an honestly-stated
+ *    "not configured yet" whenever `startUltraCheckoutAction` reports exactly that — the
+ *    same posture this codebase already uses for every other unconfigured integration.
  * 2. **No invented capabilities.** The comparison table (and, as of this pass, the
  *    marquee cards above it) is driven entirely by `TIER_COMPARISON_ROWS`
  *    (lib/tier/comparison.ts) plus matching catalog entries — this component has no
@@ -81,16 +87,18 @@ const CARD_ICONS: Record<DiffersRow["id"], typeof Zap> = {
  *   what's better, the table shows the complete picture including what's intentionally the
  *   same, division of labor rather than a dropped distinction.
  * - **"Ultra isn't open for signups yet" moved out of the page's lead sentence, into the
- *   interest card where the CTA it explains actually lives** — decided explicitly (oryn-a4
- *   flagged this needed a real decision, not a default): the founder's own instruction was
- *   "the one job of the page is to show how much a student gets," and opening with a
- *   limitation before showing a single benefit worked against that. The fact itself is
- *   unchanged and still stated plainly — `interestDescription` still says outright it isn't
- *   purchasable yet — just relocated to where a reader who's already seen the value
- *   naturally reaches it, not the very first thing on the page.
+ *   card where the CTA it explains actually lives** — decided explicitly (oryn-a4 flagged
+ *   this needed a real decision, not a default): the founder's own instruction was "the one
+ *   job of the page is to show how much a student gets," and opening with a limitation
+ *   before showing a single benefit worked against that. The underlying fact this card
+ *   states plainly has since changed (2026-09-04: it's a real checkout status now, not a
+ *   fixed "not open yet"), but the placement decision — state it where the CTA lives, not in
+ *   the page's lead sentence — still holds unchanged.
  *
- * Every real account is standard-tier by default and there is currently no in-product way
- * to become Ultra by paying — the interest card two constraints up says so.
+ * Every real account is standard-tier by default. Whether a real account can become Ultra
+ * by paying today depends on whether a payment provider is actually configured — the
+ * checkout card two constraints up states that honestly either way, never implying more
+ * than `startUltraCheckoutAction` currently reports.
  *
  * Only two tiers are rendered because `PlanTier` only has two values — there is no
  * "unknown/unreadable" state here on purpose. `resolvePlanTier` (lib/tier/plan-tier.ts)
@@ -199,6 +207,10 @@ export function PlanTierView({
   monthlyComparisonLimit,
 }: {
   tier: PlanTier;
+  /** Live, from admin_finance_settings via getFinanceSettings (lib/admin/queries.ts,
+   *  05's read, threaded down the same way as app/(app)/layout.tsx's own Sidebar prop and
+   *  the full-screen interstitial's — one source, per the founder's explicit instruction
+   *  not to add a sixth hardcoded copy of this number. */
   ultraTokenLimit: number;
   standardTokenLimit: number;
   ultraMaxTokens: number;
@@ -209,9 +221,34 @@ export function PlanTierView({
   monthlyComparisonLimit: number;
 }) {
   const t = useTranslations("settings.plan");
+  const tUpgrade = useTranslations("upgradeInterstitial");
   const locale = useLocale() as Locale;
-  const [interestRegistered, setInterestRegistered] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  // Founder direct, 2026-09-04: this card becomes the primary checkout surface, not interest
+  // registration — "ödeme sistemini bugün ekliycem" (payment goes in today), scoped by CEO to
+  // a real, provider-agnostic interface (11 building it) rather than anything mocked here.
+  // startUltraCheckoutAction is the one call site both this page and the full-screen
+  // interstitial share (11's own instruction) — this component renders whatever it
+  // currently reports, honestly: "not configured" is a real, visible state, never a dead
+  // button or a fake spinner.
+  const [checkoutResult, setCheckoutResult] = useState<StartCheckoutResult | null>(null);
+  useEffect(() => {
+    if (tier !== "standard") return;
+    let cancelled = false;
+    startUltraCheckoutAction().then((result) => {
+      if (!cancelled) setCheckoutResult(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [tier]);
+
+  function handleCheckoutClick() {
+    if (checkoutResult?.status === "ready") {
+      // Full browser redirect, not router.push — the hosted payment page lives on the
+      // provider's own domain (11's own instruction), never an internal route.
+      window.location.href = checkoutResult.checkoutUrl;
+    }
+  }
 
   const formattedUltraLimit = formatTokenCount(ultraTokenLimit);
   const formattedStandardLimit = formatTokenCount(standardTokenLimit);
@@ -234,19 +271,6 @@ export function PlanTierView({
     if (id === "comparisonWidth") return { max: formatNumber(column === "ultra" ? ultraCompareMax : standardCompareMax) };
     if (id === "comparisonQuota" && column === "standard") return { limit: formatNumber(monthlyComparisonLimit) };
     return {};
-  }
-
-  function registerInterest() {
-    startTransition(async () => {
-      await registerUltraInterestAction();
-      // Local confirmation only, not persisted — a second visit (or a page reload right
-      // after) shows the button again rather than remembering the click forever. A stated,
-      // deliberate limitation for this "skin only" pass, not an oversight: persisting it
-      // honestly would mean reading `product_events` back, which needs the admin client
-      // (lib/analytics/log.ts's own comment — no RLS policy for the regular client), a real
-      // addition beyond what a lightweight interest signal needs tonight.
-      setInterestRegistered(true);
-    });
   }
 
   return (
@@ -340,18 +364,26 @@ export function PlanTierView({
         {tier === "standard" ? (
           <Card>
             <CardHeader>
-              <CardTitle>{t("interestTitle")}</CardTitle>
-              <CardDescription>{t("interestDescription", { price: formatPrice(ultraPriceTry, locale) })}</CardDescription>
+              <CardTitle>{tUpgrade("title")}</CardTitle>
+              <CardDescription>
+                {tUpgrade.rich("priceLine", {
+                  price: formatPrice(ultraPriceTry, locale),
+                  strong: (chunks) => <strong style={{ color: "var(--tier-accent-strong)" }}>{chunks}</strong>,
+                })}
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              {interestRegistered ? (
-                <p className="text-sm text-muted-foreground" role="status">
-                  {t("interestConfirmed")}
-                </p>
+              {checkoutResult?.status === "ready" ? (
+                <Button onClick={handleCheckoutClick}>{tUpgrade("cta")}</Button>
               ) : (
-                <Button onClick={registerInterest} disabled={isPending}>
-                  {t("interestButton")}
-                </Button>
+                <div className="space-y-2">
+                  <Button disabled aria-describedby="plan-checkout-unavailable">
+                    {tUpgrade("cta")}
+                  </Button>
+                  <p id="plan-checkout-unavailable" className="text-xs text-muted-foreground">
+                    {checkoutResult?.status === "error" ? checkoutResult.message : tUpgrade("checkoutNotConfigured")}
+                  </p>
+                </div>
               )}
             </CardContent>
           </Card>

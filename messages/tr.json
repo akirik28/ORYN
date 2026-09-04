@@ -215,11 +215,7 @@
           "label": "Araştırma proje fikirleri",
           "same": "Herkes için üretim başına en fazla 3 fikir — bilinçli olarak küçük tutuluyor, böylece fikirler etkileyici görünüp ulaşılamaz olmak yerine gerçekçi kalıyor"
         }
-      },
-      "interestTitle": "Ultra ile ilgileniyor musun?",
-      "interestDescription": "Ultra henüz kayıtlara açık değil — ayda {price} TL olacak, ilk hafta ücretsiz. İlgilendiğini bildir, kaç öğrencinin hazır olduğunu bilelim.",
-      "interestButton": "İlgileniyorum",
-      "interestConfirmed": "Kaydedildi — teşekkürler."
+      }
     },
     "birthYear": {
       "label": "Doğduğun yıl",
@@ -2381,5 +2377,14 @@
     "acceptWhatYouCannotSeeItem1": "Danışmanla olan konuşmaları",
     "acceptWhatYouCannotSeeItem2": "Kişisel notları ve yüklediği dosyalar",
     "acceptWhatYouCannotSeeItem3": "Profilini değiştirme yetkisi"
+  },
+  "upgradeInterstitial": {
+    "dialogAriaLabel": "Ultra'ya yükselt",
+    "title": "Proxola'dan daha fazlasını al",
+    "priceLine": "Ultra ayda <strong>{price} TL</strong>, ilk hafta ücretsiz.",
+    "cta": "Ultra'ya geç",
+    "checkoutNotConfigured": "Ödeme sistemi henüz hazır değil — yakında burada olacak.",
+    "notNow": "Şimdi değil",
+    "close": "Kapat"
   }
 }

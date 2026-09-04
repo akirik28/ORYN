@@ -248,6 +248,15 @@ export interface Profile {
   upgrade_prompt_not_now_at: string | null;
   upgrade_prompt_not_now_count: number;
   upgrade_prompt_dismissed_forever: boolean;
+  /** Migration 0122 -- the full-screen upgrade interstitial's own dismissal clock, deliberately
+   * separate from upgrade_prompt_* just above (one dismissal must not silently suppress the
+   * other, same reasoning parent_email_prompt_* already established). Same
+   * soft/explicit/permanent semantics, same isUndefinedColumnError degrade to "not yet
+   * dismissed" while 0122 is unapplied. */
+  upgrade_interstitial_soft_dismissed_until: string | null;
+  upgrade_interstitial_not_now_at: string | null;
+  upgrade_interstitial_not_now_count: number;
+  upgrade_interstitial_dismissed_forever: boolean;
   /** Migration 0114 -- the periodic email digest's opt-out. Defaults true. Has no live effect
    * today: see lib/digest/run.ts's own header for why nothing calls it with dryRun:false. */
   digest_email_enabled: boolean;

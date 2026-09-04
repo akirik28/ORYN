@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { AdvisorMessage } from "@/components/proxola/advisor-message";
-import { UpgradePromptPreviewClient, ParentUpgradePromptPreviewClient } from "./upgrade-prompt-preview-client";
+import { UpgradePromptPreviewClient, ParentUpgradePromptPreviewClient, UpgradeInterstitialPreviewClient } from "./upgrade-prompt-preview-client";
 
 /**
  * Dedicated preview for the rebuilt upgrade prompt (2026-09-03, founder-directed restyle —
@@ -57,6 +57,15 @@ export default async function UpgradePromptPreviewPage() {
         </p>
       </div>
       <ParentUpgradePromptPreviewClient />
+
+      <div>
+        <h1 className="font-display text-2xl">Full-screen upgrade interstitial (2026-09-04)</h1>
+        <p className="mt-2 text-sm text-ink-3">
+          Founder-directed: full-screen, X top-right, first session then periodically. Opened by button here since the real trigger is
+          session/dismissal-state-driven. Try all three checkout states.
+        </p>
+      </div>
+      <UpgradeInterstitialPreviewClient />
     </div>
   );
 }
