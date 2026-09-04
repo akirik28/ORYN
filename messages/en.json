@@ -1012,6 +1012,7 @@
   "sourceBadge": {
     "source": "Source:",
     "checked": "Checked {time}",
+    "asOf": "As of:",
     "viewSource": "View source"
   },
   "opportunities": {

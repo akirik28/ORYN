@@ -151,7 +151,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       .order("ranking_provider"),
     supabase
       .from("university_profile_metrics")
-      .select("metric_code, value_numeric, value_text, unit, source_url, source_type, verified_at, precision_state, data_quality_flag")
+      .select("metric_code, value_numeric, value_text, unit, source_url, source_type, verified_at, precision_state, data_quality_flag, stats_as_of")
       .eq("university_id", id)
       .in("metric_code", [
         "research_topics_top5",
@@ -626,10 +626,12 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         <SourceBadge
           sourceName={tuitionSourceMetric.source_type}
           checkedAt={tuitionSourceMetric.verified_at}
+          asOf={tuitionSourceMetric.stats_as_of}
           url={tuitionSourceMetric.source_url}
           locale={locale}
           sourceLabel={tSourceBadge("source")}
           checkedLabel={(time) => tSourceBadge("checked", { time })}
+          asOfLabel={tSourceBadge("asOf")}
           viewSourceLabel={tSourceBadge("viewSource")}
         />
       ) : null}
