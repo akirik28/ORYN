@@ -205,6 +205,22 @@ MIT ve HKUST ikişer satır, "UCL" ile "University College London" muhtemelen ay
 kurum. D3 beş satırı isim isim yazdı. **Boş kopyayı doldurmak iki kez zarar
 verir.** D1 bu satırları atlıyor.
 
+## Kurucuyu bekleyen migration'lar — HİÇBİRİ ACİL DEĞİL
+
+Kod `main`'de, migration'lar canlıda **uygulanmadı.** Bugün sabah `/opportunities`
+tam bu yüzden çöktü (kod uygulanmamış bir migration'ı varsaymıştı), o yüzden
+ikisini de **elle kontrol ettim:**
+
+| No | Ne | Uygulanmadan güvenli mi? |
+| --- | --- | --- |
+| 0123 | Ödeme tabloları | henüz yazılıyor |
+| 0124 | Yükseltme kartı susturma sütunları | ✅ `select("*")` + `?? null` — çökmüyor |
+| 0126 | Fırsat yaş/sınıf "şart yok" bayrakları | ✅ okuyan her sorgu `select("*")`, `?? false` |
+| 0127 | `admission_rate_basis`'e `not_published` | ✅ yalnızca hazırlanan SQL kullanıyor |
+
+**Yani acele yok.** Uygulanana kadar özellikler sadece varsayılan davranışı
+gösterir; hiçbiri hata vermez. Kurucu döndüğünde tek pakette verilecek.
+
 ## D7 — giriş yolu olmayan programlar işaretlensin (yeni, sahipsiz)
 
 D1 dolgusunda çıktı: **Tokyo Üniversitesi'nde bizim 14-18 yaş kitlemiz için
