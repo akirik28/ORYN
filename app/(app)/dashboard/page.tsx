@@ -7,7 +7,8 @@ import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentWeeklyPlan, getOrCreateWeeklyPlan } from "@/lib/plan/persist";
 import { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
-import { getUpcomingDeadlines } from "@/lib/deadlines/upcoming";
+import { getUpcomingDeadlines, getUpcomingUndatedUniversityDeadlines } from "@/lib/deadlines/upcoming";
+import { loadSupersessionMap } from "@/lib/universities/canonical";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
 import { isOpportunityRecommendable } from "@/lib/opportunities/lifecycle";
 import { competesInCoreRecommendations } from "@/lib/opportunities/commercial";
@@ -63,7 +64,7 @@ export default async function DashboardPage() {
     return null;
   });
 
-  const [scores, snapshotsRes, recommendationRes, targetUniversities, upcomingDeadlines, matchesRes, opportunityStrip] = await Promise.all([
+  const [scores, snapshotsRes, recommendationRes, targetUniversities, upcomingDeadlines, undatedUniversityDeadlines, matchesRes, opportunityStrip] = await Promise.all([
     // Shared, cache()'d — docs/performance.md §2. By the time this page runs, the layout
     // (app/(app)/layout.tsx) has almost certainly already populated the cache for this
     // request, so this call is typically free, not just deduped.
@@ -85,6 +86,15 @@ export default async function DashboardPage() {
       .maybeSingle(),
     getTargetUniversitiesWithDetails(supabase, userId, 3),
     getUpcomingDeadlines(supabase, userId, 4),
+    // Separate group, never merged into upcomingDeadlines above — these rows make no date
+    // claim at all, so sorting or counting them alongside dated ones would assert a precision
+    // the research doesn't have. Its own supersessionMap load (loadSupersessionMap is meant to
+    // be called once per function, not shared globally — see that file's own header) rather
+    // than reusing getUpcomingDeadlines' internal one, which isn't exposed to this caller.
+    (async () => {
+      const supersessionMap = await loadSupersessionMap(supabase);
+      return getUpcomingUndatedUniversityDeadlines(supabase, userId, supersessionMap);
+    })(),
     // Over-fetch, then narrow to OPPORTUNITY_PREVIEW_SIZE after isOpportunityRecommendable has
     // run below. Taking the top 2 here and filtering afterwards silently shrank the block to
     // whatever survived — and emptied it entirely when a student's two highest-scoring matches
@@ -274,6 +284,7 @@ export default async function DashboardPage() {
       counselorThisWeek={counselorContract?.thisWeekActions ?? []}
       avoidRecommendation={avoidRecommendation}
       upcomingDeadlines={upcomingDeadlines}
+      undatedUniversityDeadlines={undatedUniversityDeadlines}
       targetUniversities={targetUniversities}
       opportunityPreview={opportunityPreview}
       opportunityStrip={opportunityStrip}
