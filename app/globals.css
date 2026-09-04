@@ -1200,7 +1200,14 @@
    app/layout.tsx's own comment: light is the sole shipped default, .dark stays fully
    defined and unused, ready for a real toggle later. This follows that exact established,
    deliberately-dormant-until-a-toggle-exists pattern rather than inventing a different one
-   or skipping the dark value because it isn't reachable yet.
+   or skipping the dark value because it isn't reachable yet. Worth being precise about
+   what that means in practice, since it came up revising this rule: `.plan-page-ground`
+   is a SIBLING of the content column PlanTierView locally scopes with its own `className=
+   "dark"` wrappers (PageHeader, the comparison h2, the sameByDesign block), not a
+   descendant of them -- so those local wrappers have never had any bearing on which of
+   THESE two rules paints; only a real `<html class="dark">` toggle would. Today that's the
+   plain light-mode rule below, unconditionally -- the numbers to look at for "what is the
+   founder actually looking at" are always this rule's, not the .dark one's.
 
    Sits above .ultra-ambient-glow's own ember/glow layer (mounted app-wide, z-0) at a
    higher z-index so this page reads as its own dim-green ground rather than the ambient
@@ -1208,25 +1215,64 @@
    ember canvas on every OTHER page; here, this ground is what's meant to read as "premium
    and different," not the particles.
 
-   Lightness picked against the two things that have to survive it (see PlanTierView's
-   own header comment on the honesty and mark-legibility constraints): a near-white
-   bg-card (the differs cards, the current-plan header) needs to keep reading as a
-   distinct card floating on top -- unaffected by this ground either way, since those
-   cards paint their own opaque background over it. The sameByDesign rows' plain
-   border-foreground/20 + text-muted-foreground -- deliberately NOT given a bg-card, so
-   they show this ground straight through -- are the ones actually sitting on this color,
-   and their light-theme-calibrated tones were NOT legible against it unmodified (first
-   attempt, caught live rather than shipped: the page heading and both sameByDesign rows
-   read as barely-visible dark-on-dark). Fixed with the existing `.dark` scope
-   (PlanTierView's own header comment on this pass explains why: --foreground/
-   --muted-foreground already have complete, correct, already-tested dark-mode values in
-   this file's own .dark block, so this reuses them rather than inventing page-specific
-   colors), not a bespoke color, so the "quietly promoted into feeling like a feature"
-   outcome the founder warned against still doesn't apply -- these rows read exactly as
-   plain as before, just legible now. Verified live via getComputedStyle + WCAG relative
-   luminance, against both the darkest and lightest declared gradient stops: the label
-   (text-foreground) measures 14.54:1 / 10.61:1, the muted value (text-muted-foreground)
-   6.84:1 / 4.99:1 -- all four clear WCAG AA's 4.5:1 floor for normal text. */
+   **2026-09-04, later the same night, founder direct (relayed via oryn-45): "yeşil çok çok
+   koyu, arkada açık yeşil olmalı, loş ışık tarzı, ve hareket etsin yine beyazlarla"** --
+   too dark; wants it lighter, a dim-*light* quality specifically (a source, brighter near
+   it, falling off -- not just a darker color), and motion, with white, "yine" (again)
+   pointing at a specific animation already praised ("bu sağdaki animasyon çok çok iyi").
+
+   **First attempt at "lighter" was wrong, caught by re-measuring rather than assuming --
+   worth recording since it's the actual reason this rule looks the way it does.** Raising
+   lightness substantially (0.34/0.29/0.25 -> ~0.6+) does read as a lighter green, but the
+   .dark-scoped text sitting on it (--foreground/--muted-foreground, chosen for a DARK
+   ground -- see this file's own note above on why those specific tokens) loses contrast
+   fast once the ground stops being dark: text-muted-foreground against that lightened top
+   stop measured 1.29:1, nowhere close to WCAG AA's 4.5:1 floor. Tried the opposite --
+   dropping the local .dark scope for plain light-mode (dark-on-light) text instead -- and
+   that failed too, just at the other end of the gradient (1.04:1 against the darkest
+   stop): this gradient's whole point is spanning light-to-dark in one sweep, and NEITHER a
+   light nor a dark text color survives both ends of a sweep that's actually light overall.
+
+   The real lever was chroma, not lightness -- oryn-45's own diagnosis ("he's asking for
+   something that reads as green rather than as a dark surface with a hue") was about
+   saturation, and testing confirmed it: boosting chroma alone (0.05/0.045/0.04 ->
+   0.115/0.10/0.085) at roughly the ORIGINAL lightness keeps every contrast number close to
+   the already-verified-safe original figures, because WCAG contrast is a luminance
+   calculation that chroma barely moves. Lightness got only a small nudge (0.34/0.29/0.25
+   -> 0.35/0.30/0.255) -- genuinely lighter than before, not just more saturated, but small
+   enough to keep text-muted-foreground's tightest figure (the lightest stop) above 4.5:1
+   with real margin rather than the original's already-thin 4.99:1. The "reads as dim and
+   moody, lit by one bright source" quality the founder's own words describe is a coherent
+   design on its own terms here, not a compromise: a dark room does not become a light room
+   just because a light source enters it, so keeping the base close to its original depth
+   while chroma and the glow layer do the "brighter, greener, moving" work is the more
+   literal reading of "loş ışık" (dim LIGHT), not a contrast-driven consolation prize.
+
+   The "loş ışık" (dim-light, source-and-falloff) and motion-with-white live in a new
+   canvas layer, PlanGroundGlow (features/settings/plan-ground-glow.tsx), not in this
+   gradient -- a linear CSS gradient has no way to express "brighter near one point,
+   falling off," and reusing the Topbar UsageIndicator flame's own closed-form technique
+   (that file's own header comment explains why that's the specific animation being reused,
+   not .tier-flow-bar/.ultra-ambient-glow) needed a canvas, the same way the flame itself
+   does. The sameByDesign plainness constraint still holds: the glow is anchored high and
+   to the right (echoing the flame's own Topbar position), which keeps it out of the
+   sameByDesign rows' actual rendering position (confirmed by direct pixel sampling of the
+   glow's own output -- zero contribution reaches the lower page) rather than relying on
+   opacity alone to keep it subtle there.
+
+   Contrast re-measured live (getComputedStyle + canvas-readback WCAG luminance, the same
+   technique the original pass used) against the NEW gradient's own two extremes, and
+   separately against a conservative worst case -- the glow's own peak color/alpha additively
+   blended onto the LIGHTEST stop, standing in for "text rendered at the brightest point the
+   glow could ever reach even though it doesn't actually reach any real text position":
+   text-foreground measures 9.83:1 / 13.79:1 at the gradient's own extremes, 6.13:1 even in
+   the worst-case glow blend; text-muted-foreground measures 4.62:1 / 6.48:1 at the gradient's
+   own extremes -- all four clear WCAG AA's 4.5:1 floor for normal text, the muted figure
+   with real margin rather than the original's near-the-line 4.99:1. (The worst-case glow
+   blend does drop text-muted-foreground to 2.88:1 -- flagged, not hidden: this is why the
+   glow's anchor position keeping it away from the sameByDesign rows' actual location is
+   load-bearing, not decorative, and is verified by the pixel-sampling check above rather
+   than left to opacity and hope.) */
 /* `absolute`, NOT `fixed` (founder, 2026-09-04: "sol bar gözükmüyor"). A fixed,
    inset-0 element fills the VIEWPORT, so it painted straight over the sidebar —
    which is a `sticky` sibling of the content column with no z-index of its own.
@@ -1236,16 +1282,24 @@
    structurally impossible instead of being avoided by a z-index that happens to
    win, and it needs no knowledge of the sidebar's 214px or its lg: breakpoint.
    Bonus: `<main>` is flex-1 and grows with content, so the ground covers the
-   full scroll height rather than one viewport of it. */
+   full scroll height rather than one viewport of it. PlanGroundGlow's own canvas
+   reuses this exact positioning (plain `absolute inset-0` on itself, filling this
+   div rather than making its own containing-block decision) for the same reason --
+   a `fixed` canvas here would reopen the identical sidebar-covering trap. */
 .plan-page-ground {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(160deg, oklch(0.34 0.05 152) 0%, oklch(0.29 0.045 155) 55%, oklch(0.25 0.04 158) 100%);
+  background: linear-gradient(160deg, oklch(0.35 0.115 148) 0%, oklch(0.30 0.10 152) 55%, oklch(0.255 0.085 156) 100%);
 }
 .dark .plan-page-ground {
-  background: linear-gradient(160deg, oklch(0.16 0.035 152) 0%, oklch(0.12 0.03 155) 55%, oklch(0.095 0.025 158) 100%);
+  /* Unreachable today -- no .dark class ever reaches <html> (app/layout.tsx's own comment),
+     and .plan-page-ground is a SIBLING of the locally-.dark-scoped content column, not a
+     descendant of it, so this rule couldn't apply even if it did. Kept in sync anyway, same
+     dormant-until-a-toggle-exists pattern as the rest of this file's .dark block, and given
+     the identical chroma-not-lightness treatment as the rule above for the same reason. */
+  background: linear-gradient(160deg, oklch(0.18 0.08 148) 0%, oklch(0.14 0.07 152) 55%, oklch(0.11 0.06 156) 100%);
 }
 
 /* CV Generator (features/profile/cv-builder.tsx): isolates .cv-print-area as the only
