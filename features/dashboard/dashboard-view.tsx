@@ -26,7 +26,7 @@ import { signalCoverage, type DimensionSignal } from "@/lib/scoring/signal";
 import { describeProfileChange, type ProfileChange } from "@/lib/scoring/change";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import type { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
-import type { getUpcomingDeadlines, DeadlineSource } from "@/lib/deadlines/upcoming";
+import type { getUpcomingDeadlines, getUpcomingUndatedUniversityDeadlines, DeadlineSource } from "@/lib/deadlines/upcoming";
 import type { HomeStripOpportunity } from "@/lib/opportunities/home-strip";
 import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
 import type { CounselorRecommendation } from "@/lib/counselor";
@@ -72,6 +72,11 @@ export interface DashboardViewProps {
   counselorThisWeek: CounselorRecommendation[];
   avoidRecommendation: { title: string; reason: string } | null;
   upcomingDeadlines: Awaited<ReturnType<typeof getUpcomingDeadlines>>;
+  /** Separate from upcomingDeadlines above, never merged into it — see lib/deadlines/
+   *  upcoming.ts's getUpcomingUndatedUniversityDeadlines for why these can't share a list
+   *  (no date to sort or count down by). Optional/defaulting to an empty array, same
+   *  dev-preview-harness reasoning as the other optional fields here. */
+  undatedUniversityDeadlines?: Awaited<ReturnType<typeof getUpcomingUndatedUniversityDeadlines>>;
   targetUniversities: Awaited<ReturnType<typeof getTargetUniversitiesWithDetails>>;
   opportunityPreview: { title: string; matchScore: number; deadline: string | null; cycleStatus: Opportunity["cycle_status"] | null }[];
   /** The richer, full-card rotating strip (features/dashboard/opportunity-strip.tsx) --
@@ -123,6 +128,7 @@ export async function DashboardView({
   counselorThisWeek,
   avoidRecommendation,
   upcomingDeadlines,
+  undatedUniversityDeadlines = [],
   targetUniversities,
   opportunityPreview,
   opportunityStrip,
@@ -465,30 +471,65 @@ export async function DashboardView({
                 />
               </section>
 
-              {upcomingDeadlines.length > 0 ? (
+              {upcomingDeadlines.length > 0 || undatedUniversityDeadlines.length > 0 ? (
                 <section style={glassCard} className="glass-card-fast p-6" aria-label={t("dueSoon")}>
                   <Eyebrow locale={locale}>{t("dueSoon")}</Eyebrow>
-                  <ul className="mt-5 space-y-0">
-                    {upcomingDeadlines.map((deadline) => {
-                      const SourceIcon = DEADLINE_SOURCE_ICONS[deadline.source];
-                      return (
-                        <li key={deadline.id} className="border-b border-border/60 last:border-0">
-                          <Link
-                            href={deadline.href}
-                            className="group flex items-start justify-between gap-3 py-3 transition-colors hover:text-brand-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-                          >
-                            <span className="flex min-w-0 items-start gap-2.5">
-                              <SourceIcon className="mt-0.5 size-3.5 shrink-0 text-ink-4" aria-hidden="true" />
+                  {upcomingDeadlines.length > 0 ? (
+                    <ul className="mt-5 space-y-0">
+                      {upcomingDeadlines.map((deadline) => {
+                        const SourceIcon = DEADLINE_SOURCE_ICONS[deadline.source];
+                        return (
+                          <li key={deadline.id} className="border-b border-border/60 last:border-0">
+                            <Link
+                              href={deadline.href}
+                              className="group flex items-start justify-between gap-3 py-3 transition-colors hover:text-brand-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                            >
+                              <span className="flex min-w-0 items-start gap-2.5">
+                                <SourceIcon className="mt-0.5 size-3.5 shrink-0 text-ink-4" aria-hidden="true" />
+                                <span className="min-w-0 text-sm leading-snug text-ink-2 group-hover:text-brand-primary">
+                                  {deadline.title}
+                                </span>
+                              </span>
+                              <DeadlineBadge date={deadline.date} locale={locale} />
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : null}
+                  {/* 2026-09-04: a separate group, never merged into the dated list above --
+                      these rows (VERIFIED_RECURRING_UNDATED etc., lib/deadlines/upcoming.ts's
+                      getUpcomingUndatedUniversityDeadlines) make no date claim at all, so
+                      sorting or counting them down alongside dated ones would assert a
+                      precision the research doesn't have. Copy says "not yet announced", never
+                      "no date" -- the gap is Proxola's own research being incomplete, not a
+                      claim about the university. This is also what lets the outer section
+                      render for a student with zero dated items but real undated research on
+                      file (the exact case the 2026-09-04 audit found: a fully onboarded
+                      student, 3 active targets, 19 real deadline rows, an empty section) --
+                      the section's own visibility condition above already covers both. */}
+                  {undatedUniversityDeadlines.length > 0 ? (
+                    <div className={upcomingDeadlines.length > 0 ? "mt-6" : "mt-5"}>
+                      <Eyebrow locale={locale} rule={false} className="mb-3">
+                        {t("dateNotYetAnnounced")}
+                      </Eyebrow>
+                      <ul className="space-y-0">
+                        {undatedUniversityDeadlines.map((deadline) => (
+                          <li key={deadline.id} className="border-b border-border/60 last:border-0">
+                            <Link
+                              href={deadline.href}
+                              className="group flex items-center gap-2.5 py-3 transition-colors hover:text-brand-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                            >
+                              <Landmark className="size-3.5 shrink-0 text-ink-4" aria-hidden="true" />
                               <span className="min-w-0 text-sm leading-snug text-ink-2 group-hover:text-brand-primary">
                                 {deadline.title}
                               </span>
-                            </span>
-                            <DeadlineBadge date={deadline.date} locale={locale} />
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
                 </section>
               ) : null}
             </aside>

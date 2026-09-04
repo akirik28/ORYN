@@ -1120,6 +1120,16 @@ export const FIXTURE_DEADLINES = [
   { id: "d3", title: "Erasmus Rotterdam — program deadline", date: daysFromNow(28), href: "/universities/uni-3", source: "university" as const },
 ];
 
+/** 2026-09-04: the "not yet announced" group (lib/deadlines/upcoming.ts's
+ * getUpcomingUndatedUniversityDeadlines) — real, verified research with no confirmed date,
+ * a separate group from FIXTURE_DEADLINES above. Real-shaped: Carnegie Mellon is the actual
+ * university this fixture is modeled on (2026-09-04 audit — 17 real deadline rows on file,
+ * every dated one last cycle's, the rest exactly this shape). */
+export const FIXTURE_UNDATED_UNIVERSITY_DEADLINES = [
+  { id: "u1", title: "Carnegie Mellon University — application", href: "/universities/uni-1" },
+  { id: "u2", title: "Massachusetts Institute of Technology — scholarship", href: "/universities/uni-2" },
+];
+
 // ---------------------------------------------------------------------------------------
 // Portfolio + universities-browse fixtures — added 2026-09-03 for the student-app mobile
 // pass, the same reasoning as this file's own header: real, specific, plausible data, not

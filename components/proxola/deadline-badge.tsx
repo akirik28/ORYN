@@ -3,10 +3,23 @@ import { Clock } from "lucide-react";
 import { StatusBadge, type StatusTone } from "@/components/proxola/status-badge";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
-function urgencyTone(daysUntil: number): StatusTone {
+/**
+ * AGENTS.md Phase 23 names four urgency bands (3/7/14/30 days); until 2026-09-04 this only
+ * had three dynamic tiers plus one flat catch-all past 14 days, so a deadline 20 days out and
+ * one 120 days out rendered identically. Checked against real production data before adding
+ * this: the closest real deadline anywhere in the database was 6 days out, and every other
+ * real upcoming deadline (sampled 20-124+ days) fell in that single flat bucket — the missing
+ * 30-day tier is the one that would actually have mattered.
+ *
+ * "info" for the new 15-30 day band, not "success" (nothing succeeded) or a repeat of
+ * "brand"/"neutral" (would silently collapse back into an existing tier) — the one previously
+ * unused StatusTone that reads as calm/informational rather than urgent or empty.
+ */
+export function urgencyTone(daysUntil: number): StatusTone {
   if (daysUntil <= 3) return "error";
   if (daysUntil <= 7) return "warning";
   if (daysUntil <= 14) return "brand";
+  if (daysUntil <= 30) return "info";
   return "neutral";
 }
 
