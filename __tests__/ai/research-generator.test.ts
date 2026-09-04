@@ -24,7 +24,7 @@ const { insertMock, monthToDateRowsRef, providerRef, graduationYearRef, skillsRe
   monthToDateRowsRef: { current: [] as Array<{ estimated_cost: number | null }> },
   providerRef: { current: null as MockAIProvider | null },
   graduationYearRef: { current: null as number | null },
-  skillsRef: { current: [] as { name: string; category: string }[] },
+  skillsRef: { current: [] as { name: string; category: string; proficiency: string | null }[] },
 }));
 
 vi.mock("@/lib/supabase/admin", () => {
@@ -172,7 +172,7 @@ describe("generateResearchProjects — weekly time budget uses the real label", 
  */
 describe("generateResearchProjects — existing skills reach the prompt", () => {
   test("skills render with a readable category label, not the raw enum member", async () => {
-    skillsRef.current = [{ name: "Financial modeling", category: "analytical" }];
+    skillsRef.current = [{ name: "Financial modeling", category: "analytical", proficiency: null }];
     const { generateResearchProjects } = await import("@/lib/ai/research-generator");
     providerRef.current!.queueStructured(sampleProjectList());
 
@@ -192,5 +192,46 @@ describe("generateResearchProjects — existing skills reach the prompt", () => 
 
     const sentPrompt = providerRef.current!.structuredCalls[0]?.prompt as string;
     expect(sentPrompt).toContain("Existing skills: none listed");
+  });
+});
+
+/**
+ * 2026-09-04, CEO's follow-up call after the first pass shipped without `proficiency`: 7 of
+ * 9 live skill rows carry a real, student-entered level. Not just carried in the data —
+ * referenced in the closing instruction too, so it actually changes what the model does
+ * with it (matches Phase 13's own "scale difficulty to the student's ... experience").
+ */
+describe("generateResearchProjects — skill proficiency calibrates difficulty, not just decoration", () => {
+  test("a stated proficiency reaches the prompt appended to its skill", async () => {
+    skillsRef.current = [{ name: "Python", category: "technical", proficiency: "Advanced" }];
+    const { generateResearchProjects } = await import("@/lib/ai/research-generator");
+    providerRef.current!.queueStructured(sampleProjectList());
+
+    await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics", tier: "standard" });
+
+    const sentPrompt = providerRef.current!.structuredCalls[0]?.prompt as string;
+    expect(sentPrompt).toContain("Python [Technical] — Advanced");
+  });
+
+  test("a skill with no proficiency on file shows the name and category alone, no stray dash", async () => {
+    skillsRef.current = [{ name: "Java", category: "technical", proficiency: null }];
+    const { generateResearchProjects } = await import("@/lib/ai/research-generator");
+    providerRef.current!.queueStructured(sampleProjectList());
+
+    await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics", tier: "standard" });
+
+    const sentPrompt = providerRef.current!.structuredCalls[0]?.prompt as string;
+    expect(sentPrompt).toContain("Java [Technical]");
+    expect(sentPrompt).not.toContain("Java [Technical] —");
+  });
+
+  test("the closing instruction tells the model to use stated proficiency to calibrate, not just note it", async () => {
+    const { generateResearchProjects } = await import("@/lib/ai/research-generator");
+    providerRef.current!.queueStructured(sampleProjectList());
+
+    await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics", tier: "standard" });
+
+    const sentPrompt = providerRef.current!.structuredCalls[0]?.prompt as string;
+    expect(sentPrompt).toMatch(/stated level.*calibrate/i);
   });
 });

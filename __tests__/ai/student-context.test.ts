@@ -698,7 +698,7 @@ describe("formatContextForPrompt — goals category and interests", () => {
  */
 describe("formatContextForPrompt — skills", () => {
   test("renders name and readable category label, not the raw enum member", () => {
-    const text = formatContextForPrompt({ ...baseContext(), skills: [{ name: "Financial modeling", category: "analytical" }] });
+    const text = formatContextForPrompt({ ...baseContext(), skills: [{ name: "Financial modeling", category: "analytical", proficiency: null }] });
     expect(text).toContain("Skills: Financial modeling [Analytical]");
     expect(text).not.toContain("[analytical]");
   });
@@ -707,8 +707,8 @@ describe("formatContextForPrompt — skills", () => {
     const text = formatContextForPrompt({
       ...baseContext(),
       skills: [
-        { name: "Financial modeling", category: "analytical" },
-        { name: "Public speaking", category: "communication" },
+        { name: "Financial modeling", category: "analytical", proficiency: null },
+        { name: "Public speaking", category: "communication", proficiency: null },
       ],
     });
     expect(text).toContain("Skills: Financial modeling [Analytical], Public speaking [Communication]");
@@ -717,6 +717,23 @@ describe("formatContextForPrompt — skills", () => {
   test("no skills set renders the same 'none set' wording interests already uses, not a blank line", () => {
     const text = formatContextForPrompt(baseContext());
     expect(text).toContain("Skills: none set");
+  });
+
+  /**
+   * 2026-09-04, CEO's follow-up call: shipped without `proficiency` first, then live data
+   * checked — 7 of 9 real skill rows carry a student-entered level. A plain `text` column,
+   * not a closed DB enum (unlike `category`), so no label accessor applies — same reasoning
+   * as testScores' subscore keys and career_goals.category above.
+   */
+  test("a skill with a stated proficiency appends it after the category tag", () => {
+    const text = formatContextForPrompt({ ...baseContext(), skills: [{ name: "Python", category: "technical", proficiency: "Advanced" }] });
+    expect(text).toContain("Python [Technical] — Advanced");
+  });
+
+  test("a skill with no proficiency on file shows the name and category alone, no stray dash", () => {
+    const text = formatContextForPrompt({ ...baseContext(), skills: [{ name: "Java", category: "technical", proficiency: null }] });
+    expect(text).toContain("Java [Technical]");
+    expect(text).not.toContain("Java [Technical] —");
   });
 });
 
