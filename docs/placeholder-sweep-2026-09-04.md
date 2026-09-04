@@ -10,6 +10,14 @@ both explained below, neither of which is a stray leftover string — one is a f
 decision, the other is a documented design tradeoff the founder's own reaction has now
 called into question. Everything else checked came back clean.
 
+**Independent corroboration, found on rebase:** commit `721f84e4` (landed on main while this
+sweep was in progress, unrelated primary purpose — the quiet admin sign-in link in the same
+footer) answers the identical `[Registered name]` question on its own, reaching the same
+conclusion: unresolved on purpose, waiting on the founder, not an engineering defect. That
+commit doesn't touch the actual bracket-rendering code, so the design-tension question below
+is still open and unaddressed by it — noting the overlap for the record, not because either
+pass needs redoing.
+
 ## What the founder saw, precisely
 
 `features/legal/site-footer.tsx`'s company line renders `[Registered name]` because
