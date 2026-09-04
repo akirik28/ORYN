@@ -1,12 +1,19 @@
 # Does a parent account actually work, end to end — the verification plan
 
-**Rewritten 2026-09-04, later the same night, against the real shipped schema.** The original
-version of this doc (still below in spirit) was written before P1 existed, against the spec's
-documented shape. All seven lanes have since merged — `supabase/migrations/0116_parent_accounts.sql`
-is the real, final contract, read in full for this rewrite, not re-derived from the spec. Two
-things the spec couldn't have predicted and the original plan didn't know to check: a guard
-trigger that freezes `confirmed_at` unless the caller is the student, and three RPCs
-(`get_parent_child_profile`/`_target_universities`/`_applications`) taking an explicit
+**Rewritten 2026-09-04, later the same night, against the real shipped schema — twice now.**
+The original version of this doc (still below in spirit) was written before P1 existed,
+against the spec's documented shape. All seven lanes have since merged — `supabase/migrations/
+0116_parent_accounts.sql` is the real, final contract for the feature's core, read in full for
+the first rewrite, not re-derived from the spec. Two migrations have since followed it: **0117**
+(`profiles.parent_email_prompt_*`, four columns) is a student-side prompt-dismissal clock with
+no RLS and no parent path — out of scope, and structurally so: `get_parent_child_profile`'s
+explicit nine-column `SELECT` list can't widen to include a new `profiles` column by accident,
+which is the whitelist design paying for itself. **0118** (`parent_links.last_commentary_sent_at`)
+*is* in scope — a new column on the one table the guard trigger protects, added after that
+trigger was written, which is exactly how C3 below found the trigger didn't know about it yet.
+Two things the spec couldn't have predicted and the original plan didn't know to check: the
+guard trigger itself (which freezes `confirmed_at` unless the caller is the student), and three
+RPCs (`get_parent_child_profile`/`_target_universities`/`_applications`) taking an explicit
 `p_student uuid` rather than three raw tables with a parent-read policy. **Still nothing run —
 0116 is staged, not applied. The founder runs it by hand; nobody else does or asks him to.**
 
@@ -34,7 +41,7 @@ role).
 `is_active_parent_of(p_student uuid)` is the single choke point every one of those three
 functions and all three direct-table policies call — one place to test, per K2.
 
-## The two checks this pass adds, because the original plan predates them
+## The three checks this pass adds, because the original plan predates them
 
 **The `confirmed_at` provenance guard.** `parent_links_guard_immutable_columns()` (the
 before-update trigger) freezes `confirmed_at` to its old value on any `UPDATE` whose caller
@@ -55,6 +62,20 @@ signal; content-table emptiness is not. **C2 below proves this on real rows**: t
 already has 0 real `applications` — a genuine, live "active parent, empty content table" case
 requiring no synthetic data — checked against a revoked link's all-zero result on the same
 function.
+
+**The same hole, reopened by the next migration, on a different column.** `parent_links_guard_immutable_columns`
+freezes six named columns — `parent_user_id`, `student_user_id`, `invited_email`, `invited_at`,
+`created_at`, and (conditionally) `confirmed_at`. Migration 0118 adds a seventh,
+`last_commentary_sent_at` (P5's weekly-commentary window), *after* the trigger was written —
+the trigger has no way to know about a column that didn't exist yet, so it doesn't freeze it,
+and the identical smuggling shape C1 was written to catch is open again on the new column
+unless the trigger is updated alongside it. **C3a below tests exactly that, in the same UPDATE
+as C1** (one revoke attempt, two smuggled columns, both must freeze) **— and C3b tests the
+other direction a freeze-everything fix could get wrong**: the not-yet-armed commentary batch
+runner will need to write this same column legitimately, through the admin client (no
+`request.jwt.claims`, `auth.uid()` reads `NULL`). A trigger guard broad enough to block the
+parent must not also be broad enough to block that job — C3b confirms the legitimate write
+still lands.
 
 ## The script — every check, ready to paste, nothing run yet
 
@@ -114,24 +135,59 @@ select 'B3: feedback_reports' as check, count(*) from public.feedback_reports wh
 select 'B3: weekly_actions (deferred to P5, not built yet -- must still be 0)' as check, count(*) from public.weekly_actions wa join public.weekly_plans wp on wp.id = wa.plan_id where wp.user_id = '026e9295-1a83-4192-b57a-326aa2807b45';
 select 'B3: weekly_plans' as check, count(*) from public.weekly_plans where user_id = '026e9295-1a83-4192-b57a-326aa2807b45';
 
--- ---------- C1 (new): confirmed_at survives the parent's own revoke ----------
-select 'C1 before: confirmed_at' as check, confirmed_at from public.parent_links where parent_user_id = '7722ebe9-55af-49e6-9722-8547b8ce33a7' and student_user_id = '026e9295-1a83-4192-b57a-326aa2807b45';
+-- ---------- C1 + C3a: confirmed_at AND last_commentary_sent_at survive the parent's own revoke ----------
+-- Combined into one UPDATE on purpose: a single malicious/buggy client write smuggling
+-- edits to BOTH columns at once is the realistic shape of this attempt, not two separate
+-- ones. last_commentary_sent_at (migration 0118) postdates the guard trigger's original
+-- write -- confirm 44's fix (folding it into the same freeze) actually landed, not just
+-- that confirmed_at alone still holds.
+select 'C1/C3a before: confirmed_at, last_commentary_sent_at' as check, confirmed_at, last_commentary_sent_at from public.parent_links where parent_user_id = '7722ebe9-55af-49e6-9722-8547b8ce33a7' and student_user_id = '026e9295-1a83-4192-b57a-326aa2807b45';
 
 update public.parent_links
-set status = 'revoked', confirmed_at = now()  -- the smuggled edit the trigger must undo
+set status = 'revoked', confirmed_at = now(), last_commentary_sent_at = now()  -- both smuggled edits the trigger must undo
 where parent_user_id = '7722ebe9-55af-49e6-9722-8547b8ce33a7' and student_user_id = '026e9295-1a83-4192-b57a-326aa2807b45';
 
-select 'C1 after: status + confirmed_at (expect revoked, UNCHANGED timestamp)' as check, status, confirmed_at
+select 'C1/C3a after: status + both timestamps (expect revoked, BOTH unchanged)' as check, status, confirmed_at, last_commentary_sent_at
 from public.parent_links where parent_user_id = '7722ebe9-55af-49e6-9722-8547b8ce33a7' and student_user_id = '026e9295-1a83-4192-b57a-326aa2807b45';
 
+-- ---------- C3b: the same guard must NOT block the legitimate batch-job write ----------
+-- A trigger that freezes everyone looks safe and isn't -- the future commentary batch
+-- runner (lib/digest/parent-commentary.ts, not yet armed) writes this column through the
+-- admin client, which carries no request.jwt.claims at all, so auth.uid() reads NULL --
+-- reset role/claims below to leave impersonation entirely, the same connection shape a
+-- real service-role write has, not a third identity invented for this check.
+reset role;
+reset request.jwt.claims;
+
+with attempt as (
+  update public.parent_links set last_commentary_sent_at = now()
+  where parent_user_id = '7722ebe9-55af-49e6-9722-8547b8ce33a7' and student_user_id = '026e9295-1a83-4192-b57a-326aa2807b45'
+  returning last_commentary_sent_at
+)
+select 'C3b: admin-equivalent write to last_commentary_sent_at (expect 1 row, a fresh timestamp -- NOT frozen)' as check, count(*), max(last_commentary_sent_at) from attempt;
+
 -- ---------- B4/B5 + C2 (new): revoked link leaks nothing, incl. the two-state seam ----------
--- The link is now revoked (C1 just did it) -- reuse it rather than a fourth insert.
+-- The link is now revoked (C1/C3a did it) -- reuse it rather than a fourth insert. Re-enter
+-- parent impersonation first -- C3b's own check needed to leave it entirely (reset role
+-- above), and it does not carry forward on its own.
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"7722ebe9-55af-49e6-9722-8547b8ce33a7","role":"authenticated"}';
+
 select 'B4/B5 rpc: get_parent_child_profile on revoked (expect 0 rows)' as check, count(*) from public.get_parent_child_profile('026e9295-1a83-4192-b57a-326aa2807b45');
 select 'B4/B5 direct: opportunity_matches on revoked (expect 0)' as check, count(*) from public.opportunity_matches where user_id = '026e9295-1a83-4192-b57a-326aa2807b45';
 select 'C2: revoked profile-row count vs. earlier active-empty-applications count -- compare by eye against the B2 rpc rows above (1 row + 0 applications = active-empty; 0 rows here = revoked). Different shapes, not the same screen.' as check;
 
--- ---------- B7-B9: write denial, still-active-link parent (reset first) ----------
+-- ---------- B7-B9: write denial, an active-link parent ----------
+-- The parent's OWN update policy only ever allows moving status TOWARD 'revoked' (§2's
+-- self-activation block, K3's whole point) -- setting it back to 'active' must run under
+-- the unimpersonated connection, not the parent, or this UPDATE is itself RLS-denied and
+-- every check below it would "pass" for the wrong reason (still-revoked, not correctly-
+-- denied-while-active). Re-impersonate immediately after, for the actual checks.
+reset role;
+reset request.jwt.claims;
 update public.parent_links set status = 'active' where parent_user_id = '7722ebe9-55af-49e6-9722-8547b8ce33a7' and student_user_id = '026e9295-1a83-4192-b57a-326aa2807b45';
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"7722ebe9-55af-49e6-9722-8547b8ce33a7","role":"authenticated"}';
 
 with attempt as (
   update public.target_universities set status = 'applying' where user_id = '026e9295-1a83-4192-b57a-326aa2807b45' returning id
@@ -178,6 +234,13 @@ rollback;  -- always. nothing above this line survives.
 B11 block is expected to error with `23505`; if the script instead reaches the "B11 FAILED"
 line, that's the actual finding, not a script bug. Everything else should produce a clean row
 per check, expected values noted in each label.
+
+**This script assumes both 0116 and 0118 are applied.** They may not land in the same sitting —
+if only 0116 has landed, the C3a/C3b block (the two `last_commentary_sent_at` references)
+will error on an undefined column and abort the transaction before B4/B5-B12 ever run. If
+0118 isn't in yet, comment out or delete the C3a/C3b block first (and drop
+`last_commentary_sent_at` from C1/C3a's combined `UPDATE`, restoring it to a plain
+`confirmed_at`-only smuggle attempt) — the rest of the script is unaffected either way.
 
 ## What this pass needs beyond a green light: nothing
 
