@@ -36,10 +36,9 @@ found," below, for why). All 26 in total.
 | B12 | non-`student` `account_role` count | 0 | 0 | ✅ |
 
 **The two checks this pass specifically added (C1/C3a, C3b) are the ones that matter most.**
-The guard trigger — now named `parent_links_00_guard_immutable_columns`, not the name in the
-original migration read (see below) — correctly freezes `confirmed_at` **and**
-`last_commentary_sent_at` against the parent's own legitimate revoke, in the same UPDATE
-statement, and does *not* freeze the same column when the caller carries no
+The guard trigger, `parent_links_00_guard_immutable_columns`, correctly freezes `confirmed_at`
+**and** `last_commentary_sent_at` against the parent's own legitimate revoke, in the same
+UPDATE statement, and does *not* freeze the same column when the caller carries no
 `request.jwt.claims` at all (the admin client's actual shape). Both directions confirmed live,
 not read from source.
 
@@ -60,20 +59,28 @@ row with `status = 'exploring'` count came back as 2, not 0 — that's not a lea
 Daniel's three pre-existing rows already carrying that status; the total staying at exactly 3
 (not 4) is the actual proof no row was added by B7's attempted insert.
 
-## Two things this run found
+## One correction to this doc, made after CEO checked it against the migration directly
 
-**1. The trigger's real name isn't the one in the migration file.** `to_regclass` and a plain
-`exists(... column_name = ...)` check both came back negative for
-`parent_links_guard_immutable_columns` before this ran — reading like the guard was missing
-entirely, which would have been a serious finding given the two most recent commits on `main`
-at the time ("Make 0116 re-runnable," "Remove dead temp table from package 09 — it broke the
-founder's run") pointed at exactly this migration having application trouble. A full
-`pg_trigger`/`pg_policies`/`pg_proc` dump against `parent_links` showed the real name:
-`parent_links_00_guard_immutable_columns` — a `00_` prefix, presumably added while making 0116
-idempotent/re-runnable. Everything else (all 4 functions, all 4 policies) matched the original
-names exactly. Worth knowing for whoever next greps this schema by name instead of dumping it.
+**The "trigger's real name isn't the one in the migration file" finding below was wrong —
+retracted.** A narrow `exists(... column_name = ...)` check for
+`parent_links_guard_immutable_columns` came back negative before this ran, and I read that as
+the guard trigger missing under a different live name. It wasn't a different name: line 139 of
+`0116_parent_accounts.sql` is `create or replace function
+public.parent_links_guard_immutable_columns()` — the **function**. Line 168's `drop trigger if
+exists` and line 169's `create trigger` both say `parent_links_00_guard_immutable_columns` —
+the **trigger**, consistently, throughout the file. I compared the live trigger's name against
+the function's name, not against the trigger's own name in the file, and reported a mismatch
+that was never there. CEO caught this by reading the migration directly rather than taking the
+claim on faith. The `00_` prefix orders the trigger's own firing sequence and was in the file
+from the start, not added later. Reporting the original instinct (a name check returning
+negative, right after two commits about this exact migration having application trouble) was
+still the right call — a genuine `drop`/`create` name mismatch would break 0116 on a second
+run, which happened once tonight for an unrelated reason — but the specific finding was mine to
+get right and I didn't; corrected here rather than left standing.
 
-**2. The plan script's own B7 check has a real design gap.** B7's comment already anticipated
+## The other thing this run found — real, and now fixed
+
+**The plan script's own B7 check has a real design gap.** B7's comment already anticipated
 an error ("expect 0 rows — error or empty, either is a pass") but nothing protected it with a
 `savepoint`, unlike B11 further down. Run exactly as written, B7's `42501` aborts the whole
 transaction — every check after it (B10, B11, B12) never executes, and the script produces no
@@ -118,6 +125,10 @@ Did not touch a browser or a real session. Did not test 0117 (`parent_email_prom
 still out of scope, structurally, per the original plan's own reasoning. Did not test P5's
 weekly-commentary batch job itself (`lib/digest/parent-commentary.ts`) — not armed on any cron
 yet, C3b only proves the column *can* be written by that job's connection shape, not that the
-job runs correctly. Did not edit `docs/PROXOLA-PLAN.md` or `docs/parent-account-e2e-plan-2026-09-04.md`
-— reporting the B7 gap here rather than fixing the plan doc directly, since it's shared and not
-mine to edit unprompted.
+job runs correctly. Did not edit `docs/PROXOLA-PLAN.md`.
+
+**Update:** the B7/B11 gap above was fixed on CEO's explicit assignment, in a separate branch
+(`docs/e2e-plan-b7-fix-2026-09-04`) rather than folded into this run record — both wrapped in a
+`DO` block with its own `EXCEPTION` handler instead of a bare savepoint, proved red (the
+original block, run alone, returns only the `42501` error and nothing else) then green (the
+full corrected script runs end to end and reaches B12 cleanly) before that fix was pushed.
