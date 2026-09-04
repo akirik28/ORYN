@@ -3,6 +3,17 @@
 -- delete) the bundled row, (3) migrate any matches/saves tied to the old identity. Prepared,
 -- NOT applied -- same discipline as every other data-changing file in this pass.
 --
+-- ADDED 2026-09-04 while assembling Package 15 (data/morning/15-*.sql): each INSERT below
+-- originally had no re-run guard -- `gen_random_uuid()` for id means a second run would have
+-- created 5 duplicate rows silently, no error, exactly the failure class Package 14's own
+-- two-run test found three times over. Fixed at the source, not just in the package copy, per
+-- the same standard applied to 0126/D5/D8 earlier tonight. Each INSERT now ends with `on
+-- conflict (normalized_title, coalesce(organization, '')) do nothing` -- reusing the EXISTING
+-- opportunities_dedup_idx (migration 0008), the same established pattern already proven in
+-- supabase/seed_drive_batch1.sql, not a new mechanism. A second run is now a clean no-op for
+-- these 5 rows, verified by Package 15's own two-run test (scripts/check-package-15-
+-- sequence.sh).
+--
 -- Re-measured immediately before writing this file (2026-09-04, same session that wrote the
 -- plan), because the plan's own numbers are hours old and this arc's own standing rule is to
 -- never trust a stale measurement: saved_opportunities is still 0 rows for the bundled id
@@ -118,7 +129,8 @@ insert into public.opportunities (
   '{}',
   now(),
   now()
-);
+)
+on conflict (normalized_title, coalesce(organization, '')) do nothing;
 
 -- 2. Fryer, Galois and Hypatia Contests
 insert into public.opportunities (
@@ -171,7 +183,8 @@ insert into public.opportunities (
   '{}',
   now(),
   now()
-);
+)
+on conflict (normalized_title, coalesce(organization, '')) do nothing;
 
 -- 3. Euclid Contest -- the one contest in this split genuinely narrower than 9-12.
 insert into public.opportunities (
@@ -224,7 +237,8 @@ insert into public.opportunities (
   '{}',
   now(),
   now()
-);
+)
+on conflict (normalized_title, coalesce(organization, '')) do nothing;
 
 -- 4. Canadian Senior and Intermediate Mathematics Contests (CIMC + CSMC) -- kept as one row,
 -- same treatment as PCF/FGH above: CIMC (grades 9-10) and CSMC (grades 11-12) share one
@@ -279,7 +293,8 @@ insert into public.opportunities (
   '{}',
   now(),
   now()
-);
+)
+on conflict (normalized_title, coalesce(organization, '')) do nothing;
 
 -- 5. Canadian Team Mathematics Contest (CTMC)
 insert into public.opportunities (
@@ -332,7 +347,8 @@ insert into public.opportunities (
   '{}',
   now(),
   now()
-);
+)
+on conflict (normalized_title, coalesce(organization, '')) do nothing;
 
 -- 6. Retire the bundled row -- run only after the five INSERTs above have been applied and
 -- confirmed present (CEO's own sequencing requirement). status = 'disabled', not deleted --
