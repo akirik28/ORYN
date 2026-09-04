@@ -84,20 +84,27 @@ için boş kalır ve hiçbir hata görünmez.**
 Kurucu limit dolduğu için filoyu durdurdu. **Dokuz şerit de düzenli durdu:** her
 biri işini push etti, devir notu yazdı, `.next`'ini sildi. **Kayıp yok.**
 
-**⚠️ AÇIK KALAN TEK KRİTİK İŞ: paket sıra testi hiç çalıştırılamadı.**
-14 → 15 → 16'yı ardışık, iki koşu hâlinde çalıştırma denendi ve **ilk baseline
-migration'ında patladı**; sebebi araştırılamadan disk doldu. **Statik olarak
-doğrulanan:** 0132'nin indeksi ile paket 16'nın birleştirmesi **aynı tabloya
-dokunmuyor** (paket 16 yalnızca `public.opportunities`'e yazıyor). **Ölçülemeyen:**
-Edinburgh'ün **paket 15 → 16** sırasının zararsız olduğu — Edinburgh her iki
-pakette de geçiyor. **Yeniden açıldığında ilk iş budur.**
+**✅ SIRA TESTİ YAPILDI — üç paket de teslim edilebilir.**
+`scripts/check-morning-packages-14-15-16-sequence.sh`: **14 → 15 → 16, tek
+veritabanında, gerçek sırayla, iki koşu.** Temiz.
 
-**Ve bugün üçüncü kez bir paket yorumu yanlış bir şey iddia etti:**
+İki kesişim de ölçüldü:
+- **0132'nin indeksi ile paket 16 aynı tabloya dokunmuyor** — paket 16 yalnızca
+  `opportunities`'e yazıyor.
+- **Edinburgh her iki pakette de geçiyor, ama sıra önemsiz:** iki koşu sonunda
+  hayatta kalan satır hem doğru `country_eligibility_basis`'i hem paket 16'nın
+  taşıdığı yaş/tarih verisini taşıyor; emekli satır `disabled` ve hiçbir öneri
+  yüzeyinde okunmuyor.
+
+**Ve bu test hazırlanırken DÖRDÜNCÜ bayatlama bulundu:**
 `edinburgh-duplicate-row-parity-fix` **hiçbir pakette yoktu**, ama paket 16'nın
-yorumu "zaten uygulandı" varsayıyordu. Paket 15'e eklendi. (Diğer ikisi: paket
-15'in Interlochen yorumu, ve `matching.ts`'in görünmeyen ikizi "canlı doğrulanmış
-örnek" göstermesi.) **Yorumlar doğrulandıkları anın fotoğrafı; kod değişince onlar
-değişmiyor.**
+yorumu "zaten uygulandı" varsayıyordu — yani üç paket de çalıştırılsa o satır
+**hiç dolmayacaktı.** Paket 15'e eklendi (0133'e bağımlı), sağlama listesine 9.
+dosya olarak katıldı.
+
+**Bugün dört kez bir yorum, artık doğru olmayan bir şey iddia etti.** Yorumlar
+doğrulandıkları anın fotoğrafı; kod değişince onlar değişmiyor. Dört paketin
+dördünde de artık SHA sağlaması var — bu sınıf kapandı.
 
 **Yeniden açıldığında sıra:**
 1. **Kurucunun yedi maddesi aşağıda** — ilk üçü tek oturumda biter ve en çok onlar açar.
