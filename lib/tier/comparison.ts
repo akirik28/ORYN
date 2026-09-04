@@ -91,9 +91,57 @@
  * showing the dollar ceiling would read as a second feature when it's the same one fact
  * shown twice.
  */
-interface DiffersRow {
+/**
+ * **2026-09-04, two more rows added — founder, after `docs/comparison-premium-gate-audit-
+ * 2026-09-04.md` (CEO dispatch) confirmed the gating was already fully built and enforced:
+ * "bunu premium özelliklere eklesene" (add this to the premium features [list]).**
+ * `lib/comparison/limits.ts`'s width cap and monthly frequency cap were real and live —
+ * this page just never said so. A student reading this table learned about four Ultra
+ * advantages and never learned about two more they already had.
+ *
+ * `comparisonWidth` and `comparisonQuota` are two axes, not one, same shape as
+ * `aiAllowance`/`replyCeiling` above — `lib/comparison/limits.ts`'s own header calls them
+ * out explicitly as "two independent limits, a width cap and a frequency cap":
+ * `comparisonWidth` is how many items go into one comparison at once
+ * (`resolveComparisonWidthCeiling`, 2 vs 4); `comparisonQuota` is how many comparisons a
+ * student can open in a month (`MONTHLY_COMPARISON_LIMIT`, 5 vs unlimited). A student could
+ * be well under one limit and blocked by the other.
+ *
+ * **"Unlimited" for Ultra's monthly count — verified directly against the enforcement
+ * code before writing it, not repeated from the dispatch that reported it, since it's the
+ * strongest claim these two rows make.** `isComparisonQuotaExhausted` (`lib/comparison/
+ * limits.ts`) returns `false` for `planTier === "ultra"` before it looks at usage at all,
+ * and both compare pages (`app/(app)/universities/compare/page.tsx`,
+ * `.../opportunities/compare/page.tsx`) only fetch usage inside `if (planTier !== "ultra")`
+ * in the first place — an Ultra account never reads its own usage count for gating, not
+ * "a ceiling high enough not to bite."
+ *
+ * **One shared pool across universities and opportunities, not five each** —
+ * `lib/comparison/limits.ts`'s header quotes the founder directly on this ("2 tane
+ * opportunity veya üniyi ayda 5 kere karşılaştırabil" reads as one number, not two pools),
+ * and `getMonthlyComparisonUsage` counts `product_events` rows by user and event name only,
+ * never filtered by item type. `comparisonQuota`'s catalog string says so explicitly rather
+ * than leaving it to be discovered the first time someone hits the limit after two
+ * university comparisons and assumes the feature is broken.
+ *
+ * **`comparisonQuota` is in the marquee (`ultra-feature-marquee.tsx`) above; `comparisonWidth`
+ * deliberately is not — a judgment call, reported rather than defaulted.** The marquee runs
+ * a fixed 32s loop (`plan-marquee-scroll`, app/globals.css) regardless of card count, so
+ * more cards means faster apparent scroll speed, not a longer loop: going from today's 4
+ * cards to 6 would speed the pass by roughly 50%. "Unlimited" is a single strong,
+ * instantly-readable claim — the same shape as the marquee's two existing numeric stat
+ * cards, which already get the large-stat visual treatment. "Compare up to 4 instead of 2"
+ * is real and fully stated below, but it takes a beat to read two numbers and compare them,
+ * which the static table (read at the reader's own pace) suits better than a 32s scroll.
+ * Flagging this judgment call explicitly rather than silently including or excluding either
+ * row, in case the founder or CEO would rather include both or neither.
+ */
+// Exported so plan-tier-view.tsx's CARD_ICONS (which needs an icon for every table row,
+// unlike ultra-feature-marquee.tsx's UltraFeatureCardData["id"], which deliberately covers
+// only the narrower marquee-eligible subset) can key off this type directly.
+export interface DiffersRow {
   kind: "differs";
-  id: "visualTheme" | "replyDepth" | "aiAllowance" | "replyCeiling";
+  id: "visualTheme" | "replyDepth" | "aiAllowance" | "replyCeiling" | "comparisonWidth" | "comparisonQuota";
 }
 
 interface SameByDesignRow {
@@ -108,6 +156,8 @@ export const TIER_COMPARISON_ROWS: readonly TierComparisonRow[] = [
   { kind: "differs", id: "replyCeiling" },
   { kind: "differs", id: "replyDepth" },
   { kind: "differs", id: "visualTheme" },
+  { kind: "differs", id: "comparisonWidth" },
+  { kind: "differs", id: "comparisonQuota" },
   { kind: "sameByDesign", id: "weeklyPlanFocus" },
   { kind: "sameByDesign", id: "researchIdeaFocus" },
 ];

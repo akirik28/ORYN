@@ -7,6 +7,7 @@ import { MONTHLY_AI_TOKEN_LIMIT } from "@/lib/ai/token-limits";
 import { ADVISOR_MAX_TOKENS_STANDARD, ADVISOR_MAX_TOKENS_ULTRA } from "@/lib/ai/advisor-chat";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getFinanceSettings } from "@/lib/admin/queries";
+import { resolveComparisonWidthCeiling, MONTHLY_COMPARISON_LIMIT } from "@/lib/comparison/limits";
 
 // Routed under /settings, deliberately not /plan — app/(app)/plan already exists and is
 // the *weekly* plan (Phase 9). Two different meanings of "plan" one click apart in the
@@ -43,6 +44,14 @@ export default async function PlanTierPage() {
   // stated price actually moves when the founder edits it in the control center. Degrades
   // to ULTRA_PRICE_TRY (lib/admin/finance.ts) via getFinanceSettings' own
   // DEFAULT_FINANCE_SETTINGS if the row or column is ever missing -- never blank or zero.
+  //
+  // standardCompareMax/ultraCompareMax/monthlyComparisonLimit, 2026-09-04: same
+  // server-computed-prop pattern, sourced from lib/comparison/limits.ts -- the exact module
+  // both compare pages (app/(app)/universities/compare/page.tsx,
+  // .../opportunities/compare/page.tsx) already enforce these limits from, so this page's
+  // stated numbers can't drift from what actually gates a comparison. See
+  // plan-tier-view.tsx's own header for why these are threaded as props even though that
+  // module is technically client-safe to import directly.
   return (
     <PlanTierView
       tier={tier}
@@ -51,6 +60,9 @@ export default async function PlanTierPage() {
       ultraMaxTokens={ADVISOR_MAX_TOKENS_ULTRA}
       standardMaxTokens={ADVISOR_MAX_TOKENS_STANDARD}
       ultraPriceTry={financeSettings.ultraPriceTry}
+      standardCompareMax={resolveComparisonWidthCeiling("standard")}
+      ultraCompareMax={resolveComparisonWidthCeiling("ultra")}
+      monthlyComparisonLimit={MONTHLY_COMPARISON_LIMIT}
     />
   );
 }

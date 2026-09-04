@@ -169,6 +169,10 @@
         "visualTheme": {
           "label": "Kendine ait bir tema",
           "description": "Animasyonlu bir alev; kenar çubuğunda, kullanım göstergesinde ve yanıt kaydırıcısında."
+        },
+        "comparisonQuota": {
+          "label": "Sınırsız karşılaştırma",
+          "description": "İstediğin kadar üniversite veya fırsatı, istediğin zaman karşılaştır."
         }
       },
       "comparisonTitle": "Planları karşılaştır",
@@ -192,6 +196,16 @@
           "label": "Yanıt derinliği",
           "standard": "Hızlı veya Standart yanıtlar",
           "ultra": "Gerektiğinde daha uzun, daha detaylı yanıtlar da var"
+        },
+        "comparisonWidth": {
+          "label": "Karşılaştırma genişliği",
+          "standard": "Aynı anda en fazla {max} üniversite veya fırsat",
+          "ultra": "Aynı anda en fazla {max} üniversite veya fırsat — iki katı"
+        },
+        "comparisonQuota": {
+          "label": "Aylık karşılaştırma",
+          "standard": "Ayda toplam {limit} karşılaştırma — üniversite veya fırsat fark etmez",
+          "ultra": "Sınırsız — istediğin kadar ve istediğin sayıda karşılaştır"
         },
         "weeklyPlanFocus": {
           "label": "Haftalık plan odağı",
