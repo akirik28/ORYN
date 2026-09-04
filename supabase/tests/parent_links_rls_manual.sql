@@ -62,9 +62,12 @@ values ('e5000000-0000-0000-0000-000000000005', 'Test Fixture Competition', 'com
 insert into public.opportunity_matches (user_id, opportunity_id, relevance_score, profile_need_score, match_score)
 values ('a1000000-0000-0000-0000-000000000001', 'e5000000-0000-0000-0000-000000000005', 80, 70, 75);
 
--- Bob <-> Alice: ACTIVE (as if the full K3 flow already ran).
-insert into public.parent_links (parent_user_id, student_user_id, status, invited_email, invited_at, confirmed_at)
-values ('b2000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000001', 'active', 'bob-p1@test.local', now(), now());
+-- Bob <-> Alice: ACTIVE (as if the full K3 flow already ran). last_commentary_sent_at seeded
+-- to a real, distinctive value (migration 0118) so block 3's guard-trigger test below has a
+-- real baseline to prove stays unchanged, the same reason confirmed_at is seeded to a real
+-- "now()" rather than left null.
+insert into public.parent_links (parent_user_id, student_user_id, status, invited_email, invited_at, confirmed_at, last_commentary_sent_at)
+values ('b2000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000001', 'active', 'bob-p1@test.local', now(), now(), '2026-08-01T00:00:00Z');
 
 -- Dave <-> Alice: PENDING — invited, never confirmed. Must leak nothing (K3).
 insert into public.parent_links (parent_user_id, student_user_id, status, invited_email, invited_at)
@@ -132,24 +135,31 @@ from public.advisor_conversations where user_id = 'a1000000-0000-0000-0000-00000
 -- attempted self-activation is not reachable from THIS link (already active) -- see block 5
 -- for Dave's pending link, which is where that specific attack actually applies.
 
--- Guard trigger, confirmed_at specifically: Bob attempts his own legitimate revoke WHILE also
--- smuggling a confirmed_at rewrite into the same statement. This is a split expectation, not a
--- pure denial -- the revoke half must SUCCEED (it's Bob's own allowed transition, and no other
--- block exercises an ACTIVE parent's own revoke actually working -- block 5 only covers Dave's
--- still-pending one), while the confirmed_at half must be silently discarded: the guard trigger
--- only lets confirmed_at move when auth.uid() = student_user_id, and Bob is the parent, not
--- the student.
+-- Guard trigger, confirmed_at AND last_commentary_sent_at (migration 0118 added the second
+-- column and its own guard clause after this test originally shipped with just the first --
+-- extended in place rather than duplicated, so one statement proves both columns are frozen
+-- together, the same way a real attacker would try to smuggle more than one change at once).
+-- Bob attempts his own legitimate revoke WHILE ALSO smuggling rewrites to both columns in the
+-- same statement. Split expectation, not a pure denial -- the revoke half must SUCCEED (it's
+-- Bob's own allowed transition, and no other block exercises an ACTIVE parent's own revoke
+-- actually working -- block 5 only covers Dave's still-pending one), while BOTH smuggled
+-- columns must be silently discarded: confirmed_at only moves when auth.uid() =
+-- student_user_id (Bob is the parent, not the student), and last_commentary_sent_at only
+-- moves when auth.uid() is null (Bob very much has one).
 update public.parent_links
-set status = 'revoked', confirmed_at = '1900-01-01'::timestamptz
+set status = 'revoked', confirmed_at = '1900-01-01'::timestamptz, last_commentary_sent_at = '2099-01-01'::timestamptz
 where parent_user_id = 'b2000000-0000-0000-0000-000000000002' and student_user_id = 'a1000000-0000-0000-0000-000000000001';
 
 select status as bobs_status_after_revoke___expect_revoked,
-       confirmed_at as bobs_confirmed_at_after_smuggle_attempt___expect_original_setup_timestamp_not_1900
+       confirmed_at as bobs_confirmed_at_after_smuggle_attempt___expect_original_setup_timestamp_not_1900,
+       last_commentary_sent_at as bobs_last_commentary_sent_at_after_smuggle_attempt___expect_2026_08_01_not_2099
 from public.parent_links
 where parent_user_id = 'b2000000-0000-0000-0000-000000000002' and student_user_id = 'a1000000-0000-0000-0000-000000000001';
--- If the guard held: status is 'revoked' (the legitimate half went through) and confirmed_at is
+-- If the guard held: status is 'revoked' (the legitimate half went through), confirmed_at is
 -- still whatever block 1's setup INSERT set it to (approximately "now" at setup time) -- NOT
--- 1900-01-01. confirmed_at showing 1900-01-01 is the failure signal.
+-- 1900-01-01 -- and last_commentary_sent_at is still block 1's seeded 2026-08-01 -- NOT
+-- 2099-01-01. Either smuggled value surviving is that column's own failure signal,
+-- independently of the other.
 --
 -- NOTE: this ends Bob's link in 'revoked' state -- nothing later in this script depends on Bob
 -- still being an active parent, so this is safe to run at this point and not before.
@@ -272,6 +282,31 @@ from public.parent_links where student_user_id = 'a1000000-0000-0000-0000-000000
 -- this point, update the literal count, but the delete-attempt row count must never drop.
 
 -- ---------------------------------------------------------------------------
+-- 6b. As the batch runner (service_role) — the OTHER direction migration 0118's guard fix
+--    has to prove: freezing last_commentary_sent_at from every authenticated caller must not
+--    also freeze it from the one caller who is SUPPOSED to write it. A trigger that blocks
+--    everyone is a different bug that happens to look like a fix (CEO, 2026-09-04).
+-- ---------------------------------------------------------------------------
+-- Real Supabase grants service_role BYPASSRLS -- if this is being run against a hand-rolled
+-- local role that doesn't have it yet, `alter role service_role bypassrls;` first, or this
+-- block tests the wrong thing (RLS denying the row, not the trigger allowing the column).
+reset role;
+set local role service_role;
+select set_config('request.jwt.claims', '{}', true); -- no sub claim at all -- auth.uid() is null, exactly what createAdminClient() presents.
+
+update public.parent_links
+set last_commentary_sent_at = now()
+where parent_user_id = 'b2000000-0000-0000-0000-000000000002' and student_user_id = 'a1000000-0000-0000-0000-000000000001';
+
+select (last_commentary_sent_at > '2026-08-02'::timestamptz) as runner_write_landed___expect_true
+from public.parent_links
+where parent_user_id = 'b2000000-0000-0000-0000-000000000002' and student_user_id = 'a1000000-0000-0000-0000-000000000001';
+-- Compared against a date after block 1's seeded 2026-08-01, not an exact value -- this
+-- block's own now() is whenever it actually runs, not a fixed literal. true here is the
+-- direction "the wall must not also block the runner itself" -- see block 3's guard test
+-- above for the OTHER direction (an authenticated parent's own smuggle attempt, frozen).
+
+-- ---------------------------------------------------------------------------
 -- 7. Cleanup.
 -- ---------------------------------------------------------------------------
 -- RESET ROLE first -- found by actually running this script (2026-09-04), not by reading it.
@@ -346,6 +381,21 @@ from public.opportunities where id = 'e5000000-0000-0000-0000-000000000005';
 --   1900-01-01. Lower stakes than block 5 (no access changes hands either way, since
 --   is_active_parent_of() never reads confirmed_at) but the same "closed, not just narrow"
 --   standard applies to every column in this table, not only the ones that gate access.
+-- Block 3 (Bob cannot smuggle last_commentary_sent_at through the same revoke, migration
+--   0118): remove the `if auth.uid() is not null then new.last_commentary_sent_at := ...`
+--   branch -- bobs_last_commentary_sent_at_after_smuggle_attempt flips from 2026-08-01 to
+--   2099-01-01. This is the exact hole b9/CEO found four hours after confirmed_at's own guard
+--   shipped: the trigger was restated for a column that didn't exist yet when it was written,
+--   and the restatement is the only thing that closes it again. If a THIRD column is ever
+--   added to this table needing the same protection, restate this function a third time
+--   rather than assuming the pattern holds without being written into the new column too.
+-- Block 6b (the runner's own write must still land): change
+--   `if auth.uid() is not null then new.last_commentary_sent_at := ...` to an unconditional
+--   `new.last_commentary_sent_at := old.last_commentary_sent_at;` (i.e. simulate the "obvious
+--   but wrong" fix that freezes the column from everyone including service_role) --
+--   runner_write_landed flips from true to false. This is the failure mode CEO named
+--   explicitly: "a trigger that blocks everyone is not a fix, it's a different bug that
+--   happens to look safe" -- this mutation is what that bug would actually look like here.
 -- Block 4 (Carol cannot insert a link to Alice): change the insert policy's WITH CHECK from
 --   `student_user_id = auth.uid()` to `true` -- carol_inserted_link_to_alice flips to 1.
 -- Block 5 (Dave cannot self-activate): change the parent-side UPDATE policy's WITH CHECK
