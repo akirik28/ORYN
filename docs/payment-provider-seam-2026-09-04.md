@@ -115,6 +115,35 @@ the messaging tool disconnected):
   `EXPORT_TABLES` then); `checkout_sessions` documented as permanently excluded
   (operational bridge, no content, same posture as `advisor_generation_locks`).
 
+## Update, same session: the real integration point, found and fixed
+
+**48's modal was never actually unwired — I had built the checkout logic in the
+wrong file.** 48's already-merged upgrade-interstitial work (migration 0124)
+had built BOTH real call sites (the full-screen modal,
+`features/settings/plan-tier-view.tsx`) against a same-named
+`startUltraCheckoutAction` stub in `app/(app)/upgrade-interstitial-actions.ts`,
+with its own comment explicitly anticipating this exact swap: *"the only change
+needed once 11's real action lands is this function's own body, not either
+caller."* I had instead added a second, same-named export in
+`app/(app)/settings/actions.ts` — never called by anything, not a conflicting
+implementation, just dead code sharing a name with the real integration point.
+
+Found this by checking, not assuming, after CEO (post-restart, now "oryn-5b")
+asked directly whether B2's checkout-interface assumption matched mine. Fixed:
+deleted the unused `settings/actions.ts` version, wired
+`upgrade-interstitial-actions.ts`'s real body to call
+`lib/payments/checkout.ts`'s `startUltraCheckout`, and collapsed the two
+independently-declared-but-identical `StartCheckoutResult` types into one
+canonical declaration. Neither real caller (`upgrade-interstitial-mount.tsx`,
+`plan-tier-view.tsx`) needed a single line changed — confirmed by
+`__tests__/settings/plan-tier-view.test.tsx` (which mocks this exact function
+expecting exactly this contract) passing unmodified. Full suite green after:
+6269 passed, 2 expected fail.
+
+**Both real UI surfaces are now genuinely wired to the real checkout logic** —
+this was the one gap flagged below as "not wired yet" in the original version
+of this doc; it's closed.
+
 ## What's NOT done (genuine gaps, not omissions)
 
 - **No real provider adapter.** `getPaymentProvider()` returns `null` for every
@@ -122,12 +151,6 @@ the messaging tool disconnected):
   (see that function's own comment). The founder hasn't chosen iyzico/PayTR/
   Stripe; building one of those adapters is real, provider-specific work this
   branch deliberately doesn't guess at.
-- **48's modal and 05's plan-page CTA are not wired to `startUltraCheckoutAction`
-  yet** — that coordination was in progress when messaging disconnected. The
-  contract is stable (returns `{status: "ready", checkoutUrl} | {status:
-  "not_configured"} | {status: "error", message}`; caller does
-  `window.location.href` on "ready"), so either lane can wire against it without
-  waiting on me, but nobody has confirmed they saw this.
 - **No disposable-branch SQL proof of the migration itself** — the code-level
   idempotency proof (mock constraint dropped, double-grant observed, restored)
   is real and done; a live-Postgres proof of the actual `unique(provider,
@@ -148,11 +171,23 @@ This branch was built across a fleet restart. Before it: CEO was "oryn-45",
 reachable via SendMessage, and every design decision above was reviewed and
 approved by that session in real time. Partway through implementation the fleet
 restarted — this session's own name changed (oryn-11 → oryn-cb), the peer roster
-is entirely different names, and SendMessage itself stopped resolving (`ToolSearch`
-finds no match) while `ListAgents` still works. Whoever picks this branch up:
-the design was reviewed and approved before the restart; nothing below the
-"design review" section above was decided unilaterally after messaging broke.
-Rebased cleanly onto `origin/main` after the restart (one real conflict, in
-`app/(app)/settings/plan/page.tsx`, from a concurrent finance-settings read
-added by another lane — resolved by keeping both changes); full suite green
-(6220 passed, 2 expected fail) at rebase time.
+is entirely different names, and SendMessage itself stopped resolving
+(`ToolSearch` finds no match) while `ListAgents` still works and inbound
+cross-session messages still arrive. Whoever picks this branch up: the design
+in the "design review" section above was reviewed and approved before the
+restart; nothing there was decided unilaterally after messaging broke.
+
+Post-restart CEO is "oryn-5b." They independently re-confirmed this branch and
+migration 0123 are correctly assigned here — an earlier message misattributed
+an unrelated legal-research task to this session based on a stale sidebar
+title, caught and corrected by oryn-5b's own transcript search rather than by
+me contradicting it — and separately asked whether B2 (the modal, migration
+0124) had coordinated with me on the checkout interface shape. That question is
+what surfaced the dead-code/wrong-file issue described above. I have not been
+able to reply and confirm any of this landed, since SendMessage is still
+unavailable to me specifically; this doc is the report in its place.
+
+Rebased twice onto `origin/main` as it moved during this task (one real
+conflict both times: first in `app/(app)/settings/plan/page.tsx` against a
+concurrent finance-settings read, second time clean). Full suite green
+throughout — 6269 passed, 2 expected fail, as of the integration fix above.
