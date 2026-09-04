@@ -221,6 +221,29 @@ ikisini de **elle kontrol ettim:**
 **Yani acele yok.** Uygulanana kadar özellikler sadece varsayılan davranışı
 gösterir; hiçbiri hata vermez. Kurucu döndüğünde tek pakette verilecek.
 
+## D2 sonucu bir ürün kararı doğurdu — 0129
+
+**Öğrencinin gerçekten gördüğü 34 fırsat araştırıldı. 24'ünde resmî sayfa yaş/sınıf
+şartını hiç söylemiyor.** Bu bir başarısızlık değil, yapısal gerçek — ve o 24 fırsat
+bugünkü şemayla **sonsuza kadar "doğrulanmadı" uyarısı taşıyacak.**
+
+**Öğrenci her fırsatta uyarı görürse, uyarıyı okumamayı öğrenir** — ve gerçekten
+önemli olanı da kaçırır. Uyarının değeri, nadir olmasında.
+
+**Karar: üçüncü durum ekleniyor (0129)**, bugün üniversite tarafında yapılanın
+birebir aynısı (`admission_rate_basis` → `not_published`):
+araştırılmadı · **bakıldı, sayfa belirtmiyor** ← yeni · bakıldı, şart yok yazıyor (0126).
+Sütun eklenip bırakılmayacak: yeni durumda arayüz uyarı yerine sakin bir cümle
+kuracak — *"resmî sayfa yaş şartı belirtmiyor, kontrol edildi (tarih)"*.
+
+**İki veri hatası ayrıca bulundu:** AMC-AIME'nin `official_url`'i yanlış sayfaya
+gidiyor (eksik alan değil, **yanlış veri** — öğrenci tıklıyor, başka yere düşüyor);
+Waterloo/CEMC tek satırda birden çok yarışma taşıyor (Beaver 5-10. sınıf, Euclid
+yalnız 12) — o satır bugün 10. sınıfa Euclid'i uygun gösteriyor. Bölünecek, ama
+önce kimsenin kaydettiği/eşleştiği bir satır mı diye ölçülecek.
+
+**Görünmeyen 333 satıra dönülmeyecek** — bugün ürünü değiştirmiyorlar.
+
 ## D7 — ✅ ÖLÇÜLDÜ, KOD YAZILMADI (bilinçli)
 
 D1 dolgusunda çıktı: **Tokyo Üniversitesi'nde bizim 14-18 yaş kitlemiz için
