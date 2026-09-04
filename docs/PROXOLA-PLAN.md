@@ -205,6 +205,24 @@ MIT ve HKUST ikişer satır, "UCL" ile "University College London" muhtemelen ay
 kurum. D3 beş satırı isim isim yazdı. **Boş kopyayı doldurmak iki kez zarar
 verir.** D1 bu satırları atlıyor.
 
+## C2 — sunucu tarafı merge edildi, AMA uç noktalar ulaşılamaz (bilerek)
+
+`73124976`: sağlayıcıya `generateTextStream`, `generateAdvisorReplyStream`, ve iki
+Route Handler (`app/api/advisor/chat/route.ts`, `.../retry/route.ts`).
+
+**Hiçbir istemci bu uç noktaları çağırmıyor ve çağırmamalı — henüz.** Route
+Handler'lar `sendAdvisorMessage`/`retryAdvisorMessage`'ın **11 korumasını elle
+aynalıyor**, ve bu tam olarak bir korumanın sessizce eksik kalabileceği şekil.
+Şu an güvenli olmasının tek sebebi ulaşılamaz olmaları. **İstemci `submit()`
+bağlanmadan önce, her korumanın kırılıp yakalandığına dair ayrı kanıt
+bekleniyor** — tercihen parite testiyle (aynı bozuk koşulu hem sunucu eylemine
+hem Route Handler'a ver, aynı sonucu döndürsünler), çünkü o test listeyi ezbere
+değil mevcut sunucu eylemine kilitler.
+
+**Kimse bu uç noktaları erken bağlamasın.**
+
+---
+
 ## D5 — son başvuru tarihleri: ölçüm tanımı değiştirdi
 
 Global boşluk %89,7 ama **öğrencilerin gerçekten hedeflediği yerde neredeyse
