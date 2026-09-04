@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Zap, MessagesSquare, Flame, Palette } from "lucide-react";
-import { TIER_COMPARISON_ROWS } from "@/lib/tier/comparison";
+import { Zap, MessagesSquare, Flame, Palette, Infinity as InfinityIcon } from "lucide-react";
+import { TIER_COMPARISON_ROWS, type DiffersRow } from "@/lib/tier/comparison";
 import { formatNumber, formatTokenCount } from "@/lib/i18n/format";
 import type { UltraFeatureCardData } from "@/features/settings/ultra-feature-marquee";
 import { UpgradeInterstitialModal } from "./upgrade-interstitial-modal";
@@ -16,12 +16,17 @@ import type { PlanTier } from "@/types/database";
  *  token-limit numbers the server layout passes down, the same division PlanTierView's own
  *  server page (app/(app)/settings/plan/page.tsx) already established. A small, deliberate
  *  duplication of one ~10-line mapping rather than a shared export neither existing caller
- *  needed before now. */
-const CARD_ICONS: Record<UltraFeatureCardData["id"], typeof Zap> = {
+ *  needed before now — kept in sync by hand (2026-09-04: PlanTierView gained
+ *  comparisonWidth/comparisonQuota the same night, this file updated to match; `comparisonWidth`
+ *  has no icon here on purpose, since it's filtered out of the marquee below exactly like
+ *  PlanTierView's own copy, for the same "a static 2-vs-4 needs a beat to read" reasoning
+ *  lib/tier/comparison.ts's own header states). */
+const CARD_ICONS: Record<Exclude<DiffersRow["id"], "comparisonWidth">, typeof Zap> = {
   aiAllowance: Zap,
   replyCeiling: MessagesSquare,
   replyDepth: Flame,
   visualTheme: Palette,
+  comparisonQuota: InfinityIcon,
 };
 
 const SESSION_STORAGE_KEY = "oryn:upgrade-interstitial:shown";
@@ -90,11 +95,13 @@ export function UpgradeInterstitialMount({
 
   const marqueeCards: UltraFeatureCardData[] = useMemo(
     () =>
-      TIER_COMPARISON_ROWS.filter((row) => row.kind === "differs").map((row) => ({
-        id: row.id,
-        icon: CARD_ICONS[row.id],
-        stat: row.id === "aiAllowance" ? formatTokenCount(ultraTokenLimit) : row.id === "replyCeiling" ? formatNumber(ultraMaxTokens) : undefined,
-      })),
+      TIER_COMPARISON_ROWS.filter((row) => row.kind === "differs")
+        .filter((row): row is DiffersRow & { id: UltraFeatureCardData["id"] } => row.id !== "comparisonWidth")
+        .map((row) => ({
+          id: row.id,
+          icon: CARD_ICONS[row.id],
+          stat: row.id === "aiAllowance" ? formatTokenCount(ultraTokenLimit) : row.id === "replyCeiling" ? formatNumber(ultraMaxTokens) : undefined,
+        })),
     [ultraTokenLimit, ultraMaxTokens],
   );
 
