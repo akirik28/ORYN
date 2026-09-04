@@ -72,6 +72,7 @@ class MockQueryBuilder {
   private insertValues: MockRow | null = null;
   private wantCount = false;
   private wantSingle = false;
+  private wantExactlyOne = false;
 
   constructor(
     private readonly tableName: string,
@@ -113,6 +114,16 @@ class MockQueryBuilder {
 
   maybeSingle(): this {
     this.wantSingle = true;
+    return this;
+  }
+
+  /** Real Postgrest semantics, not maybeSingle's — 0 or 2+ matches is PGRST116, an error, not
+   * a quiet null. Added for buildStudentAdvisorContext's own `.select("*").eq("id",
+   * userId).single()` profile read, which a 0-match/2-match fixture bug should fail loudly
+   * against, the same way it would against a real database. */
+  single(): this {
+    this.wantSingle = true;
+    this.wantExactlyOne = true;
     return this;
   }
 
@@ -165,6 +176,13 @@ class MockQueryBuilder {
 
     // select
     const matches = this.matchingRows();
+    if (this.wantExactlyOne && matches.length !== 1) {
+      return {
+        data: null,
+        error: { code: "PGRST116", message: `JSON object requested, multiple (or no) rows returned` },
+        count: null,
+      };
+    }
     if (this.wantSingle) return { data: matches[0] ?? null, error: null, count: null };
     return { data: matches, error: null, count: this.wantCount ? matches.length : null };
   }
