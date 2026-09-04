@@ -59,6 +59,11 @@ export default async function AdvisorSessionsPreviewPage({ searchParams }: { sea
           initialConversationId={empty ? null : CONV_NEW}
           initialMessages={[]}
           initialConversations={conversations}
+          // AdvisorWorkspace gained a required responseMode on main (the interim "thinking"
+          // status uses it to say whether a detailed answer is coming) between this preview
+          // being written and merged. "balanced" is the product default, and this preview is
+          // about the session list, not the thinking state.
+          responseMode="balanced"
           aiConfigured={false}
           quotaExhausted={false}
           quotaResetsAt="2026-10-01T00:00:00.000Z"
