@@ -1,6 +1,8 @@
 # 4 Eylül sabah paketi — oku, sonra çalıştır
 
-Tek dosya: **`09-migrations-2026-09-04.sql`** (618 satır).
+Bu, dört paketin **ilki**. Sıra: **09 → 13 → 11 → 12.**
+
+Dosya: **`09-migrations-2026-09-04.sql`** (629 satır).
 Tek işlem. Hepsi geçer ya da hiçbiri geçmez.
 
 ---
@@ -84,7 +86,7 @@ ve bu sayede paketi bozacak bir hata bulundu.**
 edemedim — canlı veritabanına okuma erişimim bu oturumda engellendi ve **bunu
 dolanmadım, başkasından da istemedim.**
 
-İlk kontrolüm sadece **ayrıştırmaydı**: 618 satır, sıfır sözdizimi hatası. Bunun
+İlk kontrolüm sadece **ayrıştırmaydı**: sıfır sözdizimi hatası. Bunun
 yakalamadığı bir şey vardı ve **44 numaralı oturum onu yakaladı** — migration zincirini
 gerçek bir Postgres'e uygulayarak, benim yaptığımdan daha güçlü bir kontrolle.
 
@@ -103,8 +105,19 @@ değişmedi. Sonra iki yönlü doğruladım: aynı fixture'a **eski sıra hata v
 sütun `text` kalıyor**, **yeni sıra temiz geçiyor ve sütun `jsonb NOT NULL` oluyor.**
 Kontrolün gerçekten kırmızıya dönebildiğini görmeden "temiz" demedim.
 
-**Hâlâ yakalanmayan:** gerçek şemaya karşı geri kalan anlamsal doğruluk. 4. bölümdeki
-doğrulama bloğu bunun için var — eksik bir nesne bulursa **her şeyi geri alır.**
+**Sonra bir kez daha, daha sertini yaptım (4 Eylül, sabaha karşı):** canlı veritabanının
+şema kopyasını kurup **dört paketi sırayla** çalıştırdım. Bu, bu dosyada **iki hata daha**
+buldu — ikisi de 4. bölümdeki doğrulama bloğundaydı, ikisi de benimdi:
+
+- var olmayan bir sütunu arıyordu (0115 mevcut sütunun **tipini** değiştiriyor, yeni sütun eklemiyor)
+- bir sözdizimi hatası yüzünden anlamlı bir mesaj yerine **anlaşılmaz bir hata** fırlatıyordu
+
+**Yani bu dosya sana patlayacaktı** — hem de ilk çalıştıracağın paket olarak. İkisi de
+düzeltildi ve dördü sırayla tekrar çalıştırıldı: temiz.
+
+**Hâlâ yakalanmayan:** senin veritabanındaki gerçek satırların bu şema kopyasıyla aynı
+davranıp davranmadığı. 4. bölümdeki doğrulama bloğu bunun için var — eksik bir nesne
+bulursa **her şeyi geri alır.**
 
 **2. RLS politikalarının testi yazıldı ama çalıştırılmadı.**
 `supabase/tests/parent_links_rls_manual.sql` — 339 satır, her engellemenin
