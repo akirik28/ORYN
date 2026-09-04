@@ -474,10 +474,16 @@ where university_id = (select id from public.universities where name = 'Universi
   and admission_rate is null; -- guarded: never overwrites a value someone fills in the meantime
 
 -- LSE: new row -- guarded, not just a plain insert (see file header: stat_year is never set,
--- so the table's own unique index can't catch a second attempt on its own).
+-- so the table's own unique index can't catch a second attempt on its own). stat_year=2025
+-- set explicitly (2026-09-04 follow-up): LSE's own finding cites the 2025 cycle by name,
+-- matching Oxford's row; the other four D8 rows below stay null on purpose -- checked the
+-- live table first, only 2 of 128 published rows and 0 of 2 existing no_single_rate rows
+-- have stat_year set at all, so asserting one on a structural finding with no real cycle
+-- would make it the outlier, not the convention. The not-exists guard is those four rows'
+-- real protection, not stat_year.
 insert into public.university_statistics
-  (university_id, admission_rate, admission_rate_basis, source, data_confidence, retrieved_at)
-select id, 0.0633, 'published',
+  (university_id, stat_year, admission_rate, admission_rate_basis, source, data_confidence, retrieved_at)
+select id, 2025, 0.0633, 'published',
   'London School of Economics (official) — "in 2025, we received approximately 30,000 applications for roughly 1,900 places," rate derived from LSE''s own rounded figures, not a literal published percentage. https://www.lse.ac.uk/study-at-lse/Undergraduate/Teachers-schools-parents/Information-for-teachers-and-schools/admissions-advice',
   'medium', now()
 from public.universities where name = 'London School of Economics and Political Science'
