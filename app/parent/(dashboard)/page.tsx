@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { getParentDashboardContext } from "@/lib/parent/dashboard-context";
 import { ParentPanelView } from "@/features/parent/parent-panel-view";
 import { ParentPendingScreen } from "@/features/parent/parent-pending-screen";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("parent.overview");
+  return { title: t("heading") };
+}
 
 /**
  * The parent overview -- everything in one scroll (P3, docs/veli-hesabi-spec-2026-09-04.md).
@@ -21,6 +28,11 @@ import { ParentPendingScreen } from "@/features/parent/parent-pending-screen";
  * /parent/universities, /parent/applications, /parent/progress are the four new, real,
  * bookmarkable routes alongside it. The shared nav (app/parent/(dashboard)/layout.tsx) is
  * what makes all five reachable from one another.
+ *
+ * `generateMetadata` added same night, i18n coverage sweep: this page had no title mechanism
+ * at all (not the static-English antipattern the check script flags, just nothing), so the
+ * browser tab silently fell back to app/layout.tsx's own English default regardless of
+ * locale -- the other four /parent/(dashboard)/* pages already had this, this one didn't.
  */
 export default async function ParentDashboardPage() {
   const ctx = await getParentDashboardContext();

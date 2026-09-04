@@ -45,8 +45,20 @@ import { join, relative } from "node:path";
 const ROOT = process.cwd();
 const SCAN_DIRS = ["app", "features"];
 
-/** notFound()-gated design previews and the staff-only admin area are not student surfaces. */
-const NOT_STUDENT_FACING = [/\(dev-preview\)/, /\/admin\//];
+/**
+ * notFound()-gated design previews and the staff-only admin area are not student surfaces.
+ *
+ * FIXED 2026-09-04: the admin pattern was `/\/admin\//`, a literal "/admin/" path segment.
+ * That correctly excludes `features/admin/*` (a plain folder, no route grouping — the pattern
+ * kept working here, which is exactly why this had gone unnoticed) but never matched
+ * `app/(admin)/kumanda/*`, whose route GROUP is parenthesized per Next.js's own convention
+ * (admin renamed to /kumanda some time before this fix) — so every page under there has been
+ * silently counted as student-facing in every run this script has ever produced, first caught
+ * by the new no-metadata-at-all check below listing seven kumanda pages as a "gap." Needs
+ * both shapes, not one instead of the other: `\(admin\)` alone, tried first, broke the
+ * features/admin/* exclusion that was already correct.
+ */
+const NOT_STUDENT_FACING = [/\(dev-preview\)/, /\(admin\)/, /\/admin\//];
 
 /**
  * A file counts as locale-aware if it reads the catalog or branches on the locale itself.
@@ -111,19 +123,37 @@ if (identical.length) console.log(`  identical in both locales (${identical.leng
  * this counts is the pages that still use the static form, plus any `generateMetadata` that
  * never reads a locale — the second kind looks fixed and is not.
  */
-function scanMetadata(): { staticTitles: string[]; localeBlindGenerators: string[] } {
+/**
+ * A fourth failure mode, added 2026-09-04 after the first three caught nothing on a page
+ * that genuinely had no title mechanism at all: `export const metadata`/`generateMetadata`
+ * are each their OWN regex branch below, so a `page.tsx` matching neither one falls out of
+ * the loop entirely, uncounted — not a static-English title, not a locale-blind generator,
+ * just silently absent, inheriting app/layout.tsx's own English default regardless of locale.
+ * That is a real, separate gap from the two this function already tracked, found by hand
+ * (three /parent/(dashboard)/*'s own page.tsx files had it) after this script's own "0"
+ * output was read as "no gap" rather than "no gap in the two categories measured" — worth
+ * fixing here, in the ruler, for the same reason the header comment above gives for the
+ * partly-translated-file split: a number nobody can trust from misreading it once is a
+ * number worth making harder to misread.  Scoped to `page.tsx` specifically (not every
+ * `.tsx` under app/) — a layout or component file setting its own metadata isn't the thing
+ * a missing tab title is actually about.
+ */
+function scanMetadata(): { staticTitles: string[]; localeBlindGenerators: string[]; noMetadataAtAll: string[] } {
   const staticTitles: string[] = [];
   const localeBlindGenerators: string[] = [];
+  const noMetadataAtAll: string[] = [];
   for (const file of walk(join(ROOT, "app"))) {
     const source = readFileSync(file, "utf8");
     const rel = relative(ROOT, file);
     if (NOT_STUDENT_FACING.some((re) => re.test(`/${rel}`))) continue;
     if (/export const metadata\b/.test(source) && /title:\s*"/.test(source)) staticTitles.push(rel);
-    else if (/generateMetadata/.test(source) && !/getTranslations|resolveLocale|getLocale/.test(source)) {
-      localeBlindGenerators.push(rel);
+    else if (/generateMetadata/.test(source)) {
+      if (!/getTranslations|resolveLocale|getLocale/.test(source)) localeBlindGenerators.push(rel);
+    } else if (file.endsWith("page.tsx")) {
+      noMetadataAtAll.push(rel);
     }
   }
-  return { staticTitles, localeBlindGenerators };
+  return { staticTitles, localeBlindGenerators, noMetadataAtAll };
 }
 
 const files = SCAN_DIRS.flatMap((d) => walk(join(ROOT, d)));
@@ -263,9 +293,19 @@ if (dataModules.length === 0) {
 
 const meta = scanMetadata();
 console.log("\nPage titles");
-console.log(`  ${meta.staticTitles.length} student-facing pages set a build-time English title — the browser tab stays English in Turkish`);
+if (meta.staticTitles.length > 0) {
+  console.log(`  ${meta.staticTitles.length} student-facing pages set a build-time English title — the browser tab stays English in Turkish: ${meta.staticTitles.join(", ")}`);
+} else {
+  console.log("  0 pages use the static-English-title form (export const metadata with a literal title) — but see below, that is not the whole picture.");
+}
 if (meta.localeBlindGenerators.length > 0) {
   console.log(`  ${meta.localeBlindGenerators.length} use generateMetadata but never read a locale (looks fixed, is not): ${meta.localeBlindGenerators.join(", ")}`);
+}
+if (meta.noMetadataAtAll.length > 0) {
+  console.log(`  ${meta.noMetadataAtAll.length} page.tsx files set no metadata at all (neither form above) — the browser tab falls back to app/layout.tsx's English default regardless of locale:`);
+  for (const f of meta.noMetadataAtAll) console.log(`    ${f}`);
+} else {
+  console.log("  0 page.tsx files are missing metadata entirely.");
 }
 console.log("  Pattern to copy: app/(legal)/privacy/page.tsx's generateMetadata, which resolves the request-time locale.");
 

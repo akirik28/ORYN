@@ -1,14 +1,34 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ExternalLink } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { verifySession } from "@/lib/security/dal";
 import { getActiveParentLink } from "@/lib/auth/account-role";
 import { createClient } from "@/lib/supabase/server";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { loadParentSafeUniversityDetail } from "@/lib/parent/university-detail";
+import { getUniversity } from "@/lib/universities/detail-reads";
 import { OutlookBadge } from "@/features/universities/outlook-badge";
 import { SourceBadge } from "@/components/proxola/source-badge";
 import { formatTuition, tuitionQualifier } from "@/lib/universities/tuition-format";
 import { formatNumber, formatCurrency } from "@/lib/i18n/format";
+
+/**
+ * `getUniversity` (lib/universities/detail-reads.ts), not `loadParentSafeUniversityDetail` --
+ * the page body's own function is the full 8-query aggregate, and this only needs a name.
+ * `getUniversity` is `cache()`-wrapped on the plain string id, so this call and the page's own
+ * later `loadParentSafeUniversityDetail(...)` call (which uses the identical `getUniversity`
+ * internally) dedupe to one actual query, not two -- same fix docs/performance.md §5 already
+ * made for the student-side /universities/[id] page, whose own generateMetadata this mirrors.
+ * No supersession/canonicalization step, deliberately matching the page body below, which has
+ * none either -- adding one here alone would risk the title resolving a different university
+ * than the body renders, a worse bug than the one this fixes.
+ */
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const [university, t] = await Promise.all([getUniversity(id), getTranslations("parent.universityDetail")]);
+  return { title: university?.name ?? t("fallbackTitle") };
+}
 
 /**
  * B6 (2026-09-04) — the parent-safe university detail page. Read-only by construction:

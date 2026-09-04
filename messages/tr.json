@@ -1517,6 +1517,9 @@
       "notNow": "Şimdi değil",
       "close": "Kapat"
     },
+    "overview": {
+      "heading": "Genel bakış — Proxola"
+    },
     "opportunities": {
       "heading": "Fırsatlar — Proxola"
     },
@@ -1528,6 +1531,12 @@
     },
     "progress": {
       "heading": "Gelişim — Proxola"
+    },
+    "opportunityDetail": {
+      "fallbackTitle": "Fırsat"
+    },
+    "universityDetail": {
+      "fallbackTitle": "Üniversite"
     }
   },
   "messaging": {

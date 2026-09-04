@@ -1517,6 +1517,9 @@
       "notNow": "Not now",
       "close": "Close"
     },
+    "overview": {
+      "heading": "Overview — Proxola"
+    },
     "opportunities": {
       "heading": "Opportunities — Proxola"
     },
@@ -1528,6 +1531,12 @@
     },
     "progress": {
       "heading": "Progress — Proxola"
+    },
+    "opportunityDetail": {
+      "fallbackTitle": "Opportunity"
+    },
+    "universityDetail": {
+      "fallbackTitle": "University"
     }
   },
   "messaging": {

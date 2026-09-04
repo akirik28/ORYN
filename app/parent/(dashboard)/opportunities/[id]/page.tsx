@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ExternalLink } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { verifySession } from "@/lib/security/dal";
 import { getActiveParentLink } from "@/lib/auth/account-role";
 import { createClient } from "@/lib/supabase/server";
@@ -7,6 +9,26 @@ import { resolveLocale } from "@/lib/i18n/locale";
 import { loadParentSafeOpportunityDetail } from "@/lib/parent/opportunity-detail";
 import { DeadlineBadge } from "@/components/proxola/deadline-badge";
 import { categoryLabel } from "@/lib/opportunities/labels";
+
+/**
+ * A direct, minimal query rather than reusing loadParentSafeOpportunityDetail's own
+ * select("*") -- unlike the university detail page's 8-query aggregate, this table read is
+ * already a single, cheap, primary-key lookup, so a second one for just `title` costs less
+ * than the machinery (a cache()-wrapped shared helper) that would be needed to dedupe it.
+ * Not gated behind getActiveParentLink here: a title leaking an opportunity's own name to
+ * whoever holds a guessable id is not the access boundary this page's body enforces (the
+ * catalog itself is public read, per the catalog browser's own comment) -- this only reads
+ * `title`, nothing about who requested it.
+ */
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const [{ data: opportunity }, t] = await Promise.all([
+    supabase.from("opportunities").select("title").eq("id", id).maybeSingle(),
+    getTranslations("parent.opportunityDetail"),
+  ]);
+  return { title: opportunity?.title ?? t("fallbackTitle") };
+}
 
 /**
  * B6 (2026-09-04) — the parent-safe opportunity detail page. Plain catalog fact only,
