@@ -1323,11 +1323,22 @@ export type UniversityRequirementInsert = Insertable<
   | "calendar_bound_fact_class"
 >;
 
+/** Migration 0119. Distinguishes the two things a null `admission_rate` can mean: nobody has
+ * researched this university yet ("not_researched", the column default), vs. actively
+ * confirmed the institution has no single admission rate by construction — e.g. per-program
+ * admission systems, or a mix of selective and fully open programs ("no_single_rate"). A row
+ * with a real `admission_rate` is "published". Only "published" is ever set automatically (by
+ * the migration itself, deterministically, from admission_rate already being non-null) —
+ * "no_single_rate" can only come from an actual research pass having looked and confirmed it,
+ * never inferred from the data alone. See docs/fill-9-universities-findings-2026-09-04.md. */
+export type AdmissionRateBasis = "published" | "not_researched" | "no_single_rate";
+
 export interface UniversityStatistic {
   id: string;
   university_id: string;
   stat_year: number | null;
   admission_rate: number | null;
+  admission_rate_basis: AdmissionRateBasis | null;
   sat_range_low: number | null;
   sat_range_high: number | null;
   act_range_low: number | null;
@@ -1348,7 +1359,7 @@ export interface UniversityStatistic {
   created_at: string;
   updated_at: string;
 }
-export type UniversityStatisticInsert = Insertable<UniversityStatistic, "id" | "created_at" | "updated_at" | "data_confidence" | "last_changed_at">;
+export type UniversityStatisticInsert = Insertable<UniversityStatistic, "id" | "created_at" | "updated_at" | "data_confidence" | "last_changed_at" | "admission_rate_basis">;
 
 /** One row per (programme, admission cycle, scholarship/fee tier, faculty) — migration 0055,
  * revised against the live YOK Atlas API before first application. Never overwritten by the

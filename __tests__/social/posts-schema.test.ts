@@ -534,7 +534,23 @@ describe("migration numbering", () => {
     // parent_links-driven batch runner) is untouched by this migration; this is schema only.
     // CEO assigned 0117/0118 together to avoid a fifth same-night collision, and both lanes
     // checked correctly and were simply racing. Still unapplied.
-    expect(Math.max(...numbers.map(Number))).toBe(118);
+    //
+    // 0119 (admission_rate_basis) -- docs/fill-9-universities-findings-2026-09-04.md's schema-
+    // gap finding: a null university_statistics.admission_rate meant two different things with
+    // no way to tell them apart -- "nobody has researched this yet" (Oxford: site friction, not
+    // a structural absence) vs. "this institution has no single admission rate by construction"
+    // (TU Munich's per-program admission system; TU Delft's 6 selective programs against an
+    // otherwise-open-admission rest). One text column, admission_rate_basis, checked against
+    // ('published' | 'not_researched' | 'no_single_rate'), default 'not_researched'. Only
+    // 'published' is ever set automatically, by the migration itself, deterministically, from
+    // admission_rate already being non-null on the row -- 'no_single_rate' can only come from an
+    // actual research pass having looked and confirmed it, same discipline the findings doc
+    // applied by hand to TU Munich and TU Delft. The OTHER schema-gap candidate that pass
+    // considered -- a fee-status split for cost_of_attendance -- turned out to need no schema
+    // change at all: university_profile_metrics' tuition_domestic_annual/
+    // tuition_international_annual metric codes already cover it, built and merged before
+    // 2026-09-03. Still unapplied; the founder runs it in the morning.
+    expect(Math.max(...numbers.map(Number))).toBe(119);
   });
 });
 

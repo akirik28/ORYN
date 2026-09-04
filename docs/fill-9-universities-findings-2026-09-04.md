@@ -309,6 +309,17 @@ year, recorded as such rather than implied comparable).
 pattern. KCL's own page: "All tuition fees can be found on each individual
 course page" — international fees vary by course, no single figure to cite.
 
+**Added after this doc first merged:** while staging the fill, found that
+`scripts/acquire-university-statistics-uk.ts` — a 2026-08 UK tuition-acquisition
+pass, weeks before this one — had already reached the identical conclusion about
+KCL independently: "University College London, University of Manchester, King's
+College London, University of Birmingham, University of Leeds, and Durham
+University each confirmed to have NO single published international figure —
+fees are programme-specific." Two independent passes, weeks apart, hitting the
+same structural wall is stronger evidence for the schema-gap argument above than
+one night's research on its own — noted here rather than left buried in a
+staging-branch commit message.
+
 ### 9. Delft University of Technology — Netherlands, QS 48
 **Gap: statistics only** — best-covered of the 9 going in (53 programs, 43
 requirements, 1 source already).
