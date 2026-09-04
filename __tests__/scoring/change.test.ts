@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { buildProfileChange, describeProfileChange, NO_PROFILE_CHANGE } from "@/lib/scoring/change";
+import { buildProfileChange, describeProfileChange, describeProfileChangeForParent, NO_PROFILE_CHANGE } from "@/lib/scoring/change";
 import type { ProfileDimension } from "@/types/database";
 
 const row = (dimension: ProfileDimension, score: number) => ({ dimension, score });
@@ -97,5 +97,72 @@ describe("describeProfileChange — locale: tr", () => {
   test("omitting locale is identical to passing 'en' explicitly (default-locale backward compatibility)", () => {
     const change = buildProfileChange([row("research", 55)], { research: 42 });
     expect(describeProfileChange(change)).toBe(describeProfileChange(change, "en"));
+  });
+});
+
+/**
+ * Turkish voice pass (2026-09-04, docs/veli-hesabi-spec-2026-09-04.md) — describeProfileChange
+ * itself is correct and unchanged (it addresses the STUDENT, "sen", about their own profile);
+ * this is the parent-reading sibling lib/digest/parent-commentary.ts's no-AI fallback needs,
+ * found calling describeProfileChange directly and sending a student-voiced "since YOUR last
+ * review" sentence to a parent who had no review of their own. Same selection logic (same
+ * fixtures work for both, reused below), genuinely different copy: third person, names the
+ * student, never says "you" in any form/register.
+ */
+describe("describeProfileChangeForParent", () => {
+  test("names the dimension that moved most and the student, in third person", () => {
+    const sentence = describeProfileChangeForParent(
+      buildProfileChange([row("research", 50), row("leadership", 60)], { research: 42, leadership: 58 }),
+      "Ada",
+    );
+    expect(sentence).toContain("Research");
+    expect(sentence).toContain("Ada");
+    expect(sentence).toContain("1 other area");
+    expect(sentence!.toLowerCase()).not.toMatch(/\byour\b|\byou\b/);
+  });
+
+  test("a flat period names the student instead of saying 'your profile'", () => {
+    const sentence = describeProfileChangeForParent(buildProfileChange([row("research", 50)], { research: 50 }), "Ada");
+    expect(sentence).toBe("Ada's profile held steady this week.");
+  });
+
+  test("a decline names the student, never 'your'", () => {
+    const sentence = describeProfileChangeForParent(buildProfileChange([row("research", 30)], { research: 42 }), "Ada");
+    expect(sentence).toContain("Nothing moved forward");
+    expect(sentence).toContain("Ada");
+    expect(sentence!.toLowerCase()).not.toMatch(/\byour\b|\byou\b/);
+  });
+
+  describe("locale: tr", () => {
+    test("a single improvement never says 'senin'/'sen' — names the student with 'için' instead", () => {
+      const change = buildProfileChange([row("research", 55)], { research: 42 });
+      const sentence = describeProfileChangeForParent(change, "Ada", "tr")!;
+      expect(sentence).toBe("Ada için bu hafta en çok Araştırma alanı ilerledi.");
+      expect(sentence).not.toContain("Son incelemenden"); // the student-voiced original's opener — must not leak here
+      expect(sentence).not.toMatch(/\bsen\b|\bsenin\b|-din\b|-din\.|değiştiremezsin|göreceksin/i);
+    });
+
+    test("a decline names the student via 'için', not 'senin'", () => {
+      const sentence = describeProfileChangeForParent(buildProfileChange([row("research", 30)], { research: 42 }), "Ada", "tr")!;
+      expect(sentence).toContain("Ada için");
+      expect(sentence).toContain("Araştırma");
+      expect(sentence).not.toContain("Son incelemenden");
+    });
+
+    test("steady period names the student, not 'Profilin' (your profile)", () => {
+      const change = buildProfileChange([row("research", 42)], { research: 42 });
+      expect(describeProfileChangeForParent(change, "Ada", "tr")).toBe("Ada için profil bu hafta sabit kaldı.");
+    });
+
+    /** The actual bug found live: an arbitrary, dynamically-supplied name must never be
+     * possessive-suffixed (vowel harmony needs the name's real last vowel, which this
+     * function cannot know at compile time) — "için" is why this is safe regardless of what
+     * the name is. Names picked to span different final-vowel classes a hardcoded suffix
+     * would get wrong for at least one of them. */
+    test.each(["Ada", "Deniz", "Kaan", "Ömer", "Gül", "Utku"])("never suffixes the name '%s' with a possessive", (name) => {
+      const change = buildProfileChange([row("research", 55)], { research: 42 });
+      const sentence = describeProfileChangeForParent(change, name, "tr")!;
+      expect(sentence.startsWith(`${name} için`)).toBe(true);
+    });
   });
 });

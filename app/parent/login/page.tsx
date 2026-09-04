@@ -64,7 +64,7 @@ export default async function ParentLoginPage() {
           </h1>
           <p className="text-sm text-muted-foreground">{t("subheading")}</p>
         </div>
-        <LoginForm next="/parent" />
+        <LoginForm next="/parent" namespace="parent.login" />
         <p className="text-center text-[13px] text-muted-foreground">
           <Link href="/login" className="font-semibold" style={{ color: "var(--role-accent)" }}>
             {t("backToStudentSignIn")}
