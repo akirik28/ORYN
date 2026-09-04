@@ -143,6 +143,42 @@ today) checks for. Not a bug — just worth knowing that "wire the same check in
 bigger job than adding a guard, since compare has no row for two of the four fields the check
 inspects.
 
+## Rendered, not just read (CEO follow-up)
+
+Everything above was code + live-data reading. CEO pushed back after seeing the first pass —
+today's worst bugs were only visible to someone who actually opened the page, so don't settle
+for reading the source here either. The shared browser pane carries the founder's real,
+persisted session (standing rule all night: don't touch it), and the compare route needs an
+authenticated request with real university ids in its URL, so a live browser tab wasn't a safe
+option. Instead: `__tests__/universities/compare-page-render.test.tsx` calls the real
+`CompareUniversitiesPage` function directly — same code, same imports, same JSX — against a
+mocked Supabase client seeded with the exact live values above (MIT/Oxford/Edinburgh), and
+asserts on the actual rendered DOM via `@testing-library/react`, not on a manual trace of the
+conditionals. Extended `__tests__/stubs/mock-supabase-table.ts` with `.in()` support to do it
+(the page's own queries all use `.in()`; the harness only had `.eq()`/`.neq()` before).
+
+Proven, by real rendered `textContent`, not inferred:
+- Oxford's `costOfAttendance` cell renders exactly `"—"`, `admissionRate` renders exactly
+  `"—"`, and `statisticsSource` in the same column renders a `SourceBadge` whose text contains
+  `"ox.ac.uk"` — the self-contradicting shape, now proven by execution, not just by reading
+  `page.tsx:196-212`.
+- Oxford's `tuition` cell does NOT render `"—"` — confirms the earlier `value_text`/
+  `value_numeric` correction was right.
+- The full ordered list of rendered row labels is exactly the 10 known fields, with nothing
+  deadline-shaped in it, for any university.
+- MIT's `applicationSystem`/`researchStrengths` cells render `"—"` while its
+  `costOfAttendance`/`admissionRate` do not — the partial-gap picture, not a blanket "MIT has
+  no data" situation.
+
+Proven capable of failing, not just passing: temporarily gave Oxford a real `admission_rate`
+(0.17) in the fixture and reran — exactly one test failed (`expected '17%' to be '—'`), the
+other three unaffected, then reverted to confirm full green again. The failure was in the
+right test for the right reason, not the whole file going red — real discrimination, not a
+vacuous pass.
+
+Gates: `tsc --noEmit` clean, `eslint` clean on both changed files, full suite run separately
+before push (see commit).
+
 ## What was checked and ruled out
 
 - Caltech showing 0 `university_deadlines` rows live is **expected, not a regression** — D5's
