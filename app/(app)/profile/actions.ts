@@ -395,7 +395,7 @@ export async function refineAchievement(params: {
     // app/(app)/advisor/actions.ts: getCurrentProfile() is cache()'d, so this costs nothing
     // extra even though requireUser() above already resolved the session.
     const profile = await getCurrentProfile();
-    const tier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+    const tier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null });
     const data = await refineAchievementDescription({ userId: session.userId!, locale, tier, ...params });
     return { data };
   } catch (error) {
@@ -432,7 +432,7 @@ export async function generateResearchIdeas(field: string): Promise<{ data?: Res
       interests: (interests ?? []).map((i) => i.label),
       // 2026-09-03, closing the Ultra tier-economics boundary -- see refineAchievement
       // above's identical pattern.
-      tier: resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null }),
+      tier: resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null }),
     });
     return { data };
   } catch (error) {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { ArrowLeft, Lock, Scale } from "lucide-react";
+import { ArrowLeft, ExternalLink, Lock, Scale } from "lucide-react";
 import { requireProfile } from "@/lib/security/dal";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { resolveComparisonWidthCeiling, isComparisonQuotaExhausted } from "@/lib/comparison/limits";
@@ -11,6 +11,9 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
 import { deriveTuitionContext } from "@/lib/universities/counseling-adapter";
+import { lacksApplicationDeadline, lacksCoreAdmissionStats, soonestApplicationDeadline } from "@/lib/universities/data-depth";
+import { categorizeAndDedupeResearchTopics } from "@/lib/universities/research-taxonomy";
+import { formatAbsoluteDate } from "@/lib/i18n/date";
 import { PageHeader } from "@/components/proxola/page-header";
 import { EmptyState } from "@/components/proxola/empty-state";
 import { SourceBadge } from "@/components/proxola/source-badge";
@@ -71,15 +74,19 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
     );
   }
 
-  const [{ data: universities }, { data: stats }, { data: rankings }, { data: metrics }] = await Promise.all([
+  const [{ data: universities }, { data: stats }, { data: rankings }, { data: metrics }, { data: deadlines }] = await Promise.all([
     supabase.from("universities").select("*").in("id", requestedIds),
     supabase.from("university_statistics").select("*").in("university_id", requestedIds),
     supabase.from("university_rankings").select("university_id, rank_display").eq("ranking_provider", "QS").in("university_id", requestedIds),
     supabase
       .from("university_profile_metrics")
-      .select("university_id, metric_code, value_text, value_numeric, unit, precision_state")
+      .select("university_id, metric_code, value_text, value_numeric, unit, precision_state, source_url, verified_at")
       .in("university_id", requestedIds)
       .in("metric_code", ["research_topics_top5", "tuition_domestic_annual", "tuition_international_annual"]),
+    supabase
+      .from("university_deadlines")
+      .select("university_id, deadline_type, deadline_date, recurrence, verification_state, recurrence_month, recurrence_day")
+      .in("university_id", requestedIds),
   ]);
 
   // Preserve the order the student picked them in (requestedIds), not whatever order the DB
@@ -136,8 +143,33 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
 
   const statsByUniId = new Map((stats ?? []).map((s) => [s.university_id, s]));
   const rankByUniId = new Map((rankings ?? []).map((r) => [r.university_id, r.rank_display]));
+  const deadlineRowsByUniId = new Map<string, NonNullable<typeof deadlines>>();
+  for (const d of deadlines ?? []) {
+    deadlineRowsByUniId.set(d.university_id, [...(deadlineRowsByUniId.get(d.university_id) ?? []), d]);
+  }
+  const today = new Date();
+  // CEO, 2026-09-04, from the display-honesty measurement (docs/research-topics-display-
+  // honesty-2026-09-04.md): raw OpenAlex phrases, uncategorized, is the same self-
+  // contradiction shape as the SourceBadge fix above -- most sharply here, since this is the
+  // premium, paid feature. Same taxonomy the card already uses (categorizeAndDedupeResearchTopics),
+  // same max=3 default (this row shares a narrow column with 2-4 other universities' cells, the
+  // card's own space constraint, not the detail page's -- that page passes 5).
+  //
+  // Three distinct states per university, not two -- no row at all (unchanged NA, matches
+  // every other row) is a different fact from a real row where nothing categorizes (a new,
+  // explicit "couldn't classify" message, never NA -- a bare "--" here would read exactly like
+  // "no data," the same silent-blank problem this whole pass exists to fix). The render below
+  // picks between them using hasRawTopics, not categories.length alone.
   const topicRows = (metrics ?? []).filter((m) => m.metric_code === "research_topics_top5");
-  const topicsByUniId = new Map(topicRows.map((m) => [m.university_id, m.value_text?.split(" | ").filter(Boolean).slice(0, 3) ?? []]));
+  const topicsByUniId = new Map(
+    topicRows.map((m) => {
+      const rawTopics = m.value_text?.split(" | ").filter(Boolean) ?? [];
+      return [
+        m.university_id,
+        { categories: categorizeAndDedupeResearchTopics(rawTopics), hasRawTopics: rawTopics.length > 0, sourceUrl: m.source_url, verifiedAt: m.verified_at },
+      ] as const;
+    })
+  );
   const internationalTuitionByUniId = new Map(
     (metrics ?? [])
       .filter((m) => m.metric_code === "tuition_international_annual" && m.value_numeric != null)
@@ -154,6 +186,42 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
     { label: t("qsRanking"), render: (u) => (rankByUniId.get(u.id) ? `#${rankByUniId.get(u.id)}` : NA) },
     { label: t("institutionType"), render: (u) => u.institution_type ?? NA },
     { label: t("students"), render: (u) => (u.student_size != null ? u.student_size.toLocaleString("en-US") : NA) },
+    {
+      // CEO follow-up to C7 (2026-09-04): university_deadlines was never queried on this page
+      // at all before this row — not a blank cell, an absent dimension. The type-aware gate
+      // (lacksApplicationDeadline) is the exact same function the detail page's own honest
+      // empty-state uses, so MIT's scholarship-only row reads the same "not confirmed" way
+      // here as it does there, rather than silently implying no deadline research exists.
+      // Never phrased as "no deadline" (a student could wrongly rule out a real option) and
+      // always paired with a real link when one exists — same two constraints CEO set for the
+      // detail page's version of this fix.
+      label: t("applicationDeadline"),
+      render: (u) => {
+        const deadlineRows = deadlineRowsByUniId.get(u.id) ?? [];
+        const officialUrl = u.admissions_url ?? u.website_url;
+        if (lacksApplicationDeadline(deadlineRows.map((d) => d.deadline_type))) {
+          return (
+            <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span>{t("applicationDeadlineNotConfirmed")}</span>
+              {officialUrl ? (
+                <a href={officialUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
+                  {t("visitSite")} <ExternalLink className="size-3" />
+                </a>
+              ) : null}
+            </span>
+          );
+        }
+        // A real application/early row exists (the gate above passed) but Yale — one of the
+        // 12 real target_universities rows — has ONLY recurring_annual_undated rows for both
+        // types, no dated one at all. soonestApplicationDeadline checks both branches for
+        // exactly this reason — a dated-only search would silently render nothing for a
+        // university the gate above just said has real data.
+        const soonest = soonestApplicationDeadline(deadlineRows, today);
+        if (!soonest) return NA;
+        const typeLabel = soonest.deadlineType === "early" ? t("deadlineTypeEarly") : t("deadlineTypeApplication");
+        return `${typeLabel}: ${formatAbsoluteDate(soonest.date, locale)}`;
+      },
+    },
     {
       label: t("costOfAttendance"),
       render: (u) => {
@@ -193,10 +261,23 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
       // pulled years apart would sit side by side with nothing marking the gap. A source row
       // — one badge per university, in its own column, the same shape every other fact in
       // this table already uses — is the placement that can't average that difference away.
+      //
+      // Suppressed when lacksCoreAdmissionStats fires (CEO follow-up to C7, 2026-09-04) — the
+      // self-contradicting bug the detail page fixed the same day: Oxford's real `source` URL
+      // rendering directly beneath admissionRate/costOfAttendance cells that both read "—".
+      // Same function, same guard shape, second surface.
       label: t("statisticsSource"),
       render: (u) => {
         const s = statsByUniId.get(u.id);
-        return s?.source ? (
+        if (!s?.source) return NA;
+        const missingCoreStats = lacksCoreAdmissionStats({
+          admissionRate: s.admission_rate,
+          satRangeLow: s.sat_range_low,
+          actRangeLow: s.act_range_low,
+          graduationRate: s.graduation_rate,
+        });
+        if (missingCoreStats) return NA;
+        return (
           <SourceBadge
             sourceName={s.source}
             checkedAt={s.updated_at}
@@ -206,8 +287,6 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
             checkedLabel={(time) => tSourceBadge("checked", { time })}
             viewSourceLabel={tSourceBadge("viewSource")}
           />
-        ) : (
-          NA
         );
       },
     },
@@ -218,15 +297,27 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
     {
       label: t("researchStrengths"),
       render: (u) => {
-        const topics = topicsByUniId.get(u.id) ?? [];
-        if (topics.length === 0) return NA;
+        const entry = topicsByUniId.get(u.id);
+        if (!entry || !entry.hasRawTopics) return NA;
+        if (entry.categories.length === 0) return <span>{t("researchStrengthsUnclassified")}</span>;
         return (
-          <div className="flex flex-wrap gap-1">
-            {topics.map((t) => (
-              <span key={t} className="rounded-full border bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground">
-                {t}
-              </span>
-            ))}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex flex-wrap gap-1">
+              {entry.categories.map((category) => (
+                <span key={category} className="rounded-full border bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground">
+                  {category}
+                </span>
+              ))}
+            </div>
+            <SourceBadge
+              sourceName="OpenAlex"
+              checkedAt={entry.verifiedAt}
+              url={entry.sourceUrl}
+              locale={locale}
+              sourceLabel={tSourceBadge("source")}
+              checkedLabel={(time) => tSourceBadge("checked", { time })}
+              viewSourceLabel={tSourceBadge("viewSource")}
+            />
           </div>
         );
       },

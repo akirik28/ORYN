@@ -215,9 +215,18 @@ export default async function DashboardPage() {
       // renders this honestly (CYCLE_STATUSES_WORTH_A_DESCRIPTOR); this preview used to have no
       // field to render it from at all — not degraded, structurally absent. Verified live
       // 2026-09-02: 12 of this block's eligible candidates carry exactly that shape.
-      return { title: opportunity?.title, matchScore: m.match_score, deadline: opportunity?.deadline ?? null, cycleStatus: opportunity?.cycle_status ?? null };
+      return {
+        id: opportunity?.id,
+        title: opportunity?.title,
+        matchScore: m.match_score,
+        deadline: opportunity?.deadline ?? null,
+        cycleStatus: opportunity?.cycle_status ?? null,
+      };
     })
-    .filter((o): o is { title: string; matchScore: number; deadline: string | null; cycleStatus: Opportunity["cycle_status"] | null } => Boolean(o.title))
+    .filter(
+      (o): o is { id: string; title: string; matchScore: number; deadline: string | null; cycleStatus: Opportunity["cycle_status"] | null } =>
+        Boolean(o.title) && Boolean(o.id)
+    )
     // Cut to size only now that unrecommendable rows are gone, so the block shows the best
     // rows a student can actually act on rather than whatever survived the top two.
     .slice(0, OPPORTUNITY_PREVIEW_SIZE);

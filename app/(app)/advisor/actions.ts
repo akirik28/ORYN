@@ -164,7 +164,7 @@ export async function sendAdvisorMessage(
   // is cache()-wrapped, so this and the later read inside the try block are one real query,
   // not two.
   const tierProfile = await getCurrentProfile();
-  const planTier = resolvePlanTier(tierProfile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+  const planTier = resolvePlanTier(tierProfile ?? { plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null });
 
   // The monthly allowance the UI shows has to be the one actually enforced, or the bar is
   // decoration. Checked after the burst limiter because that one is the cheaper guard.
@@ -400,7 +400,7 @@ export async function retryAdvisorMessage(failedMessageId: string): Promise<{ co
   // Resolved here, ahead of the quota check below, same reasoning as sendAdvisorMessage's
   // identical reorder above (2026-09-03, the Ultra tier-economics build).
   const tierProfile = await getCurrentProfile();
-  const planTier = resolvePlanTier(tierProfile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+  const planTier = resolvePlanTier(tierProfile ?? { plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null });
 
   // A retry spends real model budget like any other call, so it draws on the same
   // allowance rather than offering a way around it. Same fallback reasoning as
@@ -499,7 +499,7 @@ export async function createConversation(): Promise<{ conversationId?: string; e
   const supabase = await createClient();
 
   const tierProfile = await getCurrentProfile();
-  const planTier = resolvePlanTier(tierProfile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+  const planTier = resolvePlanTier(tierProfile ?? { plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null });
 
   const wallCheck = await assertConversationLimitNotExceeded(supabase, userId, planTier, locale);
   if (wallCheck.error) return wallCheck;

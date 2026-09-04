@@ -2,7 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, ParentLinkStatus, PlanTier, Profile } from "@/types/database";
-import { isUndefinedTableError } from "@/lib/supabase/errors";
+import { isUndefinedTableError, isUndefinedColumnError } from "@/lib/supabase/errors";
 import { resolvePlanTier } from "./plan-tier";
 
 export type { ParentLinkStatus };
@@ -27,7 +27,7 @@ export type { ParentLinkStatus };
  */
 export function resolveParentEffectiveTier(
   linkStatus: ParentLinkStatus,
-  studentProfile: Pick<Profile, "plan_tier" | "ultra_gift_expires_at">
+  studentProfile: Pick<Profile, "plan_tier" | "ultra_gift_expires_at" | "paid_ultra_expires_at">
 ): PlanTier {
   if (linkStatus !== "active") return "standard";
   return resolvePlanTier(studentProfile);
@@ -56,7 +56,10 @@ export function resolveParentEffectiveTier(
  * column on one that already exists, so this is the "missing table" member of
  * lib/supabase/errors.ts's schema-cache-miss family, not the "missing column" one.
  * `plan_tier`/`ultra_gift_expires_at` themselves need no degrade guard here — both are already
- * live columns, unrelated to 0116.
+ * live columns, unrelated to 0116. `paid_ultra_expires_at` (migration 0123, the payment
+ * seam) is a genuinely separate, independently-appliable migration from 0116, so it DOES get
+ * its own `isUndefinedColumnError` retry below — a parent-account rollout and a payment
+ * rollout landing on different days is the expected case, not an edge one.
  */
 export async function fetchParentEffectiveTier(
   admin: SupabaseClient<Database>,
@@ -77,11 +80,17 @@ export async function fetchParentEffectiveTier(
   }
   if (!link) return "standard"; // no relationship at all -- same as "not active"
 
-  const { data: student, error: studentError } = await admin
+  let { data: student, error: studentError } = await admin
     .from("profiles")
-    .select("plan_tier, ultra_gift_expires_at")
+    .select("plan_tier, ultra_gift_expires_at, paid_ultra_expires_at")
     .eq("id", studentUserId)
     .maybeSingle();
+
+  if (studentError && isUndefinedColumnError(studentError, "paid_ultra_expires_at")) {
+    const fallback = await admin.from("profiles").select("plan_tier, ultra_gift_expires_at").eq("id", studentUserId).maybeSingle();
+    student = fallback.data ? { ...fallback.data, paid_ultra_expires_at: null } : null;
+    studentError = fallback.error;
+  }
 
   if (studentError || !student) {
     if (studentError) console.error("[parent-tier] failed to read student profile", { error: studentError.message });

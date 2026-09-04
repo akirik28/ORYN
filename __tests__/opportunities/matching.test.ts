@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { computeEligibility, computeOpportunityMatch, computeAvoidSignals, isNearStudent, renderEligibilityNotes } from "@/lib/opportunities/matching";
+import { computeEligibility, computeOpportunityMatch, computeAvoidSignals, isNearStudent, isWithinTargetGeography, isTargetingCountry, renderEligibilityNotes } from "@/lib/opportunities/matching";
 import type { OpportunityForMatching, StudentMatchProfile, DismissedOpportunitySignal } from "@/lib/opportunities/matching";
 
 function opportunity(overrides: Partial<OpportunityForMatching> = {}): OpportunityForMatching {
@@ -101,6 +101,43 @@ describe("computeEligibility", () => {
     expect(result.notes.map((n) => n.code)).not.toContain("age_eligibility_unverified");
   });
 
+  // Migration 0129 — the third state neither the default nor ageEligibilityConfirmedOpen
+  // can express: checked, official page doesn't say. Proves BOTH halves of the swap, same
+  // "prove it can go red" bar: the alarm-toned code disappears AND the calmer one appears
+  // — not just "some code changed."
+  test("age_eligibility_checked_not_stated replaces age_eligibility_unverified when the basis says checked_not_stated", () => {
+    // Grade and country resolved via real/confirmed values so only the age dimension under
+    // test can produce a note -- an unrelated dimension's own unverified note would keep
+    // this assertion honest about the wrong thing, the exact mistake caught (and fixed) in
+    // the counselor/eligibility.ts version of this same test.
+    const result = computeEligibility(
+      student({ graduationYear: new Date().getFullYear() + 1 }),
+      opportunity({ ageEligibilityBasis: "checked_not_stated", lastVerifiedAt: "2026-09-04", eligibleGrades: ["12"], countryEligibilityConfirmedOpen: true })
+    );
+    expect(result.eligible).toBe(true);
+    expect(result.notes.map((n) => n.code)).not.toContain("age_eligibility_unverified");
+    expect(result.notes).toEqual([{ code: "age_eligibility_checked_not_stated", params: { checkedAt: "2026-09-04" } }]);
+  });
+
+  // The un-set default still produces the original alarm-toned code — proves the new branch
+  // didn't silently swallow the old, common case.
+  test("age_eligibility_unverified still fires when basis is unset (the default, unresearched case)", () => {
+    const result = computeEligibility(student(), opportunity());
+    expect(result.notes.map((n) => n.code)).toContain("age_eligibility_unverified");
+    expect(result.notes.map((n) => n.code)).not.toContain("age_eligibility_checked_not_stated");
+  });
+
+  // Proves the full render pipeline, not just the code -- the date actually reaches the
+  // rendered sentence, in both locales, formatted (not the raw ISO string).
+  test("age_eligibility_checked_not_stated renders a calm, dated sentence in both locales", () => {
+    const result = computeEligibility(
+      student({ graduationYear: new Date().getFullYear() + 1 }),
+      opportunity({ ageEligibilityBasis: "checked_not_stated", lastVerifiedAt: "2026-09-04", eligibleGrades: ["12"], countryEligibilityConfirmedOpen: true })
+    );
+    expect(renderEligibilityNotes(result.notes, "en")).toBe("The official page doesn't state an age requirement — checked (September 4, 2026).");
+    expect(renderEligibilityNotes(result.notes, "tr")).toBe("Resmi sayfa yaş şartı belirtmiyor — kontrol edildi (4 Eylül 2026).");
+  });
+
   test("is ineligible when a citizenship restriction is known to exclude the student", () => {
     const result = computeEligibility(
       student({ citizenshipCountries: ["Canada"] }),
@@ -157,6 +194,34 @@ describe("computeEligibility", () => {
     const result = computeEligibility(student(), opportunity({ gradeEligibilityConfirmedOpen: true }));
     expect(result.eligible).toBe(true);
     expect(result.notes.map((n) => n.code)).not.toContain("grade_eligibility_unverified");
+  });
+
+  // Migration 0129 — same shape as the age pair above, for grade.
+  test("grade_eligibility_checked_not_stated replaces grade_eligibility_unverified when the basis says checked_not_stated", () => {
+    // Age (a trivially-wide real bound, satisfied by student()'s own default age: 16) and
+    // country resolved so only the grade dimension under test can produce a note.
+    const result = computeEligibility(
+      student(),
+      opportunity({ gradeEligibilityBasis: "checked_not_stated", lastVerifiedAt: "2026-09-04", minimumAge: 0, maximumAge: 120, countryEligibilityConfirmedOpen: true })
+    );
+    expect(result.eligible).toBe(true);
+    expect(result.notes.map((n) => n.code)).not.toContain("grade_eligibility_unverified");
+    expect(result.notes).toEqual([{ code: "grade_eligibility_checked_not_stated", params: { checkedAt: "2026-09-04" } }]);
+  });
+
+  test("grade_eligibility_unverified still fires when basis is unset (the default, unresearched case)", () => {
+    const result = computeEligibility(student(), opportunity());
+    expect(result.notes.map((n) => n.code)).toContain("grade_eligibility_unverified");
+    expect(result.notes.map((n) => n.code)).not.toContain("grade_eligibility_checked_not_stated");
+  });
+
+  test("grade_eligibility_checked_not_stated renders a calm, dated sentence in both locales", () => {
+    const result = computeEligibility(
+      student(),
+      opportunity({ gradeEligibilityBasis: "checked_not_stated", lastVerifiedAt: "2026-09-04", minimumAge: 0, maximumAge: 120, countryEligibilityConfirmedOpen: true })
+    );
+    expect(renderEligibilityNotes(result.notes, "en")).toBe("The official page doesn't state a grade requirement — checked (September 4, 2026).");
+    expect(renderEligibilityNotes(result.notes, "tr")).toBe("Resmi sayfa sınıf şartı belirtmiyor — kontrol edildi (4 Eylül 2026).");
   });
 
   // Confirmed live against a real profile this session: a student's own stored country
@@ -223,6 +288,36 @@ describe("computeEligibility", () => {
       const result = computeEligibility(resolvedStudent(), resolvedOpportunity({ countryEligibilityConfirmedOpen: true }));
       expect(result.eligible).toBe(true);
       expect(result.notes).toEqual([]);
+    });
+
+    // Migration 0133 — the third state neither the default nor countryEligibilityConfirmedOpen
+    // can express: checked, official page doesn't say. Same "prove it can go red" bar as the
+    // age/grade pair above: proves both halves of the swap, not just "some code changed."
+    // Age/grade are already fully resolved by resolvedStudent()/resolvedOpportunity() above, so
+    // only the country dimension under test can produce a note.
+    test("country_eligibility_checked_not_stated replaces country_eligibility_unverified when the basis says checked_not_stated", () => {
+      const result = computeEligibility(resolvedStudent(), resolvedOpportunity({ countryEligibilityBasis: "checked_not_stated", lastVerifiedAt: "2026-09-04" }));
+      expect(result.eligible).toBe(true);
+      expect(result.notes.map((n) => n.code)).not.toContain("country_eligibility_unverified");
+      expect(result.notes).toEqual([{ code: "country_eligibility_checked_not_stated", params: { checkedAt: "2026-09-04" } }]);
+    });
+
+    // The un-set default still produces the original alarm-toned code — proves the new branch
+    // didn't silently swallow the old, common case.
+    test("country_eligibility_unverified still fires when basis is unset (the default, unresearched case)", () => {
+      const result = computeEligibility(resolvedStudent(), resolvedOpportunity());
+      expect(result.notes.map((n) => n.code)).toContain("country_eligibility_unverified");
+      expect(result.notes.map((n) => n.code)).not.toContain("country_eligibility_checked_not_stated");
+    });
+
+    // Proves the full render pipeline, not just the code — the date actually reaches the
+    // rendered sentence, in both locales, formatted (not the raw ISO string).
+    test("country_eligibility_checked_not_stated renders a calm, dated sentence in both locales", () => {
+      const result = computeEligibility(resolvedStudent(), resolvedOpportunity({ countryEligibilityBasis: "checked_not_stated", lastVerifiedAt: "2026-09-04" }));
+      expect(renderEligibilityNotes(result.notes, "en")).toBe(
+        "The official page doesn't state a country/citizenship requirement — checked (September 4, 2026)."
+      );
+      expect(renderEligibilityNotes(result.notes, "tr")).toBe("Resmi sayfa ülke/vatandaşlık şartı belirtmiyor — kontrol edildi (4 Eylül 2026).");
     });
 
     test("no note when a populated allow-list already covers the row (researched-restricted case)", () => {
@@ -343,6 +438,192 @@ describe("computeOpportunityMatch", () => {
     expect(near.relevanceScore).toBeGreaterThan(far.relevanceScore);
   });
 
+  // 2026-09-04 (CEO dispatch: target_geographies was collected at onboarding — 100% fill
+  // rate among onboarded students, docs/target-geography-boost-2026-09-04.md — and never read
+  // anywhere. Real measured effect: students whose target excludes the catalog's dominant
+  // country (70% US) still saw a majority-US recommendation set, because nothing
+  // differentiated them from a student who never stated a preference at all).
+  describe("target_geographies boost", () => {
+    test("scores higher when the opportunity falls inside the student's stated target, even with zero interest overlap — isolated from proximity (student's own country is France, matching neither opportunity, so isNearStudent is false on both sides and cannot explain the difference)", () => {
+      const inTarget = computeOpportunityMatch(
+        student({ country: "France", targetGeographies: ["turkey"] }),
+        opportunity({ country: "Turkey" })
+      );
+      const outsideTarget = computeOpportunityMatch(
+        student({ country: "France", targetGeographies: ["turkey"] }),
+        opportunity({ country: "United States" })
+      );
+      expect(inTarget.relevanceScore).toBeGreaterThan(outsideTarget.relevanceScore);
+      expect(inTarget.matchScore).toBeGreaterThan(outsideTarget.matchScore);
+    });
+
+    test("omitting targetGeographies behaves identically to the pre-fix code — no caller breaks by not knowing about this field yet", () => {
+      const withoutField = computeOpportunityMatch(student({ country: "Turkey" }), opportunity({ country: "Turkey" }));
+      const withEmptyArray = computeOpportunityMatch(student({ country: "Turkey", targetGeographies: [] }), opportunity({ country: "Turkey" }));
+      expect(withoutField.relevanceScore).toBe(withEmptyArray.relevanceScore);
+    });
+
+    test("'not_sure' never boosts anything — it's the honest absence of a direction, not a sixth region", () => {
+      const match = computeOpportunityMatch(student({ targetGeographies: ["not_sure"] }), opportunity({ country: "United States" }));
+      const noTarget = computeOpportunityMatch(student({ targetGeographies: [] }), opportunity({ country: "United States" }));
+      expect(match.relevanceScore).toBe(noTarget.relevanceScore);
+    });
+
+    test("stacks additively with the proximity boost — they're independent facts (current residence vs. stated aspiration) that can both be true at once", () => {
+      // Turkey-resident, Turkey-targeting student, Turkey-based opportunity: both isNearStudent
+      // AND isWithinTargetGeography are true here, and should both contribute.
+      const both = computeOpportunityMatch(student({ country: "Turkey", targetGeographies: ["turkey"] }), opportunity({ country: "Turkey" }));
+      const targetOnly = computeOpportunityMatch(student({ country: "France", targetGeographies: ["turkey"] }), opportunity({ country: "Turkey" }));
+      const proximityOnly = computeOpportunityMatch(student({ country: "Turkey", targetGeographies: ["uk"] }), opportunity({ country: "Turkey" }));
+      expect(both.relevanceScore).toBeGreaterThan(targetOnly.relevanceScore);
+      expect(both.relevanceScore).toBeGreaterThan(proximityOnly.relevanceScore);
+    });
+
+    // The concrete worry CEO raised before approving this: an overly strong boost could bury a
+    // genuinely stronger interest match under a weak same-country one. Proven false for this
+    // magnitude directly, not just argued in a comment: a real 2-of-3 interest match against an
+    // out-of-target country still outranks a 0-of-3 interest match inside the target.
+    test("cannot lift a weak in-target match above a strong out-of-target one — the boost tie-breaks, it doesn't override", () => {
+      const weakButInTarget = computeOpportunityMatch(
+        student({ country: "Turkey", targetGeographies: ["turkey"], interests: ["Economics", "Mathematics", "Biology"] }),
+        opportunity({ country: "Turkey", fields: ["Chemistry"] })
+      );
+      const strongButOutsideTarget = computeOpportunityMatch(
+        student({ country: "Turkey", targetGeographies: ["turkey"], interests: ["Economics", "Mathematics", "Biology"] }),
+        opportunity({ country: "United States", fields: ["Economics", "Mathematics"] })
+      );
+      expect(strongButOutsideTarget.relevanceScore).toBeGreaterThan(weakButInTarget.relevanceScore);
+    });
+
+    test("never affects eligibility — a target-geography match on an otherwise-ineligible opportunity still scores 0", () => {
+      const match = computeOpportunityMatch(
+        student({ age: 12, targetGeographies: ["usa"] }),
+        opportunity({ minimumAge: 16, country: "United States" })
+      );
+      expect(match.eligible).toBe(false);
+      expect(match.matchScore).toBe(0);
+    });
+  });
+
+  // CEO, 2026-09-04, from the measured overlap gap (docs/university-opportunity-overlap-
+  // measurement-2026-09-04.md): 2 of 8 real students with a target_universities row target a
+  // country their target_geographies never mentions -- "usa"/"uk" doesn't imply MIT. Reuses
+  // TARGET_GEOGRAPHY_BOOST (not a second constant) via isTargetingCountry, which merges both
+  // sources into one check before the boost is ever applied -- see that function's own
+  // comment for why, and the explicit no-double-counting test below for the proof.
+  describe("target_universities country boost", () => {
+    test("scores higher when the opportunity falls inside a targeted university's country, even with zero interest overlap — isolated from proximity", () => {
+      const inTarget = computeOpportunityMatch(
+        student({ country: "France", targetUniversityCountries: ["United States"] }),
+        opportunity({ country: "United States" })
+      );
+      const outsideTarget = computeOpportunityMatch(
+        student({ country: "France", targetUniversityCountries: ["United States"] }),
+        opportunity({ country: "Germany" })
+      );
+      expect(inTarget.relevanceScore).toBeGreaterThan(outsideTarget.relevanceScore);
+      expect(inTarget.matchScore).toBeGreaterThan(outsideTarget.matchScore);
+    });
+
+    test("omitting targetUniversityCountries behaves identically to a student with no target universities", () => {
+      const withoutField = computeOpportunityMatch(student({ country: "Turkey" }), opportunity({ country: "Turkey" }));
+      const withEmptyArray = computeOpportunityMatch(student({ country: "Turkey", targetUniversityCountries: [] }), opportunity({ country: "Turkey" }));
+      expect(withoutField.relevanceScore).toBe(withEmptyArray.relevanceScore);
+    });
+
+    test("stacks additively with the proximity boost, same as target_geographies does", () => {
+      const both = computeOpportunityMatch(student({ country: "Turkey", targetUniversityCountries: ["Turkey"] }), opportunity({ country: "Turkey" }));
+      const targetOnly = computeOpportunityMatch(student({ country: "France", targetUniversityCountries: ["Turkey"] }), opportunity({ country: "Turkey" }));
+      const proximityOnly = computeOpportunityMatch(student({ country: "Turkey", targetUniversityCountries: ["United Kingdom"] }), opportunity({ country: "Turkey" }));
+      expect(both.relevanceScore).toBeGreaterThan(targetOnly.relevanceScore);
+      expect(both.relevanceScore).toBeGreaterThan(proximityOnly.relevanceScore);
+    });
+
+    // The exact scenario CEO named: a student who said "usa" AND is targeting a US
+    // university (e.g. MIT). Both sources agree on the same country -- the boost must fire
+    // ONCE, not twice, for what is really one underlying fact stated two ways.
+    test("does NOT double-count when target_geographies and a targeted university agree on the same country", () => {
+      const bothSourcesSameCountry = computeOpportunityMatch(
+        student({ country: "France", targetGeographies: ["usa"], targetUniversityCountries: ["United States"] }),
+        opportunity({ country: "United States" })
+      );
+      const geographyOnly = computeOpportunityMatch(
+        student({ country: "France", targetGeographies: ["usa"] }),
+        opportunity({ country: "United States" })
+      );
+      const universityOnly = computeOpportunityMatch(
+        student({ country: "France", targetUniversityCountries: ["United States"] }),
+        opportunity({ country: "United States" })
+      );
+      expect(bothSourcesSameCountry.relevanceScore).toBe(geographyOnly.relevanceScore);
+      expect(bothSourcesSameCountry.relevanceScore).toBe(universityOnly.relevanceScore);
+    });
+
+    // The other half of the same guarantee: two DIFFERENT countries, one from each source,
+    // must still each get their own boost when an opportunity matches THAT one specifically —
+    // merging into one check must not accidentally collapse two real, distinct targets into one.
+    test("two different countries from the two different sources each still boost their own matching opportunity", () => {
+      const s = student({ country: "France", targetGeographies: ["uk"], targetUniversityCountries: ["Turkey"] });
+      const ukMatch = computeOpportunityMatch(s, opportunity({ country: "United Kingdom" }));
+      const turkeyMatch = computeOpportunityMatch(s, opportunity({ country: "Turkey" }));
+      const neitherMatch = computeOpportunityMatch(s, opportunity({ country: "Germany" }));
+      expect(ukMatch.relevanceScore).toBeGreaterThan(neitherMatch.relevanceScore);
+      expect(turkeyMatch.relevanceScore).toBeGreaterThan(neitherMatch.relevanceScore);
+      expect(ukMatch.relevanceScore).toBe(turkeyMatch.relevanceScore);
+    });
+
+    test("cannot lift a weak in-target match above a strong out-of-target one — the boost tie-breaks, it doesn't override", () => {
+      const weakButInTarget = computeOpportunityMatch(
+        student({ country: "Turkey", targetUniversityCountries: ["Turkey"], interests: ["Economics", "Mathematics", "Biology"] }),
+        opportunity({ country: "Turkey", fields: ["Chemistry"] })
+      );
+      const strongButOutsideTarget = computeOpportunityMatch(
+        student({ country: "Turkey", targetUniversityCountries: ["Turkey"], interests: ["Economics", "Mathematics", "Biology"] }),
+        opportunity({ country: "United States", fields: ["Economics", "Mathematics"] })
+      );
+      expect(strongButOutsideTarget.relevanceScore).toBeGreaterThan(weakButInTarget.relevanceScore);
+    });
+
+    test("never affects eligibility — a targeted-university-country match on an otherwise-ineligible opportunity still scores 0", () => {
+      const match = computeOpportunityMatch(
+        student({ age: 12, targetUniversityCountries: ["United States"] }),
+        opportunity({ minimumAge: 16, country: "United States" })
+      );
+      expect(match.eligible).toBe(false);
+      expect(match.matchScore).toBe(0);
+    });
+  });
+
+  describe("isTargetingCountry", () => {
+    test("true from target_geographies alone", () => {
+      expect(isTargetingCountry({ targetGeographies: ["usa"], targetUniversityCountries: [] }, "United States")).toBe(true);
+    });
+
+    test("true from targetUniversityCountries alone", () => {
+      expect(isTargetingCountry({ targetGeographies: [], targetUniversityCountries: ["United States"] }, "United States")).toBe(true);
+    });
+
+    test("true when both are present and agree", () => {
+      expect(isTargetingCountry({ targetGeographies: ["usa"], targetUniversityCountries: ["United States"] }, "United States")).toBe(true);
+    });
+
+    test("false when neither source names the opportunity's country", () => {
+      expect(isTargetingCountry({ targetGeographies: ["uk"], targetUniversityCountries: ["Turkey"] }, "Germany")).toBe(false);
+    });
+
+    test("targetUniversityCountries goes through the same country-alias normalization as target_geographies — 'Türkiye' matches 'Turkey'", () => {
+      expect(isTargetingCountry({ targetGeographies: [], targetUniversityCountries: ["Türkiye"] }, "Turkey")).toBe(true);
+    });
+
+    test("both fields optional/undefined — a caller that doesn't know about either yet gets false, not a crash", () => {
+      expect(isTargetingCountry({}, "United States")).toBe(false);
+    });
+
+    test("null opportunity country never matches, regardless of source", () => {
+      expect(isTargetingCountry({ targetGeographies: ["usa"], targetUniversityCountries: ["United States"] }, null)).toBe(false);
+    });
+  });
+
   test("proximity boost never overrides eligibility", () => {
     const match = computeOpportunityMatch(student({ age: 12, country: "United States" }), opportunity({ minimumAge: 16, country: "United States" }));
     expect(match.eligible).toBe(false);
@@ -412,6 +693,54 @@ describe("isNearStudent", () => {
 
   test("resolves the confirmed Türkiye/Turkey alias case", () => {
     expect(isNearStudent(student({ country: "Türkiye" }), opportunity({ country: "Turkey" }))).toBe(true);
+  });
+});
+
+describe("isWithinTargetGeography", () => {
+  test("single-country targets match their real country, and only that one", () => {
+    expect(isWithinTargetGeography(["usa"], "United States")).toBe(true);
+    expect(isWithinTargetGeography(["usa"], "Canada")).toBe(false);
+    expect(isWithinTargetGeography(["uk"], "United Kingdom")).toBe(true);
+    expect(isWithinTargetGeography(["canada"], "Canada")).toBe(true);
+    expect(isWithinTargetGeography(["turkey"], "Turkey")).toBe(true);
+  });
+
+  test("'turkey' resolves the same Türkiye/Turkey alias isNearStudent/isSameCountry already handle — one country-equivalence rule, not a second copy", () => {
+    expect(isWithinTargetGeography(["turkey"], "Türkiye")).toBe(true);
+  });
+
+  test("'europe' matches continental Europe but explicitly excludes the UK and Turkey — the onboarding screen offered those as separate options, not as part of 'Europe'", () => {
+    expect(isWithinTargetGeography(["europe"], "France")).toBe(true);
+    expect(isWithinTargetGeography(["europe"], "Germany")).toBe(true);
+    expect(isWithinTargetGeography(["europe"], "United Kingdom")).toBe(false);
+    expect(isWithinTargetGeography(["europe"], "Turkey")).toBe(false);
+    expect(isWithinTargetGeography(["europe"], "Türkiye")).toBe(false);
+  });
+
+  test("'europe' does not match a non-European country", () => {
+    expect(isWithinTargetGeography(["europe"], "United States")).toBe(false);
+    expect(isWithinTargetGeography(["europe"], "Japan")).toBe(false);
+  });
+
+  test("'not_sure' never matches anything — the honest absence of a direction, not a sixth region", () => {
+    expect(isWithinTargetGeography(["not_sure"], "United States")).toBe(false);
+    expect(isWithinTargetGeography(["not_sure"], "Turkey")).toBe(false);
+  });
+
+  test("a student can target multiple geographies at once — matches if ANY of them fit", () => {
+    expect(isWithinTargetGeography(["uk", "turkey"], "Turkey")).toBe(true);
+    expect(isWithinTargetGeography(["uk", "turkey"], "United Kingdom")).toBe(true);
+    expect(isWithinTargetGeography(["uk", "turkey"], "United States")).toBe(false);
+  });
+
+  test("no target, no country, or an unrecognized country string never matches", () => {
+    expect(isWithinTargetGeography([], "United States")).toBe(false);
+    expect(isWithinTargetGeography(["usa"], null)).toBe(false);
+    // "Global (online)" / "International" are real live opportunities.country values that
+    // are not actual countries (remote/global placeholders) -- must not match anything,
+    // silence rather than a false claim of geographic alignment.
+    expect(isWithinTargetGeography(["usa"], "Global (online)")).toBe(false);
+    expect(isWithinTargetGeography(["usa"], "International")).toBe(false);
   });
 });
 

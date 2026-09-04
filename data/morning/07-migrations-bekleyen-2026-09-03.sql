@@ -48,7 +48,7 @@ begin;
 -- lib/admin/queries.ts's getPageViewStats) already degrades to an honest "not measured"
 -- state when this table is absent, so nothing breaks before this migration is applied.
 
-create table public.page_views (
+create table if not exists public.page_views (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   path text not null,
@@ -62,7 +62,7 @@ comment on column public.page_views.path is
 comment on column public.page_views.visitor_hash is
   'sha256(secret + UTC date + IP + user agent), computed server-side and discarded immediately -- not reversible to an IP or user agent, and changes daily for the same visitor by design. Distinct count within a single day is an accurate distinct-visitor count; summed across multiple days it over-counts (a returning visitor gets a new hash each day), so multi-day totals in the UI are labeled as page views, not visitors.';
 
-create index page_views_created_at_idx on public.page_views (created_at desc);
+create index if not exists page_views_created_at_idx on public.page_views (created_at desc);
 
 alter table public.page_views enable row level security;
 
@@ -177,10 +177,14 @@ alter table public.page_views enable row level security;
 -- strings alongside the English ones the way the existing filter already has them -- is real,
 -- separate front-end work this migration does not include and does not estimate. Approving the
 -- column is a data-modeling decision; approving a visible feature is a second, later one.
-create type academic_tier as enum ('research_university', 'applied_sciences');
+do $$ begin
+  if not exists (select 1 from pg_type where typname = 'academic_tier') then
+    create type academic_tier as enum ('research_university', 'applied_sciences');
+  end if;
+end $$;
 
-alter table public.universities add column academic_tier academic_tier;
-alter table public.universities add column academic_tier_local_name text;
+alter table public.universities add column if not exists academic_tier academic_tier;
+alter table public.universities add column if not exists academic_tier_local_name text;
 
 comment on column public.universities.academic_tier is
   'Migration 0108, written not applied — the shared cross-country class distinguishing a research university from the applied-sciences/polytechnic tier (Fachhochschule/hogeschool/ammattikorkeakoulu/Technological University). NULL means not yet classified, not "is a research university" — this column is not backfilled for the 1,019 pre-existing rows as part of this migration; that is separate, unattempted future research. Where a row''s institution_type is already occupied by US College-Scorecard-style ownership data (public/private/nonprofit), academic_tier is the correct place for tier instead, not institution_type.';
@@ -226,8 +230,8 @@ comment on column public.universities.academic_tier_local_name is
 -- never requires it even when curriculum = 'other' -- a student who picks "other" and types
 -- nothing is still a student who picked "other".
 
-alter table public.profiles add column curriculum_other_text text;
-alter table public.education_records add column curriculum_other_text text;
+alter table public.profiles add column if not exists curriculum_other_text text;
+alter table public.education_records add column if not exists curriculum_other_text text;
 
 comment on column public.profiles.curriculum_other_text is
   'Free text for what "other" means when profiles.curriculum = ''other'' -- optional, max 100 chars (app-enforced). See this migration''s own header for why no CHECK constraint and no school-name/address scope creep.';
@@ -264,12 +268,13 @@ comment on column public.education_records.curriculum_other_text is
 -- turns the update into a no-op and returns zero rows, all as one atomic operation with no
 -- window for a second caller to interleave. A `select` followed by a conditional `insert` from
 -- TypeScript would have exactly that window.
-create table public.advisor_generation_locks (
+create table if not exists public.advisor_generation_locks (
   user_id uuid primary key references public.profiles(id) on delete cascade,
   started_at timestamptz not null default now()
 );
 
 alter table public.advisor_generation_locks enable row level security;
+drop policy if exists "owner full access" on public.advisor_generation_locks;
 create policy "owner full access" on public.advisor_generation_locks for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 -- Returns the lock's started_at on success, NULL if a fresh (non-stale) lock is already held
@@ -461,7 +466,7 @@ alter table public.advisor_conversation_retention_runs enable row level security
 -- client regardless, which bypasses RLS entirely and was never gated by this policy either
 -- way.
 
-create table public.feedback_reports (
+create table if not exists public.feedback_reports (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references public.profiles(id) on delete set null,
   message text not null,
@@ -481,15 +486,17 @@ comment on column public.feedback_reports.path is
 comment on column public.feedback_reports.plan_tier is
   'The student''s plan_tier at submission time (server-derived from their session, never client-supplied) -- context for whoever reads the report, not something the student was asked to state.';
 
-create index feedback_reports_created_at_idx on public.feedback_reports (created_at desc);
+create index if not exists feedback_reports_created_at_idx on public.feedback_reports (created_at desc);
 
 alter table public.feedback_reports enable row level security;
 
+drop policy if exists "students can submit their own feedback report" on public.feedback_reports;
 create policy "students can submit their own feedback report"
   on public.feedback_reports for insert
   to authenticated
   with check (auth.uid() = user_id);
 
+drop policy if exists "students can read their own feedback reports" on public.feedback_reports;
 create policy "students can read their own feedback reports"
   on public.feedback_reports for select
   to authenticated

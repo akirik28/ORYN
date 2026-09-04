@@ -5,7 +5,8 @@ import "@testing-library/jest-dom/vitest";
 import { NextIntlClientProvider } from "next-intl";
 import en from "@/messages/en.json";
 import { AdvisorChat } from "@/features/advisor/advisor-chat";
-import { sendAdvisorMessage, notNowUpgradePrompt, softDismissUpgradePrompt } from "@/app/(app)/advisor/actions";
+import { notNowUpgradePrompt, softDismissUpgradePrompt } from "@/app/(app)/advisor/actions";
+import { streamAdvisorChat } from "@/lib/advisor/stream-client";
 import { NOT_YET_DISMISSED } from "@/lib/advisor/upgrade-prompt";
 import type { AdvisorMessage } from "@/types/database";
 
@@ -29,11 +30,13 @@ import type { AdvisorMessage } from "@/types/database";
  */
 
 vi.mock("@/app/(app)/advisor/actions", () => ({
-  sendAdvisorMessage: vi.fn(),
-  retryAdvisorMessage: vi.fn(),
   softDismissUpgradePrompt: vi.fn(),
   notNowUpgradePrompt: vi.fn(),
 }));
+// 2026-09-04, the streaming build: AdvisorChat calls streamAdvisorChat (lib/advisor/stream-
+// client.ts) now, not sendAdvisorMessage/retryAdvisorMessage directly — mocking the actual
+// dependency this component holds, not the Server Actions it used to call and no longer does.
+vi.mock("@/lib/advisor/stream-client", () => ({ streamAdvisorChat: vi.fn() }));
 
 // jsdom doesn't implement Element.scrollTo — AdvisorChat's own auto-scroll-on-new-message
 // effect calls it unconditionally, unrelated to anything this file actually tests.
@@ -118,11 +121,14 @@ describe("AdvisorChat — the code path oryn.qa.b's own data cannot currently ex
  * reloaded historical one" true by construction rather than something asserted separately.
  */
 async function sendAndAwaitReply(degraded: boolean) {
-  vi.mocked(sendAdvisorMessage).mockResolvedValue({
-    conversationId: "f5bc7909-6cee-485f-931f-fb322a940ebb",
-    assistantMessageId: "new-reply",
-    content: "A reply.",
-    degraded,
+  // The mock's own onDelta call is what makes the reply text actually appear in the DOM —
+  // the real streamAdvisorChat forwards each chunk the same way; this fixture just delivers
+  // it all as one chunk, which is a faithful-enough stand-in for what this file's own tests
+  // actually check (the upgrade-prompt overlay's timing/eligibility, not chunking behavior —
+  // see __tests__/advisor/stream-client.test.ts for chunk-boundary coverage).
+  vi.mocked(streamAdvisorChat).mockImplementation(async (_endpoint, _body, onDelta) => {
+    onDelta("A reply.");
+    return { conversationId: "f5bc7909-6cee-485f-931f-fb322a940ebb", assistantMessageId: "new-reply", degraded };
   });
   fireEvent.change(screen.getByPlaceholderText("Ask Proxola…"), { target: { value: "A question" } });
   fireEvent.click(screen.getByRole("button", { name: "Send message" }));
@@ -184,11 +190,9 @@ describe("AdvisorChat — upgrade prompt overlay (founder-approved pop-up, frequ
     await sendAndAwaitReply(true);
     fireEvent.click(screen.getByText("Not now")); // clears this one so a second could render if the cap didn't hold
 
-    vi.mocked(sendAdvisorMessage).mockResolvedValue({
-      conversationId: "f5bc7909-6cee-485f-931f-fb322a940ebb",
-      assistantMessageId: "new-reply-2",
-      content: "A second reply.",
-      degraded: true,
+    vi.mocked(streamAdvisorChat).mockImplementation(async (_endpoint, _body, onDelta) => {
+      onDelta("A second reply.");
+      return { conversationId: "f5bc7909-6cee-485f-931f-fb322a940ebb", assistantMessageId: "new-reply-2", degraded: true };
     });
     fireEvent.change(screen.getByPlaceholderText("Ask Proxola…"), { target: { value: "Another question" } });
     fireEvent.click(screen.getByRole("button", { name: "Send message" }));

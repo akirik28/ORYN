@@ -276,7 +276,7 @@ comment on column public.admin_finance_settings.updated_by is
 -- path exists or should exist. `disabled_by` is a real profiles FK (not just a string) so
 -- the admin panel can show who flipped a job off, matching message_reports' own
 -- reviewed_by convention.
-create table public.job_controls (
+create table if not exists public.job_controls (
   job_name text primary key,
   disabled boolean not null default false,
   disabled_at timestamptz,
@@ -320,7 +320,7 @@ comment on table public.job_controls is
 -- other admin-only write in this app -- no insert/update/delete policy exists for
 -- authenticated users.
 
-create table public.quota_grants (
+create table if not exists public.quota_grants (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
   amount_usd numeric(10,4) not null check (amount_usd > 0),
@@ -328,9 +328,10 @@ create table public.quota_grants (
   granted_by uuid references public.profiles(id) on delete set null,
   created_at timestamptz not null default now()
 );
-create index quota_grants_user_id_idx on public.quota_grants(user_id, created_at desc);
+create index if not exists quota_grants_user_id_idx on public.quota_grants(user_id, created_at desc);
 
 alter table public.quota_grants enable row level security;
+drop policy if exists "select own quota grants" on public.quota_grants;
 create policy "select own quota grants" on public.quota_grants for select using (user_id = auth.uid());
 
 
@@ -440,6 +441,7 @@ alter table public.admin_actions enable row level security;
 -- Admins can read the full log (accountability has to be visible to the people it's about);
 -- nothing here grants a normal student row access, since RLS with no policy for a role denies
 -- by default -- the same posture every other admin-only table in this schema already takes.
+drop policy if exists "admins can read admin_actions" on public.admin_actions;
 create policy "admins can read admin_actions" on public.admin_actions
   for select to authenticated
   using (exists (select 1 from public.profiles where id = auth.uid() and is_admin = true));
@@ -472,7 +474,7 @@ create policy "admins can read admin_actions" on public.admin_actions
 -- Service-role access only, same convention as provider_health/external_sync_jobs
 -- (0014_row_level_security.sql) -- no student has any reason to read or write this.
 
-create table public.job_budget_overrides (
+create table if not exists public.job_budget_overrides (
   feature text primary key,
   budget_usd numeric(10,2) not null check (budget_usd >= 0),
   updated_by uuid references public.profiles(id) on delete set null,
@@ -504,7 +506,7 @@ alter table public.job_budget_overrides enable row level security;
 -- Service-role access only, same convention as job_budget_overrides/provider_health
 -- (0014_row_level_security.sql) -- no student has any reason to read or write this.
 
-create table public.ai_model_pricing (
+create table if not exists public.ai_model_pricing (
   model text primary key,
   input_rate_per_million numeric(10,4) not null check (input_rate_per_million >= 0),
   output_rate_per_million numeric(10,4) not null check (output_rate_per_million >= 0),
@@ -534,7 +536,7 @@ alter table public.ai_model_pricing enable row level security;
 -- table should hold a judgment about any admin-legible feature identifier without a
 -- migration every time the candidate set changes.
 
-create table public.admin_dead_feature_flags (
+create table if not exists public.admin_dead_feature_flags (
   feature_key text primary key,
   marked_by uuid references public.profiles(id) on delete set null,
   marked_at timestamptz not null default now(),
@@ -795,7 +797,7 @@ alter table public.opportunity_verification_runs enable row level security;
 -- "don't overwrite a non-null value," which a CHECK constraint can't express on its own; a
 -- unique constraint doesn't fit either, since every granted row's value is a distinct
 -- timestamp, not a shared flag.
-alter table public.profiles add column ultra_gift_granted_at timestamptz;
+alter table public.profiles add column if not exists ultra_gift_granted_at timestamptz;
 
 
 -- ══════════════════════════════════════════════════════════════════
@@ -826,7 +828,7 @@ alter table public.profiles add column ultra_gift_granted_at timestamptz;
 -- different reasons. These three are toggles/a single number on one "how open is the
 -- product right now" screen; nothing downstream needs to know which of the three changed
 -- most recently.
-create table public.admin_product_settings (
+create table if not exists public.admin_product_settings (
   id uuid primary key,
   signups_enabled boolean not null default true,
   maintenance_mode boolean not null default false,

@@ -26,7 +26,7 @@ export default async function PlanTierPage() {
   // same "no reason to serialize two unrelated fetches" reasoning as app/(app)/layout.tsx's
   // own Promise.all just above its Sidebar render.
   const [profile, financeSettings] = await Promise.all([getCurrentProfile(), getFinanceSettings(createAdminClient())]);
-  const tier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+  const tier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null });
 
   // 2026-09-03, the founder-directed redesign: every figure PlanTierView renders (the
   // marquee cards' stat numbers, the comparison table's aiAllowance/replyCeiling rows) is

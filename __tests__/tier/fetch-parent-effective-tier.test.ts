@@ -36,22 +36,22 @@ beforeEach(() => {
 
 describe("fetchParentEffectiveTier", () => {
   test("active link, ultra student -> ultra", async () => {
-    const admin = makeAdmin({ data: { status: "active" }, error: null }, { data: { plan_tier: "ultra", ultra_gift_expires_at: null }, error: null });
+    const admin = makeAdmin({ data: { status: "active" }, error: null }, { data: { plan_tier: "ultra", ultra_gift_expires_at: null, paid_ultra_expires_at: null }, error: null });
     expect(await fetchParentEffectiveTier(admin, PARENT_ID, STUDENT_ID)).toBe("ultra");
   });
 
   test("active link, standard student -> standard", async () => {
-    const admin = makeAdmin({ data: { status: "active" }, error: null }, { data: { plan_tier: "standard", ultra_gift_expires_at: null }, error: null });
+    const admin = makeAdmin({ data: { status: "active" }, error: null }, { data: { plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null }, error: null });
     expect(await fetchParentEffectiveTier(admin, PARENT_ID, STUDENT_ID)).toBe("standard");
   });
 
   test("pending link, ultra student -> standard (leaks nothing before confirmation)", async () => {
-    const admin = makeAdmin({ data: { status: "pending" }, error: null }, { data: { plan_tier: "ultra", ultra_gift_expires_at: null }, error: null });
+    const admin = makeAdmin({ data: { status: "pending" }, error: null }, { data: { plan_tier: "ultra", ultra_gift_expires_at: null, paid_ultra_expires_at: null }, error: null });
     expect(await fetchParentEffectiveTier(admin, PARENT_ID, STUDENT_ID)).toBe("standard");
   });
 
   test("no link row at all -> standard", async () => {
-    const admin = makeAdmin({ data: null, error: null }, { data: { plan_tier: "ultra", ultra_gift_expires_at: null }, error: null });
+    const admin = makeAdmin({ data: null, error: null }, { data: { plan_tier: "ultra", ultra_gift_expires_at: null, paid_ultra_expires_at: null }, error: null });
     expect(await fetchParentEffectiveTier(admin, PARENT_ID, STUDENT_ID)).toBe("standard");
   });
 

@@ -35,7 +35,10 @@ import en from "@/messages/en.json";
  * imports rather than the component itself.
  */
 
-vi.mock("@/app/(onboarding)/onboarding/actions", () => ({ completeOnboarding: vi.fn() }));
+vi.mock("@/app/(onboarding)/onboarding/actions", () => ({
+  completeOnboarding: vi.fn(),
+  recordOnboardingStep: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock("@/features/entities/entity-combobox", () => ({
   EntityCombobox: () => <div data-testid="entity-combobox" />,
 }));

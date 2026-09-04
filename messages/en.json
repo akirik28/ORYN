@@ -772,7 +772,7 @@
       "uploadCv": "Upload CV",
       "uploadCvHint": "PDF, DOCX, or text",
       "enterManually": "Enter manually",
-      "enterManuallyHint": "Add things yourself",
+      "enterManuallyHint": "Add it from your Profile later",
       "skipForNow": "Skip for now",
       "skipForNowHint": "Do this later",
       "manualNotice": "No problem — you can add activities, awards, projects, and more from your Profile at any time.",
@@ -809,6 +809,8 @@
       "testScores": "Test scores",
       "graduationRate": "Graduation rate",
       "unavailable": "Unavailable",
+      "admissionStatsEmptyMessage": "This university's admission rate, test scores, and graduation rate aren't in Proxola's records yet — that's a gap in our research, not a low number.",
+      "applicationDeadlineUnconfirmedMessage": "Proxola hasn't confirmed this university's application deadline yet — check the official admissions page for the current date.",
       "notResearchedTitle": "Proxola hasn't researched this university in depth yet",
       "notResearchedDescription": "Program, requirement, and admissions details aren't in Proxola's records yet — that's a gap in our research, not a reflection of the university.",
       "undergradPostgradCaption": "{undergrad} undergrad · {postgrad} postgrad",
@@ -999,6 +1001,11 @@
       "qsRanking": "QS ranking",
       "institutionType": "Institution type",
       "students": "Students",
+      "applicationDeadline": "Application deadline",
+      "applicationDeadlineNotConfirmed": "Not confirmed yet",
+      "visitSite": "Visit site",
+      "deadlineTypeApplication": "Application",
+      "deadlineTypeEarly": "Early action",
       "costOfAttendance": "Cost of attendance",
       "costPerYear": "{value} / year",
       "tuition": "Tuition",
@@ -1006,12 +1013,14 @@
       "statisticsSource": "Data source",
       "applicationSystem": "Application system",
       "researchStrengths": "Research strengths",
+      "researchStrengthsUnclassified": "No classifiable field found",
       "pageTitle": "Compare universities"
     }
   },
   "sourceBadge": {
     "source": "Source:",
     "checked": "Checked {time}",
+    "asOf": "As of:",
     "viewSource": "View source"
   },
   "opportunities": {
@@ -1508,6 +1517,18 @@
       "cta": "See Ultra",
       "notNow": "Not now",
       "close": "Close"
+    },
+    "opportunities": {
+      "heading": "Opportunities — Proxola"
+    },
+    "universities": {
+      "heading": "Universities — Proxola"
+    },
+    "applications": {
+      "heading": "Applications — Proxola"
+    },
+    "progress": {
+      "heading": "Progress — Proxola"
     }
   },
   "messaging": {

@@ -18,7 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { CurriculumType, TargetGeography } from "@/types/database";
 import type { CompleteOnboardingInput } from "@/lib/validation/onboarding";
-import { completeOnboarding } from "@/app/(onboarding)/onboarding/actions";
+import { completeOnboarding, recordOnboardingStep } from "@/app/(onboarding)/onboarding/actions";
 import { EntityCombobox } from "@/features/entities/entity-combobox";
 import { SuggestInput } from "@/features/entities/suggest-input";
 import { COUNTRY_SUGGESTIONS } from "@/lib/vocabularies/countries";
@@ -180,14 +180,22 @@ export function OnboardingWizard({ curriculumOtherTextLive = false }: { curricul
       }
     }
     isAdvancing.current = true;
-    setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1));
+    const nextStep = Math.min(step + 1, TOTAL_STEPS - 1);
+    setStep(nextStep);
+    // Fire-and-forget: this is a diagnostic write for drop-off analysis, not part of the
+    // wizard's own state. It must never block or fail the student's actual navigation —
+    // including the expected case where OnboardingWizard is mounted unauthenticated on
+    // /design-preview/onboarding, where recordOnboardingStep's requireUser() always rejects.
+    void recordOnboardingStep(nextStep).catch(() => {});
   }
 
   function goBack() {
     if (isAdvancing.current) return;
     setError(null);
     isAdvancing.current = true;
-    setStep((s) => Math.max(s - 1, 0));
+    const prevStep = Math.max(step - 1, 0);
+    setStep(prevStep);
+    void recordOnboardingStep(prevStep).catch(() => {});
   }
 
   function finish() {

@@ -123,7 +123,7 @@ beforeEach(() => {
 
 describe("sendAdvisorMessage's lazy-create — now walled the same as createConversation", () => {
   test("Standard, zero existing conversations: lazy-create still succeeds — a first message must still work", async () => {
-    getCurrentProfileMock.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null, response_mode: "balanced" });
+    getCurrentProfileMock.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null, response_mode: "balanced" });
 
     const result = await sendAdvisorMessage(null, "Should I start another club?");
 
@@ -134,7 +134,7 @@ describe("sendAdvisorMessage's lazy-create — now walled the same as createConv
   });
 
   test("THE FIX: Standard, one existing conversation, conversationId arrives null anyway — lazy-create is now blocked, no insert happens", async () => {
-    getCurrentProfileMock.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null, response_mode: "balanced" });
+    getCurrentProfileMock.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null, response_mode: "balanced" });
     conversationCountMock.mockReturnValue({ count: 1, error: null, data: null });
 
     const result = await sendAdvisorMessage(null, "A second thing to ask, from a stale client with no convId in state.");
@@ -145,7 +145,7 @@ describe("sendAdvisorMessage's lazy-create — now walled the same as createConv
   });
 
   test("Ultra, conversationId: null, regardless of existing count — always succeeds, count never even queried", async () => {
-    getCurrentProfileMock.mockResolvedValue({ plan_tier: "ultra", ultra_gift_expires_at: null, response_mode: "balanced" });
+    getCurrentProfileMock.mockResolvedValue({ plan_tier: "ultra", ultra_gift_expires_at: null, paid_ultra_expires_at: null, response_mode: "balanced" });
     conversationCountMock.mockReturnValue({ count: 99, error: null, data: null });
 
     const result = await sendAdvisorMessage(null, "A third, fourth, whatever thing to ask.");
@@ -156,7 +156,7 @@ describe("sendAdvisorMessage's lazy-create — now walled the same as createConv
   });
 
   test("a count-query failure fails CLOSED here too, not open — same posture as createConversation's own identical check", async () => {
-    getCurrentProfileMock.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null, response_mode: "balanced" });
+    getCurrentProfileMock.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null, response_mode: "balanced" });
     conversationCountMock.mockReturnValue({ count: null, error: { code: "57014", message: "canceling statement due to statement timeout" }, data: null });
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -168,7 +168,7 @@ describe("sendAdvisorMessage's lazy-create — now walled the same as createConv
   });
 
   test("an existing conversationId (the ordinary case) never touches the count check at all — this wall is lazy-create-specific", async () => {
-    getCurrentProfileMock.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null, response_mode: "balanced" });
+    getCurrentProfileMock.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null, response_mode: "balanced" });
     conversationCountMock.mockReturnValue({ count: 1, error: null, data: null });
     const c = client();
     // Override advisor_conversations for the ownership-check + touch-updated_at paths a real

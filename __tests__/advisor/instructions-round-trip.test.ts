@@ -53,7 +53,7 @@ beforeEach(() => {
 
 describe("advisor_instructions — save, then a fresh read, through one shared stateful table", () => {
   test("a saved instruction is what the next profile read actually returns", async () => {
-    getCurrentProfileMock.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null });
+    getCurrentProfileMock.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null });
     const client = new MockSupabaseClient({
       profiles: { rows: [{ id: USER_ID, advisor_instructions: null }] },
     });
@@ -68,7 +68,7 @@ describe("advisor_instructions — save, then a fresh read, through one shared s
   });
 
   test("clearing (empty string) round-trips to null, not an empty string surviving into the prompt path", async () => {
-    getCurrentProfileMock.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null });
+    getCurrentProfileMock.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null });
     const client = new MockSupabaseClient({
       profiles: { rows: [{ id: USER_ID, advisor_instructions: "Old instruction." }] },
     });
@@ -81,7 +81,7 @@ describe("advisor_instructions — save, then a fresh read, through one shared s
   });
 
   test("a Standard-tier save over the 500-char cap is rejected before the write, and the OLD value is still what reads back", async () => {
-    getCurrentProfileMock.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null });
+    getCurrentProfileMock.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null });
     const client = new MockSupabaseClient({
       profiles: { rows: [{ id: USER_ID, advisor_instructions: "Original." }] },
     });
@@ -95,7 +95,7 @@ describe("advisor_instructions — save, then a fresh read, through one shared s
   });
 
   test("Ultra's wider 2,000-char cap actually applies on this same save path, not just in the documented number", async () => {
-    getCurrentProfileMock.mockResolvedValue({ plan_tier: "ultra", ultra_gift_expires_at: null });
+    getCurrentProfileMock.mockResolvedValue({ plan_tier: "ultra", ultra_gift_expires_at: null, paid_ultra_expires_at: null });
     const client = new MockSupabaseClient({
       profiles: { rows: [{ id: USER_ID, advisor_instructions: null }] },
     });
@@ -110,7 +110,7 @@ describe("advisor_instructions — save, then a fresh read, through one shared s
   });
 
   test("migration 0111 unapplied (advisor_instructions column missing): save degrades honestly, and the read genuinely still returns nothing new — not a false green from an untriggered write", async () => {
-    getCurrentProfileMock.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null });
+    getCurrentProfileMock.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null });
     const client = new MockSupabaseClient({
       profiles: { rows: [{ id: USER_ID }], missingColumns: ["advisor_instructions"] },
     });

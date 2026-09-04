@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/security/dal";
 import { getAccountRole, getParentLinkStatus, hasActiveParentLink } from "@/lib/auth/account-role";
+import { resolveLocale } from "@/lib/i18n/locale";
+import { ParentNav } from "@/features/parent/parent-nav";
 
 /**
  * The real parent surface's gate (renders at /parent, the (dashboard) segment doesn't
@@ -39,6 +41,11 @@ import { getAccountRole, getParentLinkStatus, hasActiveParentLink } from "@/lib/
 // (STALE 2026-09-04: this comment used to say "no page.tsx in this segment on purpose,"
 // written before lane 11's page.tsx landed -- corrected during a composed read of the whole
 // route group, CEO dispatch, so it stops contradicting the file tree next to it.)
+//
+// ADDED 2026-09-04 (B3a): the nav bar. Placed here rather than in each page, since every
+// page reachable through this layout is exactly the set of five it links between -- one
+// shared nav instead of five copies. Renders only once this layout's three redirects have
+// all passed, so it never appears for a parent with nothing yet to navigate between.
 export default async function ParentDashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await verifySession();
   if (!session.isAuth || !session.userId) {
@@ -55,5 +62,12 @@ export default async function ParentDashboardLayout({ children }: { children: Re
     redirect("/parent/pending");
   }
 
-  return <>{children}</>;
+  const locale = await resolveLocale();
+
+  return (
+    <>
+      <ParentNav locale={locale} />
+      {children}
+    </>
+  );
 }

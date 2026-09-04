@@ -534,7 +534,10 @@ export const FIXTURE_UNIVERSITY_PROFILE_METRICS = [
   // The branch this exercises on the detail page: no cost_of_attendance (US-only), a real
   // international tuition figure instead — LSE's own published 2025/26 international
   // undergraduate fee, a single exact figure (precision_state "exact"), not a range.
-  { metric_code: "tuition_international_annual", value_numeric: 26400, value_text: null, unit: "GBP", source_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Fees-and-funding", source_type: "official_primary", verified_at: daysFromNow(-10), precision_state: "exact", data_quality_flag: null },
+  // stats_as_of populated on this row only (B5, 2026-09-04) so the dev-preview page's
+  // tuition SourceBadge — which only ever renders this row, not the domestic one below —
+  // has a real "As of" value to show rather than silently rendering the label's absent case.
+  { metric_code: "tuition_international_annual", value_numeric: 26400, value_text: null, unit: "GBP", source_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Fees-and-funding", source_type: "official_primary", verified_at: daysFromNow(-10), precision_state: "exact", data_quality_flag: null, stats_as_of: "2025/26" },
   { metric_code: "tuition_domestic_annual", value_numeric: 9535, value_text: null, unit: "GBP", source_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Fees-and-funding", source_type: "official_primary", verified_at: daysFromNow(-10), precision_state: "exact", data_quality_flag: null },
 ];
 
@@ -666,6 +669,11 @@ export const FIXTURE_OPPORTUNITY_DETAIL: Opportunity = {
   // grade axis regardless.
   age_eligibility_confirmed_open: false,
   grade_eligibility_confirmed_open: false,
+  age_eligibility_basis: "not_researched",
+  grade_eligibility_basis: "not_researched",
+  // Migration 0133, kept in sync with country_eligibility_confirmed_open: true above, same
+  // backfill relationship as the age/grade pair.
+  country_eligibility_basis: "confirmed_no_restriction",
   created_at: daysFromNow(-25),
   updated_at: daysFromNow(-6),
 };
@@ -776,6 +784,10 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       // confirmed-open escape hatch. opp-4 below is the fixture exercising that path instead.
       age_eligibility_confirmed_open: false,
       grade_eligibility_confirmed_open: false,
+      age_eligibility_basis: "not_researched",
+      grade_eligibility_basis: "not_researched",
+      // Migration 0133, kept in sync with country_eligibility_confirmed_open: true above.
+      country_eligibility_basis: "confirmed_no_restriction",
       created_at: daysFromNow(-30),
       updated_at: daysFromNow(-3),
     },
@@ -840,6 +852,10 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       // exercises the "Grade eligibility not verified yet" advisory note here.
       age_eligibility_confirmed_open: false,
       grade_eligibility_confirmed_open: false,
+      age_eligibility_basis: "not_researched",
+      grade_eligibility_basis: "not_researched",
+      // Migration 0133, kept in sync with country_eligibility_confirmed_open: false above.
+      country_eligibility_basis: "not_researched",
       created_at: daysFromNow(-20),
       updated_at: daysFromNow(-5),
     },
@@ -903,6 +919,10 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       // flag false, same "mostly unresearched" default as country above.
       age_eligibility_confirmed_open: false,
       grade_eligibility_confirmed_open: false,
+      age_eligibility_basis: "not_researched",
+      grade_eligibility_basis: "not_researched",
+      // Migration 0133, kept in sync with country_eligibility_confirmed_open: false above.
+      country_eligibility_basis: "not_researched",
       created_at: daysFromNow(-15),
       updated_at: daysFromNow(-8),
     },
@@ -965,6 +985,12 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       // example of each path.
       age_eligibility_confirmed_open: true,
       grade_eligibility_confirmed_open: true,
+      // Kept in sync with the booleans above, same backfill relationship 0129's own
+      // migration establishes for real rows.
+      age_eligibility_basis: "confirmed_no_restriction",
+      grade_eligibility_basis: "confirmed_no_restriction",
+      // Migration 0133, same relationship to country_eligibility_confirmed_open: true above.
+      country_eligibility_basis: "confirmed_no_restriction",
       created_at: daysFromNow(-40),
       updated_at: daysFromNow(-2),
     },
@@ -1023,6 +1049,10 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       // flag false, same "mostly unresearched" default as country above.
       age_eligibility_confirmed_open: false,
       grade_eligibility_confirmed_open: false,
+      age_eligibility_basis: "not_researched",
+      grade_eligibility_basis: "not_researched",
+      // Migration 0133, kept in sync with country_eligibility_confirmed_open: false above.
+      country_eligibility_basis: "not_researched",
       created_at: daysFromNow(-10),
       updated_at: daysFromNow(-10),
     },
@@ -1072,6 +1102,10 @@ export function buildFixtureHomeStrip(_locale: Locale = DEFAULT_LOCALE): HomeStr
       countryEligibilityConfirmedOpen: opportunity.country_eligibility_confirmed_open ?? false,
       ageEligibilityConfirmedOpen: opportunity.age_eligibility_confirmed_open ?? false,
       gradeEligibilityConfirmedOpen: opportunity.grade_eligibility_confirmed_open ?? false,
+      ageEligibilityBasis: opportunity.age_eligibility_basis ?? null,
+      gradeEligibilityBasis: opportunity.grade_eligibility_basis ?? null,
+      countryEligibilityBasis: opportunity.country_eligibility_basis ?? null,
+      lastVerifiedAt: opportunity.last_verified_at ?? null,
       citizenshipRestrictions: opportunity.citizenship_restrictions,
       residencyRestrictions: opportunity.residency_restrictions,
       fields: opportunity.fields,

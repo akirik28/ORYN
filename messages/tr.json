@@ -772,7 +772,7 @@
       "uploadCv": "CV Yükle",
       "uploadCvHint": "PDF, DOCX veya metin",
       "enterManually": "Elle gir",
-      "enterManuallyHint": "Kendin ekle",
+      "enterManuallyHint": "Sonra, Profilinden ekle",
       "skipForNow": "Şimdilik atla",
       "skipForNowHint": "Bunu sonra yap",
       "manualNotice": "Sorun değil — faaliyetlerini, ödüllerini, projelerini ve daha fazlasını istediğin zaman Profilinden ekleyebilirsin.",
@@ -809,6 +809,8 @@
       "testScores": "Standart sınav puanları",
       "graduationRate": "Mezuniyet oranı",
       "unavailable": "Mevcut değil",
+      "admissionStatsEmptyMessage": "Bu üniversitenin kabul oranı, sınav puanları ve mezuniyet oranı henüz Proxola'nın kayıtlarında yok — bu, düşük bir rakamın değil, araştırmamızdaki bir eksikliğin göstergesi.",
+      "applicationDeadlineUnconfirmedMessage": "Proxola bu üniversitenin başvuru son tarihini henüz doğrulamadı — güncel tarih için resmi kabul sayfasını kontrol edin.",
       "notResearchedTitle": "Proxola bu üniversiteyi henüz derinlemesine araştırmadı",
       "notResearchedDescription": "Program, gereklilik ve kabul bilgileri henüz Proxola'nın kayıtlarında yok — bu, üniversitenin değil, bizim araştırmamızdaki bir eksiklik.",
       "undergradPostgradCaption": "{undergrad} lisans · {postgrad} lisansüstü",
@@ -999,6 +1001,11 @@
       "qsRanking": "QS sıralaması",
       "institutionType": "Kurum türü",
       "students": "Öğrenci sayısı",
+      "applicationDeadline": "Başvuru son tarihi",
+      "applicationDeadlineNotConfirmed": "Henüz doğrulanmadı",
+      "visitSite": "Siteyi ziyaret et",
+      "deadlineTypeApplication": "Başvuru",
+      "deadlineTypeEarly": "Erken başvuru",
       "costOfAttendance": "Öğrenim maliyeti",
       "costPerYear": "{value} / yıl",
       "tuition": "Öğrenim ücreti",
@@ -1006,12 +1013,14 @@
       "statisticsSource": "Veri kaynağı",
       "applicationSystem": "Başvuru sistemi",
       "researchStrengths": "Araştırma güçlü yönleri",
+      "researchStrengthsUnclassified": "Sınıflandırılabilen bir alan bulunamadı",
       "pageTitle": "Üniversite Karşılaştırma"
     }
   },
   "sourceBadge": {
     "source": "Kaynak:",
     "checked": "{time} kontrol edildi",
+    "asOf": "Dönem:",
     "viewSource": "Kaynağı görüntüle"
   },
   "opportunities": {
@@ -1508,6 +1517,18 @@
       "cta": "Ultra'ya bak",
       "notNow": "Şimdi değil",
       "close": "Kapat"
+    },
+    "opportunities": {
+      "heading": "Fırsatlar — Proxola"
+    },
+    "universities": {
+      "heading": "Üniversiteler — Proxola"
+    },
+    "applications": {
+      "heading": "Başvurular — Proxola"
+    },
+    "progress": {
+      "heading": "Gelişim — Proxola"
     }
   },
   "messaging": {

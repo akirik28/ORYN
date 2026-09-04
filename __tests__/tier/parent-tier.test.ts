@@ -1,10 +1,12 @@
 import { describe, test, expect } from "vitest";
 import { resolveParentEffectiveTier } from "@/lib/tier/parent-tier";
 
-const STANDARD = { plan_tier: "standard" as const, ultra_gift_expires_at: null };
-const ULTRA = { plan_tier: "ultra" as const, ultra_gift_expires_at: null };
-const ACTIVE_GIFT = { plan_tier: "standard" as const, ultra_gift_expires_at: new Date(Date.now() + 86_400_000).toISOString() };
-const EXPIRED_GIFT = { plan_tier: "standard" as const, ultra_gift_expires_at: new Date(Date.now() - 86_400_000).toISOString() };
+const STANDARD = { plan_tier: "standard" as const, ultra_gift_expires_at: null, paid_ultra_expires_at: null };
+const ULTRA = { plan_tier: "ultra" as const, ultra_gift_expires_at: null, paid_ultra_expires_at: null };
+const ACTIVE_GIFT = { plan_tier: "standard" as const, ultra_gift_expires_at: new Date(Date.now() + 86_400_000).toISOString(), paid_ultra_expires_at: null };
+const EXPIRED_GIFT = { plan_tier: "standard" as const, ultra_gift_expires_at: new Date(Date.now() - 86_400_000).toISOString(), paid_ultra_expires_at: null };
+const ACTIVE_PAID_SUBSCRIPTION = { plan_tier: "standard" as const, ultra_gift_expires_at: null, paid_ultra_expires_at: new Date(Date.now() + 86_400_000).toISOString() };
+const LAPSED_PAID_SUBSCRIPTION = { plan_tier: "standard" as const, ultra_gift_expires_at: null, paid_ultra_expires_at: new Date(Date.now() - 86_400_000).toISOString() };
 
 describe("resolveParentEffectiveTier", () => {
   test("active link, standard student -> standard", () => {
@@ -33,5 +35,20 @@ describe("resolveParentEffectiveTier", () => {
 
   test("revoked link on a student with an active gift still inherits nothing -- status gates before tier is even looked at", () => {
     expect(resolveParentEffectiveTier("revoked", ACTIVE_GIFT)).toBe("standard");
+  });
+
+  /** 2026-09-04, payment-provider seam: a parent inherits a paid subscription the identical
+   *  way they inherit a gift -- same expiry mechanism, one column over (lib/tier/plan-
+   *  tier.ts's own resolvePlanTier is what's actually being exercised here in both cases). */
+  test("active link, student with an active paid subscription -> ultra", () => {
+    expect(resolveParentEffectiveTier("active", ACTIVE_PAID_SUBSCRIPTION)).toBe("ultra");
+  });
+
+  test("active link, student's paid subscription has lapsed (canceled or a failed renewal) -> standard", () => {
+    expect(resolveParentEffectiveTier("active", LAPSED_PAID_SUBSCRIPTION)).toBe("standard");
+  });
+
+  test("revoked link on a student with an active paid subscription still inherits nothing", () => {
+    expect(resolveParentEffectiveTier("revoked", ACTIVE_PAID_SUBSCRIPTION)).toBe("standard");
   });
 });

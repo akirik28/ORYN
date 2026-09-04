@@ -73,7 +73,7 @@ export interface DashboardViewProps {
   avoidRecommendation: { title: string; reason: string } | null;
   upcomingDeadlines: Awaited<ReturnType<typeof getUpcomingDeadlines>>;
   targetUniversities: Awaited<ReturnType<typeof getTargetUniversitiesWithDetails>>;
-  opportunityPreview: { title: string; matchScore: number; deadline: string | null; cycleStatus: Opportunity["cycle_status"] | null }[];
+  opportunityPreview: { id: string; title: string; matchScore: number; deadline: string | null; cycleStatus: Opportunity["cycle_status"] | null }[];
   /** The richer, full-card rotating strip (features/dashboard/opportunity-strip.tsx) --
    * additive to opportunityPreview above, not a replacement for it. See that component's
    * own header for the empty/thin/full-state handling and the sponsored-slot seam. */
@@ -529,17 +529,32 @@ export async function DashboardView({
               />
               {targetUniversities.length > 0 ? (
                 <ul className="mt-5">
-                  {targetUniversities.map((target) => (
-                    <li
-                      key={target.id}
-                      className="flex items-center justify-between gap-3 border-b border-border/60 py-3 last:border-0"
-                    >
-                      <span className="min-w-0 truncate text-sm text-ink-2">
-                        {target.university?.name ?? t("unknownUniversity")}
-                      </span>
-                      <OutlookBadge outlook={target.outlook} locale={locale} />
-                    </li>
-                  ))}
+                  {targetUniversities.map((target) =>
+                    target.university?.id ? (
+                      <li key={target.id} className="border-b border-border/60 last:border-0">
+                        <Link
+                          href={`/universities/${target.university.id}`}
+                          className="group flex items-center justify-between gap-3 py-3 transition-colors hover:text-brand-primary focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                        >
+                          <span className="min-w-0 truncate text-sm text-ink-2 group-hover:text-brand-primary">
+                            {target.university.name}
+                          </span>
+                          <OutlookBadge outlook={target.outlook} locale={locale} />
+                        </Link>
+                      </li>
+                    ) : (
+                      // No resolvable university row -- nothing to link to (see
+                      // getTargetUniversitiesWithDetails' own null fallback). Same row shape,
+                      // not wrapped in a Link, so this doesn't render as a dead click target.
+                      <li
+                        key={target.id}
+                        className="flex items-center justify-between gap-3 border-b border-border/60 py-3 last:border-0"
+                      >
+                        <span className="min-w-0 truncate text-sm text-ink-2">{t("unknownUniversity")}</span>
+                        <OutlookBadge outlook={target.outlook} locale={locale} />
+                      </li>
+                    )
+                  )}
                 </ul>
               ) : (
                 <p className="mt-5 max-w-md text-sm leading-relaxed text-ink-2">
@@ -577,13 +592,18 @@ export async function DashboardView({
                     const cycleDescriptor =
                       opp.cycleStatus && CYCLE_STATUSES_WORTH_A_DESCRIPTOR.has(opp.cycleStatus) ? cycleStatusLabel(opp.cycleStatus, locale) : null;
                     return (
-                      <li key={opp.title} className="border-b border-border/60 py-3 last:border-0">
-                        <p className="text-sm leading-snug text-ink-2">{opp.title}</p>
-                        <p className="mt-1.5 flex items-center gap-3">
-                          <span className="text-xs text-ink-3">{tTier(matchTierKey(opp.matchScore))}</span>
-                          {cycleDescriptor ? <span className="text-xs text-ink-3">{cycleDescriptor}</span> : null}
-                          {opp.deadline ? <DeadlineBadge date={opp.deadline} locale={locale} /> : null}
-                        </p>
+                      <li key={opp.id} className="border-b border-border/60 last:border-0">
+                        <Link
+                          href={`/opportunities/${opp.id}`}
+                          className="group block py-3 transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                        >
+                          <p className="text-sm leading-snug text-ink-2 group-hover:text-brand-primary">{opp.title}</p>
+                          <p className="mt-1.5 flex items-center gap-3">
+                            <span className="text-xs text-ink-3">{tTier(matchTierKey(opp.matchScore))}</span>
+                            {cycleDescriptor ? <span className="text-xs text-ink-3">{cycleDescriptor}</span> : null}
+                            {opp.deadline ? <DeadlineBadge date={opp.deadline} locale={locale} /> : null}
+                          </p>
+                        </Link>
                       </li>
                     );
                   })}

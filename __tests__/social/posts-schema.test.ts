@@ -608,7 +608,87 @@ describe("migration numbering", () => {
     // criterion (ASSIP), found during D2's own opportunity-eligibility research, not
     // hypothetical. Same CHECK-constraint discipline as 0060: a row cannot claim
     // "confirmed open" while also carrying the structured bound that would contradict it.
-    expect(Math.max(...numbers.map(Number))).toBe(126);
+    //
+    // 0127 (admission_rate_basis_not_published) -- a THIRD state for a column 0119 gave two.
+    // 'not_researched' means nobody looked; 'no_single_rate' means the institution has no
+    // single rate by construction (TU Munich's per-programme aptitude assessment). D1's
+    // QS-top-100 fill hit the case neither covers: NUS, Tsinghua and Peking were researched,
+    // the rate exists as a concept, and the university simply does not publish it. Leaving
+    // those at the default would have told the next research pass "nobody has looked here"
+    // about three universities that had just been looked at. Same discipline as 0119 itself:
+    // this value is only ever set by a real research pass, never guessed, never defaulted to.
+    //
+    // 0128 not landed as a file here as of this rebase.
+    //
+    // 0129 (age_grade_eligibility_basis) -- the same third-state shape as 0127 above,
+    // independently arrived at for opportunities' age/grade instead of universities'
+    // admission rate: 'not_researched' (default) | 'checked_not_stated' (a research pass
+    // read the official page and it simply doesn't state a requirement) |
+    // 'confirmed_no_restriction' (mirrors 0126's boolean=true). Surfaced by D2's
+    // visible-priority research: 24 of the 34 opportunities students actually see had their
+    // official page checked and it just doesn't mention age/grade -- collapsing that into
+    // "unresearched" means those rows carry the same "not verified yet" warning forever,
+    // indistinguishable from a row nobody's ever looked at. A student seeing that warning on
+    // every row learns to stop reading it. Mirrors university_statistics.
+    // admission_rate_basis (0119)'s own shape -- a plain text column with a CHECK enum, not
+    // a new pattern -- kept alongside 0126's booleans rather than replacing them, backfilled
+    // deterministically from them. Named 'checked_not_stated' rather than reusing 0127's own
+    // 'not_published' string -- flagged to CEO as a naming question, not decided
+    // unilaterally: "not published" reads naturally for a rate a university chooses not to
+    // release, but oddly for an eligibility requirement that simply isn't mentioned.
+    // 0128/0129 not landed as files as of this rebase. 0130 (parent_commentary_entries) is
+    // storage for B3b's monthly parent commentary narrative -- the batch runner computed it
+    // and discarded it, writing only a timestamp; this migration adds the table
+    // (parent_link_id-scoped, not student-scoped, so a student with two linked parents keeps
+    // two independent series) and get_parent_child_commentary, its own read function. Found
+    // and fixed a real cross-tenant leak in the function before it ever landed on this branch:
+    // the first version gated on is_active_parent_of() alone, the same pattern 0116's three
+    // existing get_parent_child_* functions use correctly for tables with one row per
+    // student -- but this table has one row per PARENT-STUDENT PAIR, so that gate alone let
+    // an active parent's query pull in a second, unrelated parent's own entries through the
+    // shared student_user_id join. Proven locally against a real Postgres cluster (docs/
+    // parent-commentary-storage-rls-proof-2026-09-04.md), including confirming the assertion
+    // itself can fail: the deliberately-broken version was reinstalled mid-script and the
+    // unrelated-parent check correctly went red before the real, scoped function was restored.
+    //
+    // 0131 reserved then released -- the work it was assigned to turned out to need no schema
+    // change at all. Nothing was ever written under it; deliberately left as a gap rather than
+    // reused, so a package or a doc citing "0131" can never mean two different things.
+    //
+    // 0132 (university_statistics_year_index_coalesce) -- the ROOT of the night's quietest bug
+    // class, closed at the table instead of file by file. The existing unique index was
+    // (university_id, stat_year), and only 3 of 133 rows populate stat_year at all: NULL never
+    // equals NULL, so the index provably never fired for the other 130, and a staged package
+    // silently doubled five rows on its second run with zero errors. Mirrors 0056's own
+    // coalesce(...) shape rather than inventing one -- and university_requirements had already
+    // solved this exact null-bypass the same way, which is what made the gap visible. -1 is
+    // never a real year and is never written to the column; it exists only inside the index
+    // expression. Measured before writing: zero duplicate rows today, so the index can be
+    // created without a cleanup pass -- and that claim was itself proven by applying the new
+    // index to a deliberately duplicated table and watching CREATE UNIQUE INDEX reject it.
+    //
+    // 0133 (country_eligibility_basis) -- the same third state 0129 gave age/grade, now for
+    // country. Renumbered from 0131 on rebase: that number was assigned for this exact work,
+    // but by the time this branch caught up with origin/main, 0131 had already been reserved
+    // and released for unrelated work and permanently retired as a gap (see the paragraph
+    // immediately above) -- reusing it here would have made "0131" mean two different things,
+    // exactly what that paragraph says must never happen, so this migration moves to the next
+    // free number instead. Shape: 'not_researched' (default) | 'checked_not_stated' (a
+    // research pass read the official page and it simply doesn't state a country/citizenship
+    // requirement) | 'confirmed_no_restriction' (mirrors 0060's
+    // country_eligibility_confirmed_open=true). D2's own re-measurement after 0129 landed
+    // found the row-level "still shows some warning" count on the visible-34 set unchanged
+    // (29/34) -- because 0060's boolean only covers "confirmed no gate," and several rows that
+    // gained the new age/grade state were ALSO genuinely checked for country and found silent
+    // (12 opportunities, listed in this migration's own header comment). Same shape as
+    // 0129/0119 -- a plain text column with a CHECK enum, kept alongside 0060's boolean rather
+    // than replacing it, backfilled deterministically from it. Naming, resolved by CEO rather
+    // than left open: deliberately NOT unified with 0127's 'not_published' -- that means a
+    // real value exists and is withheld (NUS/Tsinghua/Peking's admission rate), this means the
+    // topic is simply never raised at all, which reads as "probably open," not "confirmed
+    // hidden." Written down in both this migration's own column comment and here so a later
+    // pass doesn't "fix" the two into false consistency.
+    expect(Math.max(...numbers.map(Number))).toBe(133);
   });
 });
 

@@ -62,7 +62,7 @@ export default async function AdvisorPage() {
   // layout.tsx does (that mechanism exists to preview the whole shell, not one page in
   // isolation) -- resolvePlanTier(profile) alone is this file's own established pattern,
   // unchanged by this build.
-  const planTier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+  const planTier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null });
   // The allowance the chat actually enforces (app/(app)/advisor/actions.ts) — shared
   // across all seven student-facing AI features since the 2026-09-02 token-metering
   // change, not chat messages alone (lib/ai/monthly-quota.ts's PER_STUDENT_AI_FEATURES).

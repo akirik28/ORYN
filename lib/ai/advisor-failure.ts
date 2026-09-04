@@ -1,3 +1,4 @@
+import { APIConnectionError } from "@anthropic-ai/sdk";
 import { AIProviderNotConfiguredError, AIResponseIncompleteError } from "./provider";
 import { aiServiceFailureMessage } from "./service-failure";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
@@ -38,6 +39,22 @@ export function classifyAdvisorFailure(error: unknown, locale: Locale = DEFAULT_
       errorMessage: tr
         ? "Danışman yanıtı bitirmeden önce yer sıkıntısı yaşadı. Tekrar dene, ya da daha odaklı bir soru sor."
         : "The advisor ran out of room before it finished answering. Try again, or ask a more focused question.",
+    };
+  }
+  if (error instanceof APIConnectionError) {
+    // Covers both a plain dropped connection and its own subclass, APIConnectionTimeoutError
+    // — the streaming call's 120s timeout (lib/ai/anthropic-provider.ts's own
+    // ADVISOR_STREAM_TIMEOUT_MS comment has the full reasoning) throws exactly this. Neither
+    // "the request was the problem" (AIResponseIncompleteError's honest framing above) nor "we
+    // know the service is struggling" (the status-based branch below, which a client-side
+    // timeout was never given a status code to match) is true here — the honest middle
+    // ground is naming the actual shape of what happened (took too long) without guessing
+    // whose fault it was.
+    return {
+      status: "failed",
+      errorMessage: tr
+        ? "Bu yanıt beklenenden uzun sürdü. Tekrar dene."
+        : "That reply took longer than expected. Try again.",
     };
   }
   /**

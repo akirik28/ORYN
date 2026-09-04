@@ -32,13 +32,19 @@
 -- tie-breaking source would be exactly the guess this rule forbids. Flagged for whoever picks
 -- this up next, not silently dropped.
 --
--- BEFORE APPLYING: re-check university_deadlines for this university_id has zero rows at
--- apply time (re-verify, don't trust this comment if time has passed since 2026-09-04).
+-- RE-RUN SAFETY (2026-09-04, added while assembling Package 14): this table has no unique
+-- constraint that would catch a second application, so the precondition this header already
+-- asked a human to check by hand is now a real, executable guard instead -- running this
+-- file twice inserts the four rows once, not eight. Content of the VALUES list below is
+-- unchanged from the original.
 
-insert into university_deadlines (
-  university_id, deadline_type, deadline_date, application_cycle, recurrence, cycle_year,
-  cycle_label, verification_state, source_type, binding_policy, data_status, source_url, retrieved_at
-) values
+do $$
+begin
+  if not exists (select 1 from public.university_deadlines where university_id = 'd6fe8e8f-749f-462d-88b3-b22dfdc11a4c') then
+    insert into university_deadlines (
+      university_id, deadline_type, deadline_date, application_cycle, recurrence, cycle_year,
+      cycle_label, verification_state, source_type, binding_policy, data_status, source_url, retrieved_at
+    ) values
 -- Restrictive Early Action: application deadline November 1, 2026 ("Application Deadline:
 -- November 1, 2026"), decisions by mid-December.
 ('d6fe8e8f-749f-462d-88b3-b22dfdc11a4c', 'early', '2026-11-01', 'Restrictive Early Action', 'dated_specific', 2027,
@@ -58,3 +64,9 @@ insert into university_deadlines (
 ('d6fe8e8f-749f-462d-88b3-b22dfdc11a4c', 'document', '2027-01-10', 'Regular Decision', 'dated_specific', 2027,
  'Regular Decision', 'VERIFIED_CURRENT', 'official_primary', null, 'fresh',
  'https://www.admissions.caltech.edu/apply/first-year-applicants/deadlines', '2026-09-04T00:00:00Z');
+    raise notice 'D5: Caltech''s 4 deadline rows inserted.';
+  else
+    raise notice 'D5: Caltech already has university_deadlines rows -- skipped, not re-inserted.';
+  end if;
+end
+$$;

@@ -112,8 +112,14 @@ function evaluateOpportunityEligibility(
     // unless migration 0126's flag says a research pass explicitly confirmed there's
     // genuinely no age gate. Same principle as the countryEligibilityUnverified note below,
     // applied to the field that had no equivalent safeguard until now (2026-09-03 named the
-    // gap, 0126 closes it).
-    notes.push(eligibilityMessages.ageEligibilityUnverified(locale));
+    // gap, 0126 closes it). Migration 0129's third case: checked, page doesn't say --
+    // suppresses this same alarm-toned note in favor of a calmer, distinct one, same
+    // reasoning as lib/opportunities/matching.ts's own identical branch.
+    if (opportunity.age_eligibility_basis === "checked_not_stated") {
+      notes.push(eligibilityMessages.ageEligibilityCheckedNotStated(opportunity.last_verified_at ?? "", locale));
+    } else {
+      notes.push(eligibilityMessages.ageEligibilityUnverified(locale));
+    }
   }
 
   // --- Country / residency (eligible_countries is the existing, already-in-wide-use
@@ -172,7 +178,14 @@ function evaluateOpportunityEligibility(
   const countryEligibilityConfirmedOpen = opportunity.country_eligibility_confirmed_open ?? false;
   const hasUnstructuredRestrictionEvidence = Boolean(opportunity.citizenship_restrictions || opportunity.residency_restrictions);
   if (!hasCountryRestriction && !hasCitizenshipRestriction && !hasUnstructuredRestrictionEvidence && !countryEligibilityConfirmedOpen) {
-    notes.push(eligibilityMessages.countryEligibilityUnverified(locale));
+    // Migration 0133's third case, same reasoning as the age/grade branches above: a
+    // research pass checked the official page and it simply doesn't state a country/
+    // citizenship requirement either way, distinct from "nobody's looked" (the default).
+    if (opportunity.country_eligibility_basis === "checked_not_stated") {
+      notes.push(eligibilityMessages.countryEligibilityCheckedNotStated(opportunity.last_verified_at ?? "", locale));
+    } else {
+      notes.push(eligibilityMessages.countryEligibilityUnverified(locale));
+    }
   }
 
   // --- Grade level, computed from graduation_year (lib/profile/grade-level.ts) — closes
@@ -190,8 +203,13 @@ function evaluateOpportunityEligibility(
   } else if (!(opportunity.grade_eligibility_confirmed_open ?? false)) {
     // No eligible_grades recorded at all — not evidence every grade is welcome, just never
     // researched, unless migration 0126's flag says a research pass explicitly confirmed
-    // there's genuinely no grade gate. Same principle as the age branch above.
-    notes.push(eligibilityMessages.gradeEligibilityUnverified(locale));
+    // there's genuinely no grade gate. Same principle as the age branch above. Migration
+    // 0129's third case, same reasoning as the age branch's own comment above.
+    if (opportunity.grade_eligibility_basis === "checked_not_stated") {
+      notes.push(eligibilityMessages.gradeEligibilityCheckedNotStated(opportunity.last_verified_at ?? "", locale));
+    } else {
+      notes.push(eligibilityMessages.gradeEligibilityUnverified(locale));
+    }
   }
 
   if (notes.length > 0) {

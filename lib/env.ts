@@ -38,6 +38,15 @@ export const env = {
   pageViews: {
     hashSecret: required(process.env.PAGE_VIEW_HASH_SECRET),
   },
+  payments: {
+    /** "stripe" | "iyzico" | "paytr" — unset until the founder chooses one (2026-09-04,
+     *  payment-provider seam). Provider-specific credential vars (STRIPE_SECRET_KEY etc.)
+     *  are deliberately not declared here yet: inventing env vars for providers that might
+     *  never be chosen would be exactly the kind of premature-abstraction this file's own
+     *  header warns against elsewhere. Add a provider's real credential block here only when
+     *  building that provider's concrete adapter, not before. */
+    provider: required(process.env.PAYMENT_PROVIDER),
+  },
 } as const;
 
 export const integrationStatus = {
@@ -47,6 +56,11 @@ export const integrationStatus = {
   tavily: Boolean(env.tavily.apiKey),
   collegeScorecard: Boolean(env.collegeScorecard.apiKey),
   openAlex: true, // OpenAlex has no auth requirement; polite-pool email is optional.
+  /** True once a provider NAME is set — not proof a concrete adapter exists for it yet.
+   *  lib/payments/index.ts's getPaymentProvider() is the one place that also checks whether
+   *  the named provider is actually implemented; this flag alone answers "was one chosen,"
+   *  not "is checkout actually possible right now." */
+  payments: Boolean(env.payments.provider),
 } as const;
 
 export type IntegrationName = keyof typeof integrationStatus;

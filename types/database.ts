@@ -184,6 +184,19 @@ export interface Profile {
    * retroactively changes a gift already granted. An absent/unreadable value reads as
    * "never granted," same convention as plan_tier/response_mode above. */
   ultra_gift_expires_at: string | null;
+  /** Migration 0123, written not applied — read-time expiry for a PAID Ultra subscription,
+   * mirroring ultra_gift_expires_at's mechanism (an "is it active right now" check against
+   * now(), not a "was it ever granted" record) but never sharing that column: the gift
+   * column's permanently-non-null state after first use IS the once-per-person record, and a
+   * recurring payment renewing that same column would silently corrupt it. Written only by
+   * the payment webhook handler (service-role, guarded by profiles_guard_protected_columns
+   * the same way plan_tier/ultra_gift_expires_at already are), with the provider's own
+   * returned period end — never computed locally, since only the provider knows about
+   * proration, retried renewals, or a grace window. Cancellation and a failed payment
+   * deliberately do not clear or rewind this column; see lib/tier/plan-tier.ts's
+   * resolvePlanTier for the read side and supabase/migrations/0123's own header for why
+   * plan_tier itself must never be the payment path's write target. */
+  paid_ultra_expires_at: string | null;
   /** Migration 0091 — student preference for advisor chat's model/prompt style, overridden
    * by spend-based degrade whenever that's active (lib/ai/limits/budget.ts). Live as of
    * 2026-09-02; every read still defaults an absent/unreadable value to "balanced" — see
@@ -1771,6 +1784,22 @@ export interface Opportunity {
    * restriction populates eligible_grades instead. Read defensively (`?? false`) until 0126
    * is applied everywhere. */
   grade_eligibility_confirmed_open: boolean;
+  /** Migration 0129 (unapplied) -- the third state age_eligibility_confirmed_open (0126)
+   * can't express: 'not_researched' (default, nobody's looked) | 'checked_not_stated' (a
+   * research pass read the official page and it doesn't state an age requirement either
+   * way) | 'confirmed_no_restriction' (the page explicitly says there's no age gate --
+   * kept in sync with age_eligibility_confirmed_open, which remains the fast boolean check
+   * application code already uses). Read defensively until 0129 is applied everywhere. */
+  age_eligibility_basis: string | null;
+  /** Migration 0129 (unapplied) -- same shape as age_eligibility_basis above, for
+   * eligible_grades/grade_eligibility_confirmed_open. */
+  grade_eligibility_basis: string | null;
+  /** Migration 0133 (unapplied) -- same shape as age_eligibility_basis/grade_eligibility_basis
+   * above, for eligible_countries/country_eligibility_confirmed_open (0060). Deliberately NOT
+   * the same value name as university_statistics.admission_rate_basis's 'not_published'
+   * (0127) for the 'checked, source is silent' case -- see this migration's own column
+   * comment for why the two claims aren't equivalent. */
+  country_eligibility_basis: string | null;
   /** Migration 0103. See that migration's own column comment for the full semantic
    * contract (design doc §8.5) — written only by a P1 reverification outcome, never
    * backfilled, never read as staleness. Distinct from verified_at/last_verified_at above:
@@ -1810,6 +1839,11 @@ export type OpportunityInsert = Insertable<
   // both have a DB default of false, so they're omittable at insert time, not required.
   | "age_eligibility_confirmed_open"
   | "grade_eligibility_confirmed_open"
+  // Migration 0129 — same reason, both default 'not_researched'.
+  | "age_eligibility_basis"
+  | "grade_eligibility_basis"
+  // Migration 0133 — same reason, defaults 'not_researched'.
+  | "country_eligibility_basis"
   | "access_channel"
   | "country_eligibility_confirmed_open"
   // Migration 0066 — array has a DB default of '{}', the three image columns are nullable.
@@ -2364,6 +2398,42 @@ export type ParentLinkInsert = Omit<ParentLink, "id" | "confirmed_at" | "created
  * because this type stops it. */
 export type ParentLinkUpdate = Partial<Pick<ParentLink, "status" | "confirmed_at" | "last_commentary_sent_at">>;
 
+/** Migration 0130, written not applied. One row per monthly commentary generation for one
+ * parent_links relationship — see that migration's own table comment for why `parent_link_id`
+ * rather than `student_user_id` (a student linked to two parents needs two independent
+ * series). No Update type anywhere: append-only, matching admin_action_log/
+ * deadline_notification_log's own posture — a generated commentary is never edited. */
+export interface ParentCommentaryEntryRow {
+  id: string;
+  parent_link_id: string;
+  generated_at: string;
+  locale: string;
+  period_start: string;
+  period_end: string;
+  narrative: string;
+  narrative_source: string;
+  created_at: string;
+}
+/** id/generated_at/created_at are DB-defaulted — the batch runner (and the on-demand Server
+ * Action, lib/parent/commentary-actions.ts) supply everything else explicitly. */
+export type ParentCommentaryEntryInsert = Insertable<ParentCommentaryEntryRow, "id" | "generated_at" | "created_at">;
+
+/** Migration 0130's own get_parent_child_commentary — same shape as the three
+ * ParentChildXxxRow types below, hand-typed for the same reason (migration merged, not yet
+ * applied live). Identical column list to ParentCommentaryEntryRow minus parent_link_id,
+ * which the function's own is_active_parent_of()-scoped join already resolves for the
+ * caller, so it has no reason to leak which specific link id a caller isn't otherwise
+ * privileged to see structured any differently. */
+export interface ParentChildCommentaryRow {
+  id: string;
+  generated_at: string;
+  locale: string;
+  period_start: string;
+  period_end: string;
+  narrative: string;
+  narrative_source: string;
+}
+
 /** Migration 0116's three get_parent_child_* functions (§5, "curated read functions") — each
  * `returns table`'s own column list IS the whitelist that keeps advisor_instructions/notes off
  * a parent's read (a raw-table RLS policy can't hide one column while allowing another; a
@@ -2500,6 +2570,69 @@ export interface AdminActionLog {
  * DeadlineNotificationLog/UniversityNotificationLog above — a log entry is never edited. */
 export type AdminActionLogInsert = Insertable<AdminActionLog, "id" | "target_user_id" | "target_label" | "detail" | "created_at">;
 
+/** Migration 0123 (payment-provider seam), written not applied. See that migration's own
+ * header for why this table exists: a checkout_completed webhook carries the provider's own
+ * session/subscription id, never this app's user id, so lib/payments/checkout.ts writes a
+ * row here BEFORE the browser ever reaches the provider, and lib/payments/webhook-handler.ts
+ * resolves user_id back through it on that one event type. Never updated after insert. */
+export interface CheckoutSession {
+  id: string;
+  user_id: string;
+  created_at: string;
+}
+/** id/created_at are DB-defaulted; user_id is the only thing lib/payments/checkout.ts ever
+ * supplies. No Update type — see this table's own migration comment on why it's insert-only. */
+export type CheckoutSessionInsert = Pick<CheckoutSession, "user_id">;
+
+/** Migration 0123, written not applied — the human-readable subscription lifecycle record.
+ * NOT what lib/tier/plan-tier.ts's resolvePlanTier reads for entitlement (that's
+ * profiles.paid_ultra_expires_at); see this table's own migration comment for the full
+ * reasoning. unique(user_id) — one row per user for their whole lifecycle, status changes in
+ * place rather than a new row per resubscription. */
+export interface Subscription {
+  id: string;
+  user_id: string;
+  provider: string;
+  provider_subscription_id: string;
+  status: "active" | "past_due" | "canceled";
+  current_period_end: string;
+  created_at: string;
+  updated_at: string;
+}
+/** id/created_at/updated_at are DB-defaulted. Every field lib/payments/entitlement.ts's
+ * checkout_completed/subscription_renewed branch upserts, in one shape — matches this
+ * table's own unique(user_id) upsert target exactly. */
+export type SubscriptionInsert = Omit<Subscription, "id" | "created_at" | "updated_at">;
+/** Session-scoped shape a client could never reach anyway (subscriptions has no client
+ * write policy at all — see migration 0123) — this exists for lib/payments/entitlement.ts's
+ * own narrower status-only writes (subscription_canceled/payment_failed/refunded), which
+ * touch `status` alone rather than the full upsert shape SubscriptionInsert represents. */
+export type SubscriptionUpdate = Partial<Pick<Subscription, "status" | "current_period_end">>;
+
+/** Migration 0123, written not applied — append-only webhook log, and the actual
+ * idempotency guard (unique(provider, provider_event_id), checked by
+ * lib/payments/webhook-handler.ts's insert-then-check-conflict). `payload` stores the
+ * already-normalized PaymentWebhookEvent (lib/payments/provider.ts), not the provider's raw
+ * body — the raw body is what got verified into this shape; keeping the normalized form is
+ * enough to answer "what did this event mean," which is what a support question needs. */
+export interface PaymentEvent {
+  id: string;
+  provider: string;
+  provider_event_id: string;
+  kind: string;
+  payload: Record<string, unknown>;
+  subscription_id: string | null;
+  processed_at: string;
+}
+/** id/processed_at are DB-defaulted. subscription_id is nullable and genuinely absent from
+ * every insert today: lib/payments/webhook-handler.ts writes this row BEFORE
+ * lib/payments/entitlement.ts creates or looks up the subscription it's about (most acutely
+ * true for checkout_completed, which is what creates the subscriptions row at all) — linking
+ * it after the fact would need a second write this design doesn't otherwise need, so it's
+ * left null rather than added for a completeness this table doesn't require. No Update
+ * type: append-only, same posture as AdminActionLog above. */
+export type PaymentEventInsert = Omit<PaymentEvent, "id" | "subscription_id" | "processed_at"> & { subscription_id?: string | null };
+
 // ---------- Database aggregate (Supabase client generic shape) ----------
 
 // `Relationships` is required by @supabase/postgrest-js's GenericTable constraint for the
@@ -2563,6 +2696,12 @@ export interface Database {
       /** Migration 0116, written not applied. Same whitelist/empty-array reasoning as
        * get_parent_child_profile above — excludes applications.notes. */
       get_parent_child_applications: { Args: { p_student: string }; Returns: ParentChildApplicationRow[] };
+      /** Migration 0130, written not applied. SECURITY DEFINER, scoped to the caller's OWN
+       * active link specifically (not a bare is_active_parent_of() gate) — see that
+       * migration's own function comment for the cross-link leak this scoping closes.
+       * `p_limit` defaults to 12 server-side; passed explicitly here since lib/parent/
+       * commentary.ts always does. */
+      get_parent_child_commentary: { Args: { p_student: string; p_limit: number }; Returns: ParentChildCommentaryRow[] };
     };
     Tables: {
       profiles: Table<Profile, Partial<Profile>, ProfileUpdate>;
@@ -2651,11 +2790,15 @@ export interface Database {
       feedback_reports: Table<FeedbackReport, FeedbackReportInsert, never>;
       page_views: Table<PageView, PageViewInsert, never>;
       parent_links: Table<ParentLink, ParentLinkInsert, ParentLinkUpdate>;
+      parent_commentary_entries: Table<ParentCommentaryEntryRow, ParentCommentaryEntryInsert, never>;
       birth_year_changes: Table<BirthYearChange, never, never>;
       deadline_notification_log: Table<DeadlineNotificationLog, DeadlineNotificationLogInsert, never>;
       university_notification_log: Table<UniversityNotificationLog, UniversityNotificationLogInsert, never>;
       admin_action_log: Table<AdminActionLog, AdminActionLogInsert, never>;
       admin_dead_feature_flags: Table<AdminDeadFeatureFlag, AdminDeadFeatureFlagInsert, never>;
+      checkout_sessions: Table<CheckoutSession, CheckoutSessionInsert, never>;
+      subscriptions: Table<Subscription, SubscriptionInsert, SubscriptionUpdate>;
+      payment_events: Table<PaymentEvent, PaymentEventInsert, never>;
     };
   };
 }

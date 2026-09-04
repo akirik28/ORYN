@@ -344,8 +344,12 @@ export async function resolveParentMonthlyCommentary(
   studentUserId: string,
   since: string | null
 ): Promise<ParentCommentaryOutcome> {
-  const { data: tierRow } = await supabase.from("profiles").select("plan_tier, ultra_gift_expires_at").eq("id", studentUserId).single();
-  const tier: PlanTier = resolveParentEffectiveTier("active", { plan_tier: (tierRow?.plan_tier as PlanTier | undefined) ?? "standard", ultra_gift_expires_at: tierRow?.ultra_gift_expires_at ?? null });
+  const { data: tierRow } = await supabase.from("profiles").select("plan_tier, ultra_gift_expires_at, paid_ultra_expires_at").eq("id", studentUserId).single();
+  const tier: PlanTier = resolveParentEffectiveTier("active", {
+    plan_tier: (tierRow?.plan_tier as PlanTier | undefined) ?? "standard",
+    ultra_gift_expires_at: tierRow?.ultra_gift_expires_at ?? null,
+    paid_ultra_expires_at: tierRow?.paid_ultra_expires_at ?? null,
+  });
   if (tier !== "ultra") return { kind: "not_premium" };
 
   const content = await buildParentMonthlyCommentary(supabase, studentUserId, since);

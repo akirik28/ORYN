@@ -2,7 +2,9 @@ import { clampScore } from "@/lib/scoring/math";
 import { normalizeEntitySearchText } from "@/lib/entities/normalize";
 import { currentGradeLevel, gradeMatchesEligibility } from "@/lib/profile/grade-level";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
-import type { OpportunityCategory, ProfileDimension, SavedOpportunityStatus } from "@/types/database";
+import { formatAbsoluteDate } from "@/lib/i18n/date";
+import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
+import type { OpportunityCategory, ProfileDimension, SavedOpportunityStatus, TargetGeography } from "@/types/database";
 
 export interface StudentMatchProfile {
   age: number | null;
@@ -13,6 +15,26 @@ export interface StudentMatchProfile {
   /** Distinct from `country` (residence/school location) — migration 0047. Optional/empty
    * for callers that don't have it yet; never inferred from `country`. */
   citizenshipCountries?: string[];
+  /** The student's stated STUDY-destination preference (types/database.ts's
+   * TargetGeography[], collected at onboarding) — distinct from both `country` (current
+   * residence) and `citizenshipCountries` (legal eligibility) above: this is where the
+   * student said they WANT to go. Feeds computeRelevance's boost below only, never
+   * computeEligibility — a stated preference is a reason to rank an aligned opportunity
+   * higher, never a reason to hide a misaligned one (2026-09-04, CEO: "yükseltme, kapı
+   * değil" — a boost, not a gate). Optional/empty for callers that don't have it yet, which
+   * must behave identically to a student who picked "not sure" — no boost applies either
+   * way. */
+  targetGeographies?: TargetGeography[];
+  /** The countries of this student's own `target_universities` rows — a second, more specific
+   * source for the exact same underlying fact `targetGeographies` represents (where the
+   * student wants to go), not a new dimension. Deliberately merged with `targetGeographies`
+   * into one combined check (`isTargetingCountry` below) rather than checked and boosted
+   * independently, so a student who said "usa" AND is targeting MIT gets TARGET_GEOGRAPHY_BOOST
+   * applied exactly once, not twice, for the same fact (2026-09-04, CEO: "aynı fırsat iki kez
+   * yükseltilmemeli"). Optional/empty for callers that don't have it yet — must behave
+   * identically to a student with no target universities, same convention as
+   * `targetGeographies` above. */
+  targetUniversityCountries?: string[];
   /** Feeds currentGradeLevel() for eligible_grades checks below. */
   graduationYear?: number | null;
   /** Computed from this student's own `not_interested` dismissal history — see
@@ -53,6 +75,31 @@ export interface OpportunityForMatching {
    * all (George Mason's ASSIP — "15 years or older," no grade language). Optional: absent
    * means not confirmed, never "restricted." */
   gradeEligibilityConfirmedOpen?: boolean;
+  /** The third state 0126's two booleans above can't express (migration 0129, unapplied):
+   * a research pass CHECKED the official page and it simply doesn't state an age/grade
+   * requirement either way — distinct from "nobody's looked" (the default) and from
+   * "confirmed no restriction" (the page makes that claim positively). Suppresses the
+   * "not verified yet" note the same way *ConfirmedOpen does, but renders a different,
+   * calmer sentence instead of going silent — a student seeing the same warning on every
+   * row learns to stop reading it, per the founder's own framing for why this exists.
+   * `'not_researched' | 'checked_not_stated' | 'confirmed_no_restriction' | null | undefined`
+   * — only `'checked_not_stated'` changes behavior here; the other values already have
+   * their own signal (absence, or the *ConfirmedOpen booleans) and this field is read
+   * defensively for all of them. */
+  ageEligibilityBasis?: string | null;
+  gradeEligibilityBasis?: string | null;
+  /** Same third state, migration 0133 (unapplied), for eligibleCountries/
+   * countryEligibilityConfirmedOpen above. Deliberately not unified with
+   * university_statistics.admission_rate_basis's 'not_published' (0127) — that means a real
+   * value exists and is withheld; this means the topic is never raised at all. See 0133's own
+   * column comment. */
+  countryEligibilityBasis?: string | null;
+  /** opportunities.last_verified_at — reused (not a new column) as the "checked (date)"
+   * this file's ageEligibilityCheckedNotStated/gradeEligibilityCheckedNotStated/
+   * countryEligibilityCheckedNotStated messages cite, since it already records when a
+   * research pass last touched this row. Optional: absent means the sentence renders
+   * without a date rather than crashing. */
+  lastVerifiedAt?: string | null;
   /** Free-text citizenship/residency restriction prose (opportunities.citizenship_restrictions
    * / residency_restrictions) — too unstructured for the allow-list checks above to parse, but
    * real evidence a student should see. Surfaced below with the exact wording lib/counselor/
@@ -61,8 +108,18 @@ export interface OpportunityForMatching {
    * this function previously received only a boolean summary of "prose exists" here, and used
    * it solely to suppress the generic "not verified yet" note below — going completely silent
    * (eligible: true, notes: null) on a row whose own text describes a real restriction, live-
-   * confirmed on Garcia Summer Research Program. Optional/null: no prose on file, never
-   * "confirmed unrestricted." */
+   * confirmed on Garcia Summer Scholars. Optional/null: no prose on file, never "confirmed
+   * unrestricted."
+   *
+   * CORRECTED 2026-09-04 (docs/opportunity-duplicate-scan-2026-09-04.md): this originally
+   * named "Garcia Summer Research Program" — real at the time, but that row was a student-
+   * invisible duplicate twin of "Garcia Summer Scholars" (same official_url, same program).
+   * The citizenship_restrictions text was migrated onto the visible row, and the twin retired
+   * (docs/opportunity-duplicate-consolidation-2026-09-04.sql), so the name here now points at
+   * the row a student can actually reach — not just the row the fix happened to have been
+   * verified against at the time. A comment naming unverified-visibility evidence as "live-
+   * confirmed" is itself part of the bug, not just the data — worth remembering the next time
+   * a fix cites a specific row by name. */
   citizenshipRestrictions?: string | null;
   residencyRestrictions?: string | null;
   fields: string[];
@@ -98,6 +155,7 @@ export type EligibilityNoteCode =
   | "age_above_maximum"
   | "age_unknown"
   | "age_eligibility_unverified"
+  | "age_eligibility_checked_not_stated"
   | "country_unknown"
   | "country_not_eligible"
   | "citizenship_unknown"
@@ -105,9 +163,11 @@ export type EligibilityNoteCode =
   | "citizenship_restriction_on_file"
   | "residency_restriction_on_file"
   | "country_eligibility_unverified"
+  | "country_eligibility_checked_not_stated"
   | "grade_unknown"
   | "grade_not_eligible"
   | "grade_eligibility_unverified"
+  | "grade_eligibility_checked_not_stated"
   | "not_yet_computed";
 
 export interface EligibilityNote {
@@ -253,6 +313,21 @@ export const eligibilityMessages = {
   countryEligibilityUnverified: (locale: Locale) =>
     locale === "tr" ? "Ülke uygunluğu henüz doğrulanmadı — kısıtlamalar için resmi sayfayı kontrol et." : "Country eligibility not verified yet — check the official page for restrictions.",
 
+  // Migration 0133's third state for country — same reasoning as ageEligibilityCheckedNotStated/
+  // gradeEligibilityCheckedNotStated below: a research pass DID check the official page and it
+  // simply doesn't mention country/citizenship, distinct from countryEligibilityUnverified above
+  // (nobody has looked at all).
+  countryEligibilityCheckedNotStated: (checkedAt: string, locale: Locale) => {
+    const date = checkedAt ? formatAbsoluteDate(checkedAt, locale) : null;
+    return locale === "tr"
+      ? date
+        ? `Resmi sayfa ülke/vatandaşlık şartı belirtmiyor — kontrol edildi (${date}).`
+        : "Resmi sayfa ülke/vatandaşlık şartı belirtmiyor — kontrol edildi."
+      : date
+        ? `The official page doesn't state a country/citizenship requirement — checked (${date}).`
+        : "The official page doesn't state a country/citizenship requirement — checked.";
+  },
+
   // Same principle as countryEligibilityUnverified, same trigger shape: the OPPORTUNITY
   // never recorded an age bound at all, distinct from ageUnknown above (which fires when
   // the opportunity has a real bound but the STUDENT's birth year is what's missing). No
@@ -264,6 +339,24 @@ export const eligibilityMessages = {
     locale === "tr"
       ? "Yaş uygunluğu henüz doğrulanmadı — kısıtlamalar için resmi sayfayı kontrol et."
       : "Age eligibility not verified yet — check the official page for restrictions.",
+
+  // Migration 0129's third state: a research pass DID check the official page and it
+  // simply doesn't mention age — a calmer, distinct claim from ageEligibilityUnverified
+  // above (which means nobody has looked at all). checkedAt is opportunities.
+  // last_verified_at; formatted here (render time, in whatever locale is current) rather
+  // than passed pre-formatted, same discipline every other locale-dependent value in this
+  // file already follows. Empty string when the date is unknown -- reads as "checked" with
+  // no date rather than crashing on an invalid Date.
+  ageEligibilityCheckedNotStated: (checkedAt: string, locale: Locale) => {
+    const date = checkedAt ? formatAbsoluteDate(checkedAt, locale) : null;
+    return locale === "tr"
+      ? date
+        ? `Resmi sayfa yaş şartı belirtmiyor — kontrol edildi (${date}).`
+        : "Resmi sayfa yaş şartı belirtmiyor — kontrol edildi."
+      : date
+        ? `The official page doesn't state an age requirement — checked (${date}).`
+        : "The official page doesn't state an age requirement — checked.";
+  },
 
   gradeUnknown: (locale: Locale) => (locale === "tr" ? "Sınıf seviyesine göre kısıtlı — kontrol etmek için mezuniyet yılını ekle." : "Restricted by grade level — add your graduation year to check."),
 
@@ -279,6 +372,19 @@ export const eligibilityMessages = {
     locale === "tr"
       ? "Sınıf uygunluğu henüz doğrulanmadı — kısıtlamalar için resmi sayfayı kontrol et."
       : "Grade eligibility not verified yet — check the official page for restrictions.",
+
+  // Migration 0129's third state for grade — same reasoning as ageEligibilityCheckedNotStated
+  // above.
+  gradeEligibilityCheckedNotStated: (checkedAt: string, locale: Locale) => {
+    const date = checkedAt ? formatAbsoluteDate(checkedAt, locale) : null;
+    return locale === "tr"
+      ? date
+        ? `Resmi sayfa sınıf şartı belirtmiyor — kontrol edildi (${date}).`
+        : "Resmi sayfa sınıf şartı belirtmiyor — kontrol edildi."
+      : date
+        ? `The official page doesn't state a grade requirement — checked (${date}).`
+        : "The official page doesn't state a grade requirement — checked.";
+  },
 };
 
 /**
@@ -326,6 +432,8 @@ function renderEligibilityNote(note: EligibilityNote, locale: Locale): string {
       return eligibilityMessages.ageUnknown(locale);
     case "age_eligibility_unverified":
       return eligibilityMessages.ageEligibilityUnverified(locale);
+    case "age_eligibility_checked_not_stated":
+      return eligibilityMessages.ageEligibilityCheckedNotStated(String(p.checkedAt ?? ""), locale);
     case "country_unknown":
       return eligibilityMessages.countryUnknown(locale);
     case "country_not_eligible":
@@ -340,12 +448,16 @@ function renderEligibilityNote(note: EligibilityNote, locale: Locale): string {
       return eligibilityMessages.residencyRestrictionOnFile(String(p.restriction), locale);
     case "country_eligibility_unverified":
       return eligibilityMessages.countryEligibilityUnverified(locale);
+    case "country_eligibility_checked_not_stated":
+      return eligibilityMessages.countryEligibilityCheckedNotStated(String(p.checkedAt ?? ""), locale);
     case "grade_unknown":
       return eligibilityMessages.gradeUnknown(locale);
     case "grade_not_eligible":
       return eligibilityMessages.gradeNotEligible(String(p.eligibleGrades), Number(p.currentGrade), locale);
     case "grade_eligibility_unverified":
       return eligibilityMessages.gradeEligibilityUnverified(locale);
+    case "grade_eligibility_checked_not_stated":
+      return eligibilityMessages.gradeEligibilityCheckedNotStated(String(p.checkedAt ?? ""), locale);
     case "not_yet_computed":
       return eligibilityMessages.notYetComputed(locale);
   }
@@ -389,7 +501,18 @@ export function computeEligibility(
     // has explicitly confirmed there's genuinely no age gate (migration 0126) — same
     // principle as countryEligibilityUnverified below, applied to the field that had no
     // equivalent safeguard until now (2026-09-03 named the gap, 0126 closes it).
-    unknownNotes.push({ code: "age_eligibility_unverified" });
+    //
+    // Migration 0129: a THIRD case the two above don't cover — a research pass checked the
+    // official page and it simply doesn't state an age requirement either way. Founder's
+    // own reasoning for why this needs its own code, not just silence-via-ConfirmedOpen: a
+    // student seeing "not verified yet" on every single row learns to stop reading it,
+    // which means the one row where it actually matters gets no more attention than the 24
+    // where it's genuinely moot. Different sentence, same suppression of the alarm-toned one.
+    if (opportunity.ageEligibilityBasis === "checked_not_stated") {
+      unknownNotes.push({ code: "age_eligibility_checked_not_stated", params: { checkedAt: opportunity.lastVerifiedAt ?? "" } });
+    } else {
+      unknownNotes.push({ code: "age_eligibility_unverified" });
+    }
   }
 
   const hasCountryRestriction = opportunity.eligibleCountries.length > 0;
@@ -421,9 +544,11 @@ export function computeEligibility(
   // Advisor never disagree about what one row's own text says. THE FIX (Package 8): before
   // this, the row went completely silent whenever a structured allow-list was absent but
   // prose existed — the counselor surfaced it, this function didn't, live-confirmed on
-  // Garcia Summer Research Program. 39 of 199 currently-actionable live rows carry prose
-  // this now surfaces that previously produced no note at all (verified against
-  // oryn-qa-scratch, 2026-08-22).
+  // Garcia Summer Scholars (see this file's own StudentMatchProfile-adjacent comment above
+  // for why this now says "Scholars," not "Research Program" — a 2026-09-04 duplicate-row
+  // correction, not a typo). 39 of 199 currently-actionable live rows carry prose this now
+  // surfaces that previously produced no note at all (verified against oryn-qa-scratch,
+  // 2026-08-22).
   if (opportunity.citizenshipRestrictions && !hasCitizenshipRestriction) {
     unknownNotes.push({ code: "citizenship_restriction_on_file", params: { restriction: opportunity.citizenshipRestrictions } });
   }
@@ -445,7 +570,14 @@ export function computeEligibility(
     !hasUnstructuredRestrictionEvidence &&
     !(opportunity.countryEligibilityConfirmedOpen ?? false)
   ) {
-    unknownNotes.push({ code: "country_eligibility_unverified" });
+    // Migration 0133's third case, same reasoning as the age/grade branches above: a
+    // research pass checked the official page and it simply doesn't state a country/
+    // citizenship requirement either way, distinct from "nobody's looked" (the default).
+    if (opportunity.countryEligibilityBasis === "checked_not_stated") {
+      unknownNotes.push({ code: "country_eligibility_checked_not_stated", params: { checkedAt: opportunity.lastVerifiedAt ?? "" } });
+    } else {
+      unknownNotes.push({ code: "country_eligibility_unverified" });
+    }
   }
 
   const eligibleGrades = opportunity.eligibleGrades ?? [];
@@ -459,8 +591,13 @@ export function computeEligibility(
   } else if (!(opportunity.gradeEligibilityConfirmedOpen ?? false)) {
     // Same principle as the age branch above: no eligible_grades recorded at all is not
     // evidence every grade is welcome, just never researched, unless migration 0126's flag
-    // says a research pass explicitly confirmed there's genuinely no grade gate.
-    unknownNotes.push({ code: "grade_eligibility_unverified" });
+    // says a research pass explicitly confirmed there's genuinely no grade gate. Migration
+    // 0129's third case, same reasoning as the age branch's own comment above.
+    if (opportunity.gradeEligibilityBasis === "checked_not_stated") {
+      unknownNotes.push({ code: "grade_eligibility_checked_not_stated", params: { checkedAt: opportunity.lastVerifiedAt ?? "" } });
+    } else {
+      unknownNotes.push({ code: "grade_eligibility_unverified" });
+    }
   }
 
   return { eligible: true, notes: unknownNotes };
@@ -496,6 +633,83 @@ export function isNearStudent(student: StudentMatchProfile, opportunity: Pick<Op
 }
 
 const PROXIMITY_BOOST = 15;
+
+/**
+ * target_geographies (types/database.ts) is a 5-way split the onboarding screen showed as
+ * five separate buttons: USA / UK / Europe / Canada / Turkey. "europe" therefore means what
+ * a student actually saw when they picked it — continental Europe WITHOUT the UK or Turkey,
+ * even though country-geo.ts's own continental "Europe" region (built for the university
+ * explorer's map and region tabs, a different surface with a purely geographic purpose)
+ * includes both. Using that region as-is here would silently answer a question the student
+ * was never asked — they chose among three separate options, not one merged continent
+ * (2026-09-04, CEO: "kullanıcıya ne sorulduğu, haritada ne olduğundan önce gelir").
+ */
+const CONTINENTAL_EUROPE_MINUS_UK_TURKEY = new Set(
+  SUPPORTED_COUNTRIES.filter((c) => c.region === "Europe")
+    .map((c) => canonicalCountryKey(c.name))
+    .filter((key) => key !== canonicalCountryKey("United Kingdom") && key !== canonicalCountryKey("Turkey"))
+);
+
+const TARGET_GEOGRAPHY_SINGLE_COUNTRY: Partial<Record<TargetGeography, string>> = {
+  usa: "United States",
+  uk: "United Kingdom",
+  canada: "Canada",
+  turkey: "Turkey",
+};
+
+/**
+ * Whether `opportunityCountry` falls inside any of the student's stated target_geographies.
+ * "not_sure" never matches anything — it's the honest absence of a direction, not a sixth
+ * region. A null or unrecognized opportunity country (a genuinely remote/global opportunity,
+ * or a value like "International"/"Global (online)" that isn't a real country at all —
+ * confirmed live, both appear in opportunities.country) never matches either: silence, not a
+ * claim that the opportunity is outside every target.
+ */
+export function isWithinTargetGeography(targetGeographies: TargetGeography[], opportunityCountry: string | null): boolean {
+  if (!opportunityCountry) return false;
+  const key = canonicalCountryKey(opportunityCountry);
+  return targetGeographies.some((target) => {
+    if (target === "europe") return CONTINENTAL_EUROPE_MINUS_UK_TURKEY.has(key);
+    const singleCountry = TARGET_GEOGRAPHY_SINGLE_COUNTRY[target];
+    return singleCountry !== undefined && canonicalCountryKey(singleCountry) === key;
+  });
+}
+
+/**
+ * Whether `opportunityCountry` is a country this student is targeting, from EITHER source —
+ * the broad, self-reported `targetGeographies` or the specific country of one of their actual
+ * `target_universities` (2026-09-04, measured first: of the 8 real students with a target
+ * university, 2 targeted a country their target_geographies never mentioned — "usa"/"uk"
+ * doesn't imply MIT, and vice versa isn't assumed either). The two are checked together, not
+ * as two independently-truthy flags summed in computeRelevance, specifically so a student who
+ * said "usa" AND targets MIT gets one boost for that fact, not two (CEO: "aynı fırsat iki kez
+ * yükseltilmemeli").
+ */
+export function isTargetingCountry(student: Pick<StudentMatchProfile, "targetGeographies" | "targetUniversityCountries">, opportunityCountry: string | null): boolean {
+  if (isWithinTargetGeography(student.targetGeographies ?? [], opportunityCountry)) return true;
+  if (!opportunityCountry) return false;
+  const key = canonicalCountryKey(opportunityCountry);
+  return (student.targetUniversityCountries ?? []).some((c) => canonicalCountryKey(c) === key);
+}
+
+/**
+ * Same magnitude as PROXIMITY_BOOST directly above, deliberately — not a second number
+ * invented from nothing. Why that magnitude specifically does not do what CEO named as the
+ * real risk (a strong match outside the student's target burying — or being buried by — a
+ * weak one inside it): computeRelevance's interest-overlap term is `(matched/total)*100`, so
+ * for a student with N stated interests the gap between adjacent match counts is 100/N — at
+ * least ~14.3 for anyone with up to 7 interests, comfortably the common case (this file's own
+ * onboarding interest list is nowhere near that dense per student today). A 15-point boost is
+ * smaller than that gap, so it can only ever tip a genuine tie or near-tie — two opportunities
+ * that already share the same interest overlap — toward the one inside the student's stated
+ * target. It cannot lift a 0-of-3-interest Turkey opportunity above a 2-of-3-interest US one
+ * for a Turkey-targeting student: the interest gap (66.7) dwarfs the boost (15). That is
+ * exactly the "strong match buried under a weak one" failure mode, and this magnitude cannot
+ * produce it under any realistic interest count. Additive with PROXIMITY_BOOST, not a
+ * replacement for it — the two are independent facts (current residence vs. stated
+ * aspiration) that can both be true for the same opportunity, and both should count.
+ */
+const TARGET_GEOGRAPHY_BOOST = 15;
 
 /**
  * `opportunities.fields` is uncontrolled free text and does not share a vocabulary with the
@@ -680,13 +894,20 @@ function applyAvoidSignals(
 
 function computeRelevance(student: StudentMatchProfile, opportunity: OpportunityForMatching): RelevanceComputation {
   const near = isNearStudent(student, opportunity);
+  // Independent of `near` above (current residence vs. stated aspiration) — see
+  // TARGET_GEOGRAPHY_BOOST's own comment for why the two stack rather than one replacing the
+  // other, and for why this magnitude can't bury a genuinely stronger interest match.
+  // isTargetingCountry itself merges targetGeographies and targetUniversityCountries into one
+  // check — see its own comment for why that merge happens before this boolean, not after.
+  const targetsThisCountry = isTargetingCountry(student, opportunity.country);
+  const geographyBoost = (near ? PROXIMITY_BOOST : 0) + (targetsThisCountry ? TARGET_GEOGRAPHY_BOOST : 0);
 
   if (opportunity.fields.length === 0) {
-    const { score, avoidReasons } = applyAvoidSignals(40 + (near ? PROXIMITY_BOOST : 0), opportunity, near, student.dismissedSignals);
+    const { score, avoidReasons } = applyAvoidSignals(40 + geographyBoost, opportunity, near, student.dismissedSignals);
     return { score, basis: "opportunity_fields_missing", matchedInterests: [], avoidReasons };
   }
   if (student.interests.length === 0) {
-    const { score, avoidReasons } = applyAvoidSignals(40 + (near ? PROXIMITY_BOOST : 0), opportunity, near, student.dismissedSignals);
+    const { score, avoidReasons } = applyAvoidSignals(40 + geographyBoost, opportunity, near, student.dismissedSignals);
     return { score, basis: "student_interests_missing", matchedInterests: [], avoidReasons };
   }
 
@@ -704,7 +925,7 @@ function computeRelevance(student: StudentMatchProfile, opportunity: Opportunity
   // fit to display as their own stated interest.
   const matchedInterests = student.interests.filter((interest) => fields.includes(normalizeFieldLabel(interest)));
 
-  const baseScore = (matchedInterests.length / student.interests.length) * 100 + (near ? PROXIMITY_BOOST : 0);
+  const baseScore = (matchedInterests.length / student.interests.length) * 100 + geographyBoost;
   const { score, avoidReasons } = applyAvoidSignals(baseScore, opportunity, near, student.dismissedSignals);
   return { score, basis: matchedInterests.length > 0 ? "some_overlap" : "no_overlap", matchedInterests, avoidReasons };
 }
