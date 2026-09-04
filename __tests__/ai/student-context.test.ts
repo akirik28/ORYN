@@ -69,6 +69,7 @@ function baseContext(overrides: Partial<StudentAdvisorContext> = {}): StudentAdv
     sports: [],
     goals: [],
     interests: [],
+    skills: [],
     targetUniversities: [],
     upcomingDeadlines: [],
     recentRecommendationTitles: [],
@@ -683,6 +684,39 @@ describe("formatContextForPrompt — goals category and interests", () => {
   test("no interests set renders the same 'none set' wording goals already uses, not a blank line", () => {
     const text = formatContextForPrompt(baseContext());
     expect(text).toContain("Interests: none set");
+  });
+});
+
+/**
+ * 2026-09-04, research-generator audit follow-up: `skills` reached context for the first
+ * time in this pass (see StudentAdvisorContext's own interface comment) — before this,
+ * neither the advisor nor the research generator had any signal about what the student
+ * already knows how to do. `category` is a closed DB enum (SkillCategory), so it needs the
+ * same label-before-interpolation treatment as courseLevel/employmentType — reusing
+ * lib/profile/cv-import.ts's skillCategoryLabel, the same accessor the manual skill form and
+ * CV-import review screen already render with, not a second copy.
+ */
+describe("formatContextForPrompt — skills", () => {
+  test("renders name and readable category label, not the raw enum member", () => {
+    const text = formatContextForPrompt({ ...baseContext(), skills: [{ name: "Financial modeling", category: "analytical" }] });
+    expect(text).toContain("Skills: Financial modeling [Analytical]");
+    expect(text).not.toContain("[analytical]");
+  });
+
+  test("multiple skills render as a comma-joined list", () => {
+    const text = formatContextForPrompt({
+      ...baseContext(),
+      skills: [
+        { name: "Financial modeling", category: "analytical" },
+        { name: "Public speaking", category: "communication" },
+      ],
+    });
+    expect(text).toContain("Skills: Financial modeling [Analytical], Public speaking [Communication]");
+  });
+
+  test("no skills set renders the same 'none set' wording interests already uses, not a blank line", () => {
+    const text = formatContextForPrompt(baseContext());
+    expect(text).toContain("Skills: none set");
   });
 });
 
