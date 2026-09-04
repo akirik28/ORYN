@@ -93,6 +93,11 @@ function client() {
           // The count check: .select("id", { count: "exact", head: true }).eq("user_id", userId)
           select: () => ({ eq: () => chainable(conversationCountMock()) }),
           insert: (row: Record<string, unknown>) => chainable(conversationInsertMock(row)),
+          // The first-message title update (lib/advisor/conversation-title.ts) — this file's
+          // own subject is the session wall, not titling (see __tests__/advisor/
+          // conversation-title.test.ts and instructions-round-trip-shaped coverage for that),
+          // so a trivial, always-succeeding stub is correct here.
+          update: () => ({ eq: () => chainable({ data: null, error: null }) }),
         };
       }
       if (table === "advisor_messages") {

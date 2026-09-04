@@ -1204,6 +1204,12 @@
       "creating": "Başlatılıyor…",
       "createFailed": "Yeni oturum başlatılamadı. Tekrar dene."
     },
+    "sessionList": {
+      "heading": "Oturumlar",
+      "empty": "Henüz geçmiş oturum yok.",
+      "newConversationPlaceholder": "Yeni sohbet",
+      "loadFailed": "Bu oturum yüklenemedi. Tekrar dene."
+    },
     "usageMeter": {
       "thisMonth": "Bu ay",
       "ariaUnknown": "Bu ay kaç token kaldığı yüklenemedi. Aylık hakkın {limit} token.",

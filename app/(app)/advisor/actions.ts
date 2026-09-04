@@ -16,9 +16,10 @@ import { resolveResponseMode } from "@/lib/tier/response-mode";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { computeNotNowUpdate, computeSoftDismissUntil } from "@/lib/advisor/upgrade-prompt";
 import { acquireAdvisorGenerationLock, releaseAdvisorGenerationLock } from "@/lib/advisor/generation-lock";
+import { deriveConversationTitle } from "@/lib/advisor/conversation-title";
 import type { AIMessage } from "@/lib/ai/provider";
 import type { Locale } from "@/lib/i18n/config";
-import type { PlanTier } from "@/types/database";
+import type { AdvisorMessage, PlanTier } from "@/types/database";
 
 /**
  * docs/ozellesme-spec-2026-09-03.md §2's actual wall — Standard gets exactly one conversation,
@@ -132,7 +133,7 @@ const MAX_HISTORY_TURNS = 40;
 export async function sendAdvisorMessage(
   conversationId: string | null,
   content: string
-): Promise<{ conversationId: string; assistantMessageId?: string; content?: string; degraded?: boolean; error?: string }> {
+): Promise<{ conversationId: string; assistantMessageId?: string; content?: string; degraded?: boolean; conversationTitle?: string; error?: string }> {
   const session = await requireUser();
   const userId = session.userId!;
   const locale = await resolveLocale();
@@ -222,7 +223,7 @@ export async function sendAdvisorMessage(
 
     const { data: conversation, error } = await supabase
       .from("advisor_conversations")
-      .insert({ user_id: userId, title: trimmed.slice(0, 60) })
+      .insert({ user_id: userId })
       .select()
       .single();
     if (error || !conversation) {
@@ -247,11 +248,27 @@ export async function sendAdvisorMessage(
     .reverse()
     .map((m) => ({ role: m.role, content: m.content ?? "" }));
 
+  // First message of this conversation, however it came to exist (just lazy-created above, or
+  // an existing empty shell from createConversation's own explicit button, still carrying the
+  // DB's generic default title) — see deriveConversationTitle's own header for why this is the
+  // one place both paths converge. Best-effort: a failed title update must never fail the
+  // message send itself, and a title the DB doesn't actually hold must never be reported back
+  // to the client as if it does.
+  let conversationTitle: string | undefined;
+  if ((priorMessages?.length ?? 0) === 0) {
+    conversationTitle = deriveConversationTitle(trimmed);
+    const { error: titleError } = await supabase.from("advisor_conversations").update({ title: conversationTitle }).eq("id", convId);
+    if (titleError) {
+      console.warn("[advisor] failed to set conversation title from first message", { conversationId: convId, error: titleError.message });
+      conversationTitle = undefined;
+    }
+  }
+
   const { error: userMessageError } = await supabase
     .from("advisor_messages")
     .insert({ conversation_id: convId, user_id: userId, role: "user", content: trimmed });
   if (userMessageError) {
-    return { conversationId: convId, error: tr ? "Mesajın kaydedilemedi." : "Couldn't save your message." };
+    return { conversationId: convId, conversationTitle, error: tr ? "Mesajın kaydedilemedi." : "Couldn't save your message." };
   }
   await logEvent(userId, "advisor_message_sent", { conversationId: convId });
 
@@ -263,7 +280,7 @@ export async function sendAdvisorMessage(
   // second in-flight message from the same student is an expected, non-exceptional outcome.
   const lockStartedAt = await acquireAdvisorGenerationLock(supabase);
   if (!lockStartedAt) {
-    return { conversationId: convId, error: alreadyGeneratingMessage(locale) };
+    return { conversationId: convId, conversationTitle, error: alreadyGeneratingMessage(locale) };
   }
 
   try {
@@ -307,10 +324,10 @@ export async function sendAdvisorMessage(
         console.error("[advisor] failed to persist the failure record itself", { conversationId: convId, error: failedMessageError.message });
       }
       revalidatePath("/advisor");
-      return { conversationId: convId, assistantMessageId: failedMessage?.id, error: errorMessage };
+      return { conversationId: convId, assistantMessageId: failedMessage?.id, conversationTitle, error: errorMessage };
     }
     revalidatePath("/advisor");
-    return { conversationId: convId, assistantMessageId: assistantMessage.id, content: reply, degraded };
+    return { conversationId: convId, assistantMessageId: assistantMessage.id, content: reply, degraded, conversationTitle };
   } catch (error) {
     // P0 fix: previously nothing was written here at all — the user's message stayed
     // saved with no reply and no persisted failure signal, only an ephemeral client-side
@@ -331,7 +348,7 @@ export async function sendAdvisorMessage(
       console.error("[advisor] failed to persist the failure record itself", { conversationId: convId, error: failedMessageError.message });
     }
     revalidatePath("/advisor");
-    return { conversationId: convId, assistantMessageId: failedMessage?.id, error: errorMessage };
+    return { conversationId: convId, assistantMessageId: failedMessage?.id, conversationTitle, error: errorMessage };
   } finally {
     // Every exit above (success, save-failure, or the catch block) reaches this — a released
     // lock is what lets this same student's next message through, so it must run regardless
@@ -566,4 +583,52 @@ export async function notNowUpgradePrompt(): Promise<void> {
   if (writeError && !isUndefinedColumnError(writeError, "upgrade_prompt_")) {
     console.warn("[advisor] failed to record upgrade-prompt not-now", { userId: session.userId, error: writeError });
   }
+}
+
+/**
+ * The read half of the session list (docs/veli-hesabi-spec-2026-09-04.md is unrelated — this
+ * is the founder's separate 2026-09-04 request: past sessions reachable on the right, not gone
+ * the moment "new session" is clicked). Deliberately a pure read: no INSERT anywhere in this
+ * function, so reopening a past conversation can never reach assertConversationLimitNotExceeded
+ * — that check only ever runs from sendAdvisorMessage's own lazy-create branch and
+ * createConversation, neither of which this function calls. A Standard student reopening their
+ * one existing conversation, or an Ultra student reopening any of theirs, is a read regardless
+ * of tier — the session wall gates creating a NEW conversation, never looking at an old one.
+ *
+ * Ownership checked the same way sendAdvisorMessage's own existing-conversation branch already
+ * does (`.eq("id", ...).eq("user_id", userId)`) — RLS's owner-only policy on both tables
+ * (migration 0014) already makes a foreign conversation id harmless, this is the same defense-
+ * in-depth "don't rely on RLS alone" discipline as every other authorization-sensitive action
+ * in this file.
+ */
+export async function getConversationMessages(conversationId: string): Promise<{ messages: AdvisorMessage[]; error?: string }> {
+  const session = await requireUser();
+  const userId = session.userId!;
+  const locale = await resolveLocale();
+  const tr = locale === "tr";
+
+  if (!isUuidLike(conversationId)) return { messages: [], error: tr ? "Geçersiz konuşma." : "Invalid conversation." };
+
+  const supabase = await createClient();
+  const { data: conversation, error: ownershipError } = await supabase
+    .from("advisor_conversations")
+    .select("id")
+    .eq("id", conversationId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (ownershipError || !conversation) {
+    return { messages: [], error: tr ? "Bu oturum bulunamadı." : "This session couldn't be found." };
+  }
+
+  const { data: messages, error: messagesError } = await supabase
+    .from("advisor_messages")
+    .select("*")
+    .eq("conversation_id", conversationId)
+    .order("created_at", { ascending: true });
+  if (messagesError) {
+    console.error("[advisor] failed to load messages for a past conversation", { conversationId, error: messagesError.message });
+    return { messages: [], error: tr ? "Bu oturum yüklenemedi." : "This session couldn't be loaded." };
+  }
+
+  return { messages: messages ?? [] };
 }

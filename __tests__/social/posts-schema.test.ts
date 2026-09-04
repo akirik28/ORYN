@@ -571,7 +571,21 @@ describe("migration numbering", () => {
     // guard and 'standard' with it. account_role taken in the same pass; last_digest_sent_at
     // deliberately left out, reasoned in the migration itself. Numbering skips 0120 -- see the
     // note above for why that one was removed rather than renumbered.
-    expect(Math.max(...numbers.map(Number))).toBe(121);
+    // 0122 (advisor_conversations_guard_admin_columns) -- the permissive-update-policy sweep's
+    // own §3, closed: summary/summarized_at are single-writer (lib/advisor/retention.ts's
+    // admin client, itself unarmed) but sat inside 0014's blanket owner-full-access UPDATE
+    // alongside title (correctly user-editable). No security definer here, unlike
+    // parent_links_guard_immutable_columns (0116/0118) -- this trigger never needs to see
+    // another user's row, so current_user correctly reflects the actual caller without the
+    // auth.uid() workaround that function needed. Proved both directions on a real Postgres
+    // before this migration existed as a file: a student's smuggled summary/summarized_at
+    // edit alongside a legitimate title rename is frozen; service_role's own write still
+    // lands. Built alongside the founder's separate same-night session-list request (past
+    // conversations reachable on the right, topic-derived titles from the first message,
+    // lib/advisor/conversation-title.ts) -- this table's title column is what that feature
+    // writes, which is what made the sweep's §3 finding directly in scope rather than a
+    // detour.
+    expect(Math.max(...numbers.map(Number))).toBe(122);
   });
 });
 
