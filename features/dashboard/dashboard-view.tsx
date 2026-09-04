@@ -486,8 +486,22 @@ export async function DashboardView({
                             >
                               <span className="flex min-w-0 items-start gap-2.5">
                                 <SourceIcon className="mt-0.5 size-3.5 shrink-0 text-ink-4" aria-hidden="true" />
-                                <span className="min-w-0 text-sm leading-snug text-ink-2 group-hover:text-brand-primary">
-                                  {deadline.title}
+                                <span className="min-w-0">
+                                  <span className="block text-sm leading-snug text-ink-2 group-hover:text-brand-primary">
+                                    {deadline.title}
+                                  </span>
+                                  {/* 2026-09-04, CEO's own ruling: inline, not a separate group — this
+                                      item's date is real, and moving it to a box at the bottom of the
+                                      list would read as "you have time," the wrong signal for something
+                                      that could close in days. Calm/neutral, not the warning tone the
+                                      opportunity-card eligibility badge uses elsewhere — copy is about
+                                      Proxola's own research being unconfirmed, never a claim that the
+                                      date itself is wrong. */}
+                                  {deadline.sourceUnverified ? (
+                                    <span lang={locale} className="mt-0.5 block text-xs text-ink-4">
+                                      {t("sourceUnverified")}
+                                    </span>
+                                  ) : null}
                                 </span>
                               </span>
                               <DeadlineBadge date={deadline.date} locale={locale} />

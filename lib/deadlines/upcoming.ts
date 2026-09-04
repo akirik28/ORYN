@@ -14,6 +14,24 @@ export interface UpcomingDeadline {
   title: string;
   date: string;
   href: string;
+  /**
+   * True only for a university-sourced row whose verification_state is 'unverified' — the
+   * only one of the three sources with a matching concept today (2026-09-04 audit: 4 such
+   * rows currently live, across 3 students; applications are self-reported by the student, so
+   * "unverified" doesn't apply, and no live opportunity currently carries the equivalent
+   * cycle_status='unverified' state, so it's set false rather than wired up unmeasured).
+   * Always explicit, never left implicit-undefined, so a caller can render a marker off this
+   * one field without also having to branch on `source`.
+   *
+   * Deliberately stays inline in the item's own normal date-sorted position — CEO's own
+   * ruling against a separate sub-group (the shape getUpcomingUndatedUniversityDeadlines
+   * above uses for undated rows): those rows have no date and so have nowhere else to sort;
+   * this field's rows DO have a real date, and moving a dated, 6-days-away deadline into a
+   * separate "unverified" box at the bottom of the list would read as "you have time," which
+   * is exactly the wrong signal for something closing in 6 days. Urgency comes before
+   * verification status here.
+   */
+  sourceUnverified: boolean;
 }
 
 const ACTIVE_APPLICATION_STATUSES = ["not_started", "in_progress", "submitted", "under_review"] as const;
@@ -53,6 +71,7 @@ async function getUpcomingApplicationDeadlines(supabase: SupabaseClient<Database
       title: name ? `${name} application` : "Application",
       date: application.deadline!,
       href: `/applications/${application.id}`,
+      sourceUnverified: false,
     };
   });
 }
@@ -82,6 +101,7 @@ export async function getUpcomingOpportunityDeadlines(supabase: SupabaseClient<D
     title: opportunity.title,
     date: opportunity.deadline!,
     href: "/opportunities",
+    sourceUnverified: false,
   }));
 }
 
@@ -98,7 +118,11 @@ export function deadlineDetailLabel(deadline: { deadline_text_verbatim: string |
   return deadline.deadline_text_verbatim ?? deadline.cycle_label ?? deadline.deadline_type;
 }
 
-async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string, supersessionMap: SupersessionMap): Promise<UpcomingDeadline[]> {
+/** Exported (only) so __tests__/deadlines/upcoming-unverified.test.ts can pin and verify the
+ * sourceUnverified flag directly, without also mocking the application/opportunity sources
+ * getUpcomingDeadlines fans out to — same reasoning getUpcomingOpportunityDeadlines's own
+ * header gives for being exported. No behavior change. */
+export async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>, userId: string, today: string, supersessionMap: SupersessionMap): Promise<UpcomingDeadline[]> {
   const { data: targets } = await supabase
     .from("target_universities")
     .select("university_id, program_id")
@@ -145,6 +169,11 @@ async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>
       title: `${name} — ${deadlineDetailLabel(deadline)}`,
       date: deadline.deadline_date!,
       href: `/universities/${deadline.university_id}`,
+      // Left visible rather than filtered out (same call the comment above already makes for
+      // NON_ACTIONABLE_VERIFICATION_STATES not including 'unverified') — unconfirmed is not
+      // the same claim as wrong, matching getUpcomingOpportunityDeadlines' identical stance
+      // on cycle_status='unverified'. The flag lets the caller mark it, not hide it.
+      sourceUnverified: deadline.verification_state === "unverified",
     });
   }
   return result;

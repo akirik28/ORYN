@@ -85,7 +85,7 @@ describe("getUpcomingOpportunityDeadlines — pinned current behavior", () => {
     const result = await getUpcomingOpportunityDeadlines(supabase, USER_ID, TODAY);
 
     expect(result).toEqual([
-      { id: "opportunity-opp-1", source: "opportunity", title: "Breakthrough Junior Challenge", date: "2026-11-01", href: "/opportunities" },
+      { id: "opportunity-opp-1", source: "opportunity", title: "Breakthrough Junior Challenge", date: "2026-11-01", href: "/opportunities", sourceUnverified: false },
     ]);
   });
 
