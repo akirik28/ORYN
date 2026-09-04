@@ -9,7 +9,8 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AdvisorMessage, AdvisorMessageThinking } from "@/components/proxola/advisor-message";
 import { Eyebrow } from "@/components/proxola/eyebrow";
 import { UpgradePromptOverlay } from "@/features/advisor/upgrade-prompt-overlay";
-import { sendAdvisorMessage, retryAdvisorMessage, softDismissUpgradePrompt, notNowUpgradePrompt } from "@/app/(app)/advisor/actions";
+import { softDismissUpgradePrompt, notNowUpgradePrompt } from "@/app/(app)/advisor/actions";
+import { streamAdvisorChat } from "@/lib/advisor/stream-client";
 import { shouldShowUpgradePrompt, NOT_YET_DISMISSED, type UpgradePromptDismissalState } from "@/lib/advisor/upgrade-prompt";
 import { formatAbsoluteDate } from "@/lib/i18n/date";
 import type { Locale } from "@/lib/i18n/config";
@@ -172,12 +173,14 @@ export function AdvisorChat({
    * "only on the first qualifying reply" true by construction rather than something this
    * function has to separately enforce beyond the session-shown check.
    *
-   * `isStreaming` is always `false` here deliberately, not a placeholder — this component
-   * has no token-by-token streaming (the "thinking" placeholder is a spinner until the full
-   * reply arrives in one Server Action response), so by the time this runs the reply is
-   * already fully arrived, never mid-generation. Kept as an explicit field on
-   * UpgradePromptContext (not silently dropped) so a future streaming implementation has an
-   * obvious place to wire a real value in, rather than needing to rediscover the requirement.
+   * `isStreaming` is still always `false` here, and still deliberately — 2026-09-04's own
+   * streaming build is the "future implementation" this field's own comment used to promise
+   * a place for, and it turns out this call site didn't need to change: maybeShowUpgradePrompt
+   * runs from submit()'s/retry()'s own continuation AFTER streamAdvisorChat's promise
+   * resolves, which only happens once the stream's own `done`/`error` event has arrived — by
+   * construction, the reply is always fully in by the time this runs, same as before
+   * streaming existed. What DOES stream now is content arriving into the message bubble
+   * itself (see submit()'s onDelta below), a fully separate concern from this gate.
    */
   function maybeShowUpgradePrompt(messageId: string, degraded: boolean | undefined) {
     if (hasShownUpgradePromptThisSession()) return;
@@ -221,14 +224,24 @@ export function AdvisorChat({
     inputRef.current = "";
 
     startTransition(async () => {
-      const result = await sendAdvisorMessage(convId, content);
+      // Each delta lands in the SAME "thinking" placeholder's own content — the render below
+      // switches from AdvisorMessageThinking to the real content view the moment content is
+      // non-empty, so this is what turns the static status label into a growing reply as it
+      // arrives, without a separate piece of state to track "am I streaming".
+      const result = await streamAdvisorChat("/api/advisor/chat", { conversationId: convId, content }, (delta) => {
+        setMessages((prev) => prev.map((m) => (m.id === "thinking" ? { ...m, content: m.content + delta } : m)));
+      });
       if (result.conversationId) setConvId(result.conversationId);
       if (result.conversationId && result.conversationTitle) onConversationTitled?.(result.conversationId, result.conversationTitle);
 
       if (result.error) {
         if (result.assistantMessageId) {
           // A real, persisted failed turn — render it as a retry-able bubble, same as one
-          // loaded from the DB on refresh, instead of only an ephemeral banner.
+          // loaded from the DB on refresh, instead of only an ephemeral banner. Any text that
+          // had already streamed in is discarded here on purpose, not preserved-then-marked-
+          // failed: this is specifically the "generated fine but the save failed" case, and
+          // showing content the database doesn't actually hold would contradict the very
+          // guarantee streamAdvisorChat's own done event exists to make (see its header).
           setMessages((prev) =>
             prev.map((m) => (m.id === "thinking" ? { id: result.assistantMessageId!, role: "assistant", content: "", failed: true, errorMessage: result.error } : m))
           );
@@ -241,19 +254,14 @@ export function AdvisorChat({
         return;
       }
 
-      // Swap the thinking placeholder for the real reply directly, rather than only
-      // dropping it: revalidatePath() on the server invalidates the route for the *next*
-      // render, but this component's `messages` is local useState seeded once from
-      // `initialMessages` — a prop change alone never flows back in without a remount, so
-      // the reply would otherwise stay invisible until a manual reload (found live-testing
-      // this exact path — the server had already persisted and returned the reply while
-      // the chat kept showing nothing).
+      // The content itself already arrived via onDelta above — this only finalizes the
+      // message's identity (the real persisted id) and the fields that were never knowable
+      // until the stream's own done event: degraded, and clearing `pending` so the render
+      // stops treating it as still-in-flight (immaterial for the content view itself, which
+      // already switched once content became non-empty, but still gates retry-button
+      // eligibility and the upgrade-prompt timing below).
       setMessages((prev) =>
-        prev.map((m) =>
-          m.id === "thinking"
-            ? { id: result.assistantMessageId ?? "thinking", role: "assistant", content: result.content ?? "", degraded: result.degraded }
-            : m,
-        )
+        prev.map((m) => (m.id === "thinking" ? { ...m, id: result.assistantMessageId ?? "thinking", pending: false, degraded: result.degraded } : m)),
       );
       maybeShowUpgradePrompt(result.assistantMessageId ?? "thinking", result.degraded);
     });
@@ -262,18 +270,23 @@ export function AdvisorChat({
   function retry(messageId: string) {
     if (retryingId) return;
     setRetryingId(messageId);
-    setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, pending: true, failed: false } : m)));
+    // content explicitly reset to "" — a failed row's content is always null/empty already
+    // (both the server's failed-row insert and the DB-load mapping agree on that), but
+    // stating it here rather than relying on that incidentally being true is what makes the
+    // render's `pending && !content` check correctly show the thinking placeholder again for
+    // the retry's own new attempt, not whatever the previous failed attempt happened to leave.
+    setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, pending: true, failed: false, content: "" } : m)));
 
     startTransition(async () => {
-      const result = await retryAdvisorMessage(messageId);
+      const result = await streamAdvisorChat("/api/advisor/chat/retry", { failedMessageId: messageId }, (delta) => {
+        setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, content: m.content + delta } : m)));
+      });
       setRetryingId(null);
       if (result.error) {
-        setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, pending: false, failed: true, errorMessage: result.error } : m)));
+        setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, pending: false, failed: true, content: "", errorMessage: result.error } : m)));
         return;
       }
-      setMessages((prev) =>
-        prev.map((m) => (m.id === messageId ? { ...m, pending: false, failed: false, content: result.content ?? "", degraded: result.degraded } : m)),
-      );
+      setMessages((prev) => prev.map((m) => (m.id === messageId ? { ...m, pending: false, failed: false, degraded: result.degraded } : m)));
       maybeShowUpgradePrompt(messageId, result.degraded);
     });
   }
@@ -306,7 +319,14 @@ export function AdvisorChat({
           </div>
         ) : (
           messages.map((message) =>
-            message.pending ? (
+            // Content, not `pending` alone, is what switches this from the status label to
+            // the real content view — a reply mid-stream is still `pending: true` (retry
+            // eligibility and the upgrade-prompt timing both still key off that), but the
+            // moment the first delta arrives there's real text to show, and showing it as it
+            // grows is the entire point of streaming. A message that's pending with no
+            // content yet (the gap between "request sent" and "first token received," never
+            // zero) is exactly what AdvisorMessageThinking's own statusLabel exists to cover.
+            message.pending && !message.content ? (
               <AdvisorMessageThinking
                 key={message.id}
                 statusLabel={isThoroughReply ? t("thinkingThorough") : t("thinking")}
