@@ -286,6 +286,7 @@ export const FIXTURE_UNIVERSITY_STATISTICS: UniversityStatistic = {
   university_id: FIXTURE_UNIVERSITY.id,
   stat_year: 2025,
   admission_rate: 0.09,
+  admission_rate_basis: "published",
   sat_range_low: null,
   sat_range_high: null,
   act_range_low: null,
