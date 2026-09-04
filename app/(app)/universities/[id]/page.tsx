@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { MapPin, Users, DollarSign, GraduationCap, ExternalLink, Trophy, Target, TrendingUp, FileSearch } from "lucide-react";
 import { subjectLabel } from "@/lib/programs/subject-labels";
 import { EmptyState } from "@/components/proxola/empty-state";
-import { lacksResearchDepth } from "@/lib/universities/data-depth";
+import { lacksResearchDepth, lacksApplicationDeadline, lacksCoreAdmissionStats } from "@/lib/universities/data-depth";
 import { requireUser, getCurrentProfile, getProfileScores } from "@/lib/security/dal";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { heroGradientStyle } from "@/components/proxola/hero-gradient";
@@ -319,6 +319,26 @@ export default async function UniversityDetailPage({ params }: { params: Promise
     sourceCount: sourcesRes.data?.length ?? 0,
   });
 
+  // D6 (docs/PROXOLA-PLAN.md): lacksDepth above is silent on the exact shape MIT and Oxford
+  // exposed -- a university with real depth elsewhere can still have a wrong-kind row in one
+  // specific table. `deadlineTypes` uses every row on file, not just `datedDeadlines`/
+  // `recurringDeadlines` (which additionally require the row to be upcoming) -- the question
+  // here is whether an application deadline has ever been researched at all, not whether
+  // one happens to be actionable right now.
+  const missingApplicationDeadline = lacksApplicationDeadline((deadlinesRes.data ?? []).map((d) => d.deadline_type));
+  // lacksCoreAdmissionStats, not lacksAdmissionStatistics -- see that function's own header
+  // in data-depth.ts for why cost is deliberately excluded from this specific render decision
+  // (it has its own independent fallback, university_profile_metrics tuition, below).
+  const missingCoreAdmissionStats = lacksCoreAdmissionStats(
+    stats ? { admissionRate: stats.admission_rate, satRangeLow: stats.sat_range_low, actRangeLow: stats.act_range_low, graduationRate: stats.graduation_rate } : null
+  );
+  // Shared by both D6 empty-state notes below -- the spec's own rule for an empty state
+  // ("Kayıt bulunamadı" kötü, ne yapacağını söyleyen iyi" — Phase 43) is a link, not just an
+  // instruction to go look. admissions_url preferred over website_url when both exist: it's
+  // the actual page a student needs, the same precedence the page's own bottom-of-page
+  // "Admissions" link already uses.
+  const officialSourceUrl = university.admissions_url ?? university.website_url;
+
   return (
     // Same dark "isFull"-screen treatment as the Explorer (app/(app)/universities/page.tsx)
     // — source's UniversityDetailScreen is dark too, and this page's whole component tree
@@ -532,7 +552,17 @@ export default async function UniversityDetailPage({ params }: { params: Promise
                 : undefined
           }
         />
-        <StatCard icon={GraduationCap} label={t("admissionRate")} value={stats?.admission_rate != null ? `${Math.round(stats.admission_rate * 100)}%` : t("unavailable")} />
+        {/* D6: when none of the three have any real value (missingCoreAdmissionStats), three
+            separate "Unavailable" cards read as three separate gaps rather than the one gap
+            they actually are, and "Unavailable" sitting where a percentage normally goes can
+            look like a genuinely low number rather than an absent one. Replaced with a single
+            plain-paragraph note below the grid instead — same register as programsEmptyMessage/
+            requirementCheckEmptyMessage elsewhere on this page, not a fourth invented empty-
+            state language. Cost is deliberately never part of this: it has its own fallback
+            (university_profile_metrics tuition) and keeps rendering its own card regardless. */}
+        {!missingCoreAdmissionStats ? (
+          <StatCard icon={GraduationCap} label={t("admissionRate")} value={stats?.admission_rate != null ? `${Math.round(stats.admission_rate * 100)}%` : t("unavailable")} />
+        ) : null}
         {/* These read two genuinely different concepts — US `cost_of_attendance` (an IPEDS
             all-in sticker-price estimate) vs a UK-and-onward `tuition_international_annual`
             (tuition only, official-university-page-sourced, often a range) — and are never
@@ -586,9 +616,23 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         ) : (
           <StatCard icon={DollarSign} label={t("costOfAttendance")} value={t("unavailable")} />
         )}
-        <StatCard icon={Target} label={t("testScores")} value={testScoreRangeLabel(stats, t)} />
-        <StatCard icon={TrendingUp} label={t("graduationRate")} value={stats?.graduation_rate != null ? `${Math.round(stats.graduation_rate * 100)}%` : t("unavailable")} />
+        {!missingCoreAdmissionStats ? (
+          <>
+            <StatCard icon={Target} label={t("testScores")} value={testScoreRangeLabel(stats, t)} />
+            <StatCard icon={TrendingUp} label={t("graduationRate")} value={stats?.graduation_rate != null ? `${Math.round(stats.graduation_rate * 100)}%` : t("unavailable")} />
+          </>
+        ) : null}
       </div>
+      {missingCoreAdmissionStats ? (
+        <p lang={locale} className="max-w-3xl text-sm text-muted-foreground">
+          {t("admissionStatsEmptyMessage")}{" "}
+          {officialSourceUrl ? (
+            <a href={officialSourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
+              {t("visitWebsite")} <ExternalLink className="size-3.5" />
+            </a>
+          ) : null}
+        </p>
+      ) : null}
 
       {/* Phase 36/71: admission rate, test scores, and graduation rate above all come from
           this one `university_statistics` row, and every row on file already carries a
@@ -604,8 +648,17 @@ export default async function UniversityDetailPage({ params }: { params: Promise
           draw from a different table (university_profile_metrics) with their own source —
           see the tuition badge immediately below, added specifically so this one's
           placement under the grid stops implying it covers the tuition card too
-          (source-traceability-audit-2026-09-03.md). */}
-      {stats?.source ? (
+          (source-traceability-audit-2026-09-03.md).
+
+          D6: also suppressed when missingCoreAdmissionStats fires, even though `stats.source`
+          itself can still be genuinely populated — confirmed live on Oxford's own row, which
+          carries a real ox.ac.uk source URL despite admission_rate/sat/act/graduation_rate
+          all being null (a source was checked, the figures just weren't published on the page
+          checked). Showing "Source: ox.ac.uk · Checked: ..." directly under
+          admissionStatsEmptyMessage's "hasn't been researched yet" would read as the page
+          contradicting itself on the same screen -- caught checking Oxford's actual row
+          before shipping this, not assumed. */}
+      {stats?.source && !missingCoreAdmissionStats ? (
         <SourceBadge
           sourceName={stats.source}
           checkedAt={stats.updated_at}
@@ -754,7 +807,14 @@ export default async function UniversityDetailPage({ params }: { params: Promise
         </section>
       ) : null}
 
-      {datedDeadlines.length > 0 || recurringDeadlines.length > 0 ? (
+      {/* D6: this section used to render only when an actionable deadline existed at all —
+          MIT's own shape (one real, actionable "scholarship" row, nothing application/early)
+          rendered normally with no indication the one deadline a student actually needs was
+          never confirmed. Now always renders when there's something to show OR the specific
+          gap to name, same "the section says so rather than disappearing" pattern already
+          established for programs/requirements above. The note is additive, never replacing
+          a real row -- MIT's scholarship deadline still shows exactly as it does today. */}
+      {datedDeadlines.length > 0 || recurringDeadlines.length > 0 || missingApplicationDeadline ? (
         <section className="space-y-4">
           <SectionHeader title={t("importantDatesTitle")} description={t("importantDatesDescription")} />
           {datedDeadlines.length > 0 ? (
@@ -762,6 +822,16 @@ export default async function UniversityDetailPage({ params }: { params: Promise
           ) : null}
           {recurringDeadlines.length > 0 ? (
             <DeadlineGroup title={t("recurringTitle")} kind="recurring" items={recurringDeadlines} programNameById={programNameById} locale={locale} t={t} tBindingPolicy={tBindingPolicy} />
+          ) : null}
+          {missingApplicationDeadline ? (
+            <p lang={locale} className="text-sm text-muted-foreground">
+              {t("applicationDeadlineUnconfirmedMessage")}{" "}
+              {officialSourceUrl ? (
+                <a href={officialSourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
+                  {t("visitWebsite")} <ExternalLink className="size-3.5" />
+                </a>
+              ) : null}
+            </p>
           ) : null}
         </section>
       ) : null}

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { lacksResearchDepth, lacksApplicationDeadline, lacksAdmissionStatistics } from "@/lib/universities/data-depth";
+import { lacksResearchDepth, lacksApplicationDeadline, lacksAdmissionStatistics, lacksCoreAdmissionStats } from "@/lib/universities/data-depth";
 
 /**
  * CEO finding, 2026-09-02: 734 of 1,019 universities came from one bulk import with real
@@ -92,5 +92,35 @@ describe("lacksAdmissionStatistics", () => {
 
   test("GREEN: fully populated", () => {
     expect(lacksAdmissionStatistics({ admissionRate: 0.04, satRangeLow: 1500, actRangeLow: 34, costOfAttendance: 82000 })).toBe(false);
+  });
+});
+
+/**
+ * The narrower, cost-excluded version actually wired into the university detail page's own
+ * empty-state decision — see its own header comment in data-depth.ts for why. Oxford is
+ * still the motivating case, but with its REAL full shape this time: cost is genuinely
+ * missing from university_statistics too, but its detail page shows a real tuition figure
+ * regardless (from a different table, university_profile_metrics) -- this function correctly
+ * has no opinion about that at all, since it never takes cost as an input in the first place.
+ */
+describe("lacksCoreAdmissionStats", () => {
+  test("RED: Oxford's real shape -- admission rate, both test-score ranges, and graduation rate all null", () => {
+    expect(lacksCoreAdmissionStats({ admissionRate: null, satRangeLow: null, actRangeLow: null, graduationRate: null })).toBe(true);
+  });
+
+  test("RED: no row at all", () => {
+    expect(lacksCoreAdmissionStats(null)).toBe(true);
+  });
+
+  test("GREEN: a real admission rate alone is enough", () => {
+    expect(lacksCoreAdmissionStats({ admissionRate: 0.03, satRangeLow: null, actRangeLow: null, graduationRate: null })).toBe(false);
+  });
+
+  test("GREEN: a real graduation rate alone is enough", () => {
+    expect(lacksCoreAdmissionStats({ admissionRate: null, satRangeLow: null, actRangeLow: null, graduationRate: 0.94 })).toBe(false);
+  });
+
+  test("GREEN: fully populated", () => {
+    expect(lacksCoreAdmissionStats({ admissionRate: 0.04, satRangeLow: 1500, actRangeLow: 34, graduationRate: 0.96 })).toBe(false);
   });
 });
