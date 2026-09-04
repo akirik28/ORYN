@@ -1511,6 +1511,18 @@
       "cta": "See Ultra",
       "notNow": "Not now",
       "close": "Close"
+    },
+    "opportunities": {
+      "heading": "Opportunities — Proxola"
+    },
+    "universities": {
+      "heading": "Universities — Proxola"
+    },
+    "applications": {
+      "heading": "Applications — Proxola"
+    },
+    "progress": {
+      "heading": "Progress — Proxola"
     }
   },
   "messaging": {
