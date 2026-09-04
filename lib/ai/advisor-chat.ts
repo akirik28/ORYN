@@ -5,6 +5,7 @@ import { withUsageLogging } from "./usage";
 import { ADVISOR_SYSTEM_PROMPT } from "./advisor-prompt";
 import { buildStudentAdvisorContext, formatContextForPrompt } from "./student-context";
 import { buildOpportunityContextText } from "./opportunity-context";
+import { buildUniversityAdmissionContextText } from "./university-admission-context";
 import { DEGRADE_MODEL, selectModelForUser } from "./limits/budget";
 import type { AIMessage } from "./provider";
 import { withOutputLanguage } from "./output-language";
@@ -68,9 +69,10 @@ interface GenerateAdvisorReplyParams {
 async function assembleAdvisorSystemPrompt(userId: string): Promise<string> {
   const context = await buildStudentAdvisorContext(userId);
   const opportunityContext = await buildOpportunityContextText(userId);
+  const universityAdmissionContext = await buildUniversityAdmissionContextText(userId);
   const locale = context.student.preferredLanguage;
   return withOutputLanguage(
-    `${ADVISOR_SYSTEM_PROMPT}\n\nCurrent student context:\n${formatContextForPrompt(context, locale)}${opportunityContext}`,
+    `${ADVISOR_SYSTEM_PROMPT}\n\nCurrent student context:\n${formatContextForPrompt(context, locale)}${opportunityContext}${universityAdmissionContext}`,
     locale,
   );
 }

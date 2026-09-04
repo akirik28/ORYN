@@ -1352,8 +1352,13 @@ export type UniversityRequirementInsert = Insertable<
  * with a real `admission_rate` is "published". Only "published" is ever set automatically (by
  * the migration itself, deterministically, from admission_rate already being non-null) —
  * "no_single_rate" can only come from an actual research pass having looked and confirmed it,
- * never inferred from the data alone. See docs/fill-9-universities-findings-2026-09-04.md. */
-export type AdmissionRateBasis = "published" | "not_researched" | "no_single_rate";
+ * never inferred from the data alone. See docs/fill-9-universities-findings-2026-09-04.md.
+ * "not_published" added by migration 0127: actively researched, a single rate plausibly
+ * exists, but the institution doesn't release one officially (e.g. NUS, Tsinghua, Peking) —
+ * distinct from "not_researched" so a later pass doesn't re-spend the research confirming the
+ * same absence. This file is hand-authored, not generated from the live schema — added here
+ * to match 0127 rather than left drifted; see docs/d1-qs-top100-fill-2026-09-04.md. */
+export type AdmissionRateBasis = "published" | "not_researched" | "no_single_rate" | "not_published";
 
 export interface UniversityStatistic {
   id: string;
