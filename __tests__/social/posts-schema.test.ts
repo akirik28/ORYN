@@ -550,7 +550,18 @@ describe("migration numbering", () => {
     // change at all: university_profile_metrics' tuition_domestic_annual/
     // tuition_international_annual metric codes already cover it, built and merged before
     // 2026-09-03. Still unapplied; the founder runs it in the morning.
-    expect(Math.max(...numbers.map(Number))).toBe(119);
+    //
+    // 0120 (parent_links_guard_last_commentary_sent_at) -- a codebase-wide guard-trigger
+    // column-drift sweep (oryn/guard-trigger-column-drift-2026-09-04) found that 0118 added
+    // parent_links.last_commentary_sent_at four hours after 0116 defined
+    // parent_links_guard_immutable_columns(), which the trigger never learned about --
+    // CREATE OR REPLACE FUNCTION adds the missing reassignment, the same idiom already used
+    // twice for opportunity_matches_guard_computed_columns (migrations 0086, 0115) as that
+    // table grew new computed columns. Schema only, no trigger redefinition needed (0116's
+    // trigger is an unconditional `before update`, already firing on every column). Numbered
+    // 0120, not 0119 -- origin/main claimed 0119 (admission_rate_basis, directly above) in the
+    // same window; renamed after rebasing. Still unapplied, same as 0116/0117/0118/0119.
+    expect(Math.max(...numbers.map(Number))).toBe(120);
   });
 });
 
