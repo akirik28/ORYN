@@ -134,6 +134,25 @@ describe("NotificationBell — pinned success-path behavior", () => {
  * absence": the dot must never carry either class when there is nothing unread, since it
  * does not render at all in that state.
  */
+/**
+ * 2026-09-04 fix (docs/application-tracker-notification-audit-2026-09-04.md): this popover
+ * used to show its own "All caught up" for zero notifications — a materially more confident
+ * claim than the /notifications page's honest "Nothing here yet" for the identical
+ * condition, and wrong in the reassuring direction for a student who has simply never
+ * received one (the common case, not a rare one, per the audit's own real-account numbers).
+ * No test previously exercised this state at all — every fixture above passes at least one
+ * notification.
+ */
+describe("NotificationBell — empty state (zero notifications)", () => {
+  test("shows the honest 'nothing here yet' copy, not 'all caught up'", async () => {
+    renderBell([]);
+    await openBell();
+
+    expect(screen.getByText("Nothing here yet")).toBeInTheDocument();
+    expect(screen.queryByText("All caught up")).not.toBeInTheDocument();
+  });
+});
+
 describe("NotificationBell — Ultra tier dot", () => {
   // Scoped to the trigger button specifically, not the whole container -- the popover's own
   // per-row unread dots (features/notifications/*) share the same size-2/aria-hidden shape,

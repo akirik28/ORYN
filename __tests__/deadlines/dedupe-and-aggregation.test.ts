@@ -274,3 +274,46 @@ describe("scanDeadlines — anti-spam: the same deadline must never notify twice
     expect(createNotification).toHaveBeenCalledTimes(2);
   });
 });
+
+describe("scanDeadlines — a deadline BETWEEN buckets still gets exactly one reminder (2026-09-04 fix)", () => {
+  test("6 days out — the live shape (Oxford, early_decision) that never fired under exact-day matching, however often the job ran — now gets caught by the nearest bucket (7), and the copy still says the REAL day count", async () => {
+    const today = new Date();
+    db.applications = [{ id: "app-oxford", user_id: STUDENT_ID, deadline: daysFromAnchor(today, 6), target_university_id: "target-1", status: "not_started" }];
+    db.target_universities = [{ id: "target-1", user_id: STUDENT_ID, university_id: "univ-1", program_id: null, status: "target" }];
+    db.universities = [{ id: "univ-1", name: "University of Oxford" }];
+
+    const first = await scanDeadlines();
+    expect(first.notified).toBe(1);
+    expect(createNotification).toHaveBeenCalledTimes(1);
+    // The bucket (7) is only ever a dedup key — the student sees the real count (6).
+    expect(createNotification).toHaveBeenCalledWith(expect.objectContaining({ title: "6 days until deadline" }));
+    expect(deadlineNotificationLogBacking).toEqual([
+      expect.objectContaining({ user_id: STUDENT_ID, source: "application", source_id: "app-oxford", threshold_days: 7 }),
+    ]);
+
+    // Same anti-spam property as every other bucket: running again with nothing changed
+    // (still 6 days out) must not notify a second time for the same bucket.
+    const second = await scanDeadlines();
+    expect(second.notified).toBe(0);
+    expect(createNotification).toHaveBeenCalledTimes(1);
+  });
+
+  test("every non-exact day still gets caught by its nearest bucket, not just 6", async () => {
+    const today = new Date();
+    db.applications = [
+      { id: "app-2", user_id: "student-2", deadline: daysFromAnchor(today, 2), target_university_id: "target-2", status: "not_started" },
+      { id: "app-4", user_id: "student-4", deadline: daysFromAnchor(today, 4), target_university_id: "target-4", status: "not_started" },
+      { id: "app-8", user_id: "student-8", deadline: daysFromAnchor(today, 8), target_university_id: "target-8", status: "not_started" },
+    ];
+    db.target_universities = [];
+    db.universities = [];
+
+    await scanDeadlines();
+
+    const byUser = new Map(vi.mocked(createNotification).mock.calls.map((c) => [c[0].userId, c[0]]));
+    expect(byUser.get("student-2")).toMatchObject({ title: "2 days until deadline" });
+    expect(byUser.get("student-4")).toMatchObject({ title: "4 days until deadline" });
+    expect(byUser.get("student-8")).toMatchObject({ title: "8 days until deadline" });
+    expect(deadlineNotificationLogBacking.map((r) => r.threshold_days).sort((a, b) => (a as number) - (b as number))).toEqual([3, 7, 14]);
+  });
+});

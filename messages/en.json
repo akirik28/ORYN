@@ -1291,7 +1291,7 @@
       "earliestDeadline": " · Earliest deadline {date}"
     },
     "due": "Due",
-    "ready": "ready",
+    "ofChecklist": "of checklist",
     "statusLabels": {
       "not_started": "Not started",
       "in_progress": "In progress",
@@ -1639,7 +1639,6 @@
     "label": "Notifications",
     "title": "Notifications",
     "markAllRead": "Mark all read",
-    "allCaughtUp": "All caught up",
     "unreadCount": "{count} unread",
     "noUnread": "No unread",
     "weeklyPlanReady": "Your weekly plan is ready",

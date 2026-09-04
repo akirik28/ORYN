@@ -18,8 +18,8 @@ import { DEFAULT_LOCALE, toLocale, type Locale } from "@/lib/i18n/config";
  * alert reads as strictly more useful, not a deviation worth removing) — `30` was, until
  * this package, simply missing from this array, so the spec's own outermost bucket had
  * never once been reachable. Ordered descending (most-distant bucket first) only because
- * that's the natural reading order; matching is exact-day via thresholdCrossed() below and
- * doesn't depend on array order.
+ * that's the natural reading order; thresholdCrossed() below finds the nearest applicable
+ * bucket via Math.min(), so it doesn't depend on array order either.
  *
  * A deadline crossing into a NEARER bucket re-notifies rather than firing once ever — see
  * writeDeadlineNotifications()'s and migration 0075's comments for why that's the
@@ -36,10 +36,18 @@ const ACTIVE_TARGET_STATUSES = ["exploring", "target", "applying"] as const;
  * file notifies a student directly from inside a per-source loop any more (Phase 24: "avoid
  * spam, aggregate where possible"; see writeDeadlineNotifications()).
  *
- * `source`/`sourceId`/`daysUntil` together are the dedupe key persisted to
+ * `source`/`sourceId`/`thresholdBucket` together are the dedupe key persisted to
  * deadline_notification_log (migration 0075) — deliberately not `deadlineDate`, so a
  * university pushing a deadline back doesn't need special-casing: a changed date just
- * means a (possibly) different daysUntil, which is already part of the key.
+ * means a (possibly) different bucket, which is already part of the key.
+ *
+ * `daysUntil` and `thresholdBucket` are deliberately separate fields (2026-09-04 fix — see
+ * thresholdCrossed()'s own updated comment): `daysUntil` is the real, exact count and is
+ * the only one ever shown to a student (notification copy, digest sort order);
+ * `thresholdBucket` is purely an internal dedup key and is never rendered. Before this fix
+ * the two were the same field, which is exactly why a deadline sitting between two buckets
+ * (6 days out, between the 7- and 3-day buckets) could never match anything — there was no
+ * "nearest bucket" concept, only exact equality.
  *
  * `singleBody`/`itemLabel` are both pre-translated at collection time (each scan*Deadlines
  * function already has the right per-student `translate` in scope from `localeByUser`) —
@@ -53,6 +61,7 @@ export interface DeadlineHit {
   source: DeadlineNotificationSource;
   sourceId: string;
   daysUntil: number;
+  thresholdBucket: number;
   link: string;
   itemLabel: string;
   singleBody: string;
@@ -98,18 +107,37 @@ async function loadLocalesByUser(supabase: SupabaseClient<Database>, userIds: st
 }
 
 /**
- * Pure threshold match — returns the crossed bucket (30/14/7/3/1) or null. Exported so
- * __tests__/deadlines/threshold-crossed.test.ts can pin date arithmetic directly, the same
- * role notifyIfThresholdCrossed's threshold half used to play before this package split
- * "does this cross a threshold" (pure, no I/O) from "has it already been notified about"
- * (needs deadline_notification_log, see filterAlreadyNotified below) and "what does the
- * notification say" (needs aggregation across possibly-several hits, see
+ * Pure threshold match — returns the nearest reminder bucket (30/14/7/3/1) this deadline
+ * currently falls within, or null if it's more than 30 days out or already past. Exported
+ * so __tests__/deadlines/threshold-crossed.test.ts can pin date arithmetic directly, the
+ * same role notifyIfThresholdCrossed's threshold half used to play before this package
+ * split "does this cross a threshold" (pure, no I/O) from "has it already been notified
+ * about" (needs deadline_notification_log, see filterAlreadyNotified below) and "what does
+ * the notification say" (needs aggregation across possibly-several hits, see
  * buildDigestNotification below). The old function did all three inline per-candidate,
  * which is exactly what made per-candidate notifications the only option.
+ *
+ * CORRECTED 2026-09-04: this used to require EXACT equality
+ * (`REMINDER_THRESHOLDS.includes(daysUntil)`), despite this very docstring already having
+ * described "crossed" semantics before the fix matched them — a deadline sitting BETWEEN
+ * two buckets (say, 6 days out, between the 7- and 3-day marks) matched nothing, ever, no
+ * matter how reliably or how often scanDeadlines() ran, because there would never be a
+ * day where daysUntil happened to equal exactly 30, 14, 7, 3, or 1. Confirmed against a
+ * real, live application (Oxford, early_decision, 6 days out — see
+ * docs/application-tracker-notification-audit-2026-09-04.md) that could never have
+ * received a reminder under the old logic. Now returns the smallest threshold the deadline
+ * has already reached or passed — a job that skips a day (or a deadline that's only just
+ * been added already inside a bucket) still gets caught by the nearest remaining one,
+ * instead of silently requiring a day it was never observed to land on exactly.
+ * `deadline_notification_log` (migration 0075) already dedupes on this bucket value, not on
+ * daysUntil — see writeDeadlineNotifications() below — so a student is still notified at
+ * most once per bucket regardless of which exact day the job happens to catch it on.
  */
 export function thresholdCrossed(deadlineDate: string, today: Date): number | null {
   const daysUntil = differenceInCalendarDays(new Date(deadlineDate), today);
-  return REMINDER_THRESHOLDS.includes(daysUntil) ? daysUntil : null;
+  if (daysUntil < 0) return null;
+  const applicable = REMINDER_THRESHOLDS.filter((threshold) => daysUntil <= threshold);
+  return applicable.length > 0 ? Math.min(...applicable) : null;
 }
 
 /** Exported (only) so __tests__/deadlines/scan-applications.test.ts can pin its behavior
@@ -148,8 +176,9 @@ export async function scanApplications(
 
   const hits: DeadlineHit[] = [];
   for (const application of applications) {
-    const daysUntil = thresholdCrossed(application.deadline!, today);
-    if (daysUntil === null) continue;
+    const thresholdBucket = thresholdCrossed(application.deadline!, today);
+    if (thresholdBucket === null) continue;
+    const daysUntil = differenceInCalendarDays(new Date(application.deadline!), today);
 
     const universityId = universityIdByTarget.get(application.target_university_id);
     const universityName = universityId ? universityNameById.get(universityId) : null;
@@ -162,6 +191,7 @@ export async function scanApplications(
       source: "application",
       sourceId: application.id,
       daysUntil,
+      thresholdBucket,
       link: `/applications/${application.id}`,
       itemLabel: universityName ?? translate("unnamedApplication"),
       singleBody: universityName ? translate("applicationDeadlineApproaching", { name: universityName }) : translate("applicationDeadlineApproachingGeneric"),
@@ -202,8 +232,9 @@ export async function scanSavedOpportunityDeadlines(
     if (!isOpportunityActionable(opportunity, today)) continue;
     checked += 1;
 
-    const daysUntil = thresholdCrossed(opportunity.deadline, today);
-    if (daysUntil === null) continue;
+    const thresholdBucket = thresholdCrossed(opportunity.deadline, today);
+    if (thresholdBucket === null) continue;
+    const daysUntil = differenceInCalendarDays(new Date(opportunity.deadline), today);
 
     const locale = localeByUser.get(save.user_id) ?? DEFAULT_LOCALE;
     const translate = translators[locale];
@@ -213,6 +244,7 @@ export async function scanSavedOpportunityDeadlines(
       source: "opportunity",
       sourceId: opportunity.id,
       daysUntil,
+      thresholdBucket,
       // Every saved-opportunity single-item notification has always pointed at the same
       // generic list page (there's no per-opportunity detail route) — unlike applications
       // and university deadlines, this was never actually a usable dedupe key on its own,
@@ -274,8 +306,9 @@ export async function scanTargetUniversityDeadlines(
     const universityName = universityNameById.get(canonicalId) ?? translate("unnamedTargetUniversity");
     for (const deadline of relevant) {
       checked += 1;
-      const daysUntil = thresholdCrossed(deadline.deadline_date!, today);
-      if (daysUntil === null) continue;
+      const thresholdBucket = thresholdCrossed(deadline.deadline_date!, today);
+      if (thresholdBucket === null) continue;
+      const daysUntil = differenceInCalendarDays(new Date(deadline.deadline_date!), today);
 
       hits.push({
         userId: target.user_id,
@@ -283,6 +316,7 @@ export async function scanTargetUniversityDeadlines(
         source: "university_deadline",
         sourceId: deadline.id,
         daysUntil,
+        thresholdBucket,
         link: `/universities/${canonicalId}`,
         // deadlineDetailLabel is verbatim source text or an internal enum value, never
         // translated — same "a quoted claim must stay checkable against its source"
@@ -301,14 +335,14 @@ export async function scanTargetUniversityDeadlines(
  * than one query per hit. Dedupe key is (user_id, source, source_id, threshold_days): see
  * the migration's own comment for why threshold_days is part of the key (a nearer bucket
  * is a new fact) rather than deadlineDate (a pushed-back date shouldn't need special
- * handling — it's just a different daysUntil, already covered).
+ * handling — it's just a different thresholdBucket, already covered).
  */
 async function filterAlreadyNotified(supabase: SupabaseClient<Database>, hits: DeadlineHit[]): Promise<DeadlineHit[]> {
   if (hits.length === 0) return [];
   const userIds = [...new Set(hits.map((hit) => hit.userId))];
   const { data: logged } = await supabase.from("deadline_notification_log").select("user_id, source, source_id, threshold_days").in("user_id", userIds);
   const loggedKeys = new Set((logged ?? []).map((row) => `${row.user_id}|${row.source}|${row.source_id}|${row.threshold_days}`));
-  return hits.filter((hit) => !loggedKeys.has(`${hit.userId}|${hit.source}|${hit.sourceId}|${hit.daysUntil}`));
+  return hits.filter((hit) => !loggedKeys.has(`${hit.userId}|${hit.source}|${hit.sourceId}|${hit.thresholdBucket}`));
 }
 
 /**
@@ -385,7 +419,7 @@ async function writeDeadlineNotifications(supabase: SupabaseClient<Database>, hi
       user_id: hit.userId,
       source: hit.source,
       source_id: hit.sourceId,
-      threshold_days: hit.daysUntil,
+      threshold_days: hit.thresholdBucket,
     }));
     const { error: logError } = await supabase.from("deadline_notification_log").upsert(logRows, { onConflict: "user_id,source,source_id,threshold_days", ignoreDuplicates: true });
     if (logError) {
