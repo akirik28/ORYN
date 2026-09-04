@@ -7,9 +7,10 @@
 -- in the founder's hands tonight for exactly that reason.
 --
 -- Second batch of 15 (next-nearest deadlines after batch 1, excluding batch 1's 15 ids).
--- 5 rows below got a confident, sourced fill; the rest of the 15 had no confidently-
--- extractable answer on the page fetched (listed in docs/opportunity-eligibility-d2-not-
--- found-2026-09-04.md's Batch 2 section) or were re-verified as already accurate.
+-- 5 rows originally got a confident, sourced fill below (now 4 real UPDATEs -- Immerse
+-- Education's was withdrawn 2026-09-04, see that item's own note); the rest of the 15 had no
+-- confidently-extractable answer on the page fetched (listed in docs/opportunity-eligibility-
+-- d2-not-found-2026-09-04.md's Batch 2 section) or were re-verified as already accurate.
 
 -- ============================================================================
 -- ADDITIONS (filling a genuine blank, not changing an existing value)
@@ -36,13 +37,21 @@ set eligible_grades = array['9','10','11','12'],
     last_verified_at = now()
 where id = '973b3bdd-59c2-4e99-a76b-2006b365d63a';
 
--- 4. Immerse Education Summer School (Cambridge) -- official page explicitly states
--- "students aged 13-18 from around the world," plus a stated alumni base from 140+
--- countries -- an affirmative statement, not just absence of a restriction.
-update public.opportunities
-set country_eligibility_confirmed_open = true,
-    last_verified_at = now()
-where id = '7f90019e-05c7-4059-ae13-8e285ab3ea38';
+-- 4. Immerse Education Summer School (Cambridge) -- WITHDRAWN 2026-09-04, corrected at the
+-- source rather than left for a later package to inherit. This UPDATE originally set
+-- country_eligibility_confirmed_open = true on the strength of "students aged 13-18 from
+-- around the world" plus a 140+-country alumni stat -- read at the time as an affirmative
+-- statement. A later, more rigorous pass (docs/citizenship-restrictions-classification-
+-- 2026-09-04.sql, CEO's own explicit ruling) drew the line this evidence actually sits on the
+-- wrong side of: attendee/alumni-diversity language describes who happens to show up, not a
+-- stated policy -- the same standard that kept EYE's "160 nationalities" and Oxford
+-- Scholastica's "85 countries" at checked_not_stated rather than confirmed_no_restriction.
+-- This row's real, correct classification is now in that file: country_eligibility_basis =
+-- 'checked_not_stated', citizenship_restrictions cleared. Removing the UPDATE here rather
+-- than leaving both in place -- applying both, in either order, would have left this row
+-- confirmed-open regardless of the classification file's own explicit ruling, since
+-- confirmed_open gates independently of basis (see that file's own "a fourth thing had to be
+-- verified" note). No other row in this file is affected by this correction.
 
 -- 5. Penn Pre-College Program (Residential) -- official page states plainly "International
 -- students welcome. F-1 student visa required."
