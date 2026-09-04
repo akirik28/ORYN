@@ -1,5 +1,38 @@
 # The advisor is slow — what are the real options
 
+**Correction, 2026-09-04, after C2 shipped and time-to-first-token was actually measured:**
+Option 1 below claims streaming shows "the first words appear within roughly 1-2 seconds." That
+was an industry-pattern assumption, written before either the streaming build or a real
+measurement existed — **it's wrong, and the real number changes what streaming actually buys.**
+
+Measured directly against the real production code path (`AnthropicProvider.generateTextStream`,
+the same method C2 ships, timed from request start to the first `.text` delta — thinking deltas
+aren't forwarded, so this is genuinely "time until anything visible arrives"), 2 conditions x 2
+real runs, same rich test profile as the 2026-09-03 doc:
+
+| Condition | TTFT min | TTFT max |
+|---|---|---|
+| standard/balanced | 19.91s | 30.35s |
+| ultra/thorough | 34.20s | 57.75s |
+
+**This is close to the FULL generation time this same doc already measured (24.9-45.0s and
+40.3-55.4s), not a small fraction of it.** Claude Sonnet 5's adaptive thinking happens entirely
+before the first visible token — the maxTokens comment in `lib/ai/advisor-chat.ts` already said
+"the budget has to clear the reasoning before the student sees a word"; this is the first real
+wall-clock number for how long that actually takes. For roughly half of a typical call, a
+streamed reply looks identical to a non-streamed one: nothing visible yet.
+
+Streaming still helps for the remaining half — the student watches the real answer arrive
+instead of one final wall of text — but "1-2 seconds" below should be read as wrong, not
+approximate. The interim-status label (Option 2, also shipped) is carrying more of the real
+perceived-latency burden than this doc originally credited it for: it's the only thing visible
+during the whole 20-58 second thinking window, streaming or not. Not proposing a new fix here —
+capping the thinking budget directly is still ruled out below for the same quality-trade reason,
+and that reasoning doesn't change. The rest of this document is otherwise left as originally
+written, including the now-incorrect "1-2 seconds" line, so the correction is visible against
+what it's correcting rather than silently edited away.
+
+
 **Founder's own question:** *"bir de ai çok yavaş ne yapıcaz"* — the AI is very slow, what are
 we going to do about it. This is a direct follow-up to
 [docs/advisor-latency-vs-function-limits-2026-09-03.md](./advisor-latency-vs-function-limits-2026-09-03.md),
@@ -201,6 +234,10 @@ irrelevant here.)
 ---
 
 ## What to tell the founder
+
+**See the correction at the top of this doc first** — "makes the wait honest and visible" below
+is directionally right but was written before real TTFT numbers existed; the honest version is
+narrower than this section originally put it.
 
 The honest shape of the answer: the model itself is not unreasonably slow for what it's being
 asked to do (55.4s worst case, for a "look at my whole profile and tell me everything"
