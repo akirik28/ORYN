@@ -1,4 +1,5 @@
-import { GraduationCap, ExternalLink } from "lucide-react";
+import Link from "next/link";
+import { GraduationCap } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { loadUniversityBrowsePage } from "@/lib/universities/browse-page";
 import { getSupersededUniversityIds, loadSupersessionMap } from "@/lib/universities/canonical";
@@ -16,11 +17,11 @@ const RESULT_CAP = 20;
  * join — that's a separate query the student page runs on its own), so there is nothing
  * here that could leak the child's data through it.
  *
- * Detail is an inline `<details>` expansion, not a link to /universities/[id] — that page
- * computes and WRITES an admission outlook keyed to whoever is viewing it, and renders a
- * save button and an admin form that don't apply to a parent. Linking there would write
- * garbage under the parent's own account. A real parent-safe detail page is its own
- * separate, undecided piece of work (CEO, 2026-09-04) — not silently rolled into this one.
+ * Detail links to /parent/universities/[id] (B6, 2026-09-04) — a genuinely separate,
+ * read-only page, not /universities/[id] itself: that page computes and WRITES an admission
+ * outlook keyed to whoever is viewing it, and renders a save button and an admin form that
+ * don't apply to a parent. Linking there would write garbage under the parent's own account.
+ * See lib/parent/university-detail.ts's own header for what the safe page actually reads.
  *
  * Read-only by construction, matching ParentPanelView's own rule: the search form below is
  * a plain GET, no server action anywhere in this file.
@@ -85,30 +86,10 @@ export async function UniversityCatalogBrowser({
         <ul className="space-y-1">
           {shown.map((u) => (
             <li key={u.id} className="border-b border-[var(--role-surface-border)] py-2 last:border-0">
-              <details>
-                <summary className="flex cursor-pointer items-center justify-between gap-3">
-                  <span className="min-w-0 truncate font-medium text-foreground">{u.name}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">{[u.city, u.country].filter(Boolean).join(", ")}</span>
-                </summary>
-                <div className="mt-2 space-y-1 pl-1 text-sm text-muted-foreground">
-                  {u.institution_type ? (
-                    <p>
-                      {tr ? "Tür" : "Type"}: {u.institution_type}
-                    </p>
-                  ) : null}
-                  {u.website_url ? (
-                    <a
-                      href={u.website_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 hover:underline"
-                      style={{ color: "var(--role-accent)" }}
-                    >
-                      {tr ? "Web sitesi" : "Website"} <ExternalLink className="size-3" />
-                    </a>
-                  ) : null}
-                </div>
-              </details>
+              <Link href={`/parent/universities/${u.id}`} className="flex items-center justify-between gap-3 hover:opacity-80">
+                <span className="min-w-0 truncate font-medium text-foreground">{u.name}</span>
+                <span className="shrink-0 text-xs text-muted-foreground">{[u.city, u.country].filter(Boolean).join(", ")}</span>
+              </Link>
             </li>
           ))}
         </ul>

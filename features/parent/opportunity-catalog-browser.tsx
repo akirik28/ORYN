@@ -1,8 +1,8 @@
-import { Compass, ExternalLink } from "lucide-react";
+import Link from "next/link";
+import { Compass } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { EmptyState } from "@/components/proxola/empty-state";
 import { DeadlineBadge } from "@/components/proxola/deadline-badge";
-import { categoryLabel } from "@/lib/opportunities/labels";
 import { formatNumber } from "@/lib/i18n/format";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -23,6 +23,10 @@ const RESULT_CAP = 20;
  *
  * Read-only by construction, matching ParentPanelView's own rule: the search form below is
  * a plain GET, no server action anywhere in this file.
+ *
+ * Detail links to /parent/opportunities/[id] (B6, 2026-09-04) — a plain catalog-fact page,
+ * same no-match-data scope as this browser. See lib/parent/opportunity-detail.ts's header
+ * for the note on the get_parent_child_* vs. direct-RLS-read inconsistency this sidesteps.
  */
 export async function OpportunityCatalogBrowser({
   searchParams,
@@ -78,27 +82,10 @@ export async function OpportunityCatalogBrowser({
         <ul className="space-y-1">
           {shown.map((o) => (
             <li key={o.id} className="border-b border-[var(--role-surface-border)] py-2 last:border-0">
-              <details>
-                <summary className="flex cursor-pointer items-center justify-between gap-3">
-                  <span className="min-w-0 truncate font-medium text-foreground">{o.title}</span>
-                  {o.deadline ? <DeadlineBadge date={o.deadline} locale={locale} /> : null}
-                </summary>
-                <div className="mt-2 space-y-1 pl-1 text-sm text-muted-foreground">
-                  {o.organization ? <p>{o.organization}</p> : null}
-                  <p>{categoryLabel(o.category, locale)}</p>
-                  {o.official_url ? (
-                    <a
-                      href={o.official_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 hover:underline"
-                      style={{ color: "var(--role-accent)" }}
-                    >
-                      {tr ? "Resmi sayfa" : "Official page"} <ExternalLink className="size-3" />
-                    </a>
-                  ) : null}
-                </div>
-              </details>
+              <Link href={`/parent/opportunities/${o.id}`} className="flex items-center justify-between gap-3 hover:opacity-80">
+                <span className="min-w-0 truncate font-medium text-foreground">{o.title}</span>
+                {o.deadline ? <DeadlineBadge date={o.deadline} locale={locale} /> : null}
+              </Link>
             </li>
           ))}
         </ul>
