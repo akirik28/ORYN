@@ -36,6 +36,17 @@ export async function setOpportunityStatus(params: {
   }
 
   revalidatePath("/opportunities");
+  // Added 2026-09-04 (C3 follow-up): addTargetUniversity revalidates both /universities and
+  // /dashboard for the identical save-then-check-dashboard shape; this action only revalidated
+  // /opportunities. Checked before assuming this fixes a visible bug, not after: the
+  // dashboard's own opportunity preview (app/(app)/dashboard/page.tsx) is built entirely from
+  // opportunity_matches and never reads saved_opportunities at all, so today this call has
+  // nothing to invalidate that would change what renders there -- saving/applying/marking not-
+  // interested has no visible effect on the dashboard preview either way. Added anyway for the
+  // same reason the university action has it: correct and consistent with that pattern, and it
+  // stops being a silent gap the day the dashboard preview does start reading saved status
+  // (e.g. a "saved" badge), rather than needing to be rediscovered then.
+  revalidatePath("/dashboard");
   return {};
 }
 
