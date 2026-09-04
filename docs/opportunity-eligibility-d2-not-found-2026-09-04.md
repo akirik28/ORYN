@@ -33,6 +33,50 @@ a record of the dead end.
 
 **Confirmed genuinely accurate, no gap**: Immerse Education and Penn Pre-College Program (Residential) both had explicit "open to international students" language and are now filled (see the batch's own SQL); Özyeğin, Penn Medicine, and İTÜ all had explicit "all high school students may apply" language and are now filled for grade. Geleceği Eşitle's single-country value was checked specifically against CEO's "false single-country" pattern and confirmed CORRECT as stored (residency-gated, not nationality-gated — see the SQL file's own note).
 
+## Visible-priority batch (measured, not deadline-ordered — 2026-09-04)
+
+CEO redirected priority after measuring: `saved_opportunities` (4 rows) ∪ `opportunity_matches`'
+own top-5-per-student "actually shown" set (mirroring `lib/opportunities/home-strip.ts`
+exactly) = 34 distinct opportunities, 33 of which carry a gap — a small, high-leverage set
+worth its own tracking section rather than folding into the deadline-ordered batches above.
+6 rows resolved with a sourced fill (see `d2-visible-priority-additions-2026-09-04.sql` and
+`d2-visible-priority-requires-0126-2026-09-04.sql`). The rest:
+
+**Confirmed already accurate, no change needed**: BRI Student Fellowship (age 15-18 AND
+grade 11-12 both explicitly confirmed: "15-18 year old's who are currently Juniors or
+Seniors"); Istanbul Bilgi University Summer School (grade 9-12 confirmed: "9-10-11-12.
+sınıf öğrencileri... başvurabilir"); Schoolhouse.world (minimum age 13 confirmed, no
+maximum stated — genuinely no ceiling, not an unresearched one).
+
+| Opportunity | id | Missing | URL fetched | Why it didn't resolve |
+|---|---|---|---|---|
+| LaunchX | `50392e5e-a7ab-4de4-9ad7-fc7b51a742dc` | country | `https://www.launchx.com/` | No eligibility statement on the landing page; application portal/FAQ not fetched this pass. |
+| Girl Up Project Awards | `31f4ecf4-902c-4636-bcc8-77e300d42ae5` | grade, country | `https://girlup.org/programs/project-awards` | Fetch failed (socket hang up). |
+| The Duke of Edinburgh's International Award — Türkiye | `cdb9da8a-3c8d-47ea-bcee-6cf749738246` | country | `https://www.intaward.org.tr/` | Page describes the participation mechanism (through schools/youth centers) but states no nationality/residency policy either way. |
+| Wharton Global High School Investment Competition | `2e2f995a-2ac3-4138-a3df-ca4e4033aa36` | age, grade | `https://globalyouth.wharton.upenn.edu/competitions/investment-competition/` | Fetch failed (socket hang up); grade already correctly stored as 9-12, only age was the real gap and wasn't reached. |
+| International Public Policy Forum (IPPF) | `bc303473-ba94-41e4-9b3d-038804858a8c` | age | `https://www.ippfdebate.com/` | Fetch failed (socket hang up) both times tried; grade already correctly stored. |
+| AMC - AIME | `4ce6fd8f-5a9b-4399-b168-e38c0f44c7b1` | age, grade, country | `https://maa.org/events/mathfest-program/special-sessions/` | HTTP 403. Also worth flagging separately: this `official_url` looks wrong for AMC/AIME specifically (a MathFest special-sessions page, not an AMC/AIME eligibility page) — possibly a data-quality issue on the row itself, not just a fetch failure. |
+| Waterloo Mathematics and Computing Contests | `51c4b57b-7ea1-4503-b9e6-f1468dc9f3f8` | grade | `https://cemc.uwaterloo.ca/contests` | Structural mismatch, not a missing-data gap: this one row bundles multiple distinct contests (Beaver Computing grades 5-10, Gauss 7-8, Euclid grade-12-only, etc.) with different eligibility each — no single `eligible_grades` value can represent it honestly. Whoever owns this row should decide whether it should be split into several opportunity rows, not something to guess at here. |
+| Blue Ocean Competition | `cb4a1030-d035-4c1f-8579-37c458a88b0e` | age, grade | `https://blueoceancompetition.org/` | Page only says "high school students/entrepreneurs" generically, no specific age or grade numbers. |
+| Purple Comet! Math Meet | `e5dd5ce7-4730-42d7-84a3-b6492779b038` | grade | `https://purplecomet.org/` | "middle and high school students" stated but no specific grade numbers given. |
+| STEM Fellowship Journal | `b51bf24f-42c2-419f-a456-ca86dff0ad8e` | grade | `https://journal.stemfellowship.org/journal/sfj` | HTTP 403. |
+| Interlochen Review | `95093e1a-fc13-4d9a-b4ed-5f0584252b44` | age, grade, country | — | Not attempted this pass (ran out of batch budget, honestly — not a fetch failure). |
+| Lumiere Education | `bc678344-c213-4ae8-a4f8-48af2856338f` | age, grade, country | — | Not attempted this pass. |
+| Young Guru Academy (YGA) | `5d2aca22-26d5-4592-a5fb-a554c7a51f50` | age, grade, country | — | Not attempted this pass. |
+| Research Program KUSRP 2026 | `2116709f-e222-43c7-95e0-f801053f8f2e` | age, grade, country | `https://research.ku.edu.tr/research-outreach/summer-research/kusrp/2026-highschool-projects/` | HTTP 403. |
+| Two-week UM Academies (non-credit) | `889c580c-dbb6-4490-9078-9faf2a2a2ed0` | age, grade, country | — | Not attempted this pass. |
+| UCSB Research Mentorship Programs | `647eb8da-9cb8-46d4-8ded-b4c516f7ac90` | age, grade, country | `https://www.summer.ucsb.edu/programs/research-mentorship-program/overview` | "High school students from all over the world" — descriptive, not a stated policy; no specific grade/age numbers. |
+| InvestIN - Immersive Career Experiences | `8a7c89e4-e63a-4f64-a76d-4bae1b31e889` | grade, country | `https://investin.org/collections/our-programmes` | Age range roughly confirmed (12-18 across program tiers) but no grade numbers; page references an "international students" section not fetched this pass. |
+| JA Company Programme (Europe) | `55a5efea-e280-4176-bf65-49a028b097af` | grade | `https://jaeurope.org/learning-experiences/portfolio/company-programme/` | Age (15-18) confirmed, matches stored value; no grade statement — genuinely age-only is plausible but not stated with the same completeness TechGirls' page had, so not used for the 0126 flag this pass. |
+| Wall Street 101 | `574ab33a-abc7-420e-893a-0b3b6f9d341e` | age, country | — | Not attempted this pass; grade already correctly stored as 9-12. |
+| International Economics Olympiad (IEO) | `9193db16-7a9e-42b1-95b6-74eda83a0ac9` | country, grade | `https://ieo-official.org/` | Age resolved (see SQL). Country: participation is mediated through "official national organizers" across 74 countries — a logistics structure, not a stated open/restricted policy, so not confirmed either way. Grade: no statement found. |
+| Harvard Pre-Collegiate Economics Challenge (HPEC) | `a4a24425-2a6f-4902-99a4-4fb43dc110dd` | age, grade, country | `https://www.thehuea.org/competitions/hpec` | Page states rules for the upcoming cycle "will be posted when registration opens" — not yet published, not just unfetched. |
+| ODTÜ (METU) Engineering Summer School | `0c8e00c1-b2b7-4039-8021-10a310de62e4` | country | `https://metusummerschool.org/` | Age/grade already correctly stored (15-18, grades 10-12). Page describes the program for "lise öğrencileri" (high school students) with no nationality/residency statement either way. |
+| Wharton Data Science Competition | `cfb32772-6259-4e3a-9ead-bc289b463d08` | age, country | `https://globalyouth.wharton.upenn.edu/competitions/data-science/` | Grade resolved (see SQL). Age/country: no statement found beyond "all current high school students." |
+| International Young Physicists' Tournament (IYPT) | `b41bf5f5-d2cb-4f5d-84e5-8d9e8630af07` | age, grade, country | `https://iypt.org/` | Page describes "high school students" generically; no specific eligibility criteria on the page fetched — needs the official regulations document, not fetched this pass. |
+| European Youth Event (EYE) | `1acee3b0-eaac-479a-996a-b0a2a0570351` | grade, country | `https://european-youth-event.europarl.europa.eu/` | Age (16-30) already correctly stored. Country: page cites "160 different nationalities" among past attendees — descriptive attendee statistics, not a stated open-to-all policy, so not used to set the confirmed-open flag (same standard applied to BU Tanglewood/CBS in batch 1). |
+| University of the Arts London — International Summer School | `ae5e73f0-43ba-42be-baed-423d3087e7e1` | age, grade, country | `https://www.arts.ac.uk/study-at-ual/short-courses/summer-short-courses` | Page has no eligibility statement of any kind, just a program description. |
+
 ## What this doesn't cover
 
 Only the rows from batches 1-2 that produced no usable answer. The rows that DID resolve
