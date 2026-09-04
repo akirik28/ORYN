@@ -113,3 +113,31 @@ listesi + konudan isimlendirme ✓ · Ultra kendi kendine verilebilme açığı 
 (migration bekliyor) · Plan sayfası yeşil zemin ✓ · Admin giriş bağlantısı ✓ ·
 Footer yer tutucu ✓ · Danışman bekleme göstergesi ✓ · Fırsatlar sayfası
 çökmesi ✓
+
+---
+
+## Dağıtım — 4 Eylül, 08:20 (CEO)
+
+Dokuz oturumun hepsine tanıtım + kurallar + tek madde gönderildi. Her oturum
+**önce elindeki işi bitirir, rapor eder, sonra aşağıdaki maddeyi alır.**
+
+| Oturum | Elindeki iş | Sıradaki madde |
+| --- | --- | --- |
+| academic_tier backfill | bitti | **D3** — alan bazlı ölçüm + "öğrenci görüyor mu" ekseni |
+| production deployment | sürüyor | **B1** — ödeme kesişimi, migration **0123** |
+| CFO | filo gözetimi | gözetim devam — numara çakışması, merge girişimi, aynı dosya |
+| freemium araştırması | sürüyor | **B2** — tam ekran yükseltme kartı, migration **0124** |
+| i18n altyapısı | sürüyor | **B3a** — veli ayrı sayfalar |
+| kullanım sınırları | sürüyor | **B3b** — veli özeti haftalıktan aylığa |
+| reşit olmayan hukuki çerçeve | sürüyor | **A4'ün girdisi** — tüm e-posta gönderimi buna kilitli |
+| yeni ülke: 40 kurum | sürüyor | **D1** — üniversite doldurma, QS top-100'ün kalan 25'i |
+| fırsat görsel script'i | sürüyor | **D2** — fırsat doldurma (yaş / sınıf / ülke) |
+
+**Verilen migration numaraları: 0123 → B1, 0124 → B2.** Başkası almaz.
+
+**Henüz kimseye verilmedi:** B3c (veli kütüphane erişimi), C1 (veli uçtan uca —
+A1 bitti, artık çalıştırılabilir), C2 (danışman streaming), C3 (öğrenci ana
+akışı). Oturumlar rapor ettikçe sıradan verilecek.
+
+**Açık risk:** uzaktaki `ORYN i18n altyapısı` oturumu çevrimdışı ama duruyor;
+yereldeki i18n oturumuyla aynı işi yapıyor olabilirler. CFO'ya teyit ettirildi.
