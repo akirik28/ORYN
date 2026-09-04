@@ -11,7 +11,21 @@ sürümünü göndermek, yanlış olanı çalıştırma riski demek. Ek olarak v
 
 ---
 
+> **Bu dosyayı bir kez güncelledim.** İlk gönderdiğimde içinde sadece 0118 vardı;
+> 0117 birkaç dakika sonra hazır oldu ve ikisini tek pakete koydum.
+> **Eskisini çalıştırdıysan sorun yok** — bu dosya iki kez çalıştırılmaya dayanıklı,
+> denedim. Sadece bunu çalıştır, eskisini sil.
+
+---
+
 ## İçinde ne var
+
+**Migration 0117** — veli e-postası pop-up'ının **kendi** kapatma sayacı (4 sütun).
+
+Neden ayrı sayaç: mevcut "Ultra'ya geç" pop-up'ıyla aynı sütunları kullansaydı,
+öğrenci danışman sohbetinde o pop-up'ı kapattığında **ilgisiz olan veli e-postası
+pop-up'ı da sessizce susardı.** Ve bunu kimse fark etmezdi — görünmeyen bir pop-up'ın
+hata durumu yoktur.
 
 **Migration 0118** — tek sütun: `parent_links.last_commentary_sent_at`.
 
@@ -44,7 +58,8 @@ Dosya kendini iki yönden de kontrol ediyor, ve ben ikisini de yerel bir Postgre
 denedim:
 
 - **09 uygulanmamışken:** durdu, hata verdi, hiçbir şey uygulamadı ✓
-- **09 uygulanmışken:** temiz geçti, sütun `timestamptz` olarak oluştu ✓
+- **09 uygulanmışken:** temiz geçti, iki migration da yerine oturdu ✓
+- **İkinci kez çalıştırınca:** sıfır hata — tekrar çalıştırmak zararsız ✓
 
 İkinci sonucu görmeden önce birincisini görmüş olmam önemli — **hiçbir zaman
 kırmızıya dönmeyen bir kontrol, kontrol değildir.**
