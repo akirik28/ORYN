@@ -50,13 +50,57 @@ function renderView(tier: "standard" | "ultra") {
   );
 }
 
+// 2026-09-04: PlanTierView now mounts PlanGroundGlow (features/settings/plan-ground-glow.tsx)
+// inside .plan-page-ground, which calls usePrefersReducedMotion() — jsdom has no
+// window.matchMedia at all, so any render of this component crashes without a stub. Same
+// mock shape as __tests__/app-shell/usage-indicator.test.tsx's own beforeEach (that
+// component hits the identical hook+canvas combination), reused rather than re-derived.
+function mockCanvasContext() {
+  return {
+    clearRect: vi.fn(),
+    beginPath: vi.fn(),
+    arc: vi.fn(),
+    fill: vi.fn(),
+    fillRect: vi.fn(),
+    setTransform: vi.fn(),
+    createLinearGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+    createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+    fillStyle: "",
+    globalCompositeOperation: "source-over",
+  };
+}
+
 beforeEach(() => {
   mockedRegister.mockReset();
   mockedRegister.mockResolvedValue(undefined);
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
+  );
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(mockCanvasContext() as unknown as CanvasRenderingContext2D);
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+    width: 768,
+    height: 1024,
+    top: 0,
+    left: 0,
+    right: 768,
+    bottom: 1024,
+    x: 0,
+    y: 0,
+    toJSON() {},
+  });
+  vi.spyOn(window, "requestAnimationFrame").mockImplementation(() => 1);
+  vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => {});
 });
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
 });
 
 describe("PlanTierView — no buy button", () => {

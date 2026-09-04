@@ -12,6 +12,7 @@ import { registerUltraInterestAction } from "@/app/(app)/settings/actions";
 import { TIER_COMPARISON_ROWS } from "@/lib/tier/comparison";
 import { formatNumber, formatTokenCount, formatPrice } from "@/lib/i18n/format";
 import { UltraFeatureMarquee, type UltraFeatureCardData } from "@/features/settings/ultra-feature-marquee";
+import { PlanGroundGlow } from "@/features/settings/plan-ground-glow";
 import type { PlanTier } from "@/types/database";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -146,6 +147,15 @@ const CARD_ICONS: Record<UltraFeatureCardData["id"], typeof Zap> = {
  * the VIEWPORT, so it painted over the sidebar, which is a sticky sibling of the content
  * column carrying no z-index of its own. Now `absolute`, anchored to the layout's own
  * `<main class="relative">`. "Full-bleed" here means the content column, not the screen.
+ *
+ * **2026-09-04, later the same night, founder direct (relayed via oryn-45): "yeşil çok çok
+ * koyu, arkada açık yeşil olmalı, loş ışık tarzı, ve hareket etsin yine beyazlarla"** —
+ * lighter, a dim-light quality specifically, and motion with white. `PlanGroundGlow`
+ * (features/settings/plan-ground-glow.tsx) is the motion — its own header comment has the
+ * full reasoning for which existing Ultra animation it reuses and why. Mounted as a plain
+ * child of this same `.plan-page-ground` div rather than a second positioned layer of its
+ * own, so it inherits the div's positioning discipline (`absolute`, not `fixed`) instead of
+ * making a second containing-block decision that could reopen the sidebar-covering trap.
  */
 export function PlanTierView({
   tier,
@@ -201,7 +211,9 @@ export function PlanTierView({
 
   return (
     <>
-      <div aria-hidden="true" className="plan-page-ground" />
+      <div aria-hidden="true" className="plan-page-ground">
+        <PlanGroundGlow />
+      </div>
       <div className="relative z-10 max-w-3xl space-y-8">
         <PageHeader className="dark [&_h1]:text-foreground" title={t("title")} description={t("description")} />
 
