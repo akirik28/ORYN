@@ -340,7 +340,20 @@ ikisini de **elle kontrol ettim:**
 | 0127 | `admission_rate_basis`'e `not_published` | ✅ yalnızca hazırlanan SQL kullanıyor |
 
 **Yani acele yok.** Uygulanana kadar özellikler sadece varsayılan davranışı
-gösterir; hiçbiri hata vermez. Kurucu döndüğünde tek pakette verilecek.
+gösterir; hiçbiri hata vermez.
+
+**Paket 14 (`data/morning/14-toplu-paket-2026-09-04.sql`) hazır ve iki kez
+çalıştırılmış:** 0124 + 0126 + 0127, artı üniversite dolgusu, Caltech tarihleri,
+hedeflenen 12'nin istatistikleri, fırsat dolgusu.
+
+**⚠️ Paket 14'ten SONRA merge edilen, hiçbir pakette OLMAYAN:**
+- **0129** (fırsat yaş/sınıf üçüncü durumu) — `main`'de
+- **0130** (veli aylık özet saklama) — `main`'de
+- **0131** (ülke üçüncü durumu) ve **0132** (istatistik indeksi) — yolda
+
+**Paket 15 gerekecek.** Bu satır, bu sabah tam olarak "paketi doğruladıktan sonra
+dosyaya bir migration eklendi" hatasıyla yandığımız için burada duruyor:
+**paketi kimin hazırlayacağı değil, neyin dışarıda kaldığı unutuluyor.**
 
 ## D2 sonucu bir ürün kararı doğurdu — 0129
 
