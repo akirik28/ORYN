@@ -69,7 +69,18 @@ oranı · üniversite sayfalarında dürüst boş durumlar (301 sayfa) · ünive
 dolgusu 12/19 · fırsat dolgusu (görünür 34) · hukuk araştırması · onboarding
 denetimi · ana ekran denetimi · dürüstlük ayrımları denetimi · yedi ayrı ölçüm.
 
-**⚠️ CEO DÜZELTMESİ — veli katalog erişimi HENÜZ ULAŞILABİLİR DEĞİL.** Kurucuya
+**✅ VELİ ZİNCİRİ KAPANDI (`8976eaf2`) — ve bu sefer iddia etmeden önce ölçtüm.**
+Kanıt, dördü de merge sonrası koşturuldu: (1) `app/parent/(dashboard)/universities/page.tsx`
+ve `opportunities/page.tsx` katalog tarayıcılarını **gerçekten import ediyor**;
+(2) sekiz veli rotasının hepsi `main`'de; (3) katalog tarayıcıları
+`/parent/universities/${id}` ve `/parent/opportunities/${id}` — yani **veli
+ad alanındaki** detay sayfalarına bağlıyor, öğrencininkine değil; (4) üretim
+derlemesi sekiz `/parent/*` rotasını da derliyor. 422 dosya / **6293 test**.
+
+**Aşağıdaki eski düzeltme tarihsel kayıt olarak duruyor — hatanın kendisi
+silinmesin diye:**
+
+**⚠️ CEO DÜZELTMESİ (artık geçersiz) — veli katalog erişimi HENÜZ ULAŞILABİLİR DEĞİL.** Kurucuya
 "veli artık katalogu gezebiliyor" diye rapor ettim; **yanlıştı.** Katalog
 tarayıcıları (B3c) ve detay sayfaları (B6) `main`'de, **ama hiçbir dosya onları
 import etmiyor** ve `app/parent/` altında liste rotası yok — B3a `origin`'de bile
