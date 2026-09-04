@@ -48,7 +48,7 @@ const THOROUGH_INSTRUCTION =
 export const ADVISOR_MAX_TOKENS_STANDARD = 4096;
 export const ADVISOR_MAX_TOKENS_ULTRA = 8192;
 
-export async function generateAdvisorReply(params: {
+interface GenerateAdvisorReplyParams {
   userId: string;
   history: AIMessage[];
   newMessage: string;
@@ -60,72 +60,112 @@ export async function generateAdvisorReply(params: {
    * with any argument, same discipline as every authorization check in this codebase, so
    * the generation call itself must not trust that responseMode ever got here honestly. */
   planTier: PlanTier;
-}): Promise<AdvisorReply> {
-  const context = await buildStudentAdvisorContext(params.userId);
-  const opportunityContext = await buildOpportunityContextText(params.userId);
-  const provider = getAIProvider();
+}
 
+/** Context assembly + system prompt construction — identical for generateAdvisorReply and
+ * generateAdvisorReplyStream, factored out so a streaming sibling doesn't mean two places
+ * building the student's context differently. */
+async function assembleAdvisorSystemPrompt(userId: string): Promise<string> {
+  const context = await buildStudentAdvisorContext(userId);
+  const opportunityContext = await buildOpportunityContextText(userId);
   const locale = context.student.preferredLanguage;
-  const system = withOutputLanguage(
+  return withOutputLanguage(
     `${ADVISOR_SYSTEM_PROMPT}\n\nCurrent student context:\n${formatContextForPrompt(context, locale)}${opportunityContext}`,
     locale,
   );
+}
+
+/**
+ * Resolves the actual provider request from the already-assembled system prompt and the
+ * model `withUsageLogging`'s selectModel chose — the model/thorough/maxTokens decision
+ * itself, shared verbatim by the streaming and non-streaming callers since neither one
+ * changes any of this reasoning, only how the resulting request is sent.
+ *
+ * Spend-based degrade always wins over a student's own response-mode preference — the
+ * precedence is one rule, not a case matrix. `model` here already reflects
+ * selectModelForUser's decision (env.anthropic.model normally, DEGRADE_MODEL once
+ * spend-degraded); "fast" only ever asks for the SAME cheap model degrade would also
+ * choose, so honoring it can never weaken the cap. "thorough" only ever adds an
+ * instruction when the effective model is still the ceiling model AND the student is
+ * actually on the Ultra plan — asking an already-degraded, already-cheaper model to
+ * write MORE would undermine the entire reason it degraded, and a stored "thorough"
+ * preference surviving a downgrade (features/advisor/response-mode-slider.tsx's own
+ * comment on that exact case) must never silently keep producing Ultra-quality output
+ * for a standard-plan student just because the column still says so.
+ */
+function resolveAdvisorRequest(params: GenerateAdvisorReplyParams, system: string, model: string) {
+  const effectiveModel = params.responseMode === "fast" && model === env.anthropic.model ? DEGRADE_MODEL : model;
+  const thorough = params.responseMode === "thorough" && effectiveModel === env.anthropic.model && params.planTier === "ultra";
+  return {
+    system: thorough ? `${system}\n\n${THOROUGH_INSTRUCTION}` : system,
+    prompt: params.newMessage,
+    history: params.history,
+    model: effectiveModel,
+    // This budget covers the model's thinking *and* the reply. Adaptive thinking is on by
+    // default on claude-sonnet-5, and it scales with how much profile there is to reason
+    // over — so the budget has to clear the reasoning before the student sees a word.
+    // Lowering this does NOT make thinking shorter: the model reasons however much the
+    // task needs regardless of the ceiling, so this number only controls how much margin
+    // exists between that need and a truncated response. It is not a lever for reply
+    // length at all -- there is no separate mechanism in this file that is.
+    //
+    // The 2026-08-23 benchmark, on a rich profile: 1024 returned a thinking block and no
+    // text at all — a hard failure; 2048 truncated mid-answer; 4096 completed cleanly with
+    // 1599 thinking tokens (a separate sample hit 1736). Brought back down from 8192
+    // (2026-08-23's defensive ceiling) to 4096 — the measured, benchmark-verified floor,
+    // not a new guess: ~2.3-2.5k of headroom over both observed thinking samples. 8192 was
+    // originally paired with a prompt-brevity change (2026-09-02, branch
+    // oryn/advisor-reply-length-2026-09-02) reverted the same day after the one live
+    // eval comparison scored worse, not better -- 4096 does not depend on that reverted
+    // change; it is the same floor this codebase already had independent evidence for
+    // before that experiment started. Re-tighten only
+    // against a new benchmark showing thinking has grown, never by assumption.
+    //
+    // Ultra gets 8192, not a blind doubling of Standard's 4096: benchmarked live
+    // 2026-09-03 against the same class of demanding request (a real fixture profile, a
+    // "give me everything, not a summary" question). 4096 truncated (stop_reason
+    // "max_tokens", exactly reproducing the failure above); 8192 completed cleanly
+    // (stop_reason "end_turn", 5,927 output tokens, 2,265 tokens of headroom — ~28% of
+    // the ceiling, landing in the same headroom band 4096 was itself benchmarked against).
+    // A measured number with a stated method, same discipline as the paragraph above,
+    // applied in the direction of raising it rather than only ever tightening it.
+    maxTokens: params.planTier === "ultra" ? ADVISOR_MAX_TOKENS_ULTRA : ADVISOR_MAX_TOKENS_STANDARD,
+  };
+}
+
+export async function generateAdvisorReply(params: GenerateAdvisorReplyParams): Promise<AdvisorReply> {
+  const system = await assembleAdvisorSystemPrompt(params.userId);
+  const provider = getAIProvider();
 
   // selectModel explicit, not the default: withUsageLogging's own default is
   // selectModelForUser(userId) alone (tier "standard"), which would silently give an Ultra
   // student Standard's $0.50 degrade point despite params.planTier already being known here
   // -- the exact "two limits that disagree" shape this build exists to close, just at the
   // per-call layer instead of the display layer.
-  const result = await withUsageLogging({ userId: params.userId, feature: "advisor_chat", selectModel: (uid) => selectModelForUser(uid, params.planTier) }, (model) => {
-    // Spend-based degrade always wins over a student's own response-mode preference — the
-    // precedence is one rule, not a case matrix. `model` here already reflects
-    // selectModelForUser's decision (env.anthropic.model normally, DEGRADE_MODEL once
-    // spend-degraded); "fast" only ever asks for the SAME cheap model degrade would also
-    // choose, so honoring it can never weaken the cap. "thorough" only ever adds an
-    // instruction when the effective model is still the ceiling model AND the student is
-    // actually on the Ultra plan — asking an already-degraded, already-cheaper model to
-    // write MORE would undermine the entire reason it degraded, and a stored "thorough"
-    // preference surviving a downgrade (features/advisor/response-mode-slider.tsx's own
-    // comment on that exact case) must never silently keep producing Ultra-quality output
-    // for a standard-plan student just because the column still says so.
-    const effectiveModel = params.responseMode === "fast" && model === env.anthropic.model ? DEGRADE_MODEL : model;
-    const thorough = params.responseMode === "thorough" && effectiveModel === env.anthropic.model && params.planTier === "ultra";
-    return provider.generateText({
-      system: thorough ? `${system}\n\n${THOROUGH_INSTRUCTION}` : system,
-      prompt: params.newMessage,
-      history: params.history,
-      model: effectiveModel,
-      // This budget covers the model's thinking *and* the reply. Adaptive thinking is on by
-      // default on claude-sonnet-5, and it scales with how much profile there is to reason
-      // over — so the budget has to clear the reasoning before the student sees a word.
-      // Lowering this does NOT make thinking shorter: the model reasons however much the
-      // task needs regardless of the ceiling, so this number only controls how much margin
-      // exists between that need and a truncated response. It is not a lever for reply
-      // length at all -- there is no separate mechanism in this file that is.
-      //
-      // The 2026-08-23 benchmark, on a rich profile: 1024 returned a thinking block and no
-      // text at all — a hard failure; 2048 truncated mid-answer; 4096 completed cleanly with
-      // 1599 thinking tokens (a separate sample hit 1736). Brought back down from 8192
-      // (2026-08-23's defensive ceiling) to 4096 — the measured, benchmark-verified floor,
-      // not a new guess: ~2.3-2.5k of headroom over both observed thinking samples. 8192 was
-      // originally paired with a prompt-brevity change (2026-09-02, branch
-      // oryn/advisor-reply-length-2026-09-02) reverted the same day after the one live
-      // eval comparison scored worse, not better -- 4096 does not depend on that reverted
-      // change; it is the same floor this codebase already had independent evidence for
-      // before that experiment started. Re-tighten only
-      // against a new benchmark showing thinking has grown, never by assumption.
-      //
-      // Ultra gets 8192, not a blind doubling of Standard's 4096: benchmarked live
-      // 2026-09-03 against the same class of demanding request (a real fixture profile, a
-      // "give me everything, not a summary" question). 4096 truncated (stop_reason
-      // "max_tokens", exactly reproducing the failure above); 8192 completed cleanly
-      // (stop_reason "end_turn", 5,927 output tokens, 2,265 tokens of headroom — ~28% of
-      // the ceiling, landing in the same headroom band 4096 was itself benchmarked against).
-      // A measured number with a stated method, same discipline as the paragraph above,
-      // applied in the direction of raising it rather than only ever tightening it.
-      maxTokens: params.planTier === "ultra" ? ADVISOR_MAX_TOKENS_ULTRA : ADVISOR_MAX_TOKENS_STANDARD,
-    });
-  });
+  const result = await withUsageLogging(
+    { userId: params.userId, feature: "advisor_chat", selectModel: (uid) => selectModelForUser(uid, params.planTier) },
+    (model) => provider.generateText(resolveAdvisorRequest(params, system, model)),
+  );
+
+  return { text: result.text, degraded: result.model !== env.anthropic.model };
+}
+
+/**
+ * Same context, same model/thorough/maxTokens resolution, same usage logging as
+ * generateAdvisorReply — the only difference is the network call underneath
+ * (provider.generateTextStream instead of generateText), which forwards each text delta to
+ * `onDelta` as it arrives rather than only returning the complete string at the end. Built
+ * for app/api/advisor/chat/route.ts's streaming Route Handler; generateAdvisorReply itself
+ * is untouched and still what every non-streaming caller should use.
+ */
+export async function generateAdvisorReplyStream(params: GenerateAdvisorReplyParams, onDelta: (delta: string) => void): Promise<AdvisorReply> {
+  const system = await assembleAdvisorSystemPrompt(params.userId);
+  const provider = getAIProvider();
+
+  const result = await withUsageLogging(
+    { userId: params.userId, feature: "advisor_chat", selectModel: (uid) => selectModelForUser(uid, params.planTier) },
+    (model) => provider.generateTextStream(resolveAdvisorRequest(params, system, model), onDelta),
+  );
 
   return { text: result.text, degraded: result.model !== env.anthropic.model };
 }

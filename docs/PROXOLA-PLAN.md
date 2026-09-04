@@ -93,6 +93,21 @@ bile yok."* Üç iş:
 
 ---
 
+**B5. Ücret rakamının hangi yıla ait olduğu ekranda görünsün.**
+`university_profile_metrics.stats_as_of` ve `notes` **var ama hiçbir uygulama
+kodu okumuyor** — yani ürün her ücreti tarihsiz gösteriyor. Pekin Üniversitesi'nin
+2026 harcı henüz yayınlanmadığı için 2025 rakamı yazılıyor; etiketi olmadan
+öğrenci güncel sanır. Sorun tek üniversite değil, **tüm ücret gösterimi.**
+Sorgudan geçir, rakamın yanında göster. Sahibi yok.
+
+**B6. Veli için güvenli üniversite/fırsat detay sayfası — ERTELENDİ, bilerek.**
+Öğrencinin `[id]` detay sayfası **bakan kişinin kendi profiline göre** kabul
+görünümü hesaplayıp **yazıyor**, ayrıca "kaydet" düğmesi ve admin formu render
+ediyor. Veliyi oraya bağlamak veli hesabının altına çöp satır yazardı. B3c bu
+turda **satır içi açılım** yapıyor; gerçek detay sayfası ayrı bir karar.
+
+---
+
 ## C — KALİTE / DOĞRULAMA
 
 **C1. Veli uçtan uca doğrulama — ✅ TAMAM (4 Eylül).** 26 kontrol, hepsi geçti.
@@ -190,4 +205,35 @@ MIT ve HKUST ikişer satır, "UCL" ile "University College London" muhtemelen ay
 kurum. D3 beş satırı isim isim yazdı. **Boş kopyayı doldurmak iki kez zarar
 verir.** D1 bu satırları atlıyor.
 
-**Henüz kimseye verilmedi:** C3 (öğrenci ana akışı — paylaşılan tarayıcı engeli).
+## C2 — sunucu tarafı merge edildi, AMA uç noktalar ulaşılamaz (bilerek)
+
+`73124976`: sağlayıcıya `generateTextStream`, `generateAdvisorReplyStream`, ve iki
+Route Handler (`app/api/advisor/chat/route.ts`, `.../retry/route.ts`).
+
+**Hiçbir istemci bu uç noktaları çağırmıyor ve çağırmamalı — henüz.** Route
+Handler'lar `sendAdvisorMessage`/`retryAdvisorMessage`'ın **11 korumasını elle
+aynalıyor**, ve bu tam olarak bir korumanın sessizce eksik kalabileceği şekil.
+Şu an güvenli olmasının tek sebebi ulaşılamaz olmaları. **İstemci `submit()`
+bağlanmadan önce, her korumanın kırılıp yakalandığına dair ayrı kanıt
+bekleniyor** — tercihen parite testiyle (aynı bozuk koşulu hem sunucu eylemine
+hem Route Handler'a ver, aynı sonucu döndürsünler), çünkü o test listeyi ezbere
+değil mevcut sunucu eylemine kilitler.
+
+**Kimse bu uç noktaları erken bağlamasın.**
+
+---
+
+## D5 — son başvuru tarihleri: ölçüm tanımı değiştirdi
+
+Global boşluk %89,7 ama **öğrencilerin gerçekten hedeflediği yerde neredeyse
+sorun yok**: 12 farklı üniversite hedeflenmiş, yalnızca 1'i (Caltech) tamamen
+boş. Ölçmeden doldursaydık kimsenin bakmadığı ~900 üniversiteye saatler
+harcanacaktı.
+
+**Asıl bulgu daha sinsi: MIT 10 kez hedeflenmiş ve tek satırı
+`scholarship:undated`** — yani satır var, ama öğrencinin aradığı *başvuru*
+tarihi yok. **"Kaç satır var" diye sayan her kontrol MIT'yi dolu sayar.**
+D5 artık türe göre denetliyor, satır sayısına göre değil.
+
+**Henüz kimseye verilmedi:** B5, B6, C3 (öğrenci ana akışı — paylaşılan tarayıcı
+engeli).

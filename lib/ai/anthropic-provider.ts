@@ -106,6 +106,37 @@ function buildMessages(request: AIRequest): Anthropic.MessageParam[] {
   return [...history, { role: "user", content: buildUserContent(request) }];
 }
 
+/**
+ * Shared by generateText and generateTextStream — both end up with exactly one final
+ * Anthropic.Message (the streaming path awaits MessageStream.finalMessage() to get here,
+ * same shape as the non-streaming client.messages.create() result) and need the identical
+ * extract/validate/record-health handling. Extracted 2026-09-04 (the streaming build) so
+ * this logic — including the SEV-1 history behind the incomplete-response check below —
+ * exists in exactly one place rather than being copied into a second call site.
+ */
+async function finalizeTextResult(message: Anthropic.Message, model: string): Promise<AITextResult> {
+  const usage = { inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens };
+
+  // Note `.find` rather than `content[0]`: on a thinking model the text block is not
+  // first — a thinking block precedes it — so the answer must be located by type.
+  const textBlock = message.content.find((block) => block.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    // Carries stop_reason and usage so the caller can distinguish an exhausted budget
+    // from a real API failure, and can still record tokens this turn actually burned.
+    // Recorded as a provider_health failure too — the call reached Anthropic and came
+    // back with nothing usable, which is exactly the kind of degradation this table
+    // exists to surface, distinct from a clean network/auth failure above.
+    const incomplete = new AIResponseIncompleteError({ stopReason: message.stop_reason, usage, model });
+    await recordProviderFailure(PROVIDER_NAME, incomplete.message);
+    await reportProviderFailure(incomplete.message, model, { failure_mode: "incomplete_response", stop_reason: String(message.stop_reason) });
+    throw incomplete;
+  }
+
+  await recordProviderSuccess(PROVIDER_NAME);
+
+  return { text: textBlock.text, usage, model };
+}
+
 export class AnthropicProvider implements AIProvider {
   async generateText(request: AIRequest): Promise<AITextResult> {
     const client = await getClient();
@@ -135,26 +166,42 @@ export class AnthropicProvider implements AIProvider {
       throw error;
     }
 
-    const usage = { inputTokens: message.usage.input_tokens, outputTokens: message.usage.output_tokens };
+    return finalizeTextResult(message, model);
+  }
 
-    // Note `.find` rather than `content[0]`: on a thinking model the text block is not
-    // first — a thinking block precedes it — so the answer must be located by type.
-    const textBlock = message.content.find((block) => block.type === "text");
-    if (!textBlock || textBlock.type !== "text") {
-      // Carries stop_reason and usage so the caller can distinguish an exhausted budget
-      // from a real API failure, and can still record tokens this turn actually burned.
-      // Recorded as a provider_health failure too — the call reached Anthropic and came
-      // back with nothing usable, which is exactly the kind of degradation this table
-      // exists to surface, distinct from a clean network/auth failure above.
-      const incomplete = new AIResponseIncompleteError({ stopReason: message.stop_reason, usage, model });
-      await recordProviderFailure(PROVIDER_NAME, incomplete.message);
-      await reportProviderFailure(incomplete.message, model, { failure_mode: "incomplete_response", stop_reason: String(message.stop_reason) });
-      throw incomplete;
+  /**
+   * Same request handling as generateText (model selection, maxTokens, message assembly)
+   * down to reusing finalizeTextResult for the exact same extract/validate/record-health
+   * behavior once the message is complete — the only difference is the network call itself:
+   * client.messages.stream() instead of .create(), with each text delta forwarded to
+   * `onDelta` as it arrives rather than the caller only seeing the complete string at the
+   * end. MessageStream.finalMessage() resolves with the same Anthropic.Message shape
+   * .create() returns, including usage and stop_reason — nothing downstream of the network
+   * call needed to change to support this.
+   */
+  async generateTextStream(request: AIRequest, onDelta: (delta: string) => void): Promise<AITextResult> {
+    const client = await getClient();
+    const model = request.model ?? env.anthropic.model;
+
+    const stream = client.messages.stream({
+      model,
+      max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
+      system: request.system,
+      messages: buildMessages(request),
+    });
+    stream.on("text", (delta) => onDelta(delta));
+
+    let message: Anthropic.Message;
+    try {
+      message = await stream.finalMessage();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error calling Anthropic.";
+      await recordProviderFailure(PROVIDER_NAME, errorMessage);
+      await reportProviderFailure(errorMessage, model, { failure_mode: "transport" });
+      throw error;
     }
 
-    await recordProviderSuccess(PROVIDER_NAME);
-
-    return { text: textBlock.text, usage, model };
+    return finalizeTextResult(message, model);
   }
 
   async generateStructured<T>(request: AIStructuredRequest<T>): Promise<AIStructuredResult<T>> {
