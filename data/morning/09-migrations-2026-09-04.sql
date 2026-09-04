@@ -565,39 +565,41 @@ do $$
 declare
   eksik text[] := '{}';
 begin
-  -- 0115
+  -- 0115 converts eligibility_notes from text to jsonb -- it does NOT add a new
+  -- column. Checking for a column named eligibility_notes_codes (which no migration
+  -- creates) is what this block did until 2026-09-04; it reported a false failure.
   if not exists (select 1 from information_schema.columns
     where table_schema='public' and table_name='opportunity_matches'
-      and column_name='eligibility_notes_codes') then
-    eksik := eksik || '0115: opportunity_matches.eligibility_notes_codes'; end if;
+      and column_name='eligibility_notes' and data_type='jsonb') then
+    eksik := eksik || '0115: opportunity_matches.eligibility_notes henuz jsonb degil'::text; end if;
 
   -- 0116: sutunlar
   if not exists (select 1 from information_schema.columns
     where table_schema='public' and table_name='profiles' and column_name='account_role') then
-    eksik := eksik || '0116: profiles.account_role'; end if;
+    eksik := eksik || '0116: profiles.account_role'::text; end if;
   if not exists (select 1 from information_schema.columns
     where table_schema='public' and table_name='profiles' and column_name='parent_invite_email') then
-    eksik := eksik || '0116: profiles.parent_invite_email'; end if;
+    eksik := eksik || '0116: profiles.parent_invite_email'::text; end if;
 
   -- 0116: tablo
   if not exists (select 1 from information_schema.tables
     where table_schema='public' and table_name='parent_links') then
-    eksik := eksik || '0116: parent_links tablosu'; end if;
+    eksik := eksik || '0116: parent_links tablosu'::text; end if;
 
   -- 0116: RLS acik mi
   if not exists (select 1 from pg_class c join pg_namespace ns on ns.oid=c.relnamespace
     where ns.nspname='public' and c.relname='parent_links' and c.relrowsecurity) then
-    eksik := eksik || '0116: parent_links uzerinde RLS KAPALI'; end if;
+    eksik := eksik || '0116: parent_links uzerinde RLS KAPALI'::text; end if;
 
   -- 0116: okuma fonksiyonlari
   if not exists (select 1 from pg_proc where proname='get_parent_child_profile') then
-    eksik := eksik || '0116: get_parent_child_profile()'; end if;
+    eksik := eksik || '0116: get_parent_child_profile()'::text; end if;
   if not exists (select 1 from pg_proc where proname='get_parent_child_target_universities') then
-    eksik := eksik || '0116: get_parent_child_target_universities()'; end if;
+    eksik := eksik || '0116: get_parent_child_target_universities()'::text; end if;
   if not exists (select 1 from pg_proc where proname='get_parent_child_applications') then
-    eksik := eksik || '0116: get_parent_child_applications()'; end if;
+    eksik := eksik || '0116: get_parent_child_applications()'::text; end if;
   if not exists (select 1 from pg_proc where proname='is_active_parent_of') then
-    eksik := eksik || '0116: is_active_parent_of()'; end if;
+    eksik := eksik || '0116: is_active_parent_of()'::text; end if;
 
   if array_length(eksik, 1) > 0 then
     raise exception E'\n\nEKSIK NESNELER:\n  %\n\nHicbir sey uygulanmadi.\n',

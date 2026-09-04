@@ -2,8 +2,13 @@
 -- PROXOLA — ACİL: Ultra şu an bedava alınabiliyor
 -- ═══════════════════════════════════════════════════════════════════════════
 --
--- ⚠ BUNU İLK ÇALIŞTIR. Diğer paketlerden (09, 11, 12) bağımsız, onları
---   beklemiyor, onlar da bunu beklemiyor. Sıra fark etmez ama bu en acil olan.
+-- ⚠ SIRA: 09'DAN SONRA, 11'DEN ÖNCE. (09 → 13 → 11 → 12)
+--
+--   ÖNEMLİ DÜZELTME: İlk gönderdiğimde "bunu ilk çalıştır" demiştim. YANLIŞTI.
+--   Bu paket `account_role` sütununu da koruyor, ve o sütunu 09 oluşturuyor.
+--   09'dan önce çalıştırırsan hata verir ve hiçbir şey uygulanmaz — zararsız,
+--   ama boşuna. Bunu varsaymıştım, denemeden söylemiştim; sonra denedim ve
+--   patladığını gördüm.
 --
 -- SORUN
 --   Bir öğrenci kendi profil satırına doğrudan yazarak kendini Ultra

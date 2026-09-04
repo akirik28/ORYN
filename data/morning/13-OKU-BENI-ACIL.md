@@ -1,7 +1,16 @@
-# ⚠ ACİL — bunu ilk çalıştır
+# ⚠ ACİL — sıra: 09'dan sonra, 11'den önce
 
-**Diğer paketlerden bağımsız.** 09, 11, 12 ile ilgisi yok, onları beklemiyor.
-Sırayı bozmaz. Ama en acil olan bu.
+**Sıra: 09 → 13 → 11 → 12.**
+
+> **Düzeltme:** İlk gönderdiğimde *"bunu ilk çalıştır, bağımsız"* demiştim. **Yanlıştı.**
+> Bu paket `account_role` sütununu da koruyor ve o sütunu 09 oluşturuyor — 09'dan önce
+> çalıştırırsan hata verir, hiçbir şey uygulanmaz.
+>
+> **Bağımsızlığı varsaymıştım, denemeden söylemiştim.** Sonra dört paketi gerçek bir
+> Postgres'te canlı şemanın kopyası üzerinde sırayla çalıştırdım ve patladığını gördüm.
+> **09 iki dakika sürüyor; gecikme önemsiz, ama sıra önemli.**
+
+Bu hâlâ en acil düzeltme — sadece tek başına duramıyor.
 
 ---
 
