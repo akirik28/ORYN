@@ -504,8 +504,6 @@ comment on function public.get_parent_child_applications(uuid) is
 --
 -- Tekrar çalıştırılabilir: zaten doğru olan satırlarda hiçbir şey değişmez.
 
-create temporary table _ek_duzeltme (tablo text, sutun text) on commit drop;
-
 do $$
 declare
   hedef record;
