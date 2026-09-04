@@ -290,6 +290,36 @@ describe("computeEligibility", () => {
       expect(result.notes).toEqual([]);
     });
 
+    // Migration 0133 — the third state neither the default nor countryEligibilityConfirmedOpen
+    // can express: checked, official page doesn't say. Same "prove it can go red" bar as the
+    // age/grade pair above: proves both halves of the swap, not just "some code changed."
+    // Age/grade are already fully resolved by resolvedStudent()/resolvedOpportunity() above, so
+    // only the country dimension under test can produce a note.
+    test("country_eligibility_checked_not_stated replaces country_eligibility_unverified when the basis says checked_not_stated", () => {
+      const result = computeEligibility(resolvedStudent(), resolvedOpportunity({ countryEligibilityBasis: "checked_not_stated", lastVerifiedAt: "2026-09-04" }));
+      expect(result.eligible).toBe(true);
+      expect(result.notes.map((n) => n.code)).not.toContain("country_eligibility_unverified");
+      expect(result.notes).toEqual([{ code: "country_eligibility_checked_not_stated", params: { checkedAt: "2026-09-04" } }]);
+    });
+
+    // The un-set default still produces the original alarm-toned code — proves the new branch
+    // didn't silently swallow the old, common case.
+    test("country_eligibility_unverified still fires when basis is unset (the default, unresearched case)", () => {
+      const result = computeEligibility(resolvedStudent(), resolvedOpportunity());
+      expect(result.notes.map((n) => n.code)).toContain("country_eligibility_unverified");
+      expect(result.notes.map((n) => n.code)).not.toContain("country_eligibility_checked_not_stated");
+    });
+
+    // Proves the full render pipeline, not just the code — the date actually reaches the
+    // rendered sentence, in both locales, formatted (not the raw ISO string).
+    test("country_eligibility_checked_not_stated renders a calm, dated sentence in both locales", () => {
+      const result = computeEligibility(resolvedStudent(), resolvedOpportunity({ countryEligibilityBasis: "checked_not_stated", lastVerifiedAt: "2026-09-04" }));
+      expect(renderEligibilityNotes(result.notes, "en")).toBe(
+        "The official page doesn't state a country/citizenship requirement — checked (September 4, 2026)."
+      );
+      expect(renderEligibilityNotes(result.notes, "tr")).toBe("Resmi sayfa ülke/vatandaşlık şartı belirtmiyor — kontrol edildi (4 Eylül 2026).");
+    });
+
     test("no note when a populated allow-list already covers the row (researched-restricted case)", () => {
       const result = computeEligibility(resolvedStudent({ country: "Canada" }), resolvedOpportunity({ eligibleCountries: ["United States", "Canada"] }));
       expect(result.eligible).toBe(true);

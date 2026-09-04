@@ -61,6 +61,7 @@ function opportunity(overrides: Partial<Opportunity> = {}): Opportunity {
     grade_eligibility_confirmed_open: false,
     age_eligibility_basis: "not_researched",
     grade_eligibility_basis: "not_researched",
+    country_eligibility_basis: "not_researched",
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
     ...overrides,
@@ -278,6 +279,36 @@ describe("evaluateCandidateEligibility — opportunities", () => {
   test("age_eligibility_unverified sentence still fires when basis is unset", () => {
     const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ age_eligibility_confirmed_open: false })));
     expect(result.notes.join(" ")).toMatch(/age eligibility not verified yet/i);
+  });
+
+  // Migration 0133 — the same third state as age/grade above, for country: checked, official
+  // page doesn't say. Age and grade resolved via AGE_AND_GRADE_RESOLVED so only the country
+  // dimension under test can produce a note — the same isolation discipline the age/grade
+  // tests above already apply.
+  test("country_eligibility_basis 'checked_not_stated' produces the calmer, dated sentence instead of the unverified one", () => {
+    const result = evaluateCandidateEligibility(
+      opportunityCandidate(),
+      state(
+        opportunity({
+          country_eligibility_basis: "checked_not_stated",
+          last_verified_at: "2026-09-04T00:00:00.000Z",
+          ...AGE_AND_GRADE_RESOLVED,
+        }),
+        2009,
+        { advisor: { student: { birthYear: 2009, graduationYear: RESOLVED_GRADE_YEAR } } as CounselorState["advisor"] }
+      )
+    );
+    // "unknown", not "known_eligible" -- same reasoning as the age/grade tests above:
+    // checked_not_stated is still genuine uncertainty, just communicated calmly. Only
+    // confirmed_no_restriction (0060/0126-style) earns known_eligible.
+    expect(result.verdict).toBe("unknown");
+    expect(result.notes.join(" ")).not.toMatch(/country eligibility not verified yet/i);
+    expect(result.notes.join(" ")).toMatch(/country\/citizenship requirement — checked \(/i);
+  });
+
+  test("country_eligibility_unverified sentence still fires when basis is unset", () => {
+    const result = evaluateCandidateEligibility(opportunityCandidate(), state(opportunity({ country_eligibility_confirmed_open: false })));
+    expect(result.notes.join(" ")).toMatch(/country eligibility not verified yet/i);
   });
 
   // A structured citizenship gate means the row WAS researched and citizenship is the
