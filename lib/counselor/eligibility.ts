@@ -104,12 +104,15 @@ function evaluateOpportunityEligibility(
   // which this layer doesn't have access to from birthYear alone without a birth month/day
   // this product deliberately doesn't collect, see migration 0002's comment). ---
   const hasAgeRestriction = opportunity.minimum_age !== null || opportunity.maximum_age !== null;
+  const ageEligibilityConfirmedOpen = opportunity.age_eligibility_confirmed_open ?? false;
   if (hasAgeRestriction && birthYear === null) {
     notes.push(eligibilityMessages.ageUnknown(locale));
-  } else if (!hasAgeRestriction) {
-    // No bound recorded at all — not evidence every age is welcome, just never researched.
-    // Same principle as the countryEligibilityUnverified note below, applied to the field
-    // that had no equivalent safeguard (2026-09-03).
+  } else if (!hasAgeRestriction && !ageEligibilityConfirmedOpen) {
+    // No bound recorded at all — not evidence every age is welcome, just never researched,
+    // unless migration 0126's flag says a research pass explicitly confirmed there's
+    // genuinely no age gate. Same principle as the countryEligibilityUnverified note below,
+    // applied to the field that had no equivalent safeguard until now (2026-09-03 named the
+    // gap, 0126 closes it).
     notes.push(eligibilityMessages.ageEligibilityUnverified(locale));
   }
 
@@ -184,9 +187,10 @@ function evaluateOpportunityEligibility(
     } else if (!gradeMatchesEligibility(grade, opportunity.eligible_grades)) {
       return { verdict: "known_ineligible", notes: [eligibilityMessages.gradeNotEligible(opportunity.eligible_grades.join(", "), grade, locale)] };
     }
-  } else {
+  } else if (!(opportunity.grade_eligibility_confirmed_open ?? false)) {
     // No eligible_grades recorded at all — not evidence every grade is welcome, just never
-    // researched. Same principle as the age branch above.
+    // researched, unless migration 0126's flag says a research pass explicitly confirmed
+    // there's genuinely no grade gate. Same principle as the age branch above.
     notes.push(eligibilityMessages.gradeEligibilityUnverified(locale));
   }
 

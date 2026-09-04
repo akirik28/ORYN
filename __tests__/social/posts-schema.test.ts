@@ -595,7 +595,20 @@ describe("migration numbering", () => {
     // owner, the same shape those two existing dismissal-column sets already have. Started as
     // 0122, collided same-night with the advisor-guard migration directly above; CEO assigned
     // 0124 (0123 already spoken for), renamed after rebasing.
-    expect(Math.max(...numbers.map(Number))).toBe(124);
+    //
+    // 0125 not landed as a file here as of this rebase.
+    //
+    // 0126 (opportunity_age_grade_eligibility_confirmed_open) -- mirrors 0060's
+    // country_eligibility_confirmed_open shape for age and grade, closing the gap
+    // docs/absence-as-known-value-inventory-2026-09-03.md named for both but only fixed for
+    // country: an opportunity with no age bound or eligible_grades on file has always meant
+    // BOTH "confirmed no gate here" and "never researched," indistinguishable. Two
+    // independent boolean flags, not one combined one -- a program can be genuinely
+    // grade-gated with no age criterion (Wharton FBW) or genuinely age-gated with no grade
+    // criterion (ASSIP), found during D2's own opportunity-eligibility research, not
+    // hypothetical. Same CHECK-constraint discipline as 0060: a row cannot claim
+    // "confirmed open" while also carrying the structured bound that would contradict it.
+    expect(Math.max(...numbers.map(Number))).toBe(126);
   });
 });
 

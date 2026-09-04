@@ -244,6 +244,10 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
       // ?? false: migration 0060 may not be applied on this environment yet — an absent
       // column means "not confirmed open," which is also the honest live default.
       countryEligibilityConfirmedOpen: opportunity.country_eligibility_confirmed_open ?? false,
+      // Same defensive ?? false as above — migration 0126 may not be applied on this
+      // environment yet.
+      ageEligibilityConfirmedOpen: opportunity.age_eligibility_confirmed_open ?? false,
+      gradeEligibilityConfirmedOpen: opportunity.grade_eligibility_confirmed_open ?? false,
       // Package 8 fix: previously reduced to a boolean here (only used to suppress the
       // "not verified yet" note, never to say what the prose actually says). Passing the
       // raw text lets computeEligibility surface the same restriction note
