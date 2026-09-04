@@ -1,5 +1,3 @@
-import Link from "next/link";
-import Image from "next/image";
 import { NotConfiguredNotice } from "@/features/system/not-configured-notice";
 import { getTranslations } from "next-intl/server";
 import { integrationStatus } from "@/lib/env";
@@ -17,14 +15,31 @@ export const dynamic = "force-dynamic";
  * A single top-level gate here would create the exact redirect-loop risk this file's
  * children (login, pending) are built to avoid -- see each page's own header comment.
  *
+ * FIXED 2026-09-04 (CEO dispatch, confirmed live via a throwaway composed-render preview):
+ * this used to ALSO wrap every child in a `max-w-sm` login-card, which squeezed the real
+ * dashboard panel (ParentPanelView, its own full-page component) into ~304px at any screen
+ * width -- the primary success path for every linked parent, broken since the feature
+ * merged, because nobody had rendered the composed tree until then. CEO's ruling: the card
+ * belongs to the login-shaped screens, not every route under this layout, so only
+ * `data-role="parent"` and the shared background stay here now.
+ *
+ * Extended past CEO's own wording once `ParentPendingScreen` (features/parent/parent-
+ * pending-screen.tsx) got wired into /parent/pending in this same pass: that component is
+ * ALSO a self-contained full-page shell (its own `min-h-svh`, its own background, its own
+ * card) -- CEO's ruling named login and pending as the two screens keeping the card, written
+ * before either of us had looked at what pending's real content actually was. Nesting a
+ * second full-page component inside this layout's card would reproduce the exact bug this
+ * fix exists to close, just on a different page. So pending renders full-page here too, the
+ * same as the dashboard, and only /parent/login/page.tsx now carries its own card inline --
+ * flagged explicitly rather than silently deviating from the letter of the instruction.
+ *
  * `data-role="parent"` on the wrapper is a structural hook for P3's brown theme
  * (docs/veli-hesabi-spec-2026-09-04.md K5: "kahverengi tema mevcut tier mekanizmasını
- * kullanır... data-role='parent'"), not the theme itself -- P3 owns the actual color
- * tokens. Server-rendered on this wrapper div rather than client-side on <html> the way
- * UltraAmbient sets data-tier: that mechanism exists because Ultra also reacts to a
- * client-side dev-tier-preview toggle mid-session, which account_role has no equivalent
- * of -- a plain server attribute is simpler here and P3 can move it if the real theme
- * build needs it on <html> instead.
+ * kullanır... data-role='parent'") -- both `ParentPendingScreen` and `ParentPanelView`
+ * consume the resulting `--role-*` custom properties (app/globals.css) directly, which is
+ * why this wrapper only needs to set the attribute, not repeat the background formula
+ * itself; kept here anyway as a `bg-background`-equivalent base so anything rendered before
+ * a child component's own background paints (e.g. a loading state) doesn't flash unstyled.
  */
 export default async function ParentLayout({ children }: { children: React.ReactNode }) {
   if (!integrationStatus.supabase) {
@@ -33,20 +48,8 @@ export default async function ParentLayout({ children }: { children: React.React
   }
 
   return (
-    <div
-      data-role="parent"
-      className={`${inter.className} relative flex min-h-svh flex-col items-center justify-center overflow-hidden px-4 py-12`}
-      style={{ background: "linear-gradient(145deg, #EFE6DA 0%, #E4D5C2 100%)" }}
-    >
-      <Link href="/" className="relative mb-8">
-        <Image src="/brand/logo-full.png" alt="Proxola" width={139} height={44} priority className="h-11 w-auto" />
-      </Link>
-      <div
-        className="relative w-full max-w-sm rounded-[24px] p-10"
-        style={{ background: "rgba(255,255,255,0.9)", backdropFilter: "blur(24px)", boxShadow: "0 24px 80px rgba(120,90,50,0.14)" }}
-      >
-        {children}
-      </div>
+    <div data-role="parent" className={inter.className} style={{ background: "var(--role-page-bg-1)" }}>
+      {children}
     </div>
   );
 }

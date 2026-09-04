@@ -1478,8 +1478,6 @@
     },
     "pending": {
       "heading": "Not linked yet",
-      "bodyNoInvite": "No student has linked this account yet. Ask your child to add your email from their account settings — you'll get an email once they do.",
-      "bodyAwaitingConfirmation": "You're signed in, but your child hasn't confirmed the link yet. Nothing will be visible here until they do.",
       "signOut": "Sign out"
     },
     "upgradePrompt": {

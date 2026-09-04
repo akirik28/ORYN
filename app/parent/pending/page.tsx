@@ -2,14 +2,23 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { verifySession } from "@/lib/security/dal";
-import { getAccountRole, getParentLinkStatus } from "@/lib/auth/account-role";
+import { getAccountRole, getParentLinkStatus, type ParentLinkStatus } from "@/lib/auth/account-role";
 import { signOut } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
-import { instrumentSerif } from "@/lib/fonts";
+import { ParentPendingScreen } from "@/features/parent/parent-pending-screen";
+import { resolveLocale } from "@/lib/i18n/locale";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("parent.pending");
   return { title: t("heading") };
+}
+
+/** `ParentPendingScreen`'s three states (pending/revoked/no_link) aren't quite this file's
+ * four (that type also carries "active", which never reaches this page -- see below). Named
+ * as its own function rather than inlined so the one place this mapping exists is easy to
+ * find if a status value is ever added to either side. */
+function toScreenState(status: ParentLinkStatus): "pending" | "revoked" | "no_link" {
+  return status === "none" ? "no_link" : status === "pending" ? "pending" : "revoked";
 }
 
 /**
@@ -19,6 +28,16 @@ export async function generateMetadata(): Promise<Metadata> {
  * explicit ask: "its own screen, not a redirect loop or an empty dashboard." This IS that
  * screen, not a fallback inside the dashboard -- the dashboard layout below never renders
  * for a not-yet-linked parent at all, it redirects here instead.
+ *
+ * FIXED 2026-09-04: now renders `features/parent/parent-pending-screen.tsx`'s
+ * `ParentPendingScreen` instead of hand-rolled copy -- that component was built expecting
+ * this page to call it ("routing is P2's; this is the copy," its own header says) but
+ * shipped after this page did, so the two went unreconciled until
+ * docs/parent-state-machine-trace-2026-09-04.md caught it. Real upgrade, not just a
+ * refactor: three honest states instead of two ("revoked" no longer reuses the "no invite"
+ * copy), brown-themed via the same `--role-*` tokens the dashboard uses, and it's the
+ * component 11 will extend if a fourth state is ever needed -- one place instead of two.
+ * Sign-out is passed in via `action` since the component itself knows nothing about auth.
  *
  * Auth- and role-gated like the dashboard group, but deliberately NOT nested inside it --
  * app/parent/(dashboard)/layout.tsx redirects HERE when the link isn't active, so if this
@@ -43,23 +62,19 @@ export default async function ParentPendingPage() {
     redirect("/parent");
   }
 
-  const t = await getTranslations("parent.pending");
-  // "revoked" reuses the no-invite copy rather than a third message -- both honestly mean
-  // "nothing to see right now", and a distinct "your access was removed" message can wait
-  // for P4, which is the lane that will actually be able to produce that state on purpose.
-  const body = status === "pending" ? t("bodyAwaitingConfirmation") : t("bodyNoInvite");
+  const [t, locale] = await Promise.all([getTranslations("parent.pending"), resolveLocale()]);
 
   return (
-    <div className="space-y-6 text-center">
-      <h1 style={{ fontFamily: instrumentSerif.style.fontFamily, fontSize: 28, fontWeight: 400, color: "#2E2418" }}>
-        {t("heading")}
-      </h1>
-      <p className="text-sm" style={{ color: "#8A7A64" }}>{body}</p>
-      <form action={signOut}>
-        <Button type="submit" variant="outline" className="w-full">
-          {t("signOut")}
-        </Button>
-      </form>
-    </div>
+    <ParentPendingScreen
+      state={toScreenState(status)}
+      locale={locale}
+      action={
+        <form action={signOut}>
+          <Button type="submit" variant="outline" className="w-full">
+            {t("signOut")}
+          </Button>
+        </form>
+      }
+    />
   );
 }
