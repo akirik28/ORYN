@@ -12,6 +12,7 @@ import { resolveLocale } from "@/lib/i18n/locale";
 import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
 import { deriveTuitionContext } from "@/lib/universities/counseling-adapter";
 import { lacksApplicationDeadline, lacksCoreAdmissionStats, soonestApplicationDeadline } from "@/lib/universities/data-depth";
+import { categorizeAndDedupeResearchTopics } from "@/lib/universities/research-taxonomy";
 import { formatAbsoluteDate } from "@/lib/i18n/date";
 import { PageHeader } from "@/components/proxola/page-header";
 import { EmptyState } from "@/components/proxola/empty-state";
@@ -79,7 +80,7 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
     supabase.from("university_rankings").select("university_id, rank_display").eq("ranking_provider", "QS").in("university_id", requestedIds),
     supabase
       .from("university_profile_metrics")
-      .select("university_id, metric_code, value_text, value_numeric, unit, precision_state")
+      .select("university_id, metric_code, value_text, value_numeric, unit, precision_state, source_url, verified_at")
       .in("university_id", requestedIds)
       .in("metric_code", ["research_topics_top5", "tuition_domestic_annual", "tuition_international_annual"]),
     supabase
@@ -147,8 +148,28 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
     deadlineRowsByUniId.set(d.university_id, [...(deadlineRowsByUniId.get(d.university_id) ?? []), d]);
   }
   const today = new Date();
+  // CEO, 2026-09-04, from the display-honesty measurement (docs/research-topics-display-
+  // honesty-2026-09-04.md): raw OpenAlex phrases, uncategorized, is the same self-
+  // contradiction shape as the SourceBadge fix above -- most sharply here, since this is the
+  // premium, paid feature. Same taxonomy the card already uses (categorizeAndDedupeResearchTopics),
+  // same max=3 default (this row shares a narrow column with 2-4 other universities' cells, the
+  // card's own space constraint, not the detail page's -- that page passes 5).
+  //
+  // Three distinct states per university, not two -- no row at all (unchanged NA, matches
+  // every other row) is a different fact from a real row where nothing categorizes (a new,
+  // explicit "couldn't classify" message, never NA -- a bare "--" here would read exactly like
+  // "no data," the same silent-blank problem this whole pass exists to fix). The render below
+  // picks between them using hasRawTopics, not categories.length alone.
   const topicRows = (metrics ?? []).filter((m) => m.metric_code === "research_topics_top5");
-  const topicsByUniId = new Map(topicRows.map((m) => [m.university_id, m.value_text?.split(" | ").filter(Boolean).slice(0, 3) ?? []]));
+  const topicsByUniId = new Map(
+    topicRows.map((m) => {
+      const rawTopics = m.value_text?.split(" | ").filter(Boolean) ?? [];
+      return [
+        m.university_id,
+        { categories: categorizeAndDedupeResearchTopics(rawTopics), hasRawTopics: rawTopics.length > 0, sourceUrl: m.source_url, verifiedAt: m.verified_at },
+      ] as const;
+    })
+  );
   const internationalTuitionByUniId = new Map(
     (metrics ?? [])
       .filter((m) => m.metric_code === "tuition_international_annual" && m.value_numeric != null)
@@ -276,15 +297,27 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
     {
       label: t("researchStrengths"),
       render: (u) => {
-        const topics = topicsByUniId.get(u.id) ?? [];
-        if (topics.length === 0) return NA;
+        const entry = topicsByUniId.get(u.id);
+        if (!entry || !entry.hasRawTopics) return NA;
+        if (entry.categories.length === 0) return <span>{t("researchStrengthsUnclassified")}</span>;
         return (
-          <div className="flex flex-wrap gap-1">
-            {topics.map((t) => (
-              <span key={t} className="rounded-full border bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground">
-                {t}
-              </span>
-            ))}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex flex-wrap gap-1">
+              {entry.categories.map((category) => (
+                <span key={category} className="rounded-full border bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground">
+                  {category}
+                </span>
+              ))}
+            </div>
+            <SourceBadge
+              sourceName="OpenAlex"
+              checkedAt={entry.verifiedAt}
+              url={entry.sourceUrl}
+              locale={locale}
+              sourceLabel={tSourceBadge("source")}
+              checkedLabel={(time) => tSourceBadge("checked", { time })}
+              viewSourceLabel={tSourceBadge("viewSource")}
+            />
           </div>
         );
       },

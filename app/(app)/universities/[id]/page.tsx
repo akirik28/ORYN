@@ -5,6 +5,7 @@ import { MapPin, Users, DollarSign, GraduationCap, ExternalLink, Trophy, Target,
 import { subjectLabel } from "@/lib/programs/subject-labels";
 import { EmptyState } from "@/components/proxola/empty-state";
 import { lacksResearchDepth, lacksApplicationDeadline, lacksCoreAdmissionStats } from "@/lib/universities/data-depth";
+import { categorizeAndDedupeResearchTopics } from "@/lib/universities/research-taxonomy";
 import { requireUser, getCurrentProfile, getProfileScores } from "@/lib/security/dal";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { heroGradientStyle } from "@/components/proxola/hero-gradient";
@@ -284,7 +285,23 @@ export default async function UniversityDetailPage({ params }: { params: Promise
     explanation.unknowns.length > 0;
   const metricByCode = new Map((metricsRes.data ?? []).map((m) => [m.metric_code, m]));
   const researchTopicsMetric = metricByCode.get("research_topics_top5");
-  const researchTopics = researchTopicsMetric?.value_text ? researchTopicsMetric.value_text.split(" | ").filter(Boolean) : [];
+  const rawResearchTopics = researchTopicsMetric?.value_text ? researchTopicsMetric.value_text.split(" | ").filter(Boolean) : [];
+  // CEO, 2026-09-04, from the display-honesty measurement (docs/research-topics-display-
+  // honesty-2026-09-04.md): 69.3% of universities with this metric have zero of their 5 raw
+  // OpenAlex topics land in a student-legible field at all -- shown raw, a business/economics
+  // student reads Oxford's "research strengths" as astrophysics. Same taxonomy the university
+  // CARD already uses (categorizeAndDedupeResearchTopics), max raised from its card default of
+  // 3 to 5 -- this page has the room the card doesn't, and dedup already collapses e.g. three
+  // physics sub-topics to one "Physics" entry, so 5 is a ceiling, not a typical count.
+  //
+  // No row at all, and a real row where nothing categorizes, both end in an empty array here
+  // -- and both get the identical treatment below (the whole section hides, same as the card's
+  // own established "null when empty" convention). Unlike the compare page's per-university
+  // table cell, this page has nothing else in the row to share space with, so silently hiding
+  // rather than showing a "we couldn't classify this" sentence is the right call CEO gave for
+  // this surface specifically -- see the compare page's own version of this fix for why THAT
+  // surface needs the opposite: an explicit sentence, not a hide.
+  const researchTopics = categorizeAndDedupeResearchTopics(rawResearchTopics, 5);
   const undergradCount = metricByCode.get("undergraduate_students")?.value_numeric ?? null;
   const postgradCount = metricByCode.get("postgraduate_students")?.value_numeric ?? null;
   const qsSizeCode = metricByCode.get("qs_size_category")?.value_text ?? null;
