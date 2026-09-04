@@ -1,3 +1,5 @@
+import Link from "next/link";
+import Image from "next/image";
 import { NotConfiguredNotice } from "@/features/system/not-configured-notice";
 import { getTranslations } from "next-intl/server";
 import { integrationStatus } from "@/lib/env";
@@ -40,6 +42,25 @@ export const dynamic = "force-dynamic";
  * why this wrapper only needs to set the attribute, not repeat the background formula
  * itself; kept here anyway as a `bg-background`-equivalent base so anything rendered before
  * a child component's own background paints (e.g. a loading state) doesn't flash unstyled.
+ *
+ * ADDED 2026-09-04 (CEO dispatch): a slim logo header, now that every route below is a
+ * self-contained full-page component with no shared chrome of its own (login moved its logo
+ * inline when it took back its card, see that page's own comment; pending and the dashboard
+ * never had one). It is a sibling of `{children}`, not a wrapper around it -- this file
+ * already carries one lesson about an ancestor squeezing a wide child, so the header owns
+ * only its own height and internal padding, no `max-w-*`, no shared container that both it
+ * and `{children}` sit inside beyond this plain full-width div. Login's own inline logo was
+ * removed in the same pass to avoid showing two.
+ *
+ * `{children}` is wrapped in `<main>` (added in the same pass) -- this page never had a
+ * `main` landmark before. Found live, in the composed-render check this whole header
+ * addition was built to go through: adding the header also produced a second `banner`
+ * landmark, because ParentPanelView had its own internal `<header>` for what is really
+ * page-specific title content. Nesting it inside `<main>` did NOT suppress that on its own
+ * -- checked against the browser's actual computed accessibility tree, not assumed from spec
+ * text -- so that inner element was changed to a plain div instead (see its own comment).
+ * The two fixes are independent: `<main>` closes the missing-landmark gap, the div change
+ * closes the duplicate-banner one.
  */
 export default async function ParentLayout({ children }: { children: React.ReactNode }) {
   if (!integrationStatus.supabase) {
@@ -49,7 +70,12 @@ export default async function ParentLayout({ children }: { children: React.React
 
   return (
     <div data-role="parent" className={inter.className} style={{ background: "var(--role-page-bg-1)" }}>
-      {children}
+      <header className="flex items-center px-6 py-5">
+        <Link href="/" aria-label="Proxola">
+          <Image src="/brand/logo-full.png" alt="Proxola" width={109} height={36} priority className="h-9 w-auto" />
+        </Link>
+      </header>
+      <main>{children}</main>
     </div>
   );
 }
