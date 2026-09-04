@@ -78,8 +78,8 @@ bile yok."* Üç iş:
 
 ## C — KALİTE / DOĞRULAMA
 
-**C1. Veli uçtan uca doğrulama.** 0116 uygulanır uygulanmaz çalışacak.
-Betik hazır: `docs/parent-account-e2e-plan-2026-09-04.md`. **A1'e bağlı.**
+**C1. Veli uçtan uca doğrulama — ✅ TAMAM (4 Eylül).** 26 kontrol, hepsi geçti.
+Ayrıntı aşağıda; tek açık kalan, plan script'indeki savepoint'siz B7.
 
 **C2. Danışman akışı (streaming).** Plan yazılı:
 `docs/advisor-streaming-plan-2026-09-04.md`. 11 koruma tek tek listelenmiş.
@@ -116,28 +116,56 @@ Footer yer tutucu ✓ · Danışman bekleme göstergesi ✓ · Fırsatlar sayfas
 
 ---
 
-## Dağıtım — 4 Eylül, 08:20 (CEO)
+## Dağıtım — 4 Eylül, 11:30 (CEO)
 
-Dokuz oturumun hepsine tanıtım + kurallar + tek madde gönderildi. Her oturum
-**önce elindeki işi bitirir, rapor eder, sonra aşağıdaki maddeyi alır.**
+**Oturum başlığı, o oturumun ne yaptığının kanıtı değildir.** İlk dağıtımda
+dokuz oturumun işini kenar çubuğu başlığından çıkardım. **Üç oturum bunu ayrı
+ayrı düzeltti**: "görsel script'i" sanılan oturum veli migration'larını yazmış,
+"kullanım sınırları" sanılan oturumda öyle bir görev hiç yok, "40 kurum"
+sanılan oturum dokuz üniversite kapatmış. Fleet yeniden başladığında başlıklar
+önceki turdan kalmış. Tablo artık **oturumların kendi beyanına** göre.
 
-| Oturum | Elindeki iş | Sıradaki madde |
+| Oturum (kendi beyanı) | Madde | Durum |
 | --- | --- | --- |
-| academic_tier backfill | bitti | **D3** — alan bazlı ölçüm + "öğrenci görüyor mu" ekseni |
-| production deployment | sürüyor | **B1** — ödeme kesişimi, migration **0123** |
-| CFO | filo gözetimi | gözetim devam — numara çakışması, merge girişimi, aynı dosya |
-| freemium araştırması | sürüyor | **B2** — tam ekran yükseltme kartı, migration **0124** |
-| i18n altyapısı | sürüyor | **B3a** — veli ayrı sayfalar |
-| kullanım sınırları | sürüyor | **B3b** — veli özeti haftalıktan aylığa |
-| reşit olmayan hukuki çerçeve | sürüyor | **A4'ün girdisi** — tüm e-posta gönderimi buna kilitli |
-| yeni ülke: 40 kurum | sürüyor | **D1** — üniversite doldurma, QS top-100'ün kalan 25'i |
-| fırsat görsel script'i | sürüyor | **D2** — fırsat doldurma (yaş / sınıf / ülke) |
+| veli E2E'sini koşan | **B3c** — veli kütüphane erişimi, gerekirse **0125** | başlıyor |
+| ödeme worktree'sinde yazan (kimliği aranıyor) | **B1** — ödeme kesişimi, **0123** | yürüyor |
+| locale shim + parent route-group yazan | **B3a** — veli ayrı sayfalar | başlıyor |
+| veli haftalık runner'ını yazan | **B3b** — özeti aylığa | başlıyor |
+| rename + plan sayfası + doğrulama denetimi | **D2** — fırsat doldurma | başladı |
+| dokuz üniversiteyi kapatan | **D1** — 19 kurum (13 boş + 6 yakın-boş) | başladı |
+| hukuki çerçeve | **A4'ün girdisi** — tüm e-posta buna kilitli | yürüyor |
+| CFO | filo gözetimi + ödeme worktree'sinde kimin yazdığını bulma | yürüyor |
+| academic_tier | **D3** — alan bazlı ölçüm | beyan bekleniyor |
+| freemium | **B2** — yükseltme kartı, **0124** | beyan bekleniyor |
 
-**Verilen migration numaraları: 0123 → B1, 0124 → B2.** Başkası almaz.
+**Migration numaraları: 0123 → B1, 0124 → B2, 0125 → B3c (gerekirse).**
 
-**Henüz kimseye verilmedi:** B3c (veli kütüphane erişimi), C1 (veli uçtan uca —
-A1 bitti, artık çalıştırılabilir), C2 (danışman streaming), C3 (öğrenci ana
-akışı). Oturumlar rapor ettikçe sıradan verilecek.
+**Açık çakışma:** `ORYN-worktrees/payment-provider-seam-2026-09-04` içinde biri
+canlı yazıyor (11:24-11:25, `0123` commit'li `236b9cf2`). B1'i verdiğim oturum
+oraya girdi, **hiçbir şeye dokunmadan durup sordu** — doğru davranış. Karar:
+**worktree'de duran iş B1'i ve 0123'ü tutar**, diğeri B3c'ye geçti.
 
-**Açık risk:** uzaktaki `ORYN i18n altyapısı` oturumu çevrimdışı ama duruyor;
-yereldeki i18n oturumuyla aynı işi yapıyor olabilirler. CFO'ya teyit ettirildi.
+---
+
+## C1 — ✅ TAMAM (4 Eylül)
+
+Veli akışı uçtan uca koşuldu: **26 kontrol, hepsi geçti**, tamamı geri alınan
+işlemler içinde, sonrasında hiçbir şeyin kalmadığı teyitli.
+`docs/parent-account-e2e-run-2026-09-04.md`, dal: `docs/parent-e2e-run-2026-09-04`.
+Guard trigger hem `confirmed_at`'i hem `last_commentary_sent_at`'i velinin
+kendi revoke'una karşı donduruyor, admin eşdeğeri yazıda dondurmuyor.
+
+**Açık kalan tek düzeltme:** E2E plan script'inde B7, hata vermesi *beklenen*
+bir insert'i savepoint'siz çalıştırıyor — işlem abort oluyor ve **B10-B12 hiç
+koşmadan, ekranda hata görünmeden** geçiliyor. Bulan oturum düzeltiyor.
+
+---
+
+## D4 — üniversite tekilleştirme (yeni, sahipsiz)
+
+MIT ve HKUST'un ikişer satırı var (biri dolu biri boş); "UCL" ile "University
+College London" muhtemelen aynı kurum (biri 16 gereksinim, diğeri sıfır).
+**Boş kopyayı doldurmak iki kez zarar verir** — efor boşa gider ve çift kayıt
+kalıcılaşır. D1 bu satırları atlıyor. Tekilleştirme ayrı iş, henüz kimsede yok.
+
+**Henüz kimseye verilmedi:** D4, C2 (danışman streaming), C3 (öğrenci ana akışı).
