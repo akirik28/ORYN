@@ -1,7 +1,11 @@
 -- Classification of the 7 rows docs/citizenship-restrictions-boilerplate-cleanup-2026-09-04.sql
 -- deliberately left untouched -- CEO's own three-way test, applied row by row with reasoning
 -- named for each, per CEO's explicit request not to decide silently. REQUIRES MIGRATION 0133
--- (country_eligibility_basis) applied first for the two UPDATEs that set it.
+-- (country_eligibility_basis) applied first for every UPDATE below that sets it. An 8th row,
+-- Interlochen Review, was added 2026-09-04 -- not one of the original 7, found by applying
+-- this same test to a different file's own confirmed_open=true claim once the independence
+-- bug below made "check every row that claims confirmed_open, not just the one that broke"
+-- the right question to ask.
 --
 -- THE TEST (CEO's own framing):
 --   1. An explicit "no restriction" statement -- the page itself states the openness, not
@@ -29,6 +33,19 @@
 -- confirmed_no_restriction below ALSO clears citizenship_restrictions -- the quote's evidence
 -- has been promoted into the structured field, so the free-text copy is no longer needed and
 -- would actively contradict the new structured answer if left in place.
+--
+-- A FIFTH thing, found only because CEO checked package 14 and this file side by side for the
+-- same id (Immerse, 7f90019e) and noticed the boolean never got reset: the SAME independence
+-- runs the OTHER direction too. computeEligibility/evaluateOpportunityEligibility read
+-- countryEligibilityConfirmedOpen FIRST -- `else if (!confirmedOpen) { check basis }` -- so a
+-- row carrying confirmed_open=true from an EARLIER file and basis='checked_not_stated' from
+-- THIS one would keep running the confirmed_open branch forever; the stricter basis value
+-- would sit in the database and never be read. Package 14 (docs/d2-batch2-additions-and-
+-- corrections-2026-09-04.sql) set Immerse's confirmed_open=true before this file's own
+-- ruling reclassified it -- withdrawn there directly (see that file's own note), but every
+-- checked_not_stated UPDATE below ALSO now writes country_eligibility_confirmed_open = false
+-- explicitly, rather than relying on the source-file withdrawal alone: a package assembled
+-- from this file's own SQL, without re-reading the other file first, must be safe on its own.
 
 -- Bocconi Summer School for High School Students -- CEO's own example: "official page says
 -- applicants can be 'in Italy or abroad'" is the page itself stating openness (both
@@ -111,6 +128,7 @@ where id = '7f90019e-05c7-4059-ae13-8e285ab3ea38'
 -- (already judged NOT sufficient for confirmed-open).
 update public.opportunities
 set country_eligibility_basis = 'checked_not_stated',
+    country_eligibility_confirmed_open = false,
     citizenship_restrictions = null,
     last_verified_at = now()
 where id = '2080d194-88e9-4585-9a81-c99e9a19840b'
@@ -121,10 +139,31 @@ where id = '2080d194-88e9-4585-9a81-c99e9a19840b'
 -- statement.
 update public.opportunities
 set country_eligibility_basis = 'checked_not_stated',
+    country_eligibility_confirmed_open = false,
     citizenship_restrictions = null,
     last_verified_at = now()
 where id = '647eb8da-9cb8-46d4-8ded-b4c516f7ac90'
   and citizenship_restrictions = 'None stated; official page: engages qualified, high-achieving high school students from all over the world';
+
+-- Interlochen Review -- NOT one of the original 7, added here 2026-09-04 answering CEO's own
+-- question ("başka satır var mı?" -- are there other rows) after the confirmed_open/basis
+-- independence bug surfaced on Immerse: docs/d2-visible-priority-additions-2026-09-04.sql set
+-- this row's country_eligibility_confirmed_open = true on "...from around the world" -- the
+-- SAME descriptive-attendee wording judged insufficient for Immerse above, flagged by that
+-- file's own original author as "the closer call of the two" against Immerse specifically.
+-- Once Immerse fell on the checked_not_stated side, this one falls there too, same reasoning.
+-- Withdrawn at that file's own source (see its own note); country_eligibility_confirmed_open
+-- has no other row setting it true for this id, but set to false here too regardless, same
+-- defensive discipline CEO's own instruction established for this file: a package built from
+-- this file's SQL alone must be safe even if the other file's withdrawal is never re-checked.
+-- citizenship_restrictions/residency_restrictions are already null on this row -- nothing to
+-- clear.
+update public.opportunities
+set country_eligibility_basis = 'checked_not_stated',
+    country_eligibility_confirmed_open = false,
+    last_verified_at = now()
+where id = '95093e1a-fc13-4d9a-b4ed-5f0584252b44'
+  and country_eligibility_confirmed_open = false;
 
 -- NOT touched below -- content correctly stays, no basis change, per CEO's own instruction:
 --
