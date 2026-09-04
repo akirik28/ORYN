@@ -62,14 +62,53 @@ export const getAccountRole = cache(async (userId: string): Promise<AccountRole>
  * needs to distinguish from "the row lacks that field", only isUndefinedTableError (the
  * table itself not existing yet) is checked below.
  *
- * Not filtered to a single status server-side -- reads whichever row is most current (a
- * parent linked to more than one student is a real, spec-supported shape, G7 doesn't cap
- * it; every caller below only asks "is there an active one", so the most-recently-touched
- * row is the right one to prefer when none are active yet).
+ * FIXED 2026-09-04 (docs/parent-state-machine-trace-2026-09-04.md) -- previously ordered by
+ * `updated_at` alone across every status, which silently picked a more-recently-touched
+ * `revoked`/`pending` link over an untouched-in-months `active` one for a parent linked to
+ * more than one student (G7 doesn't cap it). That locked the parent out of a child they
+ * genuinely have active access to: every /parent entry point redirects on `status !==
+ * "active"`, with no path back to the real active link once misrouted. Renamed from
+ * `getMostRecentParentLink` because that name was the bug's own cover story -- it read as a
+ * complete description of the ordering when "most recent" was never the actual priority
+ * caller code needed.
+ *
+ * Two queries, not one, because an `active`-first ordering isn't expressible as a single
+ * PostgREST `.order()` without a computed column neither this table nor this call needs
+ * elsewhere: try for the most-recently-updated ACTIVE link first; only if none exists, fall
+ * back to the most-recently-updated link of any status (still correct for the
+ * pending-vs-revoked-vs-none distinction app/parent/pending/page.tsx needs when there is no
+ * active link to prefer). Two round trips only in that one case, not on every call --
+ * unaffected by `cache()`'s per-request memoization either way.
+ *
+ * The "most-recently-updated wins" tiebreak among MULTIPLE active links (two children, both
+ * active) is kept deliberately, not by default: a parent linked to two currently-active
+ * children has to land somewhere, both are genuinely reachable so this is no longer a
+ * lockout either way, and "whichever was confirmed/touched most recently" is as defensible a
+ * default as any other in the absence of a multi-child switcher UI (not built). Documented
+ * here specifically so the next person extending this doesn't mistake it for the same
+ * unexamined default that caused the bug this function is now named to avoid repeating.
  */
-export const getMostRecentParentLink = cache(async (parentUserId: string): Promise<ParentLink | null> => {
+export const getRelevantParentLink = cache(async (parentUserId: string): Promise<ParentLink | null> => {
   const supabase = await createClient();
-  const { data, error } = await supabase
+
+  const { data: active, error: activeError } = await supabase
+    .from("parent_links")
+    .select("*")
+    .eq("parent_user_id", parentUserId)
+    .eq("status", "active")
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (activeError) {
+    if (!isUndefinedTableError(activeError, "parent_links")) {
+      console.error("[account-role] failed to read active parent_links", { parentUserId, error: activeError.message });
+    }
+    return null;
+  }
+  if (active) return active;
+
+  const { data: mostRecentAny, error: fallbackError } = await supabase
     .from("parent_links")
     .select("*")
     .eq("parent_user_id", parentUserId)
@@ -77,13 +116,13 @@ export const getMostRecentParentLink = cache(async (parentUserId: string): Promi
     .limit(1)
     .maybeSingle();
 
-  if (error) {
-    if (!isUndefinedTableError(error, "parent_links")) {
-      console.error("[account-role] failed to read parent_links", { parentUserId, error: error.message });
+  if (fallbackError) {
+    if (!isUndefinedTableError(fallbackError, "parent_links")) {
+      console.error("[account-role] failed to read parent_links", { parentUserId, error: fallbackError.message });
     }
     return null;
   }
-  return data;
+  return mostRecentAny;
 });
 
 /**
@@ -99,7 +138,7 @@ export const getMostRecentParentLink = cache(async (parentUserId: string): Promi
 export type ParentLinkStatus = "active" | "pending" | "revoked" | "none";
 
 export async function getParentLinkStatus(parentUserId: string): Promise<ParentLinkStatus> {
-  const link = await getMostRecentParentLink(parentUserId);
+  const link = await getRelevantParentLink(parentUserId);
   return link?.status ?? "none";
 }
 
@@ -118,6 +157,6 @@ export function hasActiveParentLink(status: ParentLinkStatus): boolean {
  * rather than asserting a precondition it can't itself enforce.
  */
 export async function getActiveParentLink(parentUserId: string): Promise<ParentLink | null> {
-  const link = await getMostRecentParentLink(parentUserId);
+  const link = await getRelevantParentLink(parentUserId);
   return link?.status === "active" ? link : null;
 }

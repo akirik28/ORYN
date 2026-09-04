@@ -15,9 +15,15 @@ const COPY: Record<NonActiveState, { icon: typeof MailCheck; title: [string, str
   revoked: {
     icon: ShieldOff,
     title: ["Erişim sona erdi", "Access has ended"],
+    // Deliberately doesn't say WHO ended it or WHY -- fixed 2026-09-04 (11's own note on
+    // docs/parent-state-machine-trace-2026-09-04.md): the original wording ("the student has
+    // removed this parent link") reads as a deliberate act, but lib/parent/links.ts's
+    // revokeStalePendingLinks can also revoke as a side effect of the student simply
+    // correcting a typo'd parent email -- a parent losing access to that isn't "cut off,"
+    // and shouldn't read as if they were.
     body: [
-      "Öğrenci bu veli bağlantısını kaldırdı. Bu, öğrencinin herhangi bir zamanda alabileceği bir karardır ve geri getirmek yeni bir davet gerektirir.",
-      "The student has removed this parent link. That's a decision the student can make at any time, and restoring access requires a new invitation from them.",
+      "Bu veli bağlantısı artık etkin değil. Bunun nedeni öğrencinin bağlantıyı doğrudan kaldırması olabileceği gibi, kendi hesap bilgilerini güncellemesinin bir yan etkisi de olabilir. Bu size doğru gelmiyorsa, öğrenciden yeni bir davet göndermesini isteyin.",
+      "This parent link is no longer active. This can happen if the student removed it directly, or as a side effect of updating their own account information. If this doesn't seem right, ask the student to send a new invitation.",
     ],
   },
   no_link: {
@@ -39,7 +45,19 @@ const COPY: Record<NonActiveState, { icon: typeof MailCheck; title: [string, str
  * mounted) is P2's; this is the copy, which has to carry the actual message so "revoked"
  * doesn't read as a bug report and "pending" doesn't read as Proxola being slow.
  */
-export function ParentPendingScreen({ state, locale = DEFAULT_LOCALE }: { state: NonActiveState; locale?: Locale }) {
+export function ParentPendingScreen({
+  state,
+  locale = DEFAULT_LOCALE,
+  action,
+}: {
+  state: NonActiveState;
+  locale?: Locale;
+  /** Optional extra control rendered below the body text, inside the same card -- added
+   * 2026-09-04 so app/parent/pending/page.tsx can offer sign-out without this component
+   * needing to know anything about auth actions itself. Absent by default; every other
+   * caller (the design-preview route) is unaffected. */
+  action?: React.ReactNode;
+}) {
   const tr = locale === "tr";
   const { icon: Icon, title, body } = COPY[state];
   return (
@@ -53,6 +71,7 @@ export function ParentPendingScreen({ state, locale = DEFAULT_LOCALE }: { state:
         </span>
         <h1 className="font-display text-lg font-semibold text-foreground">{tr ? title[0] : title[1]}</h1>
         <p className="text-sm text-muted-foreground">{tr ? body[0] : body[1]}</p>
+        {action}
       </div>
     </div>
   );

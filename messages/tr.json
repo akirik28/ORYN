@@ -1478,8 +1478,6 @@
     },
     "pending": {
       "heading": "Henüz bağlı değil",
-      "bodyNoInvite": "Bu hesabı henüz hiçbir öğrenci bağlamadı. Çocuğunuzdan hesap ayarlarından e-posta adresinizi eklemesini isteyin — eklediğinde size bir e-posta gönderilecek.",
-      "bodyAwaitingConfirmation": "Giriş yaptınız, ancak çocuğunuz bağlantıyı henüz onaylamadı. Onaylayana kadar burada hiçbir şey görünmeyecek.",
       "signOut": "Çıkış yap"
     },
     "upgradePrompt": {
