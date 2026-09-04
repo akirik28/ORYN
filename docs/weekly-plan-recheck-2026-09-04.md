@@ -130,16 +130,16 @@ whether they know a target university's admission rate.
 still `$10.00/month` (admin-editable, `weekly_plan_budget_settings`), degrade-not-stop,
 summed across every student. Confirmed by reading the current file — no drift from the doc.
 
-**Could not find a source for the "~234-569 token" figure** — searched `docs/` for
-"admission" combined with a token count, and for a `B7`-named doc; neither the admission-context
-file's own header comment nor its test file states a measured token cost. Not asserting the
-number is wrong — just that I can't cite where it came from, so I'm not relaying it as verified.
-Computed my own independent estimate from the real template strings in
-`formatAdmissionRateLine`/`formatUniversityAdmissionContext` (a ~60-token section header plus
-~20-45 tokens per rendered line, published/not_published/no_single_rate only —
-`not_researched` renders nothing) — for a student with 3-8 target universities, that lands
-roughly in the 200-500 token range, the same order of magnitude as the cited figure. Consistent,
-not independently re-derived to the token.
+**Correction, found after the first pass: the "~234-569 token" figure is real and precisely
+measured — sourced from durable memory, not `docs/`.** Searched `docs/` first and found
+nothing, which was an incomplete search, not a correct conclusion — the actual source is
+`project_oryn_b7_advisor_admission_rate_context.md`, a different session's own record of
+building this exact file (B7, same day). It used this codebase's own established projection
+tool, `lib/ai/eval/cost-estimate.ts` (`~4 chars/token`, applied to real formatter output, not
+typed-up prose — the same file documents this is a deliberate, stated-uncertainty
+approximation, not false precision): **234 tokens for a realistic 5-target case, 569 for a
+worst-realistic 10-target-all-published case.** Precisely measured, not estimated by me or
+worth re-deriving.
 
 **But that cost doesn't apply to weekly-plan's budget at all** — since
 `university-admission-context.ts` is advisor-chat-only (§2 above), its token cost, whatever the
@@ -152,15 +152,16 @@ that function.
 either consumer.
 
 **Skills is the one real, confirmed token-cost growth weekly-plan picked up today** — a single
-new line, `Skills: {name} [{category}], ...`. Estimated directly from the real render shape
-(not measured against a live model): at the average 4.5 skills/student this session measured
-earlier tonight for the accounts that have any, roughly `"Financial modeling [Analytical], "` ×
-4-5 entries ≈ 35-45 tokens total, plus the `Skills: ` prefix — call it **under 50 tokens per
-call**, on both weekly-plan and advisor-chat since both share `formatContextForPrompt`. At
-$3/million input tokens (Sonnet, matching the aggregate-budget doc's own $0.029/call baseline
-for a much larger prompt), 50 tokens is on the order of **$0.00015/call** — not a number that
-moves the $10/month ceiling in any visible way, even multiplied across every student, every
-week.
+new line, `Skills: {name} [{category}], ...`. Measured directly, character-for-character, from
+this session's own already-executed test assertion (`student-context.test.ts`'s real rendered
+output for 2 skills — not typed-up prose): `"Skills: Financial modeling [Analytical], Public
+speaking [Communication]"` is 72 characters, same `~4 chars/token` methodology the B7 figure
+above uses — **≈18 tokens for 2 skills.** Scaling to the average 4.5 skills/student this
+session measured earlier tonight for the accounts that have any (~30-35 chars per additional
+entry), a realistic case lands **≈40-45 tokens**, on both weekly-plan and advisor-chat since
+both share `formatContextForPrompt`. At $3/million input tokens (Sonnet), that's on the order
+of **$0.00012-0.00014/call** — not a number that moves the $10/month ceiling in any visible
+way, even multiplied across every student, every week.
 
 **Net answer to "does today's growth threaten the budget once cron is armed"**: no, on the
 evidence gathered here. The one context addition that actually reached weekly-plan today
@@ -178,15 +179,17 @@ unchanged.
 ## What I could not measure
 
 No live token count against the real Anthropic API for either the admission-rate section or
-the skills line — estimated from template strings, not measured, matching this session's
-established "no live model call" convention. Could not find the specific document CEO's
-"~234-569 token" figure traces to, despite a real search — noted rather than silently
-substituting my own estimate as if it were the same claim. This investigation was also
-interrupted mid-task by a real, separate disk-space emergency (`/private/tmp`'s volume hit
-zero free bytes, confirmed via repeated `ENOSPC` failures on even trivial Bash calls) —
-reported to CEO immediately, resolved itself within a few minutes (810Mi free, 96% capacity,
-genuinely thin but not currently blocking), and cost roughly 5 minutes of this task's time;
-noting it here for completeness, not as a finding about weekly-plan itself.
+the skills line — both figures above come from the codebase's own established
+`~4-chars/token` projection method applied to real rendered strings, not a live model call,
+matching this session's established "no live model call" convention. First pass of this doc
+searched only `docs/` for the "~234-569 token" figure's source and came up empty — an
+incomplete search, not a correct conclusion; the real source turned out to be a memory entry,
+corrected above. This investigation was also interrupted mid-task by a real, separate
+disk-space emergency (`/private/tmp`'s volume hit zero free bytes, confirmed via repeated
+`ENOSPC` failures on even trivial Bash calls) — reported to CEO immediately, resolved itself
+within a few minutes (810Mi free, 96% capacity, genuinely thin but not currently blocking),
+and cost roughly 5 minutes of this task's time; noting it here for completeness, not as a
+finding about weekly-plan itself.
 
 ---
 
