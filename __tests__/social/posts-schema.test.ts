@@ -551,17 +551,17 @@ describe("migration numbering", () => {
     // tuition_international_annual metric codes already cover it, built and merged before
     // 2026-09-03. Still unapplied; the founder runs it in the morning.
     //
-    // 0120 (parent_links_guard_last_commentary_sent_at) -- a codebase-wide guard-trigger
-    // column-drift sweep (oryn/guard-trigger-column-drift-2026-09-04) found that 0118 added
-    // parent_links.last_commentary_sent_at four hours after 0116 defined
-    // parent_links_guard_immutable_columns(), which the trigger never learned about --
-    // CREATE OR REPLACE FUNCTION adds the missing reassignment, the same idiom already used
-    // twice for opportunity_matches_guard_computed_columns (migrations 0086, 0115) as that
-    // table grew new computed columns. Schema only, no trigger redefinition needed (0116's
-    // trigger is an unconditional `before update`, already firing on every column). Numbered
-    // 0120, not 0119 -- origin/main claimed 0119 (admission_rate_basis, directly above) in the
-    // same window; renamed after rebasing. Still unapplied, same as 0116/0117/0118/0119.
-    expect(Math.max(...numbers.map(Number))).toBe(120);
+    // 0120 was CREATED and then REMOVED the same night, deliberately, and the reason is worth
+    // keeping: a guard-drift sweep found parent_links.last_commentary_sent_at missing from
+    // parent_links_guard_immutable_columns() and wrote a fix -- correctly identifying a real
+    // gap. But 0118's own author had already closed it inside 0118 itself, hours earlier, and
+    // the two fixes were NOT equivalent. 0118 freezes the column only when auth.uid() is not
+    // null, so the batch runner (admin client, no uid) can still write its own windowing
+    // column. 0120's version was unconditional. Applying later, it would have won -- and the
+    // runner would have been permanently unable to write the column it exists to maintain,
+    // making every run treat everything as new. A guard that blocks everyone looks safe and
+    // is a different bug. 0120 removed; 0118 remains the single fix.
+    expect(Math.max(...numbers.map(Number))).toBe(119);
   });
 });
 
