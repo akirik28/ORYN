@@ -92,14 +92,25 @@ export async function generateResearchProjects(params: {
   // `skills` reached context for the first time in this same pass (see student-context.ts's
   // interface comment) — without this, `requiredSkills` on a generated project was the model
   // inventing what a project needs with zero signal about what the student already has.
+  //
+  // `proficiency` added same day, CEO's call: 7 of 9 live skill rows carry a real,
+  // student-entered level ("Intermediate", "Advanced") — a declared fact, not an inference,
+  // same shape as target_geographies the same day (the student already told us, wire it in
+  // rather than re-deriving it). Appended only when the student actually set one; never
+  // invented for the two rows that don't have it. Rendered here AND referenced in the
+  // closing instruction below — carrying it in the data but never telling the model to act
+  // on it would leave this exactly as decorative as it was before this fix, the same gap
+  // this whole task started from.
   const skillsText =
-    context.skills.length > 0 ? context.skills.map((s) => `${s.name} [${skillCategoryLabel(s.category, context.student.preferredLanguage)}]`).join(", ") : "none listed";
+    context.skills.length > 0
+      ? context.skills.map((s) => `${s.name} [${skillCategoryLabel(s.category, context.student.preferredLanguage)}]${s.proficiency ? ` — ${s.proficiency}` : ""}`).join(", ")
+      : "none listed";
 
   const provider = getAIProvider();
   const result = await withUsageLogging({ userId: params.userId, feature: "research_generator", selectModel: (uid) => selectModelForUser(uid, params.tier) }, (model) =>
     provider.generateStructured({
       system: withOutputLanguage(SYSTEM_PROMPT, context.student.preferredLanguage),
-      prompt: `Student field of interest: ${params.field}\nOther interests: ${params.interests.join(", ") || "none stated"}\n${gradeContext}\nWeekly time budget: ${timeBudgetText}\nExisting skills: ${skillsText}\nCurrent research score: ${context.profileScores.find((s) => s.dimension === "research")?.score ?? "unknown"}/100\n\nCurrent research literature in this space, for grounding:\n${themesContext}\n\nGenerate up to 3 achievable research project ideas, building on the student's existing skills where relevant rather than assuming they start from zero.`,
+      prompt: `Student field of interest: ${params.field}\nOther interests: ${params.interests.join(", ") || "none stated"}\n${gradeContext}\nWeekly time budget: ${timeBudgetText}\nExisting skills: ${skillsText}\nCurrent research score: ${context.profileScores.find((s) => s.dimension === "research")?.score ?? "unknown"}/100\n\nCurrent research literature in this space, for grounding:\n${themesContext}\n\nGenerate up to 3 achievable research project ideas, building on the student's existing skills where relevant rather than assuming they start from zero. Where a skill has a stated level, use it to calibrate: an "Advanced" skill can carry a more central, ambitious role in the project; a skill with no level stated or an earlier level should be treated as still developing, not already mastered.`,
       schema: ResearchProjectListSchema,
       schemaName: "record_research_projects",
       schemaDescription: "Records up to 3 achievable research project ideas for the student.",

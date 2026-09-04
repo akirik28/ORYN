@@ -91,10 +91,12 @@ export const REGRESSION_CONTEXT: StudentAdvisorContext = {
   interests: ["Economics", "Entrepreneurship"],
   // 2026-09-04, added alongside StudentAdvisorContext's new `skills` field — fits the
   // entrepreneurship/leadership persona, exercises the populated path (BASELINE_CONTEXT
-  // below exercises the empty one).
+  // below exercises the empty one). One with a stated proficiency, one without — same mix
+  // real live data has (7 of 9 skill rows carry one, 2 don't), so this fixture exercises
+  // both render branches rather than only the fully-populated one.
   skills: [
-    { name: "Financial modeling", category: "analytical" },
-    { name: "Public speaking", category: "communication" },
+    { name: "Financial modeling", category: "analytical", proficiency: "Advanced" },
+    { name: "Public speaking", category: "communication", proficiency: null },
   ],
   targetUniversities: [{ id: "t1", universityId: "u1", programId: null, name: "London School of Economics", status: "target", outlook: "extreme_reach" }],
   upcomingDeadlines: [{ title: "LSE — personal statement", date: inDays(21), source: "target_university" }],

@@ -312,10 +312,20 @@ export interface StudentAdvisorContext {
    * generator's context before 2026-09-04 (found during the research-generator audit,
    * docs/handoffs/research-project-generator-audit-2026-09-04.md) — `requiredSkills` on a
    * generated research project was pure invention with zero signal about what the student
-   * already has. Same minimal shape as `getPortfolioSkills` (lib/portfolio/build.ts): name +
-   * the closed `category` enum, no `proficiency` — nothing downstream needs it yet, and
-   * `interests` right above is the same "just enough to name in a sentence" shape. */
-  skills: { name: string; category: SkillCategory }[];
+   * already has.
+   *
+   * `proficiency` added same day, same follow-up: shipped without it first ("nothing
+   * downstream needs it yet", matching `getPortfolioSkills`'s own minimal shape in
+   * lib/portfolio/build.ts — a separate, unrelated fetch for the Portfolio page, not shared
+   * code with this one, despite the shape coincidence), but CEO's call once live data was
+   * checked — 7 of 9 live skill rows have a real, student-entered proficiency ("Intermediate",
+   * "Advanced"), the same "the student already told us, we just weren't reading it" shape as
+   * `target_geographies` earlier the same day. A research project recommended to someone who
+   * wrote "Advanced Python" should not be pitched as if they'd never coded — spec's own rule
+   * ("scale difficulty to the student's age and experience") applies exactly as much to a
+   * stated skill level as to grade level. `getPortfolioSkills` is NOT touched by this — it's
+   * a genuinely separate function/query, only ever shape-matched by comment, not shared. */
+  skills: { name: string; category: SkillCategory; proficiency: string | null }[];
   /** `outlook` is the persisted enum, not a free string — typing it loosely is what let the
    *  raw `extreme_reach` reach the prompt and then a student. `status` tightened alongside
    *  it in the same 2026-09-02 sweep that caught curriculum/weeklyTimeBudget/confidence —
@@ -498,7 +508,7 @@ export async function buildStudentAdvisorContext(userId: string, supabaseClient?
     getPendingApplicationRequirements(supabase, userId, supersessionMap),
     supabase.from("sports_experiences").select("sport, level, is_captain, hours_per_week, ongoing, achievements").eq("user_id", userId),
     supabase.from("student_interests").select("label").eq("user_id", userId),
-    supabase.from("skills").select("name, category").eq("user_id", userId),
+    supabase.from("skills").select("name, category, proficiency").eq("user_id", userId),
   ]);
 
   const profile = readOr("profile", profileRes, null, { userId });
@@ -830,7 +840,12 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
   // closed-enum-needs-a-label treatment as courseLevel/employmentType above, reusing the
   // label function the manual skill form and CV-import review screen already use rather
   // than inventing a second copy (lib/profile/cv-import.ts's skillCategoryLabel).
-  lines.push(`Skills: ${context.skills.map((s) => `${s.name} [${skillCategoryLabel(s.category, locale)}]`).join(", ") || "none set"}`);
+  // `proficiency` added same day: a plain `text` column, not a closed DB enum, so no label
+  // accessor applies (same reasoning as testScores' subscore keys) — appended only when the
+  // student actually set one, never invented for the rows that don't have it.
+  lines.push(
+    `Skills: ${context.skills.map((s) => `${s.name} [${skillCategoryLabel(s.category, locale)}]${s.proficiency ? ` — ${s.proficiency}` : ""}`).join(", ") || "none set"}`,
+  );
   /**
    * `outlook` is a persisted enum (`extreme_reach`, `not_applicable`, …) and the badge that
    * renders it says "Extreme Reach". Handed the raw value, the model writes the raw value:
