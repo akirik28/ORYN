@@ -15,6 +15,40 @@ PACKAGE="docs/opportunity-duplicate-consolidation-2026-09-04.sql"
 command -v psql >/dev/null || { echo "psql not on PATH"; exit 2; }
 trap 'psql -q postgres -c "drop database if exists $DB" >/dev/null 2>&1' EXIT
 
+# PROVENANCE CHECK (CEO, 2026-09-04: "aynı riski taşıyor" -- same mechanism added to Package
+# 15 after its own source went stale twice unnoticed, extended here). Package 16's SQL content
+# is self-authored, drawn from direct live-database measurement, not assembled from other
+# evolving files the way Package 15 is -- so this is a WARNING, not a hard failure: the scan
+# doc (docs/opportunity-duplicate-scan-2026-09-04.md) drifting doesn't make this package's own
+# UPDATEs wrong, but it does mean the package's own comments (which cite that doc's claims,
+# e.g. the WYSE section) were written against a specific version of it. Uses bash 3.2-portable
+# path:hash pairs, not associative arrays -- same reason as Package 15's own check (this
+# machine's default `bash` predates `declare -A`).
+echo "── provenance check (scan doc vs. what this package's comments cite) ──"
+EXPECTED_HASHES=(
+  "docs/opportunity-duplicate-scan-2026-09-04.md:85464edb311472834d3fa40923b6ec74004328a1b23b3ed6e900ef1a9475a8fe"
+)
+for entry in "${EXPECTED_HASHES[@]}"; do
+  f="${entry%%:*}"
+  expected="${entry#*:}"
+  if [ ! -f "$f" ]; then
+    echo "  MISSING: $f (cited by this package's comments, but no longer exists here)"
+    continue
+  fi
+  actual=$(shasum -a 256 "$f" | cut -d' ' -f1)
+  if [ "$actual" != "$expected" ]; then
+    echo "  DRIFTED (warning, not a failure): $f"
+    echo "    package's comments cite:  $expected"
+    echo "    file on disk is now:      $actual"
+    echo "    This package's own SQL is still correct (it was verified against live data,"
+    echo "    not this doc) -- but re-read the doc's current WYSE/Garcia sections before"
+    echo "    trusting this package's OWN prose about them without a fresh look."
+  else
+    echo "  OK -- scan doc unchanged since this package's comments were written"
+  fi
+done
+echo
+
 psql -q postgres -c "drop database if exists $DB" -c "create database $DB" >/dev/null 2>&1
 
 psql -q "$DB" -v ON_ERROR_STOP=1 >/dev/null 2>&1 <<'SQL'

@@ -3,6 +3,20 @@
 -- Package 16. Order within each pair: data migration first, retirement second (CEO's own
 -- explicit rule, same as Waterloo/CEMC). Nothing deleted -- status='disabled', same pattern.
 --
+-- ═══ KAYNAK SAĞLAMASI (Paket 15'in aynı sınıftaki bayatlama hatasından sonra CEO'nun
+-- açık talebi: "aynı riski taşıyor") ═══
+-- Bu dosya şu commit'ten üretildi: f7247e2132b0a072a59802a9120b44922a595b5e
+-- Asıl kaynağın (docs/opportunity-duplicate-scan-2026-09-04.md) üretim anındaki SHA-256'sı:
+--   85464edb311472834d3fa40923b6ec74004328a1b23b3ed6e900ef1a9475a8fe
+-- scripts/check-package-16-sequence.sh'in kendi "provenance check" adımı bunu yeniden
+-- hesaplayıp karşılaştırıyor -- tarama dokümanı değişirse (örn. WYSE'nin eligible_countries
+-- iddiası düzeltilirse) test SESSİZCE geçmiyor, açıkça uyarıyor. Bu dosyanın kendi SQL
+-- içeriği tarama dokümanına DEĞİL, doğrudan canlı veritabanı ölçümüne dayanıyor (her satırın
+-- alan değerleri execute_sql ile okunmuş) -- yani bir tarama-dokümanı düzeltmesi bu SQL'in
+-- kendisini YANLIŞ yapmaz, ama üstündeki YORUMLARIN (özellikle WYSE bölümü, "scan doc'un
+-- iddiası" diye referans veriyor) hangi tarama-doküman sürümüne göre yazıldığını bilmek
+-- gelecekte bir okuyucu için değerli -- bu yüzden uyarı, hata değil.
+--
 -- Measured before writing anything (CEO's explicit ask: does this self-heal like Waterloo/
 -- CEMC did?): saved_opportunities = 0 for all six rows across all three pairs -- nothing to
 -- migrate there, for any pair. opportunity_matches has 8 stale rows per opportunity (normal --

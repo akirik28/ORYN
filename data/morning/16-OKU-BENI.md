@@ -94,6 +94,20 @@ koruması) daha standart anlamda re-run güvenli, ama onlarda da kısıt ihlali 
 (silinen tarih damgası dışında). Abartmadım — kanıtlanmayan bir şeyi kanıtlanmış gibi
 yazmadım.
 
+## Sağlama kontrolü — CEO'nun talebi, Paket 15'in yaşadığı bayatlama hatasından sonra
+
+Paket 15, merge edildikten SONRA kaynak dosyalarından biri değişti (yeni bir satır eklendi)
+ve kimse fark etmedi, iki kez. CEO'nun açık isteği: **"bunu Paket 16'ya da ekle, o da aynı
+riski taşıyor."** Bu paketin kendi SQL'i başka dosyalardan derlenmiyor (Paket 15 gibi) —
+doğrudan canlı veritabanı ölçümüne dayanıyor, o yüzden bir hard-fail değil, **uyarı**: bu
+dosyanın üstündeki YORUMLAR (özellikle WYSE bölümü) `docs/opportunity-duplicate-scan-
+2026-09-04.md`'nin belirli bir sürümüne atıf yapıyor. `scripts/check-package-16-sequence.sh`
+artık en başta bu dokümanın SHA-256'sını yeniden hesaplayıp paketin kendi başlığındaki
+üretim-anı değeriyle karşılaştırıyor — farklıysa, SQL'in kendisi hâlâ doğru olduğu için
+durmuyor ama açıkça uyarıyor: doküman güncellendiyse (örn. WYSE düzeltmeleri), bu paketin
+kendi prose'una taze bakılmalı. Kanıtlandı: dokümana deneme satırı ekleyip çalıştırdım,
+uyarı çıktı ve doğru dosyayı adlandırdı; geri alıp tekrar çalıştırdım, temiz.
+
 ## Doğrulama yöntemi
 
 `scripts/check-package-16-sequence.sh` — aynı harness deseni, dördüncü kez yeniden
