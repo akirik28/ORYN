@@ -245,12 +245,25 @@ kimliği). Kimse dokunmadı.
 
 ---
 
-## C2 — sunucu tarafı merge edildi, AMA uç noktalar ulaşılamaz (bilerek)
+## C2 — ✅ TAMAM (iki yarısı da merge edildi)
 
 `73124976`: sağlayıcıya `generateTextStream`, `generateAdvisorReplyStream`, ve iki
 Route Handler (`app/api/advisor/chat/route.ts`, `.../retry/route.ts`).
 
-**Hiçbir istemci bu uç noktaları çağırmıyor ve çağırmamalı — henüz.** Route
+**Artık istemci de bağlı** (`b345e002`): `submit()`/`retry()` SSE üzerinden akıyor,
+her parça mesaj balonuna canlı düşüyor. 11 korumanın her biri **kaynağı tek tek
+bozularak** kırmızıya döndürüldü, sonra geri alındı — okuyarak değil, kırarak.
+O sırada iki testin **kendisi** bozuk çıktı: aynı tabloya iki kez yazan bir rotada
+ham `insert` sayacı yanlış insert'i sayıyordu, ve biri **gerçek dal tamamen
+kapalıyken bile geçiyordu.**
+
+**KARAR (CEO): `sendAdvisorMessage`/`retryAdvisorMessage` silinmeyecek.** Artık
+çağrılmıyorlar ama **streaming yolu hiç gerçek tarayıcıda çalışmadı.** Ölçülmüş,
+sertleştirilmiş, korumaları kanıtlanmış bir yolu, yerine geçen şey canlıda bir kez
+bile denenmeden silmeyiz. Silme şartı: canlı doğrulama. **Kimse "ölü kod" diye
+temizlemesin.**
+
+Eski uyarı (tarihsel): uç noktalar bir süre ulaşılamaz duruyordu — Route
 Handler'lar `sendAdvisorMessage`/`retryAdvisorMessage`'ın **11 korumasını elle
 aynalıyor**, ve bu tam olarak bir korumanın sessizce eksik kalabileceği şekil.
 Şu an güvenli olmasının tek sebebi ulaşılamaz olmaları. **İstemci `submit()`
