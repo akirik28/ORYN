@@ -37,11 +37,12 @@ const PROVIDER_NAME = "anthropic";
 const DEFAULT_MAX_TOKENS = 8192;
 
 /**
- * Only applied to the streaming call (generateTextStream), not generateText/generateStructured
- * — those already return or throw promptly on the SDK's own default 10-minute timeout, since
- * nothing observes them mid-flight. A streaming reply is different: a student is watching a
+ * Applied to the streaming call (generateTextStream) specifically — a student is watching a
  * "thinking" placeholder the whole time, so a connection that stalls without ever closing or
- * erroring would leave them staring at it far longer than any real call has ever taken.
+ * erroring would leave them staring at it far longer than any real call has ever taken. See
+ * NON_STREAMING_TIMEOUT_MS below for why generateText/generateStructured need the identical
+ * treatment for a different reason (cost, not UX) — this is not the only place it applies,
+ * just the one it was first found and fixed for.
  *
  * 120s, not the SDK's 10-minute default — chosen against the real, measured worst case
  * (docs/advisor-latency-options-2026-09-04.md's own TTFT measurement: 57.75s for the slowest
@@ -55,6 +56,37 @@ const DEFAULT_MAX_TOKENS = 8192;
  * point of adding this. A timeout here must mean "stop and report", never "try again quietly".
  */
 const ADVISOR_STREAM_TIMEOUT_MS = 120_000;
+
+/**
+ * Applied to every generateText/generateStructured call — the two non-streaming methods,
+ * which until 2026-09-04 passed no RequestOptions at all and so ran on the SDK's own
+ * defaults: `timeout: 600_000` (10 minutes) and `maxRetries: 2`. That used to be treated as
+ * fine because "nothing observes them mid-flight" — true for UX, but it missed the same cost
+ * multiplication the streaming fix above exists to prevent: a request that times out is
+ * retried twice more by default, so an unbounded call here could silently take up to ~30
+ * minutes (3 attempts x 10 minutes) and bill for up to three attempts instead of one — the
+ * exact shape ADVISOR_STREAM_TIMEOUT_MS's own comment already describes, just without a
+ * spinner in front of it to notice.
+ *
+ * Every caller of these two methods was traced (14 call sites, 2026-09-04 audit): several run
+ * inside `app/api/jobs/**` routes, which `vercel.json`'s `functions` block caps at a hard
+ * `maxDuration: 300` — a call left on the SDK's 10-minute default would never get the chance
+ * to time out cleanly there; Vercel kills the whole function first, so recordProviderFailure/
+ * reportProviderFailure never run and the failure is invisible to provider_health. Every other
+ * (interactive, Server-Action-triggered) caller uses a maxTokens budget of 400-4096 — smaller
+ * than the 8192 ceiling ADVISOR_STREAM_TIMEOUT_MS was measured against (57.75s worst-case
+ * TTFT) — so the same figure carries the same headroom for them, not a value copied over
+ * unexamined: 120s is under half of the 300s platform ceiling that actually applies to some
+ * callers, and roughly 2x the worst real generation time measured against a strictly larger
+ * token budget than any of the others use.
+ *
+ * Reuses ADVISOR_STREAM_TIMEOUT_MS's literal value on purpose rather than picking a second,
+ * independently-arbitrary number — kept as its own named constant (not a shared import of that
+ * one) because the justification above is derived independently, not because "it's already
+ * there." maxRetries: 0 applies for the identical reason it does on the streaming call: a
+ * timeout here must mean stop and report, never retry quietly.
+ */
+const NON_STREAMING_TIMEOUT_MS = 120_000;
 
 /**
  * Async since 2026-09-03 (was sync) so the not-configured case can be recorded before it
@@ -173,12 +205,15 @@ export class AnthropicProvider implements AIProvider {
     const model = request.model ?? env.anthropic.model;
     let message: Anthropic.Message;
     try {
-      message = await client.messages.create({
-        model,
-        max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
-        system: request.system,
-        messages: buildMessages(request),
-      });
+      message = await client.messages.create(
+        {
+          model,
+          max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
+          system: request.system,
+          messages: buildMessages(request),
+        },
+        { timeout: NON_STREAMING_TIMEOUT_MS, maxRetries: 0 },
+      );
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error calling Anthropic.";
       await recordProviderFailure(PROVIDER_NAME, errorMessage);
@@ -258,14 +293,17 @@ export class AnthropicProvider implements AIProvider {
       // across the two attempts.
       let message: Anthropic.Message;
       try {
-        message = await client.messages.create({
-          model,
-          max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
-          system: request.system,
-          messages: [{ role: "user", content: buildUserContent({ ...request, prompt }) }],
-          tools: [tool],
-          tool_choice: { type: "tool", name: request.schemaName },
-        });
+        message = await client.messages.create(
+          {
+            model,
+            max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
+            system: request.system,
+            messages: [{ role: "user", content: buildUserContent({ ...request, prompt }) }],
+            tools: [tool],
+            tool_choice: { type: "tool", name: request.schemaName },
+          },
+          { timeout: NON_STREAMING_TIMEOUT_MS, maxRetries: 0 },
+        );
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error calling Anthropic.";
         await recordProviderFailure(PROVIDER_NAME, errorMessage);
