@@ -52,11 +52,10 @@ Oxford 2) are a legitimate, honest state in this schema's own vocabulary, not a 
 row-exists-but-empty pattern is isolated to `university_statistics` for this group of 12** —
 it does not show up in requirements or deadlines.
 
-One gap outside that pattern, worth flagging separately rather than silently fixing here:
-**Caltech has 37 requirements and 26 programs but zero deadline rows.** Real deadline
-research (finding Caltech's actual current cycle dates) is a different kind of work than
-filling a statistics table from an official numbers page — flagged for whoever owns deadline
-research next, not attempted in this pass.
+One gap outside that pattern, flagged rather than fixed here — **already picked up
+elsewhere**: Caltech's zero deadline rows turned out to be another lane's work in progress,
+its own real dates pulled from Caltech's official REA/Regular Decision pages, SQL ready and
+waiting on the same apply step this doc's SQL is. Nothing further needed from this doc on it.
 
 ## 3. Filled — official sources only, unfound left blank
 
@@ -101,31 +100,16 @@ correctly classified rather than left ambiguous):
 
 **Bocconi**: searched `unibocconi.it` directly (including its own "Results and Enrollment"
 page) — no applicant/admit counts or rate published anywhere I could find.
-`admission_rate_basis: not_published` is the accurate value **but that state doesn't exist
-yet** — it ships in migration 0127 (`d1-qs-top100-fill` branch, not yet merged to main).
-**Sequencing dependency, flagging rather than assuming:** if my migration number lands after
-0127 merges, I'll use `not_published`; if before, Bocconi's row ships with
-`admission_rate_basis` left at the `not_researched` default (still correct — just less
-specific than what I actually found) rather than blocked on a value that doesn't exist yet.
+`admission_rate_basis: not_published` — **originally blocked** (that value shipped in
+migration 0127, `d1-qs-top100-fill` branch, not yet merged when this pass started) **and now
+unblocked**: CEO merged 0127 to `main` same night, the value exists, the INSERT in §4 is live.
 
-**Boğaziçi**: search explicitly returned *"acceptance rate is not reported by the university
-itself as official published statistics."* Judgment call, flagging rather than deciding
-unilaterally: Turkish admission here runs through YKS (domestic) / YÖS (international)
-score-cutoffs **per programme**, the same shape TU Munich/TU Delft's `no_single_rate` already
-covers, not a holistic "reviewed X, admitted Y" rate a single percentage would describe even
-if published. I lean `no_single_rate` over `not_published` for this reason — structurally
-closer to Munich/Delft than to Bocconi's "plausibly one rate exists, just not released"
-shape — but this is the one genuinely ambiguous classification in this batch and I'd rather
-you weigh in than guess silently.
-
-**Warwick**: Warwick does publish detailed admissions statistics — a real, official, FOI-backed
-data hub at `warwick.ac.uk/.../freedomofinformation/admissionsdata` — but it's an interactive/
-filtered page, and every year-specific figure `WebFetch` could reach was old (2016, 2009).
-Using a decade-old figure as today's rate would be the exact stale-precision problem tonight
-has been about. **Left at `not_researched`, genuinely** (not `not_published` — the data
-exists and Warwick does release it, I just couldn't drive the filter to a current year with
-the tools this pass had). Flagged as a distinct, completable follow-up: someone with browser
-automation against that specific page, not another web-search pass.
+**Boğaziçi**: **`no_single_rate` — CEO confirmed.** Search returned "acceptance rate is not
+reported by the university itself," but the real mechanism is YKS (domestic) / YÖS
+(international) score-cutoffs **per programme** — the same shape TU Munich/TU Delft's
+`no_single_rate` already covers, not a holistic "reviewed X, admitted Y" rate a single
+percentage would describe even if published. Flagged as a judgment call rather than decided
+unilaterally; CEO agreed it was the right read.
 
 ## 4. Draft SQL — NOT applied, no migration number
 
@@ -162,22 +146,19 @@ select id, 'no_single_rate',
   'medium', now()
 from public.universities where name = 'University of Amsterdam';
 
--- Boğaziçi: recommended no_single_rate (see §3 for the judgment call) -- confirm before applying.
+-- Boğaziçi: no_single_rate -- CEO-confirmed.
 insert into public.university_statistics (university_id, admission_rate_basis, source, data_confidence, retrieved_at)
 select id, 'no_single_rate',
   'Boğaziçi University — admission via YKS (domestic) / YÖS (international) score-cutoffs set per programme each cycle; no single institution-wide admission rate is published or structurally applicable. No official rate found on bogazici.edu.tr.',
   'low', now()
 from public.universities where name = 'Boğaziçi University';
 
--- Bocconi: not_published, BLOCKED on migration 0127 merging first (adds that enum value).
--- If 0127 lands before my number is assigned, uncomment and use 'not_published'.
--- Until then, Bocconi gets no row from this migration -- left at the honest default rather
--- than forced into a value that doesn't exist yet.
--- insert into public.university_statistics (university_id, admission_rate_basis, source, data_confidence, retrieved_at)
--- select id, 'not_published',
---   'Bocconi University — searched unibocconi.it directly, including its own Results and Enrollment page; no applicant/admit counts or admission rate published.',
---   'low', now()
--- from public.universities where name = 'Bocconi University';
+-- Bocconi: not_published -- unblocked, migration 0127 is merged to main.
+insert into public.university_statistics (university_id, admission_rate_basis, source, data_confidence, retrieved_at)
+select id, 'not_published',
+  'Bocconi University — searched unibocconi.it directly, including its own Results and Enrollment page; no applicant/admit counts or admission rate published.',
+  'low', now()
+from public.universities where name = 'Bocconi University';
 
 -- Caltech: fill the one missing field on an otherwise-complete row. Confirmed via search
 -- (multiple sources independently citing the same IPEDS 2025 survey figure for enrolled
@@ -199,5 +180,35 @@ IPEDS lineage the row's existing `source` string already names, so I'm treating 
 but flagging the sourcing distinction rather than letting it look identical in provenance to
 the four fields that came straight from the API.
 
-**Warwick, Bocconi (until 0127), and the Boğaziçi classification** are the three open items —
-everything else above is ready to apply once you assign a number.
+## 5. Warwick and Oxford, revisited with browser access
+
+CEO clarified the browser-pane caution that shaped this pass originally: the risk is our own
+app's authenticated pages sharing the founder's real session (host-scoped, not port-scoped) —
+public external sites carry none of that risk. Went back to both open items with that access.
+
+**Oxford — partially upgraded, not fully.** Read `ox.ac.uk`'s own live admissions-statistics
+page directly (not search synthesis): confirms *"In 2025, 3,302 students were admitted to
+Oxford to begin their undergraduate studies"* verbatim, primary-sourced now, not relayed.
+The applicant count (23,329) that the 14.2% rate depends on lives in the Annual Admissions
+Statistical Report — a PDF the site serves as a forced download (browser sandbox won't open
+it) — or Tableau dashboards the "About the applicants" / "By course" links open, neither of
+which this tooling can read as text. So: the numerator is now directly verified, the
+denominator still isn't. Left `data_confidence: medium` rather than upgrading to `high` —
+a real, partial win, not the full confirmation CEO asked me to check for, and I'd rather say
+that plainly than round a half-verification up to a full one. §4's Oxford UPDATE is unchanged.
+
+**Warwick — still not_researched, and now a clearer account of why.** Went to the FOI
+admissions-data page directly: it names "the University's academic statistics webpages" with
+year/department dropdowns as where the real data lives, but that phrase isn't an actual link
+on the page as rendered (tried scrolling it into view and clicking directly — no navigation).
+Found a second, genuinely official path instead: UCAS (the UK's central admissions body, and
+the same source LSE's own figures ultimately trace to) publishes a per-university stats page
+at `ucas.com/explore/unis/.../university-of-warwick/stats?studyYear=current` — but it sits
+behind a CAPTCHA challenge. Did not attempt to complete or bypass it — that's a hard line for
+me regardless of who's asking. **Left open, with a sharper next step than before**: this
+needs either a human clicking through UCAS's CAPTCHA once, or someone who can locate Warwick's
+own internal stats-dashboard URL directly rather than via its FOI page's dead cross-reference
+— not another automated pass with the same tools this one had.
+
+**Only Warwick remains open** — everything else in §4 is confirmed and ready to apply once
+you assign a number.
