@@ -115,6 +115,42 @@ CMIMC, Dive Into Engineering, Emerging Engineers @ UVA, UT Austin WiSTEM, York H
 describes multiple *subject* tracks under one uniform eligibility, the ordinary and unproblematic
 shape, not Waterloo/WYSE's shape.
 
+## Second, independent method — corroborates the three pairs above, finds no new live problem
+
+The exact-URL method only catches byte-identical URLs — matching universities' own D9 scan
+used four independent methods precisely because one method has blind spots a second one
+doesn't share. Ran two more against all 422 rows:
+
+**Trigram title similarity** (`pg_trgm`, `similarity(a.title, b.title) > 0.35`, same threshold
+D9 used) — 100+ candidate pairs, read in full rather than trusted by score, since a bare
+generic title ("Pre-College Program," IE University's own, real and specific despite the
+vocabulary) trigram-matches half a dozen unrelated programs on shared words alone. After
+reading every pair above a genuine similarity floor: no new live "both sides active" pair
+turned up beyond the three already found. Confirmed several already-resolved pairs the exact-
+URL method also caught (Clark Scholars, RSI at MIT, FRC Türkiye — all three explicitly on the
+2026-09-03 sweep's own list) and ruled out real false positives with shared vocabulary but
+genuinely distinct eligibility (Wharton's own FBW vs. LBW tracks, UKMT's Senior/Junior team
+challenges, the "International ___ Olympiad" cluster, Garcia vs. Simons — the last two already
+on the 2026-09-03 sweep's own ruled-out list too).
+
+**Normalized-URL grouping** (strip `https://`/`www.`/trailing slash, lowercase, then the same
+`GROUP BY ... HAVING count(*) > 1`) — closes the exact-URL method's real blind spot: two rows
+can describe the identical page while differing only in a `www.` prefix, which byte-exact
+`GROUP BY official_url` never catches. Found exactly **one previously-uncounted pair**, both
+already correctly resolved: **UCSB Research Mentorship** — `647eb8da` "UCSB Research
+Mentorship Programs" (active) and `8296f39c` "Research Mentorship Program" (disabled) are the
+same `summer.ucsb.edu` page, one with and one without the `www.` prefix; the disabled sibling
+is the thin/generic-titled one, same shape as every other already-resolved pair. One more of
+the same shape found this way too: **School of the Art Institute of Chicago** (`e9c4cd39`
+"Early College Program (ECP)...", active / `07504254` "School of the Art Institute of Chicago
+(SAIC)...", disabled) — not previously on any list, but already correctly resolved, not a new
+live problem. No new "both active" pair surfaced by this method either.
+
+**Net effect of both additional methods**: stronger confidence the three real pairs (Edinburgh,
+Garcia, Lehigh) plus WYSE are the complete set of live problems in the current catalog, not an
+artifact of only having looked one way — a second, structurally different method independently
+lands on the same three, rather than surfacing a fourth.
+
 ## Not done here, per CEO's explicit instruction
 
 Nothing merged, disabled, or split. No SQL prepared this pass — this is the list, the
