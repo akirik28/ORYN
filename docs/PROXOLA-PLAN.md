@@ -60,6 +60,21 @@ yerde 14+ kendi rızası, **Türkiye hariç** — Türk hukukunda net yaş eşi�
 (vaka bazlı "ayırt etme gücü"), o yüzden bir Türk avukat teyit edene kadar veli
 rızası. Beş madde avukata bırakıldı, uydurulmadı.
 
+**A6. HİÇBİR ZAMANLANMIŞ İŞ BUGÜNE KADAR ÇALIŞMADI — yeni, ve büyük.**
+`external_sync_jobs` canlıda tek tek kontrol edildi: **altı işin altısında sıfır
+çalışma kaydı.** Fırsat keşfi, gereksinim keşfi, üniversite verisi senkronu, bayat
+veri tespiti, bildirimler, kabul görünümü tazeleme — hiçbiri **bir kez bile**
+dönmemiş. Tek istisna iki elle test (22 Ağustos).
+
+**Bu, bugün ölçtüğümüz veri boşluklarının bir kısmını doğrudan açıklıyor:** veriyi
+tazeleyecek mekanizma yazılmış, `vercel.json`'da kurulmuş, ama hiç çalışmamış.
+En olası sebep dağıtımın yapılmamış olması (hiçbiri çalışmadığına göre).
+
+**Kod hatası yok** — `isOutlookStale` hiç hesaplanmamış görünümü zaten maksimum
+bayat sayıyor, tarayıcı null'ları dışlamıyor, cron tanımı doğru. **Eksik olan tek
+şey işin bir kez çalışması.** Bu canlı veriye gerçek bir yazma — **kurucunun kendi
+eliyle**; CEO da yapmıyor.
+
 **A5. E-posta sağlayıcısı seç — YENİ, ve A4'ten daha bağlayıcı.**
 Aylık veli özeti yazıldı ve **hiçbir yere gönderilmiyor**: projede e-posta
 altyapısı **hiç yok** (`package.json`'da sağlayıcı paketi yok, `.env.example`'da
