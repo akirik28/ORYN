@@ -650,7 +650,23 @@ describe("migration numbering", () => {
     // parent-commentary-storage-rls-proof-2026-09-04.md), including confirming the assertion
     // itself can fail: the deliberately-broken version was reinstalled mid-script and the
     // unrelated-parent check correctly went red before the real, scoped function was restored.
-    expect(Math.max(...numbers.map(Number))).toBe(130);
+    //
+    // 0131 reserved then released -- the work it was assigned to turned out to need no schema
+    // change at all. Nothing was ever written under it; deliberately left as a gap rather than
+    // reused, so a package or a doc citing "0131" can never mean two different things.
+    //
+    // 0132 (university_statistics_year_index_coalesce) -- the ROOT of the night's quietest bug
+    // class, closed at the table instead of file by file. The existing unique index was
+    // (university_id, stat_year), and only 3 of 133 rows populate stat_year at all: NULL never
+    // equals NULL, so the index provably never fired for the other 130, and a staged package
+    // silently doubled five rows on its second run with zero errors. Mirrors 0056's own
+    // coalesce(...) shape rather than inventing one -- and university_requirements had already
+    // solved this exact null-bypass the same way, which is what made the gap visible. -1 is
+    // never a real year and is never written to the column; it exists only inside the index
+    // expression. Measured before writing: zero duplicate rows today, so the index can be
+    // created without a cleanup pass -- and that claim was itself proven by applying the new
+    // index to a deliberately duplicated table and watching CREATE UNIQUE INDEX reject it.
+    expect(Math.max(...numbers.map(Number))).toBe(132);
   });
 });
 
