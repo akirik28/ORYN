@@ -116,22 +116,34 @@ Footer yer tutucu ✓ · Danışman bekleme göstergesi ✓ · Fırsatlar sayfas
 
 ---
 
-## Dağıtım — 4 Eylül, 08:20 (CEO)
+## Dağıtım — 4 Eylül (CEO)
 
-Dokuz oturumun hepsine tanıtım + kurallar + tek madde gönderildi. Her oturum
-**önce elindeki işi bitirir, rapor eder, sonra aşağıdaki maddeyi alır.**
+Dokuz oturumun hepsine tanıtım + kurallar + tek madde gönderildi.
 
-| Oturum | Elindeki iş | Sıradaki madde |
-| --- | --- | --- |
-| academic_tier backfill | bitti | **D3** — alan bazlı ölçüm + "öğrenci görüyor mu" ekseni |
-| production deployment | sürüyor | **B1** — ödeme kesişimi, migration **0123** |
-| CFO | filo gözetimi | gözetim devam — numara çakışması, merge girişimi, aynı dosya |
-| freemium araştırması | sürüyor | **B2** — tam ekran yükseltme kartı, migration **0124** |
-| i18n altyapısı | sürüyor | **B3a** — veli ayrı sayfalar |
-| kullanım sınırları | sürüyor | **B3b** — veli özeti haftalıktan aylığa |
-| reşit olmayan hukuki çerçeve | sürüyor | **A4'ün girdisi** — tüm e-posta gönderimi buna kilitli |
-| yeni ülke: 40 kurum | sürüyor | **D1** — üniversite doldurma, QS top-100'ün kalan 25'i |
-| fırsat görsel script'i | sürüyor | **D2** — fırsat doldurma (yaş / sınıf / ülke) |
+**Önce bir düzeltme, çünkü tekrar edilmemesi gerekiyor:** ilk dağıtımda her
+oturumun ne yaptığını **kenar çubuğundaki oturum başlığından** çıkardım.
+Başlığı `Fırsatlar görsel edinim script'i` olan oturum aslında veli
+migration'larını (0116, 0118), RLS doğrulamasını ve P5 haftalık yorum
+runner'ını yazmış olan oturummuş. **Oturum başlığı, o oturumun ne yaptığının
+kanıtı değildir.** O oturum durup sorduğu için yakalandı; sormasaydı sekiz
+yanlış yönlendirme fark edilmeden gidecekti. Aşağıdaki tablo artık oturumların
+*kendi* beyanına göre güncellenecek, başlığa göre değil.
+
+| Oturum (başlık — güvenilmez) | Madde |
+| --- | --- |
+| academic_tier backfill | **D3** — alan bazlı ölçüm + "öğrenci görüyor mu" ekseni |
+| production deployment | **B1** — ödeme kesişimi, migration **0123** |
+| CFO | filo gözetimi — numara çakışması, merge girişimi, aynı dosya |
+| freemium araştırması | **B2** — tam ekran yükseltme kartı, migration **0124** |
+| i18n altyapısı | **B3a** — veli ayrı sayfalar |
+| kullanım sınırları | **D2** — fırsat doldurma *(takas edildi)* |
+| reşit olmayan hukuki çerçeve | **A4'ün girdisi** — tüm e-posta gönderimi buna kilitli |
+| yeni ülke: 40 kurum | **D1** — üniversite doldurma, QS top-100'ün kalan 25'i |
+| "görsel script'i" = veli migration'larını yazan oturum | **B3b** — veli özeti aylığa *(takas edildi)* |
+
+**Takas sebebi:** B3b haftalık runner'ı aylığa çevirmek demek. O runner'ı yazan
+oturum dururken işi bağlamı olmayan bir oturuma vermiştim — yani yazılmış olanı
+baştan yazdırma yoluna sokmuştum. D2 ile yer değiştirdiler.
 
 **Verilen migration numaraları: 0123 → B1, 0124 → B2.** Başkası almaz.
 
@@ -140,4 +152,5 @@ A1 bitti, artık çalıştırılabilir), C2 (danışman streaming), C3 (öğrenc
 akışı). Oturumlar rapor ettikçe sıradan verilecek.
 
 **Açık risk:** uzaktaki `ORYN i18n altyapısı` oturumu çevrimdışı ama duruyor;
-yereldeki i18n oturumuyla aynı işi yapıyor olabilirler. CFO'ya teyit ettirildi.
+yereldeki i18n oturumuyla aynı işi yapıyor olabilirler. Bu şüphe de iki başlığın
+benzemesine dayanıyor — dala ve `origin`'e bakarak teyit edilecek.
