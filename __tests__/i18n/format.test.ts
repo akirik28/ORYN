@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { formatNumber, formatCurrency, formatDuration, formatTokenCount } from "@/lib/i18n/format";
+import { formatNumber, formatCurrency, formatDuration, formatTokenCount, formatPrice } from "@/lib/i18n/format";
 
 describe("formatNumber", () => {
   test("adds thousands separators", () => {
@@ -41,6 +41,26 @@ describe("formatCurrency", () => {
 
   test("supports a different currency", () => {
     expect(formatCurrency(1000, "EUR")).toBe("€1,000");
+  });
+});
+
+describe("formatPrice", () => {
+  test("en locale uses a period decimal separator", () => {
+    expect(formatPrice(399.99, "en")).toBe("399.99");
+  });
+
+  test("tr locale uses a comma decimal separator — the entire reason this formatter exists", () => {
+    expect(formatPrice(399.99, "tr")).toBe("399,99");
+  });
+
+  test("always shows two decimal places, even for a whole number", () => {
+    expect(formatPrice(400, "en")).toBe("400.00");
+    expect(formatPrice(400, "tr")).toBe("400,00");
+  });
+
+  test("groups thousands per locale", () => {
+    expect(formatPrice(1234.5, "en")).toBe("1,234.50");
+    expect(formatPrice(1234.5, "tr")).toBe("1.234,50");
   });
 });
 

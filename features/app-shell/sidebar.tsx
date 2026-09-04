@@ -4,12 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { Flame } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
+import { formatPrice } from "@/lib/i18n/format";
 import { UserMenu } from "./user-menu";
 import { LanguageSwitcher } from "./language-switcher";
 import { PRIMARY_NAV, SECONDARY_NAV } from "./nav-items";
 import type { DimensionSignal } from "@/lib/scoring/signal";
+import type { Locale } from "@/lib/i18n/config";
 
 const SETTINGS_ITEM = SECONDARY_NAV.find((item) => item.href === "/settings")!;
 const SECONDARY_ITEMS = SECONDARY_NAV.filter((item) => item.href !== "/settings");
@@ -69,20 +71,30 @@ const SECONDARY_ITEMS = SECONDARY_NAV.filter((item) => item.href !== "/settings"
  * a smaller bump. Standard is untouched; these are `ultra:`-prefixed, so they add nothing
  * outside `[data-tier="ultra"]`. language-switcher.tsx's sidebar variant and user-menu.tsx's
  * sidebar summary line carry the identical fix for the identical reason.
+ *
+ * `ultraPriceTry`, 2026-09-04: the price stated in the upgrade CTA's subtext line below,
+ * previously baked into the catalog string itself. Now a prop threaded from
+ * admin_finance_settings (app/(app)/layout.tsx's getFinanceSettings call) so editing it in
+ * the control center changes what's shown here, formatted per-locale via formatPrice
+ * rather than string-replaced — "399,99" is correct Turkish grouping, not a fact that
+ * survives a naive find/replace into English.
  */
 export function Sidebar({
   displayName,
   email,
   signal,
   isAdmin = false,
+  ultraPriceTry,
 }: {
   displayName: string;
   email: string | null;
   signal: DimensionSignal[];
   isAdmin?: boolean;
+  ultraPriceTry: number;
 }) {
   const pathname = usePathname();
   const t = useTranslations("nav");
+  const locale = useLocale() as Locale;
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
@@ -176,7 +188,7 @@ export function Sidebar({
                 width, in English — "First week free" was getting cut to "First we…",
                 silently dropping the fact this line exists to state. Wraps to two lines
                 instead; both languages checked, neither runs past three. */}
-            <span className="text-[11px] leading-snug text-white/90">{t("upgradePlanPrice")}</span>
+            <span className="text-[11px] leading-snug text-white/90">{t("upgradePlanPrice", { price: formatPrice(ultraPriceTry, locale) })}</span>
           </span>
         </Link>
       </div>
