@@ -248,6 +248,12 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
       // environment yet.
       ageEligibilityConfirmedOpen: opportunity.age_eligibility_confirmed_open ?? false,
       gradeEligibilityConfirmedOpen: opportunity.grade_eligibility_confirmed_open ?? false,
+      // Migration 0129 — the third state (checked, not stated). Absent/unapplied reads as
+      // null, which is neither 'checked_not_stated' nor anything else meaningful, so the
+      // read path correctly falls through to the age_eligibility_unverified branch.
+      ageEligibilityBasis: opportunity.age_eligibility_basis ?? null,
+      gradeEligibilityBasis: opportunity.grade_eligibility_basis ?? null,
+      lastVerifiedAt: opportunity.last_verified_at ?? null,
       // Package 8 fix: previously reduced to a boolean here (only used to suppress the
       // "not verified yet" note, never to say what the prose actually says). Passing the
       // raw text lets computeEligibility surface the same restriction note

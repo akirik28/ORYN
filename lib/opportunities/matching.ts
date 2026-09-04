@@ -2,6 +2,7 @@ import { clampScore } from "@/lib/scoring/math";
 import { normalizeEntitySearchText } from "@/lib/entities/normalize";
 import { currentGradeLevel, gradeMatchesEligibility } from "@/lib/profile/grade-level";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
+import { formatAbsoluteDate } from "@/lib/i18n/date";
 import type { OpportunityCategory, ProfileDimension, SavedOpportunityStatus } from "@/types/database";
 
 export interface StudentMatchProfile {
@@ -53,6 +54,24 @@ export interface OpportunityForMatching {
    * all (George Mason's ASSIP — "15 years or older," no grade language). Optional: absent
    * means not confirmed, never "restricted." */
   gradeEligibilityConfirmedOpen?: boolean;
+  /** The third state 0126's two booleans above can't express (migration 0129, unapplied):
+   * a research pass CHECKED the official page and it simply doesn't state an age/grade
+   * requirement either way — distinct from "nobody's looked" (the default) and from
+   * "confirmed no restriction" (the page makes that claim positively). Suppresses the
+   * "not verified yet" note the same way *ConfirmedOpen does, but renders a different,
+   * calmer sentence instead of going silent — a student seeing the same warning on every
+   * row learns to stop reading it, per the founder's own framing for why this exists.
+   * `'not_researched' | 'checked_not_stated' | 'confirmed_no_restriction' | null | undefined`
+   * — only `'checked_not_stated'` changes behavior here; the other values already have
+   * their own signal (absence, or the *ConfirmedOpen booleans) and this field is read
+   * defensively for all of them. */
+  ageEligibilityBasis?: string | null;
+  gradeEligibilityBasis?: string | null;
+  /** opportunities.last_verified_at — reused (not a new column) as the "checked (date)"
+   * this file's ageEligibilityCheckedNotStated/gradeEligibilityCheckedNotStated messages
+   * cite, since it already records when a research pass last touched this row. Optional:
+   * absent means the sentence renders without a date rather than crashing. */
+  lastVerifiedAt?: string | null;
   /** Free-text citizenship/residency restriction prose (opportunities.citizenship_restrictions
    * / residency_restrictions) — too unstructured for the allow-list checks above to parse, but
    * real evidence a student should see. Surfaced below with the exact wording lib/counselor/
@@ -98,6 +117,7 @@ export type EligibilityNoteCode =
   | "age_above_maximum"
   | "age_unknown"
   | "age_eligibility_unverified"
+  | "age_eligibility_checked_not_stated"
   | "country_unknown"
   | "country_not_eligible"
   | "citizenship_unknown"
@@ -108,6 +128,7 @@ export type EligibilityNoteCode =
   | "grade_unknown"
   | "grade_not_eligible"
   | "grade_eligibility_unverified"
+  | "grade_eligibility_checked_not_stated"
   | "not_yet_computed";
 
 export interface EligibilityNote {
@@ -265,6 +286,24 @@ export const eligibilityMessages = {
       ? "Yaş uygunluğu henüz doğrulanmadı — kısıtlamalar için resmi sayfayı kontrol et."
       : "Age eligibility not verified yet — check the official page for restrictions.",
 
+  // Migration 0129's third state: a research pass DID check the official page and it
+  // simply doesn't mention age — a calmer, distinct claim from ageEligibilityUnverified
+  // above (which means nobody has looked at all). checkedAt is opportunities.
+  // last_verified_at; formatted here (render time, in whatever locale is current) rather
+  // than passed pre-formatted, same discipline every other locale-dependent value in this
+  // file already follows. Empty string when the date is unknown -- reads as "checked" with
+  // no date rather than crashing on an invalid Date.
+  ageEligibilityCheckedNotStated: (checkedAt: string, locale: Locale) => {
+    const date = checkedAt ? formatAbsoluteDate(checkedAt, locale) : null;
+    return locale === "tr"
+      ? date
+        ? `Resmi sayfa yaş şartı belirtmiyor — kontrol edildi (${date}).`
+        : "Resmi sayfa yaş şartı belirtmiyor — kontrol edildi."
+      : date
+        ? `The official page doesn't state an age requirement — checked (${date}).`
+        : "The official page doesn't state an age requirement — checked.";
+  },
+
   gradeUnknown: (locale: Locale) => (locale === "tr" ? "Sınıf seviyesine göre kısıtlı — kontrol etmek için mezuniyet yılını ekle." : "Restricted by grade level — add your graduation year to check."),
 
   // `currentGrade` is the same kind of "kept from copy.ts" enrichment as citizenshipNotEligible
@@ -279,6 +318,19 @@ export const eligibilityMessages = {
     locale === "tr"
       ? "Sınıf uygunluğu henüz doğrulanmadı — kısıtlamalar için resmi sayfayı kontrol et."
       : "Grade eligibility not verified yet — check the official page for restrictions.",
+
+  // Migration 0129's third state for grade — same reasoning as ageEligibilityCheckedNotStated
+  // above.
+  gradeEligibilityCheckedNotStated: (checkedAt: string, locale: Locale) => {
+    const date = checkedAt ? formatAbsoluteDate(checkedAt, locale) : null;
+    return locale === "tr"
+      ? date
+        ? `Resmi sayfa sınıf şartı belirtmiyor — kontrol edildi (${date}).`
+        : "Resmi sayfa sınıf şartı belirtmiyor — kontrol edildi."
+      : date
+        ? `The official page doesn't state a grade requirement — checked (${date}).`
+        : "The official page doesn't state a grade requirement — checked.";
+  },
 };
 
 /**
@@ -326,6 +378,8 @@ function renderEligibilityNote(note: EligibilityNote, locale: Locale): string {
       return eligibilityMessages.ageUnknown(locale);
     case "age_eligibility_unverified":
       return eligibilityMessages.ageEligibilityUnverified(locale);
+    case "age_eligibility_checked_not_stated":
+      return eligibilityMessages.ageEligibilityCheckedNotStated(String(p.checkedAt ?? ""), locale);
     case "country_unknown":
       return eligibilityMessages.countryUnknown(locale);
     case "country_not_eligible":
@@ -346,6 +400,8 @@ function renderEligibilityNote(note: EligibilityNote, locale: Locale): string {
       return eligibilityMessages.gradeNotEligible(String(p.eligibleGrades), Number(p.currentGrade), locale);
     case "grade_eligibility_unverified":
       return eligibilityMessages.gradeEligibilityUnverified(locale);
+    case "grade_eligibility_checked_not_stated":
+      return eligibilityMessages.gradeEligibilityCheckedNotStated(String(p.checkedAt ?? ""), locale);
     case "not_yet_computed":
       return eligibilityMessages.notYetComputed(locale);
   }
@@ -389,7 +445,18 @@ export function computeEligibility(
     // has explicitly confirmed there's genuinely no age gate (migration 0126) — same
     // principle as countryEligibilityUnverified below, applied to the field that had no
     // equivalent safeguard until now (2026-09-03 named the gap, 0126 closes it).
-    unknownNotes.push({ code: "age_eligibility_unverified" });
+    //
+    // Migration 0129: a THIRD case the two above don't cover — a research pass checked the
+    // official page and it simply doesn't state an age requirement either way. Founder's
+    // own reasoning for why this needs its own code, not just silence-via-ConfirmedOpen: a
+    // student seeing "not verified yet" on every single row learns to stop reading it,
+    // which means the one row where it actually matters gets no more attention than the 24
+    // where it's genuinely moot. Different sentence, same suppression of the alarm-toned one.
+    if (opportunity.ageEligibilityBasis === "checked_not_stated") {
+      unknownNotes.push({ code: "age_eligibility_checked_not_stated", params: { checkedAt: opportunity.lastVerifiedAt ?? "" } });
+    } else {
+      unknownNotes.push({ code: "age_eligibility_unverified" });
+    }
   }
 
   const hasCountryRestriction = opportunity.eligibleCountries.length > 0;
@@ -459,8 +526,13 @@ export function computeEligibility(
   } else if (!(opportunity.gradeEligibilityConfirmedOpen ?? false)) {
     // Same principle as the age branch above: no eligible_grades recorded at all is not
     // evidence every grade is welcome, just never researched, unless migration 0126's flag
-    // says a research pass explicitly confirmed there's genuinely no grade gate.
-    unknownNotes.push({ code: "grade_eligibility_unverified" });
+    // says a research pass explicitly confirmed there's genuinely no grade gate. Migration
+    // 0129's third case, same reasoning as the age branch's own comment above.
+    if (opportunity.gradeEligibilityBasis === "checked_not_stated") {
+      unknownNotes.push({ code: "grade_eligibility_checked_not_stated", params: { checkedAt: opportunity.lastVerifiedAt ?? "" } });
+    } else {
+      unknownNotes.push({ code: "grade_eligibility_unverified" });
+    }
   }
 
   return { eligible: true, notes: unknownNotes };
