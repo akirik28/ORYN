@@ -1,5 +1,30 @@
 # Proxola — çalışma planı
 
+> ## Bu oturumu açan kişiye
+>
+> **Bu projede CEO/entegratör rolünü `oryn-5b` yürütüyor.** Kurucu (Ada Sarp
+> Kırık) işi ona veriyor, o da şeritlere dağıtıyor ve `main`'e tek o merge
+> ediyor. Sen bir şeridi devraldın; işin bitince **kendi dalını push et, dur,
+> rapor et ve yeni iş iste.**
+>
+> **Değişmeyen kurallar — istisnasız:**
+>
+> 1. **`main`'e merge etme.** Dalını push et, orada bırak. Merge yetkisi tek kişide.
+> 2. **Canlı veritabanına yazma yok.** SQL'i hazırla, kurucu çalıştırır.
+> 3. **Migration numarasını CEO verir.** Kendin alma — bir günde beş kez çakıştı.
+> 4. **Paylaşılan tarayıcıda kurucunun gerçek oturumu var.** Sadece
+>    `127.0.0.1` + `/design-preview/*`. Sayfa onun hesabıyla açılırsa **dur**,
+>    okumak dahil. `localhost` port fark etmeksizin onun çerezini taşır.
+> 5. **Yapılmış mı diye bak, sonra yaz.** Bir günde üç kez "eksik" denen şey
+>    yazılmış çıktı; sorun kod yazılmaması değil, doğrulanmamasıydı.
+> 6. **Kontrolün kırmızıya dönebildiğini kanıtlamadan "geçti" deme.** Bir günde
+>    beş kez bozuk bir kontrol ile temiz bir sonuç ekranda aynı göründü.
+> 7. **Kendi hatanı bildir.** Yakalanmış bir hatayı fazladan bildirmek bir
+>    paragraf tutar; bildirmemek bir sonrakine bir saat kaybettirir.
+> 8. **Bitince rapor et ve yeni iş iste.** Bekleme, sorma sırası sende.
+>
+> **Çalışma penceresi: yarın akşam 22.00'a kadar.**
+
 **Bu dosya tek doğruluk kaynağı.** Bir oturum açtığında ona madde numarası ver:
 *"PROXOLA-PLAN.md'deki P3'ü al."* Madde kendi içinde yeterli.
 
@@ -14,8 +39,10 @@
 
 ## A — KURUCUDA (kimse yapamaz, sende)
 
-**A1. Migration'ları çalıştır.** Sıra: **09 → 13 → 11 → 12**.
-Hepsi tekrar çalıştırılabilir; yarım kalmışsa baştan çalıştır, zarar vermez.
+**A1. Migration'lar — ✅ TAMAM (4 Eylül).** Dördü de uygulandı ve canlıda
+doğrulandı: şema, politikalar, korumalar, Türkçe ek düzeltmesi (9 satır),
+TU Münih ücret düzeltmesi (0 → 4000), üniversite verisi (15 gereksinim,
+13 kaynak). **C1 artık çalıştırılabilir.**
 
 **A2. Şirket kaydı.** Dört alan buna bağlı: ticaret unvanı, sicil numarası,
 kayıtlı adres, `privacy@proxola.com` yönlendirmesi.
