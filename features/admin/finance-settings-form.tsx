@@ -12,9 +12,15 @@ import { updateFinanceSettings } from "@/app/(app)/admin/actions";
  * can't happen from this form -- matches the action's own "both optional, whichever is
  * provided" contract, this form just always provides both.
  *
- * `router.refresh()` after a successful save: the action's own `revalidatePath("/admin")`
- * only invalidates the old page, not this route group -- this form's own refresh is what
- * makes /kumanda/ayarlar and /kumanda/kar-zarar show the number that was just saved.
+ * `router.refresh()` after a successful save: added when the action's own revalidation
+ * still said `revalidatePath("/admin")` -- a route that only ever redirects now, so it
+ * invalidated nothing this form's readers actually look at, and this refresh was what
+ * really made /kumanda/ayarlar and /kumanda/kar-zarar show the number that was just saved.
+ * The action now calls `revalidatePath("/kumanda", "layout")` instead (oryn/admin-surface-
+ * repair-2026-09-04), which should cover both pages server-side on its own -- this refresh
+ * is very likely redundant now, kept rather than removed in the same pass that fixed the
+ * action, since a client-side belt-and-suspenders refresh costs one extra render, not a
+ * correctness risk, and removing it wasn't what that fix was checking.
  */
 export function FinanceSettingsForm({ currentRate, currentPriceTry, live = true }: { currentRate: number | null; currentPriceTry: number; live?: boolean }) {
   const t = useTranslations("admin.control.settings.finance");
