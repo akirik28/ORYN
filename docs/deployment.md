@@ -1,9 +1,9 @@
 # Deployment
 
-Everything needed to take Oryn from "runs on a laptop" to "running in production," in the
+Everything needed to take Proxola from "runs on a laptop" to "running in production," in the
 order it has to happen. Written to be followed literally by one person with a terminal.
 
-Oryn has **never been deployed**. There is no hosting project, no domain, no production
+Proxola has **never been deployed**. There is no hosting project, no domain, no production
 database, and no scheduled job has run since 22 August 2026. Nothing below is a
 re-configuration of something already live — it is all first-time setup.
 
@@ -52,7 +52,7 @@ correct on the fresh replay too: `public_profiles`'s `auth.uid() IS NOT NULL` gu
 
 ### 0.2 Supabase's built-in email cannot deliver a single real signup
 
-Oryn emails users at signup (`/auth/confirm`) and at password reset — see
+Proxola emails users at signup (`/auth/confirm`) and at password reset — see
 `app/(auth)/actions.ts`. Supabase's default email service:
 
 - is rate-limited to **2 messages per hour**, and
@@ -320,7 +320,7 @@ rolls off. `lib/monitoring/` is wired into Next's `onRequestError` hook via the 
 Server Actions — is captured.
 
 1. Create a project at [sentry.io](https://sentry.io) (platform: Next.js). Any
-   Sentry-compatible backend works, including self-hosted Sentry and GlitchTip — Oryn
+   Sentry-compatible backend works, including self-hosted Sentry and GlitchTip — Proxola
    speaks the envelope protocol directly rather than depending on the Sentry SDK.
 2. Copy the DSN into `SENTRY_DSN` on Vercel.
 3. Redeploy.

@@ -107,6 +107,14 @@ bayat sayıyor, tarayıcı null'ları dışlamıyor, cron tanımı doğru. **Eks
 şey işin bir kez çalışması.** Bu canlı veriye gerçek bir yazma — **kurucunun kendi
 eliyle**; CEO da yapmıyor.
 
+**Ve kılavuz zaten yazılmış: `docs/deployment.md`.** Sıralı, eksiksiz, ve kendi
+açılış cümlesi bu teşhisi bu geceden önce koymuş: *"Proxola hiç dağıtılmadı… 22
+Ağustos'tan beri hiçbir zamanlanmış iş çalışmadı."* Cron kurulumu (§6, `CRON_SECRET`
+ve elle tetikleme komutu dahil) ve e-posta (§4, Supabase'in yerleşik e-postası
+gerçek bir kayda teslim edemiyor, özel SMTP şart) zaten içinde. Bugün eklenen tek
+şey ödeme satırı. **Yeni bir doküman yazılmadı — bu, bugün dördüncü kez "eksik"
+sanılan şeyin yazılmış çıkması.**
+
 **A5. E-posta sağlayıcısı seç — YENİ, ve A4'ten daha bağlayıcı.**
 Aylık veli özeti yazıldı ve **hiçbir yere gönderilmiyor**: projede e-posta
 altyapısı **hiç yok** (`package.json`'da sağlayıcı paketi yok, `.env.example`'da
