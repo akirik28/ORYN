@@ -35,12 +35,12 @@ import { usePrefersReducedMotion } from "@/lib/ui/use-prefers-reduced-motion";
 const HOT: [number, number, number] = [255, 250, 235];
 
 // Mirrors app/globals.css's .plan-page-ground light-mode gradient's own lightest (0%) stop,
-// oklch(0.35 0.115 148) — measured live via canvas readback, kept in sync by hand the same
+// oklch(0.33 0.055 148) — measured live via canvas readback, kept in sync by hand the same
 // way usage-indicator.tsx/ultra-ambient.tsx's EMBER_COLORS mirror their own CSS source,
 // since a canvas can't read a CSS `background` gradient stop directly. The 0% stop
 // specifically (not 55%/100%) because this glow is anchored near the top of the page
 // (srcY below), where the 160deg gradient sits close to its own starting color.
-const FAR: [number, number, number] = [0, 73, 17];
+const FAR: [number, number, number] = [32, 61, 37];
 
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
@@ -64,7 +64,7 @@ function drawAmbientLight(ctx: CanvasRenderingContext2D, W: number, H: number, T
   // same division of labor drawUsageFlame's linear bloom + per-dot loop split between them.
   const breathe = 0.5 + 0.5 * Math.sin(T * 0.22);
   const radius = radiusFor(reach, breathe);
-  const peakAlpha = 0.15 + 0.05 * breathe;
+  const peakAlpha = 0.10 + 0.035 * breathe;
 
   const bloom = ctx.createRadialGradient(srcX, srcY, 0, srcX, srcY, radius);
   bloom.addColorStop(0, `rgba(${HOT.join(",")},${peakAlpha.toFixed(3)})`);

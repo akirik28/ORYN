@@ -1169,6 +1169,8 @@
         "universityListRealistic": "Is my university list realistic?"
       },
       "couldntComplete": "Proxola couldn't complete this response.",
+      "thinking": "Thinking about your profile",
+      "thinkingThorough": "Writing a detailed answer",
       "tryAgain": "Try again",
       "placeholderReady": "Ask Proxola…",
       "placeholderNotConfigured": "The AI counselor isn't configured yet",
@@ -1197,6 +1199,12 @@
       "close": "Close",
       "creating": "Starting…",
       "createFailed": "Couldn't start a new session. Try again."
+    },
+    "sessionList": {
+      "heading": "Sessions",
+      "empty": "No past sessions yet.",
+      "newConversationPlaceholder": "New conversation",
+      "loadFailed": "Couldn't load this session. Try again."
     },
     "usageMeter": {
       "thisMonth": "This month",

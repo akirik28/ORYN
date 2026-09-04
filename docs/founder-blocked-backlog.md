@@ -1714,6 +1714,33 @@ list.
 
 ---
 
+## 43. Supply seven `COMPANY` legal-identity fields (`lib/legal/content.ts`) — four yours, three counsel's
+
+**Action**: see `docs/kurucu-sirket-bilgileri-eksikleri-2026-09-04.md` — a short, plain-Turkish
+version of this same item, written to hand directly to the founder rather than making him read
+this file's own register.
+**Why it's here**: surfaced by the founder's own screenshot of `Operated by: [Registered name]`
+in the public footer, live (`docs/placeholder-sweep-2026-09-04.md`'s full audit). The bracket
+rendering itself is fixed (`fix/footer-unresolved-quiet-state-2026-09-04`) — a plain phrase
+("registration pending"/"tescil bekleniyor") now, no brackets. What's still open is the actual
+data: `COMPANY` (`lib/legal/content.ts`) has seven fields wrapped in `unresolved(...)`, four
+tagged `owner: "founder"` (`legalName`, `registrationNumber`, `registeredAddress`,
+`privacyContactEmail`), three tagged `owner: "counsel"` (`verbisRegistration`,
+`dataProtectionOfficer`, `governingLaw`) — the tag was already in the code, not assigned by this
+pass. Filling in a field there resolves it everywhere it renders (footer + all three legal
+documents) in one place, no second edit needed.
+**Blocks**: nothing functional today — every unresolved field degrades honestly (a stated
+"pending" phrase in the footer, a loud dashed-border chip on the policy pages), never a wrong or
+invented value. Blocks item 13 (professional legal review) from being meaningful, though: counsel
+reviewing a privacy notice that still says its own controller identity is unresolved has less to
+actually approve.
+**Depends on**: nothing technical — three of the four founder items come from one action
+(registering the company); the fourth (`privacyContactEmail`) is a separate, smaller step (set up
+the mailbox/routing rule). The three counsel items need a legal determination, not founder action
+— listed so he knows they exist, not so he does something about them himself.
+
+---
+
 ## Environment hazard (not a decision, but you should know)
 
 **The primary checkout `/Users/adasarpkirik/Desktop/Founder/ORYN` sits on branch

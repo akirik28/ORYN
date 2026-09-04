@@ -23,6 +23,8 @@ import { resolveAdvisorInstructions } from "@/lib/tier/advisor-instructions";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { extractUpgradePromptDismissalState } from "@/lib/advisor/upgrade-prompt";
 
+const CONVERSATION_LIST_LIMIT = 50;
+
 export async function generateMetadata(): Promise<Metadata> {
   const tMeta = await getTranslations("nav");
   return { title: tMeta("counselor") };
@@ -35,13 +37,20 @@ export default async function AdvisorPage() {
   const locale = await resolveLocale();
   const t = await getTranslations("advisor.page");
 
-  const [conversationRes, profile, scores, upcomingDeadlines] = await Promise.all([
-    supabase.from("advisor_conversations").select("*").eq("user_id", userId).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+  const [conversationsRes, profile, scores, upcomingDeadlines] = await Promise.all([
+    // Founder, 2026-09-04: past sessions must stay reachable on the right, not gone the
+    // moment "new session" is clicked. Full list, not just the most recent — the active
+    // conversation on initial load is simply this list's own first row (already ordered by
+    // updated_at desc), no second query needed for what used to be a separate
+    // .limit(1).maybeSingle(). CONVERSATION_LIST_LIMIT caps it the same way every other list
+    // in this codebase caps an unbounded-in-principle query.
+    supabase.from("advisor_conversations").select("id, title, updated_at").eq("user_id", userId).order("updated_at", { ascending: false }).limit(CONVERSATION_LIST_LIMIT),
     getCurrentProfile(),
     // Shared, cache()'d — docs/performance.md §2; see app/(app)/layout.tsx's identical use.
     getProfileScores(userId),
     getUpcomingDeadlines(supabase, userId, 10),
   ]);
+  const conversations = conversationsRes.data ?? [];
 
   // getCurrentProfile() (unlike layout.tsx's requireProfile()) can return null — same
   // "balanced" default resolveResponseMode itself falls back to for a genuinely missing
@@ -76,7 +85,7 @@ export default async function AdvisorPage() {
     },
   );
 
-  const conversation = conversationRes.data;
+  const conversation = conversations[0] ?? null;
   const messages = conversation
     ? (
         await supabase
@@ -146,6 +155,7 @@ export default async function AdvisorPage() {
         <AdvisorWorkspace
           initialConversationId={conversation?.id ?? null}
           initialMessages={messages}
+          initialConversations={conversations.map((c) => ({ id: c.id, title: c.title, updatedAt: c.updated_at }))}
           aiConfigured={isAIConfigured()}
           // The composer and the sidebar meter must agree — same read (`quota` above),
           // not a second one that could drift. `usedIsKnown` guards this exactly like
@@ -154,6 +164,7 @@ export default async function AdvisorPage() {
           quotaExhausted={quota.usedIsKnown && quota.remaining <= 0}
           quotaResetsAt={quota.resetsAt}
           tier={planTier}
+          responseMode={responseMode}
           upgradePromptDismissalState={upgradePromptDismissalState}
           quota={quota}
           budgetDegraded={budgetDegraded}

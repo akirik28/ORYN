@@ -1169,6 +1169,8 @@
         "universityListRealistic": "Üniversite listem gerçekçi mi?"
       },
       "couldntComplete": "Proxola bu yanıtı tamamlayamadı.",
+      "thinking": "Profilini inceliyor",
+      "thinkingThorough": "Detaylı bir yanıt yazıyor",
       "tryAgain": "Tekrar dene",
       "placeholderReady": "Proxola'ya sor…",
       "placeholderNotConfigured": "Yapay zeka danışmanı henüz yapılandırılmadı",
@@ -1197,6 +1199,12 @@
       "close": "Kapat",
       "creating": "Başlatılıyor…",
       "createFailed": "Yeni oturum başlatılamadı. Tekrar dene."
+    },
+    "sessionList": {
+      "heading": "Oturumlar",
+      "empty": "Henüz geçmiş oturum yok.",
+      "newConversationPlaceholder": "Yeni sohbet",
+      "loadFailed": "Bu oturum yüklenemedi. Tekrar dene."
     },
     "usageMeter": {
       "thisMonth": "Bu ay",
