@@ -201,11 +201,7 @@
           "label": "Research project ideas",
           "same": "Up to 3 per generation for everyone — kept small on purpose, so they stay realistic instead of impressive-sounding but out of reach"
         }
-      },
-      "interestTitle": "Interested in Ultra?",
-      "interestDescription": "Ultra isn't open for signups yet — it'll be 399.99 TL/month, with the first week free. Register your interest, so we know how many students are ready for it.",
-      "interestButton": "I'm interested",
-      "interestConfirmed": "Noted — thanks."
+      }
     },
     "birthYear": {
       "label": "Year you were born",
@@ -2359,5 +2355,14 @@
     "acceptWhatYouCannotSeeItem1": "Their conversations with the Proxola advisor",
     "acceptWhatYouCannotSeeItem2": "Personal notes and uploaded files",
     "acceptWhatYouCannotSeeItem3": "Any ability to change their profile"
+  },
+  "upgradeInterstitial": {
+    "dialogAriaLabel": "Upgrade to Ultra",
+    "title": "Get more out of Proxola",
+    "priceLine": "Ultra is <strong>{price} TL/month</strong>, with the first week free.",
+    "cta": "Upgrade to Ultra",
+    "checkoutNotConfigured": "Payment isn't set up yet — check back soon.",
+    "notNow": "Not now",
+    "close": "Close"
   }
 }

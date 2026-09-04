@@ -12,6 +12,10 @@ import { Topbar } from "@/features/app-shell/topbar";
 import { MobileNav } from "@/features/app-shell/mobile-nav";
 import { RouteAmbientBlobs } from "@/features/app-shell/route-ambient-blobs";
 import { UltraAmbient } from "@/features/app-shell/ultra-ambient";
+import { UpgradeInterstitialMount } from "@/features/upgrade-interstitial/upgrade-interstitial-mount";
+import { extractUpgradeInterstitialDismissalState } from "@/lib/upgrade-interstitial/prompt";
+import { MONTHLY_AI_TOKEN_LIMIT } from "@/lib/ai/token-limits";
+import { ADVISOR_MAX_TOKENS_ULTRA } from "@/lib/ai/advisor-chat";
 import { DevTierPreviewToggle } from "@/features/app-shell/dev-tier-preview-toggle";
 import { NotConfiguredNotice } from "@/features/system/not-configured-notice";
 import { MaintenanceScreen } from "@/features/system/maintenance-screen";
@@ -203,6 +207,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             component's own doc comment for why that happens client-side, scoped to this
             authenticated shell, rather than server-side on the public root layout. */}
         <UltraAmbient tier={planTier} />
+        {/* Full-screen upgrade interstitial (2026-09-04, founder-directed) — mounted once
+            here, same reasoning as UltraAmbient just above: every authenticated page gets it,
+            no per-page wiring. Gated inside on tier/dismissal state/once-per-session, so this
+            renders null on every request that shouldn't show it (an Ultra viewer, or anyone
+            still inside a dismissal window) rather than being conditionally mounted here. */}
+        <UpgradeInterstitialMount
+          tier={planTier}
+          dismissalState={extractUpgradeInterstitialDismissalState(profile)}
+          ultraTokenLimit={MONTHLY_AI_TOKEN_LIMIT.ultra}
+          ultraMaxTokens={ADVISOR_MAX_TOKENS_ULTRA}
+        />
         {/* lib/tier/dev-preview.ts — devPreviewAllowed is false in any production build, so
             this branch (and the Server Action it calls) is structurally absent there, not
             merely hidden. Rendered here rather than deeper in the tree so it's visible on

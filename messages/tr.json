@@ -2359,5 +2359,14 @@
     "acceptWhatYouCannotSeeItem1": "Danışmanla olan konuşmaları",
     "acceptWhatYouCannotSeeItem2": "Kişisel notları ve yüklediği dosyalar",
     "acceptWhatYouCannotSeeItem3": "Profilini değiştirme yetkisi"
+  },
+  "upgradeInterstitial": {
+    "dialogAriaLabel": "Ultra'ya yükselt",
+    "title": "Proxola'dan daha fazlasını al",
+    "priceLine": "Ultra ayda <strong>{price} TL</strong>, ilk hafta ücretsiz.",
+    "cta": "Ultra'ya geç",
+    "checkoutNotConfigured": "Ödeme sistemi henüz hazır değil — yakında burada olacak.",
+    "notNow": "Şimdi değil",
+    "close": "Kapat"
   }
 }

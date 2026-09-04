@@ -1,14 +1,15 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Sparkles, Zap, MessagesSquare, Flame, Palette } from "lucide-react";
 import { PageHeader } from "@/components/proxola/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { registerUltraInterestAction } from "@/app/(app)/settings/actions";
+import { ButtonLink } from "@/components/ui/button-link";
+import { checkUltraCheckoutAvailabilityAction, type UltraCheckoutAvailability } from "@/app/(app)/upgrade-interstitial-actions";
 import { TIER_COMPARISON_ROWS } from "@/lib/tier/comparison";
 import { formatNumber, formatTokenCount } from "@/lib/i18n/format";
 import { UltraFeatureMarquee, type UltraFeatureCardData } from "@/features/settings/ultra-feature-marquee";
@@ -140,20 +141,42 @@ const CARD_ICONS: Record<UltraFeatureCardData["id"], typeof Zap> = {
  */
 export function PlanTierView({
   tier,
+  priceTry,
   ultraTokenLimit,
   standardTokenLimit,
   ultraMaxTokens,
   standardMaxTokens,
 }: {
   tier: PlanTier;
+  /** Live, from admin_finance_settings via getFinanceSettings (lib/admin/queries.ts) — same
+   *  source the full-screen interstitial reads (features/upgrade-interstitial), per the
+   *  founder's explicit instruction not to add a sixth hardcoded copy of this number. */
+  priceTry: number;
   ultraTokenLimit: number;
   standardTokenLimit: number;
   ultraMaxTokens: number;
   standardMaxTokens: number;
 }) {
   const t = useTranslations("settings.plan");
-  const [interestRegistered, setInterestRegistered] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const tUpgrade = useTranslations("upgradeInterstitial");
+  const locale = useLocale();
+  // Founder direct, 2026-09-04: this card becomes the primary checkout surface, not interest
+  // registration — "ödeme sistemini bugün ekliycem" (payment goes in today), scoped by CEO to
+  // a real, provider-agnostic interface (11 building it) rather than anything mocked here.
+  // checkUltraCheckoutAvailabilityAction is the one place that check happens; this component
+  // renders whatever it currently reports, honestly, same as the full-screen interstitial —
+  // "not configured" is a real, visible state here, never a dead button or a fake spinner.
+  const [checkoutAvailability, setCheckoutAvailability] = useState<UltraCheckoutAvailability | null>(null);
+  useEffect(() => {
+    if (tier !== "standard") return;
+    let cancelled = false;
+    checkUltraCheckoutAvailabilityAction().then((result) => {
+      if (!cancelled) setCheckoutAvailability(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [tier]);
 
   const formattedUltraLimit = formatTokenCount(ultraTokenLimit);
   const formattedStandardLimit = formatTokenCount(standardTokenLimit);
@@ -174,18 +197,14 @@ export function PlanTierView({
     return {};
   }
 
-  function registerInterest() {
-    startTransition(async () => {
-      await registerUltraInterestAction();
-      // Local confirmation only, not persisted — a second visit (or a page reload right
-      // after) shows the button again rather than remembering the click forever. A stated,
-      // deliberate limitation for this "skin only" pass, not an oversight: persisting it
-      // honestly would mean reading `product_events` back, which needs the admin client
-      // (lib/analytics/log.ts's own comment — no RLS policy for the regular client), a real
-      // addition beyond what a lightweight interest signal needs tonight.
-      setInterestRegistered(true);
-    });
-  }
+  // Same locale-matched decimal-separator formatting as the full-screen interstitial
+  // (features/upgrade-interstitial/upgrade-interstitial-modal.tsx's own comment has the full
+  // reasoning for why this is a narrow, local choice rather than lib/i18n/format.ts's
+  // deliberately English-pinned NUMBER_FORMAT_LOCALE).
+  const formattedPrice = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(priceTry);
 
   return (
     <>
@@ -276,18 +295,23 @@ export function PlanTierView({
         {tier === "standard" ? (
           <Card>
             <CardHeader>
-              <CardTitle>{t("interestTitle")}</CardTitle>
-              <CardDescription>{t("interestDescription")}</CardDescription>
+              <CardTitle>{tUpgrade("title")}</CardTitle>
+              <CardDescription>
+                {tUpgrade.rich("priceLine", { price: formattedPrice, strong: (chunks) => <strong style={{ color: "var(--tier-accent-strong)" }}>{chunks}</strong> })}
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              {interestRegistered ? (
-                <p className="text-sm text-muted-foreground" role="status">
-                  {t("interestConfirmed")}
-                </p>
+              {checkoutAvailability?.available && checkoutAvailability.checkoutUrl ? (
+                <ButtonLink href={checkoutAvailability.checkoutUrl}>{tUpgrade("cta")}</ButtonLink>
               ) : (
-                <Button onClick={registerInterest} disabled={isPending}>
-                  {t("interestButton")}
-                </Button>
+                <div className="space-y-2">
+                  <Button disabled aria-describedby="plan-checkout-unavailable">
+                    {tUpgrade("cta")}
+                  </Button>
+                  <p id="plan-checkout-unavailable" className="text-xs text-muted-foreground">
+                    {tUpgrade("checkoutNotConfigured")}
+                  </p>
+                </div>
               )}
             </CardContent>
           </Card>
