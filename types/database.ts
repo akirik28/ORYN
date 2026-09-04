@@ -2364,6 +2364,42 @@ export type ParentLinkInsert = Omit<ParentLink, "id" | "confirmed_at" | "created
  * because this type stops it. */
 export type ParentLinkUpdate = Partial<Pick<ParentLink, "status" | "confirmed_at" | "last_commentary_sent_at">>;
 
+/** Migration 0130, written not applied. One row per monthly commentary generation for one
+ * parent_links relationship — see that migration's own table comment for why `parent_link_id`
+ * rather than `student_user_id` (a student linked to two parents needs two independent
+ * series). No Update type anywhere: append-only, matching admin_action_log/
+ * deadline_notification_log's own posture — a generated commentary is never edited. */
+export interface ParentCommentaryEntryRow {
+  id: string;
+  parent_link_id: string;
+  generated_at: string;
+  locale: string;
+  period_start: string;
+  period_end: string;
+  narrative: string;
+  narrative_source: string;
+  created_at: string;
+}
+/** id/generated_at/created_at are DB-defaulted — the batch runner (and the on-demand Server
+ * Action, lib/parent/commentary-actions.ts) supply everything else explicitly. */
+export type ParentCommentaryEntryInsert = Insertable<ParentCommentaryEntryRow, "id" | "generated_at" | "created_at">;
+
+/** Migration 0130's own get_parent_child_commentary — same shape as the three
+ * ParentChildXxxRow types below, hand-typed for the same reason (migration merged, not yet
+ * applied live). Identical column list to ParentCommentaryEntryRow minus parent_link_id,
+ * which the function's own is_active_parent_of()-scoped join already resolves for the
+ * caller, so it has no reason to leak which specific link id a caller isn't otherwise
+ * privileged to see structured any differently. */
+export interface ParentChildCommentaryRow {
+  id: string;
+  generated_at: string;
+  locale: string;
+  period_start: string;
+  period_end: string;
+  narrative: string;
+  narrative_source: string;
+}
+
 /** Migration 0116's three get_parent_child_* functions (§5, "curated read functions") — each
  * `returns table`'s own column list IS the whitelist that keeps advisor_instructions/notes off
  * a parent's read (a raw-table RLS policy can't hide one column while allowing another; a
@@ -2563,6 +2599,12 @@ export interface Database {
       /** Migration 0116, written not applied. Same whitelist/empty-array reasoning as
        * get_parent_child_profile above — excludes applications.notes. */
       get_parent_child_applications: { Args: { p_student: string }; Returns: ParentChildApplicationRow[] };
+      /** Migration 0130, written not applied. SECURITY DEFINER, scoped to the caller's OWN
+       * active link specifically (not a bare is_active_parent_of() gate) — see that
+       * migration's own function comment for the cross-link leak this scoping closes.
+       * `p_limit` defaults to 12 server-side; passed explicitly here since lib/parent/
+       * commentary.ts always does. */
+      get_parent_child_commentary: { Args: { p_student: string; p_limit: number }; Returns: ParentChildCommentaryRow[] };
     };
     Tables: {
       profiles: Table<Profile, Partial<Profile>, ProfileUpdate>;
@@ -2651,6 +2693,7 @@ export interface Database {
       feedback_reports: Table<FeedbackReport, FeedbackReportInsert, never>;
       page_views: Table<PageView, PageViewInsert, never>;
       parent_links: Table<ParentLink, ParentLinkInsert, ParentLinkUpdate>;
+      parent_commentary_entries: Table<ParentCommentaryEntryRow, ParentCommentaryEntryInsert, never>;
       birth_year_changes: Table<BirthYearChange, never, never>;
       deadline_notification_log: Table<DeadlineNotificationLog, DeadlineNotificationLogInsert, never>;
       university_notification_log: Table<UniversityNotificationLog, UniversityNotificationLogInsert, never>;

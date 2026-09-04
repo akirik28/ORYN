@@ -11,7 +11,9 @@ import {
 } from "@/features/parent/parent-panel-view";
 import { ParentNav } from "@/features/parent/parent-nav";
 import { ParentPendingScreen } from "@/features/parent/parent-pending-screen";
+import { ParentCommentaryPanel } from "@/features/parent/parent-commentary-panel";
 import type { ParentPanelData } from "@/lib/parent/panel-data";
+import type { ParentCommentaryEntry } from "@/lib/parent/commentary";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 /**
@@ -33,6 +35,15 @@ import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
  * too so its own look is checkable without a real session, though its links point at the real
  * (auth-gated) routes -- clicking one in this preview leaves the preview context by design,
  * this page only proves the render, not the navigation.
+ *
+ * `?section=progress&commentary=has_entry` (B3b storage/display, same day) previews
+ * ParentCommentaryPanel with a fixture entry; omitting it previews the no-entry state. Both
+ * pass `due={false}` deliberately -- this page has no session, so `due={true}` would make the
+ * panel's own effect call the real Server Action, which would correctly no-op on "no_link"
+ * and leave the spinner showing forever (not dangerous: no admin-client call ever happens
+ * without a real link, just not a useful preview). The spinner state and the `not_premium`
+ * state (only ever reachable as a real action's resolved result, not something a static
+ * preview prop can force) are both checked by reading the component's source instead.
  */
 /** `gap.label` is locale-resolved text (see computeGap's own dimensionLabel(dimension,
  *  locale) call) -- a fixture that hardcodes the English word regardless of the preview's
@@ -66,6 +77,21 @@ const FIXTURE_DATA_EMPTY: ParentPanelData = {
   applications: [],
 };
 
+function fixtureCommentaryEntry(locale: Locale): ParentCommentaryEntry {
+  return {
+    id: "entry-1",
+    generatedAt: "2026-09-01T09:00:00.000Z",
+    locale,
+    periodStart: "2026-08-01T00:00:00.000Z",
+    periodEnd: "2026-09-01T00:00:00.000Z",
+    narrative:
+      locale === "tr"
+        ? "Bu ay araştırma alanında belirgin bir ilerleme oldu ve iki yeni fırsat eşleşmesi kaydedildi."
+        : "There was clear movement in research this month, and two new opportunity matches were recorded.",
+    narrativeSource: "ai",
+  };
+}
+
 const SECTION_TITLES: Record<string, { en: string; tr: string }> = {
   opportunities: { en: "Opportunities", tr: "Fırsatlar" },
   universities: { en: "Universities", tr: "Üniversiteler" },
@@ -76,11 +102,11 @@ const SECTION_TITLES: Record<string, { en: string; tr: string }> = {
 export default async function ParentPanelPreviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ state?: string; locale?: string; empty?: string; section?: string }>;
+  searchParams: Promise<{ state?: string; locale?: string; empty?: string; section?: string; commentary?: string }>;
 }) {
   if (process.env.NODE_ENV === "production") notFound();
 
-  const { state, locale: localeParam, empty, section } = await searchParams;
+  const { state, locale: localeParam, empty, section, commentary } = await searchParams;
   const locale: Locale = localeParam === "tr" ? "tr" : DEFAULT_LOCALE;
   const tr = locale === "tr";
   const nonActiveState = state === "pending" || state === "revoked" || state === "no_link" ? state : null;
@@ -106,7 +132,16 @@ export default async function ParentPanelPreviewPage({
           {section === "opportunities" && <OpportunitiesSection opportunities={data.opportunities} locale={locale} />}
           {section === "universities" && <UniversitiesSection universities={data.universities} locale={locale} />}
           {section === "applications" && <ApplicationsSection applications={data.applications} locale={locale} />}
-          {section === "progress" && <GapSection gap={data.gap} locale={locale} />}
+          {section === "progress" && (
+            <>
+              <ParentCommentaryPanel
+                entry={commentary === "has_entry" ? fixtureCommentaryEntry(locale) : null}
+                due={false}
+                locale={locale}
+              />
+              <GapSection gap={data.gap} locale={locale} />
+            </>
+          )}
         </ParentPageShell>
       </>
     );
