@@ -99,7 +99,7 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
   }
   const supabase = client ?? (await createClient());
 
-  const [profileRes, scoresRes, interestsRes, opportunitiesRes, savedRes, previousMatchesRes] = await Promise.all([
+  const [profileRes, scoresRes, interestsRes, opportunitiesRes, savedRes, previousMatchesRes, targetUniversitiesRes] = await Promise.all([
     // select("*"), not an explicit column list: an explicit list naming citizenship_countries
     // (migration 0047, not applied on every environment) makes PostgREST reject the WHOLE
     // query (42703 "column does not exist"), silently degrading every other profile field
@@ -132,6 +132,14 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
     // so there is no baseline to diff against (see the notification block below, which
     // treats that case as "skip notifying" rather than "everything is new").
     supabase.from("opportunity_matches").select("opportunity_id, eligible").eq("user_id", userId),
+    // CEO, 2026-09-04, from the measured overlap gap: target_geographies alone missed 25% of
+    // real students' actual targeted-university countries (2 of 8) -- "usa"/"uk" doesn't imply
+    // MIT, and vice versa isn't assumed either. Just the university_id here; the countries
+    // themselves are a second, sequential read below (not a nested select) -- one FK, no
+    // ambiguity risk, but this codebase's own established pattern everywhere else is two flat
+    // queries joined in application code, not PostgREST's embedded-resource syntax, and this
+    // read isn't on a page-render-latency-critical path worth breaking that consistency for.
+    supabase.from("target_universities").select("university_id").eq("user_id", userId),
   ]);
 
   // The check the 2026-09-02 bug needed: every table above is either owned by this exact
@@ -188,6 +196,15 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
     ])
   );
 
+  const targetUniversityIds = readOr("refreshOpportunityMatches.targetUniversities", targetUniversitiesRes, [], { userId }).map((t) => t.university_id);
+  const targetUniversitiesCountriesRes =
+    targetUniversityIds.length > 0
+      ? await supabase.from("universities").select("country").in("id", targetUniversityIds)
+      : { data: [] as { country: string | null }[], error: null };
+  const targetUniversityCountries = readOr("refreshOpportunityMatches.targetUniversityCountries", targetUniversitiesCountriesRes, [], { userId })
+    .map((u) => u.country)
+    .filter((c): c is string => c != null);
+
   const baseStudentProfile: StudentMatchProfile = {
     age,
     country: profileRes.data?.country ?? null,
@@ -195,6 +212,7 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
     weakestDimensions,
     citizenshipCountries: profileRes.data?.citizenship_countries ?? [],
     targetGeographies: profileRes.data?.target_geographies ?? [],
+    targetUniversityCountries,
     graduationYear: profileRes.data?.graduation_year ?? null,
   };
 

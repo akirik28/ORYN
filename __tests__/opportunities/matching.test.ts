@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { computeEligibility, computeOpportunityMatch, computeAvoidSignals, isNearStudent, isWithinTargetGeography, renderEligibilityNotes } from "@/lib/opportunities/matching";
+import { computeEligibility, computeOpportunityMatch, computeAvoidSignals, isNearStudent, isWithinTargetGeography, isTargetingCountry, renderEligibilityNotes } from "@/lib/opportunities/matching";
 import type { OpportunityForMatching, StudentMatchProfile, DismissedOpportunitySignal } from "@/lib/opportunities/matching";
 
 function opportunity(overrides: Partial<OpportunityForMatching> = {}): OpportunityForMatching {
@@ -502,6 +502,125 @@ describe("computeOpportunityMatch", () => {
       );
       expect(match.eligible).toBe(false);
       expect(match.matchScore).toBe(0);
+    });
+  });
+
+  // CEO, 2026-09-04, from the measured overlap gap (docs/university-opportunity-overlap-
+  // measurement-2026-09-04.md): 2 of 8 real students with a target_universities row target a
+  // country their target_geographies never mentions -- "usa"/"uk" doesn't imply MIT. Reuses
+  // TARGET_GEOGRAPHY_BOOST (not a second constant) via isTargetingCountry, which merges both
+  // sources into one check before the boost is ever applied -- see that function's own
+  // comment for why, and the explicit no-double-counting test below for the proof.
+  describe("target_universities country boost", () => {
+    test("scores higher when the opportunity falls inside a targeted university's country, even with zero interest overlap — isolated from proximity", () => {
+      const inTarget = computeOpportunityMatch(
+        student({ country: "France", targetUniversityCountries: ["United States"] }),
+        opportunity({ country: "United States" })
+      );
+      const outsideTarget = computeOpportunityMatch(
+        student({ country: "France", targetUniversityCountries: ["United States"] }),
+        opportunity({ country: "Germany" })
+      );
+      expect(inTarget.relevanceScore).toBeGreaterThan(outsideTarget.relevanceScore);
+      expect(inTarget.matchScore).toBeGreaterThan(outsideTarget.matchScore);
+    });
+
+    test("omitting targetUniversityCountries behaves identically to a student with no target universities", () => {
+      const withoutField = computeOpportunityMatch(student({ country: "Turkey" }), opportunity({ country: "Turkey" }));
+      const withEmptyArray = computeOpportunityMatch(student({ country: "Turkey", targetUniversityCountries: [] }), opportunity({ country: "Turkey" }));
+      expect(withoutField.relevanceScore).toBe(withEmptyArray.relevanceScore);
+    });
+
+    test("stacks additively with the proximity boost, same as target_geographies does", () => {
+      const both = computeOpportunityMatch(student({ country: "Turkey", targetUniversityCountries: ["Turkey"] }), opportunity({ country: "Turkey" }));
+      const targetOnly = computeOpportunityMatch(student({ country: "France", targetUniversityCountries: ["Turkey"] }), opportunity({ country: "Turkey" }));
+      const proximityOnly = computeOpportunityMatch(student({ country: "Turkey", targetUniversityCountries: ["United Kingdom"] }), opportunity({ country: "Turkey" }));
+      expect(both.relevanceScore).toBeGreaterThan(targetOnly.relevanceScore);
+      expect(both.relevanceScore).toBeGreaterThan(proximityOnly.relevanceScore);
+    });
+
+    // The exact scenario CEO named: a student who said "usa" AND is targeting a US
+    // university (e.g. MIT). Both sources agree on the same country -- the boost must fire
+    // ONCE, not twice, for what is really one underlying fact stated two ways.
+    test("does NOT double-count when target_geographies and a targeted university agree on the same country", () => {
+      const bothSourcesSameCountry = computeOpportunityMatch(
+        student({ country: "France", targetGeographies: ["usa"], targetUniversityCountries: ["United States"] }),
+        opportunity({ country: "United States" })
+      );
+      const geographyOnly = computeOpportunityMatch(
+        student({ country: "France", targetGeographies: ["usa"] }),
+        opportunity({ country: "United States" })
+      );
+      const universityOnly = computeOpportunityMatch(
+        student({ country: "France", targetUniversityCountries: ["United States"] }),
+        opportunity({ country: "United States" })
+      );
+      expect(bothSourcesSameCountry.relevanceScore).toBe(geographyOnly.relevanceScore);
+      expect(bothSourcesSameCountry.relevanceScore).toBe(universityOnly.relevanceScore);
+    });
+
+    // The other half of the same guarantee: two DIFFERENT countries, one from each source,
+    // must still each get their own boost when an opportunity matches THAT one specifically —
+    // merging into one check must not accidentally collapse two real, distinct targets into one.
+    test("two different countries from the two different sources each still boost their own matching opportunity", () => {
+      const s = student({ country: "France", targetGeographies: ["uk"], targetUniversityCountries: ["Turkey"] });
+      const ukMatch = computeOpportunityMatch(s, opportunity({ country: "United Kingdom" }));
+      const turkeyMatch = computeOpportunityMatch(s, opportunity({ country: "Turkey" }));
+      const neitherMatch = computeOpportunityMatch(s, opportunity({ country: "Germany" }));
+      expect(ukMatch.relevanceScore).toBeGreaterThan(neitherMatch.relevanceScore);
+      expect(turkeyMatch.relevanceScore).toBeGreaterThan(neitherMatch.relevanceScore);
+      expect(ukMatch.relevanceScore).toBe(turkeyMatch.relevanceScore);
+    });
+
+    test("cannot lift a weak in-target match above a strong out-of-target one — the boost tie-breaks, it doesn't override", () => {
+      const weakButInTarget = computeOpportunityMatch(
+        student({ country: "Turkey", targetUniversityCountries: ["Turkey"], interests: ["Economics", "Mathematics", "Biology"] }),
+        opportunity({ country: "Turkey", fields: ["Chemistry"] })
+      );
+      const strongButOutsideTarget = computeOpportunityMatch(
+        student({ country: "Turkey", targetUniversityCountries: ["Turkey"], interests: ["Economics", "Mathematics", "Biology"] }),
+        opportunity({ country: "United States", fields: ["Economics", "Mathematics"] })
+      );
+      expect(strongButOutsideTarget.relevanceScore).toBeGreaterThan(weakButInTarget.relevanceScore);
+    });
+
+    test("never affects eligibility — a targeted-university-country match on an otherwise-ineligible opportunity still scores 0", () => {
+      const match = computeOpportunityMatch(
+        student({ age: 12, targetUniversityCountries: ["United States"] }),
+        opportunity({ minimumAge: 16, country: "United States" })
+      );
+      expect(match.eligible).toBe(false);
+      expect(match.matchScore).toBe(0);
+    });
+  });
+
+  describe("isTargetingCountry", () => {
+    test("true from target_geographies alone", () => {
+      expect(isTargetingCountry({ targetGeographies: ["usa"], targetUniversityCountries: [] }, "United States")).toBe(true);
+    });
+
+    test("true from targetUniversityCountries alone", () => {
+      expect(isTargetingCountry({ targetGeographies: [], targetUniversityCountries: ["United States"] }, "United States")).toBe(true);
+    });
+
+    test("true when both are present and agree", () => {
+      expect(isTargetingCountry({ targetGeographies: ["usa"], targetUniversityCountries: ["United States"] }, "United States")).toBe(true);
+    });
+
+    test("false when neither source names the opportunity's country", () => {
+      expect(isTargetingCountry({ targetGeographies: ["uk"], targetUniversityCountries: ["Turkey"] }, "Germany")).toBe(false);
+    });
+
+    test("targetUniversityCountries goes through the same country-alias normalization as target_geographies — 'Türkiye' matches 'Turkey'", () => {
+      expect(isTargetingCountry({ targetGeographies: [], targetUniversityCountries: ["Türkiye"] }, "Turkey")).toBe(true);
+    });
+
+    test("both fields optional/undefined — a caller that doesn't know about either yet gets false, not a crash", () => {
+      expect(isTargetingCountry({}, "United States")).toBe(false);
+    });
+
+    test("null opportunity country never matches, regardless of source", () => {
+      expect(isTargetingCountry({ targetGeographies: ["usa"], targetUniversityCountries: ["United States"] }, null)).toBe(false);
     });
   });
 

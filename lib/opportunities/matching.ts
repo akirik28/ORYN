@@ -25,6 +25,16 @@ export interface StudentMatchProfile {
    * must behave identically to a student who picked "not sure" — no boost applies either
    * way. */
   targetGeographies?: TargetGeography[];
+  /** The countries of this student's own `target_universities` rows — a second, more specific
+   * source for the exact same underlying fact `targetGeographies` represents (where the
+   * student wants to go), not a new dimension. Deliberately merged with `targetGeographies`
+   * into one combined check (`isTargetingCountry` below) rather than checked and boosted
+   * independently, so a student who said "usa" AND is targeting MIT gets TARGET_GEOGRAPHY_BOOST
+   * applied exactly once, not twice, for the same fact (2026-09-04, CEO: "aynı fırsat iki kez
+   * yükseltilmemeli"). Optional/empty for callers that don't have it yet — must behave
+   * identically to a student with no target universities, same convention as
+   * `targetGeographies` above. */
+  targetUniversityCountries?: string[];
   /** Feeds currentGradeLevel() for eligible_grades checks below. */
   graduationYear?: number | null;
   /** Computed from this student's own `not_interested` dismissal history — see
@@ -654,6 +664,23 @@ export function isWithinTargetGeography(targetGeographies: TargetGeography[], op
 }
 
 /**
+ * Whether `opportunityCountry` is a country this student is targeting, from EITHER source —
+ * the broad, self-reported `targetGeographies` or the specific country of one of their actual
+ * `target_universities` (2026-09-04, measured first: of the 8 real students with a target
+ * university, 2 targeted a country their target_geographies never mentioned — "usa"/"uk"
+ * doesn't imply MIT, and vice versa isn't assumed either). The two are checked together, not
+ * as two independently-truthy flags summed in computeRelevance, specifically so a student who
+ * said "usa" AND targets MIT gets one boost for that fact, not two (CEO: "aynı fırsat iki kez
+ * yükseltilmemeli").
+ */
+export function isTargetingCountry(student: Pick<StudentMatchProfile, "targetGeographies" | "targetUniversityCountries">, opportunityCountry: string | null): boolean {
+  if (isWithinTargetGeography(student.targetGeographies ?? [], opportunityCountry)) return true;
+  if (!opportunityCountry) return false;
+  const key = canonicalCountryKey(opportunityCountry);
+  return (student.targetUniversityCountries ?? []).some((c) => canonicalCountryKey(c) === key);
+}
+
+/**
  * Same magnitude as PROXIMITY_BOOST directly above, deliberately — not a second number
  * invented from nothing. Why that magnitude specifically does not do what CEO named as the
  * real risk (a strong match outside the student's target burying — or being buried by — a
@@ -858,8 +885,10 @@ function computeRelevance(student: StudentMatchProfile, opportunity: Opportunity
   // Independent of `near` above (current residence vs. stated aspiration) — see
   // TARGET_GEOGRAPHY_BOOST's own comment for why the two stack rather than one replacing the
   // other, and for why this magnitude can't bury a genuinely stronger interest match.
-  const targetsThisGeography = isWithinTargetGeography(student.targetGeographies ?? [], opportunity.country);
-  const geographyBoost = (near ? PROXIMITY_BOOST : 0) + (targetsThisGeography ? TARGET_GEOGRAPHY_BOOST : 0);
+  // isTargetingCountry itself merges targetGeographies and targetUniversityCountries into one
+  // check — see its own comment for why that merge happens before this boolean, not after.
+  const targetsThisCountry = isTargetingCountry(student, opportunity.country);
+  const geographyBoost = (near ? PROXIMITY_BOOST : 0) + (targetsThisCountry ? TARGET_GEOGRAPHY_BOOST : 0);
 
   if (opportunity.fields.length === 0) {
     const { score, avoidReasons } = applyAvoidSignals(40 + geographyBoost, opportunity, near, student.dismissedSignals);
