@@ -128,10 +128,15 @@ const CARD_ICONS: Record<UltraFeatureCardData["id"], typeof Zap> = {
  * building: scoped to this page only, no shared surface touched (`.plan-page-ground`,
  * app/globals.css — its own header comment has the full reasoning and the measured
  * contrast numbers). Mounted here, not in app/(app)/layout.tsx, specifically so it can
- * only ever paint behind this one component. Fixed/full-bleed rather than sized to the
+ * only ever paint behind this one component. Full-bleed rather than sized to the
  * `max-w-3xl` column below it, so it reads as the page's own ground rather than a boxed
  * panel; the actual content is lifted to `z-10` in a sibling div so nothing here changes
  * which elements the content itself sits among.
+ *
+ * It was `position: fixed` until the founder reported "sol bar gözükmüyor" — fixed means
+ * the VIEWPORT, so it painted over the sidebar, which is a sticky sibling of the content
+ * column carrying no z-index of its own. Now `absolute`, anchored to the layout's own
+ * `<main class="relative">`. "Full-bleed" here means the content column, not the screen.
  */
 export function PlanTierView({
   tier,

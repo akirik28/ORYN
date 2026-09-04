@@ -1227,8 +1227,18 @@
    luminance, against both the darkest and lightest declared gradient stops: the label
    (text-foreground) measures 14.54:1 / 10.61:1, the muted value (text-muted-foreground)
    6.84:1 / 4.99:1 -- all four clear WCAG AA's 4.5:1 floor for normal text. */
+/* `absolute`, NOT `fixed` (founder, 2026-09-04: "sol bar gözükmüyor"). A fixed,
+   inset-0 element fills the VIEWPORT, so it painted straight over the sidebar —
+   which is a `sticky` sibling of the content column with no z-index of its own.
+   Absolute makes the nearest positioned ancestor the containing block, and that
+   is app/(app)/layout.tsx's own `<main class="relative">`: the content column,
+   sibling to the sidebar rather than wrapping it. Covering the shell is now
+   structurally impossible instead of being avoided by a z-index that happens to
+   win, and it needs no knowledge of the sidebar's 214px or its lg: breakpoint.
+   Bonus: `<main>` is flex-1 and grows with content, so the ground covers the
+   full scroll height rather than one viewport of it. */
 .plan-page-ground {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
