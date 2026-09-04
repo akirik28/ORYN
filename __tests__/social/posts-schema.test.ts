@@ -608,7 +608,16 @@ describe("migration numbering", () => {
     // criterion (ASSIP), found during D2's own opportunity-eligibility research, not
     // hypothetical. Same CHECK-constraint discipline as 0060: a row cannot claim
     // "confirmed open" while also carrying the structured bound that would contradict it.
-    expect(Math.max(...numbers.map(Number))).toBe(126);
+    //
+    // 0127 (admission_rate_basis_not_published) -- a THIRD state for a column 0119 gave two.
+    // 'not_researched' means nobody looked; 'no_single_rate' means the institution has no
+    // single rate by construction (TU Munich's per-programme aptitude assessment). D1's
+    // QS-top-100 fill hit the case neither covers: NUS, Tsinghua and Peking were researched,
+    // the rate exists as a concept, and the university simply does not publish it. Leaving
+    // those at the default would have told the next research pass "nobody has looked here"
+    // about three universities that had just been looked at. Same discipline as 0119 itself:
+    // this value is only ever set by a real research pass, never guessed, never defaulted to.
+    expect(Math.max(...numbers.map(Number))).toBe(127);
   });
 });
 
