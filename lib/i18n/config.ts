@@ -37,6 +37,35 @@ export const LOCALE_COOKIE = "proxola_locale";
 export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 /**
+ * The full option set for writing `LOCALE_COOKIE`, shared so `lib/i18n/actions.ts`'s
+ * `setLocale` and `lib/supabase/proxy.ts`'s migration shim can't drift apart on `path`/
+ * `sameSite`/`httpOnly`/`secure` the way `LOCALE_COOKIE`'s own value already drifted once
+ * (see `LEGACY_LOCALE_COOKIE`) -- two independent definitions of the same cookie is exactly
+ * the failure shape this constant exists to rule out, not a hypothetical one.
+ */
+export const LOCALE_COOKIE_OPTIONS = {
+  path: "/",
+  maxAge: LOCALE_COOKIE_MAX_AGE,
+  sameSite: "lax" as const,
+  httpOnly: true,
+  // Must stay off for http://localhost, or the switch appears to do nothing in dev.
+  secure: process.env.NODE_ENV === "production",
+};
+
+/**
+ * The pre-rename cookie name (`lib/i18n/config.ts` shipped this from 2026-08-31 until the
+ * 2026-09-03 rename). `lib/supabase/proxy.ts`'s `updateSession` migrates any request still
+ * carrying this to `LOCALE_COOKIE`, silently, on the same request -- see that file for why
+ * the migration lives there and not in `resolveLocale()`. Not read anywhere else; nothing
+ * downstream of the proxy should ever need to know this name existed.
+ *
+ * Safe to delete this constant and the migration step once no browser can plausibly still
+ * hold the old cookie: `LOCALE_COOKIE_MAX_AGE` is one year, and the rename shipped
+ * 2026-09-03, so nothing issued before then survives past 2027-09-03.
+ */
+export const LEGACY_LOCALE_COOKIE = "oryn_locale";
+
+/**
  * Endonyms — each language named in itself, never translated. A student looking for
  * Turkish scans for "Türkçe", not for whatever the current UI language calls Turkish.
  * This is the standard convention for language pickers and the reason this map is not
