@@ -5,6 +5,10 @@
 -- from d2-visible-priority-additions-2026-09-04.sql, same discipline as batch 2's own two
 -- files -- see that file's own header for why.
 --
+-- Projected effect, computed directly against live data (not applied): applying this file
+-- on top of d2-visible-priority-additions-2026-09-04.sql drops the visible-34 set's gapped
+-- count from 30 to 29.
+
 -- 1. TechGirls -- grade_eligibility_confirmed_open. Official eligibility page gives a
 -- complete age-based criterion (15-17 at a specific date, a specific birth-date window,
 -- plus "will attend at least one additional semester of secondary school upon return") and

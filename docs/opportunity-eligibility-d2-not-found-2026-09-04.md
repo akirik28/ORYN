@@ -39,8 +39,28 @@ CEO redirected priority after measuring: `saved_opportunities` (4 rows) ∪ `opp
 own top-5-per-student "actually shown" set (mirroring `lib/opportunities/home-strip.ts`
 exactly) = 34 distinct opportunities, 33 of which carry a gap — a small, high-leverage set
 worth its own tracking section rather than folding into the deadline-ordered batches above.
-6 rows resolved with a sourced fill (see `d2-visible-priority-additions-2026-09-04.sql` and
-`d2-visible-priority-requires-0126-2026-09-04.sql`). The rest:
+
+**Re-measured after this round, per CEO's own explicit requirement** (finish, then re-run
+the same query — the set isn't static and a "we fixed things" claim needs a before/after
+number, not a row count). Re-running found one new entrant, Tufts Pre-College Programs
+(`310c976c-1a0f-4566-8df2-2e186c898804`) — already fully resolved on every axis, needed
+nothing. Projected effect of this round's SQL, computed directly against live data rather
+than assumed: **33/34 gapped (97%) → 30/34 (88%) once the additions/corrections file is
+applied → 29/34 (85%) once 0126 is also applied and its own file runs.** Not a dramatic
+swing — an honestly small, precisely computed one, reported as such rather than rounded up.
+
+**Two of this round's own first-draft entries were wrong, caught by that same re-check
+before they became a false claim**: NYC Commuter Summer's proposed grade fill turned out to
+be a no-op — the row's `eligible_grades` was already `['9','10','11','12']`, and its real
+gap (both `minimum_age`/`maximum_age` null) was never actually addressed by the WebFetch
+answer used to write the SQL. Removed the no-op entirely rather than count it as a fix (see
+below, back among the not-found rows with its real gap named). Yale Young Global Scholars'
+proposed grade value differed from what's currently stored — a **correction**, not an
+addition (existing `['11','12']` vs. the official page's own "sophomore or junior" =
+`['10','11']`) — moved to its own section in the SQL file, same discipline as YIS in batch 1.
+
+6 opportunities got a sourced fill this round (see `d2-visible-priority-additions-2026-09-04.sql`
+and `d2-visible-priority-requires-0126-2026-09-04.sql`). The rest:
 
 **Confirmed already accurate, no change needed**: BRI Student Fellowship (age 15-18 AND
 grade 11-12 both explicitly confirmed: "15-18 year old's who are currently Juniors or
@@ -60,11 +80,11 @@ maximum stated — genuinely no ceiling, not an unresearched one).
 | Blue Ocean Competition | `cb4a1030-d035-4c1f-8579-37c458a88b0e` | age, grade | `https://blueoceancompetition.org/` | Page only says "high school students/entrepreneurs" generically, no specific age or grade numbers. |
 | Purple Comet! Math Meet | `e5dd5ce7-4730-42d7-84a3-b6492779b038` | grade | `https://purplecomet.org/` | "middle and high school students" stated but no specific grade numbers given. |
 | STEM Fellowship Journal | `b51bf24f-42c2-419f-a456-ca86dff0ad8e` | grade | `https://journal.stemfellowship.org/journal/sfj` | HTTP 403. |
-| Interlochen Review | `95093e1a-fc13-4d9a-b4ed-5f0584252b44` | age, grade, country | — | Not attempted this pass (ran out of batch budget, honestly — not a fetch failure). |
-| Lumiere Education | `bc678344-c213-4ae8-a4f8-48af2856338f` | age, grade, country | — | Not attempted this pass. |
-| Young Guru Academy (YGA) | `5d2aca22-26d5-4592-a5fb-a554c7a51f50` | age, grade, country | — | Not attempted this pass. |
+| NYC Commuter Summer — Columbia University Pre-College Programs | `3318dba7-e099-4de2-83db-f27d6697f1be` | age, country | `https://precollege.sps.columbia.edu/programs/summer-programs/nyc-commuter-summer` | Grade is already correct (`['9','10','11','12']`, confirmed by the official page's "students entering grades 9-12"). First draft of this batch mistakenly proposed re-setting grade to the same value and counted it as a fix — corrected on re-check. The real gap, `minimum_age`/`maximum_age` (both null) and country, was never addressed: the fetched text only confirmed grade. |
+| Lumiere Education | `bc678344-c213-4ae8-a4f8-48af2856338f` | age, grade, country | `https://www.lumiere-education.com/lumiere-programs` | Page describes "high school students around the world" but states no specific age/grade/country criteria. |
+| Young Guru Academy (YGA) | `5d2aca22-26d5-4592-a5fb-a554c7a51f50` | age, grade, country | `https://yga.org.tr/en/` | Landing page lists several sub-programs but states no eligibility criteria for any of them; each sub-program's own page not fetched this pass. |
 | Research Program KUSRP 2026 | `2116709f-e222-43c7-95e0-f801053f8f2e` | age, grade, country | `https://research.ku.edu.tr/research-outreach/summer-research/kusrp/2026-highschool-projects/` | HTTP 403. |
-| Two-week UM Academies (non-credit) | `889c580c-dbb6-4490-9078-9faf2a2a2ed0` | age, grade, country | — | Not attempted this pass. |
+| Two-week UM Academies (non-credit) | `889c580c-dbb6-4490-9078-9faf2a2a2ed0` | age, grade, country | `https://precollege.dcie.miami.edu/summer-programs/academies/index.html` | Page states only dates ("June 27 - July 10, 2026"), no eligibility criteria of any kind. |
 | UCSB Research Mentorship Programs | `647eb8da-9cb8-46d4-8ded-b4c516f7ac90` | age, grade, country | `https://www.summer.ucsb.edu/programs/research-mentorship-program/overview` | "High school students from all over the world" — descriptive, not a stated policy; no specific grade/age numbers. |
 | InvestIN - Immersive Career Experiences | `8a7c89e4-e63a-4f64-a76d-4bae1b31e889` | grade, country | `https://investin.org/collections/our-programmes` | Age range roughly confirmed (12-18 across program tiers) but no grade numbers; page references an "international students" section not fetched this pass. |
 | JA Company Programme (Europe) | `55a5efea-e280-4176-bf65-49a028b097af` | grade | `https://jaeurope.org/learning-experiences/portfolio/company-programme/` | Age (15-18) confirmed, matches stored value; no grade statement — genuinely age-only is plausible but not stated with the same completeness TechGirls' page had, so not used for the 0126 flag this pass. |
