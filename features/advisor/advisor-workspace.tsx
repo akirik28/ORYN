@@ -9,7 +9,7 @@ import { MonthlyUsageMeter } from "@/features/advisor/monthly-usage-meter";
 import { SessionWallDialog } from "@/features/advisor/session-wall-dialog";
 import { createConversation } from "@/app/(app)/advisor/actions";
 import type { UpgradePromptDismissalState } from "@/lib/advisor/upgrade-prompt";
-import type { AdvisorMessage as AdvisorMessageRow, PlanTier } from "@/types/database";
+import type { AdvisorMessage as AdvisorMessageRow, PlanTier, ResponseMode } from "@/types/database";
 import type { getMonthlyQuota } from "@/lib/ai/monthly-quota";
 
 /**
@@ -32,6 +32,7 @@ export function AdvisorWorkspace({
   quotaExhausted,
   quotaResetsAt,
   tier,
+  responseMode,
   upgradePromptDismissalState,
   quota,
   budgetDegraded,
@@ -42,6 +43,11 @@ export function AdvisorWorkspace({
   quotaExhausted: boolean;
   quotaResetsAt: string;
   tier: PlanTier;
+  /** Same per-student, cross-conversation setting ResponseModeSlider reads (see this file's
+   * own header on why that control lives beside AdvisorWorkspace, not inside it) — forwarded
+   * straight through to AdvisorChat, which uses it only to pick a truer interim status label
+   * for a reply it already knows will be thorough-mode. */
+  responseMode: ResponseMode;
   upgradePromptDismissalState: UpgradePromptDismissalState;
   quota: Awaited<ReturnType<typeof getMonthlyQuota>>;
   budgetDegraded: boolean;
@@ -91,6 +97,7 @@ export function AdvisorWorkspace({
             quotaExhausted={quotaExhausted}
             quotaResetsAt={quotaResetsAt}
             tier={tier}
+            responseMode={responseMode}
             upgradePromptDismissalState={upgradePromptDismissalState}
           />
         </div>

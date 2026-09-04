@@ -1173,6 +1173,8 @@
         "universityListRealistic": "Üniversite listem gerçekçi mi?"
       },
       "couldntComplete": "Proxola bu yanıtı tamamlayamadı.",
+      "thinking": "Profilini inceliyor",
+      "thinkingThorough": "Detaylı bir yanıt yazıyor",
       "tryAgain": "Tekrar dene",
       "placeholderReady": "Proxola'ya sor…",
       "placeholderNotConfigured": "Yapay zeka danışmanı henüz yapılandırılmadı",
