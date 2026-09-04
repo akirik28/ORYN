@@ -68,7 +68,69 @@ machine. **This is the entire reason the standing rule says `127.0.0.1`, specifi
 "any local port" or "a fresh port nobody else is using"** — both of those sound like they'd
 work and neither does.
 
+## 2, continued — the root cause, found (2026-09-04, later that night)
+
+CEO's ask: this blocked two of my own tasks and one other lane's, tonight — worth resolving
+what section 2 above left open ("never confirmed the root cause").
+
+**Confirmed: `preview_start({name: ...})` resolves `.claude/launch.json` against the
+session's own "primary working directory," a session-level property set once and distinct
+from anything a Bash `cd` (even a `cd <worktree> &&` prefix repeated on every call) can
+change.** That property is visible in this session's own system prompt as "Primary working
+directory" and does not move on its own. Reproduced cleanly: a worktree's `launch.json`
+(1 entry, `"oryn-feedback-dev"`) vs. the main checkout's (1 entry, `"oryn-old-ui"`, a
+completely different `name`) — `preview_start({name: "oryn-feedback-dev"})` from the
+worktree returned the *main checkout's* `"oryn-old-ui"` config with **no error**, silently
+substituting a differently-named, differently-configured server for the one actually
+requested. That silent substitution — not a crash, not a warning — is what made this
+genuinely dangerous rather than just inconvenient: a session can spend real time "verifying"
+a change against a server that was never running its code at all.
+
+**The fix: `mcp__ccd_directory__change_directory({path: <worktree absolute path>})`,
+called once, before the first `preview_start({name: ...})` of the session.** This tool moves
+the session's own working-directory property (its own description: "the session's working
+directory ... moves there when the current turn ends"), and `preview_start({name})` reads the
+*correct* `.claude/launch.json` afterward — confirmed with an unambiguous probe: added a
+second, uniquely-named dummy entry to the worktree's `launch.json` after calling
+`change_directory`, and the tool's behavior changed shape entirely (it now attempted the
+worktree's real `npm run dev` script, not the main checkout's absolute-path `oryn-old-ui`
+invocation) — proof the *file* being read had changed, independent of which specific entry
+in it got picked.
+
+**This does not fully solve the problem — it only removes the silent-substitution failure
+mode.** Trap #1 above (the cross-worktree Turbopack lock) still applies in full after
+`change_directory`: with the main checkout's `next dev` already running, a `preview_start`
+attempt from the worktree now correctly *tries* the worktree's own script and then hits the
+identical "Another next dev server is already running" refusal trap #1 describes — a
+different, later failure than before, but still a failure. **And the trap #1 fix
+(`--webpack`) does not survive the trip through `preview_start({name})` either**: setting
+`runtimeArgs` to `["run", "dev", "--", "--webpack"]` (confirmed valid — `next dev --help`
+lists `--webpack` as a real, current flag on the installed Next.js 16.3.1) and retrying still
+printed `▲ Next.js 16.3.1 (Turbopack)` in the startup banner, tested three ways (with `-p`,
+without it, `--webpack` alone) — the flag plainly isn't reaching the actual `next dev`
+process the tool spawns, for a reason this pass didn't chase further. **So the one proven
+full bypass for trap #1 — running `next dev --webpack -p <port>` directly, outside
+`preview_start` — is still the only one that works, and starting a dev server directly via
+Bash is outside what a session instructed to always prefer the Browser-pane tool for that
+purpose is supposed to do.** For a session under that instruction, the honest state is:
+partially fixed (no more silent wrong-server attach), not fully unblocked (still can't
+independently start its own worktree's live server while another session's is running,
+without either taking their slot or stepping outside that instruction).
+
+**What still reliably works, live-reconfirmed tonight**: `preview_start({url:
+"http://127.0.0.1:<port>/design-preview/..."})` against whichever server is *already*
+running, per section 2's own original fix and the standing `127.0.0.1`-not-`localhost` rule.
+This needs no server-starting action at all, so it carries none of the above restriction —
+the tradeoff, as already stated above, is that it verifies the *main checkout's currently
+merged* code, not an unmerged worktree branch.
+
 ## What to actually do next time
+
+**Call `mcp__ccd_directory__change_directory` to the worktree before the first
+`preview_start({name: ...})` of the session**, every time — otherwise it can silently attach
+to the wrong worktree's server with no error at all (§2, continued, above). This alone does
+not unblock trap #1; it only prevents "verifying" a change against code that was never
+actually running.
 
 **Never copy `.env.local` (or any file carrying `SUPABASE_SECRET_KEY`) into a worktree.** If a
 worktree's dev server needs to reach Supabase for something that doesn't require admin
