@@ -68,7 +68,7 @@ tamamlanınca kendi paketi olacak) o andan itibaren korunmuş olur; bir INSERT �
 ölçümü (canlı veride 0 çift satır, 2026-09-04) bu paket sırasında geçerliliğini koruyor
 çünkü aradaki hiçbir bölüm o tabloya dokunmuyor.
 
-## Kaynağında bulunup düzeltilen iki gerçek sorun
+## Kaynağında bulunup düzeltilen üç gerçek sorun
 
 **1. Waterloo/CEMC'nin 5 INSERT'inde re-run koruması yoktu** —
 `gen_random_uuid()` kullanıyorlar, ve hiçbir `ON CONFLICT` yoktu. **Kanıtlandı, sadece
@@ -121,6 +121,35 @@ Diğer üç veri dosyası (boilerplate temizliği, sınıflandırma, D2 ülke do
 UPDATE'i tam metin/durum eşleşmesiyle koruyor — kendiliğinden re-run güvenli, herhangi bir
 değişiklik gerekmedi.
 
+**3. Bu paket üretildikten SONRA kaynak dosyaya bir satır daha eklendi (Interlochen Review,
+`95093e1a`) — bugün ikinci kez, aynı hata sınıfı.** CEO merge etmeden önce kimlikleri tek tek
+karşılaştırdı: sınıflandırma dosyasındaki 6 UPDATE'in 5'i pakette vardı, biri (Interlochen)
+yoktu — çünkü paket ilk üretildikten sonra eklenmişti. Paketin kendi yorumu da artık yanlış
+bir şey iddia ediyordu ("diğer 4 satır ... Paket 15'in hiçbir dosyasında geçmiyor" — Interlochen
+artık o listede değildi).
+
+**Paket kaynaktan yeniden üretildi**, 6. UPDATE otomatik dahil oldu. **Sistematik kontrol
+yeniden çalıştırıldı, önceki iddiaya güvenilmedi:** Paket 14'ün `*_confirmed_open = true`
+yaptığı satırlar taze bir `grep` ile yeniden sayıldı — Penn Pre-College/TechGirls/sınıf-only
+satırın hâlâ hiçbir Paket 15 dosyasında geçmediği doğrulandı.
+
+**Bu sırada ayrı, daha derin bir sorun çıktı:** Interlochen'in `confirmed_open=true`'sunun
+asıl kaynağı (`docs/d2-visible-priority-additions-2026-09-04.sql`) o dosyanın KENDİSİNDE
+zaten geri çekilmişti — ama bu geri çekme, **çoktan inşa edilmiş Paket 14 paketine hiç
+yansımamıştı.** Yani `data/morning/14-toplu-paket-2026-09-04.sql`, kurucunun eline geçecek
+hâliyle, hâlâ eski/hatalı satırı taşıyordu. **Paket 14'ün kendisi de kaynağında düzeltildi**
+(satır sadece `eligible_grades` yazacak şekilde), Paket 14'ün kendi `check-package-14-
+sequence.sh`'i ile yeniden doğrulandı — temiz.
+
+**Kalıcı önlem — CEO'nun açık talebi:** paket üretildikten sonra kaynak dosyalar değişirse
+artık **sessizce** fark edilmeyecek. `scripts/check-package-15-sequence.sh`'in en başına bir
+**sağlama kontrolü** eklendi: paketin kendi başlığı, üretim anındaki 8 kaynak dosyanın
+(4 migration + 4 veri dosyası) SHA-256'sını taşıyor; test her çalıştığında bunları YENİDEN
+hesaplayıp karşılaştırıyor, herhangi biri farklıysa **veritabanına hiç dokunmadan** açıkça
+durup hangi dosyanın bayatladığını söylüyor. Kanıtlandı, sadece yazılmadı: bir kaynak
+dosyaya deneme amaçlı bir satır ekleyip testi çalıştırdım, kontrol hemen kırmızıya döndü ve
+doğru dosyayı adlandırdı; değişikliği geri alıp tekrar çalıştırdım, temiz geçti.
+
 ## Ne dahil değil, ve neden
 
 - **D1'in ikinci partisi** (QS top-100'ün geri kalanı, şu an 14/19 kurum, hâlâ büyüyor) —
@@ -135,18 +164,24 @@ aynı yaklaşımla, üçüncü kez yeniden kurulmadan.
 
 1. Yerel Postgres'te, 0129'dan önceki her migration'ı kurar (Paket 14'ün 0124/0126/0127'si
    dahil — bu paket ondan sonra geldiği için zaten uygulanmış varsayılıyor).
-2. Paketin referans verdiği 22 gerçek fırsatı **gerçek ID'leri ve gerçek alan değerleriyle**
+2. Paketin referans verdiği 23 gerçek fırsatı **gerçek ID'leri ve gerçek alan değerleriyle**
    ekler (canlı veritabanından okunmuş — `citizenship_restrictions`/`residency_restrictions`
    metni dahil harfiyen aynı, her UPDATE'in kendi WHERE koruması tam bu yüzden tutuyor).
 3. Paketi çalıştırır. Hata varsa durur ve gösterir.
 4. Paketi **ikinci kez** çalıştırır. Hata varsa durur ve gösterir.
-5. Sekiz farklı sonucu tek tek sayar: 5 yeni CEMC satırı (10 değil), eski Waterloo satırının
+5. Dokuz farklı sonucu tek tek sayar: 5 yeni CEMC satırı (10 değil), eski Waterloo satırının
    `disabled` olduğu, üç yeni "basis" sütununun var olduğu, `parent_commentary_entries`
    tablosunun var olduğu, `university_statistics` indeksinin artık coalesce'li olduğu,
-   14 satırın `checked_not_stated` olduğu, 2 satırın `confirmed_no_restriction`'a
-   yükseldiği, Lumiere'in kirli `citizenship_restrictions`'ının temizlendiği.
+   15 satırın `checked_not_stated` olduğu, 2 satırın `confirmed_no_restriction`'a
+   yükseldiği, Lumiere'in kirli `citizenship_restrictions`'ının temizlendiği, Interlochen'in
+   kendi satırının doğru son durumda olduğu.
 
-Bu makinede son çalıştırma: iki koşu da temiz, sekiz kontrolün hepsi beklenen sayıda.
+Ayrıca (0'ıncı adım, veritabanına dokunmadan önce): **sağlama kontrolü** — 8 kaynak dosyanın
+şu anki SHA-256'sı, paketin kendi başlığındaki üretim-anı değerleriyle karşılaştırılıyor.
+Farklıysa test hemen durur, hangi dosyanın bayatladığını söyler.
+
+Bu makinede son çalıştırma: sağlama kontrolü temiz, iki koşu da temiz, dokuz kontrolün hepsi
+beklenen sayıda.
 
 ## Canlıya hiçbir şey yazılmadı
 

@@ -53,6 +53,18 @@ başka bir pakette bunun yüzünden bir adım ikinci denemede patladı). Bu pake
 Düzeltmelerden sonra: iki koşu da hatasız, ve her kurumun istatistik/gereksinim/tarih
 satır sayısı **tek tek** kontrol edildi — hiçbiri ikiye katlanmadı.
 
+**DÜZELTME 4 (2026-09-04, Paket 15'i yenilerken bulundu, bu dosya merge edildikten
+SAATLER sonra):** Interlochen Review satırının (`95093e1a`) `country_eligibility_
+confirmed_open = true` ataması, bu paket zaten inşa edilip merge edildikten sonra, ASIL
+kaynağında (`docs/d2-visible-priority-additions-2026-09-04.sql`) geri çekildi — "from
+around the world" ifadesi Immerse Education'ınkiyle aynı gerekçeyle politika beyanı değil,
+betimleme sayıldı (bkz. Paket 15'in kendi OKU-BENİ'si). **Ama geri çekme bu paketin
+ÇOKTAN İNŞA EDİLMİŞ hâline hiç yansımamıştı** — kurucunun eline geçecek dosya hâlâ eski
+satırı taşıyordu. Bu paketin kendisinde düzeltildi (sadece `eligible_grades` kalacak
+şekilde), `check-package-14-sequence.sh` ile yeniden doğrulandı, temiz. Aynı "paket
+üretildikten sonra kaynak değişti" hatası, bir seviye derinde — Paket 15'in kendi OKU-
+BENİ'sindeki üçüncü düzeltmeye bakın, kalıcı önlem (sağlama kontrolü) orada.
+
 ## Ne dahil değil, ve neden
 
 - **Migration 0123 (ödeme), 0128, 0129, 0130** — henüz yazılmadı ya da henüz main'e

@@ -691,15 +691,26 @@ set source_url = 'https://techgirlsglobal.org/apply/eligibility-and-application-
     last_verified_at = now()
 where id = '7081b03a-3e04-4843-8bc5-0078cfd040f2';
 
--- 6. Interlochen Review -- grade and country both confirmed, genuinely empty before:
--- "high school writers, singer-songwriters and artists (grades 9-12 or high school
--- postgraduate year)... from around the world." Country treated as an affirmative
--- statement (guidance about who is invited to submit, not just historical attendee stats)
--- -- the same evidentiary bar as Immerse Education/Penn Pre-College in earlier batches, not
--- a lower one; flagged here explicitly as the closer call of the two.
+-- 6. Interlochen Review -- grade confirmed, genuinely empty before: "high school writers,
+-- singer-songwriters and artists (grades 9-12 or high school postgraduate year)... from
+-- around the world."
+--
+-- WITHDRAWN 2026-09-04 (at this bundle's own source, docs/d2-visible-priority-additions-
+-- 2026-09-04.sql, after this package was already built and merged): the country half
+-- (country_eligibility_confirmed_open = true) was reasoning from "from around the world" as
+-- an affirmative openness statement -- this file's own original comment already flagged it as
+-- "the closer call of the two" against Immerse Education, and once Immerse's own identical
+-- reasoning was judged insufficient (docs/citizenship-restrictions-classification-2026-09-04.
+-- sql, the confirmed_open/basis independence bug CEO found), the same call applies here.
+-- Reclassified as checked_not_stated instead, alongside Immerse, in that same file -- not
+-- left as a withdrawn note with no replacement value written anywhere. This bundled copy of
+-- the source UPDATE had gone stale relative to that correction (found resyncing Package 15
+-- against current source, 2026-09-04) -- fixed here at the bundle itself, matching this
+-- package's own established "fix at the source, not just report it" standard, since this
+-- bundle is what the founder actually runs, not the source file alone. Grade eligibility is
+-- unaffected and stays.
 update public.opportunities
 set eligible_grades = array['9','10','11','12'],
-    country_eligibility_confirmed_open = true,
     last_verified_at = now()
 where id = '95093e1a-fc13-4d9a-b4ed-5f0584252b44';
 
