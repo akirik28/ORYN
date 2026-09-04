@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { computeAdmissionOutlook, dataConfidenceForCompleteness, outlookLabel } from "@/lib/admissions/outlook";
 import { checkUndergraduateFieldAvailability } from "@/lib/admissions/field-availability";
+import { checkUndergraduatePathwayAvailability } from "@/lib/admissions/pathway-availability";
 import { resolveAdmissionSystem } from "@/lib/admissions/system-shape";
 
 describe("dataConfidenceForCompleteness", () => {
@@ -308,6 +309,77 @@ describe("computeAdmissionOutlook", () => {
       });
       expect(result.outlook).not.toBe("not_applicable");
     });
+  });
+});
+
+/**
+ * docs/d7-no-pathway-universities-findings-2026-09-04.md. Proves the suppression actually
+ * fires for a university on the list and does NOT fire for one that isn't — the two-sided
+ * proof this feature needs before it can be trusted (a check that only ever returns green
+ * proves nothing about whether it can catch the case it exists for).
+ */
+describe("pathwayAvailability: no entry point outranks everything else", () => {
+  const base = { profileStrength: 88, admissionRate: 0.05, dataConfidence: "high" } as const;
+  const TOKYO_ID = "2c25084f-260f-4b34-9499-5b2d1fb9a873";
+  const NOT_LISTED_ID = "e6cae05f-b8b3-4ae4-84f8-6b11d53de28a"; // MIT — a real id, not one of the four researched entries
+
+  test("RED->GREEN, listed side: Tokyo suppresses the outlook instead of rating it", () => {
+    const result = computeAdmissionOutlook({
+      ...base,
+      pathwayAvailability: checkUndergraduatePathwayAvailability({ universityId: TOKYO_ID }),
+    });
+    expect(result.outlook).toBe("not_applicable");
+    expect(result.notApplicableKind).toBe("no_undergraduate_pathway_for_applicant");
+    expect(result.notApplicableReason).toContain("PEAK");
+    expect(result.estimateRangeLow).toBeNull();
+    expect(result.estimateRangeHigh).toBeNull();
+  });
+
+  test("RED->GREEN, unlisted side: a university not on the list is rated normally, not suppressed", () => {
+    const result = computeAdmissionOutlook({
+      ...base,
+      pathwayAvailability: checkUndergraduatePathwayAvailability({ universityId: NOT_LISTED_ID }),
+    });
+    expect(result.outlook).not.toBe("not_applicable");
+    expect(result.notApplicableKind).toBeNull();
+    expect(result.estimateRangeLow).not.toBeNull();
+  });
+
+  test("omitting pathwayAvailability entirely behaves identically to the unlisted case (backward compatible)", () => {
+    const withUnlisted = computeAdmissionOutlook({ ...base, pathwayAvailability: checkUndergraduatePathwayAvailability({ universityId: NOT_LISTED_ID }) });
+    const omitted = computeAdmissionOutlook({ ...base });
+    expect(omitted).toEqual(withUnlisted);
+  });
+
+  test("pathway suppression outranks fieldAvailability — Tokyo wins even when the field also isn't offered", () => {
+    const result = computeAdmissionOutlook({
+      ...base,
+      pathwayAvailability: checkUndergraduatePathwayAvailability({ universityId: TOKYO_ID }),
+      fieldAvailability: checkUndergraduateFieldAvailability({ country: "United States", field: "medicine" }),
+    });
+    expect(result.notApplicableKind).toBe("no_undergraduate_pathway_for_applicant");
+  });
+
+  test("pathway suppression outranks Gate 1 — the mechanism sentence is dropped, since it would be moot", () => {
+    const result = computeAdmissionOutlook({
+      ...base,
+      admissionSystem: resolveAdmissionSystem({ targetCountry: "Denmark", studentCountry: "Turkey" }),
+      pathwayAvailability: checkUndergraduatePathwayAvailability({ universityId: "9b743584-6f43-4fdd-8f53-fbf2e60a1bd8" }), // Copenhagen
+    });
+    expect(result.notApplicableKind).toBe("no_undergraduate_pathway_for_applicant");
+    expect(result.admissionSystemMechanism).toBeNull();
+    expect(result.notApplicableReason).toContain("Danish");
+  });
+
+  test("its reason and sources are distinct from every other suppression kind", () => {
+    const pathway = computeAdmissionOutlook({ ...base, pathwayAvailability: checkUndergraduatePathwayAvailability({ universityId: TOKYO_ID }) });
+    const field = computeAdmissionOutlook({
+      ...base,
+      fieldAvailability: checkUndergraduateFieldAvailability({ country: "United States", field: "medicine" }),
+    });
+    expect(pathway.notApplicableKind).not.toBe(field.notApplicableKind);
+    expect(pathway.notApplicableReason).not.toEqual(field.notApplicableReason);
+    expect(pathway.sources.some((s) => s.includes("d7-no-pathway"))).toBe(true);
   });
 });
 

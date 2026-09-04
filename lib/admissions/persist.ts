@@ -7,6 +7,7 @@ import { getCurrentProfile, getProfileScores } from "@/lib/security/dal";
 import { CAREER_PROFILE_SCORE_VERSION } from "@/lib/scoring/types";
 import { getUniversity, getUniversityStatistics } from "@/lib/universities/detail-reads";
 import { checkUndergraduateFieldAvailability } from "./field-availability";
+import { checkUndergraduatePathwayAvailability } from "./pathway-availability";
 import { computeAdmissionOutlook, dataConfidenceForCompleteness, type AdmissionOutlookResult } from "./outlook";
 import { resolveAdmissionSystem } from "./system-shape";
 import { hasConfidentSignal, toProfileSignal } from "@/lib/scoring/signal";
@@ -154,6 +155,11 @@ export async function refreshAdmissionOutlook(
     locale
   );
   const fieldAvailability = checkUndergraduateFieldAvailability({ country: targetCountry, field: targetField }, locale);
+  // Keyed by university, not by the resolved program/field above — see
+  // lib/admissions/pathway-availability.ts's own note on why (every entry currently has zero
+  // university_programs rows to key a per-program check against; the fact itself is
+  // university-level, not program-level).
+  const pathwayAvailability = checkUndergraduatePathwayAvailability({ universityId: target.university_id }, locale);
 
   const outlook = computeAdmissionOutlook(
     {
@@ -162,6 +168,7 @@ export async function refreshAdmissionOutlook(
       dataConfidence,
       admissionSystem,
       fieldAvailability,
+      pathwayAvailability,
     },
     locale
   );

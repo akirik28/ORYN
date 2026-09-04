@@ -1,5 +1,6 @@
 import type { DataConfidence, OutlookLabel } from "@/types/database";
 import type { FieldAvailabilityResult } from "./field-availability";
+import type { PathwayAvailabilityResult } from "./pathway-availability";
 import type { AdmissionSystemResolution, AdmissionSystemShape } from "./system-shape";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
@@ -127,6 +128,12 @@ export type AdmissionSystemType = "holistic" | "credential_gate";
  * migration the price of a better sentence. All of these persist as `not_applicable`.
  */
 export type NotApplicableKind =
+  /** This university has no undergraduate admission pathway this applicant can use at all
+   * right now (`docs/d7-no-pathway-universities-findings-2026-09-04.md`: Tokyo's PEAK closed,
+   * Copenhagen/UNAM/TU Dresden's bachelor's level isn't offered in English). Outranks every
+   * other kind below — if there is no entry point, how the country would evaluate an
+   * application that was never going to be filed out this way is moot. */
+  | "no_undergraduate_pathway_for_applicant"
   /** No non-academic evidence review, and a competitive academic cutoff exists that Proxola
    * cannot see (Turkey/YKS, Ireland/CAO, Spain, Australia, German NC subjects). */
   | "no_evidence_review_rank_competitive"
@@ -167,6 +174,13 @@ export interface AdmissionOutlookInputs {
    * take a bachelor's first" is a genuinely useful answer where a generic disclaimer is not.
    */
   fieldAvailability?: FieldAvailabilityResult;
+  /**
+   * Whether this university currently has an undergraduate admission pathway this applicant
+   * can use at all — `checkUndergraduatePathwayAvailability()` from `./pathway-availability`.
+   * Outranks `fieldAvailability`: if there's no entry point into the university for this
+   * applicant shape, whether a specific field exists there is moot.
+   */
+  pathwayAvailability?: PathwayAvailabilityResult;
 }
 
 export interface AdmissionOutlookResult {
@@ -202,6 +216,8 @@ export interface AdmissionOutlookResult {
 }
 
 const NOT_APPLICABLE_REASONS: Record<NotApplicableKind, string> = {
+  no_undergraduate_pathway_for_applicant:
+    "There is no undergraduate admission pathway open to you at this university right now.",
   no_evidence_review_rank_competitive:
     "This target admits on academic results alone, in rank order against a cutoff that moves every year with demand. Proxola's reach/competitive/likely scale describes how a profile reads to a human reviewer, and there is no reviewer here — so it would be describing a step that doesn't exist. Proxola also can't show you where this cycle's cutoff will land, and won't guess.",
   no_evidence_review_threshold:
@@ -228,6 +244,8 @@ const NOT_APPLICABLE_REASONS: Record<NotApplicableKind, string> = {
  * (does not guess) — neither softens into a claim Proxola doesn't have grounds for.
  */
 const NOT_APPLICABLE_REASONS_TR: Record<NotApplicableKind, string> = {
+  no_undergraduate_pathway_for_applicant:
+    "Şu anda bu üniversitede senin için açık bir lisans kabul yolu yok.",
   no_evidence_review_rank_competitive:
     "Bu hedef yalnızca akademik sonuçlara göre, her yıl talebe göre değişen bir sıralama eşiğine göre kabul yapıyor. Proxola'nın Zorlu/Rekabetçi/Olası ölçeği bir profilin insan bir değerlendirici gözünde nasıl okunduğunu anlatır; burada bir değerlendirici yok — yani var olmayan bir adımı anlatmış olurdu. Proxola ayrıca bu dönemin eşiğinin nereye geleceğini gösteremez ve tahmin yürütmez.",
   no_evidence_review_threshold:
@@ -266,18 +284,23 @@ export function computeAdmissionOutlook(inputs: AdmissionOutlookInputs, locale: 
   const tier = selectivityTier(inputs.admissionRate);
   const compositeScore = Math.max(0, Math.min(100, inputs.profileStrength - SELECTIVITY_PENALTY[tier]));
 
-  // Precedence, most to least specific. A field that isn't an undergraduate object in this
-  // country outranks Gate 1 entirely: if the degree path doesn't exist, how the country would
-  // have evaluated it is moot. Gate 1 then outranks the deprecated coarse flag.
+  // Precedence, most to least specific. No pathway into the university at all outranks
+  // everything: if there's no entry point for this applicant, whether a specific field exists
+  // there or how the country would have evaluated the application is moot either way. A field
+  // that isn't an undergraduate object in this country outranks Gate 1 next, for the same
+  // "the degree path doesn't exist" reasoning one level down. Gate 1 then outranks the
+  // deprecated coarse flag.
   const shape = inputs.admissionSystem?.shape ?? null;
   const notApplicableKind: NotApplicableKind | null =
-    inputs.fieldAvailability?.availability === "not_offered_at_undergraduate"
-      ? "field_not_offered_at_undergraduate"
-      : shape !== null
-        ? notApplicableKindForShape(shape)
-        : inputs.admissionSystemType === "credential_gate"
-          ? "credential_gate_unspecified"
-          : null;
+    inputs.pathwayAvailability?.availability === "not_available_for_applicant"
+      ? "no_undergraduate_pathway_for_applicant"
+      : inputs.fieldAvailability?.availability === "not_offered_at_undergraduate"
+        ? "field_not_offered_at_undergraduate"
+        : shape !== null
+          ? notApplicableKindForShape(shape)
+          : inputs.admissionSystemType === "credential_gate"
+            ? "credential_gate_unspecified"
+            : null;
   const isNotApplicable = notApplicableKind !== null;
 
   // compositeScore is still computed above (a real, if not admissions-relevant, read of raw
@@ -299,17 +322,26 @@ export function computeAdmissionOutlook(inputs: AdmissionOutlookInputs, locale: 
     estimateConfidence = inputs.dataConfidence === "high" ? "medium" : "low";
   }
 
-  // For the field case the student is shown the specific route ("Medicine is not an
-  // undergraduate degree in the United States — you take a bachelor's first, then apply to
-  // medical school"), never the generic sentence alone: the whole reason this kind is
-  // separate is that a real answer exists here, and the country's general admissions
-  // mechanism is beside the point once the degree path itself doesn't exist.
+  // For the pathway and field cases the student is shown the specific situation ("PEAK's
+  // final intake was Fall 2026" / "Medicine is not an undergraduate degree in the United
+  // States — you take a bachelor's first, then apply to medical school"), never the generic
+  // sentence alone: the whole reason these kinds are separate is that a real answer exists
+  // here, and the country's general admissions mechanism is beside the point once there's no
+  // entry point (pathway) or the degree path itself doesn't exist (field).
+  const pathway = notApplicableKind === "no_undergraduate_pathway_for_applicant" ? inputs.pathwayAvailability! : null;
   const field = notApplicableKind === "field_not_offered_at_undergraduate" ? inputs.fieldAvailability! : null;
-  const mechanism = field ? null : (inputs.admissionSystem?.mechanism ?? null);
+  const mechanism = pathway || field ? null : (inputs.admissionSystem?.mechanism ?? null);
 
   let notApplicableReason: string | null = null;
   if (isNotApplicable) {
-    if (field) {
+    if (pathway) {
+      // Same locale/fallback reasoning as the field branch below — pathway.explanation is
+      // already in the caller's chosen locale via checkUndergraduatePathwayAvailability(query,
+      // locale); only the defensive fallback needs its own lookup.
+      notApplicableReason = [pathway.explanation ?? notApplicableReasonFor(notApplicableKind, locale), pathway.caveat]
+        .filter((part): part is string => part !== null)
+        .join(" ");
+    } else if (field) {
       // field.explanation is already in the caller's chosen locale by this point — it comes
       // from inputs.fieldAvailability, which the caller built via
       // checkUndergraduateFieldAvailability(query, locale). Only the fallback (an unresearched
@@ -341,6 +373,6 @@ export function computeAdmissionOutlook(inputs: AdmissionOutlookInputs, locale: 
     notApplicableKind,
     admissionSystemShape: shape,
     admissionSystemMechanism: mechanism,
-    sources: field ? field.sources : (inputs.admissionSystem?.sources ?? []),
+    sources: pathway ? pathway.sources : field ? field.sources : (inputs.admissionSystem?.sources ?? []),
   };
 }
