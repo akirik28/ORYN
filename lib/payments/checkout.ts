@@ -8,10 +8,11 @@ export type StartCheckoutResult = { status: "ready"; checkoutUrl: string } | { s
 
 /**
  * The one function both the plan page and the full-screen upgrade modal call (per CEO's
- * "one source, not three" instruction) — a Server Action wraps this per call site
- * (app/(app)/settings/actions.ts's startUltraCheckoutAction) rather than exporting this
- * directly as one, so this stays plain, testable async code with no "use server" framework
- * coupling.
+ * "one source, not three" instruction), via a single Server Action wrapper —
+ * app/(app)/upgrade-interstitial-actions.ts's startUltraCheckoutAction, the exact function
+ * 48's modal work had already stubbed and both real callers already imported before this
+ * landed; this stays the plain, testable async logic underneath it, with no "use server"
+ * framework coupling of its own.
  *
  * Price comes from getFinanceSettings (lib/admin/queries.ts), never a parameter and never
  * hardcoded here — whatever's live in kumanda's finance settings row is what actually gets

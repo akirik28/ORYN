@@ -2,7 +2,6 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { requireUser, getCurrentProfile } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -14,8 +13,6 @@ import { logEvent } from "@/lib/analytics/log";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { getTranslations } from "next-intl/server";
 import { advisorInstructionsMaxLength } from "@/lib/tier/advisor-instructions";
-import { env } from "@/lib/env";
-import { startUltraCheckout, type StartCheckoutResult } from "@/lib/payments/checkout";
 import type { NotificationCategory, TimeBudget, ResponseMode } from "@/types/database";
 
 /**
@@ -359,29 +356,6 @@ export async function updateAdvisorInstructions(text: string): Promise<{ error?:
 export async function registerUltraInterestAction(): Promise<void> {
   const session = await requireUser();
   await logEvent(session.userId!, "ultra_interest_registered");
-}
-
-/**
- * The one checkout entry point both the plan page and the full-screen upgrade modal call
- * (CEO's "one source, not three" instruction) — a thin wrapper around
- * lib/payments/checkout.ts's startUltraCheckout, whose provider-agnostic logic stays plain,
- * testable async code with no "use server" coupling.
- *
- * Deliberately returns a result object rather than calling next/navigation's redirect()
- * itself: the checkout URL is an EXTERNAL domain (the provider's own hosted page), and both
- * call sites need to render their own transition state (a spinner, an honest "not available
- * yet" message) around the redirect rather than have the server throw one unconditionally.
- * The caller does `window.location.href = result.checkoutUrl` on "ready" — this must be
- * called from a Client Component for that reason, not rendered as a plain form action.
- *
- * "not_configured" renders as an honest unavailable state (AGENTS.md: never a fake success,
- * never a dead button pretending to work) — see lib/payments/index.ts's own comment on why
- * this can genuinely happen even once PAYMENT_PROVIDER is set (chosen but not yet built).
- */
-export async function startUltraCheckoutAction(): Promise<StartCheckoutResult> {
-  const session = await requireUser();
-  const origin = (await headers()).get("origin") || env.app.url;
-  return startUltraCheckout(session.userId!, `${origin}/settings/plan?checkout=success`, `${origin}/settings/plan?checkout=canceled`);
 }
 
 /**
