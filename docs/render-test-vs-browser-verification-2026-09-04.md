@@ -83,25 +83,28 @@ breakpoints, real computed CSS and dark-mode token resolution, animation/motion,
 focus states that depend on genuine browser behavior are all outside what jsdom can answer at
 all, regardless of how the test is written.
 
-**What to actually do, in priority order** — full mechanics, root cause, and the exact
-limits of each option: `docs/worktree-dev-server-hazards-2026-09-04.md`:
-1. `preview_start({url: "http://127.0.0.1:<port>/design-preview/..."})` against whichever dev
-   server is already running (call `mcp__ccd_directory__change_directory` to your own
-   worktree first if you might start one yourself — otherwise skip straight to attaching).
-   Verifies the checkout that server is actually running, which is the **main, merged**
-   checkout unless you started your own — not your own unmerged branch. `127.0.0.1`, never
-   `localhost` (cookie/session risk, not port-scoped — see that doc).
-2. If you genuinely need to see *your own unmerged worktree's* change and no server is
-   already running one you can attach to: there is currently no way to start one yourself
-   through this tool that also survives the cross-worktree Turbopack lock (confirmed
-   2026-09-04 — see that doc's own root-cause section). Say so plainly and pick one:
-   merge/land the change first and verify via (1), or state explicitly in the report that
-   visual verification specifically wasn't performed and why, rather than letting a render
-   test or a source read stand in for a screenshot without saying so.
-3. Never open any route under this app's own authenticated pages in the shared pane on the
-   strength of "it's just for looking" — that risk is independent of and prior to all of the
-   above (`docs/worktree-dev-server-hazards-2026-09-04.md`'s §3 has the full account: browser
-   cookies are host-scoped, not port-scoped, so a "fresh" local port is not a clean session).
+**The team policy (CEO, 2026-09-04), settled — not a per-lane choice**: a lane needing
+visual/layout proof writes a render test if the question is answerable that way at all (most
+"I need to see it" requests turn out to be, per the two cases above); if it genuinely can't
+be (real layout, responsive, CSS, motion), it says so plainly in its report rather than
+opening its own dev server. **Live visual checks happen at two points only**: the integrator,
+once, after merge; or the founder's own QA account (A7) — never a lane running `next dev`
+(any form, any bundler) on its own worktree. This isn't a workaround for the tool limitation
+above — it's the actual policy, decided once disk pressure made the reason concrete: nine
+lanes each holding open a dev server is nine lanes' worth of accumulating `.next` build
+output, and disk hit ~700MB free the same night from exactly that pattern on a much smaller
+scale. The narrow remaining gap — seeing your *own unmerged* worktree's change live, before
+an integrator ever touches it — is accepted as out of scope for a lane to solve itself;
+render tests plus honest reporting cover the rest.
+
+**If you are the integrator, verifying after merge** — full mechanics, root cause, and the
+exact limits: `docs/worktree-dev-server-hazards-2026-09-04.md`.
+`preview_start({url: "http://127.0.0.1:<port>/design-preview/..."})` against whichever dev
+server is already running is the one live-verification path this policy still uses — it
+needs no server-starting action at all, so it doesn't collide with the policy above. Never
+`localhost` (cookie/session risk, not port-scoped — see that doc's §3) and never any route
+under this app's own authenticated pages in the shared pane, on the strength of "it's just
+for looking" — that risk is independent of and prior to everything else in this document.
 
 ## If you're not sure which one you need
 
