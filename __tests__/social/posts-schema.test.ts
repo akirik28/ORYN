@@ -561,7 +561,27 @@ describe("migration numbering", () => {
     // runner would have been permanently unable to write the column it exists to maintain,
     // making every run treat everything as new. A guard that blocks everyone looks safe and
     // is a different bug. 0120 removed; 0118 remains the single fix.
-    expect(Math.max(...numbers.map(Number))).toBe(119);
+    //
+    // 0121 (profiles_guard_plan_tier_and_account_role) -- the same sweep's higher-severity
+    // finding, confirmed by CEO before this migration was written: profiles.plan_tier and
+    // profiles.ultra_gift_expires_at (added 2026-09-03, the Ultra tier-economics build) were
+    // never folded into profiles_guard_protected_columns() (unchanged since 0063). The RLS
+    // "update own profile" policy is a bare id = auth.uid() with no column restriction, so a
+    // student could PATCH their own row and self-grant Ultra tier -- live, on the only
+    // database this product has, no error, no failing test. account_role (0116) folded in
+    // alongside per CEO (single writer, already service-role, narrower blast radius than the
+    // tier columns). last_digest_sent_at (0114) deliberately left out, documented in the
+    // migration's own comment rather than silently skipped -- inert today, would start
+    // mattering the day the digest job arms. current_user <> 'service_role' kept unchanged --
+    // unlike parent_links (0116/0118, directly above -- security definer makes current_user
+    // the wrong check there, auth.uid() the right one), this function has no security definer
+    // and current_user <> 'service_role' has protected every column here correctly since 0062.
+    // See supabase/tests/profiles_guard_manual.sql for the both-directions proof this
+    // migration ships alongside itself, not yet run against any live database by this
+    // migration's own author, matching 0116/0118's own parent_links_rls_manual.sql precedent --
+    // and see that same precedent's own lesson directly above before assuming a guard pattern
+    // transfers unchanged between two functions with different SECURITY properties.
+    expect(Math.max(...numbers.map(Number))).toBe(121);
   });
 });
 
