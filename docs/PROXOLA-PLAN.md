@@ -221,7 +221,7 @@ ikisini de **elle kontrol ettim:**
 **Yani acele yok.** Uygulanana kadar özellikler sadece varsayılan davranışı
 gösterir; hiçbiri hata vermez. Kurucu döndüğünde tek pakette verilecek.
 
-## D7 — giriş yolu olmayan programlar işaretlensin (yeni, sahipsiz)
+## D7 — ✅ ÖLÇÜLDÜ, KOD YAZILMADI (bilinçli)
 
 D1 dolgusunda çıktı: **Tokyo Üniversitesi'nde bizim 14-18 yaş kitlemiz için
 İngilizce-öğretim lisans başvuru yolu yok** — PEAK son alımını Fall 2026'da
@@ -232,9 +232,23 @@ yaptı, diğer İngilizce program (GSC) yalnızca yurt dışında iki yıl okumu
 ürün ona bir **kabul görünümü** hesaplıyor — başvurabileceği bir yol olmadığı
 hâlde. Spesifikasyonun yasakladığı sahte kesinliğin tam örneği.
 
-Dolgu oturumu bunu, GSC'nin transfer şartlarını genel şartmış gibi yazmak yerine
-durumu açıkça anlatan bir satır olarak kaydetti — doğru olan. **Eksik olan,
-ürünün bunu bilmesi.**
+**Ölçüm sonucu işi durdurdu, ve doğrusu bu:** Tokyo'nun `target_universities`'de
+**sıfır**, `university_programs`'ta **sıfır** satırı var — bugün hiçbir öğrenciyi
+etkilemiyor. Gerçekten hedeflenen 12 üniversitenin hiçbiri bu şekilde değil, ve en
+olası ikinci vaka (Kyoto) kontrol edildi: **açık bir yolu var.** Yani sıfır
+öğrenciyi etkileyen, tek bir vaka.
+
+**Karar (CEO): ne migration, ne tek girdili liste.** Tek satırlık bir liste, altı ay
+sonra kimsenin güncellemediği bir bakım yüzeyidir. `international_eligible` ve
+`discontinued` sütunlarının 17046 satırın **sıfırında** kullanılmış olması da bunu
+destekliyor: **okunmayan sütun değil, hiç araştırılmamış boyut** — çözümü kod değil
+araştırma.
+
+**Kalıcı kural:** dolgu şeritleri böyle bir üniversiteye rastlarsa **dokümana
+kaydeder.** Üç vaka birikince mekanizma kurulur — bağlanma noktası
+(`refreshAdmissionOutlook`, `fieldAvailability`'nin yanı) ve hazır `not_applicable`
+mekanizması (0049) `docs/d7-no-pathway-universities-findings-2026-09-04.md`'de
+haritalanmış durumda, iş bir saatlik olacak.
 
 ## D4 eki — yeni kopya çifti, sahipsiz
 
