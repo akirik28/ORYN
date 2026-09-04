@@ -111,7 +111,15 @@ export function NotificationBell({ notifications, unreadCount }: { notifications
         </div>
         <div className="max-h-96 overflow-y-auto">
           {items.length === 0 ? (
-            <p className="px-4 py-7 text-center text-[13px]" style={{ color: "#AAAABC" }}>{t("allCaughtUp")}</p>
+            // Reuses the /notifications page's own honest empty-state copy ("Nothing here
+            // yet") rather than the "All caught up" this popover used to show. "All caught
+            // up" presupposes something had happened and was seen — for a student who has
+            // never received a single notification (2026-09-04 audit: true for the majority
+            // of real accounts, since generate-weekly-plans isn't wired into any schedule
+            // yet), that reads as reassurance in the wrong direction, on the one surface
+            // every student sees before ever opening the full page. See
+            // docs/application-tracker-notification-audit-2026-09-04.md.
+            <p className="px-4 py-7 text-center text-[13px]" style={{ color: "#AAAABC" }}>{t("page.emptyAllTitle")}</p>
           ) : (
             items.map((item) => {
               const key = item.kind === "single" ? item.notification.id : `group-${item.category}`;

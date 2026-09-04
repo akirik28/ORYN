@@ -92,6 +92,12 @@ const TRACKED_TYPES: Record<string, string> = {
   // to find them the way DataConfidence was found, per this file's own stated growth model.
   CourseLevel: "courseLevelLabel (lib/ai/student-context.ts)",
   EmploymentType: "employmentTypeLabel (lib/ai/student-context.ts)",
+  // 2026-09-04, research-generator audit follow-up: `skills` reached lib/ai/ for the first
+  // time in this same pass — tracked from day one rather than waiting for a live incident,
+  // same growth model as CourseLevel/EmploymentType above. The accessor already existed
+  // (lib/profile/cv-import.ts, built for the manual skill form and CV-import review screen)
+  // and is reused here, not reinvented.
+  SkillCategory: "skillCategoryLabel (lib/profile/cv-import.ts)",
 };
 
 const EXEMPT: { file: string; property: string; type: string; reason: string }[] = [

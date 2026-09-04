@@ -11,6 +11,7 @@ import { canonicalUniversityId, loadSupersessionMap, type SupersessionMap } from
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { dimensionLabel } from "@/lib/scoring/labels";
 import { curriculumLabel } from "@/lib/requirements/copy";
+import { skillCategoryLabel } from "@/lib/profile/cv-import";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { resolveAdvisorInstructions } from "@/lib/tier/advisor-instructions";
 import { DEFAULT_LOCALE, isLocale, type Locale } from "@/lib/i18n/config";
@@ -26,6 +27,7 @@ import type {
   PlanTier,
   ProfileDimension,
   ReflectionOutcome,
+  SkillCategory,
   TargetStatus,
   TimeBudget,
 } from "@/types/database";
@@ -305,6 +307,15 @@ export interface StudentAdvisorContext {
   /** Counselor Core field/relevance matching (mirrors lib/opportunities/persist-matches.ts's
    * existing use of this table) — not included in formatContextForPrompt today. */
   interests: string[];
+  /** Spec Phase 4/58 names `skills` as a profile entity and Phase 13 names it as a research-
+   * generator input, but nothing fetched this table into either the advisor or the research
+   * generator's context before 2026-09-04 (found during the research-generator audit,
+   * docs/handoffs/research-project-generator-audit-2026-09-04.md) — `requiredSkills` on a
+   * generated research project was pure invention with zero signal about what the student
+   * already has. Same minimal shape as `getPortfolioSkills` (lib/portfolio/build.ts): name +
+   * the closed `category` enum, no `proficiency` — nothing downstream needs it yet, and
+   * `interests` right above is the same "just enough to name in a sentence" shape. */
+  skills: { name: string; category: SkillCategory }[];
   /** `outlook` is the persisted enum, not a free string — typing it loosely is what let the
    *  raw `extreme_reach` reach the prompt and then a student. `status` tightened alongside
    *  it in the same 2026-09-02 sweep that caught curriculum/weeklyTimeBudget/confidence —
@@ -447,7 +458,7 @@ export async function buildStudentAdvisorContext(userId: string, supabaseClient?
   // two redundant round trips to the same 9-row table. See lib/universities/canonical.ts.
   const supersessionMap = await loadSupersessionMap(supabase);
 
-  const [profileRes, targetUniversities, upcomingDeadlines, recentRecsRes, recentActionsRes, pendingApplicationRequirements, sportsRes, interestsRes] = await Promise.all([
+  const [profileRes, targetUniversities, upcomingDeadlines, recentRecsRes, recentActionsRes, pendingApplicationRequirements, sportsRes, interestsRes, skillsRes] = await Promise.all([
     // select("*"), not an explicit column list: an explicit list naming a column that
     // doesn't exist yet on a given environment (citizenship_countries, migration 0047 — same
     // no-DDL-access constraint as 0043/0046) makes PostgREST reject the WHOLE query
@@ -487,6 +498,7 @@ export async function buildStudentAdvisorContext(userId: string, supabaseClient?
     getPendingApplicationRequirements(supabase, userId, supersessionMap),
     supabase.from("sports_experiences").select("sport, level, is_captain, hours_per_week, ongoing, achievements").eq("user_id", userId),
     supabase.from("student_interests").select("label").eq("user_id", userId),
+    supabase.from("skills").select("name, category").eq("user_id", userId),
   ]);
 
   const profile = readOr("profile", profileRes, null, { userId });
@@ -564,6 +576,7 @@ export async function buildStudentAdvisorContext(userId: string, supabaseClient?
     })),
     goals: facts.goals.map((g) => ({ title: g.title, category: g.category })),
     interests: readOr("interests", interestsRes, [], { userId }).map((i) => i.label),
+    skills: readOr("skills", skillsRes, [], { userId }),
     sports: readOr("sports", sportsRes, [], { userId }).map((s) => ({
       sport: s.sport,
       level: s.level,
@@ -813,6 +826,11 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
   // argument, not context.interests) — a student who set these during onboarding was never once
   // reminded the advisor already has them, on either hot path.
   lines.push(`Interests: ${context.interests.join(", ") || "none set"}`);
+  // Fetched into context 2026-09-04 (see the `skills` interface comment above) — same
+  // closed-enum-needs-a-label treatment as courseLevel/employmentType above, reusing the
+  // label function the manual skill form and CV-import review screen already use rather
+  // than inventing a second copy (lib/profile/cv-import.ts's skillCategoryLabel).
+  lines.push(`Skills: ${context.skills.map((s) => `${s.name} [${skillCategoryLabel(s.category, locale)}]`).join(", ") || "none set"}`);
   /**
    * `outlook` is a persisted enum (`extreme_reach`, `not_applicable`, …) and the badge that
    * renders it says "Extreme Reach". Handed the raw value, the model writes the raw value:

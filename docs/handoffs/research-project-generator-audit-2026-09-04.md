@@ -165,7 +165,63 @@ as that doc describes them).
 - The `ai_recommendations`/Phase 63 picture is more specific than "doesn't exist" — it exists,
   is fetched, and is still bypassed by this feature's own prompt construction.
 
-None of these were fixed, per instruction.
+None of these were fixed in this pass, per instruction. CEO's decisions on all four, and the
+follow-up build, are below.
+
+## CEO's decisions on the four findings, and the follow-up build
+
+Two built, two recorded and deliberately left alone — CEO's own reasoning for each:
+
+**1. `weeklyTimeBudget` raw leak — built, no further measurement needed.** The model was
+seeing `"5_10h"`, not "5-10 hours a week," on an input the founder's own spec calls out by
+name (Phase 64: "Do not recommend 15 hours of extracurricular work to a student with 3 free
+hours"). CEO's framing: we don't need to know how well the model was interpreting the raw
+token — the shared accessor already exists (`timeBudgetLabel`, fixed elsewhere 2026-09-02),
+so there was nothing left to measure before applying it here too. Fixed on
+`oryn/research-generator-context-fix-2026-09-04` — `generateResearchProjects` now computes
+the same label `formatContextForPrompt` already does, via the same `timeBudgetLabel`
+accessor, not a second copy.
+
+**2. `skills` context — measure first, then wire.** CEO's instruction: a populated-looking
+table can still be empty in the specific set a student actually sees (the exact pattern this
+session hit repeatedly tonight with `research_topics_top5`), so measure real per-student
+coverage before wiring anything. Measured live: 9 total `skills` rows, 2 of 11 accounts have
+any (avg 4.5 when present). Thin, but structurally different from the research-topics case —
+`skills` is a flat name+category list with no categorization/taxonomy step that could
+silently zero it out the way research topics did, so "populated" here means "real" whenever
+it's present, not "real but often filtered to nothing." Judged meaningful enough per CEO's own
+bar ("anlamlıysa bağla"). Wired on the same branch, into both consumers CEO named:
+`StudentAdvisorContext.skills` is now fetched once in `buildStudentAdvisorContext` and reaches
+both `formatContextForPrompt` (the shared advisor-chat/weekly-plan formatter) and
+`generateResearchProjects`'s own hand-built prompt, through the same `skillCategoryLabel`
+accessor already used by the manual skill form and CV-import review screen (not a new label
+table). `requiredSkills` on a generated project can now build on what a student already has
+instead of inventing it from nothing.
+
+**3. Not being cached — recorded, not fixed.** Every click is a billed call and the rate limit
+throttles frequency without deduplicating, but live usage is genuinely zero, so there is no
+cost today to justify building a fix for a case nobody is hitting — the same
+don't-build-for-an-invisible-case rule this session applied elsewhere tonight. Recording it
+here, explicitly, as the first thing to check once this feature is actually being used: if
+`ai_usage` ever shows real `research_generator` volume, look at whether repeated identical
+requests (same field, same interests, same day) are worth deduplicating before spending more
+on it — nothing about that judgment can be made honestly with zero real traffic to look at.
+
+**4. Phase 63 half-implemented — recorded, not fixed.** "Avoid re-recommending the same
+rejected idea" is real, and only half-exists (`avoid_for_now`-class only, and not even reaching
+this feature's own prompt regardless) — but with zero real students, nobody has been affected
+by it yet. Recorded as a known gap, not built.
+
+Gates on the code changes above: `tsc --noEmit` clean; `eslint` clean on every changed file;
+full suite green (`npx vitest run`, no failures beyond pre-existing expected ones, see the
+push commit for the exact count). Both fixes proven red-to-green — the exact naive/pre-fix
+line swapped back in, confirmed only the new tests fail (with the raw enum value visibly in
+the failure diff), reverted, confirmed green again — at two independent call sites
+(`generateResearchProjects`'s own prompt, and `formatContextForPrompt`'s shared one). Three
+pre-existing hand-built `StudentAdvisorContext` fixtures (`lib/ai/eval/fixtures.ts` ×2,
+`__tests__/ai/student-context.test.ts`'s `baseContext()`) needed a `skills` field added to keep
+compiling — found exhaustively via `tsc`, not by grep, so this is the complete list, not a
+best-effort one.
 
 ---
 

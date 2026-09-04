@@ -15,6 +15,14 @@ import { thresholdCrossed } from "@/lib/deadlines/scan";
  * package, silently missing Phase 23's own outermost bucket. 1 is kept even though it isn't
  * literally in the spec's 3/7/14/30 list — a same-day-tomorrow alert is a deliberate,
  * pre-existing addition, not something this package is removing.
+ *
+ * CORRECTED 2026-09-04: every "in-between" case below used to expect `null` — the function
+ * required EXACT equality against REMINDER_THRESHOLDS, so a deadline 6 days out (between the
+ * 7- and 3-day buckets) matched nothing, ever. That was the actual bug this fix addresses
+ * (see docs/application-tracker-notification-audit-2026-09-04.md and thresholdCrossed's own
+ * updated comment in lib/deadlines/scan.ts) — these cases now expect the NEAREST bucket the
+ * deadline has already reached, not null. Only two things still return null: more than 30
+ * days out (nothing applies yet) and already past (nothing to remind about any more).
  */
 
 const TODAY = new Date("2026-09-02T00:00:00");
@@ -37,21 +45,21 @@ describe("thresholdCrossed", () => {
     { daysOut: 7, expected: 7 },
     { daysOut: 3, expected: 3 },
     { daysOut: 1, expected: 1 },
-    { daysOut: 0, expected: null },
-    { daysOut: 2, expected: null },
-    { daysOut: 4, expected: null },
-    { daysOut: 6, expected: null },
-    { daysOut: 8, expected: null },
-    { daysOut: 13, expected: null },
-    { daysOut: 15, expected: null },
-    { daysOut: 29, expected: null },
-    { daysOut: 31, expected: null },
+    { daysOut: 0, expected: 1 }, // due today — already inside every bucket, nearest is 1
+    { daysOut: 2, expected: 3 },
+    { daysOut: 4, expected: 7 },
+    { daysOut: 6, expected: 7 }, // the live shape this fix was written for (Oxford, 2026-09-04)
+    { daysOut: 8, expected: 14 },
+    { daysOut: 13, expected: 14 },
+    { daysOut: 15, expected: 30 },
+    { daysOut: 29, expected: 30 },
+    { daysOut: 31, expected: null }, // still more than 30 days out — nothing applies yet
     { daysOut: -1, expected: null },
     { daysOut: -14, expected: null },
   ];
 
   for (const { daysOut, expected } of cases) {
-    test(`${daysOut} day(s) out ${expected === null ? "does NOT cross a threshold" : `crosses the ${expected}-day threshold`}`, () => {
+    test(`${daysOut} day(s) out ${expected === null ? "does NOT cross a threshold" : `is caught by the ${expected}-day bucket`}`, () => {
       expect(thresholdCrossed(dateStringDaysFromToday(daysOut), TODAY)).toBe(expected);
     });
   }

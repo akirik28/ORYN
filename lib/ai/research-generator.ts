@@ -5,7 +5,8 @@ import { getAIProvider } from "./index";
 import { withUsageLogging } from "./usage";
 import { selectModelForUser } from "./limits/budget";
 import { openAlexProvider } from "@/lib/providers/openalex";
-import { buildStudentAdvisorContext } from "./student-context";
+import { buildStudentAdvisorContext, timeBudgetLabel } from "./student-context";
+import { skillCategoryLabel } from "@/lib/profile/cv-import";
 import { withOutputLanguage } from "./output-language";
 import type { PlanTier } from "@/types/database";
 
@@ -79,11 +80,26 @@ export async function generateResearchProjects(params: {
       ? `Graduating ${context.student.graduationYear} (${yearsUntilGraduation} year${yearsUntilGraduation === 1 ? "" : "s"} from now).`
       : "Graduation year not on file.";
 
+  // 2026-09-04, research-generator audit follow-up
+  // (docs/handoffs/research-project-generator-audit-2026-09-04.md): this function builds its
+  // own prompt rather than calling formatContextForPrompt, so it missed the 2026-09-02
+  // raw-enum-leak sweep entirely — the model was seeing the literal stored token ("5_10h"),
+  // not "5-10 hours a week", for one of the inputs the spec calls out by name (Phase 64:
+  // "Do not recommend 15 hours of extracurricular work to a student with 3 free hours").
+  // Same fix as student-context.ts's own formatContextForPrompt, same accessor, reused not
+  // reinvented.
+  const timeBudgetText = context.student.weeklyTimeBudget ? timeBudgetLabel(context.student.weeklyTimeBudget, context.student.preferredLanguage) : "not set";
+  // `skills` reached context for the first time in this same pass (see student-context.ts's
+  // interface comment) — without this, `requiredSkills` on a generated project was the model
+  // inventing what a project needs with zero signal about what the student already has.
+  const skillsText =
+    context.skills.length > 0 ? context.skills.map((s) => `${s.name} [${skillCategoryLabel(s.category, context.student.preferredLanguage)}]`).join(", ") : "none listed";
+
   const provider = getAIProvider();
   const result = await withUsageLogging({ userId: params.userId, feature: "research_generator", selectModel: (uid) => selectModelForUser(uid, params.tier) }, (model) =>
     provider.generateStructured({
       system: withOutputLanguage(SYSTEM_PROMPT, context.student.preferredLanguage),
-      prompt: `Student field of interest: ${params.field}\nOther interests: ${params.interests.join(", ") || "none stated"}\n${gradeContext}\nWeekly time budget: ${context.student.weeklyTimeBudget ?? "not set"}\nCurrent research score: ${context.profileScores.find((s) => s.dimension === "research")?.score ?? "unknown"}/100\n\nCurrent research literature in this space, for grounding:\n${themesContext}\n\nGenerate up to 3 achievable research project ideas.`,
+      prompt: `Student field of interest: ${params.field}\nOther interests: ${params.interests.join(", ") || "none stated"}\n${gradeContext}\nWeekly time budget: ${timeBudgetText}\nExisting skills: ${skillsText}\nCurrent research score: ${context.profileScores.find((s) => s.dimension === "research")?.score ?? "unknown"}/100\n\nCurrent research literature in this space, for grounding:\n${themesContext}\n\nGenerate up to 3 achievable research project ideas, building on the student's existing skills where relevant rather than assuming they start from zero.`,
       schema: ResearchProjectListSchema,
       schemaName: "record_research_projects",
       schemaDescription: "Records up to 3 achievable research project ideas for the student.",

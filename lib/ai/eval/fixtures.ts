@@ -89,6 +89,13 @@ export const REGRESSION_CONTEXT: StudentAdvisorContext = {
   sports: [],
   goals: [{ title: "Study Economics at a top European university", category: "academic" }],
   interests: ["Economics", "Entrepreneurship"],
+  // 2026-09-04, added alongside StudentAdvisorContext's new `skills` field — fits the
+  // entrepreneurship/leadership persona, exercises the populated path (BASELINE_CONTEXT
+  // below exercises the empty one).
+  skills: [
+    { name: "Financial modeling", category: "analytical" },
+    { name: "Public speaking", category: "communication" },
+  ],
   targetUniversities: [{ id: "t1", universityId: "u1", programId: null, name: "London School of Economics", status: "target", outlook: "extreme_reach" }],
   upcomingDeadlines: [{ title: "LSE — personal statement", date: inDays(21), source: "target_university" }],
   recentRecommendationTitles: [],
@@ -146,6 +153,10 @@ export const BASELINE_CONTEXT: StudentAdvisorContext = {
   sports: [{ sport: "Swimming", level: "varsity", isCaptain: false, hoursPerWeek: 6, ongoing: true, achievements: null }],
   goals: [{ title: "Improve SAT score", category: "academic" }],
   interests: ["Economics", "Data Science"],
+  // Empty, same as certifications/volunteeringExperiences/workExperiences above — exercises
+  // formatContextForPrompt's "none set" fallback for this field (REGRESSION_CONTEXT exercises
+  // the populated path).
+  skills: [],
   targetUniversities: [{ id: "t2", universityId: "u2", programId: null, name: "University of Michigan", status: "exploring", outlook: "competitive" }],
   upcomingDeadlines: [{ title: "Economics Challenge — application", date: inDays(6), source: "opportunity" }],
   recentRecommendationTitles: ["Start a school investment club"],

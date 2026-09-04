@@ -28,6 +28,10 @@ const EN_TRANSLATE = (key: string, values?: Record<string, string | number>) => 
   }
 };
 
+// thresholdBucket is a fixed placeholder here, never asserted on — buildDigestNotification
+// is pure formatting and only ever reads daysUntil (the real count) and itemLabel/singleBody;
+// the bucket exists on DeadlineHit purely as filterAlreadyNotified/writeDeadlineNotifications'
+// dedup key (see dedupe-and-aggregation.test.ts for that behavior).
 function hit(overrides: Partial<DeadlineHit> = {}): DeadlineHit {
   return {
     userId: "student-1",
@@ -35,6 +39,7 @@ function hit(overrides: Partial<DeadlineHit> = {}): DeadlineHit {
     source: "application",
     sourceId: "app-1",
     daysUntil: 7,
+    thresholdBucket: 7,
     link: "/applications/app-1",
     itemLabel: "Yale University",
     singleBody: "Yale University — application deadline approaching.",

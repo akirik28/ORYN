@@ -103,6 +103,7 @@ describe("scanSavedOpportunityDeadlines — pinned current behavior", () => {
         source: "opportunity",
         sourceId: "opp-1",
         daysUntil: 7,
+        thresholdBucket: 7,
         link: "/opportunities",
         itemLabel: "Breakthrough Junior Challenge",
         singleBody: "Breakthrough Junior Challenge — application deadline approaching.",

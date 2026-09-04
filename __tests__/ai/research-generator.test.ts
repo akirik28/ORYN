@@ -19,11 +19,12 @@ interface RecordedInsert {
   row: Record<string, unknown>;
 }
 
-const { insertMock, monthToDateRowsRef, providerRef, graduationYearRef } = vi.hoisted(() => ({
+const { insertMock, monthToDateRowsRef, providerRef, graduationYearRef, skillsRef } = vi.hoisted(() => ({
   insertMock: vi.fn<(call: RecordedInsert) => Promise<{ error: null }>>(async () => ({ error: null })),
   monthToDateRowsRef: { current: [] as Array<{ estimated_cost: number | null }> },
   providerRef: { current: null as MockAIProvider | null },
   graduationYearRef: { current: null as number | null },
+  skillsRef: { current: [] as { name: string; category: string }[] },
 }));
 
 vi.mock("@/lib/supabase/admin", () => {
@@ -45,12 +46,29 @@ vi.mock("@/lib/supabase/admin", () => {
 
 vi.mock("@/lib/ai/index", () => ({ getAIProvider: () => providerRef.current }));
 
-vi.mock("@/lib/ai/student-context", () => ({
-  buildStudentAdvisorContext: async () => ({
-    student: { preferredLanguage: "en", graduationYear: graduationYearRef.current, weeklyTimeBudget: "3-4 hours" },
-    profileScores: [{ dimension: "research", score: 42, confidence: "medium", state: "some_evidence" }],
-  }),
-}));
+// 2026-09-04, research-generator audit follow-up: partial mock, not a full replacement —
+// generateResearchProjects now also imports timeBudgetLabel from this module (fixing the
+// raw-enum leak below), and a full replacement without it would throw
+// "timeBudgetLabel is not a function" the moment that code runs. Keeping the real accessor
+// (via importActual, the same module __tests__/ai/student-context.test.ts already loads
+// directly with no mocking at all) also makes the new tests below meaningful — a hand-faked
+// "always returns X" stub would pass even if the production code called it with the wrong
+// argument. weeklyTimeBudget corrected from the previous fixture's display-prose value
+// ("3-4 hours", not a real TimeBudget member — the exact fixture-shape drift the 2026-09-02
+// eval-fixture sweep fixed elsewhere in lib/ai/eval/fixtures.ts, just not here) to a real enum
+// key, since it now actually reaches timeBudgetLabel's lookup table instead of only ever being
+// echoed raw.
+vi.mock("@/lib/ai/student-context", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/ai/student-context")>("@/lib/ai/student-context");
+  return {
+    ...actual,
+    buildStudentAdvisorContext: async () => ({
+      student: { preferredLanguage: "en", graduationYear: graduationYearRef.current, weeklyTimeBudget: "5_10h" },
+      profileScores: [{ dimension: "research", score: 42, confidence: "medium", state: "some_evidence" }],
+      skills: skillsRef.current,
+    }),
+  };
+});
 
 vi.mock("@/lib/providers/openalex", () => ({
   openAlexProvider: { searchWorks: async () => ({ success: false, error: { message: "not queried in this test" } }) },
@@ -85,6 +103,7 @@ beforeEach(() => {
   providerRef.current = new MockAIProvider();
   monthToDateRowsRef.current = [];
   graduationYearRef.current = null;
+  skillsRef.current = [];
 });
 
 describe("generateResearchProjects — usage recording", () => {
@@ -122,5 +141,56 @@ describe("generateResearchProjects — grade-level context", () => {
 
     const sentPrompt = providerRef.current!.structuredCalls[0]?.prompt as string;
     expect(sentPrompt).toContain("Graduation year not on file.");
+  });
+});
+
+/**
+ * 2026-09-04, research-generator audit follow-up
+ * (docs/handoffs/research-project-generator-audit-2026-09-04.md): this function builds its
+ * own prompt rather than calling formatContextForPrompt, so it missed the 2026-09-02
+ * raw-enum-leak sweep entirely — the model was seeing the literal stored token ("5_10h"), not
+ * "5-10 hours a week", the exact spec-named input Phase 64 says to reason from ("Do not
+ * recommend 15 hours of extracurricular work to a student with 3 free hours").
+ */
+describe("generateResearchProjects — weekly time budget uses the real label", () => {
+  test("the readable label reaches the prompt, not the raw enum member", async () => {
+    const { generateResearchProjects } = await import("@/lib/ai/research-generator");
+    providerRef.current!.queueStructured(sampleProjectList());
+
+    await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics", tier: "standard" });
+
+    const sentPrompt = providerRef.current!.structuredCalls[0]?.prompt as string;
+    expect(sentPrompt).toContain("Weekly time budget: 5-10 hours");
+    expect(sentPrompt).not.toContain("5_10h");
+  });
+});
+
+/**
+ * Same audit, same follow-up: `skills` reached StudentAdvisorContext for the first time in
+ * this pass — before this, `requiredSkills` on a generated project was the model inventing
+ * what a project needs with zero signal about what the student already has.
+ */
+describe("generateResearchProjects — existing skills reach the prompt", () => {
+  test("skills render with a readable category label, not the raw enum member", async () => {
+    skillsRef.current = [{ name: "Financial modeling", category: "analytical" }];
+    const { generateResearchProjects } = await import("@/lib/ai/research-generator");
+    providerRef.current!.queueStructured(sampleProjectList());
+
+    await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics", tier: "standard" });
+
+    const sentPrompt = providerRef.current!.structuredCalls[0]?.prompt as string;
+    expect(sentPrompt).toContain("Existing skills: Financial modeling [Analytical]");
+    expect(sentPrompt).not.toContain("[analytical]");
+  });
+
+  test("no skills on file degrades to an explicit 'none listed', not a silent omission or a crash", async () => {
+    skillsRef.current = [];
+    const { generateResearchProjects } = await import("@/lib/ai/research-generator");
+    providerRef.current!.queueStructured(sampleProjectList());
+
+    await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics", tier: "standard" });
+
+    const sentPrompt = providerRef.current!.structuredCalls[0]?.prompt as string;
+    expect(sentPrompt).toContain("Existing skills: none listed");
   });
 });
