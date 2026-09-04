@@ -49,6 +49,28 @@
 
 ---
 
+## ⏸️ KONTROLLÜ MOLA — 4 Eylül akşamı (yeniden açıldığında önce bunu oku)
+
+Kurucu limit dolduğu için filoyu durdurdu. **Dokuz şerit de düzenli durdu:** her
+biri işini push etti, devir notu yazdı, `.next`'ini sildi. **Kayıp yok.**
+
+**Yeniden açıldığında sıra:**
+1. **Kurucunun yedi maddesi aşağıda** — ilk üçü tek oturumda biter ve en çok onlar açar.
+2. **`data/morning/14 → 15 → 16` paketleri hazır**, üçü de iki kez test edilmiş.
+   **Eksik olan tek şey: üçünü ARDIŞIK çalıştıran sıra testi** — hiç yapılmadı,
+   ve sabah kurucunun elinde patlayan hata tam olarak sıradan çıkmıştı.
+3. **Dağıtım tablosu aşağıda** — her şeridin nerede kaldığı yazılı. Yeni oturuma
+   madde numarası ver, dokümanı okusun.
+
+**Molada geçerli iki kural (bugün ikisi de gerçek olay sonrası kondu):**
+- **`git stash` şeritler arasında PAYLAŞILIYOR.** `pop`/`apply` asla index'siz;
+  uzun saklama için dal. Bugün bir şeridin dosyaları başkasının worktree'sine
+  uygulanmaya başladı, tesadüfen durdu.
+- **Derleme yapan `.next`'ini siler.** Bugün disk iki kez doldu, ikincisinde
+  tamamen — sebep dokuz worktree'de biriken ~2,5 GB derleme önbelleğiydi.
+
+---
+
 ## DURUM — 4 Eylül, öğleden sonra (önce bunu oku)
 
 **Sende bekleyen yedi şey. Hiçbiri şu an kimseyi durdurmuyor — hepsinin etrafından
