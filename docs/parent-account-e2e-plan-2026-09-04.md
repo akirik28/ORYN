@@ -98,10 +98,20 @@ begin;
 
 -- Three links to the same real student, one per status, so B4/B5/B2
 -- all run against identical underlying data and only the link status
--- varies. savepoints wrap the two checks expected to raise a real
--- exception (B11's duplicate insert, B7-B9's writes don't raise --
--- RLS-blocked writes affect 0 rows silently, confirmed earlier
--- tonight) so one expected failure doesn't abort the whole script.
+-- varies. B11's duplicate insert and B7's INSERT-based write-denial
+-- check both raise a real, hard exception (23505 and 42501) rather
+-- than silently affecting 0 rows the way an UPDATE-based denial does
+-- (B8/B9 below) -- RLS rejects an INSERT at the WITH CHECK stage,
+-- where there's no existing row to filter against, so there's no
+-- "not visible, 0 rows" outcome available the way there is for
+-- UPDATE/DELETE. Both are wrapped in a DO block with its own
+-- EXCEPTION handler, not a bare savepoint -- confirmed 2026-09-04
+-- (docs/parent-account-e2e-run-2026-09-04.md has the red/green proof)
+-- that "savepoint; risky op; select; rollback to savepoint" as
+-- separate top-level statements does NOT survive being run through
+-- the execute_sql tool: it stops submitting anything after an
+-- unhandled error, savepoint or not, so every check after the first
+-- one of these silently never ran, with no visible sign of the gap.
 
 insert into public.parent_links (parent_user_id, student_user_id, status, confirmed_at)
 values ('7722ebe9-55af-49e6-9722-8547b8ce33a7', '026e9295-1a83-4192-b57a-326aa2807b45', 'active', now());
@@ -199,10 +209,18 @@ with attempt as (
 )
 select 'B8: parent UPDATE on profiles (expect 0 rows affected)' as check, count(*) from attempt;
 
-with attempt as (
-  insert into public.target_universities (user_id, university_id, status) select '026e9295-1a83-4192-b57a-326aa2807b45', id, 'exploring' from public.universities limit 1 returning id
-)
-select 'B7: parent INSERT on target_universities (expect 0 rows -- error or empty, either is a pass)' as check, count(*) from attempt;
+create temporary table if not exists _b7_result (result text);
+grant insert on _b7_result to authenticated;
+delete from _b7_result;
+do $$
+begin
+  insert into public.target_universities (user_id, university_id, status)
+  select '026e9295-1a83-4192-b57a-326aa2807b45', id, 'exploring' from public.universities limit 1;
+  insert into _b7_result values ('FAILED -- insert should have been rejected by RLS');
+exception when insufficient_privilege then
+  insert into _b7_result values ('correctly rejected (42501)');
+end $$;
+select 'B7: parent INSERT on target_universities (expect "correctly rejected")' as check, result from _b7_result;
 
 -- ---------- B10: multi-child scoping (a real second student, Mei Tanaka) ----------
 reset role;
@@ -217,11 +235,16 @@ select 'B10: get_parent_child_profile(mei)' as check, display_name from public.g
 -- ---------- B11: unique constraint ----------
 reset role;
 reset request.jwt.claims;
-savepoint before_dup;
-insert into public.parent_links (parent_user_id, student_user_id, status) values ('7722ebe9-55af-49e6-9722-8547b8ce33a7', '026e9295-1a83-4192-b57a-326aa2807b45', 'pending');
--- expect: ERROR 23505 unique_violation. If this SELECT is reached instead, the constraint is missing.
-select 'B11 FAILED -- duplicate insert should have raised 23505' as check;
-rollback to savepoint before_dup;
+create temporary table if not exists _b11_result (result text);
+delete from _b11_result;
+do $$
+begin
+  insert into public.parent_links (parent_user_id, student_user_id, status) values ('7722ebe9-55af-49e6-9722-8547b8ce33a7', '026e9295-1a83-4192-b57a-326aa2807b45', 'pending');
+  insert into _b11_result values ('FAILED -- duplicate insert should have raised 23505');
+exception when unique_violation then
+  insert into _b11_result values ('correctly rejected (23505)');
+end $$;
+select 'B11: duplicate (parent_user_id, student_user_id) insert (expect "correctly rejected")' as check, result from _b11_result;
 
 -- ---------- B12: backfill ----------
 select 'B12: non-student account_role count (expect 0 tonight)' as check, count(*) from public.profiles where account_role is distinct from 'student';
@@ -230,10 +253,14 @@ rollback;  -- always. nothing above this line survives.
 ```
 
 **On running it**: paste as one script into the Supabase SQL editor (or `execute_sql`) — every
-`select ... as check` row is self-labeled, so the output reads top-to-bottom as a report. The
-B11 block is expected to error with `23505`; if the script instead reaches the "B11 FAILED"
-line, that's the actual finding, not a script bug. Everything else should produce a clean row
-per check, expected values noted in each label.
+`select ... as check` row is self-labeled, so the output reads top-to-bottom as a report. B7
+and B11 each report through their own small temp table (`_b7_result`/`_b11_result`) rather
+than a bare `select`, precisely so an unhandled exception can't take the rest of the script
+down with it (see the script's own header comment, and
+`docs/parent-account-e2e-run-2026-09-04.md` for why this matters and how it was proven). Both
+are expected to read "correctly rejected"; if either instead reads "FAILED," that's the actual
+finding, not a script bug. Everything else should produce a clean row per check, expected
+values noted in each label.
 
 **This script assumes both 0116 and 0118 are applied.** They may not land in the same sitting —
 if only 0116 has landed, the C3a/C3b block (the two `last_commentary_sent_at` references)
