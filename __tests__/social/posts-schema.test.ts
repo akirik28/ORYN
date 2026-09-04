@@ -617,7 +617,22 @@ describe("migration numbering", () => {
     // those at the default would have told the next research pass "nobody has looked here"
     // about three universities that had just been looked at. Same discipline as 0119 itself:
     // this value is only ever set by a real research pass, never guessed, never defaulted to.
-    expect(Math.max(...numbers.map(Number))).toBe(127);
+    //
+    // 0128/0129 not landed as files as of this rebase. 0130 (parent_commentary_entries) is
+    // storage for B3b's monthly parent commentary narrative -- the batch runner computed it
+    // and discarded it, writing only a timestamp; this migration adds the table
+    // (parent_link_id-scoped, not student-scoped, so a student with two linked parents keeps
+    // two independent series) and get_parent_child_commentary, its own read function. Found
+    // and fixed a real cross-tenant leak in the function before it ever landed on this branch:
+    // the first version gated on is_active_parent_of() alone, the same pattern 0116's three
+    // existing get_parent_child_* functions use correctly for tables with one row per
+    // student -- but this table has one row per PARENT-STUDENT PAIR, so that gate alone let
+    // an active parent's query pull in a second, unrelated parent's own entries through the
+    // shared student_user_id join. Proven locally against a real Postgres cluster (docs/
+    // parent-commentary-storage-rls-proof-2026-09-04.md), including confirming the assertion
+    // itself can fail: the deliberately-broken version was reinstalled mid-script and the
+    // unrelated-parent check correctly went red before the real, scoped function was restored.
+    expect(Math.max(...numbers.map(Number))).toBe(130);
   });
 });
 
