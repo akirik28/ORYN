@@ -16,6 +16,7 @@ export class MockAIProvider implements AIProvider {
   private textQueue: (string | Error)[] = [];
   public structuredCalls: AIStructuredRequest<unknown>[] = [];
   public textCalls: AIRequest[] = [];
+  public textStreamCalls: AIRequest[] = [];
 
   queueStructured(response: unknown): this {
     this.structuredQueue.push(response);
@@ -32,6 +33,23 @@ export class MockAIProvider implements AIProvider {
     const next = this.textQueue.shift();
     if (next === undefined) throw new Error("MockAIProvider: no more text responses queued");
     if (next instanceof Error) throw next;
+    return { text: next, usage: { inputTokens: 10, outputTokens: 10 }, model: request.model ?? "mock-model" };
+  }
+
+  /** Shares textQueue with generateText — same underlying response, callers shouldn't need
+   * to know which of the two methods their code under test actually calls. Delivers the
+   * whole queued string as a single `onDelta` call rather than simulating word-by-word
+   * chunking: enough for a caller testing "did I accumulate onDelta into the right final
+   * text", which is what every caller of this method actually needs to verify. A test that
+   * specifically needs multi-chunk behavior can call `onDelta` itself multiple times against
+   * a hand-built provider instead of asking this shared fixture to guess a chunking scheme
+   * no real caller depends on. */
+  async generateTextStream(request: AIRequest, onDelta: (delta: string) => void): Promise<AITextResult> {
+    this.textStreamCalls.push(request);
+    const next = this.textQueue.shift();
+    if (next === undefined) throw new Error("MockAIProvider: no more text responses queued");
+    if (next instanceof Error) throw next;
+    onDelta(next);
     return { text: next, usage: { inputTokens: 10, outputTokens: 10 }, model: request.model ?? "mock-model" };
   }
 
