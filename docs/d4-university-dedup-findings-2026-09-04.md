@@ -91,6 +91,40 @@ D3's own priority list ("skip these five named rows specifically if picking up D
 Filling a superseded row's own depth would be wasted research effort on a row a student can
 never independently see.
 
+## The safety rule this task actually turns on — and a live check, not just the rule
+
+CEO's addendum, prompted by a real near-miss in a sibling fill session: **CUHK (Hong Kong) and
+CUHK-Shenzhen are administratively separate institutions**, not a duplicate — the fill session
+pulled an IELTS figure from a search-engine summary that was actually CUHK-Shenzhen's, caught
+only by going to the official page. **University of Toronto and Toronto Metropolitan
+University** (formerly Ryerson) are likewise separate, confirmed live by that same session. The
+same shape is plausible for **NTU Singapore vs. National Taiwan University** and **UBC
+Vancouver vs. UBC Okanagan** — name-fragment overlap, genuinely different institutions.
+
+**The rule this doc's own MIT/HKUST/UCL merges actually followed, stated explicitly so it
+doesn't have to be re-derived next time:** a duplicate call is never made on name similarity
+alone. It needs at least two independent signals — official domain (not a search-engine
+summary), city/country, and an institution identifier where one exists — and
+`merge_canonical_entities()` (migration 0038) already enforces this upstream: `canonical_entity_id`
+is set from ROR/external-id evidence, never from string matching, and `pickCanonicalWinner`
+(`lib/universities/canonical.ts`) only ever runs on rows already confirmed identical by that
+step — it picks which confirmed-duplicate row survives, it never decides whether two rows are
+duplicates. MIT's own pair is what sufficient evidence looks like: shared `canonical_entity_id`
+already set, then confirmed independently by comparing the two `university_statistics` rows
+field-by-field — same admission rate, same SAT/ACT ranges, same College Scorecard UNITID. That
+UNITID match is the closest thing to an institution identifier this pass had, and it's what
+made the merge safe, not the fact that the two names looked alike.
+
+**Checked live, not just asserted:** none of CUHK, Toronto/TMU, NTU Singapore/National Taiwan
+University currently share a `canonical_entity_id` or carry a `superseded_by_id` pointing at
+each other — each queried by name, each shows `duplicate_status='canonical'` with its own
+distinct `canonical_entity_id` and its own real `website_url` (`cuhk.edu.hk`, `torontomu.ca`
+vs. `utoronto.ca`, `ntu.edu.sg` vs. `ntu.edu.tw`). No UBC Okanagan row exists yet, so that pair
+isn't a live risk today. **When in doubt, don't merge — mark it for review and say why, rather
+than resolve the doubt by merging.** Cost of leaving a real duplicate pair unmerged is two rows
+sitting in the fill queue a little longer; cost of merging two different institutions is their
+data blending together, discovered later, if it's discovered at all.
+
 ## Not done here, and why
 
 No migration filed — there is nothing for one to do. No code change to
