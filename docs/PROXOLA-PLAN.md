@@ -106,6 +106,21 @@ dosya olarak katıldı.
 doğrulandıkları anın fotoğrafı; kod değişince onlar değişmiyor. Dört paketin
 dördünde de artık SHA sağlaması var — bu sınıf kapandı.
 
+**🔧 YENİDEN AÇILINCA İLK KOD İŞİ — tek satırlık, ve öğrencinin güvenine dokunuyor.**
+`home-strip.ts:175` fırsatları **yalnızca `match_score`** ile sıralıyor, ikincil
+anahtar yok. **2039 satırda sadece 21 farklı skor var**, ve 8 öğrencinin 7'sinde
+5. sıradaki skor paylaşılıyor — en kötü vakada bir öğrencinin **tüm top-5'i, aynı
+43 puana sahip 191 fırsattan** geliyor. SQL beraberlik sırasını garanti etmiyor.
+
+**Şu an kararlı, ama tesadüfen:** tabloya bu oturum boyunca hiç yazma olmadı, o
+yüzden index'in fiziksel sırası sabit kaldı. **Herhangi bir yazma** — o öğrenciyle
+ilgisi olmayan bir satırı değiştiren rutin bir eşleşme tazelemesi bile — sıralamayı
+sessizce değiştirebilir. Ve cron'lar açıldığında yazma başlayacak.
+
+**Düzeltme muhtemelen tek satır:** ikincil sabit anahtar (`.order("id")`).
+**Uygulanmadı** — mola talimatı geldiğinde bulgu yeni gelmişti; gate'siz tek satır
+atmaktansa açık bırakıldı. Ayrıntı: `docs/home-strip-ranking-stability-2026-09-04.md`.
+
 **Yeniden açıldığında sıra:**
 1. **Kurucunun yedi maddesi aşağıda** — ilk üçü tek oturumda biter ve en çok onlar açar.
 2. **`data/morning/14 → 15 → 16` paketleri hazır**, üçü de iki kez test edilmiş.
