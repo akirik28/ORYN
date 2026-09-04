@@ -49,7 +49,7 @@ comment on column public.profiles.parent_invite_email is
 -- access at all. A parent can revoke their own access; a parent can never self-activate one,
 -- which is the one transition the RLS policies below are built specifically to prevent.
 
-create table public.parent_links (
+create table if not exists public.parent_links (
   id uuid primary key default gen_random_uuid(),
   parent_user_id uuid not null references auth.users(id) on delete cascade,
   student_user_id uuid not null references auth.users(id) on delete cascade,
@@ -80,15 +80,16 @@ comment on column public.parent_links.status is
   admin path before a genuine re-invite could reuse the same pair -- deliberately not
   something student-facing RLS allows; see the guard trigger below).';
 
-create index parent_links_parent_user_id_idx on public.parent_links (parent_user_id);
-create index parent_links_student_user_id_idx on public.parent_links (student_user_id);
-create index parent_links_status_idx on public.parent_links (status);
+create index if not exists parent_links_parent_user_id_idx on public.parent_links (parent_user_id);
+create index if not exists parent_links_student_user_id_idx on public.parent_links (student_user_id);
+create index if not exists parent_links_status_idx on public.parent_links (status);
 
 alter table public.parent_links enable row level security;
 
 -- Both sides of a relationship can see that it exists and its status -- this table holds no
 -- data about the STUDENT beyond an email address and a state machine, so symmetric read
 -- access here is not the privacy question; every other policy in this file is.
+drop policy if exists "parties can view their own link" on public.parent_links;
 create policy "parties can view their own link"
   on public.parent_links for select
   to authenticated
@@ -96,6 +97,7 @@ create policy "parties can view their own link"
 
 -- A student may create ONLY their own pending invite -- never pre-set to active (that would
 -- skip their own confirmation step), never naming someone else as the student.
+drop policy if exists "student can create their own pending invite" on public.parent_links;
 create policy "student can create their own pending invite"
   on public.parent_links for insert
   to authenticated
@@ -105,6 +107,7 @@ create policy "student can create their own pending invite"
 -- WITH CHECK scopes what the row is allowed to become -- pending is deliberately absent from
 -- the allowed target list, so a student can move a link forward (to active) or end it (to
 -- revoked), never back to pending.
+drop policy if exists "student can confirm or revoke their own link" on public.parent_links;
 create policy "student can confirm or revoke their own link"
   on public.parent_links for update
   to authenticated
@@ -115,6 +118,7 @@ create policy "student can confirm or revoke their own link"
 -- NOT allow a parent to move a row toward 'active' -- self-activation is exactly the
 -- shortcut K3 exists to close, and this policy's own WITH CHECK is what closes it at the
 -- database level, not just in whatever UI a later lane builds.
+drop policy if exists "parent can revoke their own link" on public.parent_links;
 create policy "parent can revoke their own link"
   on public.parent_links for update
   to authenticated
@@ -161,6 +165,7 @@ begin
 end;
 $$;
 
+drop trigger if exists parent_links_00_guard_immutable_columns on public.parent_links;
 create trigger parent_links_00_guard_immutable_columns
   before update on public.parent_links
   for each row execute function public.parent_links_guard_immutable_columns();
@@ -203,16 +208,19 @@ grant execute on function public.is_active_parent_of(uuid) to authenticated;
 -- this file, on any table, which is G1 enforced the way K2 demands: an absent policy, not a
 -- hidden button.
 
+drop policy if exists "active parent can view child's opportunity matches" on public.opportunity_matches;
 create policy "active parent can view child's opportunity matches"
   on public.opportunity_matches for select
   to authenticated
   using (public.is_active_parent_of(user_id));
 
+drop policy if exists "active parent can view child's profile scores" on public.profile_scores;
 create policy "active parent can view child's profile scores"
   on public.profile_scores for select
   to authenticated
   using (public.is_active_parent_of(user_id));
 
+drop policy if exists "active parent can view child's profile score snapshots" on public.profile_score_snapshots;
 create policy "active parent can view child's profile score snapshots"
   on public.profile_score_snapshots for select
   to authenticated
