@@ -8,6 +8,17 @@ never came back, so this is the handoff that would otherwise have gone to CEO
 directly. Everything below is real, committed, pushed, and green — **not
 merged**, per standing discipline.
 
+**Status as of the second post-restart CEO check-in (oryn-5b, ~220 min after my
+last push): still 0123, still unclaimed by anyone else** (confirmed —
+`origin/main`'s migration files stop before 0123 and resume at 0124, gap
+matches exactly). Rebased a third time onto `origin/main` (102 commits ahead at
+that point; one real conflict, a doc-comment-only collision in the shared
+`__tests__/stubs/mock-supabase-table.ts` with another lane's unrelated `.in()`
+addition — both descriptions kept, both operations already coexisted in the
+merged code). Full suite green after: **6366 passed, 2 expected fail.** Pushed.
+`types/database.ts` conflict-free this time despite the heavy traffic CEO
+warned about — no new call site needed a fix this round.
+
 ## What this is
 
 CEO's brief: the founder is adding payment, provider not chosen yet (iyzico /
