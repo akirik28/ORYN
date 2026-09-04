@@ -265,6 +265,18 @@ hızlandırdı" diye raporlamasın.**
 
 **Düşünme bütçesini kısmak kapalı** — kurucunun kalite kararı, duruyor.
 
+**Bekleme göstergesi hakkında karar (CEO, ölçümden sonra):** düşünme olayı gerçek
+bir çağrıda **tam olarak metin başladığı anda, sıfır karakterle, bir kez** geliyor
+— canlılık sinyali olarak işe yaramaz. **Ama canlılık sinyalimiz modelde değil,
+bağlantıda.** Zamanlayıcıyla dönen gösterge kalıyor; dürüstlük iki şeyden gelecek:
+(1) akış `done` gelmeden kapanır veya hata verirse gösterge **durur ve gerçek hata
+görünür** — özellikle "hiç olay gelmeden kapandı" hâli doğrulanacak; (2) 300 sn'lik
+tavanın **altında** bir zaman aşımı (ölçülen en kötü çağrı 58 sn).
+
+**Açık düşünme modu (`thinking: {type:"enabled"}`) kovalanmayacak** — faturalı çağrı
++ gerçek yapılandırma değişikliği, kazancı en iyi ihtimalle daha hoş bir animasyon.
+Açık soru olarak duruyor.
+
 
 
 `73124976`: sağlayıcıya `generateTextStream`, `generateAdvisorReplyStream`, ve iki
