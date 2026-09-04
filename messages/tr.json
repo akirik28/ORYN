@@ -1012,6 +1012,7 @@
   "sourceBadge": {
     "source": "Kaynak:",
     "checked": "{time} kontrol edildi",
+    "asOf": "Dönem:",
     "viewSource": "Kaynağı görüntüle"
   },
   "opportunities": {

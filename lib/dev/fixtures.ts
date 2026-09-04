@@ -534,7 +534,10 @@ export const FIXTURE_UNIVERSITY_PROFILE_METRICS = [
   // The branch this exercises on the detail page: no cost_of_attendance (US-only), a real
   // international tuition figure instead — LSE's own published 2025/26 international
   // undergraduate fee, a single exact figure (precision_state "exact"), not a range.
-  { metric_code: "tuition_international_annual", value_numeric: 26400, value_text: null, unit: "GBP", source_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Fees-and-funding", source_type: "official_primary", verified_at: daysFromNow(-10), precision_state: "exact", data_quality_flag: null },
+  // stats_as_of populated on this row only (B5, 2026-09-04) so the dev-preview page's
+  // tuition SourceBadge — which only ever renders this row, not the domestic one below —
+  // has a real "As of" value to show rather than silently rendering the label's absent case.
+  { metric_code: "tuition_international_annual", value_numeric: 26400, value_text: null, unit: "GBP", source_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Fees-and-funding", source_type: "official_primary", verified_at: daysFromNow(-10), precision_state: "exact", data_quality_flag: null, stats_as_of: "2025/26" },
   { metric_code: "tuition_domestic_annual", value_numeric: 9535, value_text: null, unit: "GBP", source_url: "https://www.lse.ac.uk/study-at-lse/Undergraduate/Fees-and-funding", source_type: "official_primary", verified_at: daysFromNow(-10), precision_state: "exact", data_quality_flag: null },
 ];
 

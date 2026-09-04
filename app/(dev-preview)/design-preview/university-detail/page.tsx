@@ -305,10 +305,12 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
           <SourceBadge
             sourceName={internationalTuitionMetric!.source_type!}
             checkedAt={internationalTuitionMetric!.verified_at}
+            asOf={internationalTuitionMetric!.stats_as_of}
             url={internationalTuitionMetric!.source_url!}
             locale={locale}
             sourceLabel={tSourceBadge("source")}
             checkedLabel={(time) => tSourceBadge("checked", { time })}
+            asOfLabel={tSourceBadge("asOf")}
             viewSourceLabel={tSourceBadge("viewSource")}
           />
         ) : null}
