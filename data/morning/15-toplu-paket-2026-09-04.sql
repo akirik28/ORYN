@@ -2,6 +2,24 @@
 -- Migration 0129/0130/0132/0133 + Package 14'ten sonra hazırlanmış 4 veri dolgu dosyası.
 -- CEO'nun dispatch'i: "Paket 14'ten sonra merge edilen ve hiçbir pakette olmayanlar."
 --
+-- ═══ KAYNAK SAĞLAMASI (CEO'nun istediği, bu paket ikinci kez bayatladıktan sonra
+-- eklendi) ═══
+-- Bu paket şu commit'ten üretildi: f192fd611eb704e821b58c7cec82b1946fbbb6d4
+-- Kaynak dosyaların SHA-256'ları (üretim anındaki hâli), her biri
+-- scripts/check-package-15-sequence.sh'in kendi "provenance check" adımında yeniden
+-- hesaplanıp karşılaştırılıyor -- biri değişirse test SESSİZCE geçmiyor, açıkça durup
+-- hangi dosyanın kaynağın gerisinde kaldığını söylüyor:
+--   d06fe40a... docs/citizenship-restrictions-boilerplate-cleanup-2026-09-04.sql
+--   8bfab07e... docs/citizenship-restrictions-classification-2026-09-04.sql
+--   54c52470... docs/d2-country-checked-not-stated-requires-0133-2026-09-04.sql
+--   2ac66ec0... docs/waterloo-cemc-split-execute-2026-09-04.sql
+--   a74113fd... supabase/migrations/0129_age_grade_eligibility_basis.sql
+--   1fbd6a5b... supabase/migrations/0130_parent_commentary_entries.sql
+--   799ed30f... supabase/migrations/0132_university_statistics_year_index_coalesce.sql
+--   c96fc762... supabase/migrations/0133_country_eligibility_basis.sql
+-- Bu paket bu satırdan sonra ELLE düzenlenmemeli -- kaynak değişince buradan
+-- YENİDEN üretilmeli (aynı üretim scripti, worktree'de), tek tek yama değil.
+--
 -- SIRALAMA GEREKÇESİ:
 --
 -- 1) Dört migration ÖNCE gelir, tüm veri bölümlerinden önce -- 0132 özelinde bilinçli bir
@@ -18,40 +36,55 @@
 --    girer ve index oluşturma AYRICA patlar, iki kat kötü. 0132'nin kendi ölçümü (canlı
 --    veride 0 çift satır, 2026-09-04) bu sırada geçerliliğini koruyor çünkü aradaki hiçbir
 --    bölüm o tabloya dokunmuyor.
--- 2) 0133 diğer üç veri dosyasının ikisinin (d2-country, citizenship-classification) doğrudan
---    bağımlısı -- her ikisi de country_eligibility_basis sütununu yazıyor, sütun 0133'ten
---    önce yok. Migration bölümünde olduğu için bu otomatik sağlanıyor.
+-- 2) 0133 diğer dört veri dosyasının ikisinin (d2-country, citizenship-classification)
+--    doğrudan bağımlısı -- her ikisi de country_eligibility_basis sütununu yazıyor, sütun
+--    0133'ten önce yok. Migration bölümünde olduğu için bu otomatik sağlanıyor.
 -- 3) Dört veri dosyası birbirinden BAĞIMSIZ -- hiçbiri aynı opportunity satırının aynı
---    alanına yazmıyor (tek tek doğrulandı, ORYN-wt-package15-2026-09-04 içinde). Yazılış
---    sırasına göre bırakıldı: boilerplate-cleanup → classification → d2-country →
---    waterloo-cemc-split.
+--    alanına yazmıyor (tek tek doğrulandı). Yazılış sırasına göre bırakıldı:
+--    boilerplate-cleanup → classification → d2-country → waterloo-cemc-split.
 --
 -- HARİÇ TUTULAN: D1'in ikinci partisi (QS top-100 kalanı, 14/19, bitmedi -- Paket 14'teki
 -- aynı karar burada da geçerli).
 --
--- DÜZELTME (bu paket hazırlanırken kaynağında yapıldı, kopyada değil): waterloo-cemc-split-
--- execute-2026-09-04.sql'deki 5 INSERT'in re-run guard'ı yoktu (gen_random_uuid() + ON
--- CONFLICT yok = ikinci çalıştırmada 5 satır sessizce çoğalırdı). Mevcut
--- opportunities_dedup_idx'i (migration 0008, normalized_title + organization) kullanan "on
--- conflict ... do nothing" eklendi -- yeni bir mekanizma değil, supabase/seed_drive_
--- batch1.sql'de zaten kanıtlanmış aynı desen. Dosyanın kendi başlığında da not var.
+-- DÜZELTME 1 (kaynağında yapıldı, kopyada değil): waterloo-cemc-split-execute-2026-09-04.
+-- sql'deki 5 INSERT'in re-run guard'ı yoktu (gen_random_uuid() + ON CONFLICT yok = ikinci
+-- çalıştırmada 5 satır sessizce çoğalırdı). Mevcut opportunities_dedup_idx'i (migration
+-- 0008, normalized_title + organization) kullanan "on conflict ... do nothing" eklendi --
+-- yeni bir mekanizma değil, supabase/seed_drive_batch1.sql'de zaten kanıtlanmış aynı desen.
+-- Dosyanın kendi başlığında da not var.
 --
--- İKİNCİ DÜZELTME (CEO, merge öncesi inceleme, kaynağında yapıldı): citizenship-
--- restrictions-classification-2026-09-04.sql, Immerse Education (7f90019e) satırını
--- checked_not_stated'a taşırken country_eligibility_confirmed_open'ı geri almıyordu -- Paket
--- 14'ün D2 dolgusu bu satırı zaten true yapmıştı, TERS gerekçeyle. 0133'ün CHECK kısıtı
--- enum üyeliğini doğruluyor, boole ile çapraz kontrol etmiyor -- hata vermeden, true + 
--- checked_not_stated aynı satırda duruyordu, ve computeEligibility boole'yi önce okuduğu
--- için daha dikkatli yeni sınıflandırma sessizce etkisiz kalıyordu. Daha da inceliği:
--- ikinci koşuda 0133'ün kendi backfill'i (confirmed_open=true iken çalışan) satırı
--- confirmed_no_restriction'a GERİ yazıyordu -- checked_not_stated 13'e düşüyor, 
--- confirmed_no_restriction 3'e çıkıyordu, hiçbir çelişki görünmeden. Boole artık
--- basis'le birlikte sıfırlanıyor -- bu hem çelişkiyi hem ikinci koşudaki sessiz geri
--- yazmayı kapatıyor. Sistematik kontrol: Paket 14'ün confirmed_open=true yaptığı diğer
--- 4 satır (Penn Pre-College, Interlochen Review, TechGirls, bir sınıf-only satır) Paket
--- 15'in hiçbir dosyasında geçmiyor -- tek çakışma buydu. scripts/check-package-15-
--- sequence.sh'e kalıcı kontrol eklendi: iki koşu sonunda hiçbir satır confirmed_open=true
--- ile basis='checked_not_stated' birlikte taşımamalı, üç boyutta da.
+-- DÜZELTME 2 (CEO, merge öncesi inceleme, kaynağında yapıldı): citizenship-restrictions-
+-- classification-2026-09-04.sql, Immerse Education (7f90019e) satırını checked_not_stated'a
+-- taşırken country_eligibility_confirmed_open'ı geri almıyordu -- Paket 14'ün D2 dolgusu bu
+-- satırı zaten true yapmıştı, TERS gerekçeyle. 0133'ün CHECK kısıtı enum üyeliğini
+-- doğruluyor, boole ile çapraz kontrol etmiyor -- hata vermeden, true + checked_not_stated
+-- aynı satırda duruyordu, ve computeEligibility boole'yi önce okuduğu için daha dikkatli
+-- yeni sınıflandırma sessizce etkisiz kalıyordu. Daha da inceliği: ikinci koşuda 0133'ün
+-- kendi backfill'i (confirmed_open=true iken çalışan) satırı confirmed_no_restriction'a GERİ
+-- yazıyordu -- checked_not_stated sayısı düşüyordu, confirmed_no_restriction yükseliyordu,
+-- hiçbir çelişki görünmeden. Boole artık basis'le birlikte sıfırlanıyor. Kalıcı kontrol
+-- eklendi: iki koşu sonunda hiçbir satır confirmed_open=true ile basis='checked_not_stated'
+-- birlikte taşımamalı, üç boyutta da.
+--
+-- DÜZELTME 3 (CEO, ikinci inceleme, kaynağında yapıldı) -- SİSTEMATİK KONTROL YENİDEN
+-- ÇALIŞTIRILDI, önceki iddiaya güvenilmedi: bu paket ilk üretildikten SONRA, citizenship-
+-- restrictions-classification-2026-09-04.sql'e 6. bir satır eklendi -- Interlochen Review
+-- (95093e1a), Düzeltme 2'nin AYNI çelişki sınıfını taşıyordu (Package 14'ün D2 dolgusu bu
+-- satırı da confirmed_open=true yapmıştı, "from around the world" -- Immerse'le birebir
+-- aynı gerekçe, o dosyanın kendi yazarı zaten "ikisinin en yakın çağrısı" diye işaretlemişti).
+-- Bu paket kaynaktan YENİDEN üretildi, 6. satır otomatik dahil oldu. Yeniden doğrulandı,
+-- varsayılmadı: Paket 14'ün confirmed_open=true yaptığı satırlar şimdi sadece 4 (Immerse,
+-- Penn Pre-College, TechGirls, bir sınıf-only satır) -- Interlochen artık bu listede değil,
+-- çünkü AYRI bir bulgu bu sırada çıktı: Interlochen'in confirmed_open=true'sunun asıl
+-- kaynağı (docs/d2-visible-priority-additions-2026-09-04.sql) o dosyanın KENDİSİNDE zaten
+-- geri çekilmişti -- ama bu geri çekme, ÇOKTAN İNŞA EDİLMİŞ Paket 14 paketine (data/
+-- morning/14-toplu-paket-2026-09-04.sql) hiç yansımamıştı. Yani Paket 14, ŞU AN kurucunun
+-- eline geçecek hâliyle, hâlâ eski/hatalı satırı taşıyordu -- Paket 15'in bugün ikinci kez
+-- yaşadığı AYNI bayatlama hatası, bir seviye derinde. Paket 14'ün bu satırı da kaynağında
+-- düzeltildi (data/morning/14-toplu-paket-2026-09-04.sql, doğrudan), Paket 14'ün kendi iki-
+-- koşu testiyle yeniden doğrulandı. Penn Pre-College/TechGirls/sınıf-only satırın hâlâ
+-- hiçbir Paket 15 dosyasında geçmediği taze bir grep ile yeniden doğrulandı, önceki mesaja
+-- güvenilmedi.
 --
 -- İKİ KEZ ÇALIŞTIRILDI, satır sayıldı: scripts/check-package-15-sequence.sh.
 
@@ -508,12 +541,16 @@ where id = 'bc678344-c213-4ae8-a4f8-48af2856338f'
 -- own citizenship_restrictions, and Ross Mathematics Program's citizenship_restrictions.
 
 -- ══════════════════════════════════════════════════════════
--- BÖLÜM 6/8 — CEO'nun 3'lü testiyle sınıflandırılan 7 satır (REQUIRES 0133)
+-- BÖLÜM 6/8 — CEO'nun 3'lü testiyle sınıflandırılan satırlar (REQUIRES 0133)
 -- ══════════════════════════════════════════════════════════
 -- Classification of the 7 rows docs/citizenship-restrictions-boilerplate-cleanup-2026-09-04.sql
 -- deliberately left untouched -- CEO's own three-way test, applied row by row with reasoning
 -- named for each, per CEO's explicit request not to decide silently. REQUIRES MIGRATION 0133
--- (country_eligibility_basis) applied first for the two UPDATEs that set it.
+-- (country_eligibility_basis) applied first for every UPDATE below that sets it. An 8th row,
+-- Interlochen Review, was added 2026-09-04 -- not one of the original 7, found by applying
+-- this same test to a different file's own confirmed_open=true claim once the independence
+-- bug below made "check every row that claims confirmed_open, not just the one that broke"
+-- the right question to ask.
 --
 -- THE TEST (CEO's own framing):
 --   1. An explicit "no restriction" statement -- the page itself states the openness, not
@@ -541,6 +578,19 @@ where id = 'bc678344-c213-4ae8-a4f8-48af2856338f'
 -- confirmed_no_restriction below ALSO clears citizenship_restrictions -- the quote's evidence
 -- has been promoted into the structured field, so the free-text copy is no longer needed and
 -- would actively contradict the new structured answer if left in place.
+--
+-- A FIFTH thing, found only because CEO checked package 14 and this file side by side for the
+-- same id (Immerse, 7f90019e) and noticed the boolean never got reset: the SAME independence
+-- runs the OTHER direction too. computeEligibility/evaluateOpportunityEligibility read
+-- countryEligibilityConfirmedOpen FIRST -- `else if (!confirmedOpen) { check basis }` -- so a
+-- row carrying confirmed_open=true from an EARLIER file and basis='checked_not_stated' from
+-- THIS one would keep running the confirmed_open branch forever; the stricter basis value
+-- would sit in the database and never be read. Package 14 (docs/d2-batch2-additions-and-
+-- corrections-2026-09-04.sql) set Immerse's confirmed_open=true before this file's own
+-- ruling reclassified it -- withdrawn there directly (see that file's own note), but every
+-- checked_not_stated UPDATE below ALSO now writes country_eligibility_confirmed_open = false
+-- explicitly, rather than relying on the source-file withdrawal alone: a package assembled
+-- from this file's own SQL, without re-reading the other file first, must be safe on its own.
 
 -- Bocconi Summer School for High School Students -- CEO's own example: "official page says
 -- applicants can be 'in Italy or abroad'" is the page itself stating openness (both
@@ -623,6 +673,7 @@ where id = '7f90019e-05c7-4059-ae13-8e285ab3ea38'
 -- (already judged NOT sufficient for confirmed-open).
 update public.opportunities
 set country_eligibility_basis = 'checked_not_stated',
+    country_eligibility_confirmed_open = false,
     citizenship_restrictions = null,
     last_verified_at = now()
 where id = '2080d194-88e9-4585-9a81-c99e9a19840b'
@@ -633,10 +684,31 @@ where id = '2080d194-88e9-4585-9a81-c99e9a19840b'
 -- statement.
 update public.opportunities
 set country_eligibility_basis = 'checked_not_stated',
+    country_eligibility_confirmed_open = false,
     citizenship_restrictions = null,
     last_verified_at = now()
 where id = '647eb8da-9cb8-46d4-8ded-b4c516f7ac90'
   and citizenship_restrictions = 'None stated; official page: engages qualified, high-achieving high school students from all over the world';
+
+-- Interlochen Review -- NOT one of the original 7, added here 2026-09-04 answering CEO's own
+-- question ("başka satır var mı?" -- are there other rows) after the confirmed_open/basis
+-- independence bug surfaced on Immerse: docs/d2-visible-priority-additions-2026-09-04.sql set
+-- this row's country_eligibility_confirmed_open = true on "...from around the world" -- the
+-- SAME descriptive-attendee wording judged insufficient for Immerse above, flagged by that
+-- file's own original author as "the closer call of the two" against Immerse specifically.
+-- Once Immerse fell on the checked_not_stated side, this one falls there too, same reasoning.
+-- Withdrawn at that file's own source (see its own note); country_eligibility_confirmed_open
+-- has no other row setting it true for this id, but set to false here too regardless, same
+-- defensive discipline CEO's own instruction established for this file: a package built from
+-- this file's SQL alone must be safe even if the other file's withdrawal is never re-checked.
+-- citizenship_restrictions/residency_restrictions are already null on this row -- nothing to
+-- clear.
+update public.opportunities
+set country_eligibility_basis = 'checked_not_stated',
+    country_eligibility_confirmed_open = false,
+    last_verified_at = now()
+where id = '95093e1a-fc13-4d9a-b4ed-5f0584252b44'
+  and country_eligibility_confirmed_open = false;
 
 -- NOT touched below -- content correctly stays, no basis change, per CEO's own instruction:
 --

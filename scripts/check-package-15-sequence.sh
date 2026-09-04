@@ -16,6 +16,55 @@ PACKAGE="data/morning/15-toplu-paket-2026-09-04.sql"
 command -v psql >/dev/null || { echo "psql not on PATH"; exit 2; }
 trap 'psql -q postgres -c "drop database if exists $DB" >/dev/null 2>&1' EXIT
 
+# PROVENANCE CHECK (CEO, 2026-09-04, after this package went stale TWICE the same night --
+# once when Immerse's boolean/basis independence bug was found, once when a 6th classification
+# row (Interlochen) was added to the source after this package had already been generated and
+# merged). The package's own header records the exact SHA-256 of every source file at the
+# moment it was last regenerated; this re-hashes each one NOW and fails loudly, before touching
+# any database, if even one has drifted -- the whole point being that "the package still looks
+# fine" is exactly what a stale package looks like right up until someone diffs it by hand.
+echo "── provenance check (source files vs. what this package was built from) ──"
+# Plain array of "path:sha256" pairs, not an associative array -- this machine's default
+# `bash` resolves to macOS's bundled 3.2 (confirmed: `bash --version` -> 3.2.57), which
+# predates `declare -A` entirely and fails with a confusing "unbound variable" parse error
+# on one, rather than a clear "not supported." Portable across bash 3.x and later this way.
+EXPECTED_HASHES=(
+  "docs/citizenship-restrictions-boilerplate-cleanup-2026-09-04.sql:d06fe40a51461a6725e677acafccbb3e6917662c1046f6eb11ee18d241708238"
+  "docs/citizenship-restrictions-classification-2026-09-04.sql:8bfab07eb76d952c1888bad0cf9ce9b276a677fd67c0c92bcb158b8ae012a99c"
+  "docs/d2-country-checked-not-stated-requires-0133-2026-09-04.sql:54c52470f55c5b591f6399f8e292b65d160e05f5c4e2dd76a305d5cc198baa54"
+  "docs/waterloo-cemc-split-execute-2026-09-04.sql:2ac66ec09bfa00fa5c64fe74a7c141a8def412c9778aef00ea98d6b19948ee81"
+  "supabase/migrations/0129_age_grade_eligibility_basis.sql:a74113fd9cfd96bff2e1f59a62494ea05083ee385287f7c352944e4c9ac97569"
+  "supabase/migrations/0130_parent_commentary_entries.sql:1fbd6a5b620f45d779de3f33190357e5e0b2d50944632af575978009312fb209"
+  "supabase/migrations/0132_university_statistics_year_index_coalesce.sql:799ed30fff1c01206cb312baa7df1bf3eb70fd3bbe5a1f6b8f42d0fbb91fb0dd"
+  "supabase/migrations/0133_country_eligibility_basis.sql:c96fc762d53851d5e8a47153bce06b77b2e23184921b8683a5f27f3415870907"
+)
+PROVENANCE_FAILED=0
+for entry in "${EXPECTED_HASHES[@]}"; do
+  f="${entry%%:*}"
+  expected="${entry#*:}"
+  if [ ! -f "$f" ]; then
+    echo "  MISSING: $f (this package was built from a file that no longer exists here)"
+    PROVENANCE_FAILED=1
+    continue
+  fi
+  actual=$(shasum -a 256 "$f" | cut -d' ' -f1)
+  if [ "$actual" != "$expected" ]; then
+    echo "  DRIFTED: $f"
+    echo "    package was built from: $expected"
+    echo "    file on disk is now:    $actual"
+    PROVENANCE_FAILED=1
+  fi
+done
+if [ "$PROVENANCE_FAILED" -eq 1 ]; then
+  echo
+  echo "  FAILED: at least one source file has changed since this package was generated."
+  echo "  Do not trust this package's content against the drifted file(s) above -- regenerate"
+  echo "  data/morning/15-toplu-paket-2026-09-04.sql from current source before testing further."
+  exit 1
+fi
+echo "  OK -- every source file matches what this package was actually built from"
+echo
+
 psql -q postgres -c "drop database if exists $DB" -c "create database $DB" >/dev/null 2>&1
 
 psql -q "$DB" -v ON_ERROR_STOP=1 >/dev/null 2>&1 <<'SQL'
@@ -57,7 +106,7 @@ psql -q "$DB" -v ON_ERROR_STOP=1 -f /private/tmp/claude-501/-Users-adasarpkirik-
 # eligible_countries/eligible_citizenships default to '{}' per migration 0008, and none of
 # these 22 rows have them set live (confirmed in the same execute_sql read) -- no separate
 # UPDATE needed, the INSERT's own defaults already match.
-echo "  fixture rows seeded (22 real opportunities, exact live field values)"
+echo "  fixture rows seeded (23 real opportunities, exact live field values -- 22 from the original build plus Interlochen, added when the classification source grew its 6th row)"
 echo
 
 echo "── first run ──"
@@ -140,7 +189,7 @@ psql -q "$DB" -t -c "
     (select count(*) from pg_indexes where indexname='university_statistics_university_year_idx' and indexdef ilike '%coalesce%');
 "
 psql -q "$DB" -t -c "
-  select 'rows with country_eligibility_basis = checked_not_stated (expect 14 -- 11 from D2 + Immerse/Oxford Scholastica/UCSB from classification): ' ||
+  select 'rows with country_eligibility_basis = checked_not_stated (expect 15 -- 11 from D2 + Immerse/Interlochen/Oxford Scholastica/UCSB from classification): ' ||
     count(*)
   from public.opportunities where country_eligibility_basis = 'checked_not_stated';
 "
@@ -151,6 +200,11 @@ psql -q "$DB" -t -c "
 psql -q "$DB" -t -c "
   select 'Lumiere citizenship_restrictions cleared (expect empty/null): ' || coalesce(citizenship_restrictions, '(null, correct)')
   from public.opportunities where id = 'bc678344-c213-4ae8-a4f8-48af2856338f';
+"
+psql -q "$DB" -t -c "
+  select 'Interlochen Review (95093e1a) basis/confirmed_open (expect checked_not_stated / false -- the second row this same contradiction class hit, added to source after this package was first generated): ' ||
+    coalesce(country_eligibility_basis, 'NULL') || ' / ' || country_eligibility_confirmed_open::text
+  from public.opportunities where id = '95093e1a-fc13-4d9a-b4ed-5f0584252b44';
 "
 
 echo
