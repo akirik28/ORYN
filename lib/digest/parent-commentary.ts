@@ -5,7 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, ProfileDimension, PlanTier } from "@/types/database";
 import { readOr } from "@/lib/supabase/safe-read";
 import { buildDigestContent, type DigestOpportunityMatchItem } from "./build";
-import { buildProfileChange, describeProfileChange, type ProfileChange } from "@/lib/scoring/change";
+import { buildProfileChange, describeProfileChangeForParent, type ProfileChange } from "@/lib/scoring/change";
 import { NOTIFIABLE_DIMENSION_DELTA } from "@/lib/scoring/profile-update-notification";
 import { resolveParentEffectiveTier } from "@/lib/tier/parent-tier";
 import { getAIProvider, AIProviderNotConfiguredError } from "@/lib/ai/index";
@@ -74,10 +74,10 @@ export interface WeeklySignal {
  * real observed data (every genuine profile edit ever recorded moved a dimension by 4+
  * points; the floor sits just above the smallest real one). Without this filter, a student
  * whose ONLY activity this week was a formula-level 0.3-point drift would have
- * describeProfileChange name it as "the area that moved most since your last review" — true
- * in a technical sense, misleading in the sense a parent would read it. Entries below the
- * bar are dropped from improved/declined, not folded into `steady` — `steady`'s own contract
- * is "came back identical", and a sub-threshold move did not.
+ * describeProfileChangeForParent name it as the area that moved most this week — true in a
+ * technical sense, misleading in the sense a parent would read it. Entries below the bar are
+ * dropped from improved/declined, not folded into `steady` — `steady`'s own contract is
+ * "came back identical", and a sub-threshold move did not.
  */
 export function filterNotableDimensionChanges(change: ProfileChange): ProfileChange {
   return {
@@ -123,7 +123,7 @@ export function honestNoActivityNarrative(studentDisplayName: string, locale: Lo
  */
 function assembleFactsWithoutAI(signal: WeeklySignal, locale: Locale): string {
   const parts: string[] = [];
-  const changeSentence = describeProfileChange(signal.notableChange, locale);
+  const changeSentence = describeProfileChangeForParent(signal.notableChange, signal.studentDisplayName, locale);
   if (changeSentence) parts.push(changeSentence);
   if (signal.newMatches.length > 0) {
     const titles = signal.newMatches.map((m) => m.title).join(", ");
@@ -168,7 +168,13 @@ export interface ParentWeeklyCommentaryContent {
  */
 async function generateNarrative(signal: WeeklySignal, studentUserId: string, locale: Locale): Promise<{ narrative: string; source: NarrativeSource }> {
   const factSentences: string[] = [`Week: ${signal.weekStart} to ${signal.weekEnd}.`, `Student's name: ${signal.studentDisplayName}.`];
-  const changeSentence = describeProfileChange(signal.notableChange, locale);
+  // describeProfileChangeForParent here, not describeProfileChange — the fact sentence fed to
+  // the model should already be in the same third-person voice
+  // lib/ai/parent-commentary-prompt.ts instructs the model to write in, not a second-person
+  // ("since your last review") sentence the model then has to silently reframe. Feeding a
+  // "you"-addressed fact makes it measurably easier for a model to echo that framing back
+  // despite the explicit instruction not to.
+  const changeSentence = describeProfileChangeForParent(signal.notableChange, signal.studentDisplayName, locale);
   factSentences.push(changeSentence ? `Profile movement (already computed, do not recompute or explain its cause): ${changeSentence}` : "No profile-score history to compare against yet.");
   factSentences.push(
     signal.newMatches.length > 0
