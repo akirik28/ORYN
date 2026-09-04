@@ -30,7 +30,7 @@ Searched **both directions**, per CEO's explicit instruction:
   row's own single set of structured fields can't represent — not merely different course
   topics under one uniform eligibility, which is common and not a problem.
 
-## Result: 11 exact-URL groups, 3 of them a genuine live problem; 1 genuine bundling problem
+## Result: 11 exact-URL groups, 3 of them a genuine live problem; 1 bundling candidate (see its own corrected section — smaller than first claimed)
 
 ### Already correctly resolved — re-confirmed, not re-litigated
 
@@ -78,30 +78,38 @@ all of these specific rows in one transaction that morning, apparently without r
 of them as duplicates of a richer sibling row it didn't also touch. Not independently
 confirmed what that process was; flagged as a pattern, not a diagnosis.
 
-### NEW — one genuine "bundled row" problem, Waterloo/CEMC's own shape, the other direction
+### A bundled-row candidate, WYSE — flagged here in error; correction below
 
-**Worldwide Youth in Science and Engineering (WYSE)** (`22fb607f-3aab-4320-a737-3531d0b96702`,
-active) bundles two real UIUC Grainger College of Engineering programs under one row and one
-`eligible_grades = ['9','10','11','12']`:
-- **"Exploring Your Options" (EYO)** — a week-long residential camp, described as open to
-  rising 9th-12th graders broadly (with an equity-access framing, "invite-focused on students
-  from traditionally excluded populations in STEM"), no stated residency limit.
-- **"Young Scholars Summer STEMM Research Program"** — a 6-week mentored research program,
-  restricted to rising 10th-12th graders **and explicitly only from seven named US states**
-  (Illinois, Indiana, Kentucky, Michigan, Missouri, Iowa, Wisconsin).
+**CORRECTED 2026-09-04, after preparing (but never applying) a fix for this**: this section
+originally claimed Worldwide Youth in Science and Engineering's (`22fb607f-3aab-4320-a737-
+3531d0b96702`) own `eligible_countries` was empty ("never researched") and that its bundled
+7-state restriction was completely undocumented. **Neither claim was ever actually checked
+against the row** — the query that found WYSE via description text only selected
+`description`/`minimum_age`/`maximum_age`/`eligible_grades`, not `eligible_countries` or
+`residency_restrictions`, and the empty-countries claim was written from the catalog's general
+pattern, not this row's own value. Read directly before writing a fix: `eligible_countries =
+["United States"]` and `residency_restrictions` already state the real split ("Young Scholars
+Summer STEMM Research Program is limited to residents of Illinois, Indiana, Kentucky,
+Michigan, Missouri, Iowa, and Wisconsin; EYO camp draws primarily from the broader Midwest
+region on an outreach basis and is open to all applicants") — both set 2026-08-22, weeks
+before this scan, by a research pass this scan never found or credited.
 
-The row's own `eligible_countries = []` (never researched/confirmed) gives no hint that HALF
-of what this row represents has a real, structural, named geographic restriction — a Turkish
-or non-Midwest-US student reading this one row has no way to know the Research Program half
-specifically excludes them, while the EYO half (per its own description) may not. Same
-category of problem as Waterloo's grade-band bundling, but the hidden dimension here is
-country/residency, not grade — arguably a sharper case, since eligible_countries being empty
-elsewhere in this catalog usually means "never researched," not "definitely open," and this
-row's emptiness actively hides a real, known exclusion rather than just an unresearched one.
+**CORRECTED AGAIN 2026-09-04 — country was never the real gap here; grade is.** The
+`eligible_countries` claim above was this scan's own error (see the correction just above);
+re-checking with that ruled out, the real, narrower, still-live gap CEO found is
+`eligible_grades = ['9','10','11','12']` covering the whole row, while the Research Program
+half is actually **grades 10-12 only** (its own description: "rising 10th-12th graders"; EYO
+is the half genuinely open to "rising 9th-12th graders"). A 9th grader reading this one row
+sees "eligible," but is only actually eligible for EYO, not the flagship Research Program —
+the same shape as Waterloo's own grade-band bundling, just one field over from where this
+scan first (wrongly) looked.
 
-**Measured before proposing anything**: `saved_opportunities` = 0, real top-5 matches = 0 —
-not currently visible to any student. Genuinely latent, not live, unlike the three split
-pairs above.
+**Decision: record, don't split.** 0 saves, 0 real top-5 matches — this session declined full
+research/restructuring work for invisible-case rows four separate times tonight (Waterloo's
+own original deferral plus three more today), staying consistent rather than treating this row
+differently because its own problem turned out to be narrower than first claimed. The split
+happens the day the row actually becomes visible; recording the real boundary now is a
+follow-on task, not done in this file.
 
 **Checked and ruled out, same bundling question, for completeness** (read in full, not judged
 by title alone): Downing College (a prior researcher already corrected this row's own
@@ -146,10 +154,10 @@ the same shape found this way too: **School of the Art Institute of Chicago** (`
 (SAIC)...", disabled) — not previously on any list, but already correctly resolved, not a new
 live problem. No new "both active" pair surfaced by this method either.
 
-**Net effect of both additional methods**: stronger confidence the three real pairs (Edinburgh,
-Garcia, Lehigh) plus WYSE are the complete set of live problems in the current catalog, not an
-artifact of only having looked one way — a second, structurally different method independently
-lands on the same three, rather than surfacing a fourth.
+**Net effect of both additional methods**: stronger confidence the three real split pairs
+(Edinburgh, Garcia, Lehigh) are the complete set of live split-duplicate problems in the
+current catalog, not an artifact of only having looked one way — a second, structurally
+different method independently lands on the same three, rather than surfacing a fourth.
 
 ## Not done here, per CEO's explicit instruction
 
