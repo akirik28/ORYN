@@ -101,6 +101,43 @@ describe("computeEligibility", () => {
     expect(result.notes.map((n) => n.code)).not.toContain("age_eligibility_unverified");
   });
 
+  // Migration 0129 — the third state neither the default nor ageEligibilityConfirmedOpen
+  // can express: checked, official page doesn't say. Proves BOTH halves of the swap, same
+  // "prove it can go red" bar: the alarm-toned code disappears AND the calmer one appears
+  // — not just "some code changed."
+  test("age_eligibility_checked_not_stated replaces age_eligibility_unverified when the basis says checked_not_stated", () => {
+    // Grade and country resolved via real/confirmed values so only the age dimension under
+    // test can produce a note -- an unrelated dimension's own unverified note would keep
+    // this assertion honest about the wrong thing, the exact mistake caught (and fixed) in
+    // the counselor/eligibility.ts version of this same test.
+    const result = computeEligibility(
+      student({ graduationYear: new Date().getFullYear() + 1 }),
+      opportunity({ ageEligibilityBasis: "checked_not_stated", lastVerifiedAt: "2026-09-04", eligibleGrades: ["12"], countryEligibilityConfirmedOpen: true })
+    );
+    expect(result.eligible).toBe(true);
+    expect(result.notes.map((n) => n.code)).not.toContain("age_eligibility_unverified");
+    expect(result.notes).toEqual([{ code: "age_eligibility_checked_not_stated", params: { checkedAt: "2026-09-04" } }]);
+  });
+
+  // The un-set default still produces the original alarm-toned code — proves the new branch
+  // didn't silently swallow the old, common case.
+  test("age_eligibility_unverified still fires when basis is unset (the default, unresearched case)", () => {
+    const result = computeEligibility(student(), opportunity());
+    expect(result.notes.map((n) => n.code)).toContain("age_eligibility_unverified");
+    expect(result.notes.map((n) => n.code)).not.toContain("age_eligibility_checked_not_stated");
+  });
+
+  // Proves the full render pipeline, not just the code -- the date actually reaches the
+  // rendered sentence, in both locales, formatted (not the raw ISO string).
+  test("age_eligibility_checked_not_stated renders a calm, dated sentence in both locales", () => {
+    const result = computeEligibility(
+      student({ graduationYear: new Date().getFullYear() + 1 }),
+      opportunity({ ageEligibilityBasis: "checked_not_stated", lastVerifiedAt: "2026-09-04", eligibleGrades: ["12"], countryEligibilityConfirmedOpen: true })
+    );
+    expect(renderEligibilityNotes(result.notes, "en")).toBe("The official page doesn't state an age requirement — checked (September 4, 2026).");
+    expect(renderEligibilityNotes(result.notes, "tr")).toBe("Resmi sayfa yaş şartı belirtmiyor — kontrol edildi (4 Eylül 2026).");
+  });
+
   test("is ineligible when a citizenship restriction is known to exclude the student", () => {
     const result = computeEligibility(
       student({ citizenshipCountries: ["Canada"] }),
@@ -157,6 +194,34 @@ describe("computeEligibility", () => {
     const result = computeEligibility(student(), opportunity({ gradeEligibilityConfirmedOpen: true }));
     expect(result.eligible).toBe(true);
     expect(result.notes.map((n) => n.code)).not.toContain("grade_eligibility_unverified");
+  });
+
+  // Migration 0129 — same shape as the age pair above, for grade.
+  test("grade_eligibility_checked_not_stated replaces grade_eligibility_unverified when the basis says checked_not_stated", () => {
+    // Age (a trivially-wide real bound, satisfied by student()'s own default age: 16) and
+    // country resolved so only the grade dimension under test can produce a note.
+    const result = computeEligibility(
+      student(),
+      opportunity({ gradeEligibilityBasis: "checked_not_stated", lastVerifiedAt: "2026-09-04", minimumAge: 0, maximumAge: 120, countryEligibilityConfirmedOpen: true })
+    );
+    expect(result.eligible).toBe(true);
+    expect(result.notes.map((n) => n.code)).not.toContain("grade_eligibility_unverified");
+    expect(result.notes).toEqual([{ code: "grade_eligibility_checked_not_stated", params: { checkedAt: "2026-09-04" } }]);
+  });
+
+  test("grade_eligibility_unverified still fires when basis is unset (the default, unresearched case)", () => {
+    const result = computeEligibility(student(), opportunity());
+    expect(result.notes.map((n) => n.code)).toContain("grade_eligibility_unverified");
+    expect(result.notes.map((n) => n.code)).not.toContain("grade_eligibility_checked_not_stated");
+  });
+
+  test("grade_eligibility_checked_not_stated renders a calm, dated sentence in both locales", () => {
+    const result = computeEligibility(
+      student(),
+      opportunity({ gradeEligibilityBasis: "checked_not_stated", lastVerifiedAt: "2026-09-04", minimumAge: 0, maximumAge: 120, countryEligibilityConfirmedOpen: true })
+    );
+    expect(renderEligibilityNotes(result.notes, "en")).toBe("The official page doesn't state a grade requirement — checked (September 4, 2026).");
+    expect(renderEligibilityNotes(result.notes, "tr")).toBe("Resmi sayfa sınıf şartı belirtmiyor — kontrol edildi (4 Eylül 2026).");
   });
 
   // Confirmed live against a real profile this session: a student's own stored country

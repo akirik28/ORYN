@@ -618,6 +618,24 @@ describe("migration numbering", () => {
     // about three universities that had just been looked at. Same discipline as 0119 itself:
     // this value is only ever set by a real research pass, never guessed, never defaulted to.
     //
+    // 0128 not landed as a file here as of this rebase.
+    //
+    // 0129 (age_grade_eligibility_basis) -- the same third-state shape as 0127 above,
+    // independently arrived at for opportunities' age/grade instead of universities'
+    // admission rate: 'not_researched' (default) | 'checked_not_stated' (a research pass
+    // read the official page and it simply doesn't state a requirement) |
+    // 'confirmed_no_restriction' (mirrors 0126's boolean=true). Surfaced by D2's
+    // visible-priority research: 24 of the 34 opportunities students actually see had their
+    // official page checked and it just doesn't mention age/grade -- collapsing that into
+    // "unresearched" means those rows carry the same "not verified yet" warning forever,
+    // indistinguishable from a row nobody's ever looked at. A student seeing that warning on
+    // every row learns to stop reading it. Mirrors university_statistics.
+    // admission_rate_basis (0119)'s own shape -- a plain text column with a CHECK enum, not
+    // a new pattern -- kept alongside 0126's booleans rather than replacing them, backfilled
+    // deterministically from them. Named 'checked_not_stated' rather than reusing 0127's own
+    // 'not_published' string -- flagged to CEO as a naming question, not decided
+    // unilaterally: "not published" reads naturally for a rate a university chooses not to
+    // release, but oddly for an eligibility requirement that simply isn't mentioned.
     // 0128/0129 not landed as files as of this rebase. 0130 (parent_commentary_entries) is
     // storage for B3b's monthly parent commentary narrative -- the batch runner computed it
     // and discarded it, writing only a timestamp; this migration adds the table

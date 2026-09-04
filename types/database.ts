@@ -1771,6 +1771,16 @@ export interface Opportunity {
    * restriction populates eligible_grades instead. Read defensively (`?? false`) until 0126
    * is applied everywhere. */
   grade_eligibility_confirmed_open: boolean;
+  /** Migration 0129 (unapplied) -- the third state age_eligibility_confirmed_open (0126)
+   * can't express: 'not_researched' (default, nobody's looked) | 'checked_not_stated' (a
+   * research pass read the official page and it doesn't state an age requirement either
+   * way) | 'confirmed_no_restriction' (the page explicitly says there's no age gate --
+   * kept in sync with age_eligibility_confirmed_open, which remains the fast boolean check
+   * application code already uses). Read defensively until 0129 is applied everywhere. */
+  age_eligibility_basis: string | null;
+  /** Migration 0129 (unapplied) -- same shape as age_eligibility_basis above, for
+   * eligible_grades/grade_eligibility_confirmed_open. */
+  grade_eligibility_basis: string | null;
   /** Migration 0103. See that migration's own column comment for the full semantic
    * contract (design doc §8.5) — written only by a P1 reverification outcome, never
    * backfilled, never read as staleness. Distinct from verified_at/last_verified_at above:
@@ -1810,6 +1820,9 @@ export type OpportunityInsert = Insertable<
   // both have a DB default of false, so they're omittable at insert time, not required.
   | "age_eligibility_confirmed_open"
   | "grade_eligibility_confirmed_open"
+  // Migration 0129 — same reason, both default 'not_researched'.
+  | "age_eligibility_basis"
+  | "grade_eligibility_basis"
   | "access_channel"
   | "country_eligibility_confirmed_open"
   // Migration 0066 — array has a DB default of '{}', the three image columns are nullable.

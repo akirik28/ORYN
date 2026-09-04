@@ -669,6 +669,8 @@ export const FIXTURE_OPPORTUNITY_DETAIL: Opportunity = {
   // grade axis regardless.
   age_eligibility_confirmed_open: false,
   grade_eligibility_confirmed_open: false,
+  age_eligibility_basis: "not_researched",
+  grade_eligibility_basis: "not_researched",
   created_at: daysFromNow(-25),
   updated_at: daysFromNow(-6),
 };
@@ -779,6 +781,8 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       // confirmed-open escape hatch. opp-4 below is the fixture exercising that path instead.
       age_eligibility_confirmed_open: false,
       grade_eligibility_confirmed_open: false,
+      age_eligibility_basis: "not_researched",
+      grade_eligibility_basis: "not_researched",
       created_at: daysFromNow(-30),
       updated_at: daysFromNow(-3),
     },
@@ -843,6 +847,8 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       // exercises the "Grade eligibility not verified yet" advisory note here.
       age_eligibility_confirmed_open: false,
       grade_eligibility_confirmed_open: false,
+      age_eligibility_basis: "not_researched",
+      grade_eligibility_basis: "not_researched",
       created_at: daysFromNow(-20),
       updated_at: daysFromNow(-5),
     },
@@ -906,6 +912,8 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       // flag false, same "mostly unresearched" default as country above.
       age_eligibility_confirmed_open: false,
       grade_eligibility_confirmed_open: false,
+      age_eligibility_basis: "not_researched",
+      grade_eligibility_basis: "not_researched",
       created_at: daysFromNow(-15),
       updated_at: daysFromNow(-8),
     },
@@ -968,6 +976,10 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       // example of each path.
       age_eligibility_confirmed_open: true,
       grade_eligibility_confirmed_open: true,
+      // Kept in sync with the booleans above, same backfill relationship 0129's own
+      // migration establishes for real rows.
+      age_eligibility_basis: "confirmed_no_restriction",
+      grade_eligibility_basis: "confirmed_no_restriction",
       created_at: daysFromNow(-40),
       updated_at: daysFromNow(-2),
     },
@@ -1026,6 +1038,8 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
       // flag false, same "mostly unresearched" default as country above.
       age_eligibility_confirmed_open: false,
       grade_eligibility_confirmed_open: false,
+      age_eligibility_basis: "not_researched",
+      grade_eligibility_basis: "not_researched",
       created_at: daysFromNow(-10),
       updated_at: daysFromNow(-10),
     },
@@ -1075,6 +1089,9 @@ export function buildFixtureHomeStrip(_locale: Locale = DEFAULT_LOCALE): HomeStr
       countryEligibilityConfirmedOpen: opportunity.country_eligibility_confirmed_open ?? false,
       ageEligibilityConfirmedOpen: opportunity.age_eligibility_confirmed_open ?? false,
       gradeEligibilityConfirmedOpen: opportunity.grade_eligibility_confirmed_open ?? false,
+      ageEligibilityBasis: opportunity.age_eligibility_basis ?? null,
+      gradeEligibilityBasis: opportunity.grade_eligibility_basis ?? null,
+      lastVerifiedAt: opportunity.last_verified_at ?? null,
       citizenshipRestrictions: opportunity.citizenship_restrictions,
       residencyRestrictions: opportunity.residency_restrictions,
       fields: opportunity.fields,

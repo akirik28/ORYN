@@ -97,6 +97,31 @@ maximum stated — genuinely no ceiling, not an unresearched one).
 | European Youth Event (EYE) | `1acee3b0-eaac-479a-996a-b0a2a0570351` | grade, country | `https://european-youth-event.europarl.europa.eu/` | Age (16-30) already correctly stored. Country: page cites "160 different nationalities" among past attendees — descriptive attendee statistics, not a stated open-to-all policy, so not used to set the confirmed-open flag (same standard applied to BU Tanglewood/CBS in batch 1). |
 | University of the Arts London — International Summer School | `ae5e73f0-43ba-42be-baed-423d3087e7e1` | age, grade, country | `https://www.arts.ac.uk/study-at-ual/short-courses/summer-short-courses` | Page has no eligibility statement of any kind, just a program description. |
 
+## Migration 0129 applied to this research (2026-09-04, same session)
+
+CEO recognized the pattern above — 24 of the 34 visible opportunities were genuinely
+CHECKED and their official page just doesn't state an age/grade requirement, distinct from
+both "never researched" and "confirmed no restriction" — as a real gap and assigned
+migration 0129 (`age_eligibility_basis`/`grade_eligibility_basis`, mirroring
+`university_statistics.admission_rate_basis`'s tri-state shape). 13 of this file's rows
+above qualified for the new `'checked_not_stated'` value on at least one of age/grade —
+see `docs/d2-checked-not-stated-requires-0129-2026-09-04.sql` for exactly which rows/fields
+and the strict rule applied (real content fetched, no explicit deferral to an unfetched
+page). **Country was explicitly left out of scope** — 0129 covers age/grade only, per
+CEO's own dispatch; several rows above also had a genuinely checked-but-silent country page
+(Boston University Tanglewood, WWF Youth Art Contest, Duke of Edinburgh Türkiye, METU, plus
+the country half of most multi-field rows) with nowhere to record that finding yet — open
+question for CEO, not resolved here.
+
+**Re-measured with everything from this session projected** (nothing applied — computed
+directly against live data): the visible-34 set's own row-level "still shows some warning"
+count did **not** move (29/34, same as before this round) — checked_not_stated only
+resolves age/grade, and nearly every row that gained it still has an unresolved country
+dimension keeping the row itself flagged. The number that DID move: **field-level alarm
+count, 69 → 44** across the 34 visible rows (a genuine ~36% drop in the total volume of
+alarm-toned individual notes, even though the row-level binary didn't change) — reported as
+the honest, different-shaped result it is, not smoothed into matching the row-level number.
+
 ## What this doesn't cover
 
 Only the rows from batches 1-2 that produced no usable answer. The rows that DID resolve
