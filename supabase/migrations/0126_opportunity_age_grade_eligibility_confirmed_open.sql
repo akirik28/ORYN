@@ -32,14 +32,17 @@
 -- would contradict it.
 
 alter table public.opportunities
-  add column age_eligibility_confirmed_open boolean not null default false,
-  add column grade_eligibility_confirmed_open boolean not null default false;
+  add column if not exists age_eligibility_confirmed_open boolean not null default false,
+  add column if not exists grade_eligibility_confirmed_open boolean not null default false;
 
 comment on column public.opportunities.age_eligibility_confirmed_open is
   'Research-confirmed "no age floor or ceiling — genuinely open at any age," set only from an official-source statement. false = not confirmed (the honest default; most rows are simply unresearched), never "restricted." An actual age bound populates minimum_age/maximum_age instead — the check below keeps the two claims from ever being asserted together.';
 
 comment on column public.opportunities.grade_eligibility_confirmed_open is
   'Research-confirmed "no grade-level restriction — genuinely open to any grade," set only from an official-source statement. false = not confirmed (the honest default; most rows are simply unresearched), never "restricted." A real grade restriction populates eligible_grades instead — the check below keeps the two claims from ever being asserted together.';
+
+alter table public.opportunities
+  drop constraint if exists opportunities_age_confirmed_open_no_structured_bound;
 
 alter table public.opportunities
   add constraint opportunities_age_confirmed_open_no_structured_bound
@@ -49,6 +52,9 @@ alter table public.opportunities
       and (minimum_age is not null or maximum_age is not null)
     )
   );
+
+alter table public.opportunities
+  drop constraint if exists opportunities_grade_confirmed_open_no_structured_restriction;
 
 alter table public.opportunities
   add constraint opportunities_grade_confirmed_open_no_structured_restriction
