@@ -101,6 +101,7 @@ export default async function DesignPreviewPage({ searchParams }: { searchParams
         upcomingDeadlines={FIXTURE_DEADLINES}
         targetUniversities={FIXTURE_TARGET_UNIVERSITIES}
         opportunityPreview={FIXTURE_OPPORTUNITIES.map((o) => ({
+          id: o.opportunity.id,
           title: o.opportunity.title,
           matchScore: o.matchScore,
           deadline: o.opportunity.deadline ?? null,
