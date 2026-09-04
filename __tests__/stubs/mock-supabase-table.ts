@@ -11,11 +11,16 @@
  * student A, call the function under test as student B, and assert on the *result*
  * (`count: 0`, `data: null`) rather than trusting that the right-looking calls were made.
  *
- * Scope is deliberately narrow: `.select()` / `.insert()` / `.update()`, `.eq()` / `.neq()`,
- * `.order()` (accepted, no-op — nothing under test depends on ordering correctness),
+ * Scope is deliberately narrow: `.select()` / `.insert()` / `.update()`, `.eq()` / `.neq()` /
+ * `.in()`, `.order()` (accepted, no-op — nothing under test depends on ordering correctness),
  * `.maybeSingle()`, and `{ count: "exact" }` on `.select()`/`.update()`. Add to this file
  * rather than building a second, competing mock the next time a lib/ module needs one of
  * these — CEO's own framing for why this harness exists at all: "it stops being a one-off."
+ *
+ * `.in()` added 2026-09-04 (C7, comparison-render-proof) — the first consumer needing it
+ * (a compare page's own `.in("id", ids)`) issues several of these against the same table, so
+ * the mock filters by real membership rather than recording call args, same reasoning as
+ * `.eq()`/`.neq()` above.
  */
 
 export interface MockRow {
@@ -51,7 +56,7 @@ export interface MockTableConfig {
   forceError?: MockPostgrestError;
 }
 
-type Filter = { col: string; op: "eq" | "neq"; val: unknown };
+type Filter = { col: string; op: "eq" | "neq" | "in"; val: unknown };
 
 function undefinedTableError(table: string): MockPostgrestError {
   return { code: "PGRST205", message: `Could not find the table 'public.${table}' in the schema cache` };
@@ -108,6 +113,11 @@ class MockQueryBuilder {
     return this;
   }
 
+  in(col: string, vals: unknown[]): this {
+    this.filters.push({ col, op: "in", val: vals });
+    return this;
+  }
+
   order(): this {
     return this;
   }
@@ -129,7 +139,13 @@ class MockQueryBuilder {
 
   private matchingRows(): MockRow[] {
     const rows = this.config.rows ?? [];
-    return rows.filter((row) => this.filters.every((f) => (f.op === "eq" ? row[f.col] === f.val : row[f.col] !== f.val)));
+    return rows.filter((row) =>
+      this.filters.every((f) => {
+        if (f.op === "eq") return row[f.col] === f.val;
+        if (f.op === "neq") return row[f.col] !== f.val;
+        return (f.val as unknown[]).includes(row[f.col]);
+      })
+    );
   }
 
   // Thenable, not a real Promise — this is what lets `await supabase.from(...).eq(...)` work
