@@ -51,10 +51,18 @@
 | **A4** | Hukuki onay | araştırma bitti, öneri hazır, karar senin |
 
 **Bugün `main`'e giren:** tam ekran yükseltme kartı · veli uçtan uca doğrulama
-(26 kontrol) · aylık veli özeti · veli katalog erişimi · danışman streaming (iki
-yarısı, 11 koruma tek tek kanıtlı) · ücret tarihi etiketi · Oxford kabul oranı ·
-üniversite dolgusu 12/19 · fırsat dolgusu (görünür 34) · hukuk araştırması ·
-onboarding denetimi · ana ekran denetimi · altı ayrı ölçüm.
+(26 kontrol) · aylık veli özeti · danışman streaming (iki yarısı, 11 koruma tek
+tek kanıtlı, zaman aşımı + `maxRetries:0`) · ücret tarihi etiketi · Oxford kabul
+oranı · üniversite sayfalarında dürüst boş durumlar (301 sayfa) · üniversite
+dolgusu 12/19 · fırsat dolgusu (görünür 34) · hukuk araştırması · onboarding
+denetimi · ana ekran denetimi · dürüstlük ayrımları denetimi · yedi ayrı ölçüm.
+
+**⚠️ CEO DÜZELTMESİ — veli katalog erişimi HENÜZ ULAŞILABİLİR DEĞİL.** Kurucuya
+"veli artık katalogu gezebiliyor" diye rapor ettim; **yanlıştı.** Katalog
+tarayıcıları (B3c) ve detay sayfaları (B6) `main`'de, **ama hiçbir dosya onları
+import etmiyor** ve `app/parent/` altında liste rotası yok — B3a `origin`'de bile
+değil, bir şeridin yerel dalında. **Bileşen var demek, ulaşılabilir demek değil.**
+Zincir B3a push edilip merge edilince tamamlanıyor: liste → katalog → detay.
 
 **Bekleyen migration'lar:** 0124, 0126, 0127 (+ B1 bitince 0123, sonra 0129, 0130).
 **Uygulanmadan güvenli olduklarını tek tek kontrol ettim** — hiçbiri hata vermez.
