@@ -169,17 +169,17 @@ profiles.parent_invite_email  text   -- öğrencinin kayıtta verdiği veli adre
 
 ---
 
-## 8. Şerit durumu — 4 Eylül 01:40 itibarıyla
+## 8. Şerit durumu — 4 Eylül, sabah
 
 Bu bölüm CEO tarafından güncellenir. Şeritler kendi satırını değiştirmez.
 
 | Şerit | Durum | Nerede |
 |---|---|---|
 | **P1** — migrasyon + RLS | ✅ **birleşti** | `supabase/migrations/0116_parent_accounts.sql` — **uygulanmadı**, sabah paketinde |
-| **P2** — ayrı giriş, `/parent`, `Student sign in` | ⏳ devam | 71 |
-| **P3** — veli paneli + kahverengi tema | ⏳ devam | 11 |
+| **P2** — ayrı giriş, `/parent`, `Student sign in` | ✅ birleşti | — |
+| **P3** — veli paneli + kahverengi tema | ✅ birleşti | — |
 | **P4** — davet akışı | ✅ **birleşti** | `lib/parent/`, `app/(parent-invite)/`, ayarlar bölümü |
-| **P5** — haftalık AI yorumu | ⏸ **başlamadı** | — |
+| **P5** — haftalık AI yorumu | ✅ birleşti, gönderim kapalı | — |
 | **P6** — ortak premium | ✅ **birleşti** | `lib/tier/parent-tier.ts`, `parent-interest-action.ts` |
 | **P7** — yükseltme pop-up'ları | ✅ **birleşti** | `lib/parent/upgrade-prompt.ts` |
 
@@ -201,6 +201,7 @@ göndermiyoruz" uyarısıyla). **Mail gönderimi kapalı**, hukuki cevaba bağl�
 
 ### Açık kalan
 
-- **P5 hiç başlamadı** — veliye haftalık AI yorumu (G6, G11, G15)
+- **Migration'lar uygulanmadı** — 0116, 0117, 0118 sabah paketinde bekliyor
+- **Uçtan uca kontroller çalıştırılmadı** — 0116 uygulanana kadar çalıştırılamaz
 - **§4'teki hukuki soru cevapsız** — reşit olmayanın verisine veli erişimi
 - `LEGAL_REVIEW.md` §8 yazılmadı
