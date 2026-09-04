@@ -253,6 +253,8 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
       // read path correctly falls through to the age_eligibility_unverified branch.
       ageEligibilityBasis: opportunity.age_eligibility_basis ?? null,
       gradeEligibilityBasis: opportunity.grade_eligibility_basis ?? null,
+      // Migration 0133 — same reasoning as ageEligibilityBasis/gradeEligibilityBasis above.
+      countryEligibilityBasis: opportunity.country_eligibility_basis ?? null,
       lastVerifiedAt: opportunity.last_verified_at ?? null,
       // Package 8 fix: previously reduced to a boolean here (only used to suppress the
       // "not verified yet" note, never to say what the prose actually says). Passing the

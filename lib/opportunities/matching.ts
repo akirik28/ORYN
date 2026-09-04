@@ -67,10 +67,17 @@ export interface OpportunityForMatching {
    * defensively for all of them. */
   ageEligibilityBasis?: string | null;
   gradeEligibilityBasis?: string | null;
+  /** Same third state, migration 0133 (unapplied), for eligibleCountries/
+   * countryEligibilityConfirmedOpen above. Deliberately not unified with
+   * university_statistics.admission_rate_basis's 'not_published' (0127) — that means a real
+   * value exists and is withheld; this means the topic is never raised at all. See 0133's own
+   * column comment. */
+  countryEligibilityBasis?: string | null;
   /** opportunities.last_verified_at — reused (not a new column) as the "checked (date)"
-   * this file's ageEligibilityCheckedNotStated/gradeEligibilityCheckedNotStated messages
-   * cite, since it already records when a research pass last touched this row. Optional:
-   * absent means the sentence renders without a date rather than crashing. */
+   * this file's ageEligibilityCheckedNotStated/gradeEligibilityCheckedNotStated/
+   * countryEligibilityCheckedNotStated messages cite, since it already records when a
+   * research pass last touched this row. Optional: absent means the sentence renders
+   * without a date rather than crashing. */
   lastVerifiedAt?: string | null;
   /** Free-text citizenship/residency restriction prose (opportunities.citizenship_restrictions
    * / residency_restrictions) — too unstructured for the allow-list checks above to parse, but
@@ -125,6 +132,7 @@ export type EligibilityNoteCode =
   | "citizenship_restriction_on_file"
   | "residency_restriction_on_file"
   | "country_eligibility_unverified"
+  | "country_eligibility_checked_not_stated"
   | "grade_unknown"
   | "grade_not_eligible"
   | "grade_eligibility_unverified"
@@ -274,6 +282,21 @@ export const eligibilityMessages = {
   countryEligibilityUnverified: (locale: Locale) =>
     locale === "tr" ? "Ülke uygunluğu henüz doğrulanmadı — kısıtlamalar için resmi sayfayı kontrol et." : "Country eligibility not verified yet — check the official page for restrictions.",
 
+  // Migration 0133's third state for country — same reasoning as ageEligibilityCheckedNotStated/
+  // gradeEligibilityCheckedNotStated below: a research pass DID check the official page and it
+  // simply doesn't mention country/citizenship, distinct from countryEligibilityUnverified above
+  // (nobody has looked at all).
+  countryEligibilityCheckedNotStated: (checkedAt: string, locale: Locale) => {
+    const date = checkedAt ? formatAbsoluteDate(checkedAt, locale) : null;
+    return locale === "tr"
+      ? date
+        ? `Resmi sayfa ülke/vatandaşlık şartı belirtmiyor — kontrol edildi (${date}).`
+        : "Resmi sayfa ülke/vatandaşlık şartı belirtmiyor — kontrol edildi."
+      : date
+        ? `The official page doesn't state a country/citizenship requirement — checked (${date}).`
+        : "The official page doesn't state a country/citizenship requirement — checked.";
+  },
+
   // Same principle as countryEligibilityUnverified, same trigger shape: the OPPORTUNITY
   // never recorded an age bound at all, distinct from ageUnknown above (which fires when
   // the opportunity has a real bound but the STUDENT's birth year is what's missing). No
@@ -394,6 +417,8 @@ function renderEligibilityNote(note: EligibilityNote, locale: Locale): string {
       return eligibilityMessages.residencyRestrictionOnFile(String(p.restriction), locale);
     case "country_eligibility_unverified":
       return eligibilityMessages.countryEligibilityUnverified(locale);
+    case "country_eligibility_checked_not_stated":
+      return eligibilityMessages.countryEligibilityCheckedNotStated(String(p.checkedAt ?? ""), locale);
     case "grade_unknown":
       return eligibilityMessages.gradeUnknown(locale);
     case "grade_not_eligible":
@@ -512,7 +537,14 @@ export function computeEligibility(
     !hasUnstructuredRestrictionEvidence &&
     !(opportunity.countryEligibilityConfirmedOpen ?? false)
   ) {
-    unknownNotes.push({ code: "country_eligibility_unverified" });
+    // Migration 0133's third case, same reasoning as the age/grade branches above: a
+    // research pass checked the official page and it simply doesn't state a country/
+    // citizenship requirement either way, distinct from "nobody's looked" (the default).
+    if (opportunity.countryEligibilityBasis === "checked_not_stated") {
+      unknownNotes.push({ code: "country_eligibility_checked_not_stated", params: { checkedAt: opportunity.lastVerifiedAt ?? "" } });
+    } else {
+      unknownNotes.push({ code: "country_eligibility_unverified" });
+    }
   }
 
   const eligibleGrades = opportunity.eligibleGrades ?? [];

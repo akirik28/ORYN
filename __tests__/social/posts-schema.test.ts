@@ -666,7 +666,29 @@ describe("migration numbering", () => {
     // expression. Measured before writing: zero duplicate rows today, so the index can be
     // created without a cleanup pass -- and that claim was itself proven by applying the new
     // index to a deliberately duplicated table and watching CREATE UNIQUE INDEX reject it.
-    expect(Math.max(...numbers.map(Number))).toBe(132);
+    //
+    // 0133 (country_eligibility_basis) -- the same third state 0129 gave age/grade, now for
+    // country. Renumbered from 0131 on rebase: that number was assigned for this exact work,
+    // but by the time this branch caught up with origin/main, 0131 had already been reserved
+    // and released for unrelated work and permanently retired as a gap (see the paragraph
+    // immediately above) -- reusing it here would have made "0131" mean two different things,
+    // exactly what that paragraph says must never happen, so this migration moves to the next
+    // free number instead. Shape: 'not_researched' (default) | 'checked_not_stated' (a
+    // research pass read the official page and it simply doesn't state a country/citizenship
+    // requirement) | 'confirmed_no_restriction' (mirrors 0060's
+    // country_eligibility_confirmed_open=true). D2's own re-measurement after 0129 landed
+    // found the row-level "still shows some warning" count on the visible-34 set unchanged
+    // (29/34) -- because 0060's boolean only covers "confirmed no gate," and several rows that
+    // gained the new age/grade state were ALSO genuinely checked for country and found silent
+    // (12 opportunities, listed in this migration's own header comment). Same shape as
+    // 0129/0119 -- a plain text column with a CHECK enum, kept alongside 0060's boolean rather
+    // than replacing it, backfilled deterministically from it. Naming, resolved by CEO rather
+    // than left open: deliberately NOT unified with 0127's 'not_published' -- that means a
+    // real value exists and is withheld (NUS/Tsinghua/Peking's admission rate), this means the
+    // topic is simply never raised at all, which reads as "probably open," not "confirmed
+    // hidden." Written down in both this migration's own column comment and here so a later
+    // pass doesn't "fix" the two into false consistency.
+    expect(Math.max(...numbers.map(Number))).toBe(133);
   });
 });
 

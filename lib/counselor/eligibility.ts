@@ -178,7 +178,14 @@ function evaluateOpportunityEligibility(
   const countryEligibilityConfirmedOpen = opportunity.country_eligibility_confirmed_open ?? false;
   const hasUnstructuredRestrictionEvidence = Boolean(opportunity.citizenship_restrictions || opportunity.residency_restrictions);
   if (!hasCountryRestriction && !hasCitizenshipRestriction && !hasUnstructuredRestrictionEvidence && !countryEligibilityConfirmedOpen) {
-    notes.push(eligibilityMessages.countryEligibilityUnverified(locale));
+    // Migration 0133's third case, same reasoning as the age/grade branches above: a
+    // research pass checked the official page and it simply doesn't state a country/
+    // citizenship requirement either way, distinct from "nobody's looked" (the default).
+    if (opportunity.country_eligibility_basis === "checked_not_stated") {
+      notes.push(eligibilityMessages.countryEligibilityCheckedNotStated(opportunity.last_verified_at ?? "", locale));
+    } else {
+      notes.push(eligibilityMessages.countryEligibilityUnverified(locale));
+    }
   }
 
   // --- Grade level, computed from graduation_year (lib/profile/grade-level.ts) — closes

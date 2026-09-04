@@ -1781,6 +1781,12 @@ export interface Opportunity {
   /** Migration 0129 (unapplied) -- same shape as age_eligibility_basis above, for
    * eligible_grades/grade_eligibility_confirmed_open. */
   grade_eligibility_basis: string | null;
+  /** Migration 0133 (unapplied) -- same shape as age_eligibility_basis/grade_eligibility_basis
+   * above, for eligible_countries/country_eligibility_confirmed_open (0060). Deliberately NOT
+   * the same value name as university_statistics.admission_rate_basis's 'not_published'
+   * (0127) for the 'checked, source is silent' case -- see this migration's own column
+   * comment for why the two claims aren't equivalent. */
+  country_eligibility_basis: string | null;
   /** Migration 0103. See that migration's own column comment for the full semantic
    * contract (design doc §8.5) — written only by a P1 reverification outcome, never
    * backfilled, never read as staleness. Distinct from verified_at/last_verified_at above:
@@ -1823,6 +1829,8 @@ export type OpportunityInsert = Insertable<
   // Migration 0129 — same reason, both default 'not_researched'.
   | "age_eligibility_basis"
   | "grade_eligibility_basis"
+  // Migration 0133 — same reason, defaults 'not_researched'.
+  | "country_eligibility_basis"
   | "access_channel"
   | "country_eligibility_confirmed_open"
   // Migration 0066 — array has a DB default of '{}', the three image columns are nullable.
