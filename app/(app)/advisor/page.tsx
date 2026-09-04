@@ -154,6 +154,7 @@ export default async function AdvisorPage() {
           quotaExhausted={quota.usedIsKnown && quota.remaining <= 0}
           quotaResetsAt={quota.resetsAt}
           tier={planTier}
+          responseMode={responseMode}
           upgradePromptDismissalState={upgradePromptDismissalState}
           quota={quota}
           budgetDegraded={budgetDegraded}

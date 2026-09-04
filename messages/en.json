@@ -1159,6 +1159,8 @@
         "universityListRealistic": "Is my university list realistic?"
       },
       "couldntComplete": "Proxola couldn't complete this response.",
+      "thinking": "Thinking about your profile",
+      "thinkingThorough": "Writing a detailed answer",
       "tryAgain": "Try again",
       "placeholderReady": "Ask Proxola…",
       "placeholderNotConfigured": "The AI counselor isn't configured yet",

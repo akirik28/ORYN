@@ -13,7 +13,7 @@ import { sendAdvisorMessage, retryAdvisorMessage, softDismissUpgradePrompt, notN
 import { shouldShowUpgradePrompt, NOT_YET_DISMISSED, type UpgradePromptDismissalState } from "@/lib/advisor/upgrade-prompt";
 import { formatAbsoluteDate } from "@/lib/i18n/date";
 import type { Locale } from "@/lib/i18n/config";
-import type { AdvisorMessage as AdvisorMessageRow, PlanTier } from "@/types/database";
+import type { AdvisorMessage as AdvisorMessageRow, PlanTier, ResponseMode } from "@/types/database";
 
 /** sessionStorage, not state -- "shown once per session" needs to survive this component
  * remounting (a route change and back) within the same tab, but must NOT survive a new tab
@@ -67,6 +67,7 @@ export function AdvisorChat({
   quotaExhausted = false,
   quotaResetsAt,
   tier = "standard",
+  responseMode = "balanced",
   upgradePromptDismissalState = NOT_YET_DISMISSED,
 }: {
   conversationId: string | null;
@@ -87,10 +88,22 @@ export function AdvisorChat({
    * account) and NOT_YET_DISMISSED (no suppression active), so nothing about not passing
    * these silently blocks the feature for a caller that simply hasn't been updated yet. */
   tier?: PlanTier;
+  /** Same optional/default convention as tier above. Only used to compute isThoroughReply
+   * below — never sent anywhere; the server independently resolves and re-checks this same
+   * value from the student's own profile before it ever reaches generateAdvisorReply's own
+   * gate, so a stale or spoofed prop here can only ever make the interim status label wrong,
+   * never change what the model is actually asked to do. */
+  responseMode?: ResponseMode;
   upgradePromptDismissalState?: UpgradePromptDismissalState;
 }) {
   const t = useTranslations("advisor.chat");
   const locale = useLocale() as Locale;
+  // Same gate lib/ai/advisor-chat.ts's generateAdvisorReply applies server-side before it
+  // ever appends THOROUGH_INSTRUCTION — mirrored here only to pick a truer interim status
+  // label (below), never to decide what the model is actually asked to do. A student's own
+  // standing setting, not a per-message choice, so this is stable for the component's whole
+  // lifetime, not recomputed per submission.
+  const isThoroughReply = responseMode === "thorough" && tier === "ultra";
   // Openers phrased as decisions a student is actually weighing, not feature prompts. The
   // second one matters most: it invites Oryn to say *no*, which is the behaviour the master
   // spec's Phase 39 is built around and the thing that most distinguishes it from a chatbot.
@@ -285,7 +298,10 @@ export function AdvisorChat({
         ) : (
           messages.map((message) =>
             message.pending ? (
-              <AdvisorMessageThinking key={message.id} />
+              <AdvisorMessageThinking
+                key={message.id}
+                statusLabel={isThoroughReply ? t("thinkingThorough") : t("thinking")}
+              />
             ) : message.role === "user" ? (
               <AdvisorMessage key={message.id} variant="student">
                 <p className="whitespace-pre-wrap">{message.content}</p>

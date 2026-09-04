@@ -78,8 +78,28 @@ export function AdvisorMessage({
  * Loading state for a reply in flight. Three settling lines rather than a bouncing-dot
  * indicator — dots say "typing", which is the messaging metaphor this component exists to
  * avoid, and this reads as something being composed.
+ *
+ * `statusLabel`: a single, always-true line, not a timed sequence — nothing server-side
+ * signals a phase transition back to this component (no streaming, see
+ * features/advisor/advisor-chat.tsx's own isStreaming comment), so a text label that swaps
+ * itself after N seconds would be exactly the fake-progress problem AGENTS.md's own build
+ * rule names ("Do not show fake percentage loaders unless progress is real") — just spelled
+ * as a phase name instead of a percentage. What IS knowable client-side, before the request
+ * is even sent, is which KIND of reply this will be (advisor-chat.tsx passes a different,
+ * still-true label for a thorough-mode Ultra reply) — that's a fact about the request, not a
+ * guess about its progress, so it's the one thing this component varies. Defaults to the
+ * general English label so the existing no-props test call
+ * (__tests__/proxola/uppercase-lang.test.tsx) keeps rendering exactly as before.
  */
-export function AdvisorMessageThinking({ locale = DEFAULT_LOCALE, className }: { locale?: Locale; className?: string }) {
+export function AdvisorMessageThinking({
+  locale = DEFAULT_LOCALE,
+  statusLabel = "Thinking about your profile",
+  className,
+}: {
+  locale?: Locale;
+  statusLabel?: string;
+  className?: string;
+}) {
   return (
     <article
       aria-busy="true"
@@ -89,7 +109,10 @@ export function AdvisorMessageThinking({ locale = DEFAULT_LOCALE, className }: {
       <p lang={locale} className="text-[0.6875rem] font-medium tracking-[0.18em] text-ink-1 uppercase">
         {DEFAULT_ATTRIBUTION[locale].proxola}
       </p>
-      <div className="mt-4 space-y-3" role="status" aria-label="Composing a response">
+      <div className="mt-4 space-y-3" role="status" aria-label={statusLabel}>
+        <p lang={locale} className="text-sm text-ink-3">
+          {statusLabel}
+        </p>
         <span className="block h-2.5 w-[92%] animate-pulse rounded-full bg-ink-4/20" />
         <span className="block h-2.5 w-[78%] animate-pulse rounded-full bg-ink-4/20" />
         <span className="block h-2.5 w-[54%] animate-pulse rounded-full bg-ink-4/20" />
