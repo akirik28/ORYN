@@ -125,40 +125,51 @@ set
 where university_id = (select id from public.universities where name = 'University of Oxford')
   and admission_rate is null; -- guarded: never overwrites a value someone fills in the meantime
 
--- LSE: new row.
+-- LSE: new row. RE-RUN SAFETY (added 2026-09-04, assembling Package 14): university_statistics'
+-- own unique index is (university_id, stat_year), but none of these five inserts ever set
+-- stat_year -- it lands NULL, and standard SQL never treats NULL = NULL as a conflict, so the
+-- index silently never catches a second run. Found by running the full package twice and
+-- diffing per-university row counts, not by inspecting the constraint definition first: all
+-- five doubled with zero error, the quietest failure mode found that night. Explicit
+-- not-exists guard added to all five inserts below; content otherwise unchanged.
 insert into public.university_statistics
   (university_id, admission_rate, admission_rate_basis, source, data_confidence, retrieved_at)
 select id, 0.0633, 'published',
   'London School of Economics (official) — "in 2025, we received approximately 30,000 applications for roughly 1,900 places," rate derived from LSE''s own rounded figures, not a literal published percentage. https://www.lse.ac.uk/study-at-lse/Undergraduate/Teachers-schools-parents/Information-for-teachers-and-schools/admissions-advice',
   'medium', now()
-from public.universities where name = 'London School of Economics and Political Science';
+from public.universities where name = 'London School of Economics and Political Science'
+  and not exists (select 1 from public.university_statistics existing where existing.university_id = universities.id);
 
 -- Erasmus Rotterdam, University of Amsterdam: confirmed no_single_rate (Dutch numerus-fixus-per-programme model).
 insert into public.university_statistics (university_id, admission_rate_basis, source, data_confidence, retrieved_at)
 select id, 'no_single_rate',
   'Erasmus University Rotterdam (official) — admission is per-programme (numerus fixus selection for some, open admission for others), no single university-wide rate. https://www.eur.nl/en/education/practical-matters/admission/bachelor-admission-and-application',
   'medium', now()
-from public.universities where name = 'Erasmus University Rotterdam';
+from public.universities where name = 'Erasmus University Rotterdam'
+  and not exists (select 1 from public.university_statistics existing where existing.university_id = universities.id);
 
 insert into public.university_statistics (university_id, admission_rate_basis, source, data_confidence, retrieved_at)
 select id, 'no_single_rate',
   'University of Amsterdam (official) — admission is per-programme (numerus fixus selection for some, open admission for others), no single university-wide rate. https://www.uva.nl/en/education/admissions/bachelors/applying-for-a-selective-bachelors-programme.html',
   'medium', now()
-from public.universities where name = 'University of Amsterdam';
+from public.universities where name = 'University of Amsterdam'
+  and not exists (select 1 from public.university_statistics existing where existing.university_id = universities.id);
 
 -- Boğaziçi: no_single_rate -- CEO-confirmed.
 insert into public.university_statistics (university_id, admission_rate_basis, source, data_confidence, retrieved_at)
 select id, 'no_single_rate',
   'Boğaziçi University — admission via YKS (domestic) / YÖS (international) score-cutoffs set per programme each cycle; no single institution-wide admission rate is published or structurally applicable. No official rate found on bogazici.edu.tr.',
   'low', now()
-from public.universities where name = 'Boğaziçi University';
+from public.universities where name = 'Boğaziçi University'
+  and not exists (select 1 from public.university_statistics existing where existing.university_id = universities.id);
 
 -- Bocconi: not_published -- unblocked, migration 0127 is merged to main.
 insert into public.university_statistics (university_id, admission_rate_basis, source, data_confidence, retrieved_at)
 select id, 'not_published',
   'Bocconi University — searched unibocconi.it directly, including its own Results and Enrollment page; no applicant/admit counts or admission rate published.',
   'low', now()
-from public.universities where name = 'Bocconi University';
+from public.universities where name = 'Bocconi University'
+  and not exists (select 1 from public.university_statistics existing where existing.university_id = universities.id);
 
 -- Caltech: fill the one missing field on an otherwise-complete row. Confirmed via search
 -- (multiple sources independently citing the same IPEDS 2025 survey figure for enrolled
