@@ -108,8 +108,18 @@ export interface OpportunityForMatching {
    * this function previously received only a boolean summary of "prose exists" here, and used
    * it solely to suppress the generic "not verified yet" note below — going completely silent
    * (eligible: true, notes: null) on a row whose own text describes a real restriction, live-
-   * confirmed on Garcia Summer Research Program. Optional/null: no prose on file, never
-   * "confirmed unrestricted." */
+   * confirmed on Garcia Summer Scholars. Optional/null: no prose on file, never "confirmed
+   * unrestricted."
+   *
+   * CORRECTED 2026-09-04 (docs/opportunity-duplicate-scan-2026-09-04.md): this originally
+   * named "Garcia Summer Research Program" — real at the time, but that row was a student-
+   * invisible duplicate twin of "Garcia Summer Scholars" (same official_url, same program).
+   * The citizenship_restrictions text was migrated onto the visible row, and the twin retired
+   * (docs/opportunity-duplicate-consolidation-2026-09-04.sql), so the name here now points at
+   * the row a student can actually reach — not just the row the fix happened to have been
+   * verified against at the time. A comment naming unverified-visibility evidence as "live-
+   * confirmed" is itself part of the bug, not just the data — worth remembering the next time
+   * a fix cites a specific row by name. */
   citizenshipRestrictions?: string | null;
   residencyRestrictions?: string | null;
   fields: string[];
@@ -534,9 +544,11 @@ export function computeEligibility(
   // Advisor never disagree about what one row's own text says. THE FIX (Package 8): before
   // this, the row went completely silent whenever a structured allow-list was absent but
   // prose existed — the counselor surfaced it, this function didn't, live-confirmed on
-  // Garcia Summer Research Program. 39 of 199 currently-actionable live rows carry prose
-  // this now surfaces that previously produced no note at all (verified against
-  // oryn-qa-scratch, 2026-08-22).
+  // Garcia Summer Scholars (see this file's own StudentMatchProfile-adjacent comment above
+  // for why this now says "Scholars," not "Research Program" — a 2026-09-04 duplicate-row
+  // correction, not a typo). 39 of 199 currently-actionable live rows carry prose this now
+  // surfaces that previously produced no note at all (verified against oryn-qa-scratch,
+  // 2026-08-22).
   if (opportunity.citizenshipRestrictions && !hasCitizenshipRestriction) {
     unknownNotes.push({ code: "citizenship_restriction_on_file", params: { restriction: opportunity.citizenshipRestrictions } });
   }
