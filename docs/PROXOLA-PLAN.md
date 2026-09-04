@@ -49,6 +49,36 @@
 
 ---
 
+## 🔴 CRON'LARI AÇMADAN ÖNCE OKU — moladan hemen önce bulundu
+
+**Haftalık plan işi (Job D) açılırsa, hiçbir öğrenciye plan üretmeden "başarılı"
+raporlar.**
+
+`lib/plan/persist.ts:92`'de sarmalanmamış bir `getTranslations()` çağrısı var ve
+Job D ona **plan üretimi başlamadan önce** ulaşıyor. Öğrenci başına `try/catch` işi
+çökmekten koruyor — yani **iş sonuna kadar çalışır, iş seviyesinde başarı bildirir,
+ve herkes için sıfır plan üretir. Sessizce.**
+
+Bilinen grounding-loss hatası (`persist-matches.ts`) **düzeltilmiş**; bu **ikinci,
+teşhis edilmemiş** bir bölge ve daha kötüsü: ilki kaliteyi düşürüyordu, bu **hiç
+üretmiyor.**
+
+**Bugün kimseyi etkilemiyor:** Job D `vercel.json`'a ve `JOB_DEFINITIONS`'a **hâlâ
+bağlı değil** (dosyalar okunarak doğrulandı, yorumlara güvenilmedi). **Ama A6'da
+cron'ları açarken bu iş de armadılırsa, ana ekrandaki "bu hafta 3 iş" bloğu herkes
+için boş kalır ve hiçbir hata görünmez.**
+
+**Sıra: önce bu düzeltilsin, sonra Job D armadılsın.**
+
+**Aynı denetimden iki bağlam boşluğu daha:**
+- **Hedef coğrafya** haftalık plana **hiç ulaşmıyor** — bugünkü ülke yükseltmesi
+  yalnızca fırsat eşleştirmesindeydi, `StudentAdvisorContext`'e eklenmedi.
+- **Kabul oranı bağlamı** (B7) yalnızca danışmana bağlı; haftalık plan onu hiç
+  import etmiyor.
+- **Beceriler** ulaşıyor (paylaşılan formatlayıcı üzerinden), doğrulandı.
+
+---
+
 ## ⏸️ KONTROLLÜ MOLA — 4 Eylül akşamı (yeniden açıldığında önce bunu oku)
 
 Kurucu limit dolduğu için filoyu durdurdu. **Dokuz şerit de düzenli durdu:** her
