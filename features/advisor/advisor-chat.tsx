@@ -68,10 +68,18 @@ export function AdvisorChat({
   quotaResetsAt,
   tier = "standard",
   upgradePromptDismissalState = NOT_YET_DISMISSED,
+  onConversationTitled,
 }: {
   conversationId: string | null;
   initialMessages: AdvisorMessageRow[];
   aiConfigured: boolean;
+  /** Called once per conversation, the first time sendAdvisorMessage reports a
+   * conversationTitle back (lib/advisor/conversation-title.ts derives it from that first
+   * message) — lets AdvisorWorkspace's own session list show the real topic instead of the
+   * generic placeholder without waiting for a full reload. Optional so a caller with no list
+   * to update (none exist outside AdvisorWorkspace today, but this component has its own
+   * tests that construct it directly) doesn't need to pass a no-op. */
+  onConversationTitled?: (conversationId: string, title: string) => void;
   /** This month's message-count backstop (lib/ai/monthly-quota.ts) is genuinely spent —
    * distinct from `degraded` on an individual reply. Optional and defaults to `false`,
    * same "a caller not yet passing it renders exactly as before" convention as
@@ -202,6 +210,7 @@ export function AdvisorChat({
     startTransition(async () => {
       const result = await sendAdvisorMessage(convId, content);
       if (result.conversationId) setConvId(result.conversationId);
+      if (result.conversationId && result.conversationTitle) onConversationTitled?.(result.conversationId, result.conversationTitle);
 
       if (result.error) {
         if (result.assistantMessageId) {

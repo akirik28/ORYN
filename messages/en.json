@@ -1188,6 +1188,12 @@
       "creating": "Starting…",
       "createFailed": "Couldn't start a new session. Try again."
     },
+    "sessionList": {
+      "heading": "Sessions",
+      "empty": "No past sessions yet.",
+      "newConversationPlaceholder": "New conversation",
+      "loadFailed": "Couldn't load this session. Try again."
+    },
     "usageMeter": {
       "thisMonth": "This month",
       "ariaUnknown": "How many tokens you have left this month could not be loaded. The monthly allowance is {limit} tokens.",
