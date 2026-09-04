@@ -12,58 +12,55 @@ import { getAIProvider, AIProviderNotConfiguredError } from "@/lib/ai/index";
 import { withUsageLogging } from "@/lib/ai/usage";
 import { selectModelForUser } from "@/lib/ai/limits/budget";
 import { withOutputLanguage } from "@/lib/ai/output-language";
-import { PARENT_WEEKLY_COMMENTARY_SYSTEM_PROMPT } from "@/lib/ai/parent-commentary-prompt";
+import { PARENT_MONTHLY_COMMENTARY_SYSTEM_PROMPT } from "@/lib/ai/parent-commentary-prompt";
 import { DEFAULT_LOCALE, toLocale, type Locale } from "@/lib/i18n/config";
 
 /**
  * P5's content assembly (docs/veli-hesabi-spec-2026-09-04.md) — the AI half of the parent
- * weekly commentary. Deliberately tier-blind, same shape as buildDigestContent one file over:
- * this module decides WHAT the week's commentary says, never WHETHER a given parent is
- * entitled to see it. resolveParentWeeklyCommentary (bottom of this file) is the thin,
- * tier-aware layer that mirrors lib/digest/run.ts's own processOneStudent — check
- * entitlement first, only then build content.
+ * commentary. Deliberately tier-blind, same shape as buildDigestContent one file over: this
+ * module decides WHAT a period's commentary says, never WHETHER a given parent is entitled to
+ * see it. resolveParentMonthlyCommentary (bottom of this file) is the thin, tier-aware layer
+ * that mirrors lib/digest/run.ts's own processOneStudent — check entitlement first, only then
+ * build content.
  *
- * Parameterized by `studentUserId` alone, not a parent_link row — P1 (account_role,
- * parent_links, the RLS policies, migration 0116) is staged, not applied. K4's own tier-
- * inheritance rule already defines a parent's effective tier as their linked student's
- * plan_tier, so entitlement can be checked against the student's own profile today; the only
- * piece this file cannot build yet is "for every ACTIVE parent_link, call this" — a few-line
- * batch runner once parent_links exists, not a reason to block content assembly on it. That
- * future runner MUST filter to `status = 'active'` only — a `pending` link (the schema's own
- * default) grants nothing, so an awaiting-confirmation parent gets no commentary at all, not
- * a degraded one (oryn-45, P1 schema dispatch, 2026-09-04).
+ * Converted from weekly to monthly 2026-09-04 (B3b — founder, verbatim: "ayda bir AI özet
+ * versin gelişimi", an AI summary of progress once a month). The rename touches every symbol
+ * in this file that had "Weekly" in its name; nothing about the SELECTION logic changed, only
+ * the window it's computed over and the cadence lib/digest/parent-commentary-run.ts's own
+ * due-date check enforces before this file is ever called at all — see that file's own header
+ * for why "no cron is armed" means the monthly behavior has to be provable from
+ * last_commentary_sent_at, not from how often the job happens to run.
  *
- * WHAT THIS MAY BE GROUNDED IN — a hard boundary, not a style choice (same dispatch): a parent
- * never gets a raw grant on `profiles` (that table also holds `advisor_instructions`, a
- * student's private customization instruction to the advisor). Real parent reads go through a
- * SECURITY DEFINER function with an explicit 9-column whitelist — display_name,
- * graduation_year, curriculum, country, school_name, plan_tier, onboarding_completed,
- * completeness_percent, profile_strength_score — plus direct policies on `opportunity_matches`,
- * `profile_scores`, and `profile_score_snapshots`. This file was FIRST written against a wider
- * signal set (weekly_actions' title/impact_level, and buildDigestContent's deadlines, which
- * read `applications`/`target_universities`/`university_deadlines`) before that boundary was
- * confirmed — corrected here rather than left as a second, wider surface nobody had reason to
- * distrust yet. What remains: profile_scores + profile_score_snapshots (score movement, via
- * lib/scoring/change.ts, already deterministic), opportunity_matches (new matches only, via
- * buildDigestContent — its `deadlines` field is deliberately never read here), and `display_name`
- * from the whitelist. Nothing else.
+ * Parameterized by `studentUserId` alone, not a parent_link row — matches
+ * lib/digest/parent-commentary-run.ts's own contract exactly: that runner filters to
+ * `status = 'active'` before this file is ever called, and now also to "due" before that.
+ *
+ * WHAT THIS MAY BE GROUNDED IN — a hard boundary, not a style choice (oryn-45, P1 schema
+ * dispatch, 2026-09-04): a parent never gets a raw grant on `profiles` at all (that table also
+ * holds `advisor_instructions`, a student's private customization instruction to the
+ * advisor). Real parent reads go through a 9-column SECURITY DEFINER whitelist plus direct
+ * policies on opportunity_matches/profile_scores/profile_score_snapshots. What remains:
+ * profile_scores + profile_score_snapshots (score movement, via lib/scoring/change.ts,
+ * already deterministic), opportunity_matches (new matches only, via buildDigestContent — its
+ * `deadlines` field is deliberately never read here), and `display_name` from the whitelist.
+ * Nothing else.
  */
 
 const MAX_NARRATIVE_CHARS = 700;
 
 /**
  * The decision inputs, already fetched and shaped — kept separate from the I/O that produces
- * them so the "was this week notable" call and the honest-fallback text are directly testable
+ * them so the "was this month notable" call and the honest-fallback text are directly testable
  * against plain fixtures, the same split computeEligibility/buildProfileChange/
  * detectNotifiableProfileUpdate already use throughout this codebase. Nothing here has touched
  * an AI provider yet.
  */
-export interface WeeklySignal {
+export interface MonthlySignal {
   studentDisplayName: string;
-  weekStart: string;
-  weekEnd: string;
+  periodStart: string;
+  periodEnd: string;
   /** Already filtered to NOTIFIABLE_DIMENSION_DELTA — see filterNotableDimensionChanges'
-   * own comment for why a sub-threshold move must not count as this week's signal. */
+   * own comment for why a sub-threshold move must not count as this period's signal. */
   notableChange: ProfileChange;
   newMatches: DigestOpportunityMatchItem[];
 }
@@ -73,11 +70,11 @@ export interface WeeklySignal {
  * about" rather than inventing a second threshold next to it — that constant is grounded in
  * real observed data (every genuine profile edit ever recorded moved a dimension by 4+
  * points; the floor sits just above the smallest real one). Without this filter, a student
- * whose ONLY activity this week was a formula-level 0.3-point drift would have
- * describeProfileChangeForParent name it as the area that moved most this week — true in a
- * technical sense, misleading in the sense a parent would read it. Entries below the bar are
- * dropped from improved/declined, not folded into `steady` — `steady`'s own contract is
- * "came back identical", and a sub-threshold move did not.
+ * whose ONLY activity this period was a formula-level 0.3-point drift would have
+ * describeProfileChangeForParent name it as the area that moved most — true in a technical
+ * sense, misleading in the sense a parent would read it. Entries below the bar are dropped
+ * from improved/declined, not folded into `steady` — `steady`'s own contract is "came back
+ * identical", and a sub-threshold move did not.
  */
 export function filterNotableDimensionChanges(change: ProfileChange): ProfileChange {
   return {
@@ -89,58 +86,58 @@ export function filterNotableDimensionChanges(change: ProfileChange): ProfileCha
 }
 
 /**
- * Whether this week has anything worth an AI call at all. Two independent sources, either one
- * is enough — deliberately NOT gated on `notableChange.hasHistory` alone, since a "steady,
- * nothing moved" week can still be worth a note if a new opportunity matched. The false-
- * positive direction (calling the AI for a near-empty week) is the one this whole feature
+ * Whether this period has anything worth an AI call at all. Two independent sources, either
+ * one is enough — deliberately NOT gated on `notableChange.hasHistory` alone, since a "steady,
+ * nothing moved" period can still be worth a note if a new opportunity matched. The false-
+ * positive direction (calling the AI for a near-empty period) is the one this whole feature
  * exists to avoid, so this stays a strict OR over real, concrete facts, not a fuzzy heuristic.
  */
-export function hasNotableWeeklySignal(signal: Pick<WeeklySignal, "notableChange" | "newMatches">): boolean {
+export function hasNotableMonthlySignal(signal: Pick<MonthlySignal, "notableChange" | "newMatches">): boolean {
   return signal.notableChange.improved.length > 0 || signal.notableChange.declined.length > 0 || signal.newMatches.length > 0;
 }
 
 /**
  * The honest-nothing path, built first and kept completely separate from the AI path — see
  * this file's own module comment and lib/ai/parent-commentary-prompt.ts's header for why.
- * No model call, no fabrication surface at all: a quiet week produces this exact,
+ * No model call, no fabrication surface at all: a quiet month produces this exact,
  * deterministic sentence every time. The reassurance clause ("not a red flag on its own") is
  * deliberate — a parent reading unexplained silence from a paid feature can read it as the
- * product having broken, not as an honest report of a quiet week; this says which one it is.
+ * product having broken, not as an honest report of a quiet month; this says which one it is.
  */
 export function honestNoActivityNarrative(studentDisplayName: string, locale: Locale = DEFAULT_LOCALE): string {
   return locale === "tr"
-    ? `${studentDisplayName} için bu hafta profilinde belirgin bir hareket ya da yeni bir fırsat eşleşmesi olmadı. Bu tek başına bir sorun işareti değil — bazı haftalar sakin geçer.`
-    : `There wasn't a notable profile change or a new opportunity match for ${studentDisplayName} this week. That's not a red flag on its own — some weeks are quiet.`;
+    ? `${studentDisplayName} için bu ay profilinde belirgin bir hareket ya da yeni bir fırsat eşleşmesi olmadı. Bu tek başına bir sorun işareti değil — bazı aylar sakin geçer.`
+    : `There wasn't a notable profile change or a new opportunity match for ${studentDisplayName} this month. That's not a red flag on its own — some months are quiet.`;
 }
 
 /**
  * The second fallback (2026-09-04, degrade-gracefully per AGENTS.md Rule 4/Phase 34): real
- * signal existed this week, but the AI provider isn't configured (every dev/preview
+ * signal existed this period, but the AI provider isn't configured (every dev/preview
  * environment today has no ANTHROPIC_API_KEY). Assembles a plain, deterministic sentence
  * directly from the same facts the AI path would have used — no narrative voice, no
  * interpretation, just the facts stated. Never silently drops real signal just because the
  * model can't be reached.
  */
-function assembleFactsWithoutAI(signal: WeeklySignal, locale: Locale): string {
+function assembleFactsWithoutAI(signal: MonthlySignal, locale: Locale): string {
   const parts: string[] = [];
-  const changeSentence = describeProfileChangeForParent(signal.notableChange, signal.studentDisplayName, locale);
+  const changeSentence = describeProfileChangeForParent(signal.notableChange, signal.studentDisplayName, locale, "month");
   if (changeSentence) parts.push(changeSentence);
   if (signal.newMatches.length > 0) {
     const titles = signal.newMatches.map((m) => m.title).join(", ");
-    parts.push(locale === "tr" ? `Bu hafta yeni eşleşen fırsatlar: ${titles}.` : `New opportunity matches this week: ${titles}.`);
+    parts.push(locale === "tr" ? `Bu ay yeni eşleşen fırsatlar: ${titles}.` : `New opportunity matches this month: ${titles}.`);
   }
   return parts.join(" ");
 }
 
-const ParentWeeklyCommentarySchema = z.object({
+const ParentMonthlyCommentarySchema = z.object({
   narrative: z.string().min(1).max(MAX_NARRATIVE_CHARS),
 });
 
 export type NarrativeSource = "ai" | "no_activity" | "ai_unavailable";
 
-export interface ParentWeeklyCommentaryContent {
-  weekStart: string;
-  weekEnd: string;
+export interface ParentMonthlyCommentaryContent {
+  periodStart: string;
+  periodEnd: string;
   narrative: string;
   narrativeSource: NarrativeSource;
   newMatches: DigestOpportunityMatchItem[];
@@ -150,49 +147,52 @@ export interface ParentWeeklyCommentaryContent {
  * PRE-REGISTERED over-claim definition (oryn-45's own instruction, 2026-09-04: "measuring
  * absence after the fact is the easiest score in the world to award yourself" — written
  * before any real output from this prompt has been read, matching this session's own earlier
- * ordinal-test discipline). A generated narrative over-claims if it contains ANY of:
+ * ordinal-test discipline; carried forward unchanged by the weekly-to-monthly conversion,
+ * since the underlying failure mode — a model reaching for a confident claim over an honest
+ * hedge on thin signal — doesn't change with the window size). A generated narrative
+ * over-claims if it contains ANY of:
  *   1. A specific number (a score, a count, a percentage) not present in the fact sentences
  *      passed to the model.
  *   2. A specific date, or a relative time reference ("last month", "in March") beyond
- *      "this week", not present in the facts.
+ *      "this month", not present in the facts.
  *   3. A named activity, award, or opportunity title not present in newMatches.
  *   4. Any claim about WHY a score moved (a specific cause, action, or event) — the facts
  *      given never state a cause, only a magnitude and direction.
  *   5. Language that reads as resolved/certain about a WEAK signal — e.g. calling a single
  *      just-above-threshold dimension move "strong" or "significant" progress.
- * This criterion is checked against real model output in docs/parent-weekly-commentary-p5-
- * 2026-09-04.md's own verification section — see that doc for whether it could be run at all
- * in this environment (it could not: no ANTHROPIC_API_KEY is configured here, so every real
- * run in this session's own testing took the ai_unavailable path, not the ai path this
- * criterion is actually about).
+ * Not yet checked against real model output for the monthly framing specifically, for the
+ * same reason it never was for weekly: no ANTHROPIC_API_KEY is configured in this
+ * environment, so every real invocation here takes the ai_unavailable path, not the ai path
+ * this criterion is actually about. Still the standard to hold the prompt to whenever someone
+ * with real API access can run it.
  */
-async function generateNarrative(signal: WeeklySignal, studentUserId: string, locale: Locale): Promise<{ narrative: string; source: NarrativeSource }> {
-  const factSentences: string[] = [`Week: ${signal.weekStart} to ${signal.weekEnd}.`, `Student's name: ${signal.studentDisplayName}.`];
+async function generateNarrative(signal: MonthlySignal, studentUserId: string, locale: Locale): Promise<{ narrative: string; source: NarrativeSource }> {
+  const factSentences: string[] = [`Month: ${signal.periodStart} to ${signal.periodEnd}.`, `Student's name: ${signal.studentDisplayName}.`];
   // describeProfileChangeForParent here, not describeProfileChange — the fact sentence fed to
   // the model should already be in the same third-person voice
   // lib/ai/parent-commentary-prompt.ts instructs the model to write in, not a second-person
   // ("since your last review") sentence the model then has to silently reframe. Feeding a
   // "you"-addressed fact makes it measurably easier for a model to echo that framing back
   // despite the explicit instruction not to.
-  const changeSentence = describeProfileChangeForParent(signal.notableChange, signal.studentDisplayName, locale);
+  const changeSentence = describeProfileChangeForParent(signal.notableChange, signal.studentDisplayName, locale, "month");
   factSentences.push(changeSentence ? `Profile movement (already computed, do not recompute or explain its cause): ${changeSentence}` : "No profile-score history to compare against yet.");
   factSentences.push(
     signal.newMatches.length > 0
-      ? `New opportunity matches this week: ${signal.newMatches.map((m) => `"${m.title}"${m.organization ? ` (${m.organization})` : ""}`).join("; ")}.`
-      : "No new opportunity matches this week."
+      ? `New opportunity matches this month: ${signal.newMatches.map((m) => `"${m.title}"${m.organization ? ` (${m.organization})` : ""}`).join("; ")}.`
+      : "No new opportunity matches this month."
   );
 
   try {
     const provider = getAIProvider();
     const result = await withUsageLogging(
-      { userId: studentUserId, feature: "parent_weekly_commentary", selectModel: (uid) => selectModelForUser(uid, "ultra") },
+      { userId: studentUserId, feature: "parent_monthly_commentary", selectModel: (uid) => selectModelForUser(uid, "ultra") },
       (model) =>
         provider.generateStructured({
-          system: withOutputLanguage(PARENT_WEEKLY_COMMENTARY_SYSTEM_PROMPT, locale),
-          prompt: `Here are this week's facts:\n\n${factSentences.join("\n")}\n\nWrite the parent note now.`,
-          schema: ParentWeeklyCommentarySchema,
-          schemaName: "record_parent_weekly_commentary",
-          schemaDescription: "Records a short weekly note for a parent about their child's week on Proxola.",
+          system: withOutputLanguage(PARENT_MONTHLY_COMMENTARY_SYSTEM_PROMPT, locale),
+          prompt: `Here are this month's facts:\n\n${factSentences.join("\n")}\n\nWrite the parent note now.`,
+          schema: ParentMonthlyCommentarySchema,
+          schemaName: "record_parent_monthly_commentary",
+          schemaDescription: "Records a short monthly note for a parent about their child's progress on Proxola.",
           maxTokens: 400,
           model,
         })
@@ -207,22 +207,23 @@ async function generateNarrative(signal: WeeklySignal, studentUserId: string, lo
   }
 }
 
-function startOfWeekIso(referenceDate: Date): string {
-  const d = new Date(referenceDate);
-  const day = d.getUTCDay();
-  // ISO week starts Monday — same convention lib/plan/persist.ts's currentWeekStart already
-  // uses for weekly_plans, so "this week" means the same calendar window everywhere it's used.
-  const diff = (day === 0 ? -6 : 1) - day;
-  d.setUTCDate(d.getUTCDate() + diff);
-  d.setUTCHours(0, 0, 0, 0);
+/** Calendar month, not a rolling 30-day window — "bu ay"/"this month" in every string this
+ * file produces means the calendar month, so the window it's actually computed over should
+ * match what the words say. Used only as the fallback when `since` is null (a student's very
+ * first commentary ever); every subsequent call anchors periodStart to their own
+ * last_commentary_sent_at instead (see loadMonthlySignal below), which is deliberately NOT
+ * forced back to a calendar boundary — a parent confirmed mid-month should get their next
+ * note ~30 days later, not snapped to the 1st. */
+function startOfMonthIso(referenceDate: Date): string {
+  const d = new Date(Date.UTC(referenceDate.getUTCFullYear(), referenceDate.getUTCMonth(), 1, 0, 0, 0, 0));
   return d.toISOString();
 }
 
 /**
- * Loads and shapes the week's raw signal — the only function in this file that touches
+ * Loads and shapes the period's raw signal — the only function in this file that touches
  * Supabase before generateNarrative's own AI call. `since` mirrors buildDigestContent's own
  * cursor contract exactly (null = no prior commentary, everything currently eligible counts);
- * falls back to the current ISO week's Monday when null, since the profile-snapshot
+ * falls back to the current calendar month's own start when null, since the profile-snapshot
  * comparison needs SOME window even on a first-ever run.
  *
  * buildDigestContent's own `deadlines` field is read here and immediately discarded — see
@@ -231,10 +232,10 @@ function startOfWeekIso(referenceDate: Date): string {
  * buildDigestContent unmodified rather than forking it keeps this a true reuse of the shared
  * digest seam, at the cost of one query this file never uses the result of.
  */
-async function loadWeeklySignal(supabase: SupabaseClient<Database>, studentUserId: string, studentDisplayName: string, since: string | null): Promise<WeeklySignal> {
+async function loadMonthlySignal(supabase: SupabaseClient<Database>, studentUserId: string, studentDisplayName: string, since: string | null): Promise<MonthlySignal> {
   const now = new Date();
-  const weekStart = since ?? startOfWeekIso(now);
-  const weekEnd = now.toISOString();
+  const periodStart = since ?? startOfMonthIso(now);
+  const periodEnd = now.toISOString();
 
   const [scoresRes, previousSnapshotRes, digestContent] = await Promise.all([
     supabase.from("profile_scores").select("dimension, score").eq("user_id", studentUserId),
@@ -242,7 +243,7 @@ async function loadWeeklySignal(supabase: SupabaseClient<Database>, studentUserI
       .from("profile_score_snapshots")
       .select("dimension_scores")
       .eq("user_id", studentUserId)
-      .lt("created_at", weekStart)
+      .lt("created_at", periodStart)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
@@ -259,8 +260,8 @@ async function loadWeeklySignal(supabase: SupabaseClient<Database>, studentUserI
 
   return {
     studentDisplayName,
-    weekStart,
-    weekEnd,
+    periodStart,
+    periodEnd,
     notableChange,
     newMatches: digestContent?.newMatches ?? [],
   };
@@ -269,15 +270,15 @@ async function loadWeeklySignal(supabase: SupabaseClient<Database>, studentUserI
 /**
  * Tier-blind content assembly — see this file's own module comment. Always returns real
  * content, never null: unlike buildDigestContent (where "nothing to say" means "skip this
- * student, don't send"), a parent commentary that goes silent on a quiet week reads as the
+ * student, don't send"), a parent commentary that goes silent on a quiet month reads as the
  * product having broken, not as an honest report — see honestNoActivityNarrative's own
- * comment. The AI is only ever called when hasNotableWeeklySignal is true.
+ * comment. The AI is only ever called when hasNotableMonthlySignal is true.
  */
-export async function buildParentWeeklyCommentary(
+export async function buildParentMonthlyCommentary(
   supabase: SupabaseClient<Database>,
   studentUserId: string,
   since: string | null
-): Promise<ParentWeeklyCommentaryContent> {
+): Promise<ParentMonthlyCommentaryContent> {
   // display_name + preferred_language: both on the parent-readable whitelist (the latter
   // implicitly, as the mechanism that makes the whitelist's own display readable at all) --
   // see this file's own module comment for the full list and where it came from.
@@ -285,12 +286,12 @@ export async function buildParentWeeklyCommentary(
   const locale = toLocale(profile?.preferred_language);
   const studentDisplayName = profile?.display_name ?? (locale === "tr" ? "Öğrenciniz" : "Your student");
 
-  const signal = await loadWeeklySignal(supabase, studentUserId, studentDisplayName, since);
+  const signal = await loadMonthlySignal(supabase, studentUserId, studentDisplayName, since);
 
-  if (!hasNotableWeeklySignal(signal)) {
+  if (!hasNotableMonthlySignal(signal)) {
     return {
-      weekStart: signal.weekStart,
-      weekEnd: signal.weekEnd,
+      periodStart: signal.periodStart,
+      periodEnd: signal.periodEnd,
       narrative: honestNoActivityNarrative(studentDisplayName, locale),
       narrativeSource: "no_activity",
       newMatches: [],
@@ -299,8 +300,8 @@ export async function buildParentWeeklyCommentary(
 
   const { narrative, source } = await generateNarrative(signal, studentUserId, locale);
   return {
-    weekStart: signal.weekStart,
-    weekEnd: signal.weekEnd,
+    periodStart: signal.periodStart,
+    periodEnd: signal.periodEnd,
     narrative,
     narrativeSource: source,
     newMatches: signal.newMatches,
@@ -309,37 +310,36 @@ export async function buildParentWeeklyCommentary(
 
 export type ParentCommentaryOutcome =
   | { kind: "not_premium" }
-  | { kind: "ok"; content: ParentWeeklyCommentaryContent };
+  | { kind: "ok"; content: ParentMonthlyCommentaryContent };
 
 /**
  * The tier-aware entry point — mirrors lib/digest/run.ts's own processOneStudent exactly:
  * check entitlement first, only then spend anything building content. Tier resolved via
  * lib/tier/parent-tier.ts's resolveParentEffectiveTier, not a raw `plan_tier` column read —
- * an earlier version of this function did exactly that raw read, and P6 (the tier-inheritance
- * lane, landed 2026-09-04 while this file was being corrected for the same reason) is why it
- * didn't ship that way: a raw `plan_tier === "ultra"` check misses a currently-active Ultra
- * *gift* (`ultra_gift_expires_at` in the future, permanent `plan_tier` still "standard") —
+ * a raw `plan_tier === "ultra"` check misses a currently-active Ultra *gift*
+ * (`ultra_gift_expires_at` in the future, permanent `plan_tier` still "standard") —
  * resolveParentEffectiveTier already calls the one function (`resolvePlanTier`,
  * lib/tier/plan-tier.ts, ~30 existing call sites) that resolves both correctly, and this
  * routes through it rather than re-deriving the same fallback a third time.
  *
- * `linkStatus` is hardcoded "active" here, not read from `parent_links` — P1 isn't applied,
- * and more importantly, this function's own contract (per its header) is "given an
- * ALREADY-KNOWN, already-authorized studentUserId, build content" — the link-status gate
- * belongs to the future batch runner that iterates real parent_links rows and must filter to
- * `status = 'active'` BEFORE ever calling this function at all; a `pending` link grants
- * nothing (oryn-45, 2026-09-04), and this function has no way to independently confirm that
+ * `linkStatus` is hardcoded "active" here, not read from `parent_links` — this function's own
+ * contract (per its header) is "given an ALREADY-KNOWN, already-authorized studentUserId,
+ * build content" — both the link-status gate AND the monthly due-date gate belong to the
+ * caller (lib/digest/parent-commentary-run.ts) that iterates real parent_links rows: it must
+ * filter to `status = 'active'` AND "due" BEFORE ever calling this function at all — a
+ * `pending` link grants nothing (oryn-45, 2026-09-04), and a link commentaried three days ago
+ * isn't due again yet either. This function has no way to independently confirm either
  * without parent_links, so it trusts its caller the same way processOneStudent trusts
  * `runDigestPass`'s own candidate-loading to have already applied the opt-in filter.
  *
- * Queries `profiles` a second time (buildParentWeeklyCommentary reads its own display_name/
+ * Queries `profiles` a second time (buildParentMonthlyCommentary reads its own display_name/
  * preferred_language columns independently) rather than threading a pre-fetched row through —
- * a small, deliberate redundancy that keeps buildParentWeeklyCommentary's own signature free
+ * a small, deliberate redundancy that keeps buildParentMonthlyCommentary's own signature free
  * of a profile-row parameter it would otherwise need only for this one caller. This runs in a
  * background job, not a request hot path; the extra read is cheap relative to the AI call it
  * gates.
  */
-export async function resolveParentWeeklyCommentary(
+export async function resolveParentMonthlyCommentary(
   supabase: SupabaseClient<Database>,
   studentUserId: string,
   since: string | null
@@ -348,6 +348,6 @@ export async function resolveParentWeeklyCommentary(
   const tier: PlanTier = resolveParentEffectiveTier("active", { plan_tier: (tierRow?.plan_tier as PlanTier | undefined) ?? "standard", ultra_gift_expires_at: tierRow?.ultra_gift_expires_at ?? null });
   if (tier !== "ultra") return { kind: "not_premium" };
 
-  const content = await buildParentWeeklyCommentary(supabase, studentUserId, since);
+  const content = await buildParentMonthlyCommentary(supabase, studentUserId, since);
   return { kind: "ok", content };
 }

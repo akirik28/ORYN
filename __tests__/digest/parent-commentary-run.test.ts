@@ -1,20 +1,56 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { isDueForMonthlyCommentary } from "@/lib/digest/parent-commentary-run";
 
 /**
  * lib/digest/parent-commentary-run.ts — the parent_links-driven batch runner. Mirrors
- * __tests__/digest/run.test.ts's own structure and reasoning throughout: resolveParentWeeklyCommentary
+ * __tests__/digest/run.test.ts's own structure and reasoning throughout: resolveParentMonthlyCommentary
  * is mocked directly (it has its own coverage, __tests__/digest/parent-commentary.test.ts) —
  * this suite's job is the runner's own contract, not content generation.
  *
- * CEO's own instruction for this feature, stated directly: "prove the gate before the
- * content — a standard-tier parent getting commentary is the failure that matters." Two
- * gates exist here, and both get their own proof, not one assumed from the other:
+ * Renamed from *Weekly* to *Monthly* 2026-09-04 (B3b — founder: "ayda bir AI özet versin
+ * gelişimi"). That conversion added a THIRD gate this file didn't have before: no cron is
+ * armed, so "monthly" has to be provable from parent_links.last_commentary_sent_at, not from
+ * how often this pass happens to run — isDueForMonthlyCommentary is that proof, and it gets
+ * the same standard as the other two: prove it can fail, not just that it happens to pass.
+ *
+ * Three gates total, each with its own proof, not one assumed from another:
+ *   0. Due date (isDueForMonthlyCommentary, checked first, before resolveParentMonthlyCommentary
+ *      is ever called) — a link commentaried within the last 30 days is skipped outright.
  *   1. `status = 'active'` at the QUERY level (loadCandidates' own .eq()) — a pending or
- *      revoked link must never even become a candidate, let alone reach the tier check.
- *   2. Tier (`resolveParentWeeklyCommentary`'s own not_premium outcome) — a standard-tier
+ *      revoked link must never even become a candidate, let alone reach the due-date or tier
+ *      check.
+ *   2. Tier (`resolveParentMonthlyCommentary`'s own not_premium outcome) — a standard-tier
  *      student's parent gets skipped before any commentary is built, mirroring
  *      __tests__/digest/run.test.ts's own "opted-out students never reach content building".
  */
+
+describe("isDueForMonthlyCommentary — the pure gate function on its own", () => {
+  const now = new Date("2026-09-04T12:00:00.000Z");
+
+  test("null (never sent) is immediately due", () => {
+    expect(isDueForMonthlyCommentary(null, now)).toBe(true);
+  });
+
+  test("29 days ago is NOT yet due", () => {
+    const twentyNineDaysAgo = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000).toISOString();
+    expect(isDueForMonthlyCommentary(twentyNineDaysAgo, now)).toBe(false);
+  });
+
+  test("exactly 30 days ago IS due", () => {
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    expect(isDueForMonthlyCommentary(thirtyDaysAgo, now)).toBe(true);
+  });
+
+  test("60 days ago is due", () => {
+    const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString();
+    expect(isDueForMonthlyCommentary(sixtyDaysAgo, now)).toBe(true);
+  });
+
+  test("a few hours ago is NOT due", () => {
+    const hoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString();
+    expect(isDueForMonthlyCommentary(hoursAgo, now)).toBe(false);
+  });
+});
 
 interface ParentLinkRow {
   id: string;
@@ -30,7 +66,7 @@ const { resolveMock, linksRef, updateMock } = vi.hoisted(() => ({
   updateMock: vi.fn(),
 }));
 
-vi.mock("@/lib/digest/parent-commentary", () => ({ resolveParentWeeklyCommentary: resolveMock }));
+vi.mock("@/lib/digest/parent-commentary", () => ({ resolveParentMonthlyCommentary: resolveMock }));
 
 /** `.eq("status", "active")` genuinely filters the fixture array here, not just accepted and
  * ignored — that's the mechanism proving gate #1 (see this file's own header). `.in("id", ids)`
@@ -64,13 +100,15 @@ function mockAdminClient() {
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => mockAdminClient() }));
 
 const COMMENTARY_CONTENT = {
-  weekStart: "2026-09-01T00:00:00.000Z",
-  weekEnd: "2026-09-04T00:00:00.000Z",
-  narrative: "A quiet week.",
+  periodStart: "2026-08-05T00:00:00.000Z",
+  periodEnd: "2026-09-04T00:00:00.000Z",
+  narrative: "A quiet month.",
   narrativeSource: "no_activity" as const,
   newMatches: [],
 };
 
+/** last_commentary_sent_at defaults to null (never sent -> always due), so every existing test
+ * below that doesn't care about the due-date gate specifically is unaffected by its addition. */
 function link(overrides: Partial<ParentLinkRow>): ParentLinkRow {
   return { id: "link-1", parent_user_id: "parent-1", student_user_id: "student-1", status: "active", last_commentary_sent_at: null, ...overrides };
 }
@@ -82,12 +120,48 @@ beforeEach(() => {
   updateMock.mockClear();
 });
 
-describe("runParentWeeklyCommentaryPass — gate #1: status = 'active' filtering happens before any candidate is even loaded", () => {
-  test("a pending link is never a candidate — resolveParentWeeklyCommentary is never called for it", async () => {
-    linksRef.current = [link({ id: "link-pending", status: "pending" })];
-    const { runParentWeeklyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
+describe("runParentMonthlyCommentaryPass — gate #0: due date, checked before the resolver is ever called", () => {
+  test("a link commentaried 10 days ago is skipped — resolveParentMonthlyCommentary never runs for it", async () => {
+    const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
+    linksRef.current = [link({ last_commentary_sent_at: tenDaysAgo })];
+    const { runParentMonthlyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
 
-    const result = await runParentWeeklyCommentaryPass({ dryRun: true });
+    const result = await runParentMonthlyCommentaryPass({ dryRun: true });
+
+    expect(resolveMock).not.toHaveBeenCalled();
+    expect(result.skippedNotDue).toBe(1);
+    expect(result.rows).toEqual([{ linkId: "link-1", parentUserId: "parent-1", studentUserId: "student-1", outcome: "skipped_not_due", content: null }]);
+  });
+
+  test("a link commentaried 45 days ago IS due — resolveParentMonthlyCommentary runs normally", async () => {
+    const fortyFiveDaysAgo = new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString();
+    linksRef.current = [link({ last_commentary_sent_at: fortyFiveDaysAgo })];
+    const { runParentMonthlyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
+
+    const result = await runParentMonthlyCommentaryPass({ dryRun: true });
+
+    expect(resolveMock).toHaveBeenCalledTimes(1);
+    expect(result.skippedNotDue).toBe(0);
+    expect(result.wouldSend).toBe(1);
+  });
+
+  test("dryRun:false still writes nothing for a not-yet-due link", async () => {
+    const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+    linksRef.current = [link({ last_commentary_sent_at: fiveDaysAgo })];
+    const { runParentMonthlyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
+
+    await runParentMonthlyCommentaryPass({ dryRun: false });
+
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("runParentMonthlyCommentaryPass — gate #1: status = 'active' filtering happens before any candidate is even loaded", () => {
+  test("a pending link is never a candidate — resolveParentMonthlyCommentary is never called for it", async () => {
+    linksRef.current = [link({ id: "link-pending", status: "pending" })];
+    const { runParentMonthlyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
+
+    const result = await runParentMonthlyCommentaryPass({ dryRun: true });
 
     expect(resolveMock).not.toHaveBeenCalled();
     expect(result.attempted).toBe(0);
@@ -95,9 +169,9 @@ describe("runParentWeeklyCommentaryPass — gate #1: status = 'active' filtering
 
   test("a revoked link is never a candidate either", async () => {
     linksRef.current = [link({ id: "link-revoked", status: "revoked" })];
-    const { runParentWeeklyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
+    const { runParentMonthlyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
 
-    const result = await runParentWeeklyCommentaryPass({ dryRun: true });
+    const result = await runParentMonthlyCommentaryPass({ dryRun: true });
 
     expect(resolveMock).not.toHaveBeenCalled();
     expect(result.attempted).toBe(0);
@@ -105,9 +179,9 @@ describe("runParentWeeklyCommentaryPass — gate #1: status = 'active' filtering
 
   test("an active link among pending/revoked ones IS a candidate — the filter is selective, not a blanket skip", async () => {
     linksRef.current = [link({ id: "link-pending", status: "pending" }), link({ id: "link-active", status: "active" }), link({ id: "link-revoked", status: "revoked" })];
-    const { runParentWeeklyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
+    const { runParentMonthlyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
 
-    const result = await runParentWeeklyCommentaryPass({ dryRun: true });
+    const result = await runParentMonthlyCommentaryPass({ dryRun: true });
 
     expect(resolveMock).toHaveBeenCalledTimes(1);
     expect(resolveMock).toHaveBeenCalledWith(expect.anything(), "student-1", null);
@@ -115,13 +189,13 @@ describe("runParentWeeklyCommentaryPass — gate #1: status = 'active' filtering
   });
 });
 
-describe("runParentWeeklyCommentaryPass — gate #2: tier, skipped before it's recorded as sent", () => {
+describe("runParentMonthlyCommentaryPass — gate #2: tier, skipped before it's recorded as sent", () => {
   test("not_premium is skipped, and dryRun:false still writes nothing for that row", async () => {
     linksRef.current = [link({ id: "link-standard" })];
     resolveMock.mockResolvedValue({ kind: "not_premium" });
-    const { runParentWeeklyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
+    const { runParentMonthlyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
 
-    const result = await runParentWeeklyCommentaryPass({ dryRun: false });
+    const result = await runParentMonthlyCommentaryPass({ dryRun: false });
 
     expect(updateMock).not.toHaveBeenCalled();
     expect(result.skippedNotPremium).toBe(1);
@@ -129,12 +203,12 @@ describe("runParentWeeklyCommentaryPass — gate #2: tier, skipped before it's r
   });
 });
 
-describe("runParentWeeklyCommentaryPass with dryRun: true (the default)", () => {
+describe("runParentMonthlyCommentaryPass with dryRun: true (the default)", () => {
   test("resolves real content but writes nothing at all", async () => {
     linksRef.current = [link({})];
-    const { runParentWeeklyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
+    const { runParentMonthlyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
 
-    const result = await runParentWeeklyCommentaryPass({ dryRun: true });
+    const result = await runParentMonthlyCommentaryPass({ dryRun: true });
 
     expect(updateMock).not.toHaveBeenCalled();
     expect(result.wouldSend).toBe(1);
@@ -144,9 +218,9 @@ describe("runParentWeeklyCommentaryPass with dryRun: true (the default)", () => 
 
   test("the identical mocked setup DOES write when dryRun is false, so the dry-run test above can't pass by construction", async () => {
     linksRef.current = [link({})];
-    const { runParentWeeklyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
+    const { runParentMonthlyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
 
-    const result = await runParentWeeklyCommentaryPass({ dryRun: false });
+    const result = await runParentMonthlyCommentaryPass({ dryRun: false });
 
     expect(updateMock).toHaveBeenCalledTimes(1);
     const call = updateMock.mock.calls[0][0] as { id: string; payload: Record<string, unknown> };
@@ -160,37 +234,51 @@ describe("runParentWeeklyCommentaryPass with dryRun: true (the default)", () => 
   });
 });
 
-describe("runParentWeeklyCommentaryPass — since cursor threads through unchanged", () => {
-  test("a link's own last_commentary_sent_at is passed as resolveParentWeeklyCommentary's since argument", async () => {
-    linksRef.current = [link({ last_commentary_sent_at: "2026-08-28T00:00:00.000Z" })];
-    const { runParentWeeklyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
+describe("runParentMonthlyCommentaryPass — since cursor threads through unchanged", () => {
+  test("a due link's own last_commentary_sent_at is passed as resolveParentMonthlyCommentary's since argument", async () => {
+    // Must be >30 days old, or gate #0 would skip it before resolveMock is ever called —
+    // this test is about the value threading through, not about re-proving gate #0.
+    const overThirtyDaysAgo = "2026-01-01T00:00:00.000Z";
+    linksRef.current = [link({ last_commentary_sent_at: overThirtyDaysAgo })];
+    const { runParentMonthlyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
 
-    await runParentWeeklyCommentaryPass({ dryRun: true });
+    await runParentMonthlyCommentaryPass({ dryRun: true });
 
-    expect(resolveMock).toHaveBeenCalledWith(expect.anything(), "student-1", "2026-08-28T00:00:00.000Z");
+    expect(resolveMock).toHaveBeenCalledWith(expect.anything(), "student-1", overThirtyDaysAgo);
   });
 });
 
-describe("runParentWeeklyCommentaryPass — linkIds bypasses the status filter, not the tier gate", () => {
-  test("a supplied linkId reaches the resolver even if pending, but a standard tier there still skips", async () => {
+describe("runParentMonthlyCommentaryPass — linkIds bypasses the status filter, not the tier or due-date gates", () => {
+  test("a supplied linkId reaches the due-date/resolver path even if pending, but a standard tier there still skips", async () => {
     linksRef.current = [link({ id: "link-pending-probe", status: "pending" })];
     resolveMock.mockResolvedValue({ kind: "not_premium" });
-    const { runParentWeeklyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
+    const { runParentMonthlyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
 
-    const result = await runParentWeeklyCommentaryPass({ dryRun: true, linkIds: ["link-pending-probe"] });
+    const result = await runParentMonthlyCommentaryPass({ dryRun: true, linkIds: ["link-pending-probe"] });
 
     expect(resolveMock).toHaveBeenCalledTimes(1);
     expect(result.skippedNotPremium).toBe(1);
   });
+
+  test("a supplied linkId that isn't due yet is still skipped — linkIds bypasses status, not the calendar", async () => {
+    const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+    linksRef.current = [link({ id: "link-recent-probe", status: "pending", last_commentary_sent_at: fiveDaysAgo })];
+    const { runParentMonthlyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
+
+    const result = await runParentMonthlyCommentaryPass({ dryRun: true, linkIds: ["link-recent-probe"] });
+
+    expect(resolveMock).not.toHaveBeenCalled();
+    expect(result.skippedNotDue).toBe(1);
+  });
 });
 
-describe("runParentWeeklyCommentaryPass — this module never touches anything but parent_links", () => {
+describe("runParentMonthlyCommentaryPass — this module never touches anything but parent_links", () => {
   test("mockAdminClient throws on any table access this module doesn't expect — proves no hidden call to an email/messaging table exists", async () => {
     // Same reasoning as run.test.ts's identical test: a real send mechanism would necessarily
     // call .from() on something else, which would fail this suite immediately rather than
     // silently passing. Stated as its own test so the guarantee has a name.
     linksRef.current = [link({})];
-    const { runParentWeeklyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
-    await expect(runParentWeeklyCommentaryPass({ dryRun: false })).resolves.toBeDefined();
+    const { runParentMonthlyCommentaryPass } = await import("@/lib/digest/parent-commentary-run");
+    await expect(runParentMonthlyCommentaryPass({ dryRun: false })).resolves.toBeDefined();
   });
 });

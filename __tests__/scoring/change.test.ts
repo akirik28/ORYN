@@ -165,4 +165,30 @@ describe("describeProfileChangeForParent", () => {
       expect(sentence.startsWith(`${name} için`)).toBe(true);
     });
   });
+
+  /** B3b, 2026-09-04: the weekly-to-monthly conversion parameterized this function's own
+   * period noun rather than duplicating the whole function — proven here directly, both
+   * directions (an explicit "week" reproduces the exact original strings above unchanged, an
+   * explicit "month" says "ay"/"month" in the same three positions), plus the default with no
+   * fourth argument at all still means "week" so every un-migrated caller (and every test
+   * above this one) keeps its exact original meaning. */
+  describe("period parameter (week vs. month)", () => {
+    test("period: 'month' says 'ay', not 'hafta', in a Turkish improvement sentence", () => {
+      const change = buildProfileChange([row("research", 55)], { research: 42 });
+      const sentence = describeProfileChangeForParent(change, "Ada", "tr", "month")!;
+      expect(sentence).toBe("Ada için bu ay en çok Araştırma alanı ilerledi.");
+      expect(sentence).not.toContain("hafta");
+    });
+
+    test("period: 'month' says 'this month', not 'this week', in an English steady sentence", () => {
+      const change = buildProfileChange([row("research", 42)], { research: 42 });
+      const sentence = describeProfileChangeForParent(change, "Ada", "en", "month");
+      expect(sentence).toBe("Ada's profile held steady this month.");
+    });
+
+    test("period: 'week' (explicit) is byte-identical to the no-argument default", () => {
+      const change = buildProfileChange([row("research", 30)], { research: 42 });
+      expect(describeProfileChangeForParent(change, "Ada", "en", "week")).toBe(describeProfileChangeForParent(change, "Ada", "en"));
+    });
+  });
 });

@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isUndefinedTableError } from "@/lib/supabase/errors";
-import { resolveParentWeeklyCommentary, type ParentWeeklyCommentaryContent } from "./parent-commentary";
+import { resolveParentMonthlyCommentary, type ParentMonthlyCommentaryContent } from "./parent-commentary";
 
 /**
  * P5's batch runner — the missing piece named explicitly in parent-commentary.ts's own module
@@ -19,6 +19,17 @@ import { resolveParentWeeklyCommentary, type ParentWeeklyCommentaryContent } fro
  * it is the identical kind of mechanism (periodic content, gated by a preference/entitlement
  * check, nothing sends) applied to a different candidate table and a different gate.
  *
+ * Converted from weekly to monthly 2026-09-04 (B3b — founder: "ayda bir AI özet versin
+ * gelişimi"). This file is where the cadence itself actually lives, not parent-commentary.ts:
+ * no cron is armed (lib/jobs/schedule.ts, unchanged by this migration or this build) — nothing
+ * guarantees this runner is invoked on any particular schedule, today or once armed. "Monthly"
+ * therefore cannot mean "however often the job happens to run" — it has to be provable from
+ * parent_links.last_commentary_sent_at, the one durable record of when a parent last actually
+ * got commentary. isDueForMonthlyCommentary below is that check, applied per-candidate before
+ * any tier check or AI call — a link commentaried three days ago is skipped here regardless of
+ * how many times this pass runs in the meantime, the same way createConversation's session
+ * wall doesn't care how many times it's called, only what the data already says.
+ *
  * BUILT, DELIBERATELY NOT ARMED. This file contains no email-sending call anywhere, dry run or
  * not, for the same two reasons lib/digest/run.ts gives: no email-sending infrastructure
  * exists anywhere in this codebase, and the legal question isn't settled — with one addition
@@ -26,17 +37,34 @@ import { resolveParentWeeklyCommentary, type ParentWeeklyCommentaryContent } fro
  * which is its own open question independent of the digest's. A non-dry run composes content
  * and records that commentary *would have been* generated (advancing
  * parent_links.last_commentary_sent_at) — it does not, and structurally cannot yet, deliver
- * anything to a parent. Nothing in this file, and nothing calling it, adds a cron entry
- * (lib/jobs/schedule.ts) — arming the schedule is a founder decision, same as Job D and the
- * student digest; shipping this is preparation for that decision, not an implementation of it.
+ * anything to a parent. Nothing in this file, and nothing calling it, adds a cron entry —
+ * arming the schedule is a founder decision, same as Job D and the student digest; shipping
+ * this is preparation for that decision, not an implementation of it.
  */
+
+/** ~30 days, not a calendar-month lookup (no "same day next month" edge case to get wrong for
+ * the 29th-31st) — "ayda bir" (once a month) read as a rolling cadence off the last real send,
+ * matching parent-commentary.ts's own periodStart fallback reasoning: a parent confirmed
+ * mid-month gets their first note ~30 days later, not snapped to a calendar boundary. */
+const MONTHLY_CADENCE_DAYS = 30;
+
+/** Exported for its own direct test coverage — the single most important line in this file,
+ * per B3b's own framing: prove the gate before the content, same standard the session-wall
+ * fix (app/(app)/advisor/actions.ts's assertConversationLimitNotExceeded) was held to. `null`
+ * (never sent) is immediately due — same "null = eligible" contract as
+ * lib/digest/build.ts/parent-commentary.ts's own `since` handling throughout this feature. */
+export function isDueForMonthlyCommentary(lastCommentarySentAt: string | null, now: Date = new Date()): boolean {
+  if (!lastCommentarySentAt) return true;
+  const daysSinceLastSent = (now.getTime() - new Date(lastCommentarySentAt).getTime()) / (1000 * 60 * 60 * 24);
+  return daysSinceLastSent >= MONTHLY_CADENCE_DAYS;
+}
 
 export interface ParentCommentaryRowReport {
   linkId: string;
   parentUserId: string;
   studentUserId: string;
-  outcome: "would_send" | "sent" | "skipped_not_premium";
-  content: ParentWeeklyCommentaryContent | null;
+  outcome: "would_send" | "sent" | "skipped_not_premium" | "skipped_not_due";
+  content: ParentMonthlyCommentaryContent | null;
 }
 
 export interface ParentCommentaryRunOptions {
@@ -50,9 +78,8 @@ export interface ParentCommentaryRunOptions {
    * design doc's own open item needs: running a handful of representative links through the
    * real `ai` path (not `ai_unavailable`) once real API access is available, without waiting
    * on genuine active links to exist. Does NOT bypass the tier gate inside
-   * resolveParentWeeklyCommentary itself — a standard-tier link supplied here still resolves
-   * not_premium, which is correct: this option widens WHICH rows are considered, never WHAT
-   * they're entitled to. */
+   * resolveParentMonthlyCommentary, or the due-date gate below — this option widens WHICH rows
+   * are considered, never WHAT they're entitled to or WHEN they're actually due. */
   linkIds?: string[];
 }
 
@@ -61,6 +88,7 @@ export interface ParentCommentaryRunResult {
   wouldSend: number;
   sent: number;
   skippedNotPremium: number;
+  skippedNotDue: number;
   rows?: ParentCommentaryRowReport[];
 }
 
@@ -74,7 +102,7 @@ interface CandidateLink {
 }
 
 /**
- * `status = 'active'` filtered here, before resolveParentWeeklyCommentary is ever called —
+ * `status = 'active'` filtered here, before resolveParentMonthlyCommentary is ever called —
  * per parent-commentary.ts's own contract comment: "a pending link grants nothing... this
  * function has no way to independently confirm that without parent_links, so it trusts its
  * caller." This is that caller, and the trust is placed correctly: a pending or revoked link
@@ -98,11 +126,22 @@ async function loadCandidates(admin: SupabaseClient<Database>, options: ParentCo
   return data ?? [];
 }
 
+function baseRow(candidate: CandidateLink): Omit<ParentCommentaryRowReport, "outcome" | "content"> {
+  return { linkId: candidate.id, parentUserId: candidate.parent_user_id, studentUserId: candidate.student_user_id };
+}
+
 async function processOneLink(admin: SupabaseClient<Database>, candidate: CandidateLink, dryRun: boolean): Promise<ParentCommentaryRowReport> {
-  const outcome = await resolveParentWeeklyCommentary(admin, candidate.student_user_id, candidate.last_commentary_sent_at);
+  // The cadence gate, first — before the tier check, before any AI spend. A not-yet-due
+  // Standard link and a not-yet-due Ultra link both stop here identically; which one it would
+  // have been is a question this function never needs to answer for a link that isn't due.
+  if (!isDueForMonthlyCommentary(candidate.last_commentary_sent_at)) {
+    return { ...baseRow(candidate), outcome: "skipped_not_due", content: null };
+  }
+
+  const outcome = await resolveParentMonthlyCommentary(admin, candidate.student_user_id, candidate.last_commentary_sent_at);
 
   if (outcome.kind === "not_premium") {
-    return { linkId: candidate.id, parentUserId: candidate.parent_user_id, studentUserId: candidate.student_user_id, outcome: "skipped_not_premium", content: null };
+    return { ...baseRow(candidate), outcome: "skipped_not_premium", content: null };
   }
 
   if (!dryRun) {
@@ -110,13 +149,13 @@ async function processOneLink(admin: SupabaseClient<Database>, candidate: Candid
     if (error) throw new Error(`[parent-commentary-run] failed to record last_commentary_sent_at for link ${candidate.id}: ${error.message}`);
     // "sent" here means "this run recorded a send", matching lib/digest/run.ts's own
     // processOneStudent comment verbatim — no delivery API is called anywhere in this module.
-    return { linkId: candidate.id, parentUserId: candidate.parent_user_id, studentUserId: candidate.student_user_id, outcome: "sent", content: outcome.content };
+    return { ...baseRow(candidate), outcome: "sent", content: outcome.content };
   }
 
-  return { linkId: candidate.id, parentUserId: candidate.parent_user_id, studentUserId: candidate.student_user_id, outcome: "would_send", content: outcome.content };
+  return { ...baseRow(candidate), outcome: "would_send", content: outcome.content };
 }
 
-export async function runParentWeeklyCommentaryPass(options: ParentCommentaryRunOptions = {}): Promise<ParentCommentaryRunResult> {
+export async function runParentMonthlyCommentaryPass(options: ParentCommentaryRunOptions = {}): Promise<ParentCommentaryRunResult> {
   const dryRun = options.dryRun ?? true;
   const admin = createAdminClient();
   const candidates = await loadCandidates(admin, options);
@@ -125,6 +164,7 @@ export async function runParentWeeklyCommentaryPass(options: ParentCommentaryRun
   let wouldSend = 0;
   let sent = 0;
   let skippedNotPremium = 0;
+  let skippedNotDue = 0;
 
   for (const candidate of candidates) {
     const row = await processOneLink(admin, candidate, dryRun);
@@ -132,6 +172,7 @@ export async function runParentWeeklyCommentaryPass(options: ParentCommentaryRun
     if (row.outcome === "would_send") wouldSend++;
     if (row.outcome === "sent") sent++;
     if (row.outcome === "skipped_not_premium") skippedNotPremium++;
+    if (row.outcome === "skipped_not_due") skippedNotDue++;
   }
 
   return {
@@ -139,6 +180,7 @@ export async function runParentWeeklyCommentaryPass(options: ParentCommentaryRun
     wouldSend,
     sent,
     skippedNotPremium,
+    skippedNotDue,
     rows: dryRun ? rows : undefined, // same "rows only on a dry run" contract as run-job.ts/retention.ts/lib/digest/run.ts
   };
 }
