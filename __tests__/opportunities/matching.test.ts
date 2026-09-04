@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { computeEligibility, computeOpportunityMatch, computeAvoidSignals, isNearStudent, renderEligibilityNotes } from "@/lib/opportunities/matching";
+import { computeEligibility, computeOpportunityMatch, computeAvoidSignals, isNearStudent, isWithinTargetGeography, renderEligibilityNotes } from "@/lib/opportunities/matching";
 import type { OpportunityForMatching, StudentMatchProfile, DismissedOpportunitySignal } from "@/lib/opportunities/matching";
 
 function opportunity(overrides: Partial<OpportunityForMatching> = {}): OpportunityForMatching {
@@ -408,6 +408,73 @@ describe("computeOpportunityMatch", () => {
     expect(near.relevanceScore).toBeGreaterThan(far.relevanceScore);
   });
 
+  // 2026-09-04 (CEO dispatch: target_geographies was collected at onboarding — 100% fill
+  // rate among onboarded students, docs/target-geography-boost-2026-09-04.md — and never read
+  // anywhere. Real measured effect: students whose target excludes the catalog's dominant
+  // country (70% US) still saw a majority-US recommendation set, because nothing
+  // differentiated them from a student who never stated a preference at all).
+  describe("target_geographies boost", () => {
+    test("scores higher when the opportunity falls inside the student's stated target, even with zero interest overlap — isolated from proximity (student's own country is France, matching neither opportunity, so isNearStudent is false on both sides and cannot explain the difference)", () => {
+      const inTarget = computeOpportunityMatch(
+        student({ country: "France", targetGeographies: ["turkey"] }),
+        opportunity({ country: "Turkey" })
+      );
+      const outsideTarget = computeOpportunityMatch(
+        student({ country: "France", targetGeographies: ["turkey"] }),
+        opportunity({ country: "United States" })
+      );
+      expect(inTarget.relevanceScore).toBeGreaterThan(outsideTarget.relevanceScore);
+      expect(inTarget.matchScore).toBeGreaterThan(outsideTarget.matchScore);
+    });
+
+    test("omitting targetGeographies behaves identically to the pre-fix code — no caller breaks by not knowing about this field yet", () => {
+      const withoutField = computeOpportunityMatch(student({ country: "Turkey" }), opportunity({ country: "Turkey" }));
+      const withEmptyArray = computeOpportunityMatch(student({ country: "Turkey", targetGeographies: [] }), opportunity({ country: "Turkey" }));
+      expect(withoutField.relevanceScore).toBe(withEmptyArray.relevanceScore);
+    });
+
+    test("'not_sure' never boosts anything — it's the honest absence of a direction, not a sixth region", () => {
+      const match = computeOpportunityMatch(student({ targetGeographies: ["not_sure"] }), opportunity({ country: "United States" }));
+      const noTarget = computeOpportunityMatch(student({ targetGeographies: [] }), opportunity({ country: "United States" }));
+      expect(match.relevanceScore).toBe(noTarget.relevanceScore);
+    });
+
+    test("stacks additively with the proximity boost — they're independent facts (current residence vs. stated aspiration) that can both be true at once", () => {
+      // Turkey-resident, Turkey-targeting student, Turkey-based opportunity: both isNearStudent
+      // AND isWithinTargetGeography are true here, and should both contribute.
+      const both = computeOpportunityMatch(student({ country: "Turkey", targetGeographies: ["turkey"] }), opportunity({ country: "Turkey" }));
+      const targetOnly = computeOpportunityMatch(student({ country: "France", targetGeographies: ["turkey"] }), opportunity({ country: "Turkey" }));
+      const proximityOnly = computeOpportunityMatch(student({ country: "Turkey", targetGeographies: ["uk"] }), opportunity({ country: "Turkey" }));
+      expect(both.relevanceScore).toBeGreaterThan(targetOnly.relevanceScore);
+      expect(both.relevanceScore).toBeGreaterThan(proximityOnly.relevanceScore);
+    });
+
+    // The concrete worry CEO raised before approving this: an overly strong boost could bury a
+    // genuinely stronger interest match under a weak same-country one. Proven false for this
+    // magnitude directly, not just argued in a comment: a real 2-of-3 interest match against an
+    // out-of-target country still outranks a 0-of-3 interest match inside the target.
+    test("cannot lift a weak in-target match above a strong out-of-target one — the boost tie-breaks, it doesn't override", () => {
+      const weakButInTarget = computeOpportunityMatch(
+        student({ country: "Turkey", targetGeographies: ["turkey"], interests: ["Economics", "Mathematics", "Biology"] }),
+        opportunity({ country: "Turkey", fields: ["Chemistry"] })
+      );
+      const strongButOutsideTarget = computeOpportunityMatch(
+        student({ country: "Turkey", targetGeographies: ["turkey"], interests: ["Economics", "Mathematics", "Biology"] }),
+        opportunity({ country: "United States", fields: ["Economics", "Mathematics"] })
+      );
+      expect(strongButOutsideTarget.relevanceScore).toBeGreaterThan(weakButInTarget.relevanceScore);
+    });
+
+    test("never affects eligibility — a target-geography match on an otherwise-ineligible opportunity still scores 0", () => {
+      const match = computeOpportunityMatch(
+        student({ age: 12, targetGeographies: ["usa"] }),
+        opportunity({ minimumAge: 16, country: "United States" })
+      );
+      expect(match.eligible).toBe(false);
+      expect(match.matchScore).toBe(0);
+    });
+  });
+
   test("proximity boost never overrides eligibility", () => {
     const match = computeOpportunityMatch(student({ age: 12, country: "United States" }), opportunity({ minimumAge: 16, country: "United States" }));
     expect(match.eligible).toBe(false);
@@ -477,6 +544,54 @@ describe("isNearStudent", () => {
 
   test("resolves the confirmed Türkiye/Turkey alias case", () => {
     expect(isNearStudent(student({ country: "Türkiye" }), opportunity({ country: "Turkey" }))).toBe(true);
+  });
+});
+
+describe("isWithinTargetGeography", () => {
+  test("single-country targets match their real country, and only that one", () => {
+    expect(isWithinTargetGeography(["usa"], "United States")).toBe(true);
+    expect(isWithinTargetGeography(["usa"], "Canada")).toBe(false);
+    expect(isWithinTargetGeography(["uk"], "United Kingdom")).toBe(true);
+    expect(isWithinTargetGeography(["canada"], "Canada")).toBe(true);
+    expect(isWithinTargetGeography(["turkey"], "Turkey")).toBe(true);
+  });
+
+  test("'turkey' resolves the same Türkiye/Turkey alias isNearStudent/isSameCountry already handle — one country-equivalence rule, not a second copy", () => {
+    expect(isWithinTargetGeography(["turkey"], "Türkiye")).toBe(true);
+  });
+
+  test("'europe' matches continental Europe but explicitly excludes the UK and Turkey — the onboarding screen offered those as separate options, not as part of 'Europe'", () => {
+    expect(isWithinTargetGeography(["europe"], "France")).toBe(true);
+    expect(isWithinTargetGeography(["europe"], "Germany")).toBe(true);
+    expect(isWithinTargetGeography(["europe"], "United Kingdom")).toBe(false);
+    expect(isWithinTargetGeography(["europe"], "Turkey")).toBe(false);
+    expect(isWithinTargetGeography(["europe"], "Türkiye")).toBe(false);
+  });
+
+  test("'europe' does not match a non-European country", () => {
+    expect(isWithinTargetGeography(["europe"], "United States")).toBe(false);
+    expect(isWithinTargetGeography(["europe"], "Japan")).toBe(false);
+  });
+
+  test("'not_sure' never matches anything — the honest absence of a direction, not a sixth region", () => {
+    expect(isWithinTargetGeography(["not_sure"], "United States")).toBe(false);
+    expect(isWithinTargetGeography(["not_sure"], "Turkey")).toBe(false);
+  });
+
+  test("a student can target multiple geographies at once — matches if ANY of them fit", () => {
+    expect(isWithinTargetGeography(["uk", "turkey"], "Turkey")).toBe(true);
+    expect(isWithinTargetGeography(["uk", "turkey"], "United Kingdom")).toBe(true);
+    expect(isWithinTargetGeography(["uk", "turkey"], "United States")).toBe(false);
+  });
+
+  test("no target, no country, or an unrecognized country string never matches", () => {
+    expect(isWithinTargetGeography([], "United States")).toBe(false);
+    expect(isWithinTargetGeography(["usa"], null)).toBe(false);
+    // "Global (online)" / "International" are real live opportunities.country values that
+    // are not actual countries (remote/global placeholders) -- must not match anything,
+    // silence rather than a false claim of geographic alignment.
+    expect(isWithinTargetGeography(["usa"], "Global (online)")).toBe(false);
+    expect(isWithinTargetGeography(["usa"], "International")).toBe(false);
   });
 });
 

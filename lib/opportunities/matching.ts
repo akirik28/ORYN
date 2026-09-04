@@ -3,7 +3,8 @@ import { normalizeEntitySearchText } from "@/lib/entities/normalize";
 import { currentGradeLevel, gradeMatchesEligibility } from "@/lib/profile/grade-level";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 import { formatAbsoluteDate } from "@/lib/i18n/date";
-import type { OpportunityCategory, ProfileDimension, SavedOpportunityStatus } from "@/types/database";
+import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
+import type { OpportunityCategory, ProfileDimension, SavedOpportunityStatus, TargetGeography } from "@/types/database";
 
 export interface StudentMatchProfile {
   age: number | null;
@@ -14,6 +15,16 @@ export interface StudentMatchProfile {
   /** Distinct from `country` (residence/school location) — migration 0047. Optional/empty
    * for callers that don't have it yet; never inferred from `country`. */
   citizenshipCountries?: string[];
+  /** The student's stated STUDY-destination preference (types/database.ts's
+   * TargetGeography[], collected at onboarding) — distinct from both `country` (current
+   * residence) and `citizenshipCountries` (legal eligibility) above: this is where the
+   * student said they WANT to go. Feeds computeRelevance's boost below only, never
+   * computeEligibility — a stated preference is a reason to rank an aligned opportunity
+   * higher, never a reason to hide a misaligned one (2026-09-04, CEO: "yükseltme, kapı
+   * değil" — a boost, not a gate). Optional/empty for callers that don't have it yet, which
+   * must behave identically to a student who picked "not sure" — no boost applies either
+   * way. */
+  targetGeographies?: TargetGeography[];
   /** Feeds currentGradeLevel() for eligible_grades checks below. */
   graduationYear?: number | null;
   /** Computed from this student's own `not_interested` dismissal history — see
@@ -570,6 +581,66 @@ export function isNearStudent(student: StudentMatchProfile, opportunity: Pick<Op
 const PROXIMITY_BOOST = 15;
 
 /**
+ * target_geographies (types/database.ts) is a 5-way split the onboarding screen showed as
+ * five separate buttons: USA / UK / Europe / Canada / Turkey. "europe" therefore means what
+ * a student actually saw when they picked it — continental Europe WITHOUT the UK or Turkey,
+ * even though country-geo.ts's own continental "Europe" region (built for the university
+ * explorer's map and region tabs, a different surface with a purely geographic purpose)
+ * includes both. Using that region as-is here would silently answer a question the student
+ * was never asked — they chose among three separate options, not one merged continent
+ * (2026-09-04, CEO: "kullanıcıya ne sorulduğu, haritada ne olduğundan önce gelir").
+ */
+const CONTINENTAL_EUROPE_MINUS_UK_TURKEY = new Set(
+  SUPPORTED_COUNTRIES.filter((c) => c.region === "Europe")
+    .map((c) => canonicalCountryKey(c.name))
+    .filter((key) => key !== canonicalCountryKey("United Kingdom") && key !== canonicalCountryKey("Turkey"))
+);
+
+const TARGET_GEOGRAPHY_SINGLE_COUNTRY: Partial<Record<TargetGeography, string>> = {
+  usa: "United States",
+  uk: "United Kingdom",
+  canada: "Canada",
+  turkey: "Turkey",
+};
+
+/**
+ * Whether `opportunityCountry` falls inside any of the student's stated target_geographies.
+ * "not_sure" never matches anything — it's the honest absence of a direction, not a sixth
+ * region. A null or unrecognized opportunity country (a genuinely remote/global opportunity,
+ * or a value like "International"/"Global (online)" that isn't a real country at all —
+ * confirmed live, both appear in opportunities.country) never matches either: silence, not a
+ * claim that the opportunity is outside every target.
+ */
+export function isWithinTargetGeography(targetGeographies: TargetGeography[], opportunityCountry: string | null): boolean {
+  if (!opportunityCountry) return false;
+  const key = canonicalCountryKey(opportunityCountry);
+  return targetGeographies.some((target) => {
+    if (target === "europe") return CONTINENTAL_EUROPE_MINUS_UK_TURKEY.has(key);
+    const singleCountry = TARGET_GEOGRAPHY_SINGLE_COUNTRY[target];
+    return singleCountry !== undefined && canonicalCountryKey(singleCountry) === key;
+  });
+}
+
+/**
+ * Same magnitude as PROXIMITY_BOOST directly above, deliberately — not a second number
+ * invented from nothing. Why that magnitude specifically does not do what CEO named as the
+ * real risk (a strong match outside the student's target burying — or being buried by — a
+ * weak one inside it): computeRelevance's interest-overlap term is `(matched/total)*100`, so
+ * for a student with N stated interests the gap between adjacent match counts is 100/N — at
+ * least ~14.3 for anyone with up to 7 interests, comfortably the common case (this file's own
+ * onboarding interest list is nowhere near that dense per student today). A 15-point boost is
+ * smaller than that gap, so it can only ever tip a genuine tie or near-tie — two opportunities
+ * that already share the same interest overlap — toward the one inside the student's stated
+ * target. It cannot lift a 0-of-3-interest Turkey opportunity above a 2-of-3-interest US one
+ * for a Turkey-targeting student: the interest gap (66.7) dwarfs the boost (15). That is
+ * exactly the "strong match buried under a weak one" failure mode, and this magnitude cannot
+ * produce it under any realistic interest count. Additive with PROXIMITY_BOOST, not a
+ * replacement for it — the two are independent facts (current residence vs. stated
+ * aspiration) that can both be true for the same opportunity, and both should count.
+ */
+const TARGET_GEOGRAPHY_BOOST = 15;
+
+/**
  * `opportunities.fields` is uncontrolled free text and does not share a vocabulary with the
  * onboarding interest list (lib/validation/onboarding.ts's INTEREST_SUGGESTIONS). The same
  * concept is stored under several spellings — live today: `computer_science` on 6 actionable
@@ -752,13 +823,18 @@ function applyAvoidSignals(
 
 function computeRelevance(student: StudentMatchProfile, opportunity: OpportunityForMatching): RelevanceComputation {
   const near = isNearStudent(student, opportunity);
+  // Independent of `near` above (current residence vs. stated aspiration) — see
+  // TARGET_GEOGRAPHY_BOOST's own comment for why the two stack rather than one replacing the
+  // other, and for why this magnitude can't bury a genuinely stronger interest match.
+  const targetsThisGeography = isWithinTargetGeography(student.targetGeographies ?? [], opportunity.country);
+  const geographyBoost = (near ? PROXIMITY_BOOST : 0) + (targetsThisGeography ? TARGET_GEOGRAPHY_BOOST : 0);
 
   if (opportunity.fields.length === 0) {
-    const { score, avoidReasons } = applyAvoidSignals(40 + (near ? PROXIMITY_BOOST : 0), opportunity, near, student.dismissedSignals);
+    const { score, avoidReasons } = applyAvoidSignals(40 + geographyBoost, opportunity, near, student.dismissedSignals);
     return { score, basis: "opportunity_fields_missing", matchedInterests: [], avoidReasons };
   }
   if (student.interests.length === 0) {
-    const { score, avoidReasons } = applyAvoidSignals(40 + (near ? PROXIMITY_BOOST : 0), opportunity, near, student.dismissedSignals);
+    const { score, avoidReasons } = applyAvoidSignals(40 + geographyBoost, opportunity, near, student.dismissedSignals);
     return { score, basis: "student_interests_missing", matchedInterests: [], avoidReasons };
   }
 
@@ -776,7 +852,7 @@ function computeRelevance(student: StudentMatchProfile, opportunity: Opportunity
   // fit to display as their own stated interest.
   const matchedInterests = student.interests.filter((interest) => fields.includes(normalizeFieldLabel(interest)));
 
-  const baseScore = (matchedInterests.length / student.interests.length) * 100 + (near ? PROXIMITY_BOOST : 0);
+  const baseScore = (matchedInterests.length / student.interests.length) * 100 + geographyBoost;
   const { score, avoidReasons } = applyAvoidSignals(baseScore, opportunity, near, student.dismissedSignals);
   return { score, basis: matchedInterests.length > 0 ? "some_overlap" : "no_overlap", matchedInterests, avoidReasons };
 }
