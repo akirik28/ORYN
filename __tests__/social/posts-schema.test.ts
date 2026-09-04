@@ -561,7 +561,17 @@ describe("migration numbering", () => {
     // runner would have been permanently unable to write the column it exists to maintain,
     // making every run treat everything as new. A guard that blocks everyone looks safe and
     // is a different bug. 0120 removed; 0118 remains the single fix.
-    expect(Math.max(...numbers.map(Number))).toBe(119);
+    // 0121 (profiles_guard_plan_tier_and_account_role) -- the guard-drift sweep's real find.
+    // profiles_guard_protected_columns had frozen exactly is_admin/profile_strength_score/
+    // completeness_percent since 0063, while plan_tier and ultra_gift_expires_at arrived on
+    // 2026-09-03 with the Ultra tier-economics build. The update policy on profiles is a bare
+    // using(id = auth.uid()) with check(id = auth.uid()) -- no column restriction -- so a
+    // student could PATCH their own row and set plan_tier = 'ultra'. Live, on the only database
+    // this product has. Proven on a real Postgres: same UPDATE yields 'ultra' without the
+    // guard and 'standard' with it. account_role taken in the same pass; last_digest_sent_at
+    // deliberately left out, reasoned in the migration itself. Numbering skips 0120 -- see the
+    // note above for why that one was removed rather than renumbered.
+    expect(Math.max(...numbers.map(Number))).toBe(121);
   });
 });
 
