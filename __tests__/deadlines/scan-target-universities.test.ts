@@ -114,6 +114,7 @@ describe("scanTargetUniversityDeadlines", () => {
         source: "university_deadline",
         sourceId: "ud-1",
         daysUntil: 7,
+        thresholdBucket: 7,
         link: "/universities/univ-1",
         itemLabel: "Yale University — regular_decision",
         singleBody: "Yale University — regular_decision deadline approaching.",

@@ -119,6 +119,7 @@ describe("scanApplications", () => {
         source: "application",
         sourceId: "app-1",
         daysUntil: 7,
+        thresholdBucket: 7,
         link: "/applications/app-1",
         itemLabel: "Yale University",
         singleBody: "Yale University — application deadline approaching.",

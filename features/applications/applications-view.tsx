@@ -117,11 +117,19 @@ export async function ApplicationsView({
                       </p>
                     </div>
                     {application.readiness.kind === "measured" ? (
+                      // Caption reads "of checklist" (not bare "ready"), so the number
+                      // reads unambiguously as completion of a personal list rather than
+                      // pattern-matching the admission-outlook percentages shown elsewhere
+                      // in the app (founder's own non-negotiable rule #13 — see
+                      // lib/applications/readiness.ts's own header and
+                      // docs/application-tracker-notification-audit-2026-09-04.md). Always
+                      // visible, not a hover tooltip — a tooltip is invisible on the touch
+                      // devices most of this app's own students are on.
                       <div className="shrink-0 text-right">
                         <div className={application.readiness.percent === 100 ? "text-2xl font-bold text-success" : "text-2xl font-bold text-ink-1"}>
                           {application.readiness.percent}%
                         </div>
-                        <div className="text-[11px] font-medium text-ink-3">{t("ready")}</div>
+                        <div className="text-[11px] font-medium text-ink-3">{t("ofChecklist")}</div>
                       </div>
                     ) : null}
                   </div>

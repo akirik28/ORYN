@@ -1291,7 +1291,7 @@
       "earliestDeadline": " · En yakın son tarih {date}"
     },
     "due": "Son tarih",
-    "ready": "hazır",
+    "ofChecklist": "kontrol listesi",
     "statusLabels": {
       "not_started": "Başlanmadı",
       "in_progress": "Devam ediyor",
@@ -1639,7 +1639,6 @@
     "label": "Bildirimler",
     "title": "Bildirimler",
     "markAllRead": "Tümünü okundu işaretle",
-    "allCaughtUp": "Hepsi tamam",
     "unreadCount": "{count} okunmamış",
     "noUnread": "Okunmamış yok",
     "weeklyPlanReady": "Haftalık planın hazır",
