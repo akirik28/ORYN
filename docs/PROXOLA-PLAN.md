@@ -127,6 +127,22 @@ bayat sayıyor, tarayıcı null'ları dışlamıyor, cron tanımı doğru. **Eks
 şey işin bir kez çalışması.** Bu canlı veriye gerçek bir yazma — **kurucunun kendi
 eliyle**; CEO da yapmıyor.
 
+**Cron'ları açmadan önce sorulan soru — CEO kontrolü, cevap: GÜVENLİ.**
+Altı iş **hiç çalışmadı**, yani ilk çalışmaları canlı veriye karşı provasız olacak
+— ve bugün elle araştırılmış verinin üzerine yazma riski gerçekti. Kontrol ettim:
+- `sync-university-data` yalnızca **`DEFAULT_US_UNIVERSITIES`** listesini işliyor
+  (Harvard, MIT, Stanford, Yale…). Bugün elle doldurulan Oxford, LSE, Bocconi,
+  Rotterdam, Amsterdam, Boğaziçi **bu listede yok — dokunulmuyor.**
+- Oxford'un satırı pakette **UPDATE** ile tamamlanıyor (ikinci satır açılmıyor),
+  ve Oxford/Caltech güncellemeleri `admission_rate is null` gibi koşullarla
+  korunuyor — tekrar çalıştırma mevcut değeri ezmiyor.
+
+**Kalan tek pürüz (küçük, sahipsiz):** paketteki beş satır (LSE, Rotterdam, UvA,
+Boğaziçi, Bocconi) `stat_year` **yazmıyor**. Pakete açık bir varlık kontrolü
+eklendiği için paket güvenli, ama o satırlar `(university_id, stat_year)`
+kısıtıyla **kalıcı olarak eşleşemez** — gelecekteki bir dolgu ya da ABD dışı bir
+senkron onları çiftleyebilir. `stat_year` set edilmeli.
+
 **Ve kılavuz zaten yazılmış: `docs/deployment.md`.** Sıralı, eksiksiz, ve kendi
 açılış cümlesi bu teşhisi bu geceden önce koymuş: *"Proxola hiç dağıtılmadı… 22
 Ağustos'tan beri hiçbir zamanlanmış iş çalışmadı."* Cron kurulumu (§6, `CRON_SECRET`
