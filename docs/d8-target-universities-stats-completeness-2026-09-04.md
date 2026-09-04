@@ -64,9 +64,9 @@ waiting on the same apply step this doc's SQL is. Nothing further needed from th
   23,329 applications, 2025 cycle (offer rate separately stated as 16.7%; used the acceptance
   figure, not the offer figure, to match `admission_rate`'s existing meaning on the other 5
   rows — MIT/Stanford/etc.'s College Scorecard figures are final-admit rates, not offer rates).
-  `data_confidence: medium`, not `high` — the 403 above means this is sourced through search
-  synthesis of the official page's own published numbers, not a direct primary fetch I could
-  quote verbatim myself.
+  `data_confidence: medium`, not `high` — the 3,302 figure is now primary-verified (§5), the
+  23,329 figure isn't (PDF/Tableau, unreadable by this tooling); the `source` string spells
+  out which is which rather than presenting both at one confidence level.
 - `graduation_rate`: **left null.** The only completion-rate figure surfaced (99.29%) traced
   to a secondary aggregator, not an Oxford or UK Office for Students primary source — didn't
   meet the bar the other 5 rows are held to.
@@ -119,7 +119,7 @@ update public.university_statistics
 set
   admission_rate = 0.1420,
   admission_rate_basis = 'published',
-  source = 'University of Oxford — Undergraduate admissions statistics (2025 cycle: 3,302 admitted of 23,329 applications). https://www.ox.ac.uk/about/facts-and-figures/admissions-statistics/undergraduate-students',
+  source = 'University of Oxford — Undergraduate admissions statistics, 2025 cycle. 3,302 admitted: confirmed directly on ox.ac.uk''s own live page (primary-read). 23,329 applications (→ 14.2% rate): reported via search synthesis, not independently confirmed — the figure lives in the Annual Admissions Statistical Report, served as a forced PDF download, and Tableau dashboards, neither readable by the tooling used here. https://www.ox.ac.uk/about/facts-and-figures/admissions-statistics/undergraduate-students',
   data_confidence = 'medium',
   retrieved_at = now()
 where university_id = (select id from public.universities where name = 'University of Oxford')
