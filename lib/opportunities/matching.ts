@@ -34,11 +34,25 @@ export interface OpportunityForMatching {
    * for callers that don't fetch it yet. */
   eligibleGrades?: string[];
   /** Research-confirmed "no country/citizenship gate — open worldwide" (migration 0060,
-   * unapplied; read defensively). Empty eligibleCountries has TWO live meanings —
-   * confirmed-open (deliberately stored empty) and never-researched (~90% of live rows) —
-   * and only this marker distinguishes them. Optional: absent means not confirmed, which
-   * is the honest default, never "restricted." */
+   * live on qtcvcflzxbuagvvwahhu, confirmed directly 2026-09-04 — read defensively
+   * regardless, since a fresh/local environment may still predate it). Empty
+   * eligibleCountries has TWO live meanings — confirmed-open (deliberately stored empty)
+   * and never-researched (~90% of live rows) — and only this marker distinguishes them.
+   * Optional: absent means not confirmed, which is the honest default, never "restricted." */
   countryEligibilityConfirmedOpen?: boolean;
+  /** Research-confirmed "no age floor or ceiling — genuinely open at any age" (migration
+   * 0126, unapplied). Same shape as countryEligibilityConfirmedOpen above, for age: an
+   * opportunity can be genuinely grade-gated with no age criterion at all (Wharton Global
+   * Youth's Future of the Business World — "grades 9-12," no stated age limit), so absence
+   * of a bound is not evidence every age is welcome, only ever-confirmed-open is. Optional:
+   * absent means not confirmed, never "restricted." */
+  ageEligibilityConfirmedOpen?: boolean;
+  /** Research-confirmed "no grade-level restriction — genuinely open to any grade"
+   * (migration 0126, unapplied). Same shape as countryEligibilityConfirmedOpen above, for
+   * eligibleGrades: an opportunity can be genuinely age-gated with no grade criterion at
+   * all (George Mason's ASSIP — "15 years or older," no grade language). Optional: absent
+   * means not confirmed, never "restricted." */
+  gradeEligibilityConfirmedOpen?: boolean;
   /** Free-text citizenship/residency restriction prose (opportunities.citizenship_restrictions
    * / residency_restrictions) — too unstructured for the allow-list checks above to parse, but
    * real evidence a student should see. Surfaced below with the exact wording lib/counselor/
@@ -368,12 +382,13 @@ export function computeEligibility(
     if (opportunity.maximumAge !== null && student.age !== null && student.age > opportunity.maximumAge) {
       return { eligible: false, notes: [{ code: "age_above_maximum", params: { maximumAge: opportunity.maximumAge } }] };
     }
-  } else {
+  } else if (!(opportunity.ageEligibilityConfirmedOpen ?? false)) {
     // No bound recorded at all — distinct from "recorded but the student's own age is
     // unknown" (ageUnknown, above). Absence of a recorded age floor/ceiling is not evidence
-    // every age is welcome; it's just never having been researched. Same principle as
-    // countryEligibilityUnverified below, applied to the field that had no equivalent
-    // safeguard (2026-09-03 — the age/grade half of the same unknown-called-eligible gap).
+    // every age is welcome; it's just never having been researched, UNLESS a research pass
+    // has explicitly confirmed there's genuinely no age gate (migration 0126) — same
+    // principle as countryEligibilityUnverified below, applied to the field that had no
+    // equivalent safeguard until now (2026-09-03 named the gap, 0126 closes it).
     unknownNotes.push({ code: "age_eligibility_unverified" });
   }
 
@@ -441,9 +456,10 @@ export function computeEligibility(
     } else if (!gradeMatchesEligibility(grade, eligibleGrades)) {
       return { eligible: false, notes: [{ code: "grade_not_eligible", params: { eligibleGrades: eligibleGrades.join(", "), currentGrade: grade } }] };
     }
-  } else {
-    // Same principle as the age `else` branch above: no eligible_grades recorded at all is
-    // not evidence every grade is welcome, just never researched.
+  } else if (!(opportunity.gradeEligibilityConfirmedOpen ?? false)) {
+    // Same principle as the age branch above: no eligible_grades recorded at all is not
+    // evidence every grade is welcome, just never researched, unless migration 0126's flag
+    // says a research pass explicitly confirmed there's genuinely no grade gate.
     unknownNotes.push({ code: "grade_eligibility_unverified" });
   }
 
