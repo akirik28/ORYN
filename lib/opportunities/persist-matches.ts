@@ -194,6 +194,7 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
     interests: readOr("refreshOpportunityMatches.interests", interestsRes, [], { userId }).map((i) => i.label),
     weakestDimensions,
     citizenshipCountries: profileRes.data?.citizenship_countries ?? [],
+    targetGeographies: profileRes.data?.target_geographies ?? [],
     graduationYear: profileRes.data?.graduation_year ?? null,
   };
 
