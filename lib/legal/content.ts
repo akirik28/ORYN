@@ -447,6 +447,14 @@ export interface LegalCopy {
     kvkk: string;
     contactLabel: string;
     companyLabel: string;
+    /** Shown instead of `companyLabel`'s value when `COMPANY.legalName` is unresolved --
+     *  see site-footer.tsx's own comment for why this reads as a plain statement ("registration
+     *  pending") rather than the bracketed placeholder used before 2026-09-04. */
+    companyPending: string;
+    /** Same idea as `companyPending`, for `contactLabel`'s value when `COMPANY.contactEmail`
+     *  is unresolved -- not currently reachable (contactEmail is a resolved string today) but
+     *  kept consistent with companyPending rather than left on the old bracket treatment. */
+    contactPending: string;
     draftNotice: string;
     copyright: (year: number) => string;
     ageNotice: string;
@@ -534,6 +542,8 @@ export const legalCopyEn: LegalCopy = {
     kvkk: "KVKK Disclosure (Türkiye)",
     contactLabel: "Email",
     companyLabel: "Operated by",
+    companyPending: "registration pending",
+    contactPending: "not yet available",
     draftNotice: "Our policies are drafts awaiting legal review.",
     copyright: (year: number) => `© ${year} Proxola`,
     ageNotice: "Built for students aged 14–18. If you are under 18, a parent or guardian should read these documents with you.",
@@ -962,6 +972,8 @@ export const legalCopyTr: LegalCopy = {
     kvkk: "KVKK Aydınlatma Metni (Türkiye)",
     contactLabel: "E-posta",
     companyLabel: "İşleten",
+    companyPending: "tescil bekleniyor",
+    contactPending: "henüz mevcut değil",
     draftNotice: "Politikalarımız, hukuki incelemeyi bekleyen taslaklardır.",
     copyright: (year: number) => `© ${year} Proxola`,
     ageNotice: "14-18 yaş arası öğrenciler için tasarlanmıştır. 18 yaşından küçükseniz, bu belgeleri bir ebeveyn veya vasiyle birlikte okumalısınız.",

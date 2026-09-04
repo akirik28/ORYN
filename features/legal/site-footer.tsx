@@ -11,9 +11,20 @@ import { COMPANY, getLegalCopy, isUnresolved } from "@/lib/legal/content";
  * resolve to a light palette there and would render invisible text. The `light` tone under
  * the policy pages uses the real tokens. Same content, same component, one prop.
  *
- * The company line renders its unresolved placeholder in plain brackets rather than the
- * loud `<Unconfirmed>` chip used inside the documents: in a footer the chip reads as a
- * broken component, whereas in a policy document the loudness is the point.
+ * The company line's unresolved state renders as a plain phrase ("registration pending"),
+ * not the loud `<Unconfirmed>` chip used inside the documents: in a footer the chip reads
+ * as a broken component, whereas in a policy document the loudness is the point. That
+ * prediction held -- the chip is still the wrong register for a footer, and the policy
+ * pages are unchanged.
+ *
+ * FIXED 2026-09-04, founder's own screenshot: this used to render the value in literal
+ * brackets (`[Registered name]`), which is the one part of the original reasoning that
+ * didn't hold up. Quiet and unrendered-template-variable turned out to look the same to a
+ * real visitor -- brackets are specifically the syntax of a value that failed to
+ * interpolate, so "quiet" needed to mean a plain stated fact, not a stripped-down version
+ * of the same signal. `companyPending`/`contactPending` are that: a phrase describing the
+ * state directly, in the same muted styling and position as before, no punctuation implying
+ * something should have been there and wasn't.
  */
 export function SiteFooter({ tone = "light", locale }: { tone?: "dark" | "light"; locale: Locale }) {
   const copy = getLegalCopy(locale);
@@ -80,7 +91,7 @@ export function SiteFooter({ tone = "light", locale }: { tone?: "dark" | "light"
           <li className="text-[13px] leading-relaxed" style={c.body}>
             <span style={c.faint}>{t.contactLabel}: </span>
             {isUnresolved(COMPANY.contactEmail) ? (
-              <span style={c.faint}>[{copy.common[COMPANY.contactEmail.labelKey]}]</span>
+              <span style={c.faint}>{t.contactPending}</span>
             ) : (
               <a href={`mailto:${COMPANY.contactEmail}`} style={c.link} className="hover:underline">
                 {COMPANY.contactEmail}
@@ -89,11 +100,7 @@ export function SiteFooter({ tone = "light", locale }: { tone?: "dark" | "light"
           </li>
           <li className="text-[13px] leading-relaxed" style={c.body}>
             <span style={c.faint}>{t.companyLabel}: </span>
-            {isUnresolved(COMPANY.legalName) ? (
-              <span style={c.faint}>[{copy.common[COMPANY.legalName.labelKey]}]</span>
-            ) : (
-              COMPANY.legalName
-            )}
+            {isUnresolved(COMPANY.legalName) ? <span style={c.faint}>{t.companyPending}</span> : COMPANY.legalName}
           </li>
         </FooterColumn>
       </div>
