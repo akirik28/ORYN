@@ -45,8 +45,9 @@ import type { CompleteOnboardingInput } from "@/lib/validation/onboarding";
 
 const uploadAndExtractCV = vi.hoisted(() => vi.fn());
 const completeOnboarding = vi.hoisted(() => vi.fn<(input: CompleteOnboardingInput) => Promise<{ error?: string }>>());
+const recordOnboardingStep = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
 
-vi.mock("@/app/(onboarding)/onboarding/actions", () => ({ uploadAndExtractCV, completeOnboarding }));
+vi.mock("@/app/(onboarding)/onboarding/actions", () => ({ uploadAndExtractCV, completeOnboarding, recordOnboardingStep }));
 
 // id-associated fields (step 1's school field, via its own <Label htmlFor="school">) get no
 // aria-label, so getByLabelText resolves through the association as normal; ImportStep's
