@@ -1511,6 +1511,18 @@
       "cta": "Ultra'ya bak",
       "notNow": "Şimdi değil",
       "close": "Kapat"
+    },
+    "opportunities": {
+      "heading": "Fırsatlar — Proxola"
+    },
+    "universities": {
+      "heading": "Üniversiteler — Proxola"
+    },
+    "applications": {
+      "heading": "Başvurular — Proxola"
+    },
+    "progress": {
+      "heading": "Gelişim — Proxola"
     }
   },
   "messaging": {
