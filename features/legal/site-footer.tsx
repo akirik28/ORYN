@@ -108,6 +108,24 @@ export function SiteFooter({ tone = "light", locale }: { tone?: "dark" | "light"
           </p>
         </div>
       </div>
+
+      {/* The founder's own quiet entrance, below everything else -- a convenience link, not
+          a control: requireAdmin/profiles.is_admin still gate /kumanda exactly as they
+          already did, so this changes nothing about who can get in, only how he reaches the
+          form without typing the URL. next=/kumanda reuses /login's existing searchParams
+          handling (already wired for it) rather than adding a new mechanism; a non-admin who
+          signs in from here lands on requireAdmin's own honest 404 -- the intentional case
+          it was built for, not the expired-session one its own header records fixing.
+          Deliberately no second rule/border here -- a new bordered section would read as
+          another part of the footer's structure, the opposite of quiet. Smaller than the
+          copyright/age text above it and the same faint color, placed in the same padded
+          strip rather than a strip of its own, so it reads as one more line of fine print
+          someone would only notice while looking for it. */}
+      <div className="mx-auto w-full max-w-5xl px-6 pb-6 sm:px-8">
+        <Link href="/login?next=/kumanda" className="text-[10px] hover:underline" style={c.faint}>
+          {t.adminSignIn}
+        </Link>
+      </div>
     </footer>
   );
 }

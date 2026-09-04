@@ -6,7 +6,7 @@ export { computeNotNowUpdate, computeSoftDismissUntil };
 export type { NotNowUpdate };
 
 /**
- * The gating decision for the founder's full-screen upgrade interstitial (migration 0122).
+ * The gating decision for the founder's full-screen upgrade interstitial (migration 0124).
  * Deliberately pure, mirroring lib/advisor/upgrade-prompt.ts's own reasoning: no
  * `server-only`, so a Client Component can import the decision function directly without
  * pulling a server-only dependency chain into the client bundle.

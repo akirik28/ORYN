@@ -8,8 +8,8 @@ import { computeNotNowUpdate, computeSoftDismissUntil } from "@/lib/upgrade-inte
 /**
  * Mirrors app/(app)/advisor/actions.ts's softDismissUpgradePrompt/notNowUpgradePrompt exactly
  * — same never-surfaces-an-error posture (closing a full-screen interstitial is not an action
- * a student should see fail), same migration-0122-unapplied degrade via isUndefinedColumnError,
- * different columns (migration 0122's own header explains why they're not shared).
+ * a student should see fail), same migration-0124-unapplied degrade via isUndefinedColumnError,
+ * different columns (migration 0124's own header explains why they're not shared).
  */
 export async function softDismissUpgradeInterstitial(): Promise<void> {
   const session = await requireUser();

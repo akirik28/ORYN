@@ -169,6 +169,10 @@
         "visualTheme": {
           "label": "A theme of its own",
           "description": "An animated flame carries through the sidebar, usage meter, and reply slider."
+        },
+        "comparisonQuota": {
+          "label": "Unlimited comparisons",
+          "description": "Compare as many universities or opportunities as you want, whenever you want."
         }
       },
       "comparisonTitle": "Compare plans",
@@ -192,6 +196,16 @@
           "label": "Reply depth",
           "standard": "Fast or Standard replies",
           "ultra": "Longer, more detailed replies too, when a question calls for it"
+        },
+        "comparisonWidth": {
+          "label": "Comparison width",
+          "standard": "Up to {max} universities or opportunities at once",
+          "ultra": "Up to {max} universities or opportunities at once — twice as many"
+        },
+        "comparisonQuota": {
+          "label": "Monthly comparisons",
+          "standard": "{limit} comparisons a month, shared across universities and opportunities",
+          "ultra": "Unlimited — compare as many as you want, whenever you want"
         },
         "weeklyPlanFocus": {
           "label": "Weekly plan focus",

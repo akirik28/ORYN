@@ -450,6 +450,11 @@ export interface LegalCopy {
     draftNotice: string;
     copyright: (year: number) => string;
     ageNotice: string;
+    /** The founder's own quiet entrance to /kumanda from the public footer -- a convenience
+     * link, not a security boundary (requireAdmin/profiles.is_admin still gate the route
+     * itself). Deliberately not styled or worded as a feature; see site-footer.tsx's own
+     * placement comment for why it sits below the copyright line, on its own. */
+    adminSignIn: string;
   };
   signupConsent: {
     checkboxLabel: string;
@@ -532,6 +537,7 @@ export const legalCopyEn: LegalCopy = {
     draftNotice: "Our policies are drafts awaiting legal review.",
     copyright: (year: number) => `© ${year} Proxola`,
     ageNotice: "Built for students aged 14–18. If you are under 18, a parent or guardian should read these documents with you.",
+    adminSignIn: "Admin sign in",
   },
 
   signupConsent: {
@@ -959,6 +965,7 @@ export const legalCopyTr: LegalCopy = {
     draftNotice: "Politikalarımız, hukuki incelemeyi bekleyen taslaklardır.",
     copyright: (year: number) => `© ${year} Proxola`,
     ageNotice: "14-18 yaş arası öğrenciler için tasarlanmıştır. 18 yaşından küçükseniz, bu belgeleri bir ebeveyn veya vasiyle birlikte okumalısınız.",
+    adminSignIn: "Admin girişi",
   },
 
   signupConsent: {
