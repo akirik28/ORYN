@@ -1291,7 +1291,7 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(160deg, oklch(0.35 0.115 148) 0%, oklch(0.30 0.10 152) 55%, oklch(0.255 0.085 156) 100%);
+  background: linear-gradient(160deg, oklch(0.33 0.055 148) 0%, oklch(0.285 0.048 152) 55%, oklch(0.245 0.042 156) 100%);
 }
 .dark .plan-page-ground {
   /* Unreachable today -- no .dark class ever reaches <html> (app/layout.tsx's own comment),
@@ -1299,7 +1299,7 @@
      descendant of it, so this rule couldn't apply even if it did. Kept in sync anyway, same
      dormant-until-a-toggle-exists pattern as the rest of this file's .dark block, and given
      the identical chroma-not-lightness treatment as the rule above for the same reason. */
-  background: linear-gradient(160deg, oklch(0.18 0.08 148) 0%, oklch(0.14 0.07 152) 55%, oklch(0.11 0.06 156) 100%);
+  background: linear-gradient(160deg, oklch(0.175 0.04 148) 0%, oklch(0.14 0.035 152) 55%, oklch(0.115 0.03 156) 100%);
 }
 
 /* CV Generator (features/profile/cv-builder.tsx): isolates .cv-print-area as the only
