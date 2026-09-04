@@ -82,15 +82,19 @@ set source_url = 'https://techgirlsglobal.org/apply/eligibility-and-application-
     last_verified_at = now()
 where id = '7081b03a-3e04-4843-8bc5-0078cfd040f2';
 
--- 6. Interlochen Review -- grade and country both confirmed, genuinely empty before:
--- "high school writers, singer-songwriters and artists (grades 9-12 or high school
--- postgraduate year)... from around the world." Country treated as an affirmative
--- statement (guidance about who is invited to submit, not just historical attendee stats)
--- -- the same evidentiary bar as Immerse Education/Penn Pre-College in earlier batches, not
--- a lower one; flagged here explicitly as the closer call of the two.
+-- 6. Interlochen Review -- grade confirmed, genuinely empty before: "high school writers,
+-- singer-songwriters and artists (grades 9-12 or high school postgraduate year)."
+-- Country's own confirmed_open=true CLAIM WITHDRAWN 2026-09-04, corrected at the source, same
+-- reasoning and same fix shape as this file's own Immerse correction in the batch2 file: this
+-- item's own original note called "...from around the world" an affirmative statement
+-- "flagged here explicitly as the closer call of the two" against Immerse -- once the newer,
+-- more rigorous classification pass (docs/citizenship-restrictions-classification-2026-09-04.
+-- sql, CEO's own ruling) drew the actual line for Immerse's near-identical wording, this
+-- row's own "closer call" falls on the same side: describing who submits, not a stated
+-- no-restriction policy. Reclassified there instead, alongside Immerse, rather than left half
+-- of a withdrawn note with no replacement value written anywhere.
 update public.opportunities
 set eligible_grades = array['9','10','11','12'],
-    country_eligibility_confirmed_open = true,
     last_verified_at = now()
 where id = '95093e1a-fc13-4d9a-b4ed-5f0584252b44';
 
