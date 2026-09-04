@@ -245,7 +245,27 @@ kimliği). Kimse dokunmadı.
 
 ---
 
-## C2 — ✅ TAMAM (iki yarısı da merge edildi)
+## C2 — ✅ TAMAM, ama "AI yavaş" ŞİKÂYETİ TAM KAPANMADI
+
+**Ölçülmüş gerçek (2026-09-04, üretim kod yoluyla, 4 gerçek çağrı): ilk görünür
+harf 19,9-57,8 saniye sonra düşüyor.** Model önce düşünüyor, ve o faz bitmeden
+tek harf gelmiyor. Yani tipik bir çağrının **yaklaşık yarısı boyunca akışlı cevap
+akışsız cevaptan ayırt edilemiyor.**
+
+**CEO hatası, kayda geçsin:** kurucuya "artık ilk saniyede yazmaya başlıyor"
+dedim — **ölçmediğim bir sayıydı.** Şerit gerçek ölçümü yapıp çürüttü ve kendi
+dokümanındaki "1-2 saniye" tahminini de kendi bulup düzeltti
+(`docs/advisor-latency-options-2026-09-04.md`, düzeltme bloğu olarak; eski cümle
+duruyor ki neden yanlış olduğu görülsün).
+
+**Dürüst iddia:** 20-58 saniyelik pencereyi taşıyan şey streaming değil, **ara
+durum göstergesi** (sabahki iş). Streaming ondan sonrasını kazanıyor — cevap
+yazılırken görünüyor, sonunda tek blok patlamıyor. **Kimse "streaming AI'ı
+hızlandırdı" diye raporlamasın.**
+
+**Düşünme bütçesini kısmak kapalı** — kurucunun kalite kararı, duruyor.
+
+
 
 `73124976`: sağlayıcıya `generateTextStream`, `generateAdvisorReplyStream`, ve iki
 Route Handler (`app/api/advisor/chat/route.ts`, `.../retry/route.ts`).
