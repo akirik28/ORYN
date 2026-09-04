@@ -6,7 +6,32 @@ at the bottom). Report only in the sense that this doc exists in place of a
 SendMessage report: the messaging tool disconnected partway through this task and
 never came back, so this is the handoff that would otherwise have gone to CEO
 directly. Everything below is real, committed, pushed, and green — **not
-merged**, per standing discipline.
+merged**, per standing discipline (except the part CEO already merged as
+`f192fd61` before assigning the next item below).
+
+## Update: "connect B2's checkout button to B1" — already done, verified again
+
+CEO's next assignment (received after `f192fd61` merged) asked for exactly the
+integration already completed and confirmed included in that merge. Checked the
+actual current `main` before doing anything, rather than assuming either way:
+`app/(app)/upgrade-interstitial-actions.ts`'s `startUltraCheckoutAction` is the
+real implementation on `main` right now, calling `lib/payments/checkout.ts`'s
+`startUltraCheckout` — not the pre-fix stub. Its `not_configured` result is the
+correct, honest state (no provider chosen yet, item A3), not a leftover
+placeholder.
+
+What genuinely was missing, and got added: no existing test called the real,
+unmocked `startUltraCheckoutAction` — both UI surfaces' own tests mock that
+function away entirely, proving how the UI reacts to a result, never that the
+Server Action actually reaches the payments library with a real session and a
+real request origin. Added `__tests__/upgrade-interstitial/checkout-action-wiring.test.ts`
+(5 tests) and proved it red: reverted the function to the literal pre-fix stub,
+watched all 5 fail with the exact expected shape, restored it, confirmed `git
+diff` empty and all 5 green again. Also independently confirmed the "TR + EN"
+half of the request: `checkoutNotConfigured` exists in both `messages/en.json`
+and `messages/tr.json` at the same key, already true before this commit.
+
+Full suite green: 6396 passed, 2 expected fail. Pushed.
 
 **Status as of the second post-restart CEO check-in (oryn-5b, ~220 min after my
 last push): still 0123, still unclaimed by anyone else** (confirmed —
