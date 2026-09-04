@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { integrationStatus } from "@/lib/env";
 import { verifySession } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
-import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE, isLocale } from "./config";
+import { LOCALE_COOKIE, LOCALE_COOKIE_OPTIONS, isLocale } from "./config";
 
 /**
  * Switches the interface language.
@@ -37,14 +37,7 @@ export async function setLocale(next: string): Promise<{ error?: string }> {
   }
 
   const store = await cookies();
-  store.set(LOCALE_COOKIE, next, {
-    path: "/",
-    maxAge: LOCALE_COOKIE_MAX_AGE,
-    sameSite: "lax",
-    httpOnly: true,
-    // Must stay off for http://localhost, or the switch appears to do nothing in dev.
-    secure: process.env.NODE_ENV === "production",
-  });
+  store.set(LOCALE_COOKIE, next, LOCALE_COOKIE_OPTIONS);
 
   revalidatePath("/", "layout");
 
