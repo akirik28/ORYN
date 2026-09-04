@@ -205,6 +205,30 @@ MIT ve HKUST ikişer satır, "UCL" ile "University College London" muhtemelen ay
 kurum. D3 beş satırı isim isim yazdı. **Boş kopyayı doldurmak iki kez zarar
 verir.** D1 bu satırları atlıyor.
 
+## D7 — giriş yolu olmayan programlar işaretlensin (yeni, sahipsiz)
+
+D1 dolgusunda çıktı: **Tokyo Üniversitesi'nde bizim 14-18 yaş kitlemiz için
+İngilizce-öğretim lisans başvuru yolu yok** — PEAK son alımını Fall 2026'da
+yaptı, diğer İngilizce program (GSC) yalnızca yurt dışında iki yıl okumuş
+öğrenciler için transfer kabul ediyor.
+
+**Ürün sonucu:** öğrenci böyle bir üniversiteyi hedef listesine ekleyebiliyor ve
+ürün ona bir **kabul görünümü** hesaplıyor — başvurabileceği bir yol olmadığı
+hâlde. Spesifikasyonun yasakladığı sahte kesinliğin tam örneği.
+
+Dolgu oturumu bunu, GSC'nin transfer şartlarını genel şartmış gibi yazmak yerine
+durumu açıkça anlatan bir satır olarak kaydetti — doğru olan. **Eksik olan,
+ürünün bunu bilmesi.**
+
+## D4 eki — yeni kopya çifti, sahipsiz
+
+"The University of Technology Sydney (UTS)" ve "University of Technology Sydney"
+iki ayrı satır. MIT/HKUST/UCL ile aynı şekil. D4'ün kuralı geçerli: **isim
+benzerliği yetmez**, en az iki bağımsız kanıt (resmî alan adı, şehir, kurum
+kimliği). Kimse dokunmadı.
+
+---
+
 ## C2 — sunucu tarafı merge edildi, AMA uç noktalar ulaşılamaz (bilerek)
 
 `73124976`: sağlayıcıya `generateTextStream`, `generateAdvisorReplyStream`, ve iki
