@@ -3,10 +3,12 @@
 --
 -- CEO's brief: the founder is adding payment, provider not yet chosen (iyzico/PayTR/Stripe
 -- all on the table) — build the whole flow for real behind an interface, so nothing gets
--- torn out once he picks one. This migration is the durable half of that: a payment_events
--- log that makes a webhook arriving twice safe, and a subscriptions table that is the
--- human-readable lifecycle record support/settings reads, distinct from the fast entitlement
--- check every Ultra-aware surface already makes (see profiles.paid_ultra_expires_at below).
+-- torn out once he picks one. This migration is the durable half of that: checkout_sessions
+-- bridges a checkout attempt to the user who started it (a webhook never carries this app's
+-- own user id directly), payment_events is the append-only log that makes a webhook
+-- arriving twice safe, and subscriptions is the human-readable lifecycle record support/
+-- settings reads, distinct from the fast entitlement check every Ultra-aware surface already
+-- makes (see profiles.paid_ultra_expires_at below).
 --
 -- Migration number 0123 assigned by CEO (0122 went to 48's modal work).
 
@@ -77,7 +79,43 @@ create trigger profiles_00_guard_protected_columns
   for each row execute function public.profiles_guard_protected_columns();
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- 2. subscriptions — the human-readable lifecycle record, one row per user for its whole
+-- 2. checkout_sessions — the bridge a webhook needs to know WHOSE checkout completed
+-- ═══════════════════════════════════════════════════════════════════════════
+--
+-- The gap this closes: a checkout_completed webhook carries the PROVIDER's own session/
+-- subscription id, never this app's user id (no candidate provider's hosted-page flow
+-- round-trips an arbitrary foreign id back on every event type). lib/payments/checkout.ts
+-- inserts a row here at checkout-CREATION time and passes this row's own `id` to the
+-- provider as an opaque client-reference value (Stripe's `client_reference_id`, or the
+-- equivalent "conversation id"/custom-data field on iyzico/PayTR) — the provider echoes it
+-- back on the completion webhook, and that's how lib/payments/webhook-handler.ts resolves
+-- `user_id` for the one event type that has no `subscriptions` row to look up yet. Every
+-- webhook AFTER checkout_completed (renewed/canceled/failed/refunded) instead resolves
+-- user_id through subscriptions.provider_subscription_id, which does exist by then — this
+-- table only ever needs to answer the bootstrapping question, not stay in sync afterward.
+create table public.checkout_sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+comment on table public.checkout_sessions is
+  'One row per checkout attempt, written before the browser ever reaches the provider''s
+  hosted page. Exists solely so a checkout_completed webhook (which carries the provider''s
+  own session id, never this app''s user id) can be resolved back to a user — see this
+  migration''s own header above. Never updated after insert; a completed checkout''s
+  lasting record lives in subscriptions, not here. No cleanup job for old/abandoned rows
+  yet (an abandoned checkout leaves an orphaned row forever) — small and low-cardinality
+  enough not to matter at launch, flagged rather than silently accepted as a non-issue.';
+
+alter table public.checkout_sessions enable row level security;
+
+-- No policy for `authenticated` at all, for any operation — a user has no legitimate reason
+-- to read or write this table directly; it exists purely for the service-role checkout
+-- action to write and the service-role webhook handler to read.
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- 3. subscriptions — the human-readable lifecycle record, one row per user for its whole
 --    lifetime
 -- ═══════════════════════════════════════════════════════════════════════════
 --
@@ -171,7 +209,7 @@ create trigger subscriptions_00_guard_protected_columns
   for each row execute function public.subscriptions_guard_protected_columns();
 
 -- ═══════════════════════════════════════════════════════════════════════════
--- 3. payment_events — append-only webhook log, and the actual idempotency guard
+-- 4. payment_events — append-only webhook log, and the actual idempotency guard
 -- ═══════════════════════════════════════════════════════════════════════════
 --
 -- unique(provider, provider_event_id) is the real mechanism: the webhook handler inserts a
