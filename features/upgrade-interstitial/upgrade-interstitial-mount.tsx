@@ -6,17 +6,8 @@ import { TIER_COMPARISON_ROWS } from "@/lib/tier/comparison";
 import { formatNumber, formatTokenCount } from "@/lib/i18n/format";
 import type { UltraFeatureCardData } from "@/features/settings/ultra-feature-marquee";
 import { UpgradeInterstitialModal } from "./upgrade-interstitial-modal";
-import {
-  shouldShowUpgradeInterstitial,
-  type UpgradeInterstitialDismissalState,
-} from "@/lib/upgrade-interstitial/prompt";
-import {
-  softDismissUpgradeInterstitial,
-  notNowUpgradeInterstitial,
-  getUltraPriceTryAction,
-  checkUltraCheckoutAvailabilityAction,
-  type UltraCheckoutAvailability,
-} from "@/app/(app)/upgrade-interstitial-actions";
+import { shouldShowUpgradeInterstitial, type UpgradeInterstitialDismissalState } from "@/lib/upgrade-interstitial/prompt";
+import { softDismissUpgradeInterstitial, notNowUpgradeInterstitial, startUltraCheckoutAction, type StartCheckoutResult } from "@/app/(app)/upgrade-interstitial-actions";
 import type { PlanTier } from "@/types/database";
 
 /** Same mapping PlanTierView (features/settings/plan-tier-view.tsx) builds client-side from
@@ -36,28 +27,33 @@ const CARD_ICONS: Record<UltraFeatureCardData["id"], typeof Zap> = {
 const SESSION_STORAGE_KEY = "oryn:upgrade-interstitial:shown";
 
 /**
- * Mounted once from app/(app)/layout.tsx (a Server Component), fed the server-resolved tier
- * and dismissal state — mirrors the advisor prompt's own division of labor
+ * Mounted once from app/(app)/layout.tsx (a Server Component), fed the server-resolved tier,
+ * dismissal state, and price — mirrors the advisor prompt's own division of labor
  * (lib/advisor/upgrade-prompt.ts owns the decision, this owns when/how to check it and hold
- * the Dialog's open state). "First session, not every page load" (this file's own gating
- * source's header) is tracked here via sessionStorage, the identical mechanism
- * UpgradePromptOverlay's own caller already uses for `alreadyShownThisSession` — cleared when
- * the tab/browser closes, which is exactly what makes a new session eligible again.
+ * the Dialog's open state). `ultraPriceTry` is a plain prop from the layout's own single
+ * `getFinanceSettings` read (05's work, 2026-09-04) — this component does not read
+ * admin_finance_settings itself, so there is exactly one place in the request that does.
+ * "First session, not every page load" (this file's own gating source's header) is tracked
+ * here via sessionStorage, the identical mechanism UpgradePromptOverlay's own caller already
+ * uses for `alreadyShownThisSession` — cleared when the tab/browser closes, which is exactly
+ * what makes a new session eligible again.
  */
 export function UpgradeInterstitialMount({
   tier,
   dismissalState,
   ultraTokenLimit,
   ultraMaxTokens,
+  ultraPriceTry,
 }: {
   tier: PlanTier;
   dismissalState: UpgradeInterstitialDismissalState;
   ultraTokenLimit: number;
   ultraMaxTokens: number;
+  ultraPriceTry: number;
 }) {
   const [open, setOpen] = useState(false);
-  const [priceTry, setPriceTry] = useState<number | null>(null);
-  const [checkoutAvailability, setCheckoutAvailability] = useState<UltraCheckoutAvailability>({ available: false });
+  const [eligible, setEligible] = useState(false);
+  const [checkoutResult, setCheckoutResult] = useState<StartCheckoutResult>({ status: "not_configured" });
 
   useEffect(() => {
     let alreadyShownThisSession = false;
@@ -72,10 +68,10 @@ export function UpgradeInterstitialMount({
     if (!shouldShowUpgradeInterstitial({ tier, alreadyShownThisSession }, dismissalState)) return;
 
     let cancelled = false;
-    Promise.all([getUltraPriceTryAction(), checkUltraCheckoutAvailabilityAction()]).then(([price, availability]) => {
+    startUltraCheckoutAction().then((result) => {
       if (cancelled) return;
-      setPriceTry(price);
-      setCheckoutAvailability(availability);
+      setCheckoutResult(result);
+      setEligible(true);
       setOpen(true);
       try {
         window.sessionStorage.setItem(SESSION_STORAGE_KEY, "1");
@@ -102,7 +98,7 @@ export function UpgradeInterstitialMount({
     [ultraTokenLimit, ultraMaxTokens],
   );
 
-  if (priceTry === null) return null; // nothing to show yet — either not eligible, or still loading
+  if (!eligible) return null; // nothing to show yet — either not eligible this session, or still checking
 
   return (
     <UpgradeInterstitialModal
@@ -115,9 +111,9 @@ export function UpgradeInterstitialMount({
         void notNowUpgradeInterstitial();
         setOpen(false);
       }}
-      priceTry={priceTry}
+      priceTry={ultraPriceTry}
       marqueeCards={marqueeCards}
-      checkoutAvailability={checkoutAvailability}
+      checkoutResult={checkoutResult}
     />
   );
 }

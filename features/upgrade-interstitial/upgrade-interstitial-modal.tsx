@@ -6,11 +6,12 @@ import { motion } from "motion/react";
 import { X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { ButtonLink } from "@/components/ui/button-link";
 import { DialogPortal } from "@/components/ui/dialog";
 import { transition } from "@/lib/motion";
+import { formatPrice } from "@/lib/i18n/format";
 import { UltraFeatureMarquee, type UltraFeatureCardData } from "@/features/settings/ultra-feature-marquee";
-import type { UltraCheckoutAvailability } from "@/app/(app)/upgrade-interstitial-actions";
+import type { StartCheckoutResult } from "@/app/(app)/upgrade-interstitial-actions";
+import type { Locale } from "@/lib/i18n/config";
 
 /**
  * The founder's full-screen upgrade interstitial (2026-09-04, relayed via oryn-45): "ekranın
@@ -44,7 +45,7 @@ export function UpgradeInterstitialModal({
   onNotNow,
   priceTry,
   marqueeCards,
-  checkoutAvailability,
+  checkoutResult,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -56,25 +57,23 @@ export function UpgradeInterstitialModal({
   onNotNow: () => void;
   priceTry: number;
   marqueeCards: readonly UltraFeatureCardData[];
-  checkoutAvailability: UltraCheckoutAvailability;
+  checkoutResult: StartCheckoutResult;
 }) {
   const t = useTranslations("upgradeInterstitial");
-  const locale = useLocale();
-
-  // Matches the decimal-separator convention the existing hardcoded price copy already used
-  // per locale (399,99 tr / 399.99 en) — deliberately NOT lib/i18n/format.ts's
-  // NUMBER_FORMAT_LOCALE, which that file's own header pins to English formatting for every
-  // OTHER number in the app on purpose; this is a narrow, local match to copy that already
-  // varied by locale before this modal existed, not a step toward localizing numbers
-  // app-wide.
-  const formattedPrice = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(priceTry);
+  const locale = useLocale() as Locale;
+  const formattedPrice = formatPrice(priceTry, locale);
 
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) onSoftDismiss();
     onOpenChange(nextOpen);
+  }
+
+  function handleCheckoutClick() {
+    if (checkoutResult.status === "ready") {
+      // Full browser redirect, not router.push — the hosted payment page lives on the
+      // provider's own domain (11's own instruction), never an internal route.
+      window.location.href = checkoutResult.checkoutUrl;
+    }
   }
 
   return (
@@ -115,17 +114,17 @@ export function UpgradeInterstitialModal({
             </div>
 
             <div className="flex flex-col gap-2 p-6 pt-4">
-              {checkoutAvailability.available && checkoutAvailability.checkoutUrl ? (
-                <ButtonLink href={checkoutAvailability.checkoutUrl} size="lg">
+              {checkoutResult.status === "ready" ? (
+                <Button size="lg" onClick={handleCheckoutClick}>
                   {t("cta")}
-                </ButtonLink>
+                </Button>
               ) : (
                 <div className="space-y-2">
                   <Button size="lg" disabled aria-describedby="upgrade-interstitial-unavailable">
                     {t("cta")}
                   </Button>
                   <p id="upgrade-interstitial-unavailable" className="text-xs text-ink-3">
-                    {t("checkoutNotConfigured")}
+                    {checkoutResult.status === "error" ? checkoutResult.message : t("checkoutNotConfigured")}
                   </p>
                 </div>
               )}

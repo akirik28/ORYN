@@ -20,7 +20,7 @@
     "homeLink": "Proxola — home",
     "saved": "Saved",
     "upgradePlan": "Upgrade your plan",
-    "upgradePlanPrice": "399,99 TL/month · First week free"
+    "upgradePlanPrice": "{price} TL/month · First week free"
   },
   "appShell": {
     "userMenu": {

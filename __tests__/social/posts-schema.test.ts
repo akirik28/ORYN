@@ -571,7 +571,12 @@ describe("migration numbering", () => {
     // guard and 'standard' with it. account_role taken in the same pass; last_digest_sent_at
     // deliberately left out, reasoned in the migration itself. Numbering skips 0120 -- see the
     // note above for why that one was removed rather than renumbered.
-    expect(Math.max(...numbers.map(Number))).toBe(121);
+    // 0122 (upgrade_interstitial_dismissal) -- dismissal-clock columns for the founder's
+    // full-screen upgrade interstitial, own columns not upgrade_prompt_*'s (0093) or
+    // parent_email_prompt_*'s (0117), same reasoning both already established. Not added to
+    // profiles_guard_protected_columns (0121): single legitimate writer, always the row's own
+    // owner, the same shape those two existing dismissal-column sets already have.
+    expect(Math.max(...numbers.map(Number))).toBe(122);
   });
 });
 

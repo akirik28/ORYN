@@ -6,7 +6,7 @@ import { getMonthlyQuota } from "@/lib/ai/monthly-quota";
 import { selectModelForUser } from "@/lib/ai/limits/budget";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getProductSettings } from "@/lib/admin/queries";
+import { getProductSettings, getFinanceSettings } from "@/lib/admin/queries";
 import { Sidebar } from "@/features/app-shell/sidebar";
 import { Topbar } from "@/features/app-shell/topbar";
 import { MobileNav } from "@/features/app-shell/mobile-nav";
@@ -119,7 +119,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const devPreviewOverride = devPreviewAllowed ? resolveDevTierPreviewOverride((await cookies()).get(DEV_TIER_PREVIEW_COOKIE)?.value) : null;
   const planTier = devPreviewOverride ?? realTier;
 
-  const [notificationsRes, unreadRes, scores, quota, modelSelection] = await Promise.all([
+  const [notificationsRes, unreadRes, scores, quota, modelSelection, financeSettings] = await Promise.all([
     supabase
       .from("notifications")
       .select("*")
@@ -145,11 +145,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     // reads.
     getMonthlyQuota(session.userId!, planTier),
     selectModelForUser(session.userId!, planTier),
+    // Same admin-client-for-shared-global-config read app/(admin)/kumanda/kar-zarar/page.tsx
+    // already does for this table -- Sidebar's "Upgrade your plan" CTA states the Ultra
+    // price (nav.upgradePlanPrice), previously a hardcoded catalog string. Now sourced from
+    // admin_finance_settings so editing it in the control center actually changes what a
+    // student sees; degrades to ULTRA_PRICE_TRY via getFinanceSettings' own
+    // DEFAULT_FINANCE_SETTINGS if the row or column is ever missing, never a blank/zero price.
+    getFinanceSettings(createAdminClient()),
   ]);
   const notifications = notificationsRes.data;
   const unreadCount = unreadRes.count ?? 0;
   const profileSignal = toProfileSignal(scores);
   const budgetDegraded = modelSelection.degraded;
+  const ultraPriceTry = financeSettings.ultraPriceTry;
 
   return (
     // Literal source ambient background (App.tsx `App()`'s root container) — the ground
@@ -192,7 +200,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         tier={planTier}
       />
 
-      <Sidebar displayName={displayName} email={session.email} signal={profileSignal} isAdmin={profile.is_admin} />
+      <Sidebar displayName={displayName} email={session.email} signal={profileSignal} isAdmin={profile.is_admin} ultraPriceTry={ultraPriceTry} />
 
       <div className="relative flex min-w-0 flex-1 flex-col">
         {/* Hoisted here rather than wired into each individual page: position:fixed means
@@ -217,6 +225,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           dismissalState={extractUpgradeInterstitialDismissalState(profile)}
           ultraTokenLimit={MONTHLY_AI_TOKEN_LIMIT.ultra}
           ultraMaxTokens={ADVISOR_MAX_TOKENS_ULTRA}
+          ultraPriceTry={ultraPriceTry}
         />
         {/* lib/tier/dev-preview.ts — devPreviewAllowed is false in any production build, so
             this branch (and the Server Action it calls) is structurally absent there, not

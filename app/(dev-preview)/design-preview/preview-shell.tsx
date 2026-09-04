@@ -152,7 +152,11 @@ export function PreviewShell({
         budgetDegraded={false}
         tier={tier}
       />
-      <Sidebar displayName="Ada" email="ada@example.com" signal={signal} />
+      {/* ultraPriceTry: a literal fixture, same spirit as displayName="Ada" above, not
+          lib/admin/finance.ts's ULTRA_PRICE_TRY — that file opens with `import
+          "server-only"` (same constraint this component's own header describes for
+          lib/ai/monthly-quota.ts), so it cannot be imported into this "use client" shell. */}
+      <Sidebar displayName="Ada" email="ada@example.com" signal={signal} ultraPriceTry={399.99} />
       <div className="relative flex min-w-0 flex-1 flex-col">
         <RouteAmbientBlobs />
         <Topbar notifications={PREVIEW_NOTIFICATIONS} unreadCount={PREVIEW_UNREAD_COUNT} quota={quota} budgetDegraded={false} tier={tier} />

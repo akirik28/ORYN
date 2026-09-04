@@ -20,7 +20,7 @@
     "homeLink": "Proxola — ana sayfa",
     "saved": "Kaydedilenler",
     "upgradePlan": "Planınızı yükseltin",
-    "upgradePlanPrice": "Ayda 399,99 TL · İlk hafta ücretsiz"
+    "upgradePlanPrice": "Ayda {price} TL · İlk hafta ücretsiz"
   },
   "appShell": {
     "userMenu": {
@@ -201,11 +201,7 @@
           "label": "Araştırma proje fikirleri",
           "same": "Herkes için üretim başına en fazla 3 fikir — bilinçli olarak küçük tutuluyor, böylece fikirler etkileyici görünüp ulaşılamaz olmak yerine gerçekçi kalıyor"
         }
-      },
-      "interestTitle": "Ultra ile ilgileniyor musun?",
-      "interestDescription": "Ultra henüz kayıtlara açık değil — ayda 399,99 TL olacak, ilk hafta ücretsiz. İlgilendiğini bildir, kaç öğrencinin hazır olduğunu bilelim.",
-      "interestButton": "İlgileniyorum",
-      "interestConfirmed": "Kaydedildi — teşekkürler."
+      }
     },
     "birthYear": {
       "label": "Doğduğun yıl",

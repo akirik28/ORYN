@@ -2,10 +2,8 @@
 
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { isUndefinedColumnError } from "@/lib/supabase/errors";
 import { computeNotNowUpdate, computeSoftDismissUntil } from "@/lib/upgrade-interstitial/prompt";
-import { getFinanceSettings } from "@/lib/admin/queries";
 
 /**
  * Mirrors app/(app)/advisor/actions.ts's softDismissUpgradePrompt/notNowUpgradePrompt exactly
@@ -59,30 +57,22 @@ export async function notNowUpgradeInterstitial(): Promise<void> {
 }
 
 /**
- * The interstitial's own price read — same source as everywhere else (getFinanceSettings,
- * lib/admin/queries.ts, backed by admin_finance_settings/migration 0094), not a new copy.
- * A Server Action rather than folded into the layout's own server read because the modal's
- * mount wrapper is a Client Component (needs sessionStorage for the once-per-session gate)
- * one level below the server layout — this keeps the price live even if the layout's own
- * server-rendered props go stale under client-side navigation within the (app) segment.
+ * PROVISIONAL — 11's own interface, agreed 2026-09-04 while the real provider adapters are
+ * still under CEO review: `status: "ready"` (redirect to `checkoutUrl`, a hosted payment
+ * page — full `window.location.href`, never `router.push`, since it's an external domain),
+ * `"not_configured"` (no provider set up — the honest, visible state this whole feature is
+ * built around, never a dead button or fake spinner), `"error"` (surface `message`). Price is
+ * NOT a parameter here on purpose — 11's real action reads admin_finance_settings itself at
+ * checkout-creation time, so whatever's live in kumanda's settings is what actually gets
+ * charged, not whatever this client happened to render with.
+ *
+ * This stub always returns "not_configured", which is simply true today — no provider exists
+ * yet. Both call sites (this modal, features/settings/plan-tier-view.tsx) call this exact
+ * function name; the only change needed once 11's real action lands is this function's own
+ * body, not either caller.
  */
-export async function getUltraPriceTryAction(): Promise<number> {
-  const settings = await getFinanceSettings(createAdminClient());
-  return settings.ultraPriceTry;
-}
+export type StartCheckoutResult = { status: "ready"; checkoutUrl: string } | { status: "not_configured" } | { status: "error"; message: string };
 
-/**
- * Provisional — no payment provider is configured yet (11 is building the real interface,
- * behind its own seam, coordinated 2026-09-04). Returns `available: false` unconditionally
- * until that lands; this function is the one place that changes when it does, not a check
- * duplicated at every call site. `checkoutUrl` is present only when `available` is true, so a
- * caller can't accidentally render a broken CTA against a partially-filled result.
- */
-export interface UltraCheckoutAvailability {
-  available: boolean;
-  checkoutUrl?: string;
-}
-
-export async function checkUltraCheckoutAvailabilityAction(): Promise<UltraCheckoutAvailability> {
-  return { available: false };
+export async function startUltraCheckoutAction(): Promise<StartCheckoutResult> {
+  return { status: "not_configured" };
 }

@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, INTL_LOCALES } from "./config";
+import { DEFAULT_LOCALE, INTL_LOCALES, type Locale } from "./config";
 
 /**
  * Number/currency formatting with an explicit, deterministic locale — never a bare
@@ -61,6 +61,21 @@ export function formatCurrency(value: number, currency = "USD", options?: Intl.N
 export function formatMoney(value: number, currency: string | null, options?: Intl.NumberFormatOptions): string {
   if (!currency) return formatNumber(value, { maximumFractionDigits: 0, ...options });
   return formatCurrency(value, currency, options);
+}
+
+/**
+ * A price, genuinely locale-aware — the one exception to this file's "not locale-switched
+ * yet" rule above, and the escape hatch that comment already names: thread `locale` through
+ * `INTL_LOCALES[locale]` instead of the pinned `NUMBER_FORMAT_LOCALE`. 399.99 reads as
+ * "399.99" in en-US and "399,99" in tr-TR; a Turkish reader shown the English form would
+ * parse the period as a thousands separator and misread the price by three orders of
+ * magnitude. Always two decimal places, even on a whole number (400 → "400.00"/"400,00") —
+ * this renders admin_finance_settings.ultra_price_try (lib/admin/queries.ts's
+ * getFinanceSettings), a real currency amount a student compares against other prices, not
+ * a count that reads fine truncated.
+ */
+export function formatPrice(value: number, locale: Locale, options?: Intl.NumberFormatOptions): string {
+  return new Intl.NumberFormat(INTL_LOCALES[locale], { minimumFractionDigits: 2, maximumFractionDigits: 2, ...options }).format(value);
 }
 
 /**

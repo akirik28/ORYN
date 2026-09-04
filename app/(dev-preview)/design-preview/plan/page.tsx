@@ -5,6 +5,8 @@ import { PreviewShell } from "../preview-shell";
 import { FIXTURE_PROFILE_SIGNAL } from "@/lib/dev/fixtures";
 import { MONTHLY_AI_TOKEN_LIMIT } from "@/lib/ai/token-limits";
 import { ADVISOR_MAX_TOKENS_STANDARD, ADVISOR_MAX_TOKENS_ULTRA } from "@/lib/ai/advisor-chat";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getFinanceSettings } from "@/lib/admin/queries";
 
 /**
  * Dedicated preview for the plan/comparison page — added 2026-09-02 verifying the live,
@@ -21,6 +23,10 @@ export default async function PlanPreviewPage({ searchParams }: { searchParams: 
 
   const { tier: tierParam } = await searchParams;
   const tier = tierParam === "ultra" ? "ultra" : "standard";
+  // A real Server Component (unlike preview-shell.tsx, which is "use client" and can't take
+  // this import) — reads the live row the same way the real plan/page.tsx does, so this
+  // preview shows the actual configured price rather than a fixture that could drift from it.
+  const { ultraPriceTry } = await getFinanceSettings(createAdminClient());
 
   return (
     <>
@@ -32,6 +38,7 @@ export default async function PlanPreviewPage({ searchParams }: { searchParams: 
           standardTokenLimit={MONTHLY_AI_TOKEN_LIMIT.standard}
           ultraMaxTokens={ADVISOR_MAX_TOKENS_ULTRA}
           standardMaxTokens={ADVISOR_MAX_TOKENS_STANDARD}
+          ultraPriceTry={ultraPriceTry}
         />
       </PreviewShell>
     </>

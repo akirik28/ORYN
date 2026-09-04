@@ -8,12 +8,12 @@ import { PageHeader } from "@/components/proxola/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ButtonLink } from "@/components/ui/button-link";
-import { checkUltraCheckoutAvailabilityAction, type UltraCheckoutAvailability } from "@/app/(app)/upgrade-interstitial-actions";
+import { startUltraCheckoutAction, type StartCheckoutResult } from "@/app/(app)/upgrade-interstitial-actions";
 import { TIER_COMPARISON_ROWS } from "@/lib/tier/comparison";
-import { formatNumber, formatTokenCount } from "@/lib/i18n/format";
+import { formatNumber, formatTokenCount, formatPrice } from "@/lib/i18n/format";
 import { UltraFeatureMarquee, type UltraFeatureCardData } from "@/features/settings/ultra-feature-marquee";
 import type { PlanTier } from "@/types/database";
+import type { Locale } from "@/lib/i18n/config";
 
 const CARD_ICONS: Record<UltraFeatureCardData["id"], typeof Zap> = {
   aiAllowance: Zap,
@@ -26,11 +26,17 @@ const CARD_ICONS: Record<UltraFeatureCardData["id"], typeof Zap> = {
  * The plan page. Two hard constraints from the assignment, both load-bearing on this
  * component's shape, not just its copy:
  *
- * 1. **No buy button.** There is no payments integration (migration 0089's own header),
- *    so nothing here can look like a checkout. The only interactive control is
- *    `registerUltraInterestAction` — a plain analytics event, gated behind its own honest
- *    copy (`interestDescription`), never dressed up as an upgrade flow. An Ultra student
- *    sees no call to action at all: they have nothing to register interest in.
+ * 1. **No buy button — UNTIL 2026-09-04.** From launch through 2026-09-04 there was no
+ *    payments integration (migration 0089's own header) and the only interactive control
+ *    was `registerUltraInterestAction`, a plain analytics event. Superseded the same night,
+ *    founder direct ("ödeme sistemini bugün ekliycem" — I'll add the payment system today):
+ *    this card is now the primary checkout surface, calling `startUltraCheckoutAction`
+ *    (11's provider-agnostic interface, app/(app)/upgrade-interstitial-actions.ts). What
+ *    survives unchanged from the original constraint, because it was never about the
+ *    checkout's absence: no fabricated success, no card fields anywhere in this app (every
+ *    provider redirects to its own hosted payment page), and an honestly-stated
+ *    "not configured yet" whenever `startUltraCheckoutAction` reports exactly that — the
+ *    same posture this codebase already uses for every other unconfigured integration.
  * 2. **No invented capabilities.** The comparison table (and, as of this pass, the
  *    marquee cards above it) is driven entirely by `TIER_COMPARISON_ROWS`
  *    (lib/tier/comparison.ts) plus matching catalog entries — this component has no
@@ -57,6 +63,14 @@ const CARD_ICONS: Record<UltraFeatureCardData["id"], typeof Zap> = {
  *   exactly one representation of "how these numbers look," not two. A marketing page
  *   whose figures could drift from what the product actually enforces is worse than an
  *   ugly one — the founder's own instruction for this pass, stated directly.
+ * - **`ultraPriceTry` (added 2026-09-04) follows the identical pattern with one
+ *   difference in its source**: not a hardcoded enforcement constant like the token
+ *   limits above, but the live `admin_finance_settings.ultra_price_try` row
+ *   (app/(app)/settings/plan/page.tsx's getFinanceSettings call) — editing the price in
+ *   the control center changes `interestDescription` here without a deploy. Formatted via
+ *   `formatPrice`, the one genuinely locale-aware formatter in lib/i18n/format.ts, so a
+ *   Turkish reader sees "399,99" (comma decimal) rather than the English "399.99" this
+ *   page's other, still English-pinned formatters would produce.
  * - **The marquee cards intentionally carry only the four `differs` rows, never the two
  *   `sameByDesign` ones.** Decided explicitly, not defaulted: a row of "here's what's
  *   better" cards is the wrong vehicle for "deliberately identical" — putting
@@ -75,8 +89,10 @@ const CARD_ICONS: Record<UltraFeatureCardData["id"], typeof Zap> = {
  *   purchasable yet — just relocated to where a reader who's already seen the value
  *   naturally reaches it, not the very first thing on the page.
  *
- * Every real account is standard-tier by default and there is currently no in-product way
- * to become Ultra by paying — the interest card two constraints up says so.
+ * Every real account is standard-tier by default. Whether a real account can become Ultra
+ * by paying today depends on whether a payment provider is actually configured — the
+ * checkout card two constraints up states that honestly either way, never implying more
+ * than `startUltraCheckoutAction` currently reports.
  *
  * Only two tiers are rendered because `PlanTier` only has two values — there is no
  * "unknown/unreadable" state here on purpose. `resolvePlanTier` (lib/tier/plan-tier.ts)
@@ -141,42 +157,52 @@ const CARD_ICONS: Record<UltraFeatureCardData["id"], typeof Zap> = {
  */
 export function PlanTierView({
   tier,
-  priceTry,
   ultraTokenLimit,
   standardTokenLimit,
   ultraMaxTokens,
   standardMaxTokens,
+  ultraPriceTry,
 }: {
   tier: PlanTier;
-  /** Live, from admin_finance_settings via getFinanceSettings (lib/admin/queries.ts) — same
-   *  source the full-screen interstitial reads (features/upgrade-interstitial), per the
-   *  founder's explicit instruction not to add a sixth hardcoded copy of this number. */
-  priceTry: number;
+  /** Live, from admin_finance_settings via getFinanceSettings (lib/admin/queries.ts,
+   *  05's read, threaded down the same way as app/(app)/layout.tsx's own Sidebar prop and
+   *  the full-screen interstitial's — one source, per the founder's explicit instruction
+   *  not to add a sixth hardcoded copy of this number. */
   ultraTokenLimit: number;
   standardTokenLimit: number;
   ultraMaxTokens: number;
   standardMaxTokens: number;
+  ultraPriceTry: number;
 }) {
   const t = useTranslations("settings.plan");
   const tUpgrade = useTranslations("upgradeInterstitial");
-  const locale = useLocale();
+  const locale = useLocale() as Locale;
   // Founder direct, 2026-09-04: this card becomes the primary checkout surface, not interest
   // registration — "ödeme sistemini bugün ekliycem" (payment goes in today), scoped by CEO to
   // a real, provider-agnostic interface (11 building it) rather than anything mocked here.
-  // checkUltraCheckoutAvailabilityAction is the one place that check happens; this component
-  // renders whatever it currently reports, honestly, same as the full-screen interstitial —
-  // "not configured" is a real, visible state here, never a dead button or a fake spinner.
-  const [checkoutAvailability, setCheckoutAvailability] = useState<UltraCheckoutAvailability | null>(null);
+  // startUltraCheckoutAction is the one call site both this page and the full-screen
+  // interstitial share (11's own instruction) — this component renders whatever it
+  // currently reports, honestly: "not configured" is a real, visible state, never a dead
+  // button or a fake spinner.
+  const [checkoutResult, setCheckoutResult] = useState<StartCheckoutResult | null>(null);
   useEffect(() => {
     if (tier !== "standard") return;
     let cancelled = false;
-    checkUltraCheckoutAvailabilityAction().then((result) => {
-      if (!cancelled) setCheckoutAvailability(result);
+    startUltraCheckoutAction().then((result) => {
+      if (!cancelled) setCheckoutResult(result);
     });
     return () => {
       cancelled = true;
     };
   }, [tier]);
+
+  function handleCheckoutClick() {
+    if (checkoutResult?.status === "ready") {
+      // Full browser redirect, not router.push — the hosted payment page lives on the
+      // provider's own domain (11's own instruction), never an internal route.
+      window.location.href = checkoutResult.checkoutUrl;
+    }
+  }
 
   const formattedUltraLimit = formatTokenCount(ultraTokenLimit);
   const formattedStandardLimit = formatTokenCount(standardTokenLimit);
@@ -196,15 +222,6 @@ export function PlanTierView({
     if (id === "replyCeiling") return { maxTokens: column === "ultra" ? formattedUltraMaxTokens : formattedStandardMaxTokens };
     return {};
   }
-
-  // Same locale-matched decimal-separator formatting as the full-screen interstitial
-  // (features/upgrade-interstitial/upgrade-interstitial-modal.tsx's own comment has the full
-  // reasoning for why this is a narrow, local choice rather than lib/i18n/format.ts's
-  // deliberately English-pinned NUMBER_FORMAT_LOCALE).
-  const formattedPrice = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(priceTry);
 
   return (
     <>
@@ -297,19 +314,22 @@ export function PlanTierView({
             <CardHeader>
               <CardTitle>{tUpgrade("title")}</CardTitle>
               <CardDescription>
-                {tUpgrade.rich("priceLine", { price: formattedPrice, strong: (chunks) => <strong style={{ color: "var(--tier-accent-strong)" }}>{chunks}</strong> })}
+                {tUpgrade.rich("priceLine", {
+                  price: formatPrice(ultraPriceTry, locale),
+                  strong: (chunks) => <strong style={{ color: "var(--tier-accent-strong)" }}>{chunks}</strong>,
+                })}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {checkoutAvailability?.available && checkoutAvailability.checkoutUrl ? (
-                <ButtonLink href={checkoutAvailability.checkoutUrl}>{tUpgrade("cta")}</ButtonLink>
+              {checkoutResult?.status === "ready" ? (
+                <Button onClick={handleCheckoutClick}>{tUpgrade("cta")}</Button>
               ) : (
                 <div className="space-y-2">
                   <Button disabled aria-describedby="plan-checkout-unavailable">
                     {tUpgrade("cta")}
                   </Button>
                   <p id="plan-checkout-unavailable" className="text-xs text-muted-foreground">
-                    {tUpgrade("checkoutNotConfigured")}
+                    {checkoutResult?.status === "error" ? checkoutResult.message : tUpgrade("checkoutNotConfigured")}
                   </p>
                 </div>
               )}
