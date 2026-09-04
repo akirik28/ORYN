@@ -295,3 +295,34 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
 
   redirect("/dashboard");
 }
+
+/**
+ * `profiles.onboarding_step` used to be written in exactly one place, always the literal
+ * string "completed" — a repo-wide search confirms it (docs/onboarding-first-experience-
+ * audit-2026-09-04.md's own finding, re-confirming docs/onboarding-audit-2026-09-02.md's
+ * original one). That meant the question its own name implies — where did a student who
+ * never finished actually stop — had no answer: the wizard holds all five screens' state in
+ * client-only React, so there was no per-screen save to observe a stall in.
+ *
+ * This closes that gap with the smallest change that does: one column already exists
+ * (nullable text, no CHECK constraint, confirmed live), already covered by the existing
+ * "update own profile" RLS policy (`id = auth.uid()`, no column restriction), and read
+ * nowhere else in the app (same repo-wide search) — so recording an intermediate value here
+ * cannot affect any gating logic that isn't this file's own `onboarding_completed` writes.
+ * No migration, no new table, no new event pipeline.
+ *
+ * Fire-and-forget by design, same posture as softDismissUpgradePrompt/notNowUpgradePrompt
+ * above this file's own sibling actions.ts: a student's forward progress through the wizard
+ * must never be blocked by — or even wait on — a diagnostic write succeeding. A failure here
+ * only means the eventual drop-off analysis for that student is one data point short, not
+ * that anything about their actual onboarding broke.
+ */
+export async function recordOnboardingStep(step: number): Promise<void> {
+  const session = await requireUser();
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("profiles").update({ onboarding_step: String(step) }).eq("id", session.userId!);
+  if (error) {
+    console.warn("[onboarding] failed to record step transition", { userId: session.userId, step, error: error.message });
+  }
+}
