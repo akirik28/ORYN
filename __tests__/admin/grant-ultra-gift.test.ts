@@ -92,7 +92,7 @@ describe("grantUltraGift — once per person", () => {
   });
 
   test("a real grant with the table missing: degrades to the safe 7-day default, writes and logs it", async () => {
-    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_expires_at: null, display_name: "Deniz" }, error: null });
+    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_expires_at: null, paid_ultra_expires_at: null, display_name: "Deniz" }, error: null });
     updateIsSelectMock.mockResolvedValue({ data: [{ id: USER_ID }], error: null });
     const before = Date.now();
 
@@ -119,7 +119,7 @@ describe("grantUltraGift — once per person", () => {
   });
 
   test("a real grant with a configured trial length: stores an expiry matching the admin's own setting, not the 7-day default", async () => {
-    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_expires_at: null, display_name: "Deniz" }, error: null });
+    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_expires_at: null, paid_ultra_expires_at: null, display_name: "Deniz" }, error: null });
     settingsSelectMock.mockResolvedValue({ data: { signups_enabled: true, maintenance_mode: false, trial_period_days: 14 }, error: null });
     updateIsSelectMock.mockResolvedValue({ data: [{ id: USER_ID }], error: null });
     const before = Date.now();
@@ -136,7 +136,7 @@ describe("grantUltraGift — once per person", () => {
   });
 
   test("a race lost at the guarded update (granted between the read and the write): reports granted:false, not an error", async () => {
-    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_expires_at: null, display_name: "Deniz" }, error: null });
+    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_expires_at: null, paid_ultra_expires_at: null, display_name: "Deniz" }, error: null });
     // The IS NULL guard matched zero rows -- another grant won the race in between.
     updateIsSelectMock.mockResolvedValue({ data: [], error: null });
 
@@ -147,7 +147,7 @@ describe("grantUltraGift — once per person", () => {
   });
 
   test("a real write error surfaces as an error and never logs", async () => {
-    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_expires_at: null, display_name: "Deniz" }, error: null });
+    selectMaybeSingleMock.mockResolvedValue({ data: { ultra_gift_expires_at: null, paid_ultra_expires_at: null, display_name: "Deniz" }, error: null });
     updateIsSelectMock.mockResolvedValue({ data: null, error: { code: "42501", message: "permission denied" } });
 
     const result = await grantUltraGift(USER_ID);

@@ -79,7 +79,7 @@ export async function uploadAndExtractCV(formData: FormData): Promise<CVUploadRe
     // assumed "standard" because it's early in the flow. See lib/ai/cv-extraction.ts's own
     // comment on this exact point.
     const profile = await getCurrentProfile();
-    const tier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+    const tier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null });
     const extraction = await extractCVData({ userId: session.userId!, mimeType: file.type, buffer, tier, locale });
     await logEvent(session.userId!, "cv_imported", {
       itemCount:

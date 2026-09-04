@@ -11,16 +11,23 @@
  * student A, call the function under test as student B, and assert on the *result*
  * (`count: 0`, `data: null`) rather than trusting that the right-looking calls were made.
  *
- * Scope is deliberately narrow: `.select()` / `.insert()` / `.update()`, `.eq()` / `.neq()` /
- * `.in()`, `.order()` (accepted, no-op — nothing under test depends on ordering correctness),
- * `.maybeSingle()`, and `{ count: "exact" }` on `.select()`/`.update()`. Add to this file
- * rather than building a second, competing mock the next time a lib/ module needs one of
- * these — CEO's own framing for why this harness exists at all: "it stops being a one-off."
+ * Scope is deliberately narrow: `.select()` / `.insert()` / `.update()` / `.upsert()`,
+ * `.eq()` / `.neq()` / `.in()`, `.order()` (accepted, no-op — nothing under test depends on
+ * ordering correctness), `.maybeSingle()`, and `{ count: "exact" }` on `.select()`/`.update()`.
+ * Add to this file rather than building a second, competing mock the next time a lib/ module
+ * needs one of these — CEO's own framing for why this harness exists at all: "it stops being
+ * a one-off."
  *
  * `.in()` added 2026-09-04 (C7, comparison-render-proof) — the first consumer needing it
  * (a compare page's own `.in("id", ids)`) issues several of these against the same table, so
  * the mock filters by real membership rather than recording call args, same reasoning as
  * `.eq()`/`.neq()` above.
+ *
+ * `.upsert()` added 2026-09-04 (payment-provider seam) only implements a single-column
+ * `onConflict` target matched by real equality against existing rows — real Postgres
+ * `ON CONFLICT` supports more (multi-column targets, partial indexes); this mock covers
+ * exactly what lib/payments/entitlement.ts's `subscriptions` upsert needs
+ * (`onConflict: "user_id"`), not the general case.
  */
 
 export interface MockRow {
@@ -58,6 +65,15 @@ export interface MockTableConfig {
 
 type Filter = { col: string; op: "eq" | "neq" | "in"; val: unknown };
 
+let mockIdCounter = 0;
+/** Stands in for a real `gen_random_uuid()` default — only used to fill an `id` an
+ *  insert/upsert didn't supply itself, so `.insert(...).select("id")` has something real to
+ *  hand back. Not a UUID; nothing under test should assert on its exact shape, only that one
+ *  was returned at all. */
+function nextMockId(): string {
+  return `mock-id-${(mockIdCounter++).toString().padStart(4, "0")}`;
+}
+
 function undefinedTableError(table: string): MockPostgrestError {
   return { code: "PGRST205", message: `Could not find the table 'public.${table}' in the schema cache` };
 }
@@ -72,9 +88,22 @@ function uniqueViolationError(constraint: UniqueConstraint): MockPostgrestError 
 
 class MockQueryBuilder {
   private filters: Filter[] = [];
-  private mode: "select" | "update" | "insert" = "select";
+  private mode: "select" | "update" | "insert" | "upsert" = "select";
+  // `.insert(...).select("id")` / `.upsert(...).select("id")` / `.update(...).select("id")`
+  // are all real, common chains (this app's own "detect a zero-rows-affected write" pattern
+  // — app/(app)/admin/actions.ts's setUserPlanTier, lib/payments/checkout.ts, this migration's
+  // own entitlement.ts). `select()` runs AFTER the write call in that chain, so it must not
+  // clobber `mode` back to plain "select" — this flag is what tells it a write already
+  // happened and to leave `mode` alone.
+  private hasWriteOp = false;
+  /** Set by select() when it runs AFTER a write (see hasWriteOp's own comment) — this is
+   *  what makes .insert(...).select("id") actually return the written row's data instead of
+   *  the bare { data: null } a write-with-no-select still correctly returns. */
+  private wantDataBack = false;
   private updateValues: MockRow | null = null;
   private insertValues: MockRow | null = null;
+  private upsertValues: MockRow | null = null;
+  private upsertConflictColumn: string | null = null;
   private wantCount = false;
   private wantSingle = false;
   private wantExactlyOne = false;
@@ -85,13 +114,18 @@ class MockQueryBuilder {
   ) {}
 
   select(_columns?: string, opts?: { count?: string; head?: boolean }): this {
-    this.mode = "select";
+    if (this.hasWriteOp) {
+      this.wantDataBack = true;
+    } else {
+      this.mode = "select";
+    }
     if (opts?.count) this.wantCount = true;
     return this;
   }
 
   update(values: MockRow, opts?: { count?: string }): this {
     this.mode = "update";
+    this.hasWriteOp = true;
     this.updateValues = values;
     if (opts?.count) this.wantCount = true;
     return this;
@@ -99,7 +133,16 @@ class MockQueryBuilder {
 
   insert(values: MockRow): this {
     this.mode = "insert";
+    this.hasWriteOp = true;
     this.insertValues = values;
+    return this;
+  }
+
+  upsert(values: MockRow, opts: { onConflict: string }): this {
+    this.mode = "upsert";
+    this.hasWriteOp = true;
+    this.upsertValues = values;
+    this.upsertConflictColumn = opts.onConflict;
     return this;
   }
 
@@ -176,8 +219,27 @@ class MockQueryBuilder {
         const collides = rows.some((row) => constraint.columns.every((c) => row[c] === values[c]));
         if (collides) return { data: null, error: uniqueViolationError(constraint), count: null };
       }
-      rows.push({ ...values });
-      return { data: null, error: null, count: null };
+      const inserted = { id: nextMockId(), ...values };
+      rows.push(inserted);
+      if (!this.wantDataBack) return { data: null, error: null, count: null };
+      return { data: this.wantSingle ? inserted : [inserted], error: null, count: null };
+    }
+
+    if (this.mode === "upsert") {
+      const values = this.upsertValues!;
+      const conflictCol = this.upsertConflictColumn!;
+      const missingCol = (this.config.missingColumns ?? []).find((c) => c in values);
+      if (missingCol) return { data: null, error: undefinedColumnError(this.tableName, missingCol), count: null };
+
+      const rows = this.config.rows ?? [];
+      const existing = rows.find((row) => row[conflictCol] === values[conflictCol]);
+      const result = existing ? Object.assign(existing, values) : (() => {
+        const created = { id: nextMockId(), ...values };
+        rows.push(created);
+        return created;
+      })();
+      if (!this.wantDataBack) return { data: null, error: null, count: null };
+      return { data: this.wantSingle ? result : [result], error: null, count: null };
     }
 
     if (this.mode === "update") {
@@ -187,7 +249,8 @@ class MockQueryBuilder {
 
       const matches = this.matchingRows();
       for (const row of matches) Object.assign(row, values);
-      return { data: null, error: null, count: this.wantCount ? matches.length : null };
+      if (!this.wantDataBack) return { data: null, error: null, count: this.wantCount ? matches.length : null };
+      return { data: this.wantSingle ? (matches[0] ?? null) : matches, error: null, count: this.wantCount ? matches.length : null };
     }
 
     // select

@@ -315,23 +315,36 @@ export interface AdminUserRow {
  */
 export async function getAdminUserList(admin: SupabaseClient<Database>): Promise<AdminUserRow[]> {
   const [profilesResult, spendByUser, { data: authUsers }] = await Promise.all([
-    admin.from("profiles").select("id, display_name, created_at, plan_tier, ultra_gift_expires_at").order("created_at", { ascending: false }),
+    admin.from("profiles").select("id, display_name, created_at, plan_tier, ultra_gift_expires_at, paid_ultra_expires_at").order("created_at", { ascending: false }),
     getLifetimeSpendByUser(admin),
     admin.auth.admin.listUsers(),
   ]);
 
-  // Named select, not `*` -- migration 0106 unapplied makes this the same "PostgREST
+  // Named select, not `*` -- migration 0106/0123 unapplied makes this the same "PostgREST
   // validates the requested column list" shape lib/supabase/errors.ts's own comment
   // documents for lib/notifications/create.ts, not the silent-omission shape resolvePlanTier
-  // relies on elsewhere. Retried without the one new column rather than defaulted, because
-  // the alternative -- `profiles ?? []` swallowing the error, as this function used to do --
-  // loses every OTHER real field (display name, signup date, tier) for every student, not
-  // just the gift timestamp. Confirmed live 2026-09-03: this exact query silently emptied
-  // the whole admin user list against the real database before this retry existed.
+  // relies on elsewhere (this function's own `tier: resolvePlanTier(p)` below is exactly the
+  // case that doc comment warns a narrowed select falls to "standard" for, rather than
+  // fabricating a grant -- correct for entitlement, but this admin list existing at all is
+  // about SEEING a paying customer's real state, so it's worth the two-column retry rather
+  // than accepting that fallback here). Retried without the newest missing column rather
+  // than defaulted, because the alternative -- `profiles ?? []` swallowing the error, as this
+  // function used to do -- loses every OTHER real field (display name, signup date, tier) for
+  // every student, not just one timestamp. Confirmed live 2026-09-03: this exact query
+  // silently emptied the whole admin user list against the real database before the first
+  // retry existed; a second, independently-appliable column (0123 vs. 0106) needs its own
+  // rung on the same ladder rather than assuming both migrations land together.
   let profiles = profilesResult.data;
-  if (profilesResult.error && isUndefinedColumnError(profilesResult.error, "ultra_gift_expires_at")) {
-    const fallback = await admin.from("profiles").select("id, display_name, created_at, plan_tier").order("created_at", { ascending: false });
-    profiles = fallback.data?.map((p) => ({ ...p, ultra_gift_expires_at: null as string | null })) ?? null;
+  if (profilesResult.error && isUndefinedColumnError(profilesResult.error, "paid_ultra_expires_at")) {
+    const fallback = await admin.from("profiles").select("id, display_name, created_at, plan_tier, ultra_gift_expires_at").order("created_at", { ascending: false });
+    if (fallback.error && isUndefinedColumnError(fallback.error, "ultra_gift_expires_at")) {
+      const doubleFallback = await admin.from("profiles").select("id, display_name, created_at, plan_tier").order("created_at", { ascending: false });
+      profiles = doubleFallback.data?.map((p) => ({ ...p, ultra_gift_expires_at: null as string | null, paid_ultra_expires_at: null as string | null })) ?? null;
+    } else if (fallback.error) {
+      console.error("[admin] failed to read profiles for user list", { error: fallback.error });
+    } else {
+      profiles = fallback.data?.map((p) => ({ ...p, paid_ultra_expires_at: null as string | null })) ?? null;
+    }
   } else if (profilesResult.error) {
     console.error("[admin] failed to read profiles for user list", { error: profilesResult.error });
   }
@@ -906,10 +919,11 @@ export async function getPerUserSpend(admin: SupabaseClient<Database>): Promise<
   // and vice versa for a brand-new spender with no older history.
   const userIds = new Set([...lifetimeByUser.keys(), ...last30dByUser.keys()]);
   const idList = [...userIds];
-  // plan_tier/ultra_gift_expires_at added 2026-09-03 (the Ultra tier-economics build) —
-  // resolvePlanTier needs both; see UserSpend.tier's own comment for why this list can no
-  // longer check every row against one shared ceiling.
-  const { data: profiles } = idList.length > 0 ? await admin.from("profiles").select("id, display_name, plan_tier, ultra_gift_expires_at").in("id", idList) : { data: [] };
+  // plan_tier/ultra_gift_expires_at added 2026-09-03 (the Ultra tier-economics build),
+  // paid_ultra_expires_at added 2026-09-04 (the payment-provider seam) — resolvePlanTier
+  // needs all three; see UserSpend.tier's own comment for why this list can no longer check
+  // every row against one shared ceiling.
+  const { data: profiles } = idList.length > 0 ? await admin.from("profiles").select("id, display_name, plan_tier, ultra_gift_expires_at, paid_ultra_expires_at").in("id", idList) : { data: [] };
   const nameById = new Map((profiles ?? []).map((p) => [p.id, p.display_name]));
   const tierById = new Map((profiles ?? []).map((p) => [p.id, resolvePlanTier(p)]));
 

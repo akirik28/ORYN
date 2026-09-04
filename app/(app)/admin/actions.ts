@@ -645,15 +645,22 @@ export async function setUserPlanTier(userId: string, tier: PlanTier): Promise<S
   if (tier !== "standard" && tier !== "ultra") return { error: "Invalid tier." };
 
   const admin = createAdminClient();
-  let { data: before, error: readError } = await admin.from("profiles").select("plan_tier, ultra_gift_expires_at, display_name").eq("id", userId).maybeSingle();
-  // Same degrade lib/admin/queries.ts's getAdminUserList now uses -- migration 0106
+  let { data: before, error: readError } = await admin.from("profiles").select("plan_tier, ultra_gift_expires_at, paid_ultra_expires_at, display_name").eq("id", userId).maybeSingle();
+  // Same degrade lib/admin/queries.ts's getAdminUserList uses -- migration 0106/0123
   // unapplied must not make this pre-existing, already-shipped action start reporting
   // "Couldn't find that user" for every real user, which is what a raw readError check
-  // would do here without this retry.
-  if (readError && isUndefinedColumnError(readError, "ultra_gift_expires_at")) {
-    const fallback = await admin.from("profiles").select("plan_tier, display_name").eq("id", userId).maybeSingle();
-    before = fallback.data ? { ...fallback.data, ultra_gift_expires_at: null } : null;
-    readError = fallback.error;
+  // would do here without this retry. Two independently-appliable columns get their own
+  // rung each, same reasoning as getAdminUserList's own two-level fallback.
+  if (readError && isUndefinedColumnError(readError, "paid_ultra_expires_at")) {
+    const fallback = await admin.from("profiles").select("plan_tier, ultra_gift_expires_at, display_name").eq("id", userId).maybeSingle();
+    if (fallback.error && isUndefinedColumnError(fallback.error, "ultra_gift_expires_at")) {
+      const doubleFallback = await admin.from("profiles").select("plan_tier, display_name").eq("id", userId).maybeSingle();
+      before = doubleFallback.data ? { ...doubleFallback.data, ultra_gift_expires_at: null, paid_ultra_expires_at: null } : null;
+      readError = doubleFallback.error;
+    } else {
+      before = fallback.data ? { ...fallback.data, paid_ultra_expires_at: null } : null;
+      readError = fallback.error;
+    }
   }
   if (readError || !before) {
     console.error("[admin] failed to read profile before setting plan tier", { userId, error: readError });

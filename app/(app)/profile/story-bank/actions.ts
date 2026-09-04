@@ -53,7 +53,7 @@ export async function generateStoryOutlines(
       goals: (goalsRes.data ?? []).map((g) => g.title),
       // 2026-09-03, closing the Ultra tier-economics boundary -- same pattern as every
       // other threaded feature this build touches.
-      tier: resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null }),
+      tier: resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null }),
     });
     return { data };
   } catch (error) {

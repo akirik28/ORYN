@@ -512,7 +512,7 @@ export async function buildStudentAdvisorContext(userId: string, supabaseClient?
       busyModeUntil: profile?.busy_mode_until ?? null,
       birthYear: profile?.birth_year ?? null,
       citizenshipCountries: profile?.citizenship_countries ?? [],
-      tier: resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null }),
+      tier: resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null }),
       advisorInstructions: resolveAdvisorInstructions(profile ?? { advisor_instructions: null }),
     },
     profileScores: buildProfileSignal(dimensions).map((d) => ({

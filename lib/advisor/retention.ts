@@ -157,7 +157,7 @@ async function loadCandidates(admin: SupabaseClient<Database>, options: Retentio
 }
 
 async function loadTier(admin: SupabaseClient<Database>, userId: string): Promise<"standard" | "ultra"> {
-  const { data, error } = await admin.from("profiles").select("plan_tier, ultra_gift_expires_at").eq("id", userId).single();
+  const { data, error } = await admin.from("profiles").select("plan_tier, ultra_gift_expires_at, paid_ultra_expires_at").eq("id", userId).single();
   // Fails toward the safer side for a MINOR's data: an unreadable tier is treated as Ultra
   // (exempt, do nothing) rather than Standard (would delete) — the one place in this module
   // where "unknown" and "proceed cautiously" point the same direction as "don't touch it".

@@ -99,7 +99,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const tierProfile = await getCurrentProfile();
-  const planTier = resolvePlanTier(tierProfile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+  const planTier = resolvePlanTier(tierProfile ?? { plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null });
 
   const quota = await getMonthlyQuota(userId, planTier);
   if (quota.usedIsKnown && quota.remaining <= 0) {
