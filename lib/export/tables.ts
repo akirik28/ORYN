@@ -148,6 +148,31 @@ export const EXPORT_EXCLUDED_TABLES: Record<string, string> = {
    * does.
    */
   feedback_reports: "migration 0113 is not applied anywhere yet — would export as permanently empty until it is",
+  /**
+   * Migration 0123's subscriptions table (payment-provider seam, 2026-09-04) — their data,
+   * and it belongs in EXPORT_TABLES once applied: a student's own subscription status and
+   * renewal date is exactly the kind of thing a portability request expects to see, same
+   * posture as ai_usage/quota_grants above. Not added yet because the migration isn't
+   * applied anywhere — same reasoning as feedback_reports immediately above, not a
+   * judgment that this table is somehow different in kind. Move it into EXPORT_TABLES once
+   * 0123 lands; no column allowlist needed (plain user_id, no admin-internal column the way
+   * message_reports has).
+   */
+  subscriptions: "migration 0123 is not applied anywhere yet — would export as permanently empty until it is",
+  /**
+   * Migration 0123's checkout_sessions table (payment-provider seam, 2026-09-04) — the
+   * advisor_generation_locks case, not the feedback_reports one: this holds nothing beyond
+   * "a checkout attempt happened at this time," no payment details, no plan info, nothing
+   * the student typed. It exists purely so a checkout_completed webhook (which carries the
+   * provider's own session id, never this app's user id) can be resolved back to a user —
+   * see that table's own migration comment. The moment a checkout succeeds, the durable,
+   * meaningful record of it lives in subscriptions, not here; an abandoned checkout leaves
+   * a row with nothing more to say than "one was started." Not a content judgment that
+   * would change once the migration applies — this stays excluded even after 0123 lands,
+   * unlike subscriptions immediately above.
+   */
+  checkout_sessions:
+    "operational bridge table, not content — holds only a timestamp and which user started a checkout, superseded by subscriptions the moment one completes (see that table's own migration comment); stays excluded even once migration 0123 is applied",
 };
 
 /** Tables keyed by a participant pair rather than a plain user_id — each needs its own
