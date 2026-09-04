@@ -15,18 +15,22 @@ const RESULT_CAP = 20;
  * in full before writing this one: it joins the passed userId's own opportunity_matches
  * row per opportunity (match score, eligibility, reason codes), which only means something
  * for a real student profile. Calling it with the parent's own id would render nonsense
- * (every row "0% match, ineligible"); calling it with the child's id would compute the
- * child's personalized match data through a path that isn't the whitelisted
- * get_parent_child_* RPCs CEO named as the one route child-specific info is allowed to
- * travel through. This is therefore its own, smaller query: plain active catalog rows, no
- * per-user join at all, on purpose.
+ * (every row "0% match, ineligible"); calling it with the child's id would need the same
+ * audit lib/parent/panel-data.ts's own loadParentOpportunities already did for that exact
+ * table — not attempted here. This is therefore its own, smaller query: plain active
+ * catalog rows, no per-user join at all, on purpose. Not a rule that per-child match data is
+ * forbidden — the corrected rule (CEO, 2026-09-04, see lib/parent/opportunity-detail.ts's own
+ * comment) is that `opportunity_matches` carries no student-written text at all, so it gets a
+ * real parent-scoped RLS policy and doesn't need one of the get_parent_child_* RPCs; the RPC
+ * requirement is specifically for tables that do carry student-written free text
+ * (profiles.advisor_instructions, target_universities.notes, applications.notes).
  *
  * Read-only by construction, matching ParentPanelView's own rule: the search form below is
  * a plain GET, no server action anywhere in this file.
  *
  * Detail links to /parent/opportunities/[id] (B6, 2026-09-04) — a plain catalog-fact page,
- * same no-match-data scope as this browser. See lib/parent/opportunity-detail.ts's header
- * for the note on the get_parent_child_* vs. direct-RLS-read inconsistency this sidesteps.
+ * same no-match-data scope as this browser today. See lib/parent/opportunity-detail.ts's
+ * header for why match data could be added safely and wasn't, this round.
  */
 export async function OpportunityCatalogBrowser({
   searchParams,
