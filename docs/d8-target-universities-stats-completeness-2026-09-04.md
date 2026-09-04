@@ -125,16 +125,27 @@ set
 where university_id = (select id from public.universities where name = 'University of Oxford')
   and admission_rate is null; -- guarded: never overwrites a value someone fills in the meantime
 
--- LSE: new row. RE-RUN SAFETY (added 2026-09-04, assembling Package 14): university_statistics'
--- own unique index is (university_id, stat_year), but none of these five inserts ever set
--- stat_year -- it lands NULL, and standard SQL never treats NULL = NULL as a conflict, so the
--- index silently never catches a second run. Found by running the full package twice and
--- diffing per-university row counts, not by inspecting the constraint definition first: all
--- five doubled with zero error, the quietest failure mode found that night. Explicit
--- not-exists guard added to all five inserts below; content otherwise unchanged.
+-- RE-RUN SAFETY (added 2026-09-04, assembling Package 14): university_statistics' own
+-- unique index is (university_id, stat_year), but none of these five inserts set stat_year --
+-- it lands NULL, and standard SQL never treats NULL = NULL as a conflict, so the index
+-- silently never catches a second run. Found by running the full package twice and diffing
+-- per-university row counts, not by inspecting the constraint definition first: all five
+-- doubled with zero error, the quietest failure mode found that night. Explicit not-exists
+-- guard added to all five inserts below -- that guard is what actually protects this
+-- script's own reruns, independent of stat_year.
+--
+-- STAT_YEAR ITSELF (2026-09-04, follow-up): only LSE's finding cites a specific admission
+-- cycle ("in 2025, we received...") -- stat_year=2025 set below, matching Oxford's own row.
+-- The other four (Erasmus/UvA/Boğaziçi/Bocconi) are structural findings with no cycle to
+-- assign -- checked the live table before guessing: only 2 of 128 'published' rows and 0 of
+-- 2 existing 'no_single_rate' rows (TU Munich, TU Delft, migration 0119's own precedent
+-- pair) have stat_year set at all. Asserting a year on these four would make them the
+-- outlier, not the table's own overwhelming convention. Left null on purpose, not an
+-- oversight -- the not-exists guard above is this table's real protection against a second
+-- write, not stat_year, for any row where no genuine cycle year exists to assert.
 insert into public.university_statistics
-  (university_id, admission_rate, admission_rate_basis, source, data_confidence, retrieved_at)
-select id, 0.0633, 'published',
+  (university_id, stat_year, admission_rate, admission_rate_basis, source, data_confidence, retrieved_at)
+select id, 2025, 0.0633, 'published',
   'London School of Economics (official) — "in 2025, we received approximately 30,000 applications for roughly 1,900 places," rate derived from LSE''s own rounded figures, not a literal published percentage. https://www.lse.ac.uk/study-at-lse/Undergraduate/Teachers-schools-parents/Information-for-teachers-and-schools/admissions-advice',
   'medium', now()
 from public.universities where name = 'London School of Economics and Political Science'
