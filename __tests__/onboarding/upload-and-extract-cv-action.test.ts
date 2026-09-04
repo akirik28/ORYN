@@ -53,7 +53,7 @@ function fileFormData(overrides: Partial<{ name: string; type: string; size: num
 beforeEach(() => {
   vi.clearAllMocks();
   requireUser.mockResolvedValue({ userId: "user-1" });
-  getCurrentProfile.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null });
+  getCurrentProfile.mockResolvedValue({ plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null });
   assertWithinAIRateLimit.mockResolvedValue(undefined);
   storageUpload.mockResolvedValue({ error: null });
 });

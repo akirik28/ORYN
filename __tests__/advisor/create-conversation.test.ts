@@ -29,7 +29,7 @@ const USER_ID = "11111111-1111-1111-1111-111111111111";
 /** Only the two fields resolvePlanTier actually reads -- same partial-Profile cast this
  * codebase's other tier-gated action tests already use (__tests__/security/is-admin.test.ts). */
 function profile(planTier: "standard" | "ultra"): Profile {
-  return { plan_tier: planTier, ultra_gift_expires_at: null } as unknown as Profile;
+  return { plan_tier: planTier, ultra_gift_expires_at: null, paid_ultra_expires_at: null } as unknown as Profile;
 }
 
 function client() {

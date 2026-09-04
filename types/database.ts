@@ -184,6 +184,19 @@ export interface Profile {
    * retroactively changes a gift already granted. An absent/unreadable value reads as
    * "never granted," same convention as plan_tier/response_mode above. */
   ultra_gift_expires_at: string | null;
+  /** Migration 0123, written not applied — read-time expiry for a PAID Ultra subscription,
+   * mirroring ultra_gift_expires_at's mechanism (an "is it active right now" check against
+   * now(), not a "was it ever granted" record) but never sharing that column: the gift
+   * column's permanently-non-null state after first use IS the once-per-person record, and a
+   * recurring payment renewing that same column would silently corrupt it. Written only by
+   * the payment webhook handler (service-role, guarded by profiles_guard_protected_columns
+   * the same way plan_tier/ultra_gift_expires_at already are), with the provider's own
+   * returned period end — never computed locally, since only the provider knows about
+   * proration, retried renewals, or a grace window. Cancellation and a failed payment
+   * deliberately do not clear or rewind this column; see lib/tier/plan-tier.ts's
+   * resolvePlanTier for the read side and supabase/migrations/0123's own header for why
+   * plan_tier itself must never be the payment path's write target. */
+  paid_ultra_expires_at: string | null;
   /** Migration 0091 — student preference for advisor chat's model/prompt style, overridden
    * by spend-based degrade whenever that's active (lib/ai/limits/budget.ts). Live as of
    * 2026-09-02; every read still defaults an absent/unreadable value to "balanced" — see

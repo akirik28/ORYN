@@ -271,7 +271,7 @@ export async function updateResponseMode(mode: ResponseMode): Promise<{ error?: 
 
   if (mode === "thorough") {
     const profile = await getCurrentProfile();
-    if (resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null }) !== "ultra") {
+    if (resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null }) !== "ultra") {
       return { error: "Ultra isn't available on your plan, so nothing was saved." };
     }
   }
@@ -317,7 +317,7 @@ export async function updateResponseMode(mode: ResponseMode): Promise<{ error?: 
 export async function updateAdvisorInstructions(text: string): Promise<{ error?: string }> {
   const session = await requireUser();
   const profile = await getCurrentProfile();
-  const tier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
+  const tier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null });
   const maxLength = advisorInstructionsMaxLength(tier);
 
   const trimmed = text.trim();
