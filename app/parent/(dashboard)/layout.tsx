@@ -31,11 +31,14 @@ import { getAccountRole, getParentLinkStatus, hasActiveParentLink } from "@/lib/
  * lib/security/dal.ts's own header comment for why every data-touching call re-checks for
  * itself rather than trusting an ancestor layout.
  */
-// No page.tsx in this segment on purpose -- the real panel is P3 (lane 11)'s. It reads
-// lib/auth/account-role.ts's getActiveParentLink(session.userId) directly for the linked
-// student's user id rather than this layout threading it down as a prop (App Router's
-// `children` has no such channel) -- cache()-deduped against this layout's own
-// getParentLinkStatus call, so it costs no extra query in the same request.
+// page.tsx in this segment is P3 (lane 11)'s real panel. It reads lib/auth/account-role.ts's
+// getActiveParentLink(session.userId) directly for the linked student's user id rather than
+// this layout threading it down as a prop (App Router's `children` has no such channel) --
+// cache()-deduped against this layout's own getParentLinkStatus call, so it costs no extra
+// query in the same request.
+// (STALE 2026-09-04: this comment used to say "no page.tsx in this segment on purpose,"
+// written before lane 11's page.tsx landed -- corrected during a composed read of the whole
+// route group, CEO dispatch, so it stops contradicting the file tree next to it.)
 export default async function ParentDashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await verifySession();
   if (!session.isAuth || !session.userId) {

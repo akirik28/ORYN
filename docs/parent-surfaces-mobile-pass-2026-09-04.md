@@ -1,5 +1,17 @@
 # Parent surfaces — mobile pass, 2026-09-04
 
+**Addendum, later the same night (composed read, CEO dispatch) — both open items below are
+now resolved:**
+- The layout-squeeze bug this doc's headline finding describes is fixed (`app/parent/
+  layout.tsx` no longer wraps every child in the login card; only `/parent/login` keeps one,
+  inline, in its own file). Verified live again during the composed read, on the widest real
+  content (`ParentPanelView`) and on `/parent/login` itself, in both locales.
+- The "noticed in passing" hardcoded-hex item is also resolved: `/parent/login` and
+  `/parent/pending` now read `--role-*` custom properties like the rest of the surface, not
+  hardcoded hex.
+
+Findings below are kept as-is, historically accurate for what they found at the time.
+
 Five routes checked live at 375px (`127.0.0.1`, never the shared `localhost` — the pane
 carries a real, persisted session per tonight's earlier finding). Report only, per the
 dispatch — nothing here was fixed; the one thing worth fixing is architectural, not small.
