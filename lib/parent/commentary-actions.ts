@@ -55,14 +55,26 @@ export async function generateParentCommentaryIfDue(): Promise<{ generated: bool
   const outcome = await resolveParentMonthlyCommentary(admin, link.student_user_id, link.last_commentary_sent_at);
   if (outcome.kind === "not_premium") return { generated: false, reason: "not_premium" };
 
-  const { error: insertError } = await admin.from("parent_commentary_entries").insert({
-    parent_link_id: link.id,
-    locale: narrativeLocale,
-    period_start: outcome.content.periodStart,
-    period_end: outcome.content.periodEnd,
-    narrative: outcome.content.narrative,
-    narrative_source: outcome.content.narrativeSource,
-  });
+  // upsert + ignoreDuplicates, not a plain insert (CEO, 2026-09-04, off a real same-night
+  // incident: a package silently doubled rows on a re-run because its own dedup constraint
+  // depended on a column that was never set). Migration 0130's unique(parent_link_id,
+  // period_start) is what this targets: two concurrent visits to this page (two tabs, a
+  // retry) can both read isDueForMonthlyCommentary as true and both reach this line before
+  // either write lands. With a plain insert that produces two entries for the same period;
+  // with ignoreDuplicates, the second attempt silently no-ops instead.
+  const { error: insertError } = await admin
+    .from("parent_commentary_entries")
+    .upsert(
+      {
+        parent_link_id: link.id,
+        locale: narrativeLocale,
+        period_start: outcome.content.periodStart,
+        period_end: outcome.content.periodEnd,
+        narrative: outcome.content.narrative,
+        narrative_source: outcome.content.narrativeSource,
+      },
+      { onConflict: "parent_link_id,period_start", ignoreDuplicates: true }
+    );
   if (insertError) {
     console.error("[parent/commentary-actions] failed to store generated commentary", { linkId: link.id, error: insertError.message });
     return { generated: false };

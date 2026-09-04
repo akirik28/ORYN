@@ -23,7 +23,7 @@ inlining what `is_active_parent_of()` checks rather than calling it as a bare ex
 Caught locally, never touched a real database — the migration shipped with the fix already in
 it, not as a follow-up.
 
-## Six assertions, one clean run
+## Seven assertions, one clean run
 
 | # | Scenario | Expected | Result |
 |---|---|---|---|
@@ -33,11 +33,21 @@ it, not as a follow-up.
 | 4 | Direct `select * from parent_commentary_entries` as `authenticated` | 0 rows (RLS enabled, zero policies) | PASS |
 | 5 | Function re-created with the original (unscoped) bug, re-run test 2's scenario | Now returns rows — the check can detect the exact class of bug it exists to catch | PASS |
 | 6 | Real function restored, test 2's scenario re-run | Back to 0 rows | PASS |
+| 7 | Two concurrent "generate and store" attempts for the same `(parent_link_id, period_start)` — the exact race two overlapping page visits could trigger | Exactly one row survives | PASS |
 
-Test 5 is the one that matters most, per this session's own standing discipline ("don't say a
-check passed without proving it can go red"): a broken version of the function was installed
-mid-script, specifically to confirm the assertion actually fails when the real bug shape is
-present, not just that it happens to report PASS today.
+Test 5 is the one that matters most among the first six, per this session's own standing
+discipline ("don't say a check passed without proving it can go red"): a broken version of
+the function was installed mid-script, specifically to confirm the assertion actually fails
+when the real bug shape is present, not just that it happens to report PASS today.
+
+Test 7 was added after CEO flagged a real same-night incident elsewhere: a package silently
+doubled rows on a re-run because its own dedup constraint depended on a column that was never
+actually set (`NULL` is never equal to `NULL`, so the constraint never matched). Checked
+directly against this table's own schema before adding `unique (parent_link_id, period_start)`:
+both columns are `not null`, so that specific trap cannot recur here — but the constraint's
+own behavior still needed proving, not assuming. The test runs the exact SQL
+`.upsert(..., { onConflict: "parent_link_id,period_start", ignoreDuplicates: true })` becomes
+under the hood: two inserts for the identical key, `on conflict ... do nothing` on both.
 
 ## What this doesn't cover
 

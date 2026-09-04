@@ -27,7 +27,8 @@ create table if not exists public.parent_commentary_entries (
   period_end timestamptz not null,
   narrative text not null,
   narrative_source text not null check (narrative_source in ('ai', 'no_activity', 'ai_unavailable')),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (parent_link_id, period_start)
 );
 
 comment on table public.parent_commentary_entries is
@@ -38,7 +39,18 @@ comment on table public.parent_commentary_entries is
   than `student_user_id` -- the same per-relationship (not per-student) scoping migration
   0118''s last_commentary_sent_at column already uses, and for the identical reason: a
   student linked to two parents must not have one parent''s cadence/history bleed into the
-  other''s.';
+  other''s.
+  `unique (parent_link_id, period_start)` (CEO, 2026-09-04, off a real same-night incident
+  elsewhere: a package silently doubled rows because an ON CONFLICT constraint depended on a
+  column that was never actually set, and NULL is never equal to NULL). Both columns here are
+  NOT NULL by this same table''s own schema, so that specific trap cannot recur for this
+  constraint. What it actually guards: two concurrent visits to the progress page (two tabs,
+  a retry after a slow response) both concluding generation is due and both calling
+  lib/parent/commentary-actions.ts''s Server Action before either write lands -- without this,
+  that race would insert two entries for the same period. The action inserts via
+  `.upsert(..., { onConflict: "parent_link_id,period_start", ignoreDuplicates: true })`, not a
+  plain insert, so the second concurrent attempt silently no-ops instead of erroring or
+  duplicating.';
 comment on column public.parent_commentary_entries.locale is
   'The language this specific narrative was generated in -- a parent who switches language
   mid-series keeps every prior entry exactly as written, never silently re-rendered in a
