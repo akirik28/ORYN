@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Flame, X } from "lucide-react";
+import { Flame, X, type LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { ButtonLink } from "@/components/ui/button-link";
@@ -65,18 +65,21 @@ import { transition } from "@/lib/motion";
  * off the same way it already does everywhere else that class is used -- nothing new to
  * gate here, both mechanisms were already correct before this component reused them.
  */
-/** The two namespaces this card currently renders content from — both must share the same
- * `detail`/`cta`/`notNow`/`close` key shape below for the same JSX to stay correct for
- * either one. `parent.upgradePrompt` is P7's addition (features/parent/*, once P3 exists
- * to render it) — student-facing behavior below is unchanged: `namespace` defaults to
- * exactly what this component already hardcoded, so the advisor call site needed no edit. */
-type UpgradePromptNamespace = "advisor.chat.upgradePrompt" | "parent.upgradePrompt";
+/** The three namespaces this card currently renders content from — all must share the same
+ * `detail`/`cta`/`notNow`/`close` key shape below for the same JSX to stay correct for any
+ * of them. `parent.upgradePrompt` is P7's addition (features/parent/*, once P3 exists to
+ * render it); `dashboard.parentEmailPrompt` is the P4 follow-up (a student who skipped
+ * giving a parent's email at signup, prompted from the dashboard instead) — student-facing
+ * behavior below is unchanged either time: `namespace` defaults to exactly what this
+ * component already hardcoded, so no existing call site needed an edit. */
+type UpgradePromptNamespace = "advisor.chat.upgradePrompt" | "parent.upgradePrompt" | "dashboard.parentEmailPrompt";
 
 export function UpgradePromptOverlay({
   onNotNow,
   onSoftDismiss,
   namespace = "advisor.chat.upgradePrompt",
   ctaHref = "/settings/plan",
+  icon: Icon = Flame,
 }: {
   onNotNow: () => void;
   onSoftDismiss: () => void;
@@ -87,6 +90,13 @@ export function UpgradePromptOverlay({
    *  should pass its own equivalent once P2/P3 build one, rather than this component
    *  guessing a route that doesn't exist yet. */
   ctaHref?: string;
+  /** Defaults to the original Flame — right for the two Ultra-upgrade namespaces (this
+   *  card's whole visual identity, the `.tier-glow-sm`/`.tier-flow-bar` gold theme below, was
+   *  built for those). `dashboard.parentEmailPrompt` isn't an upgrade pitch — swapping the
+   *  icon for something that reads as "give us an address" (Mail) rather than "hot deal"
+   *  costs one prop, not a second component; the shared shell (card, motion, two-exit
+   *  layout, gold accent scope) is reused exactly as CEO asked, unchanged below. */
+  icon?: LucideIcon;
 }) {
   const t = useTranslations(namespace);
 
@@ -112,7 +122,7 @@ export function UpgradePromptOverlay({
         <div className="p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-start gap-2.5">
-              <Flame aria-hidden="true" className="mt-0.5 size-4 shrink-0" style={{ color: "var(--tier-accent-strong)" }} />
+              <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0" style={{ color: "var(--tier-accent-strong)" }} />
               <p className="text-sm leading-relaxed text-ink-2">{t("detail")}</p>
             </div>
             <button

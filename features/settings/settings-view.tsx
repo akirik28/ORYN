@@ -134,7 +134,10 @@ export async function SettingsView({ email, userId, profile, unreadNotificationC
         </form>
       </section>
 
-      <section className={cardClassName}>
+      {/* id anchors the dashboard parent-email prompt's CTA (features/dashboard/parent-
+          email-prompt.tsx's ctaHref="/settings#parent-account") straight to this section
+          instead of a bare /settings that leaves the student scrolling to find it. */}
+      <section id="parent-account" className={cardClassName}>
         <h2 lang={locale} className="text-[13px] font-bold tracking-[0.08em] text-[#AAAABC] uppercase">
           {tParentInvite("sectionTitle")}
         </h2>

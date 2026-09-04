@@ -62,6 +62,24 @@ export async function setParentInviteEmail(
 ): Promise<{ error?: string }> {
   const { error } = await client.from("profiles").update({ parent_invite_email: email }).eq("id", userId);
   if (error) {
+    /**
+     * CEO's own flag, 2026-09-04, decided rather than left as-found: while migration 0116 is
+     * unapplied, this degrade is a silent SUCCESS — a student can type an address, see no
+     * error, and have it discarded. That's this repo's usual "absence reads as a known value"
+     * shape pointed the wrong way: normally the known value is a safe default; here it's a
+     * false confirmation, and the student's model of the world (I did this, it worked) is
+     * now wrong.
+     *
+     * Decision: leave it. The alternative — hiding the Settings field entirely while the
+     * column is missing, matching curriculum_other_text's own columnExistsLive gate — is the
+     * more honest shape in general, but 0116 is staged and expected to apply within hours
+     * (data/morning/09-migrations-2026-09-04.sql), not indefinitely the way
+     * curriculum_other_text sat unapplied for a much longer stretch. Building a second
+     * live-column probe and threading it through the Settings render path for a gap this
+     * short isn't worth the surface it adds. If 0116 is still unapplied a day from now, this
+     * call should be revisited — the trade-off that makes sense for hours stops making sense
+     * for days.
+     */
     if (isUndefinedColumnError(error, "parent_invite_email")) return {};
     console.error("[parent/links] failed to set parent_invite_email", { userId, error });
     return { error: "Couldn't save the parent email." };

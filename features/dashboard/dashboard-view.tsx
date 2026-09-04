@@ -18,6 +18,8 @@ import { CounselorWeekFallback } from "@/features/dashboard/counselor-week-fallb
 import { GeneratePlanButton } from "@/features/dashboard/generate-plan-button";
 import { ProfileSignal } from "@/features/dashboard/profile-signal";
 import { UltraWelcomeBanner } from "@/features/dashboard/ultra-welcome-banner";
+import { ParentEmailPrompt } from "@/features/dashboard/parent-email-prompt";
+import { NOT_YET_DISMISSED, type UpgradePromptDismissalState } from "@/lib/parent/email-prompt";
 import { OutlookBadge } from "@/features/universities/outlook-badge";
 import { computeDashboardHeroState } from "@/lib/scoring/dashboard-hero";
 import { signalCoverage, type DimensionSignal } from "@/lib/scoring/signal";
@@ -85,6 +87,15 @@ export interface DashboardViewProps {
    *  true, recorded) server-side before this component ever renders. Optional, defaulting to
    *  false, for the same dev-preview-harness reason `tier` above is optional. */
   showUltraWelcome?: boolean;
+  /** profile.parent_invite_email !== null — the only real trigger the parent-email prompt
+   *  has (lib/parent/email-prompt.ts). Optional/defaulting to true (nothing to prompt for),
+   *  same dev-preview-harness reasoning as showUltraWelcome above: a preview fixture that
+   *  doesn't pass this should render as if the student already has one on file, not summon
+   *  an unrelated prompt into every static screenshot. */
+  hasParentInviteEmail?: boolean;
+  /** lib/parent/email-prompt.ts's extractParentEmailPromptDismissalState result. Optional,
+   *  defaulting to NOT_YET_DISMISSED, for the same reason. */
+  parentEmailPromptDismissalState?: UpgradePromptDismissalState;
 }
 
 // glass-card chrome shared by every panel below the hero — literal source values
@@ -117,6 +128,8 @@ export async function DashboardView({
   opportunityStrip,
   opportunityMatchesRefreshed,
   showUltraWelcome = false,
+  hasParentInviteEmail = true,
+  parentEmailPromptDismissalState = NOT_YET_DISMISSED,
 }: DashboardViewProps) {
   // Explicit locale, not the bare `getTranslations("dashboard")` shorthand: that form
   // re-resolves locale from the request (cookie/Accept-Language) independently of the
@@ -360,6 +373,17 @@ export async function DashboardView({
               </p>
             ) : null}
           </div>
+        </div>
+      </div>
+
+      {/* Placed between the hero and the light content, not inside either: the opportunity
+          strip immediately below has been explicitly repositioned twice on the founder's own
+          instruction ("daha yukarıya koy", then "bu haftalık odağın üstüne al fırsatları") —
+          inserting a new dismissible prompt ahead of it in the same space-y-10 flow would
+          quietly undo that ordering. This sits in the seam between the two zones instead. */}
+      <div className="relative z-[1] -mx-4 px-4 md:-mx-8 md:px-8">
+        <div className="mx-auto max-w-[860px]">
+          <ParentEmailPrompt hasParentInviteEmail={hasParentInviteEmail} dismissalState={parentEmailPromptDismissalState} />
         </div>
       </div>
 
