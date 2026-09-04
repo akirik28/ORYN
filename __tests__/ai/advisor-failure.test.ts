@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { APIConnectionError, APIConnectionTimeoutError } from "@anthropic-ai/sdk";
 import { classifyAdvisorFailure } from "@/lib/ai/advisor-failure";
 import { AIProviderNotConfiguredError, AIResponseIncompleteError } from "@/lib/ai/provider";
 
@@ -35,6 +36,38 @@ describe("classifyAdvisorFailure", () => {
   test("always returns status 'failed' — this function only classifies failures", () => {
     expect(classifyAdvisorFailure(new Error("x")).status).toBe("failed");
     expect(classifyAdvisorFailure(new AIProviderNotConfiguredError()).status).toBe("failed");
+  });
+});
+
+/**
+ * lib/ai/anthropic-provider.ts's ADVISOR_STREAM_TIMEOUT_MS throws exactly this shape when a
+ * streaming call stalls past 120s — the gap this closes is a student watching the "thinking"
+ * placeholder for however long a connection happens to hang, with nothing ever telling them
+ * it failed.
+ */
+describe("a stalled streaming connection gets its own honest message, not the generic one", () => {
+  test("APIConnectionTimeoutError (the actual shape a stalled stream throws) is told apart from an unknown failure", () => {
+    const result = classifyAdvisorFailure(new APIConnectionTimeoutError());
+    expect(result.errorMessage).toBe("That reply took longer than expected. Try again.");
+    expect(result.status).toBe("failed");
+  });
+
+  test("the plain parent class (a dropped connection, not specifically a timeout) gets the same honest message", () => {
+    // APIConnectionTimeoutError extends APIConnectionError -- this proves the classification
+    // is keyed on the shared parent (instanceof), not narrowed to the timeout subclass alone,
+    // so a plain connection drop isn't left to fall through to the generic fallback either.
+    const result = classifyAdvisorFailure(new APIConnectionError({ message: "network is down" }));
+    expect(result.errorMessage).toBe("That reply took longer than expected. Try again.");
+  });
+
+  test("Turkish gets its own translation, not the English string with a locale flag ignored", () => {
+    const result = classifyAdvisorFailure(new APIConnectionTimeoutError(), "tr");
+    expect(result.errorMessage).toBe("Bu yanıt beklenenden uzun sürdü. Tekrar dene.");
+  });
+
+  test("no connection internals leak into the message shown to the student", () => {
+    const result = classifyAdvisorFailure(new APIConnectionError({ message: "connect ECONNREFUSED 10.0.4.2:443", cause: new Error("socket hang up") }));
+    expect(result.errorMessage).not.toMatch(/ECONNREFUSED|10\.0\.4\.2|socket/i);
   });
 });
 
