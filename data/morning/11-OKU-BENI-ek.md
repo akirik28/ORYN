@@ -11,7 +11,8 @@ sürümünü göndermek, yanlış olanı çalıştırma riski demek. Ek olarak v
 
 ---
 
-> **Bu dosyayı bir kez güncelledim.** İlk gönderdiğimde içinde sadece 0118 vardı;
+> **Bu dosyayı iki kez güncelledim.** Sonuncusu önemli: içindeki koruma
+> mekanizması eksikti. Sadece **en son gönderdiğimi** çalıştır. İlk gönderdiğimde içinde sadece 0118 vardı;
 > 0117 birkaç dakika sonra hazır oldu ve ikisini tek pakete koydum.
 > **Eskisini çalıştırdıysan sorun yok** — bu dosya iki kez çalıştırılmaya dayanıklı,
 > denedim. Sadece bunu çalıştır, eskisini sil.
@@ -27,7 +28,17 @@ Neden ayrı sayaç: mevcut "Ultra'ya geç" pop-up'ıyla aynı sütunları kullan
 pop-up'ı da sessizce susardı.** Ve bunu kimse fark etmezdi — görünmeyen bir pop-up'ın
 hata durumu yoktur.
 
-**Migration 0118** — tek sütun: `parent_links.last_commentary_sent_at`.
+**Migration 0118** — tek sütun (`parent_links.last_commentary_sent_at`) **ve onu koruyan
+mekanizmanın güncellenmesi.**
+
+Sütunu eklemek yeterli değildi: tabloyu koruyan mekanizma **dört saat önce yazılmıştı** ve
+yeni sütunu tanımıyordu. Yani veli, kendi meşru "erişimi kaldır" işleminin içine
+o sütuna bir değişiklik sıkıştırabilirdi. Aynı türden bir açık gece yarısı zaten
+kapatılmıştı; sonradan gelen bir migration onu sessizce geri açtı.
+
+**Kapatıldı, ve iki yönden de denendi:** veli değiştiremiyor, sistemin kendi işi hâlâ
+yazabiliyor. İkisini birden doğrulamak şart — herkesi engelleyen bir koruma güvenli
+görünür ama başka bir hatadır.
 
 Veliye gidecek haftalık AI yorumunun *"o hafta ne oldu"* penceresini tutuyor.
 Senin cümlen: *"aiın her hafta çocuklarının gelişimini yorumlaması."*
@@ -60,6 +71,11 @@ denedim:
 - **09 uygulanmamışken:** durdu, hata verdi, hiçbir şey uygulamadı ✓
 - **09 uygulanmışken:** temiz geçti, iki migration da yerine oturdu ✓
 - **İkinci kez çalıştırınca:** sıfır hata — tekrar çalıştırmak zararsız ✓
+- **Koruma gerçekten çalışıyor mu:** veli yazamadı, sistem yazabildi ✓
+
+Bu son kontrolde **kendi test aracımın bozuk olduğunu buldum** — koruma değil, aracım.
+Düzeltip tekrar çalıştırdım. Aracın bozuk olmasıyla korumanın bozuk olması ekranda
+aynı görünüyordu.
 
 İkinci sonucu görmeden önce birincisini görmüş olmam önemli — **hiçbir zaman
 kırmızıya dönmeyen bir kontrol, kontrol değildir.**
