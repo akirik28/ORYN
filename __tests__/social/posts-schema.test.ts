@@ -516,6 +516,15 @@ describe("migration numbering", () => {
     // self-picked -- four collisions already happened tonight. Still unapplied; the founder
     // runs it in the morning.
     //
+    // 0117 (parent_email_prompt_dismissal) -- the founder's own dashboard "add your parent's
+    // email" prompt (docs/veli-hesabi-spec-2026-09-04.md §1), the P4 follow-up prompting a
+    // student who skipped the field at signup. Four columns, same three-tier dismissal shape
+    // as upgrade_prompt_* (migration 0093), deliberately separate storage rather than a
+    // reuse of those columns -- two unrelated prompts sharing one dismissal clock would mean
+    // dismissing the advisor's Ultra pop-up silently suppresses this one too, and vice versa.
+    // Migration number assigned by CEO directly (confirmed clean against 44's own 0118 within
+    // minutes of each other). Still unapplied.
+    //
     // 0118 (parent_weekly_commentary) -- P5's schema half, one column:
     // parent_links.last_commentary_sent_at. Deliberately per-link, not per-student like the
     // digest's own last_digest_sent_at (migration 0114) -- a parent linked to more than one
@@ -523,9 +532,8 @@ describe("migration numbering", () => {
     // not inherit another child's backlog as "new this week." Content assembly
     // (lib/digest/parent-commentary.ts, a separate self-started lane, extended here with the
     // parent_links-driven batch runner) is untouched by this migration; this is schema only.
-    // 0117 is a different lane's own migration (parent_email_prompt_* columns), not present on
-    // this branch -- CEO assigned 0117/0118 to avoid a fifth same-night collision, and both
-    // lanes checked correctly and were simply racing. Still unapplied.
+    // CEO assigned 0117/0118 together to avoid a fifth same-night collision, and both lanes
+    // checked correctly and were simply racing. Still unapplied.
     expect(Math.max(...numbers.map(Number))).toBe(118);
   });
 });

@@ -44,6 +44,12 @@
       "body": "The interface now carries Ultra's flame accent throughout, and your advisor gives full-length replies for longer each month. Your response mode can reach Ultra too — right on the advisor page.",
       "dismiss": "Dismiss"
     },
+    "parentEmailPrompt": {
+      "detail": "Give a parent read-only access to your progress — Premium becomes shared once you both join. Proxola doesn't send this automatically yet; you'll get a link you can share yourself.",
+      "cta": "Add parent's email",
+      "notNow": "Not now",
+      "close": "Close"
+    },
     "focusThisWeek": "Your focus this week",
     "generateMyPlan": "Generate my plan",
     "thinking": "Thinking…",

@@ -19,6 +19,7 @@ import { buildProfileChange } from "@/lib/scoring/change";
 import { getCounselorState } from "@/lib/counselor/state";
 import { buildCounselorDashboardContract, resolveAvoidRecommendation, type CounselorDashboardContract } from "@/lib/counselor/dashboard-contract";
 import { greeting } from "@/lib/dashboard/greeting";
+import { extractParentEmailPromptDismissalState } from "@/lib/parent/email-prompt";
 import { DashboardView } from "@/features/dashboard/dashboard-view";
 import type { Opportunity } from "@/types/database";
 
@@ -238,6 +239,18 @@ export default async function DashboardPage() {
   // ai_recommendations row is only a fallback for computation failure, not for "no opinion."
   const avoidRecommendation = resolveAvoidRecommendation(counselorContract, recommendationRes.data);
 
+  // Derived from the same already-loaded `profile` object every other tier/state read on
+  // this page already uses — no second query, matching upgradePromptDismissalState's own
+  // established pattern on app/(app)/advisor/page.tsx.
+  const parentEmailPromptDismissalState = extractParentEmailPromptDismissalState(
+    profile ?? {
+      parent_email_prompt_soft_dismissed_until: null,
+      parent_email_prompt_not_now_at: null,
+      parent_email_prompt_not_now_count: 0,
+      parent_email_prompt_dismissed_forever: false,
+    }
+  );
+
   return (
     <DashboardView
       displayName={displayName}
@@ -257,6 +270,8 @@ export default async function DashboardPage() {
       opportunityStrip={opportunityStrip}
       opportunityMatchesRefreshed={opportunityMatchesRefreshed}
       showUltraWelcome={showUltraWelcome}
+      hasParentInviteEmail={profile?.parent_invite_email != null}
+      parentEmailPromptDismissalState={parentEmailPromptDismissalState}
     />
   );
 }

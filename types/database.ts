@@ -275,6 +275,16 @@ export interface Profile {
    * link existing yet (collected but never acted on). Null means no parent has ever been
    * invited. */
   parent_invite_email: string | null;
+  /** Migration 0117, staged, not applied — same three-tier dismissal shape as
+   * upgrade_prompt_* above (soft/explicit/permanent), deliberately separate storage, not a
+   * reuse of those columns. See that migration's own header: two unrelated prompts (upgrade
+   * to Ultra vs. add a parent's email) sharing one dismissal clock would mean dismissing one
+   * silently suppresses the other. lib/parent/email-prompt.ts re-exports
+   * upgrade_prompt_*'s own pure dismissal functions against this independent set of columns. */
+  parent_email_prompt_soft_dismissed_until: string | null;
+  parent_email_prompt_not_now_at: string | null;
+  parent_email_prompt_not_now_count: number;
+  parent_email_prompt_dismissed_forever: boolean;
   created_at: string;
   updated_at: string;
 }

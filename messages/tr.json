@@ -44,6 +44,12 @@
       "body": "Arayüz artık Ultra'nın alev vurgusunu taşıyor, danışmanın da bu ay boyunca daha uzun süre tam uzunlukta yanıtlar veriyor. Yanıt modun da artık Ultra'ya kadar çıkabiliyor — danışman sayfasında.",
       "dismiss": "Kapat"
     },
+    "parentEmailPrompt": {
+      "detail": "Bir veliye ilerlemene salt okunur erişim ver — ikiniz de katılırsanız Premium ortak olur. Proxola bunu henüz otomatik göndermiyor; paylaşabileceğin bir bağlantı alırsın.",
+      "cta": "Veli e-postası ekle",
+      "notNow": "Şimdi değil",
+      "close": "Kapat"
+    },
     "focusThisWeek": "Bu haftaki odağın",
     "generateMyPlan": "Planımı oluştur",
     "thinking": "Düşünüyor…",
