@@ -1,5 +1,32 @@
 # Payment provider seam (2026-09-04)
 
+## Controlled-pause handoff (CEO, resource limits)
+
+**Branch: `oryn/payment-provider-seam-2026-09-04`. HEAD: `0bb3d919`. Status: clean
+and fully pushed** — `git status` empty, no commits ahead of remote, no `.next`
+in this worktree to delete. Nothing half-written; stopped at a real boundary,
+not mid-edit.
+
+- **What's done:** everything in this doc above — the interface, migration
+  0123, checkout, webhook handler, entitlement grant (merged as `f192fd61`),
+  plus the B2 checkout-wiring verification test added after (already pushed,
+  proven red/green, not yet in another merge).
+- **What's half-done:** nothing on this branch. The only two open items are
+  both blocked on someone else's decision, not on unfinished code: (a) the
+  actual provider adapter (A3, founder's own choice, one file once picked);
+  (b) the disposable-Supabase-branch proof of migration 0123's guards against
+  real Postgres rather than the mock — asked the founder directly for the
+  ~$0.01344/hr cost confirmation, no answer yet.
+- **Next step:** none pending on my side until either (a) a provider is
+  chosen, or (b) the disposable-branch cost gets a yes/no.
+- **What I'm not sure about:** whether the wiring-verification test (last
+  commit, `0bb3d919`'s predecessor) has been seen by anyone — SendMessage has
+  been unavailable to this session the entire time this doc has existed, so
+  every status update here was written not knowing if it would be read before
+  the next one.
+
+---
+
 Branch `oryn/payment-provider-seam-2026-09-04`, migration 0123, written by 11/cb
 (same session, renamed mid-task by a fleet restart — see "A note on this session"
 at the bottom). Report only in the sense that this doc exists in place of a
