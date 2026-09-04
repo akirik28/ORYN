@@ -4,11 +4,16 @@ import type { ProfileChange } from "@/lib/scoring/change";
 /**
  * lib/digest/parent-commentary.ts — P5's content assembly (docs/veli-hesabi-spec-2026-09-04.md).
  * Split the same way this suite's neighbours are: the pure decision functions
- * (filterNotableDimensionChanges, hasNotableWeeklySignal, honestNoActivityNarrative) are
- * tested directly against plain fixtures, no mocking; buildParentWeeklyCommentary/
- * resolveParentWeeklyCommentary get lighter integration coverage proving the wiring, with
+ * (filterNotableDimensionChanges, hasNotableMonthlySignal, honestNoActivityNarrative) are
+ * tested directly against plain fixtures, no mocking; buildParentMonthlyCommentary/
+ * resolveParentMonthlyCommentary get lighter integration coverage proving the wiring, with
  * buildDigestContent mocked (own coverage in build.test.ts) the same way run.test.ts already
  * mocks it for the sibling runner.
+ *
+ * Renamed from *Weekly* to *Monthly* 2026-09-04 (B3b — founder: "ayda bir AI özet versin
+ * gelişimi"). The cadence gate itself (is this link actually due) lives in
+ * parent-commentary-run.test.ts, not here — this file's own subject is content given an
+ * already-due, already-authorized call, unchanged by the rename.
  *
  * fakeSupabase below deliberately does NOT handle `weekly_actions`, `applications`,
  * `target_universities`, or `university_deadlines` — those tables are outside the parent-
@@ -18,9 +23,9 @@ import type { ProfileChange } from "@/lib/scoring/change";
  * file, rather than the boundary silently eroding.
  *
  * The single most important thing this file proves: the AI provider is never touched for a
- * genuinely quiet week. That's not asserted by checking output text — it's asserted by
+ * genuinely quiet period. That's not asserted by checking output text — it's asserted by
  * mocking getAIProvider and checking it was never called at all, so a future change that
- * accidentally starts calling the model for an empty week fails loudly here, not by someone
+ * accidentally starts calling the model for an empty period fails loudly here, not by someone
  * noticing a stray API charge later.
  */
 
@@ -40,10 +45,10 @@ vi.mock("@/lib/digest/build", async (importOriginal) => {
 
 import {
   filterNotableDimensionChanges,
-  hasNotableWeeklySignal,
+  hasNotableMonthlySignal,
   honestNoActivityNarrative,
-  buildParentWeeklyCommentary,
-  resolveParentWeeklyCommentary,
+  buildParentMonthlyCommentary,
+  resolveParentMonthlyCommentary,
 } from "@/lib/digest/parent-commentary";
 
 function change(overrides: Partial<ProfileChange> = {}): ProfileChange {
@@ -77,30 +82,30 @@ describe("filterNotableDimensionChanges", () => {
   });
 });
 
-describe("hasNotableWeeklySignal", () => {
+describe("hasNotableMonthlySignal", () => {
   const empty = { notableChange: change(), newMatches: [] };
 
-  test("false when both sources are empty — the genuinely quiet week", () => {
-    expect(hasNotableWeeklySignal(empty)).toBe(false);
+  test("false when both sources are empty — the genuinely quiet month", () => {
+    expect(hasNotableMonthlySignal(empty)).toBe(false);
   });
 
   test("true from a notable score improvement alone", () => {
-    expect(hasNotableWeeklySignal({ ...empty, notableChange: change({ improved: [{ dimension: "research", delta: 8 }] }) })).toBe(true);
+    expect(hasNotableMonthlySignal({ ...empty, notableChange: change({ improved: [{ dimension: "research", delta: 8 }] }) })).toBe(true);
   });
 
   test("true from a notable score decline alone", () => {
-    expect(hasNotableWeeklySignal({ ...empty, notableChange: change({ declined: [{ dimension: "research", delta: -8 }] }) })).toBe(true);
+    expect(hasNotableMonthlySignal({ ...empty, notableChange: change({ declined: [{ dimension: "research", delta: -8 }] }) })).toBe(true);
   });
 
   test("true from a new opportunity match alone, even with a steady score", () => {
-    expect(hasNotableWeeklySignal({ ...empty, newMatches: [{ title: "Economics Challenge", organization: null, href: null }] })).toBe(true);
+    expect(hasNotableMonthlySignal({ ...empty, newMatches: [{ title: "Economics Challenge", organization: null, href: null }] })).toBe(true);
   });
 
   test("a steady score (hasHistory true, nothing crossed the threshold) is NOT signal by itself", () => {
     // The exact case this function exists to get right: describeProfileChange would still
     // produce a real sentence ("held steady since your last review") for this input, but
     // that sentence alone must not be enough to justify an AI call.
-    expect(hasNotableWeeklySignal({ ...empty, notableChange: change({ hasHistory: true, steady: 9 }) })).toBe(false);
+    expect(hasNotableMonthlySignal({ ...empty, notableChange: change({ hasHistory: true, steady: 9 }) })).toBe(false);
   });
 });
 
@@ -123,6 +128,11 @@ describe("honestNoActivityNarrative", () => {
     // this path non-AI is that it can never do that.
     const text = honestNoActivityNarrative("Ada");
     expect(text).not.toMatch(/\d/);
+  });
+
+  test("says month, not week — the B3b conversion actually touched the string, not just the function name", () => {
+    expect(honestNoActivityNarrative("Ada", "en").toLowerCase()).toContain("month");
+    expect(honestNoActivityNarrative("Ada", "tr")).toContain("ay");
   });
 });
 
@@ -173,28 +183,28 @@ beforeEach(() => {
   buildDigestContentMock.mockResolvedValue(null);
 });
 
-describe("buildParentWeeklyCommentary — the quiet week", () => {
-  test("a genuinely empty week never touches the AI provider", async () => {
+describe("buildParentMonthlyCommentary — the quiet month", () => {
+  test("a genuinely empty period never touches the AI provider", async () => {
     const supabase = fakeSupabase({ id: "s1", display_name: "Ada", preferred_language: "en", plan_tier: "ultra" });
-    const content = await buildParentWeeklyCommentary(supabase, "s1", null);
+    const content = await buildParentMonthlyCommentary(supabase, "s1", null);
 
     expect(content.narrativeSource).toBe("no_activity");
     expect(content.narrative).toContain("Ada");
     expect(getAIProviderMock).not.toHaveBeenCalled();
   });
 
-  test("a sub-threshold score wobble alone is still a quiet week", async () => {
+  test("a sub-threshold score wobble alone is still a quiet period", async () => {
     const supabase = fakeSupabase(
       { id: "s1", display_name: "Ada", preferred_language: "en", plan_tier: "ultra" },
       { scores: [{ dimension: "research", score: 41 }], previousSnapshot: { dimension_scores: { research: 40 } } }
     );
-    const content = await buildParentWeeklyCommentary(supabase, "s1", null);
+    const content = await buildParentMonthlyCommentary(supabase, "s1", null);
     expect(content.narrativeSource).toBe("no_activity");
     expect(getAIProviderMock).not.toHaveBeenCalled();
   });
 });
 
-describe("buildParentWeeklyCommentary — real signal, AI not configured", () => {
+describe("buildParentMonthlyCommentary — real signal, AI not configured", () => {
   test("degrades to a deterministic factual summary rather than throwing or going silent", async () => {
     buildDigestContentMock.mockResolvedValue({ newMatches: [{ title: "Economics Challenge", organization: "Test Org", href: "/x" }], deadlines: [] });
     const supabase = fakeSupabase({ id: "s1", display_name: "Ada", preferred_language: "en", plan_tier: "ultra" });
@@ -205,22 +215,22 @@ describe("buildParentWeeklyCommentary — real signal, AI not configured", () =>
     const { getAIProvider: realGetAIProvider } = await vi.importActual<typeof import("@/lib/ai/index")>("@/lib/ai/index");
     getAIProviderMock.mockImplementation(realGetAIProvider);
 
-    const content = await buildParentWeeklyCommentary(supabase, "s1", null);
+    const content = await buildParentMonthlyCommentary(supabase, "s1", null);
     expect(content.narrativeSource).toBe("ai_unavailable");
     expect(content.narrative).toContain("Economics Challenge");
   });
 });
 
-describe("resolveParentWeeklyCommentary — tier gate", () => {
+describe("resolveParentMonthlyCommentary — tier gate", () => {
   test("standard tier is not_premium, and content is never built", async () => {
     const supabase = fakeSupabase({ id: "s1", display_name: "Ada", preferred_language: "en", plan_tier: "standard" });
-    const outcome = await resolveParentWeeklyCommentary(supabase, "s1", null);
+    const outcome = await resolveParentMonthlyCommentary(supabase, "s1", null);
     expect(outcome.kind).toBe("not_premium");
   });
 
   test("ultra tier proceeds to real content", async () => {
     const supabase = fakeSupabase({ id: "s1", display_name: "Ada", preferred_language: "en", plan_tier: "ultra" });
-    const outcome = await resolveParentWeeklyCommentary(supabase, "s1", null);
+    const outcome = await resolveParentMonthlyCommentary(supabase, "s1", null);
     expect(outcome.kind).toBe("ok");
     if (outcome.kind === "ok") expect(outcome.content.narrativeSource).toBe("no_activity");
   });
@@ -234,14 +244,14 @@ describe("resolveParentWeeklyCommentary — tier gate", () => {
   test("an active Ultra gift resolves to premium even though the permanent plan_tier column still says standard", async () => {
     const farFuture = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     const supabase = fakeSupabase({ id: "s1", display_name: "Ada", preferred_language: "en", plan_tier: "standard", ultra_gift_expires_at: farFuture });
-    const outcome = await resolveParentWeeklyCommentary(supabase, "s1", null);
+    const outcome = await resolveParentMonthlyCommentary(supabase, "s1", null);
     expect(outcome.kind).toBe("ok");
   });
 
   test("an EXPIRED Ultra gift does not resolve to premium", async () => {
     const past = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const supabase = fakeSupabase({ id: "s1", display_name: "Ada", preferred_language: "en", plan_tier: "standard", ultra_gift_expires_at: past });
-    const outcome = await resolveParentWeeklyCommentary(supabase, "s1", null);
+    const outcome = await resolveParentMonthlyCommentary(supabase, "s1", null);
     expect(outcome.kind).toBe("not_premium");
   });
 });

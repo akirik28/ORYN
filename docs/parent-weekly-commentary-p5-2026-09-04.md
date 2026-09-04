@@ -1,5 +1,15 @@
 # P5 — the parent weekly AI commentary: content assembly
 
+**Superseded in one respect, same day:** B3b (PROXOLA-PLAN.md, founder: "ayda bir AI özet
+versin gelişimi") converted this whole feature from weekly to monthly — every symbol below
+that said "Weekly" now says "Monthly" in the real code
+(`lib/digest/parent-commentary.ts`/`-run.ts`, `lib/ai/parent-commentary-prompt.ts`), and the
+runner gained a due-date gate (`isDueForMonthlyCommentary`) since no cron is armed to make
+"monthly" true on its own. Nothing else in this account changed — the privacy boundary, the
+honest-nothing path, and the pre-registered over-claim criterion below are exactly as they
+were, just narrating a longer window now. Left as written below rather than rewritten, since
+this is a record of what was actually built and decided that night, not a spec to keep current.
+
 **Date:** 2026-09-04. **Why this doc exists:** oryn-45 dispatched P5 (the AI half of
 `docs/veli-hesabi-spec-2026-09-04.md`'s parent-account feature) with an explicit brief: build
 the honest-nothing path first, reuse the existing digest infrastructure rather than inventing a

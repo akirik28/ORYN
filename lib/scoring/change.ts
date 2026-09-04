@@ -128,18 +128,32 @@ export function describeProfileChange(change: ProfileChange, locale: Locale = DE
  * changes shape for what precedes it, regardless of that word's ending. This is not a new
  * pattern here -- honestNoActivityNarrative two functions below already uses the identical
  * "{name} için" construction for the identical reason.
+ *
+ * `period` (2026-09-04, B3b — the parent commentary's weekly-to-monthly conversion): this
+ * function has exactly one caller, lib/digest/parent-commentary.ts, so hardcoding "week" was
+ * never a real constraint, just the cadence that existed when this was first written.
+ * Parameterized rather than duplicated into a second near-identical function -- the selection
+ * logic (which dimension, improved vs. declined vs. steady) doesn't change with cadence, only
+ * the noun naming the window does. Defaults to "week" so the existing test fixtures (and any
+ * other caller that appears later) keep their exact current meaning without passing it.
  */
-export function describeProfileChangeForParent(change: ProfileChange, studentDisplayName: string, locale: Locale = DEFAULT_LOCALE): string | null {
+export function describeProfileChangeForParent(
+  change: ProfileChange,
+  studentDisplayName: string,
+  locale: Locale = DEFAULT_LOCALE,
+  period: "week" | "month" = "week"
+): string | null {
   if (!change.hasHistory) return null;
   const tr = locale === "tr";
+  const periodNoun = tr ? (period === "week" ? "hafta" : "ay") : period;
 
   const [best] = change.improved;
   if (best) {
     const label = dimensionLabel(best.dimension, locale);
     const others = change.improved.length - 1;
     const lead = tr
-      ? `${studentDisplayName} için bu hafta en çok ${label} alanı ilerledi.`
-      : `${label} is the area that moved most for ${studentDisplayName} this week.`;
+      ? `${studentDisplayName} için bu ${periodNoun} en çok ${label} alanı ilerledi.`
+      : `${label} is the area that moved most for ${studentDisplayName} this ${periodNoun}.`;
     if (others > 0) {
       return tr ? `${lead} ${others} alan daha ilerledi.` : `${lead} ${others} other area${others === 1 ? "" : "s"} also moved forward.`;
     }
@@ -150,9 +164,9 @@ export function describeProfileChangeForParent(change: ProfileChange, studentDis
   if (worst) {
     const label = dimensionLabel(worst.dimension, locale);
     return tr
-      ? `${studentDisplayName} için bu hafta hiçbir alan ilerlemedi; ${label} ise daha önce sahip olduğu kanıtın bir kısmını kaybetti.`
-      : `Nothing moved forward for ${studentDisplayName} this week, and ${label.toLowerCase()} has less supporting evidence than it did.`;
+      ? `${studentDisplayName} için bu ${periodNoun} hiçbir alan ilerlemedi; ${label} ise daha önce sahip olduğu kanıtın bir kısmını kaybetti.`
+      : `Nothing moved forward for ${studentDisplayName} this ${periodNoun}, and ${label.toLowerCase()} has less supporting evidence than it did.`;
   }
 
-  return tr ? `${studentDisplayName} için profil bu hafta sabit kaldı.` : `${studentDisplayName}'s profile held steady this week.`;
+  return tr ? `${studentDisplayName} için profil bu ${periodNoun} sabit kaldı.` : `${studentDisplayName}'s profile held steady this ${periodNoun}.`;
 }
