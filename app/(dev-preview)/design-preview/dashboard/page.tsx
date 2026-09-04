@@ -11,6 +11,7 @@ import {
   FIXTURE_WEEKLY_PLAN,
   FIXTURE_AVOID_RECOMMENDATION,
   FIXTURE_DEADLINES,
+  FIXTURE_UNDATED_UNIVERSITY_DEADLINES,
   FIXTURE_TARGET_UNIVERSITIES,
   FIXTURE_OPPORTUNITIES,
   FIXTURE_PROFILE_SIGNAL,
@@ -74,6 +75,7 @@ export default async function DashboardPreviewPage({ searchParams }: { searchPar
           counselorThisWeek={[]}
           avoidRecommendation={FIXTURE_AVOID_RECOMMENDATION}
           upcomingDeadlines={FIXTURE_DEADLINES}
+          undatedUniversityDeadlines={FIXTURE_UNDATED_UNIVERSITY_DEADLINES}
           targetUniversities={FIXTURE_TARGET_UNIVERSITIES}
           opportunityPreview={FIXTURE_OPPORTUNITIES.map((o) => ({
             id: o.opportunity.id,

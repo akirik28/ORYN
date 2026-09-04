@@ -150,6 +150,101 @@ async function getUpcomingUniversityDeadlines(supabase: SupabaseClient<Database>
   return result;
 }
 
+export interface UpcomingUndatedDeadline {
+  id: string;
+  title: string;
+  href: string;
+}
+
+/** Preference for which single row represents a university with several undated rows on
+ * file — matches lacksApplicationDeadline's own "application"/"early" priority
+ * (lib/universities/data-depth.ts) so the type a student most cares about is what's shown,
+ * not whichever row the query happens to return first. */
+const UNDATED_TYPE_PREFERENCE = ["application", "early"];
+
+function pickRepresentativeUndated<T extends { deadline_type: string }>(rows: T[]): T {
+  for (const preferred of UNDATED_TYPE_PREFERENCE) {
+    const match = rows.find((r) => r.deadline_type === preferred);
+    if (match) return match;
+  }
+  return rows[0];
+}
+
+/**
+ * A separate group from getUpcomingUniversityDeadlines above, never merged into it: these rows
+ * make no date claim at all (VERIFIED_RECURRING_UNDATED / VERIFIED_UNDATED / an undated
+ * VERIFIED_CURRENT row), so sorting them alongside dated ones — or worse, defaulting a missing
+ * date to "today" or silently omitting the row — would assert a precision the research doesn't
+ * have. 'unverified' is deliberately excluded too, unlike the dated group above (which leaves
+ * it visible): the whole point of this group is handing back real, VERIFIED research that's
+ * simply undated — an unconfirmed guess doesn't belong in a group whose own label promises "we
+ * know this recurs, just not exactly when."
+ *
+ * 2026-09-04 audit: 140 of 470 university_deadlines rows are VERIFIED_RECURRING_UNDATED alone
+ * (158 including the smaller VERIFIED_CURRENT/VERIFIED_UNDATED undated slivers) — real,
+ * completed research, structurally invisible to the dated feed by construction; a fully
+ * onboarded student with 3 active targets and 19 such rows on file saw a completely empty Due
+ * Soon section before this existed (docs/deadline-surfaces-audit-2026-09-04.md).
+ *
+ * One row per university, not per deadline_type row — a university with many undated rows
+ * (Carnegie Mellon alone has 14) would otherwise flood this group; pickRepresentativeUndated
+ * above picks the single type a student would actually act on.
+ */
+export async function getUpcomingUndatedUniversityDeadlines(supabase: SupabaseClient<Database>, userId: string, supersessionMap: SupersessionMap): Promise<UpcomingUndatedDeadline[]> {
+  const { data: targets } = await supabase
+    .from("target_universities")
+    .select("university_id, program_id")
+    .eq("user_id", userId)
+    .in("status", ACTIVE_TARGET_STATUSES);
+  if (!targets || targets.length === 0) return [];
+
+  // Canonicalized — see lib/universities/canonical.ts.
+  const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(supersessionMap, t.university_id)))];
+  const [{ data: deadlines }, { data: universities }] = await Promise.all([
+    supabase
+      .from("university_deadlines")
+      .select("id, university_id, program_id, deadline_type, verification_state, cycle_label, deadline_text_verbatim")
+      .in("university_id", universityIds)
+      .is("deadline_date", null),
+    supabase.from("universities").select("id, name").in("id", universityIds),
+  ]);
+  const universityNameById = new Map((universities ?? []).map((u) => [u.id, u.name]));
+  const programIdsByUniversity = new Map<string, Set<string | null>>();
+  for (const target of targets) {
+    const canonicalId = canonicalUniversityId(supersessionMap, target.university_id);
+    const set = programIdsByUniversity.get(canonicalId) ?? new Set<string | null>();
+    set.add(target.program_id);
+    programIdsByUniversity.set(canonicalId, set);
+  }
+
+  type UndatedRow = NonNullable<typeof deadlines>[number];
+  const byUniversity = new Map<string, UndatedRow[]>();
+  for (const deadline of deadlines ?? []) {
+    if (NON_ACTIONABLE_VERIFICATION_STATES.has(deadline.verification_state)) continue;
+    if (deadline.verification_state === "unverified") continue;
+    const targetedPrograms = programIdsByUniversity.get(deadline.university_id);
+    if (!targetedPrograms) continue;
+    if (deadline.program_id !== null && !targetedPrograms.has(deadline.program_id)) continue;
+
+    const list = byUniversity.get(deadline.university_id) ?? [];
+    list.push(deadline);
+    byUniversity.set(deadline.university_id, list);
+  }
+
+  const result: UpcomingUndatedDeadline[] = [];
+  for (const [universityId, rows] of byUniversity) {
+    const representative = pickRepresentativeUndated(rows);
+    const name = universityNameById.get(universityId) ?? "University";
+    result.push({
+      id: `university-undated-${universityId}`,
+      title: `${name} — ${deadlineDetailLabel(representative)}`,
+      href: `/universities/${universityId}`,
+    });
+  }
+  // No date to sort by — alphabetical is the only deterministic order available.
+  return result.sort((a, b) => a.title.localeCompare(b.title));
+}
+
 /** "Due soon" feed (Phase 23) — the cross-source Deadline Engine: merges application,
  * saved-opportunity, and target-university-program deadlines into one sorted feed. Mirrors
  * the three sources lib/deadlines/scan.ts notifies on, so what a student sees here lines up
