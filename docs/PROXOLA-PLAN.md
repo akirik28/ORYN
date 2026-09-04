@@ -146,6 +146,19 @@ bayat sayıyor, tarayıcı null'ları dışlamıyor, cron tanımı doğru. **Eks
 şey işin bir kez çalışması.** Bu canlı veriye gerçek bir yazma — **kurucunun kendi
 eliyle**; CEO da yapmıyor.
 
+**A6 hakkında ikinci bulgu — cron'lar açılınca hatırlatmalar YİNE çalışmayacak.**
+Son tarih hatırlatmaları **tam gün eşleşmesiyle** çalışıyor (30/14/7/3/1). Yani
+**6 gün kalan bir başvuru için hiçbir zaman tetiklenmiyor**, iş her gün çalışsa
+bile. Canlı kanıt: gerçek bir öğrencinin **Oxford erken başvurusu 10 Eylül**,
+%0 hazırlık — ve sistem onu hiç uyarmayacak. Bir gün atlanırsa o eşik bir daha
+asla gelmiyor.
+
+**Sonuç: cron'ları açmak bildirim seli DEĞİL** (45 gün içinde son tarihi olan 5
+öğrenciden bugün hiçbiri eşik gününde değil) — **seyrek ve kaçırılması kolay bir
+kapsama.** Düzeltme yazılıyor: "tam o gün" yerine "eşiği geçti ve henüz
+bildirilmedi", ve tekrarı önleyecek tablo (`deadline_notification_log`) **zaten
+var, tamamen boş.**
+
 **Cron'ları açmadan önce sorulan soru — CEO kontrolü, cevap: GÜVENLİ.**
 Altı iş **hiç çalışmadı**, yani ilk çalışmaları canlı veriye karşı provasız olacak
 — ve bugün elle araştırılmış verinin üzerine yazma riski gerçekti. Kontrol ettim:
