@@ -29,3 +29,52 @@ export function lacksResearchDepth(counts: {
 }): boolean {
   return !counts.hasStatistics && counts.programCount === 0 && counts.requirementCount === 0 && counts.sourceCount === 0;
 }
+
+/**
+ * D6 (docs/PROXOLA-PLAN.md), 2026-09-04 — a different failure shape than
+ * `lacksResearchDepth` above, found generalizing a real instance rather than proposed in
+ * the abstract: MIT is targeted by students 10 times (the second-most of any university
+ * with a real target_universities row) and has exactly one `university_deadlines` row —
+ * `deadline_type: "scholarship"`, undated. `lacksResearchDepth`'s own row-count signals
+ * would call this university fully depth-covered on the deadlines axis; a student opening
+ * the page to answer "when do I apply" finds nothing that answers it. The row isn't
+ * missing — it's the wrong kind of row. `lacksResearchDepth` cannot see this class of gap
+ * by construction: it counts whether a table has any row at all, never what's in it.
+ *
+ * `deadlineTypes` is the caller's own list of `deadline_type` values for one university —
+ * intentionally not the raw row objects, so this stays a pure predicate over exactly the
+ * one fact that matters, testable without a fixture that carries the other dozen columns
+ * `university_deadlines` has. "early" counts as a real application deadline alongside
+ * "application" — Caltech's Restrictive Early Action deadline is exactly this shape (see
+ * data/research/sql-dry-runs/universities/d5-caltech-deadlines-2026-09-04.sql), and a
+ * student applying early has just as real an answer to "when do I apply" as one applying
+ * regular decision.
+ */
+export function lacksApplicationDeadline(deadlineTypes: readonly string[]): boolean {
+  return !deadlineTypes.includes("application") && !deadlineTypes.includes("early");
+}
+
+/**
+ * D6's second confirmed instance of the same shape, in a different table: of the 12
+ * universities on any student's real target_universities list, Oxford has exactly one
+ * `university_statistics` row — and `admission_rate`, `sat_range_low`/`act_range_low`, and
+ * `cost_of_attendance` are all null within it (only `stat_year`/`source`/`data_confidence`-
+ * shaped bookkeeping columns are populated). A row-presence check (`hasStatistics: true`,
+ * `lacksResearchDepth`'s own signal) marks Oxford as covered; the stat grid a student
+ * actually reads renders four figures reading "Unavailable" — the identical rendered
+ * outcome as having no row at all, which `hasStatistics` cannot distinguish.
+ *
+ * All four fields null is the bar, not "missing any one" — a university with a real
+ * admission rate but no published test-score range (score-optional policies are common
+ * and not a data gap) should not trip this; only a row that answers none of the headline
+ * questions does.
+ */
+export function lacksAdmissionStatistics(stats: {
+  admissionRate: number | null;
+  satRangeLow: number | null;
+  actRangeLow: number | null;
+  costOfAttendance: number | null;
+} | null): boolean {
+  if (!stats) return true;
+  return stats.admissionRate === null && stats.satRangeLow === null && stats.actRangeLow === null && stats.costOfAttendance === null;
+}
