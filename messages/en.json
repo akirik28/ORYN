@@ -20,7 +20,7 @@
     "homeLink": "Proxola — home",
     "saved": "Saved",
     "upgradePlan": "Upgrade your plan",
-    "upgradePlanPrice": "399,99 TL/month · First week free"
+    "upgradePlanPrice": "{price} TL/month · First week free"
   },
   "appShell": {
     "userMenu": {
@@ -203,7 +203,7 @@
         }
       },
       "interestTitle": "Interested in Ultra?",
-      "interestDescription": "Ultra isn't open for signups yet — it'll be 399.99 TL/month, with the first week free. Register your interest, so we know how many students are ready for it.",
+      "interestDescription": "Ultra isn't open for signups yet — it'll be {price} TL/month, with the first week free. Register your interest, so we know how many students are ready for it.",
       "interestButton": "I'm interested",
       "interestConfirmed": "Noted — thanks."
     },

@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Sparkles, Zap, MessagesSquare, Flame, Palette } from "lucide-react";
 import { PageHeader } from "@/components/proxola/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -10,9 +10,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { registerUltraInterestAction } from "@/app/(app)/settings/actions";
 import { TIER_COMPARISON_ROWS } from "@/lib/tier/comparison";
-import { formatNumber, formatTokenCount } from "@/lib/i18n/format";
+import { formatNumber, formatTokenCount, formatPrice } from "@/lib/i18n/format";
 import { UltraFeatureMarquee, type UltraFeatureCardData } from "@/features/settings/ultra-feature-marquee";
 import type { PlanTier } from "@/types/database";
+import type { Locale } from "@/lib/i18n/config";
 
 const CARD_ICONS: Record<UltraFeatureCardData["id"], typeof Zap> = {
   aiAllowance: Zap,
@@ -56,6 +57,14 @@ const CARD_ICONS: Record<UltraFeatureCardData["id"], typeof Zap> = {
  *   exactly one representation of "how these numbers look," not two. A marketing page
  *   whose figures could drift from what the product actually enforces is worse than an
  *   ugly one — the founder's own instruction for this pass, stated directly.
+ * - **`ultraPriceTry` (added 2026-09-04) follows the identical pattern with one
+ *   difference in its source**: not a hardcoded enforcement constant like the token
+ *   limits above, but the live `admin_finance_settings.ultra_price_try` row
+ *   (app/(app)/settings/plan/page.tsx's getFinanceSettings call) — editing the price in
+ *   the control center changes `interestDescription` here without a deploy. Formatted via
+ *   `formatPrice`, the one genuinely locale-aware formatter in lib/i18n/format.ts, so a
+ *   Turkish reader sees "399,99" (comma decimal) rather than the English "399.99" this
+ *   page's other, still English-pinned formatters would produce.
  * - **The marquee cards intentionally carry only the four `differs` rows, never the two
  *   `sameByDesign` ones.** Decided explicitly, not defaulted: a row of "here's what's
  *   better" cards is the wrong vehicle for "deliberately identical" — putting
@@ -144,14 +153,17 @@ export function PlanTierView({
   standardTokenLimit,
   ultraMaxTokens,
   standardMaxTokens,
+  ultraPriceTry,
 }: {
   tier: PlanTier;
   ultraTokenLimit: number;
   standardTokenLimit: number;
   ultraMaxTokens: number;
   standardMaxTokens: number;
+  ultraPriceTry: number;
 }) {
   const t = useTranslations("settings.plan");
+  const locale = useLocale() as Locale;
   const [interestRegistered, setInterestRegistered] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -277,7 +289,7 @@ export function PlanTierView({
           <Card>
             <CardHeader>
               <CardTitle>{t("interestTitle")}</CardTitle>
-              <CardDescription>{t("interestDescription")}</CardDescription>
+              <CardDescription>{t("interestDescription", { price: formatPrice(ultraPriceTry, locale) })}</CardDescription>
             </CardHeader>
             <CardContent>
               {interestRegistered ? (

@@ -5,6 +5,8 @@ import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { PlanTierView } from "@/features/settings/plan-tier-view";
 import { MONTHLY_AI_TOKEN_LIMIT } from "@/lib/ai/token-limits";
 import { ADVISOR_MAX_TOKENS_STANDARD, ADVISOR_MAX_TOKENS_ULTRA } from "@/lib/ai/advisor-chat";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getFinanceSettings } from "@/lib/admin/queries";
 
 // Routed under /settings, deliberately not /plan — app/(app)/plan already exists and is
 // the *weekly* plan (Phase 9). Two different meanings of "plan" one click apart in the
@@ -19,7 +21,10 @@ export default async function PlanTierPage() {
   // guaranteed to re-run on every client-side navigation, so this page checks for itself
   // rather than trusting the shell around it.
   await requireUser();
-  const profile = await getCurrentProfile();
+  // Independent reads (profile vs. the global finance-settings row) run in parallel --
+  // same "no reason to serialize two unrelated fetches" reasoning as app/(app)/layout.tsx's
+  // own Promise.all just above its Sidebar render.
+  const [profile, financeSettings] = await Promise.all([getCurrentProfile(), getFinanceSettings(createAdminClient())]);
   const tier = resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null });
 
   // 2026-09-03, the founder-directed redesign: every figure PlanTierView renders (the
@@ -31,6 +36,13 @@ export default async function PlanTierPage() {
   // client; PlanTierView receives only the resulting plain numbers as props, the same
   // "extract or pass down, never import a server-only value into a client component"
   // pattern the Ultra tier-economics build's own preview-shell.tsx fix already established).
+  //
+  // ultraPriceTry, 2026-09-04, added the same way: sourced from admin_finance_settings
+  // (not a hardcoded constant like the token limits above) via the same getFinanceSettings
+  // read app/(admin)/kumanda/kar-zarar/page.tsx already uses, so interestDescription's
+  // stated price actually moves when the founder edits it in the control center. Degrades
+  // to ULTRA_PRICE_TRY (lib/admin/finance.ts) via getFinanceSettings' own
+  // DEFAULT_FINANCE_SETTINGS if the row or column is ever missing -- never blank or zero.
   return (
     <PlanTierView
       tier={tier}
@@ -38,6 +50,7 @@ export default async function PlanTierPage() {
       standardTokenLimit={MONTHLY_AI_TOKEN_LIMIT.standard}
       ultraMaxTokens={ADVISOR_MAX_TOKENS_ULTRA}
       standardMaxTokens={ADVISOR_MAX_TOKENS_STANDARD}
+      ultraPriceTry={financeSettings.ultraPriceTry}
     />
   );
 }

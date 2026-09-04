@@ -30,6 +30,10 @@ const ULTRA_TOKEN_LIMIT = 472_300;
 const STANDARD_TOKEN_LIMIT = 236_150;
 const ULTRA_MAX_TOKENS = 8192;
 const STANDARD_MAX_TOKENS = 4096;
+// Same "real current value, not an arbitrary test number" discipline as the token limits
+// above — matches lib/admin/finance.ts's own ULTRA_PRICE_TRY, the fallback
+// getFinanceSettings degrades to in production when admin_finance_settings is unreadable.
+const ULTRA_PRICE_TRY = 399.99;
 
 function renderView(tier: "standard" | "ultra") {
   return render(
@@ -40,6 +44,7 @@ function renderView(tier: "standard" | "ultra") {
         standardTokenLimit={STANDARD_TOKEN_LIMIT}
         ultraMaxTokens={ULTRA_MAX_TOKENS}
         standardMaxTokens={STANDARD_MAX_TOKENS}
+        ultraPriceTry={ULTRA_PRICE_TRY}
       />
     </NextIntlClientProvider>,
   );
@@ -210,6 +215,7 @@ describe("PlanTierView — the two new rows' numbers are props, not hardcoded st
           standardTokenLimit={oddStandardLimit}
           ultraMaxTokens={oddUltraMaxTokens}
           standardMaxTokens={oddStandardMaxTokens}
+          ultraPriceTry={ULTRA_PRICE_TRY}
         />
       </NextIntlClientProvider>,
     );
