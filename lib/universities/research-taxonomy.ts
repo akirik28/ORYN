@@ -1,13 +1,18 @@
 /**
  * Maps a raw OpenAlex research topic string (e.g. "Particle physics theoretical and
  * experimental studies", "Immune Cell Function and Interaction") down to one of a small set of
- * short, student-legible categories for the university CARD only.
+ * short, student-legible categories.
  *
- * The detail page keeps the raw, uncapped OpenAlex topic list as-is ("Research strengths" —
- * see app/(app)/universities/[id]/page.tsx) — that's the right level of detail once a student
- * has actually clicked in. A card has no room for "RNA and protein synthesis mechanisms"; it
- * has room for "Biology". This module exists only to bridge that gap, never to replace the
- * detailed view.
+ * Originally the university CARD only — the detail and compare pages kept the raw, uncapped
+ * OpenAlex phrases as-is. CEO, 2026-09-04, from the measured cost of that gap
+ * (docs/research-topics-display-honesty-2026-09-04.md): 934 universities carry this metric,
+ * and 69.3% of them have zero of their 5 raw topics land in a field a business/economics/
+ * humanities-interested student would recognize as relevant — shown raw, a student reads
+ * Oxford's own "research strengths" section as astrophysics, a wrong impression on screen, not
+ * just an unhelpful one. Extended to `app/(app)/universities/[id]/page.tsx` (detail) and
+ * `app/(app)/universities/compare/page.tsx` (compare) the same day — same taxonomy, no new
+ * categorization logic invented per surface, just a different `max` and a different
+ * empty-result treatment (see each page's own comment for why they differ).
  *
  * Deliberately rule-based (keyword match), not an AI call: classifying up to 5 short topic
  * strings per university, times ~1019 universities, is exactly the kind of high-volume/low-
@@ -197,8 +202,10 @@ export function categorizeResearchTopic(rawTopic: string): string | null {
 /**
  * Categorizes a list of raw topics (already split from `research_topics_top5`'s
  * `" | "`-delimited string), drops unmatched ones, de-duplicates by category (three physics
- * sub-topics should show "Physics" once, not three times), and caps the result — a card has
- * room for a small number of short chips, not five long OpenAlex phrases.
+ * sub-topics should show "Physics" once, not three times), and caps the result at `max` short
+ * chips. Default of 3 is the university card's own original space constraint — callers with
+ * more room (the detail page passes 5) raise it explicitly rather than this function guessing
+ * a per-surface value on their behalf.
  */
 export function categorizeAndDedupeResearchTopics(rawTopics: string[], max = 3): string[] {
   const seen = new Set<string>();

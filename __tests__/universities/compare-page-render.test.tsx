@@ -17,6 +17,13 @@ import { MockSupabaseClient, type MockTableConfig } from "../stubs/mock-supabase
  * first version of this file proved the BUG; this version proves the FIX — same technique,
  * opposite direction, which is exactly what a real render test is for.
  *
+ * Extended again the same day for the research-topics display-honesty fix (docs/research-
+ * topics-display-honesty-2026-09-04.md): the researchStrengths row used to show raw,
+ * uncategorized OpenAlex phrases with no source badge at all — now runs through the same
+ * taxonomy the university card already used (lib/universities/research-taxonomy.ts),
+ * distinguishing three real states (no data at all / real data that categorizes to nothing /
+ * real data that categorizes) rather than the old two (raw phrases / "—").
+ *
  * `today` is pinned via vi.useFakeTimers()/setSystemTime rather than left on the real clock —
  * the deadline row's content depends on "is this date still upcoming", and an assertion built
  * on today's real date would silently start failing once Oct 15, 2026 (one of the real dates
@@ -63,6 +70,7 @@ const MIT_ID = "03167d0c-2315-49e3-a37e-f9c9c7d2d27c";
 const OXFORD_ID = "e5164eb3-88c1-4ecc-81d7-d591ea0c34ea";
 const EDINBURGH_ID = "e2feb81c-1bda-4889-8aa9-37783b720901";
 const YALE_ID = "a24caa73-0ddd-4beb-899b-ba9d81c6622e";
+const TASMANIA_ID = "85904044-f5a8-4a6c-b948-cfcfd0899325";
 
 const universities: MockTableConfig = {
   rows: [
@@ -70,6 +78,10 @@ const universities: MockTableConfig = {
     { id: OXFORD_ID, name: "University of Oxford", city: "Oxford", country: "United Kingdom", institution_type: "Public", student_size: 26800, application_system: null, admissions_url: null, website_url: "https://www.ox.ac.uk" },
     { id: EDINBURGH_ID, name: "The University of Edinburgh", city: "Edinburgh", country: "United Kingdom", institution_type: "Public", student_size: 49485, application_system: "UCAS", admissions_url: null, website_url: "https://www.ed.ac.uk" },
     { id: YALE_ID, name: "Yale University", city: "New Haven", country: "United States", institution_type: "Private nonprofit", student_size: 6600, application_system: null, admissions_url: null, website_url: "https://www.yale.edu" },
+    // Real university whose real 5 topics categorize to NOTHING under the current taxonomy —
+    // found by running the actual function against live data, not invented (docs/research-
+    // topics-display-honesty-2026-09-04.md's 13.1% case, a concrete instance of it).
+    { id: TASMANIA_ID, name: "University of Tasmania", city: "Hobart", country: "Australia", institution_type: "Public", student_size: null, application_system: null, admissions_url: null, website_url: "https://www.utas.edu.au" },
   ],
 };
 
@@ -95,10 +107,35 @@ const universityProfileMetrics: MockTableConfig = {
     // Oxford's real tuition figures — value_numeric, not value_text (the column the real page reads).
     { university_id: OXFORD_ID, metric_code: "tuition_domestic_annual", value_text: null, value_numeric: 9790, unit: "GBP/year", precision_state: "exact" },
     { university_id: OXFORD_ID, metric_code: "tuition_international_annual", value_text: null, value_numeric: 37380, unit: "GBP/year", precision_state: "range" },
-    { university_id: OXFORD_ID, metric_code: "research_topics_top5", value_text: "Particle physics | Genomics | Data Analysis", value_numeric: null, unit: "text", precision_state: "category_only" },
+    // Real full 5-topic string + real source_url/verified_at, queried live 2026-09-04 — only
+    // "Physics" survives categorization (2 of 5 topics; "Genomics"/"Malaria"/"Data Analysis"
+    // don't match any current taxonomy keyword — see research-taxonomy.test.ts's own comment
+    // on this exact gap, found in passing, not fixed per CEO's explicit scope boundary).
+    {
+      university_id: OXFORD_ID,
+      metric_code: "research_topics_top5",
+      value_text: "Particle physics theoretical and experimental studies | Genomics and Phylogenetic Studies | Data Analysis and Archiving | Galaxies: Formation, Evolution, Phenomena | Malaria Research and Control",
+      value_numeric: null,
+      unit: "text",
+      precision_state: "category_only",
+      source_url: "https://openalex.org/I40120149",
+      verified_at: "2026-08-18T07:14:22.069236+00:00",
+    },
     { university_id: EDINBURGH_ID, metric_code: "tuition_domestic_annual", value_text: null, value_numeric: 9790, unit: "GBP/year", precision_state: "exact" },
     { university_id: EDINBURGH_ID, metric_code: "tuition_international_annual", value_text: null, value_numeric: 29600, unit: "GBP/year", precision_state: "exact" },
     { university_id: EDINBURGH_ID, metric_code: "research_topics_top5", value_text: "Informatics | Medicine | Law", value_numeric: null, unit: "text", precision_state: "category_only" },
+    // Real full 5-topic string, queried live — none of the 5 categorize under the current
+    // taxonomy (marine/geology-worded; no matching keywords in any bucket).
+    {
+      university_id: TASMANIA_ID,
+      metric_code: "research_topics_top5",
+      value_text: "Marine and fisheries research | Geological and Geochemical Analysis | Geology and Paleoclimatology Research | Coral and Marine Ecosystems Studies | Geochemistry and Geologic Mapping",
+      value_numeric: null,
+      unit: "text",
+      precision_state: "category_only",
+      source_url: "https://openalex.org/I129801699",
+      verified_at: "2026-08-18T07:14:45.152553+00:00",
+    },
     // MIT genuinely has no research_topics_top5 row and no tuition rows (US -> cost_of_attendance covers it) — omitted, not zeroed.
   ],
 };
@@ -266,5 +303,70 @@ describe("universities compare page — real render, real captured data (C7 + CE
 
     expect(rows.get("applicationSystem")?.[mitCol]?.textContent?.trim()).toBe("—");
     expect(rows.get("researchStrengths")?.[mitCol]?.textContent?.trim()).toBe("—");
+  });
+
+  // CEO's follow-up fix assignment (2026-09-04, docs/research-topics-display-honesty-2026-09-
+  // 04.md): the same taxonomy the university card already used, extended here — the compare
+  // page previously showed raw, uncategorized OpenAlex phrases with no source badge at all.
+  describe("researchStrengths — categorized, not raw (CEO's taxonomy-extension fix)", () => {
+    test("Oxford: shows the categorized 'Physics' label, never the raw jargon phrases", async () => {
+      const element = await renderCompare([MIT_ID, OXFORD_ID, EDINBURGH_ID]);
+      const { container } = render(element);
+      const oxfordCol = columnIndexFor(container, "University of Oxford");
+      const rows = cellsByRowLabel(container);
+
+      const cell = rows.get("researchStrengths")?.[oxfordCol];
+      expect(cell?.textContent).toContain("Physics");
+      // The exact raw strings that used to render verbatim — none of them anywhere in the cell.
+      expect(cell?.textContent).not.toContain("Galaxies");
+      expect(cell?.textContent).not.toContain("Genomics");
+      expect(cell?.textContent).not.toContain("Malaria");
+      expect(cell?.textContent).not.toContain("theoretical and experimental");
+    });
+
+    test("Oxford: a real SourceBadge now renders here too — previously absent from this row entirely", async () => {
+      const element = await renderCompare([MIT_ID, OXFORD_ID, EDINBURGH_ID]);
+      const { container } = render(element);
+      const oxfordCol = columnIndexFor(container, "University of Oxford");
+      const rows = cellsByRowLabel(container);
+
+      const cell = rows.get("researchStrengths")?.[oxfordCol];
+      // sourceName is visible text ("source OpenAlex"); the real URL lives in the link's href
+      // attribute, not textContent — checked separately below.
+      expect(cell?.textContent).toContain("OpenAlex");
+      const link = cell?.querySelector("a");
+      expect(link?.getAttribute("href")).toBe("https://openalex.org/I40120149");
+    });
+
+    test("Tasmania: real topics that categorize to NOTHING show the honest 'couldn't classify' message — never '—', never the raw phrases, never a source badge", async () => {
+      const element = await renderCompare([MIT_ID, TASMANIA_ID]);
+      const { container } = render(element);
+      const tasmaniaCol = columnIndexFor(container, "University of Tasmania");
+      const rows = cellsByRowLabel(container);
+
+      const cell = rows.get("researchStrengths")?.[tasmaniaCol];
+      expect(cell?.textContent).toContain("researchStrengthsUnclassified");
+      expect(cell?.textContent?.trim()).not.toBe("—");
+      expect(cell?.textContent).not.toContain("Geological");
+      expect(cell?.textContent).not.toContain("Marine");
+      // No source badge here specifically — same suppression discipline as the statisticsSource
+      // fix above (a badge next to "we couldn't classify this" would be the identical self-
+      // contradiction, just with different words: real source, no real claim above it to
+      // source it). Checked by absence of both the badge's own visible sourceName text and any
+      // link element — checking for the raw URL substring alone would prove nothing, since
+      // SourceBadge never puts the URL in visible text even when it DOES render (Oxford's own
+      // test above confirms that — the URL lives only in the link's href attribute).
+      expect(cell?.textContent).not.toContain("OpenAlex");
+      expect(cell?.querySelector("a")).toBeNull();
+    });
+
+    test("MIT: still plain '—', not the new unclassified message — MIT has no research_topics_top5 row at all, a genuinely different fact from Tasmania's 'has data, none of it categorizes'", async () => {
+      const element = await renderCompare([MIT_ID, TASMANIA_ID]);
+      const { container } = render(element);
+      const mitCol = columnIndexFor(container, "Massachusetts Institute of Technology");
+      const rows = cellsByRowLabel(container);
+
+      expect(rows.get("researchStrengths")?.[mitCol]?.textContent?.trim()).toBe("—");
+    });
   });
 });
