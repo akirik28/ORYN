@@ -19,6 +19,60 @@ merged code). Full suite green after: **6366 passed, 2 expected fail.** Pushed.
 `types/database.ts` conflict-free this time despite the heavy traffic CEO
 warned about — no new call site needed a fix this round.
 
+**Merged as `f192fd61`.** CEO's follow-up asked for one-line status plus three
+specific claims verified precisely, since they determine the sentence told to
+the founder. Re-checked all three against the actual merged code on `main`
+(not memory, not this branch):
+
+1. **Card details are never stored anywhere in this app** — confirmed. Grepped
+   `origin/main`'s `lib/payments/` and `app/api/webhooks/` for every card-field
+   name (`card_number`, `cvv`, `cvc`, `pan_number`, etc.): zero matches.
+   `CreateCheckoutInput` (the only structure this app builds before redirecting
+   to a provider) has exactly four fields — `userId`, `amountTry`,
+   `idempotencyKey`, `returnUrl`/`cancelUrl` — no card field exists to check for
+   in the first place, by construction, not by a filter that could be wrong.
+
+2. **The same webhook twice does not open two subscriptions — but say precisely
+   how this was proven, because it matters which layer.** Proven at the
+   application/mock level: `payment_events.provider_event_id` is unique
+   (`provider`, `provider_event_id`), the webhook handler inserts into that
+   table *before* granting anything, and a real Postgres unique-violation on
+   that insert is what returns "duplicate" rather than reaching the grant path.
+   Two things were actually verified, not asserted: (a) a dedicated test drops
+   the *mock's* unique constraint and shows the identical event granting
+   twice — proving the guard is load-bearing, not decorative; (b) a separate
+   check disabled the real `isUniqueViolation` branch in the actual handler
+   code and confirmed the normal duplicate-detection test goes red with that
+   removed, then restored it (`git diff` empty after). **What was NOT done:**
+   the same proof against a real Postgres constraint, not a mock of one — that
+   is exactly the disposable-branch verification CEO asked for and I asked the
+   founder to cost-confirm ($0.01344/hr) before creating. Say "proven at the
+   code/mock level, not yet against live Postgres" if precision matters here —
+   it's very likely to hold (the mock enforces `unique(provider,
+   provider_event_id)` identically to how migration 0123 declares the real
+   one), but "very likely" and "proven on real Postgres" are different claims.
+
+3. **Cancellation does not write to `plan_tier` directly — confirmed on the
+   merged code.** `entitlement.ts`'s `subscription_canceled` case does exactly
+   one write: `admin.from("subscriptions").update({ status: "canceled" })`.
+   Neither `plan_tier` nor `paid_ultra_expires_at` is touched. The separate
+   expiry column (`profiles.paid_ultra_expires_at`) is what actually carries
+   entitlement, extended only on `checkout_completed`/`subscription_renewed`
+   with the provider's own returned period end — cancellation lets that
+   already-set date run out on its own rather than writing anything itself.
+   This was the specific design fix from the review round before the restart
+   (see "design review" section below): a payment-path write to `plan_tier`
+   would have been silently absorbed by 0121's guard trigger exactly the way
+   CEO described, which is why the entitlement path was built around a
+   separate column instead of that guarded one.
+
+**One-line status: functionally complete except for two things, both already
+named, neither a surprise.** (a) The actual provider adapter — A3, the
+founder's choice, nothing to build until it's made. (b) The live-Postgres
+proof of migration 0123's own guards (item 2 above) — a disposable-branch
+question asked of the founder directly, awaiting a yes/no on the ~$0.01344/hr
+cost, not a technical blocker.
+
 ## What this is
 
 CEO's brief: the founder is adding payment, provider not chosen yet (iyzico /
