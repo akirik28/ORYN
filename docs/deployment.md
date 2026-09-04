@@ -183,6 +183,7 @@ Set these under **Settings → Environment Variables** for the **Production** en
 | `CRON_SECRET` | `openssl rand -hex 32` | See step 6 — this one is special |
 | `NEXT_PUBLIC_APP_URL` | `https://<your-domain>` | Currently still `http://localhost:3000` |
 | `SENTRY_DSN` | from step 7 | Omit to log errors to Vercel logs only |
+| `PAYMENT_PROVIDER` | `stripe` \| `iyzico` \| `paytr`, once A3 is decided | Leaving it unset is a valid, supported state — checkout shows "not configured" rather than a fake flow, see `lib/payments/`. No provider-specific credential vars exist yet by design: `lib/env.ts`'s own comment is explicit that inventing them for a provider that might not be chosen would be the same premature-abstraction mistake as everywhere else in this file. Add the real ones here the same day a provider's adapter class lands, not before. |
 
 `NEXT_PUBLIC_*` variables are baked into the build, so changing one requires a redeploy,
 not just a restart.
