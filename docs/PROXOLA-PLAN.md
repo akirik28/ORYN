@@ -162,6 +162,25 @@ gerçek bir kayda teslim edemiyor, özel SMTP şart) zaten içinde. Bugün eklen
 şey ödeme satırı. **Yeni bir doküman yazılmadı — bu, bugün dördüncü kez "eksik"
 sanılan şeyin yazılmış çıkması.**
 
+**A7. Paylaşılan tarayıcıyı QA öğrenci hesabıyla aç — YENİ, ve bugünün en büyük
+gizli maliyeti.** *"Elimde test hesabı yok"* cümlesi bugün **dört ayrı şeritten**
+çıktı: karşılaştırma sayfası, veli sayfaları, öğrenci ana akışı, mobil kontroller.
+Hepsi giriş gerektiren yüzeyler, ve paylaşılan panel **kurucunun kendi oturumunu**
+taşıdığı için hiçbir şerit bakamıyor — kural gereği bakmamalı da.
+
+Sonuç: şeritler kod okuma ve render testiyle idare ediyor. **Bugünün iki gerçek
+hatası yalnızca sayfayı açan birinin görebileceği türdendi** (Oxford'un kendi
+kendini çürüten kaynak rozeti; gizlenecek olan gerçek ücret kartı) — ikisi de
+tesadüfen yakalandı.
+
+**Çözüm ucuz:** paneli kendi hesabıyla değil **bir QA öğrenci hesabıyla** aç.
+`.env.example`'da `QA_ACCOUNT_A_EMAIL`/`QA_ACCOUNT_B_EMAIL` **zaten var** — ihtiyaç
+baştan öngörülmüş, hiç kurulmamış. Kimseyle parola paylaşmaya gerek yok: oturum
+açık gelir, şeritler bakar, kurucunun kendi verisi risk altında olmaz.
+
+**Bu tek adım C3'ü, mobil kontrolleri ve tüm giriş gerektiren yüzey
+doğrulamalarını açar.**
+
 **A5. E-posta sağlayıcısı seç — YENİ, ve A4'ten daha bağlayıcı.**
 Aylık veli özeti yazıldı ve **hiçbir yere gönderilmiyor**: projede e-posta
 altyapısı **hiç yok** (`package.json`'da sağlayıcı paketi yok, `.env.example`'da
