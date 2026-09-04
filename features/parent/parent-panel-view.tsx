@@ -36,7 +36,18 @@ export async function ParentPanelView({ data, locale = DEFAULT_LOCALE }: { data:
       style={{ background: "linear-gradient(145deg, var(--role-page-bg-1) 0%, var(--role-page-bg-2) 30%, var(--role-page-bg-3) 55%, var(--role-page-bg-4) 100%)" }}
     >
       <div className="mx-auto max-w-3xl space-y-8 px-6 py-12">
-        <header className="space-y-1">
+        {/*
+          A plain div, not <header> (CHANGED 2026-09-04): this is page-specific content (a
+          per-page title and description), not site-oriented banner content, so it was never
+          really a landmark-header semantically -- confirmed the hard way, live, once
+          app/parent/layout.tsx grew its own real <header>: nesting this inside that page's
+          new <main> did not suppress its banner role in the browser's actual computed
+          accessibility tree (verified via the live composed render, not assumed from spec
+          text), leaving two banner landmarks on one page. A div sidesteps the ambiguity
+          entirely rather than depending on a landmark-suppression rule that didn't hold up
+          under a real accessibility-tree check.
+        */}
+        <div className="space-y-1">
           <p className="text-sm font-medium" style={{ color: "var(--role-accent-strong)" }}>
             {tr ? "Veli görünümü" : "Parent view"}
           </p>
@@ -54,7 +65,7 @@ export async function ParentPanelView({ data, locale = DEFAULT_LOCALE }: { data:
               ? "Yalnızca gözlemleyebilirsiniz. Hiçbir şeyi değiştiremezsiniz."
               : "You can only observe here. Nothing can be changed from this view."}
           </p>
-        </header>
+        </div>
 
         <GapSection gap={data.gap} tr={tr} />
 
