@@ -23,7 +23,19 @@
 >    paragraf tutar; bildirmemek bir sonrakine bir saat kaybettirir.
 > 8. **Bitince rapor et ve yeni iş iste.** Bekleme, sorma sırası sende.
 >
-> **Çalışma penceresi: yarın akşam 22.00'a kadar.**
+> > 9. **Ana depoya yazma.** Keşif okumaların `Desktop/Founder/ORYN`'da geçtiyse
+>    el o yolda kalıyor — bugün **üç bağımsız oturum** yazma anında oraya kaydı
+>    (biri, o checkout'a bağlı canlı bir önizleme sunucusu çalışırken). Üçü de
+>    kendi yakaladı, zarar olmadı. Dikkatsizlik değil, **ortamın şekli.**
+>    Yazmadan önce worktree'ye geç veya `git -C <worktree>` kullan, ve ilk
+>    yazmadan önce `git status`'a bak.
+> 10. **Disk raporlarken yüzde verme, boş alan ver.** Bu Mac'te `/` (sistem
+>    hacmi) %84, `/System/Volumes/Data` (worktree'lerin yeri) %99 gösteriyor —
+>    ikisi aynı APFS container'ı ve **boş alan ikisinde de aynı: 3,3Gi.** Yüzde
+>    hangi hacimden baktığına göre değişiyor; boş alan değişmiyor. CEO bugün bu
+>    yüzden gözetmenin doğru rakamını yanlış diye "düzeltti."
+
+**Çalışma penceresi: yarın akşam 22.00'a kadar.**
 
 **Bu dosya tek doğruluk kaynağı.** Bir oturum açtığında ona madde numarası ver:
 *"PROXOLA-PLAN.md'deki P3'ü al."* Madde kendi içinde yeterli.
