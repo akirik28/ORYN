@@ -242,7 +242,23 @@ Waterloo/CEMC tek satırda birden çok yarışma taşıyor (Beaver 5-10. sınıf
 yalnız 12) — o satır bugün 10. sınıfa Euclid'i uygun gösteriyor. Bölünecek, ama
 önce kimsenin kaydettiği/eşleştiği bir satır mı diye ölçülecek.
 
+**Yeniden ölçüm (dolgudan sonra): %97 → %88 → %85** (0126 da uygulanırsa). **Az
+hareket etmesi kararın gerekçesi:** kalan uyarılar doldurulabilir bir boşluktan
+değil, **sayfanın hiçbir şey söylememesinden** geliyor. Bu sayıyı 0129 hareket
+ettirecek, daha fazla dolgu değil.
+
 **Görünmeyen 333 satıra dönülmeyecek** — bugün ürünü değiştirmiyorlar.
+
+### Dolgu şeritleri için kalıcı kural (bugün iki kez ısırdı)
+
+**Yazmadan hemen önce mevcut değeri tekrar oku.** Bir dolgu şeridi "doldurdum"
+dediği değerin satırda **zaten aynen durduğunu** son anda yakaladı — kaynak mevcut
+veriyi *doğrulamıştı*, boşluk doldurmamıştı, ve satırın **gerçek** eksiği (yaş, iki
+alan da null) hiç ele alınmamıştı. **Hiçbir şeyi değiştirmeyen bir UPDATE, diff'te
+gerçek bir dolgudan ayırt edilemez.** Aynı kontrol ikinci bir hatayı da yakaladı:
+önerilen değer mevcuttan *farklıydı* — yani ekleme değil **düzeltme**, ve kurucu
+ikisini farklı gözle okumalı. Birkaç adım önce alınmış liste, o adımlar sırasında
+eskir.
 
 ## D7 — ✅ ÖLÇÜLDÜ, KOD YAZILMADI (bilinçli)
 
