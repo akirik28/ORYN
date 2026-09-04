@@ -1,3 +1,6 @@
+import { NON_ACTIONABLE_VERIFICATION_STATES } from "@/lib/deadlines/ingest";
+import { isDatedDeadlineUpcoming } from "@/lib/deadlines/lifecycle";
+
 /**
  * Whether Oryn has recorded any real depth for this university — at least one program,
  * requirement, source, or statistics row — as opposed to just the identity fields
@@ -110,4 +113,49 @@ export function lacksCoreAdmissionStats(stats: {
 } | null): boolean {
   if (!stats) return true;
   return stats.admissionRate === null && stats.satRangeLow === null && stats.actRangeLow === null && stats.graduationRate === null;
+}
+
+export interface DeadlineRowForSoonest {
+  deadline_type: string;
+  deadline_date: string | null;
+  recurrence: string;
+  verification_state: string;
+  recurrence_month: number | null;
+  recurrence_day: number | null;
+}
+
+/**
+ * The single soonest real application/early deadline for one university, across both dated
+ * and recurring-undated rows — built for the universities compare table (C7 follow-up,
+ * 2026-09-04), which needs one representative date per university rather than the detail
+ * page's full per-deadline listing.
+ *
+ * Both branches matter, not just the dated one: of the 12 real `target_universities` rows,
+ * Yale has ONLY `recurring_annual_undated` rows for both `application` and `early` — no dated
+ * row at all. `lacksApplicationDeadline` correctly says Yale has real data (it does — a real
+ * recurring November 1st early deadline), but a dated-only search would then render nothing
+ * for a university this function's own sibling just said was covered.
+ *
+ * `today` is an explicit parameter rather than `new Date()` computed internally, for the same
+ * reason `isDatedDeadlineUpcoming` (lib/deadlines/lifecycle.ts) takes one: a test needs to pin
+ * behavior to a fixed date, not silently start failing months from now once a fixture's
+ * pinned "upcoming" date is no longer in the future.
+ */
+export function soonestApplicationDeadline(rows: readonly DeadlineRowForSoonest[], today: Date): { date: Date; deadlineType: string } | null {
+  const todayStr = today.toISOString().slice(0, 10);
+  const candidates: { date: Date; deadlineType: string }[] = [];
+  for (const d of rows) {
+    if (d.deadline_type !== "application" && d.deadline_type !== "early") continue;
+    if (NON_ACTIONABLE_VERIFICATION_STATES.has(d.verification_state)) continue;
+    if (isDatedDeadlineUpcoming(d, todayStr)) {
+      candidates.push({ date: new Date(`${d.deadline_date}T00:00:00Z`), deadlineType: d.deadline_type });
+    } else if (d.recurrence === "recurring_annual_undated" && d.recurrence_month != null && d.recurrence_day != null) {
+      const thisYear = new Date(Date.UTC(today.getUTCFullYear(), d.recurrence_month - 1, d.recurrence_day));
+      const next = thisYear.getTime() >= today.getTime() ? thisYear : new Date(Date.UTC(today.getUTCFullYear() + 1, d.recurrence_month - 1, d.recurrence_day));
+      candidates.push({ date: next, deadlineType: d.deadline_type });
+    }
+  }
+  if (candidates.length === 0) return null;
+  candidates.sort((a, b) => a.date.getTime() - b.date.getTime());
+  return candidates[0];
 }

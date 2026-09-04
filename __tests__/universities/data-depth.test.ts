@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { lacksResearchDepth, lacksApplicationDeadline, lacksAdmissionStatistics, lacksCoreAdmissionStats } from "@/lib/universities/data-depth";
+import { lacksResearchDepth, lacksApplicationDeadline, lacksAdmissionStatistics, lacksCoreAdmissionStats, soonestApplicationDeadline } from "@/lib/universities/data-depth";
 
 /**
  * CEO finding, 2026-09-02: 734 of 1,019 universities came from one bulk import with real
@@ -122,5 +122,99 @@ describe("lacksCoreAdmissionStats", () => {
 
   test("GREEN: fully populated", () => {
     expect(lacksCoreAdmissionStats({ admissionRate: 0.04, satRangeLow: 1500, actRangeLow: 34, graduationRate: 0.96 })).toBe(false);
+  });
+});
+
+/**
+ * Built for the universities compare table's own honest deadline row (CEO's C7 follow-up,
+ * 2026-09-04) -- `lacksApplicationDeadline` only answers "has this ever been researched", not
+ * "what do I show". `today` is pinned rather than `new Date()` so these can't start failing
+ * once a real date below is no longer in the future -- same reasoning
+ * lib/deadlines/lifecycle.ts's own isDatedDeadlineUpcoming gives for taking `today` as a
+ * parameter.
+ */
+describe("soonestApplicationDeadline", () => {
+  const TODAY = new Date("2026-09-04T00:00:00Z");
+
+  test("Oxford's real rows (queried live 2026-09-04) -- picks the one application row, ignores the two document rows", () => {
+    const result = soonestApplicationDeadline(
+      [
+        { deadline_type: "application", deadline_date: "2026-10-15", recurrence: "dated_specific", verification_state: "unverified", recurrence_month: null, recurrence_day: null },
+        { deadline_type: "document", deadline_date: "2026-11-10", recurrence: "dated_specific", verification_state: "unverified", recurrence_month: null, recurrence_day: null },
+        { deadline_type: "document", deadline_date: "2027-01-12", recurrence: "dated_specific", verification_state: "unverified", recurrence_month: null, recurrence_day: null },
+      ],
+      TODAY
+    );
+    expect(result?.deadlineType).toBe("application");
+    expect(result?.date.toISOString().slice(0, 10)).toBe("2026-10-15");
+  });
+
+  test("Edinburgh's real rows (queried live 2026-09-04) -- soonest of two upcoming candidates is the 'early' one, not the earlier-listed 'application' one; the already-expired application row (Sep 1) and the wrong-type document row are both excluded", () => {
+    const result = soonestApplicationDeadline(
+      [
+        { deadline_type: "document", deadline_date: "2026-07-15", recurrence: "dated_specific", verification_state: "VERIFIED_HISTORICAL", recurrence_month: null, recurrence_day: null },
+        { deadline_type: "application", deadline_date: "2026-09-01", recurrence: "dated_specific", verification_state: "unverified", recurrence_month: null, recurrence_day: null },
+        { deadline_type: "early", deadline_date: "2026-10-15", recurrence: "dated_specific", verification_state: "unverified", recurrence_month: null, recurrence_day: null },
+        { deadline_type: "application", deadline_date: "2027-01-13", recurrence: "dated_specific", verification_state: "unverified", recurrence_month: null, recurrence_day: null },
+      ],
+      TODAY
+    );
+    expect(result?.deadlineType).toBe("early");
+    expect(result?.date.toISOString().slice(0, 10)).toBe("2026-10-15");
+  });
+
+  test("Yale's real rows (queried live 2026-09-04) -- ONLY recurring_annual_undated rows for both types, no dated row exists at all; still resolves to the soonest real next occurrence, not null", () => {
+    const result = soonestApplicationDeadline(
+      [
+        { deadline_type: "application", deadline_date: null, recurrence: "recurring_annual_undated", verification_state: "VERIFIED_RECURRING_UNDATED", recurrence_month: 5, recurrence_day: 1 },
+        { deadline_type: "application", deadline_date: null, recurrence: "recurring_annual_undated", verification_state: "VERIFIED_RECURRING_UNDATED", recurrence_month: 1, recurrence_day: 2 },
+        { deadline_type: "early", deadline_date: null, recurrence: "recurring_annual_undated", verification_state: "VERIFIED_RECURRING_UNDATED", recurrence_month: 11, recurrence_day: 1 },
+      ],
+      TODAY
+    );
+    // Nov 1 hasn't happened yet this year (today is Sep 4) -- picked as-is, not wrapped.
+    // Jan 2 and May 1 have both already passed this year -- correctly wrapped to next year,
+    // and Jan 2, 2027 (the wrapped January date) still loses to Nov 1, 2026 chronologically.
+    expect(result?.deadlineType).toBe("early");
+    expect(result?.date.toISOString().slice(0, 10)).toBe("2026-11-01");
+  });
+
+  test("a non-actionable verification_state excludes a row even though its own date is in the future -- state, not date, is checked first", () => {
+    const result = soonestApplicationDeadline(
+      [{ deadline_type: "application", deadline_date: "2099-01-01", recurrence: "dated_specific", verification_state: "VERIFIED_HISTORICAL", recurrence_month: null, recurrence_day: null }],
+      TODAY
+    );
+    expect(result).toBeNull();
+  });
+
+  test("an expired dated row (before today) is excluded even with an actionable verification_state", () => {
+    const result = soonestApplicationDeadline(
+      [{ deadline_type: "application", deadline_date: "2026-01-01", recurrence: "dated_specific", verification_state: "unverified", recurrence_month: null, recurrence_day: null }],
+      TODAY
+    );
+    expect(result).toBeNull();
+  });
+
+  test("a dated candidate and a recurring candidate are compared on equal footing -- the chronologically soonest wins regardless of kind", () => {
+    const result = soonestApplicationDeadline(
+      [
+        // Recurring Sep 10 is sooner than the dated Oct 1 below, even though it's listed second.
+        { deadline_type: "application", deadline_date: "2026-10-01", recurrence: "dated_specific", verification_state: "unverified", recurrence_month: null, recurrence_day: null },
+        { deadline_type: "early", deadline_date: null, recurrence: "recurring_annual_undated", verification_state: "VERIFIED_RECURRING_UNDATED", recurrence_month: 9, recurrence_day: 10 },
+      ],
+      TODAY
+    );
+    expect(result?.deadlineType).toBe("early");
+    expect(result?.date.toISOString().slice(0, 10)).toBe("2026-09-10");
+  });
+
+  test("no application/early rows at all returns null, not a crash", () => {
+    expect(soonestApplicationDeadline([], TODAY)).toBeNull();
+    expect(
+      soonestApplicationDeadline(
+        [{ deadline_type: "scholarship", deadline_date: null, recurrence: "recurring_annual_undated", verification_state: "VERIFIED_RECURRING_UNDATED", recurrence_month: 3, recurrence_day: 1 }],
+        TODAY
+      )
+    ).toBeNull();
   });
 });

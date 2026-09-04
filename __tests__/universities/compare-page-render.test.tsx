@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, test, expect, vi } from "vitest";
+import { describe, test, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, cleanup } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { MockSupabaseClient, type MockTableConfig } from "../stubs/mock-supabase-table";
@@ -7,21 +7,28 @@ import { MockSupabaseClient, type MockTableConfig } from "../stubs/mock-supabase
 /**
  * C7 follow-up (CEO, 2026-09-04): "kaynak okumakla yetinme, mümkünse render et" — don't just
  * read the source, render it. This file actually executes app/(app)/universities/compare/
- * page.tsx's own code against real, live-captured data (queried directly against the DB
- * earlier the same session, see docs/c7-comparison-thin-data-2026-09-04.md) and inspects the
- * real DOM output — not a trace of the JSX by eye.
+ * page.tsx's own code against real, live-captured data (queried directly against the DB the
+ * same session, see docs/c7-comparison-thin-data-2026-09-04.md) and inspects the real DOM
+ * output — not a trace of the JSX by eye.
  *
- * These tests PROVE a finding; they do not assert desired behavior. The self-contradicting
- * SourceBadge test below is expected to change the day someone fixes it — that's the point:
- * this file is evidence for a report, not a spec for what "correct" looks like. See C7's own
- * doc for the full writeup and what a fix here would need to do (mirror the detail page's
- * `missingCoreAdmissionStats` guard).
+ * Extended the same day for CEO's actual fix assignment: suppress the statisticsSource badge
+ * when core stats are missing (mirrors the detail page's own fix), and add an honest
+ * application-deadline row (the page queried university_deadlines nowhere before this). The
+ * first version of this file proved the BUG; this version proves the FIX — same technique,
+ * opposite direction, which is exactly what a real render test is for.
+ *
+ * `today` is pinned via vi.useFakeTimers()/setSystemTime rather than left on the real clock —
+ * the deadline row's content depends on "is this date still upcoming", and an assertion built
+ * on today's real date would silently start failing once Oct 15, 2026 (one of the real dates
+ * below) is no longer in the future. See lib/universities/data-depth.ts's own
+ * soonestApplicationDeadline for the pure-function-level version of this same proof with a
+ * pinned `today`, plus edge cases (non-actionable states, expired dates, dated-vs-recurring
+ * sort) this file doesn't re-cover at the page level.
  *
  * Mock shape follows __tests__/advisor/chat-route-guards.test.ts's established pattern
- * (vi.hoisted + one vi.mock per dependency, import the thing under test after the mocks) and
- * __tests__/settings/plan-tier-view.test.tsx's jsdom + @testing-library/react precedent for
- * this codebase. `.in()` support was added to mock-supabase-table.ts for this file — the
- * first consumer whose queries need it.
+ * (vi.hoisted + one vi.mock per dependency, import the thing under test after the mocks),
+ * __tests__/settings/plan-tier-view.test.tsx's jsdom + @testing-library/react precedent, and
+ * __tests__/admin/ai-spend-shape.test.ts's useFakeTimers/setSystemTime pattern.
  */
 
 const {
@@ -48,27 +55,30 @@ import CompareUniversitiesPage from "@/app/(app)/universities/compare/page";
 
 const ULTRA_PROFILE = { id: "test-student", plan_tier: "ultra" as const, ultra_gift_expires_at: null };
 
-// Every field below is a real value queried live against the production DB this same
-// session (project qtcvcflzxbuagvvwahhu) — not invented fixture data. See
-// docs/c7-comparison-thin-data-2026-09-04.md for the queries these came from.
+// Every field below is a real value queried live against the production DB this same session
+// (project qtcvcflzxbuagvvwahhu) — not invented fixture data. See
+// docs/c7-comparison-thin-data-2026-09-04.md and data-depth.test.ts's own soonestApplicationDeadline
+// block for the queries these came from.
 const MIT_ID = "03167d0c-2315-49e3-a37e-f9c9c7d2d27c";
 const OXFORD_ID = "e5164eb3-88c1-4ecc-81d7-d591ea0c34ea";
 const EDINBURGH_ID = "e2feb81c-1bda-4889-8aa9-37783b720901";
+const YALE_ID = "a24caa73-0ddd-4beb-899b-ba9d81c6622e";
 
 const universities: MockTableConfig = {
   rows: [
-    { id: MIT_ID, name: "Massachusetts Institute of Technology", city: "Cambridge", country: "United States", institution_type: "Private nonprofit", student_size: 11816, application_system: null },
-    { id: OXFORD_ID, name: "University of Oxford", city: "Oxford", country: "United Kingdom", institution_type: "Public", student_size: 26800, application_system: null },
-    { id: EDINBURGH_ID, name: "The University of Edinburgh", city: "Edinburgh", country: "United Kingdom", institution_type: "Public", student_size: 49485, application_system: "UCAS" },
+    { id: MIT_ID, name: "Massachusetts Institute of Technology", city: "Cambridge", country: "United States", institution_type: "Private nonprofit", student_size: 11816, application_system: null, admissions_url: "https://mitadmissions.org", website_url: "https://mit.edu" },
+    { id: OXFORD_ID, name: "University of Oxford", city: "Oxford", country: "United Kingdom", institution_type: "Public", student_size: 26800, application_system: null, admissions_url: null, website_url: "https://www.ox.ac.uk" },
+    { id: EDINBURGH_ID, name: "The University of Edinburgh", city: "Edinburgh", country: "United Kingdom", institution_type: "Public", student_size: 49485, application_system: "UCAS", admissions_url: null, website_url: "https://www.ed.ac.uk" },
+    { id: YALE_ID, name: "Yale University", city: "New Haven", country: "United States", institution_type: "Private nonprofit", student_size: 6600, application_system: null, admissions_url: null, website_url: "https://www.yale.edu" },
   ],
 };
 
 const universityStatistics: MockTableConfig = {
   rows: [
-    { university_id: MIT_ID, admission_rate: 0.0455, cost_of_attendance: 82730, cost_currency: "USD", source: "College Scorecard (US Dept. of Education, IPEDS-derived)", data_confidence: "high", updated_at: "2026-09-04T00:00:00Z" },
+    { university_id: MIT_ID, admission_rate: 0.0455, cost_of_attendance: 82730, cost_currency: "USD", source: "College Scorecard (US Dept. of Education, IPEDS-derived)", data_confidence: "high", updated_at: "2026-09-04T00:00:00Z", sat_range_low: 1520, act_range_low: 34, graduation_rate: 0.9641 },
     // Oxford: the D6/C7 case. Every headline figure is null, but `source` is a real, populated URL.
-    { university_id: OXFORD_ID, admission_rate: null, cost_of_attendance: null, cost_currency: null, source: "https://www.ox.ac.uk/about/facts-and-figures/admissions-statistics/undergraduate-students", data_confidence: "medium", updated_at: "2026-09-04T08:08:10Z" },
-    { university_id: EDINBURGH_ID, admission_rate: 0.53, cost_of_attendance: null, cost_currency: null, source: "https://study.ed.ac.uk/undergraduate/applying/selection/admissions-statistics", data_confidence: "high", updated_at: "2026-09-04T00:00:00Z" },
+    { university_id: OXFORD_ID, admission_rate: null, cost_of_attendance: null, cost_currency: null, source: "https://www.ox.ac.uk/about/facts-and-figures/admissions-statistics/undergraduate-students", data_confidence: "medium", updated_at: "2026-09-04T08:08:10Z", sat_range_low: null, act_range_low: null, graduation_rate: null },
+    { university_id: EDINBURGH_ID, admission_rate: 0.53, cost_of_attendance: null, cost_currency: null, source: "https://study.ed.ac.uk/undergraduate/applying/selection/admissions-statistics", data_confidence: "high", updated_at: "2026-09-04T00:00:00Z", sat_range_low: null, act_range_low: null, graduation_rate: null },
   ],
 };
 
@@ -93,6 +103,25 @@ const universityProfileMetrics: MockTableConfig = {
   ],
 };
 
+// Real rows, queried live 2026-09-04 — see data-depth.test.ts's soonestApplicationDeadline
+// block for the same three universities' exact shapes and expected soonest values.
+const universityDeadlines: MockTableConfig = {
+  rows: [
+    { university_id: MIT_ID, deadline_type: "scholarship", deadline_date: null, recurrence: "recurring_annual_undated", verification_state: "VERIFIED_RECURRING_UNDATED", recurrence_month: null, recurrence_day: null },
+    { university_id: MIT_ID, deadline_type: "scholarship", deadline_date: null, recurrence: "recurring_annual_undated", verification_state: "VERIFIED_RECURRING_UNDATED", recurrence_month: null, recurrence_day: null },
+    { university_id: OXFORD_ID, deadline_type: "application", deadline_date: "2026-10-15", recurrence: "dated_specific", verification_state: "unverified", recurrence_month: null, recurrence_day: null },
+    { university_id: OXFORD_ID, deadline_type: "document", deadline_date: "2026-11-10", recurrence: "dated_specific", verification_state: "unverified", recurrence_month: null, recurrence_day: null },
+    { university_id: EDINBURGH_ID, deadline_type: "document", deadline_date: "2026-07-15", recurrence: "dated_specific", verification_state: "VERIFIED_HISTORICAL", recurrence_month: null, recurrence_day: null },
+    { university_id: EDINBURGH_ID, deadline_type: "application", deadline_date: "2026-09-01", recurrence: "dated_specific", verification_state: "unverified", recurrence_month: null, recurrence_day: null },
+    { university_id: EDINBURGH_ID, deadline_type: "early", deadline_date: "2026-10-15", recurrence: "dated_specific", verification_state: "unverified", recurrence_month: null, recurrence_day: null },
+    { university_id: EDINBURGH_ID, deadline_type: "application", deadline_date: "2027-01-13", recurrence: "dated_specific", verification_state: "unverified", recurrence_month: null, recurrence_day: null },
+    // Yale: ONLY recurring_annual_undated rows for both types, no dated row exists at all.
+    { university_id: YALE_ID, deadline_type: "application", deadline_date: null, recurrence: "recurring_annual_undated", verification_state: "VERIFIED_RECURRING_UNDATED", recurrence_month: 5, recurrence_day: 1 },
+    { university_id: YALE_ID, deadline_type: "application", deadline_date: null, recurrence: "recurring_annual_undated", verification_state: "VERIFIED_RECURRING_UNDATED", recurrence_month: 1, recurrence_day: 2 },
+    { university_id: YALE_ID, deadline_type: "early", deadline_date: null, recurrence: "recurring_annual_undated", verification_state: "VERIFIED_RECURRING_UNDATED", recurrence_month: 11, recurrence_day: 1 },
+  ],
+};
+
 function renderCompare(ids: string[]) {
   requireProfileMock.mockResolvedValue(ULTRA_PROFILE);
   createClientMock.mockResolvedValue(
@@ -101,69 +130,78 @@ function renderCompare(ids: string[]) {
       university_statistics: universityStatistics,
       university_rankings: universityRankings,
       university_profile_metrics: universityProfileMetrics,
+      university_deadlines: universityDeadlines,
     })
   );
   return CompareUniversitiesPage({ searchParams: Promise.resolve({ ids: ids.join(",") }) });
 }
 
-describe("universities compare page — real render, real captured data (C7)", () => {
-  test("Oxford's row shows the self-contradicting shape: '—' for cost and admission rate, but a real SourceBadge with the ox.ac.uk URL in the same column", async () => {
-    const element = await renderCompare([MIT_ID, OXFORD_ID, EDINBURGH_ID]);
-    const { container } = render(element);
+function cellsByRowLabel(container: HTMLElement): Map<string, Element[]> {
+  const map = new Map<string, Element[]>();
+  for (const tr of Array.from(container.querySelectorAll("tbody tr"))) {
+    const cells = Array.from(tr.querySelectorAll("td"));
+    map.set(cells[0]?.textContent?.trim() ?? "", cells);
+  }
+  return map;
+}
 
-    const headerCells = Array.from(container.querySelectorAll("thead th")).map((th) => th.textContent?.trim());
-    const oxfordColumnIndex = headerCells.findIndex((text) => text?.includes("University of Oxford"));
-    expect(oxfordColumnIndex).toBeGreaterThan(0); // 0 is the blank corner cell
+function columnIndexFor(container: HTMLElement, nameSubstring: string): number {
+  const headerCells = Array.from(container.querySelectorAll("thead th")).map((th) => th.textContent?.trim());
+  return headerCells.findIndex((text) => text?.includes(nameSubstring));
+}
 
-    const rowsByLabel = new Map<string, HTMLTableCellElement[]>();
-    for (const tr of Array.from(container.querySelectorAll("tbody tr"))) {
-      const cells = Array.from(tr.querySelectorAll("td"));
-      const label = cells[0]?.textContent?.trim() ?? "";
-      rowsByLabel.set(label, cells as HTMLTableCellElement[]);
-    }
+describe("universities compare page — real render, real captured data (C7 + CEO's fix follow-up)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-04T12:00:00.000Z"));
+  });
 
-    const oxfordCost = rowsByLabel.get("costOfAttendance")?.[oxfordColumnIndex];
-    const oxfordAdmission = rowsByLabel.get("admissionRate")?.[oxfordColumnIndex];
-    const oxfordSource = rowsByLabel.get("statisticsSource")?.[oxfordColumnIndex];
-
-    // The bug, proven by actual rendered text content — not by reading the conditional.
-    expect(oxfordCost?.textContent?.trim()).toBe("—");
-    expect(oxfordAdmission?.textContent?.trim()).toBe("—");
-    expect(oxfordSource?.textContent).toContain("ox.ac.uk");
-
+  afterEach(() => {
+    vi.useRealTimers();
     cleanup();
   });
 
-  test("Oxford's real tuition (£9,790 / £37,380) renders correctly — the value_text/value_numeric mismatch was in the report author's own query, not the product code", async () => {
+  test("FIXED: Oxford's SourceBadge is now suppressed when core stats are missing — the exact self-contradiction C7 found is gone", async () => {
     const element = await renderCompare([MIT_ID, OXFORD_ID, EDINBURGH_ID]);
     const { container } = render(element);
+    const oxfordCol = columnIndexFor(container, "University of Oxford");
+    const rows = cellsByRowLabel(container);
 
-    const headerCells = Array.from(container.querySelectorAll("thead th")).map((th) => th.textContent?.trim());
-    const oxfordColumnIndex = headerCells.findIndex((text) => text?.includes("University of Oxford"));
-
-    const rowsByLabel = new Map<string, Element[]>();
-    for (const tr of Array.from(container.querySelectorAll("tbody tr"))) {
-      const cells = Array.from(tr.querySelectorAll("td"));
-      rowsByLabel.set(cells[0]?.textContent?.trim() ?? "", cells);
-    }
-
-    const oxfordTuition = rowsByLabel.get("tuition")?.[oxfordColumnIndex];
-    expect(oxfordTuition?.textContent).not.toBe("—");
-    expect(oxfordTuition?.textContent?.length ?? 0).toBeGreaterThan(0);
-
-    cleanup();
+    expect(rows.get("costOfAttendance")?.[oxfordCol]?.textContent?.trim()).toBe("—");
+    expect(rows.get("admissionRate")?.[oxfordCol]?.textContent?.trim()).toBe("—");
+    // Previously this contained "ox.ac.uk" — now suppressed alongside the two "—" cells above.
+    expect(rows.get("statisticsSource")?.[oxfordCol]?.textContent?.trim()).toBe("—");
   });
 
-  test("no deadline row exists at all for universities — not blank, absent: the full set of rendered row labels has no deadline-shaped entry", async () => {
+  test("Edinburgh's SourceBadge still renders — its admissionRate is real, so nothing to contradict", async () => {
     const element = await renderCompare([MIT_ID, OXFORD_ID, EDINBURGH_ID]);
     const { container } = render(element);
+    const edinburghCol = columnIndexFor(container, "University of Edinburgh");
+    const rows = cellsByRowLabel(container);
 
+    expect(rows.get("admissionRate")?.[edinburghCol]?.textContent?.trim()).toBe("53%");
+    expect(rows.get("statisticsSource")?.[edinburghCol]?.textContent).toContain("ed.ac.uk");
+  });
+
+  test("Oxford's real tuition (£9,790 / £37,380) still renders — untouched by the badge fix", async () => {
+    const element = await renderCompare([MIT_ID, OXFORD_ID, EDINBURGH_ID]);
+    const { container } = render(element);
+    const oxfordCol = columnIndexFor(container, "University of Oxford");
+    const rows = cellsByRowLabel(container);
+
+    expect(rows.get("tuition")?.[oxfordCol]?.textContent).not.toBe("—");
+  });
+
+  test("NEW ROW: applicationDeadline is now the 5th row, right after students — full ordered label list", async () => {
+    const element = await renderCompare([MIT_ID, OXFORD_ID, EDINBURGH_ID]);
+    const { container } = render(element);
     const rowLabels = Array.from(container.querySelectorAll("tbody tr td:first-child")).map((td) => td.textContent?.trim());
     expect(rowLabels).toEqual([
       "location",
       "qsRanking",
       "institutionType",
       "students",
+      "applicationDeadline",
       "costOfAttendance",
       "tuition",
       "admissionRate",
@@ -171,31 +209,62 @@ describe("universities compare page — real render, real captured data (C7)", (
       "applicationSystem",
       "researchStrengths",
     ]);
-    expect(rowLabels.some((l) => l?.toLowerCase().includes("deadline"))).toBe(false);
-
-    cleanup();
   });
 
-  test("MIT — the single most-targeted university in the product — still shows real gaps: applicationSystem and researchStrengths both '—', same as an untouched row", async () => {
+  test("MIT: honest 'not confirmed' text with a real clickable link — never a claim that no deadline exists", async () => {
     const element = await renderCompare([MIT_ID, OXFORD_ID, EDINBURGH_ID]);
     const { container } = render(element);
+    const mitCol = columnIndexFor(container, "Massachusetts Institute of Technology");
+    const rows = cellsByRowLabel(container);
 
-    const headerCells = Array.from(container.querySelectorAll("thead th")).map((th) => th.textContent?.trim());
-    const mitColumnIndex = headerCells.findIndex((text) => text?.includes("Massachusetts Institute of Technology"));
+    const cell = rows.get("applicationDeadline")?.[mitCol];
+    expect(cell?.textContent).toContain("applicationDeadlineNotConfirmed");
+    expect(cell?.textContent?.toLowerCase()).not.toContain("no deadline");
+    expect(cell?.textContent?.toLowerCase()).not.toContain("does not exist");
+    const link = cell?.querySelector("a");
+    expect(link).not.toBeNull();
+    expect(link?.getAttribute("href")).toBe("https://mitadmissions.org");
+  });
 
-    const rowsByLabel = new Map<string, Element[]>();
-    for (const tr of Array.from(container.querySelectorAll("tbody tr"))) {
-      const cells = Array.from(tr.querySelectorAll("td"));
-      rowsByLabel.set(cells[0]?.textContent?.trim() ?? "", cells);
-    }
+  test("Oxford: real soonest deadline rendered — Application: Oct 15, 2026", async () => {
+    const element = await renderCompare([MIT_ID, OXFORD_ID, EDINBURGH_ID]);
+    const { container } = render(element);
+    const oxfordCol = columnIndexFor(container, "University of Oxford");
+    const rows = cellsByRowLabel(container);
 
-    expect(rowsByLabel.get("applicationSystem")?.[mitColumnIndex]?.textContent?.trim()).toBe("—");
-    expect(rowsByLabel.get("researchStrengths")?.[mitColumnIndex]?.textContent?.trim()).toBe("—");
-    // But MIT is not uniformly empty — cost, admission rate, and source are real, proving this
-    // is a partial-gap picture, not a blanket "MIT has no data" situation.
-    expect(rowsByLabel.get("costOfAttendance")?.[mitColumnIndex]?.textContent).not.toBe("—");
-    expect(rowsByLabel.get("admissionRate")?.[mitColumnIndex]?.textContent).not.toBe("—");
+    const text = rows.get("applicationDeadline")?.[oxfordCol]?.textContent ?? "";
+    expect(text).toContain("deadlineTypeApplication");
+    expect(text).not.toBe("—");
+  });
 
-    cleanup();
+  test("Edinburgh: soonest of several real rows is the 'early' one (Oct 15), not the earlier-listed but already-expired application row (Sep 1)", async () => {
+    const element = await renderCompare([MIT_ID, OXFORD_ID, EDINBURGH_ID]);
+    const { container } = render(element);
+    const edinburghCol = columnIndexFor(container, "University of Edinburgh");
+    const rows = cellsByRowLabel(container);
+
+    const text = rows.get("applicationDeadline")?.[edinburghCol]?.textContent ?? "";
+    expect(text).toContain("deadlineTypeEarly");
+  });
+
+  test("Yale: ONLY recurring_annual_undated rows, no dated row at all — still shows a real date, not '—'", async () => {
+    const element = await renderCompare([MIT_ID, YALE_ID]);
+    const { container } = render(element);
+    const yaleCol = columnIndexFor(container, "Yale University");
+    const rows = cellsByRowLabel(container);
+
+    const cell = rows.get("applicationDeadline")?.[yaleCol];
+    expect(cell?.textContent).toContain("deadlineTypeEarly");
+    expect(cell?.textContent).not.toBe("—");
+  });
+
+  test("MIT still shows its other real gaps (applicationSystem, researchStrengths) unaffected by either fix", async () => {
+    const element = await renderCompare([MIT_ID, OXFORD_ID, EDINBURGH_ID]);
+    const { container } = render(element);
+    const mitCol = columnIndexFor(container, "Massachusetts Institute of Technology");
+    const rows = cellsByRowLabel(container);
+
+    expect(rows.get("applicationSystem")?.[mitCol]?.textContent?.trim()).toBe("—");
+    expect(rows.get("researchStrengths")?.[mitCol]?.textContent?.trim()).toBe("—");
   });
 });
