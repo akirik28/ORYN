@@ -16,6 +16,56 @@ PACKAGE="data/morning/14-toplu-paket-2026-09-04.sql"
 command -v psql >/dev/null || { echo "psql not on PATH"; exit 2; }
 trap 'psql -q postgres -c "drop database if exists $DB" >/dev/null 2>&1' EXIT
 
+# PROVENANCE CHECK (CEO, 2026-09-04: "aynı sağlamayı paket 14... de uygula" -- the exact risk
+# that already fired here once. Package 14's D2 section was hand-assembled from these named
+# source files; one of them (d2-visible-priority-additions-2026-09-04.sql) had its Interlochen
+# Review country_eligibility_confirmed_open line withdrawn at its own source AFTER Package 14
+# was already built and merged -- the withdrawal never propagated into this bundle, so the
+# founder's copy still carried the withdrawn line until it was found and fixed here directly
+# (2026-09-04, while preparing the 14-15-16 sequential integration test). Same bash-3.2-
+# portable path:hash pattern as Package 15/16's own checks.
+echo "── provenance check (source files vs. what this package was built from) ──"
+EXPECTED_HASHES=(
+  "supabase/migrations/0124_upgrade_interstitial_dismissal.sql:48e192d6f9aca35d13f70e7cf7c75df73fe1748a3403934c26cc6275424ba2a2"
+  "supabase/migrations/0126_opportunity_age_grade_eligibility_confirmed_open.sql:6d8864f661b25e147d0b3a3f52424a7dc47ea12f0b26103d6d238cbec3e0e6fe"
+  "supabase/migrations/0127_admission_rate_basis_not_published.sql:188c2c38a146c5391d59a9a76e20301c67fa98fe11b0a6e6bb9f0fc60dea8fd3"
+  "docs/d2-batch2-additions-and-corrections-2026-09-04.sql:046c99b6a455dce7f46f460ab0f13b2af1ae5ac3a081413bb36e3f3369e6daa7"
+  "docs/d2-visible-priority-additions-2026-09-04.sql:c78fff802e303756d74d00d9a37ce07bda4592a68f5d5f1120e8d51e9f339311"
+  "docs/d2-visible-priority-requires-0126-2026-09-04.sql:72e1a72ffa89724ffdc79b036a5a05928cfdaae70e95b72fae901ab0d4693505"
+  "data/research/sql-dry-runs/universities/d5-caltech-deadlines-2026-09-04.sql:e28a4ffd54c77a33f442276a715059c44a5bd5df8d4c3fc1aeabaf7366f6b377"
+)
+PROVENANCE_FAILED=0
+for entry in "${EXPECTED_HASHES[@]}"; do
+  f="${entry%%:*}"
+  expected="${entry#*:}"
+  if [ ! -f "$f" ]; then
+    echo "  MISSING: $f (this package was built from a file that no longer exists here)"
+    PROVENANCE_FAILED=1
+    continue
+  fi
+  actual=$(shasum -a 256 "$f" | cut -d' ' -f1)
+  if [ "$actual" != "$expected" ]; then
+    echo "  DRIFTED: $f"
+    echo "    package was built from: $expected"
+    echo "    file on disk is now:    $actual"
+    PROVENANCE_FAILED=1
+  fi
+done
+if [ "$PROVENANCE_FAILED" -eq 1 ]; then
+  echo
+  echo "  FAILED: at least one source file has changed since this package was generated."
+  echo "  Do not trust this package's content against the drifted file(s) above -- re-verify"
+  echo "  data/morning/14-toplu-paket-2026-09-04.sql's own D2/D5 sections against current source"
+  echo "  before testing further (D1/D8 sections have no single tracked .sql source -- they were"
+  echo "  hand-written from docs/d1-qs-top100-fill-2026-09-04.md and docs/d8-target-universities-"
+  echo "  stats-completeness-2026-09-04.md, research docs rather than SQL to diff against)."
+  exit 1
+fi
+echo "  OK -- every tracked source file matches what this package was actually built from"
+echo "  (D1/D8 sections are hand-written from research .md docs, not tracked here by hash --"
+echo "  see the FAILED-branch note above for why those two are structurally different)"
+echo
+
 psql -q postgres -c "drop database if exists $DB" -c "create database $DB" >/dev/null 2>&1
 
 psql -q "$DB" -v ON_ERROR_STOP=1 >/dev/null 2>&1 <<'SQL'

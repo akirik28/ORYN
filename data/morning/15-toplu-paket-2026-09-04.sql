@@ -1,10 +1,10 @@
 -- Paket 15 — 2026-09-04
--- Migration 0129/0130/0132/0133 + Package 14'ten sonra hazırlanmış 4 veri dolgu dosyası.
+-- Migration 0129/0130/0132/0133 + Package 14'ten sonra hazırlanmış 5 veri dolgu dosyası.
 -- CEO'nun dispatch'i: "Paket 14'ten sonra merge edilen ve hiçbir pakette olmayanlar."
 --
--- ═══ KAYNAK SAĞLAMASI (CEO'nun istediği, bu paket ikinci kez bayatladıktan sonra
+-- ═══ KAYNAK SAĞLAMASI (CEO'nun istediği, bu paket bugün ikinci kez bayatladıktan sonra
 -- eklendi) ═══
--- Bu paket şu commit'ten üretildi: f192fd611eb704e821b58c7cec82b1946fbbb6d4
+-- Bu paket şu commit'ten üretildi: 165425ae6e540d1f1796f508fd1e1cd1c98bb9ea
 -- Kaynak dosyaların SHA-256'ları (üretim anındaki hâli), her biri
 -- scripts/check-package-15-sequence.sh'in kendi "provenance check" adımında yeniden
 -- hesaplanıp karşılaştırılıyor -- biri değişirse test SESSİZCE geçmiyor, açıkça durup
@@ -17,6 +17,7 @@
 --   1fbd6a5b... supabase/migrations/0130_parent_commentary_entries.sql
 --   799ed30f... supabase/migrations/0132_university_statistics_year_index_coalesce.sql
 --   c96fc762... supabase/migrations/0133_country_eligibility_basis.sql
+--   b3d2f0f7... docs/edinburgh-duplicate-row-parity-fix-2026-09-04.sql
 -- Bu paket bu satırdan sonra ELLE düzenlenmemeli -- kaynak değişince buradan
 -- YENİDEN üretilmeli (aynı üretim scripti, worktree'de), tek tek yama değil.
 --
@@ -36,12 +37,13 @@
 --    girer ve index oluşturma AYRICA patlar, iki kat kötü. 0132'nin kendi ölçümü (canlı
 --    veride 0 çift satır, 2026-09-04) bu sırada geçerliliğini koruyor çünkü aradaki hiçbir
 --    bölüm o tabloya dokunmuyor.
--- 2) 0133 diğer dört veri dosyasının ikisinin (d2-country, citizenship-classification)
---    doğrudan bağımlısı -- her ikisi de country_eligibility_basis sütununu yazıyor, sütun
---    0133'ten önce yok. Migration bölümünde olduğu için bu otomatik sağlanıyor.
--- 3) Dört veri dosyası birbirinden BAĞIMSIZ -- hiçbiri aynı opportunity satırının aynı
+-- 2) 0133 diğer dört veri dosyasının üçünün (d2-country, citizenship-classification,
+--    edinburgh-parity-fix) doğrudan bağımlısı -- üçü de country_eligibility_basis sütununu
+--    yazıyor, sütun 0133'ten önce yok. Migration bölümünde olduğu için bu otomatik sağlanıyor.
+-- 3) Beş veri dosyası birbirinden BAĞIMSIZ -- hiçbiri aynı opportunity satırının aynı
 --    alanına yazmıyor (tek tek doğrulandı). Yazılış sırasına göre bırakıldı:
---    boilerplate-cleanup → classification → d2-country → waterloo-cemc-split.
+--    boilerplate-cleanup → classification → d2-country → edinburgh-parity-fix →
+--    waterloo-cemc-split.
 --
 -- HARİÇ TUTULAN: D1'in ikinci partisi (QS top-100 kalanı, 14/19, bitmedi -- Paket 14'teki
 -- aynı karar burada da geçerli).
@@ -86,13 +88,25 @@
 -- hiçbir Paket 15 dosyasında geçmediği taze bir grep ile yeniden doğrulandı, önceki mesaja
 -- güvenilmedi.
 --
+-- DÜZELTME 4 (CEO'nun üç-paket sıralı test talebini hazırlarken bulundu, kurucuya
+-- sunulmadan önce) -- docs/edinburgh-duplicate-row-parity-fix-2026-09-04.sql (30436a92'nin
+-- -- Edinburgh'ün Paket 16'da hayatta kalan satırının -- country_eligibility_basis'ini
+-- dolduran, 0133'e bağımlı, zaten yazılmış bir düzeltme) HİÇBİR pakete dahil edilmemişti --
+-- kendi başına, bağımsız bir dosya olarak duruyordu. Paket 16'nın kendi Edinburgh bölümü bu
+-- satırın country_eligibility_basis'ini "zaten uygulanmış" varsayıyordu -- ama üç paket de
+-- (14/15/16) çalıştırılsa bile bu varsayım YANLIŞ çıkacaktı, çünkü hiçbiri bu dosyayı
+-- içermiyordu. 0133'e bağımlı olduğu ve aynı country_eligibility_basis mekanizmasını
+-- kullandığı için buraya, D2 ülke dolgusunun hemen ardına eklendi. Kendi WHERE koruması
+-- zaten tam (status'a bakmıyor -- Paket 16 hangi sırada çalışırsa çalışsın aynı sonucu
+-- verir, aşağıdaki iki-koşu testiyle doğrulandı).
+--
 -- İKİ KEZ ÇALIŞTIRILDI, satır sayıldı: scripts/check-package-15-sequence.sh.
 
 begin;
 
 
 -- ══════════════════════════════════════════════════════════
--- BÖLÜM 1/8 — Migration 0129: opportunity age/grade eligibility basis
+-- BÖLÜM 1/9 — Migration 0129: opportunity age/grade eligibility basis
 -- ══════════════════════════════════════════════════════════
 -- 0129: opportunities.age_eligibility_basis / grade_eligibility_basis -- the third state
 -- 0126 didn't have, mirroring university_statistics.admission_rate_basis's own shape (0119)
@@ -165,7 +179,7 @@ comment on column public.opportunities.grade_eligibility_basis is
 -- twice is a no-op, not an error.
 
 -- ══════════════════════════════════════════════════════════
--- BÖLÜM 2/8 — Migration 0130: parent_commentary_entries tablosu
+-- BÖLÜM 2/9 — Migration 0130: parent_commentary_entries tablosu
 -- ══════════════════════════════════════════════════════════
 -- Storage for the monthly parent commentary narrative (B3a's "gelişim" page, 2026-09-04).
 -- NOT YET APPLIED, per this repo's own standing discipline: the founder runs this by hand.
@@ -297,7 +311,7 @@ comment on function public.get_parent_child_commentary(uuid, integer) is
   (a year of monthly entries) and is clamped 1-50 so a caller cannot force an unbounded scan.';
 
 -- ══════════════════════════════════════════════════════════
--- BÖLÜM 3/8 — Migration 0132: university_statistics unique index coalesce düzeltmesi
+-- BÖLÜM 3/9 — Migration 0132: university_statistics unique index coalesce düzeltmesi
 -- (veri dolgusundan önce -- gerekçe dosyanın en üstünde)
 -- ══════════════════════════════════════════════════════════
 -- 0132: university_statistics_university_year_idx never actually fires -- same defect
@@ -335,8 +349,8 @@ create unique index if not exists university_statistics_university_year_idx
   on university_statistics (university_id, coalesce(stat_year, -1));
 
 -- ══════════════════════════════════════════════════════════
--- BÖLÜM 4/8 — Migration 0133: opportunity country eligibility basis
--- (bu satırdan sonra country_eligibility_basis sütunu var -- 4 ve 5. bölümler buna bağımlı)
+-- BÖLÜM 4/9 — Migration 0133: opportunity country eligibility basis
+-- (bu satırdan sonra country_eligibility_basis sütunu var -- 4-9 bölümleri buna bağımlı)
 -- ══════════════════════════════════════════════════════════
 -- 0133: opportunities.country_eligibility_basis -- the same third state 0129 gave age/grade,
 -- for country. Mirrors 0129's own shape exactly, which itself mirrors
@@ -398,7 +412,7 @@ comment on column public.opportunities.country_eligibility_basis is
 -- no-op, not an error.
 
 -- ══════════════════════════════════════════════════════════
--- BÖLÜM 5/8 — citizenship_restrictions/residency_restrictions boilerplate temizliği
+-- BÖLÜM 5/9 — citizenship_restrictions/residency_restrictions boilerplate temizliği
 -- ══════════════════════════════════════════════════════════
 -- Cleanup for the citizenship_restrictions/residency_restrictions leak CEO asked to be
 -- measured properly rather than fixed as "2 rows": a research pass's own internal note
@@ -541,7 +555,7 @@ where id = 'bc678344-c213-4ae8-a4f8-48af2856338f'
 -- own citizenship_restrictions, and Ross Mathematics Program's citizenship_restrictions.
 
 -- ══════════════════════════════════════════════════════════
--- BÖLÜM 6/8 — CEO'nun 3'lü testiyle sınıflandırılan satırlar (REQUIRES 0133)
+-- BÖLÜM 6/9 — CEO'nun 3'lü testiyle sınıflandırılan satırlar (REQUIRES 0133)
 -- ══════════════════════════════════════════════════════════
 -- Classification of the 7 rows docs/citizenship-restrictions-boilerplate-cleanup-2026-09-04.sql
 -- deliberately left untouched -- CEO's own three-way test, applied row by row with reasoning
@@ -731,7 +745,7 @@ where id = '95093e1a-fc13-4d9a-b4ed-5f0584252b44'
 -- no-op for that row rather than an error or a wrong overwrite.
 
 -- ══════════════════════════════════════════════════════════
--- BÖLÜM 7/8 — D2: country_eligibility_basis = checked_not_stated dolgusu, 11 satır (REQUIRES 0133)
+-- BÖLÜM 7/9 — D2: country_eligibility_basis = checked_not_stated dolgusu, 11 satır (REQUIRES 0133)
 -- ══════════════════════════════════════════════════════════
 -- D2 -- applying migration 0133's new 'checked_not_stated' basis to the COUNTRY dimension of
 -- research already gathered in batches 1-2 and the visible-priority batch
@@ -944,7 +958,48 @@ where id = 'ae5e73f0-43ba-42be-baed-423d3087e7e1'
 -- that one statement into a safe no-op instead of a silent, dead, or wrong write.
 
 -- ══════════════════════════════════════════════════════════
--- BÖLÜM 8/8 — Waterloo/CEMC bölünmesi: 5 yeni satır + eski satırın kapatılması
+-- BÖLÜM 8/9 — Edinburgh eşitleme düzeltmesi: 30436a92'ye country_eligibility_basis (REQUIRES 0133)
+-- (bu paket üretilmeden önce hiçbir pakette bulunmuyordu -- bugün burada bulunup eklendi)
+-- ══════════════════════════════════════════════════════════
+-- Found while computing the night's final closing measurement, not sought out separately:
+-- 'University of Edinburgh Pre-University Summer School 2026' (dc762fce-b83a-4217-a610-
+-- 290ac2f65f17, fixed by docs/d2-country-checked-not-stated-requires-0133-2026-09-04.sql) and
+-- 'University of Edinburgh International Summer School' (30436a92-26fd-4972-a8b3-
+-- dce8ad454943) are the SAME program listed TWICE -- both point at the identical official_url
+-- (https://study.ed.ac.uk/summer-school). The row a real student currently sees in the
+-- visible-33 set is 30436a92, NOT dc762fce -- so the 0133 country fix landed on the twin
+-- nobody is currently shown, while the one a student actually sees stays fully unresearched
+-- (age, grade AND country all null/empty, confirmed live).
+--
+-- This is a duplicate-ROW problem, the mirror image of the Waterloo/CEMC issue from earlier
+-- tonight -- that was one row wrongly bundling several real programs; this is one real program
+-- wrongly split into two rows. Not resolved here (deciding which row is canonical and merging
+-- opportunity_matches/saved_opportunities history is a bigger, separate task, same shape as
+-- Waterloo/CEMC's own "measure, then plan" first step) -- flagged for that, not fixed.
+--
+-- What IS applied below is a narrow, safe parity fix: the SAME country evidence already used
+-- for dc762fce ("Page repeats the age range... but has no grade or country statement at all,"
+-- docs/opportunity-eligibility-d2-not-found-2026-09-04.md) applies identically to 30436a92 --
+-- it is the same page. Age and grade are NOT touched here -- dc762fce already had a real age
+-- bound on file before its own fix; 30436a92 has neither age nor grade populated at all, and
+-- fixing those needs its own research pass, not a copy from a row that was never actually more
+-- complete on those two fields. REQUIRES MIGRATION 0133 applied first.
+
+update public.opportunities
+set country_eligibility_basis = 'checked_not_stated',
+    last_verified_at = now()
+where id = '30436a92-26fd-4972-a8b3-dce8ad454943'
+  and country_eligibility_confirmed_open = false
+  and citizenship_restrictions is null
+  and residency_restrictions is null
+  and eligible_countries = '{}'
+  and eligible_citizenships = '{}';
+
+-- Age and grade remain open gaps for this row -- not addressed here, named so this file is
+-- never mistaken for a complete fix of the duplicate.
+
+-- ══════════════════════════════════════════════════════════
+-- BÖLÜM 9/9 — Waterloo/CEMC bölünmesi: 5 yeni satır + eski satırın kapatılması
 -- (sıra dosyanın kendi içinde: 5 INSERT önce, retirement UPDATE sonra)
 -- ══════════════════════════════════════════════════════════
 -- Waterloo/CEMC split -- EXECUTION of the plan in docs/waterloo-cemc-split-plan-2026-09-04.md.

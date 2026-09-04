@@ -39,12 +39,15 @@ gerçek fırsat ID'leriyle, **iki kez art arda** çalıştırıldı.
    (Immerse, Oxford Scholastica, UCSB) `checked_not_stated`'a taşındı
 7. **D2 — ülke eligibility'si "checked_not_stated" dolgusu, 11 satır** (REQUIRES 0133) —
    D2'nin görünür-öncelik araştırmasının ülke yarısı; 0129 sadece yaş/sınıfı kapatmıştı
-8. **Waterloo/CEMC bölünmesi** — dokuz farklı yarışmayı tek, uyumsuz `eligible_grades`
+8. **Edinburgh eşitleme düzeltmesi** (REQUIRES 0133) — Edinburgh'ün Paket 16'da hayatta
+   kalan satırına (`30436a92`) `country_eligibility_basis` dolduruyor. Bugüne kadar hiçbir
+   pakete dahil edilmemiş, bağımsız bir dosyaydı — bulunup buraya eklendi (aşağıda DÜZELTME 4)
+9. **Waterloo/CEMC bölünmesi** — dokuz farklı yarışmayı tek, uyumsuz `eligible_grades`
    değeriyle bir araya getiren şemsiye satır, 5 doğru kapsamlı yeni satıra bölündü, eski
    satır kapatıldı (silinmedi — `status = 'disabled'`)
 
-Migration'lar önce (0132 dahil — aşağıda neden), sonra dört veri dosyası kendi yazılış
-sırasıyla. Dört veri dosyası birbirinden bağımsız — hiçbiri aynı fırsatın aynı alanına
+Migration'lar önce (0132 dahil — aşağıda neden), sonra beş veri dosyası kendi yazılış
+sırasıyla. Beş veri dosyası birbirinden bağımsız — hiçbiri aynı fırsatın aynı alanına
 yazmıyor, tek tek doğrulandı.
 
 ## 0132'nin yeri — neden veri dolgusundan önce
@@ -68,7 +71,7 @@ tamamlanınca kendi paketi olacak) o andan itibaren korunmuş olur; bir INSERT �
 ölçümü (canlı veride 0 çift satır, 2026-09-04) bu paket sırasında geçerliliğini koruyor
 çünkü aradaki hiçbir bölüm o tabloya dokunmuyor.
 
-## Kaynağında bulunup düzeltilen üç gerçek sorun
+## Kaynağında bulunup düzeltilen dört gerçek sorun
 
 **1. Waterloo/CEMC'nin 5 INSERT'inde re-run koruması yoktu** —
 `gen_random_uuid()` kullanıyorlar, ve hiçbir `ON CONFLICT` yoktu. **Kanıtlandı, sadece
@@ -143,12 +146,24 @@ sequence.sh`'i ile yeniden doğrulandı — temiz.
 
 **Kalıcı önlem — CEO'nun açık talebi:** paket üretildikten sonra kaynak dosyalar değişirse
 artık **sessizce** fark edilmeyecek. `scripts/check-package-15-sequence.sh`'in en başına bir
-**sağlama kontrolü** eklendi: paketin kendi başlığı, üretim anındaki 8 kaynak dosyanın
-(4 migration + 4 veri dosyası) SHA-256'sını taşıyor; test her çalıştığında bunları YENİDEN
+**sağlama kontrolü** eklendi: paketin kendi başlığı, üretim anındaki 9 kaynak dosyanın
+(4 migration + 5 veri dosyası) SHA-256'sını taşıyor; test her çalıştığında bunları YENİDEN
 hesaplayıp karşılaştırıyor, herhangi biri farklıysa **veritabanına hiç dokunmadan** açıkça
 durup hangi dosyanın bayatladığını söylüyor. Kanıtlandı, sadece yazılmadı: bir kaynak
 dosyaya deneme amaçlı bir satır ekleyip testi çalıştırdım, kontrol hemen kırmızıya döndü ve
 doğru dosyayı adlandırdı; değişikliği geri alıp tekrar çalıştırdım, temiz geçti.
+
+**4. `edinburgh-duplicate-row-parity-fix-2026-09-04.sql`, Paket 16'nın kendi yorumunun
+"zaten uygulanmış" varsaydığı bir düzeltme, hiçbir pakete dahil edilmemişti.** CEO'nun
+"üç paketi arka arkaya çalıştır" talebini hazırlarken bulundu, kurucuya sunulmadan önce.
+Bu dosya Edinburgh'ün Paket 16'da hayatta kalan satırına (`30436a92`) `country_eligibility_
+basis` dolduran, 0133'e bağımlı, zaten yazılmış bir düzeltme — ama kendi başına, bağımsız
+duruyordu. Üç paket de (14/15/16) çalıştırılsa bile bu satır dolmayacaktı, çünkü hiçbiri bu
+dosyayı içermiyordu. **0133'e bağımlı olduğu için buraya, D2 ülke dolgusunun hemen ardına
+eklendi** (yeni BÖLÜM 8/9). Sağlama listesine 9. dosya olarak katıldı. Kendi WHERE koruması
+`status`'a bakmıyor — Paket 16'nın Edinburgh'ü emekliye ayırmasından önce mi sonra mı
+çalıştığından bağımsız, `check-morning-packages-14-15-16-sequence.sh` ile ölçülerek
+doğrulandı (aşağıya bakın).
 
 ## Ne dahil değil, ve neden
 
@@ -164,24 +179,56 @@ aynı yaklaşımla, üçüncü kez yeniden kurulmadan.
 
 1. Yerel Postgres'te, 0129'dan önceki her migration'ı kurar (Paket 14'ün 0124/0126/0127'si
    dahil — bu paket ondan sonra geldiği için zaten uygulanmış varsayılıyor).
-2. Paketin referans verdiği 23 gerçek fırsatı **gerçek ID'leri ve gerçek alan değerleriyle**
+2. Paketin referans verdiği 24 gerçek fırsatı **gerçek ID'leri ve gerçek alan değerleriyle**
    ekler (canlı veritabanından okunmuş — `citizenship_restrictions`/`residency_restrictions`
    metni dahil harfiyen aynı, her UPDATE'in kendi WHERE koruması tam bu yüzden tutuyor).
 3. Paketi çalıştırır. Hata varsa durur ve gösterir.
 4. Paketi **ikinci kez** çalıştırır. Hata varsa durur ve gösterir.
-5. Dokuz farklı sonucu tek tek sayar: 5 yeni CEMC satırı (10 değil), eski Waterloo satırının
+5. On farklı sonucu tek tek sayar: 5 yeni CEMC satırı (10 değil), eski Waterloo satırının
    `disabled` olduğu, üç yeni "basis" sütununun var olduğu, `parent_commentary_entries`
    tablosunun var olduğu, `university_statistics` indeksinin artık coalesce'li olduğu,
-   15 satırın `checked_not_stated` olduğu, 2 satırın `confirmed_no_restriction`'a
+   16 satırın `checked_not_stated` olduğu, 2 satırın `confirmed_no_restriction`'a
    yükseldiği, Lumiere'in kirli `citizenship_restrictions`'ının temizlendiği, Interlochen'in
-   kendi satırının doğru son durumda olduğu.
+   kendi satırının doğru son durumda olduğu, Edinburgh survivor'ının basis'inin dolduğu.
 
-Ayrıca (0'ıncı adım, veritabanına dokunmadan önce): **sağlama kontrolü** — 8 kaynak dosyanın
+Ayrıca (0'ıncı adım, veritabanına dokunmadan önce): **sağlama kontrolü** — 9 kaynak dosyanın
 şu anki SHA-256'sı, paketin kendi başlığındaki üretim-anı değerleriyle karşılaştırılıyor.
 Farklıysa test hemen durur, hangi dosyanın bayatladığını söyler.
 
-Bu makinede son çalıştırma: sağlama kontrolü temiz, iki koşu da temiz, dokuz kontrolün hepsi
+Bu makinede son çalıştırma: sağlama kontrolü temiz, iki koşu da temiz, on kontrolün hepsi
 beklenen sayıda.
+
+## Üç paket arka arkaya — CEO'nun asıl istediği test
+
+Paket 14/15/16'nın kendi testleri her paketi **tek başına** doğruluyor. CEO'nun kendi
+gerekçesi: *"Bugün paketleri tek tek doğruladık. Üçünü sırayla hiç kimse çalıştırmadı — ve
+sabah kurucunun elinde patlayan hata tam olarak buydu: her paket ayrı ayrı doğruydu, sıra
+bozuktu."* `scripts/check-morning-packages-14-15-16-sequence.sh` üçünü **gerçek sırasıyla
+(14 → 15 → 16), aynı veritabanında, iki kez** çalıştırıyor.
+
+**İki kesişim özellikle soruldu, ikisi de ölçüldü:**
+- **0132'nin indeksi (Paket 15) ile Paket 16'nın birleştirmesi aynı tabloya mı dokunuyor?**
+  Hayır — Paket 16 sadece `public.opportunities`'e yazıyor, `university_statistics`'e hiç
+  dokunmuyor. Dosya okunarak (statik) doğrulandı, veritabanı gerekmedi.
+- **Paket 16'nın emekliye ayırdığı satırlar, Paket 15'in güncellediği satırlarla kesişiyor
+  mu?** Evet, Edinburgh'te — Paket 15'in D2 dolgusu `dc762fce`'ye `country_eligibility_basis`
+  yazıyor, Paket 16 aynı satırı emekliye ayırıp verisini `30436a92`'ye taşıyor. **Sıra
+  önemli değil, ölçüldü:** iki koşu sonunda `30436a92` (hayatta kalan) hem doğru
+  `country_eligibility_basis`'i hem Paket 16'nın taşıdığı yaş/tarih verisini taşıyor;
+  `dc762fce` (emekli) `disabled` durumunda. Paket 15'in D2 dolgusu `dc762fce`'ye emekli
+  olmadan önce yazıyor olsa da zararsız — emekli bir satırın hiçbir alanı hiçbir öneri
+  yüzeyinde okunmuyor.
+
+Bu makinede son çalıştırma: statik kontrol temiz, iki tam geçiş de (14→15→16, iki kez)
+hatasız, üç satırlık çapraz-paket kontrolü beklenen sonuçlarda.
+
+**Not:** bu test sırasında bir kez gerçek bir disk dolması yaşandı (`ENOSPC`, en basit
+komutlar bile başarısız oluyordu) — benden kaynaklanmadı, muhtemelen filo genelinde bir
+anlık zirve, CEO'ya anında bildirildi. Birkaç dakika içinde kendiliğinden düzeldi (5,5 GB
+boş alana döndü), test o zaman tekrarlandı ve temiz geçti. Test scripti kendi başına bu
+sınıf bir hatayı ayırt edemez (psql'in gerçek hata mesajı `>/dev/null 2>&1` ile
+bastırılıyor) — aynı "BASELINE FAILED" mesajı gerçek bir SQL hatasından da gelir. Aynı
+belirsiz hatayı tekrar görürsen, önce `df -h /` ile disk alanını kontrol et.
 
 ## Canlıya hiçbir şey yazılmadı
 

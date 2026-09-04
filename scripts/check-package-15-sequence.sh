@@ -37,6 +37,7 @@ EXPECTED_HASHES=(
   "supabase/migrations/0130_parent_commentary_entries.sql:1fbd6a5b620f45d779de3f33190357e5e0b2d50944632af575978009312fb209"
   "supabase/migrations/0132_university_statistics_year_index_coalesce.sql:799ed30fff1c01206cb312baa7df1bf3eb70fd3bbe5a1f6b8f42d0fbb91fb0dd"
   "supabase/migrations/0133_country_eligibility_basis.sql:c96fc762d53851d5e8a47153bce06b77b2e23184921b8683a5f27f3415870907"
+  "docs/edinburgh-duplicate-row-parity-fix-2026-09-04.sql:b3d2f0f723c66c0fd5f99caa2b2d1572e4dffdc269c49f1b891816fa8f070ad5"
 )
 PROVENANCE_FAILED=0
 for entry in "${EXPECTED_HASHES[@]}"; do
@@ -106,7 +107,7 @@ psql -q "$DB" -v ON_ERROR_STOP=1 -f /private/tmp/claude-501/-Users-adasarpkirik-
 # eligible_countries/eligible_citizenships default to '{}' per migration 0008, and none of
 # these 22 rows have them set live (confirmed in the same execute_sql read) -- no separate
 # UPDATE needed, the INSERT's own defaults already match.
-echo "  fixture rows seeded (23 real opportunities, exact live field values -- 22 from the original build plus Interlochen, added when the classification source grew its 6th row)"
+echo "  fixture rows seeded (24 real opportunities, exact live field values -- 22 from the original build, Interlochen added with the classification source's 6th row, 30436a92/Edinburgh added with the newly-bundled parity-fix section)"
 echo
 
 echo "── first run ──"
@@ -189,7 +190,7 @@ psql -q "$DB" -t -c "
     (select count(*) from pg_indexes where indexname='university_statistics_university_year_idx' and indexdef ilike '%coalesce%');
 "
 psql -q "$DB" -t -c "
-  select 'rows with country_eligibility_basis = checked_not_stated (expect 15 -- 11 from D2 + Immerse/Interlochen/Oxford Scholastica/UCSB from classification): ' ||
+  select 'rows with country_eligibility_basis = checked_not_stated (expect 16 -- 11 from D2 + Immerse/Interlochen/Oxford Scholastica/UCSB from classification + Edinburgh/30436a92 from the parity fix): ' ||
     count(*)
   from public.opportunities where country_eligibility_basis = 'checked_not_stated';
 "
@@ -205,6 +206,11 @@ psql -q "$DB" -t -c "
   select 'Interlochen Review (95093e1a) basis/confirmed_open (expect checked_not_stated / false -- the second row this same contradiction class hit, added to source after this package was first generated): ' ||
     coalesce(country_eligibility_basis, 'NULL') || ' / ' || country_eligibility_confirmed_open::text
   from public.opportunities where id = '95093e1a-fc13-4d9a-b4ed-5f0584252b44';
+"
+psql -q "$DB" -t -c "
+  select 'Edinburgh survivor (30436a92) basis (expect checked_not_stated -- the parity-fix file that was found unbundled by NO package while preparing the 14-15-16 sequential integration test, bundled in here): ' ||
+    coalesce(country_eligibility_basis, 'NULL')
+  from public.opportunities where id = '30436a92-26fd-4972-a8b3-dce8ad454943';
 "
 
 echo
