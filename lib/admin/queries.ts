@@ -1329,11 +1329,22 @@ export async function getCostTrend(admin: SupabaseClient<Database>, days = 30): 
 // ---------------------------------------------------------------------------------------------
 
 const ACTIVE_OPPORTUNITY_FACTS_SELECT =
-  "category, cycle_status, deadline, last_verified_at, verified_at, source_verified_at, eligible_countries, citizenship_restrictions, status";
+  "id, title, category, cycle_status, deadline, last_verified_at, verified_at, source_verified_at, eligible_countries, citizenship_restrictions, residency_restrictions, status";
 
 type ActiveOpportunityFacts = Pick<
   Opportunity,
-  "category" | "cycle_status" | "deadline" | "last_verified_at" | "verified_at" | "source_verified_at" | "eligible_countries" | "citizenship_restrictions" | "status"
+  | "id"
+  | "title"
+  | "category"
+  | "cycle_status"
+  | "deadline"
+  | "last_verified_at"
+  | "verified_at"
+  | "source_verified_at"
+  | "eligible_countries"
+  | "citizenship_restrictions"
+  | "residency_restrictions"
+  | "status"
 >;
 
 /**
@@ -1505,6 +1516,59 @@ export async function getDeadlineEligibilityCoverage(admin: SupabaseClient<Datab
         !r.citizenship_restrictions
     ).length,
   };
+}
+
+export interface DuplicateRestrictionTextGroup {
+  field: "citizenship_restrictions" | "residency_restrictions";
+  text: string;
+  opportunityIds: string[];
+  opportunityTitles: string[];
+}
+
+/**
+ * Detects a real failure mode found 2026-09-04: a research pass's own internal note ("None
+ * stated on the fetched pages.", "None stated on official site or FAQ") stored as the column's
+ * actual value instead of leaving it null when nothing was found -- confirmed live on 11
+ * opportunities (17 field-instances) across `citizenship_restrictions`/`residency_restrictions`.
+ * Two of those rows are in the currently-visible set and render the raw note verbatim to real
+ * students on the opportunity detail page's own unconditional citizenship/residency section
+ * (app/(app)/opportunities/[id]/page.tsx) -- not a dormant data-quality nit.
+ *
+ * Deliberately NOT a content/prefix pattern match (e.g. "starts with 'not stated'") -- that
+ * would have rejected Sutton Trust UK Summer Schools' own genuine, substantive restriction,
+ * which happens to start the same way ("Not explicitly stated by citizenship on the fetched
+ * pages, but the school/residency criteria make it de facto restricted..."). The signal used
+ * instead is structural, not lexical: scanning every non-null value across both columns live
+ * (2026-09-04), every real, program-specific restriction is unique text -- no two opportunities
+ * share one. Boilerplate doesn't have that property: "None stated on the fetched pages." alone
+ * repeats verbatim across six unrelated programs. Two or more opportunities sharing the exact
+ * same restriction string is therefore a narrow, false-positive-resistant signal that the value
+ * is a copy-pasted note rather than a fact actually researched for that specific program,
+ * without needing to guess which words a genuine restriction may or may not open with.
+ *
+ * Same register as `getDeadlineEligibilityCoverage` above: a spot-check signal for a human
+ * research pass to review, never an auto-fix and never rendered as a confirmed-defect count.
+ */
+export async function getDuplicateRestrictionTextGroups(admin: SupabaseClient<Database>): Promise<DuplicateRestrictionTextGroup[]> {
+  const rows = await getActiveOpportunityFacts(admin);
+  const groups = new Map<string, DuplicateRestrictionTextGroup>();
+
+  for (const field of ["citizenship_restrictions", "residency_restrictions"] as const) {
+    for (const row of rows) {
+      const text = row[field];
+      if (!text) continue;
+      const key = `${field}::${text}`;
+      const existing = groups.get(key);
+      if (existing) {
+        existing.opportunityIds.push(row.id);
+        existing.opportunityTitles.push(row.title);
+      } else {
+        groups.set(key, { field, text, opportunityIds: [row.id], opportunityTitles: [row.title] });
+      }
+    }
+  }
+
+  return [...groups.values()].filter((g) => g.opportunityIds.length > 1);
 }
 
 const DATA_STATUS_TABLES = ["universities", "university_requirements", "university_deadlines"] as const;
