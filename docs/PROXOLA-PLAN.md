@@ -77,6 +77,86 @@ geçersiz kılmıyor ama anlamını değiştiriyor:** acil değil çünkü bir �
 
 ---
 
+## ✅ JOB D DÜZELTİLDİ — cron'lar artık bu yüzden engellenmiyor (5 Eylül)
+
+`lib/plan/persist.ts:92`'deki sarmalanmamış `getTranslations()` kaldırıldı;
+`persist-matches.ts`'in kendi satır içi locale deseni uygulandı. **Kırmızıya
+döndürülerek kanıtlandı:** yeni test `next-intl/server`'ı **reddedecek** şekilde
+kurgulayıp gerçek işi sürüyor — eski kodda tam beklenen iz çıkıyor
+(`getTranslations → persist.ts:92 → generateForStudent`), düzeltmeyle gerçek plan
+üretiliyor. Eski testin **hiçbir şey yapmayan** next-intl mock'u da silindi; o mock
+hatanın saklandığı yerdi.
+
+**Aynı sınıftan ÜÇÜNCÜ bir hata da bulundu ve kapatıldı:**
+`buildUniversityAdmissionContextText` kendi oturum kapsamlı istemcisini kuruyordu,
+dışarıdan istemci alamıyordu — Job D'de **her plan için sessizce boş** dönerdi.
+`buildStudentAdvisorContext`'in zaten kullandığı `supabaseClient?` parametresiyle
+düzeltildi.
+
+**İki bağlam boşluğu da kapandı:** hedef coğrafya artık `StudentAdvisorContext`'e
+giriyor (etiket metni onboarding'in **kendi** çeviri anahtarlarından alındı,
+uydurulmadı) · kabul oranı bağlamı **önce ölçülüp** sonra bağlandı: haftalık plan
+bu ay 10 çağrıda **$0,1953**, ~5.120 girdi token/çağrı, **aylık ~$1,17** — $10
+tavanına karşı geniş pay. Kabul oranının kendi maliyeti 234-569 token (%4,6-11,1
+artış). **Tavan tehdit altında değil, o yüzden bağlandı.**
+
+**Dürüstçe bildirilen açık:** eval harness'ının prompt kurucuları bu DB'ye bağlı
+bölümü **hiç temsil edemiyor** (fixture'larda gerçek `target_universities` satırı
+yok) — B7 dünden beri bunu sessizce atlıyormuş. Sahte veri **uydurulmadı**, harness'ın
+kendi başlık yorumuna açık boşluk olarak yazıldı.
+
+---
+
+## ✅ SIRALAMA KARARSIZLIĞI KAPANDI — kanıt üretildi, iddia edilmedi (5 Eylül)
+
+`home-strip.ts` ve **veli panelinin kendi ilk-5 yüzeyi** (`panel-data.ts:76`, ikinci
+örnek, aynı şekil) ikincil sabit anahtar aldı (`.order("id")`).
+
+**Kararsızlık gerçekten üretildi:** yerel geçici Postgres, 20 satır, hepsi aynı
+`match_score`. `enable_seqscan=off` (Index Scan Backward) → bir satır **1. sırada**;
+`enable_indexscan=off + enable_bitmapscan=off` (Seq Scan) → **aynı satır 5. sırada.**
+Aynı veri, aynı sorgu, iki geçerli plan, farklı sıra. Düzeltmeden sonra iki planda da
+**bayt bayt aynı.**
+
+**Ve sahte harness kullanılmadı:** `mock-supabase-table.ts` `.order()`'ı bilinçli
+no-op sayıyor — onunla yazılan test **her zaman yeşil** olurdu. Şerit bunu fark edip
+kendi spy'ını yazdı.
+
+**Ham SQL taraması da yapıldı** (`.order(` taraması yalnızca TypeScript'i görüyordu):
+migration ve edge function'larda 4 isabet, **hiçbiri yeni örnek değil** — biri hep
+`limit 1` ile çağrılıyor, ikisi zaten iki anahtarlı ve yazma anında bir kez çalışıyor.
+**Dördüncü gerçek örnek yok**, ve bu ölçülerek söylendi.
+
+---
+
+## 🟠 DÜNKÜ DÜRÜSTLÜK İŞİ CANLIDA DEĞİL — 5 Eylül, CEO doğruladı
+
+**Canlı veritabanı `opportunities` tablosunda altı uygunluk sütunundan beşi yok.**
+CEO kendi SQL'iyle doğruladı (bir şeridin bulgusu üzerine):
+
+| sütun | canlıda |
+|---|---|
+| `country_eligibility_confirmed_open` (0060) | ✅ var |
+| `age_eligibility_confirmed_open` | ❌ yok |
+| `grade_eligibility_confirmed_open` | ❌ yok |
+| `country_eligibility_basis` · `age_eligibility_basis` · `grade_eligibility_basis` | ❌ yok |
+
+**Sonuç: dün "%97 → %79" diye raporlanan iyileşme canlıda geçerli değil.** Kod ve
+migration'lar `main`'de duruyor, uygulanmayı bekliyor. Bir şeridin bugünkü bağımsız
+ölçümü (%94,8) **dünkü başlangıç sayısıyla birebir aynı** — tam da bu yüzden.
+
+**Ama arıza değil, ve yönü güvenli:** sorgular `select("*")` kullanıyor, yani eksik
+sütun hata değil **yokluk** olarak geliyor; kod `?? false` / `?? null` ile düşüyor.
+Bu da ürünü **daha çok uyarı gösteren** tarafa düşürüyor, daha az değil. Yani canlı
+ürün **fazla temkinli**, yanıltıcı değil. **Kullanıcı zarar görmüyor, iyileşme
+sadece teslim edilmemiş.**
+
+**Bu, aşağıdaki "Kurucuyu bekleyen migration'lar — HİÇBİRİ ACİL DEĞİL" başlığını
+geçersiz kılmıyor ama anlamını değiştiriyor:** acil değil çünkü bir şey bozuk değil;
+**ama uygulanmadan dünkü işin hiçbiri öğrenciye ulaşmıyor.**
+
+---
+
 ## 🔴 CRON'LARI AÇMADAN ÖNCE OKU — moladan hemen önce bulundu
 
 **Haftalık plan işi (Job D) açılırsa, hiçbir öğrenciye plan üretmeden "başarılı"
