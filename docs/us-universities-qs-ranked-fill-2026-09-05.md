@@ -1294,3 +1294,260 @@ values
 
 Read-only against the live database plus `WebSearch` for content — no code changed, no live
 database writes. SQL staged for CEO/founder review and application, not applied.
+
+---
+
+# Batch 6
+
+## 36. Colorado State University (QS 540)
+
+`id = '69d2bf99-796b-463e-bd21-e937a855ce28'`
+
+**Sources:** `https://policy.colostate.edu/wp-content/uploads/sites/7/2023/04/College-Admissions-Use-of-National-Test-Scores-for-PUD.pdf`
+(official university policy on national test scores) and
+`https://international.colostate.edu/iec/international-admissions/english-language-proficiency/`
+(official English-language-proficiency page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('69d2bf99-796b-463e-bd21-e937a855ce28', 'standardized_test',
+   'Test-optional for all applicants, including international; not required for admission, program placement, or financial aid',
+   'Colorado State University does not require SAT/ACT (referred to internally as "National Test Scores") for admission to the institution or to any specific college, school, or program, and scores are not required to receive financial aid. If submitted, scores receive limited weight relative to grades, course rigor, and demonstrated persistence. International applicants may submit SAT/ACT but are not required to.',
+   false, 'medium', 'https://policy.colostate.edu/wp-content/uploads/sites/7/2023/04/College-Admissions-Use-of-National-Test-Scores-for-PUD.pdf', now()),
+  ('69d2bf99-796b-463e-bd21-e937a855ce28', 'english_proficiency',
+   'TOEFL, IELTS Academic, or Duolingo preferred; conditional admission with Intensive English Program available if not met',
+   'TOEFL, IELTS Academic, or Duolingo English Test (DET) results are the preferred indicators of English proficiency for undergraduate applicants. An applicant who meets academic admission standards but has not submitted a qualifying score can still receive conditional admission, enrolling in the Intensive English Program (IEP) until the Academic English Program is completed or a qualifying score is achieved. Citizens of certain countries, or applicants who recently earned a degree from a US university, may be exempt. No specific minimum numeric cutoffs were confirmed in this pass.',
+   true, 'medium', 'https://international.colostate.edu/iec/international-admissions/english-language-proficiency/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('69d2bf99-796b-463e-bd21-e937a855ce28', 'https://policy.colostate.edu/wp-content/uploads/sites/7/2023/04/College-Admissions-Use-of-National-Test-Scores-for-PUD.pdf',
+   'policy.colostate.edu', 'official_institution_website', now(), 'medium',
+   'National Test Scores are not required for Admission into the University or for Admission into any specific College, School, or Program... nor are they required to receive any financial aid.'),
+  ('69d2bf99-796b-463e-bd21-e937a855ce28', 'https://international.colostate.edu/iec/international-admissions/english-language-proficiency/',
+   'international.colostate.edu', 'official_admissions_office', now(), 'medium',
+   'TOEFL, IELTS Academic, or Duolingo English Test (DET) results are the preferred indicators of English proficiency for undergraduate applicants... Students who are awarded conditional admission enroll in the Intensive English Program (IEP).');
+```
+
+## 37. Iowa State University (QS 540)
+
+`id = 'e37c035c-40c9-444d-b5b4-32c367626ed8'`
+
+**Sources:** `https://www.iastate.edu/admission-and-aid/admissions/first-year-students`
+(official first-year admissions/testing policy) and
+`https://www.iastate.edu/admission-and-aid/admissions/international-admissions/english-proficiency-requirement`
+(official English-proficiency-requirement page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('e37c035c-40c9-444d-b5b4-32c367626ed8', 'standardized_test',
+   'Test-optional; GPA and core-course completion used when no score is submitted; CLT accepted for Fall 2026 onward but excluded from the RAI score',
+   'Iowa State is test-optional for first-year applicants, who may choose whether to self-report ACT, SAT, or CLT scores. Applicants who do not submit a score are evaluated on high-school GPA and completion of core course requirements. If submitted, SAT or CLT scores are converted to ACT-composite equivalents. Reported middle-50: SAT composite 1110-1350 (EBRW 560-670, Math 560-690); ACT composite 21-28 (average 24). Applicants for Fall 2026, Spring 2027, or Summer 2027 may submit CLT scores, but CLT is not calculated into the university''s RAI (Regents Admission Index) score.',
+   false, 'medium', 'https://www.iastate.edu/admission-and-aid/admissions/first-year-students', now()),
+  ('e37c035c-40c9-444d-b5b4-32c367626ed8', 'english_proficiency',
+   'TOEFL iBT 71 (17+ speaking/writing) or IELTS 6.0 (no section below 5.5); PTE 48+ or Duolingo 105+ also accepted',
+   'International freshman applicants must submit one of: TOEFL iBT 71 overall with 17+ in both speaking and writing, IELTS 6.0 overall with no section below 5.5, PTE 48 or higher, or Duolingo 105 or higher. Exemptions: applicants from a country where English is the sole official language, or undergraduates who have already earned a US bachelor''s degree or higher. Alternative path: completing the equivalent of Iowa State''s English 1500 or 2500 course with a grade of B or higher at an accredited US two- or four-year institution.',
+   true, 'medium', 'https://www.iastate.edu/admission-and-aid/admissions/international-admissions/english-proficiency-requirement', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('e37c035c-40c9-444d-b5b4-32c367626ed8', 'https://www.iastate.edu/admission-and-aid/admissions/first-year-students',
+   'iastate.edu', 'official_admissions_office', now(), 'medium',
+   'Iowa State is test optional... Students may choose whether or not to self-report their ACT, SAT, or CLT scores when applying for admission.'),
+  ('e37c035c-40c9-444d-b5b4-32c367626ed8', 'https://www.iastate.edu/admission-and-aid/admissions/international-admissions/english-proficiency-requirement',
+   'iastate.edu', 'official_admissions_office', now(), 'medium',
+   'International freshmen need to submit results for one of the following language tests: TOEFL iBT: 71 (17+ in speaking and writing) or IELTS: 6.0 (no section below 5.5).');
+```
+
+## 38. Florida State University (QS 546)
+
+`id = 'e1ce061f-3bb4-42d2-af71-bf2c33d1b955'`
+
+**Sources:** `https://registrar.fsu.edu/bulletin/undergraduate-information/admissions`
+(official undergraduate bulletin) for the testing mandate, and a secondary source
+(`collegeessayguy.com`) corroborating the specific TOEFL/IELTS/PTE/Duolingo cutoffs, since no
+single official FSU international-admissions page with all four numbers resolved cleanly in
+this pass.
+
+**Notable exception to the batch's pattern:** unlike most peers in this document, FSU
+*requires* SAT/ACT, not by FSU's own choice but under a Florida Board of Governors mandate
+applying statewide (hardship exceptions exist) — the same structural shape as Georgia's
+USG-mandated requirement in batch 5.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('e1ce061f-3bb4-42d2-af71-bf2c33d1b955', 'standardized_test',
+   'SAT or ACT required for all applicants (Florida Board of Governors mandate, not an FSU-specific choice), with hardship exceptions',
+   'Florida State University requires SAT or ACT scores from every applicant for the 2025-26 admissions cycle (Fall 2026 entry), per Florida Board of Governors policy applied statewide, with hardship exceptions available. Both tests are superscored. Applicants may self-report scores initially; admitted students who enroll must submit official score reports. Reported middle-50: SAT 1250-1380; ACT composite 27-31.',
+   true, 'medium', 'https://registrar.fsu.edu/bulletin/undergraduate-information/admissions', now()),
+  ('e1ce061f-3bb4-42d2-af71-bf2c33d1b955', 'english_proficiency',
+   'TOEFL iBT 80 (20+ per section) or IELTS Academic 6.5 (no band below 6.0); PTE 58, Duolingo 105, or TOEFL Essentials 9.0 also accepted',
+   'Required for international applicants whose native language is not English and who have not completed a full undergraduate or graduate degree in an English-speaking country. Minimum TOEFL iBT 80 overall with at least 20 in each section, OR IELTS Academic 6.5 overall with no band below 6.0. Additional accepted alternatives: PTE Academic 58, Duolingo English Test 105, or TOEFL Essentials 9.0 overall.',
+   true, 'medium', 'https://www.collegeessayguy.com/blog/fsu-admission-requirements', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('e1ce061f-3bb4-42d2-af71-bf2c33d1b955', 'https://registrar.fsu.edu/bulletin/undergraduate-information/admissions',
+   'registrar.fsu.edu', 'official_admissions_office', now(), 'medium',
+   'FSU requires SAT or ACT scores for every applicant, and for the 2025-26 admissions cycle FSU will require SAT or ACT scores again, with hardship exceptions -- a requirement dictated by the Florida Board of Governors.'),
+  ('e1ce061f-3bb4-42d2-af71-bf2c33d1b955', 'https://www.collegeessayguy.com/blog/fsu-admission-requirements',
+   'collegeessayguy.com', 'secondary_source', now(), 'medium',
+   'TOEFL (iBT): Minimum score of 80 overall, with minimum subscores of 20 in each section. IELTS (Academic): Minimum score of 6.5 overall, with no band less than 6.0.');
+```
+
+## 39. Boston College (QS 549)
+
+`id = 'b18a7943-41cb-4591-8857-0a8cf95739f8'`
+
+**Sources:** `https://www.bc.edu/bc-web/admission/apply/test-optional.html` (official
+test-optional policy page) and `https://www.bc.edu/bc-web/admission/apply/international.html`
+(official international-applicants page).
+
+**Preserved verbatim, cycle-scoped:** the international page cites a TOEFL iBT figure of "100
+(5.0 on the new scale)" -- almost certainly a reference to the TOEFL score-scale change that
+recurs elsewhere in this document with different numbers per institution. Recorded as-is
+rather than resolved by guessing which figure is current.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('b18a7943-41cb-4591-8857-0a8cf95739f8', 'standardized_test',
+   'Test-optional for all applicants, including international, with full consideration regardless of submission',
+   'Boston College has a test-optional admission policy: applicants who do not submit SAT/ACT scores receive full consideration during the selection process. This applies to international applicants as well as domestic ones. Transfer applicants may optionally submit ACT (code 1788) and/or SAT (code 3083) as an application credential.',
+   false, 'medium', 'https://www.bc.edu/bc-web/admission/apply/test-optional.html', now()),
+  ('b18a7943-41cb-4591-8857-0a8cf95739f8', 'english_proficiency',
+   'Required for international applicants via TOEFL/IELTS/Duolingo, waivable via native-English status, 3+ years at a US high school, or a qualifying SAT/ACT English sub-score',
+   'International students must demonstrate English proficiency via TOEFL, IELTS, or Duolingo English Test, unless the requirement is waived because the student: speaks English as a native language; attended a US high school for at least three years in a non-ESOL curriculum; or submitted an SAT EBRW score of 650+ or ACT English score of 29+. Recommended minimums (where the test is required): IELTS 7.5, Duolingo English Test 130, or TOEFL iBT 100 (cited by the source as "5.0 on the new scale" -- preserved verbatim; likely reflects a TOEFL rescaling also seen elsewhere in this document).',
+   true, 'medium', 'https://www.bc.edu/bc-web/admission/apply/international.html', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('b18a7943-41cb-4591-8857-0a8cf95739f8', 'https://www.bc.edu/bc-web/admission/apply/test-optional.html',
+   'bc.edu', 'official_admissions_office', now(), 'medium',
+   'Boston College has a test-optional admission policy... students who opt not to submit test scores will receive full consideration during the selection process.'),
+  ('b18a7943-41cb-4591-8857-0a8cf95739f8', 'https://www.bc.edu/bc-web/admission/apply/international.html',
+   'bc.edu', 'official_admissions_office', now(), 'medium',
+   'International students are required to demonstrate English language proficiency via TOEFL, IELTS, or Duolingo English Test results... Recommended minimum scores are 7.5 on the IELTS, 130 on the Duolingo English Test, or 100 (5.0 on the new scale) on the TOEFL iBT.');
+```
+
+## 40. University of Houston (QS 551)
+
+`id = '6fcfe838-3cdb-4b1d-86c5-7c5dab251e5e'`
+
+**Sources:** `https://www.uh.edu/undergraduate-admissions/resources/test-optional-admissions/`
+(official test-optional policy, with a stated end date) and
+`https://www.uh.edu/undergraduate-admissions/apply/international/english-language-requirements/index.php`
+(official English-language-requirements page).
+
+**Preserved verbatim, cycle-scoped:** the test-optional policy is stated as running "through
+June 1, 2030" -- an explicit sunset date, not an indefinite policy.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('6fcfe838-3cdb-4b1d-86c5-7c5dab251e5e', 'standardized_test',
+   'Test-optional for all freshman applicants through June 1, 2030; scores must not be more than 5 years old if submitted',
+   'The University of Houston is test-optional for freshman applicants through June 1, 2030. Applicants are not disadvantaged for applying without a score. If scores are submitted, the university uses the highest total/composite across submissions, and scores may not be more than five years old at submission (Texas Success Initiative compliance). Reported middle-50: SAT 1170-1330; ACT composite 22-27.',
+   false, 'medium', 'https://www.uh.edu/undergraduate-admissions/resources/test-optional-admissions/', now()),
+  ('6fcfe838-3cdb-4b1d-86c5-7c5dab251e5e', 'english_proficiency',
+   'Required of all applicants regardless of citizenship; TOEFL or IELTS (6.5+ overall) or Duolingo; scores expire 2 years after test date',
+   'All applicants, regardless of citizenship status, must demonstrate English proficiency to be admitted. Accepted tests: TOEFL (UH institution code 6870), IELTS, or Duolingo English Test. Minimum IELTS overall band score confirmed at 6.5; a specific TOEFL minimum was not confirmed in this pass. TOEFL, IELTS, and Duolingo scores expire two full years after the test date.',
+   true, 'medium', 'https://www.uh.edu/undergraduate-admissions/apply/international/english-language-requirements/index.php', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('6fcfe838-3cdb-4b1d-86c5-7c5dab251e5e', 'https://www.uh.edu/undergraduate-admissions/resources/test-optional-admissions/',
+   'uh.edu', 'official_admissions_office', now(), 'medium',
+   'The University of Houston has adopted a test-optional admissions policy for all freshman applicants through June 1, 2030... applicants are not disadvantaged by applying without a test score.'),
+  ('6fcfe838-3cdb-4b1d-86c5-7c5dab251e5e', 'https://www.uh.edu/undergraduate-admissions/apply/international/english-language-requirements/index.php',
+   'uh.edu', 'official_admissions_office', now(), 'medium',
+   'All applicants, regardless of citizenship status, must demonstrate proficiency in English to obtain admission to the University of Houston... The minimum IELTS score required is an overall band score of 6.5.');
+```
+
+## 41. Colorado School of Mines (QS 575)
+
+`id = '1b4ef16e-5f33-4b63-9087-e5d5a50c0e64'`
+
+**Sources:** `https://www.mines.edu/undergraduate-admissions/first-year/` (official first-year
+admissions page) and `https://www.mines.edu/undergraduate-admissions/international-first-year-requirements/`
+(official international first-year requirements page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('1b4ef16e-5f33-4b63-9087-e5d5a50c0e64', 'standardized_test',
+   'Test-optional with equal consideration in holistic and merit-scholarship review; superscored; self-reporting allowed',
+   'Colorado School of Mines applications receive equal consideration in holistic admissions and merit-scholarship review whether or not SAT/ACT scores are submitted. Both tests are superscored. Self-reported scores are accepted without requiring immediate official score reports.',
+   false, 'medium', 'https://www.mines.edu/undergraduate-admissions/first-year/', now()),
+  ('1b4ef16e-5f33-4b63-9087-e5d5a50c0e64', 'english_proficiency',
+   'Required at enrollment (not application) if native language is not English; TOEFL 79 iBT / 550 PBT, IELTS 6.5 (no band below 6.0), or PTE Academic 53 (no skill below 50); scores valid 2 years',
+   'International applicants whose native language is not English must provide evidence of English proficiency if accepted and enrolling (US permanent residents are exempt). Minimums: TOEFL 550 paper-based or 79 internet-based; IELTS overall band 6.5 with no band below 6.0; PTE Academic overall 53 with no communicative-skill score below 50. Tests must have been taken within the past two years and must not expire during the application process.',
+   true, 'medium', 'https://www.mines.edu/undergraduate-admissions/international-first-year-requirements/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('1b4ef16e-5f33-4b63-9087-e5d5a50c0e64', 'https://www.mines.edu/undergraduate-admissions/first-year/',
+   'mines.edu', 'official_admissions_office', now(), 'medium',
+   'Your application will receive equal consideration in our holistic admissions and merit scholarship review process -- with or without test scores... Mines superscores both the ACT and SAT.'),
+  ('1b4ef16e-5f33-4b63-9087-e5d5a50c0e64', 'https://www.mines.edu/undergraduate-admissions/international-first-year-requirements/',
+   'mines.edu', 'official_admissions_office', now(), 'medium',
+   'International applicants whose native language is not English must provide evidence of English language proficiency if they are accepted and decide to enroll at Mines... a minimum score of 550 paper-based test (PBT) or 79 Internet-based test (iBT).');
+```
+
+## 42. University of Delaware (QS 575)
+
+`id = '3effd351-e0fa-4bf3-a36a-d5f2dca3558d'`
+
+**Sources:** `https://www.udel.edu/apply/undergraduate-admissions/apply-to-ud/freshman-admissions/`
+(official freshman-admissions page, testing policy) and
+`https://www.udel.edu/apply/undergraduate-admissions/apply-to-ud/international-admissions/`
+(official international-admissions page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('3effd351-e0fa-4bf3-a36a-d5f2dca3558d', 'standardized_test',
+   'Test-optional for all applicants, including homeschooled and non-accredited-high-school students; submission encouraged in specific edge cases',
+   'Submitting SAT (code 5811) or ACT (code 0634) scores is optional for all applicants, including those who are home-schooled or attending a non-accredited high school. Submission is strongly encouraged (not required) for applicants with nontraditional/narrative academic records, or for applicants presenting a high-school-equivalency credential, since their transcripts may not provide the usual grade evidence.',
+   false, 'medium', 'https://www.udel.edu/apply/undergraduate-admissions/apply-to-ud/freshman-admissions/', now()),
+  ('3effd351-e0fa-4bf3-a36a-d5f2dca3558d', 'english_proficiency',
+   'TOEFL 79+ or IELTS 6.5+ for direct admission; lower scores route to conditional admission via the English Language Institute',
+   'Direct admission requires a minimum TOEFL score of 79 or IELTS score of 6.5 (either satisfies the requirement). Applicants who do not meet this threshold are not required to submit TOEFL/IELTS to apply for conditional admission, which pairs enrollment with English-language training through the university''s English Language Institute (ELI); a minimum of 65 TOEFL or 5.5 IELTS is suggested (not required) for a successful start in the ELI.',
+   true, 'medium', 'https://www.udel.edu/apply/undergraduate-admissions/apply-to-ud/international-admissions/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('3effd351-e0fa-4bf3-a36a-d5f2dca3558d', 'https://www.udel.edu/apply/undergraduate-admissions/apply-to-ud/freshman-admissions/',
+   'udel.edu', 'official_admissions_office', now(), 'medium',
+   'Submitting standardized test scores is optional for all students, including those who are home-schooled or attending a non-accredited high school.'),
+  ('3effd351-e0fa-4bf3-a36a-d5f2dca3558d', 'https://www.udel.edu/apply/undergraduate-admissions/apply-to-ud/international-admissions/',
+   'udel.edu', 'official_admissions_office', now(), 'medium',
+   'For direct admission, the University of Delaware requires a minimum score of 79 on the TOEFL or a minimum score of 6.5 on the IELTS... TOEFL or IELTS scores are not required to apply for conditional admission.');
+```
+
+---
+
+## Verification (batch 6)
+
+Read-only against the live database plus `WebSearch` for content — no code changed, no live
+database writes. SQL staged for CEO/founder review and application, not applied. Colorado State
+and Iowa State tie at QS rank 540 and Colorado School of Mines/Delaware tie at 575; the stable
+`order by rank, id` tiebreaker from the batch-3 pagination fix kept both pairs distinct with no
+duplication or skip.
