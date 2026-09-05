@@ -7,7 +7,7 @@ import { requireUser } from "@/lib/security/dal";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { createClient } from "@/lib/supabase/server";
 import { refreshOpportunityMatches } from "@/lib/opportunities/persist-matches";
-import { renderEligibilityNotes, type EligibilityNote } from "@/lib/opportunities/matching";
+import { renderEligibilityNotes, classifyEligibilityGap, type EligibilityNote } from "@/lib/opportunities/matching";
 import type { Locale } from "@/lib/i18n/config";
 import { browseOpportunities, getOpportunityFacets } from "@/lib/opportunities/browse";
 import { isOpportunityActionable, isOpportunitySufficientlyVerified } from "@/lib/opportunities/lifecycle";
@@ -175,6 +175,7 @@ async function ForYouView({
       reasonCodes={match.reason_codes as string[]}
       eligible={match.eligible}
       eligibilityNotes={renderEligibilityNotes((match.eligibility_notes as EligibilityNote[] | null) ?? [], locale)}
+      eligibilityGap={classifyEligibilityGap((match.eligibility_notes as EligibilityNote[] | null) ?? [])}
       needsVerification={!isOpportunitySufficientlyVerified(opportunity!)}
       initialStatus={statusById.get(match.opportunity_id) ?? null}
       featured={featured}

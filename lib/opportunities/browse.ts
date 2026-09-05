@@ -2,7 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Opportunity, OpportunityCategory } from "@/types/database";
-import { canonicalCountryKey, isSameCountry, type EligibilityNote } from "./matching";
+import { canonicalCountryKey, isSameCountry, type EligibilityNote, type EligibilityGapKind } from "./matching";
 import { INSUFFICIENT_VERIFICATION_REASON, isOpportunitySufficientlyVerified, resolveStoredEligibility } from "./lifecycle";
 
 export interface OpportunityBrowseFilters {
@@ -19,6 +19,10 @@ export interface OpportunityBrowseRow {
   matchScore: number;
   eligible: boolean;
   eligibilityNotes: string | null;
+  /** See classifyEligibilityGap (matching.ts) / ResolvedEligibility (lifecycle.ts) — which of
+   * two specific "unknown" situations eligibilityNotes represents, so the card can give the
+   * student-fixable case (profile_incomplete) its own non-alarming, actionable treatment. */
+  eligibilityGap: EligibilityGapKind | null;
   /** Distinguishes "this cycle isn't open" from "you don't qualify" — see ResolvedEligibility
    * in lib/opportunities/lifecycle.ts for why the card must not conflate the two. */
   notActionable: boolean;
@@ -133,7 +137,7 @@ export async function browseOpportunities(
     const stored = match
       ? { eligible: match.eligible, notes: (match.eligibility_notes as EligibilityNote[] | null) ?? [] }
       : { eligible: true, notes: [{ code: "not_yet_computed" }] as EligibilityNote[] };
-    const { eligible, notes, notActionable } = resolveStoredEligibility(opportunity, stored);
+    const { eligible, notes, notActionable, eligibilityGap } = resolveStoredEligibility(opportunity, stored);
 
     // The freshness gate DEMOTES here rather than excluding, unlike the counselor's ranked
     // recommendations. Browse is the "see everything" surface and deliberately keeps even
@@ -157,6 +161,7 @@ export async function browseOpportunities(
       // "Needs verification" whose only prose is "Restricted by country" leaves the badge
       // unexplained.
       eligibilityNotes: needsVerification ? [notes, INSUFFICIENT_VERIFICATION_REASON].filter(Boolean).join(" ") : notes,
+      eligibilityGap,
       notActionable,
       needsVerification,
       reasonCodes: (match?.reason_codes as string[] | null) ?? [],

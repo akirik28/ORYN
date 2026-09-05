@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { computeEligibility, computeOpportunityMatch, computeAvoidSignals, isNearStudent, isWithinTargetGeography, isTargetingCountry, renderEligibilityNotes } from "@/lib/opportunities/matching";
+import { computeEligibility, computeOpportunityMatch, computeAvoidSignals, isNearStudent, isWithinTargetGeography, isTargetingCountry, renderEligibilityNotes, classifyEligibilityGap } from "@/lib/opportunities/matching";
 import type { OpportunityForMatching, StudentMatchProfile, DismissedOpportunitySignal } from "@/lib/opportunities/matching";
 
 function opportunity(overrides: Partial<OpportunityForMatching> = {}): OpportunityForMatching {
@@ -967,5 +967,66 @@ describe("computeOpportunityMatch — avoid signals never exclude, only lower re
       "not_interested"
     );
     expect(match.eligible).toBe(false);
+  });
+});
+
+// CEO, 2026-09-05: computeEligibility already tracks three meaningfully different "we don't
+// have a confirmed answer" situations by note code, but every caller collapsed them into one
+// identical warning badge. classifyEligibilityGap is the one place that reads the distinction
+// back out, so a UI surface can treat "you haven't told us your age yet" (student-fixable, an
+// invitation) differently from "nobody has researched this at all" or "checked, source didn't
+// say" (both facts about the opportunity, not the student).
+describe("classifyEligibilityGap", () => {
+  test("null on no notes at all", () => {
+    expect(classifyEligibilityGap([])).toBeNull();
+  });
+
+  test.each(["age_unknown", "country_unknown", "grade_unknown", "citizenship_unknown"] as const)(
+    "profile_incomplete for a bare %s note",
+    (code) => {
+      expect(classifyEligibilityGap([{ code }])).toBe("profile_incomplete");
+    }
+  );
+
+  test.each([
+    "age_eligibility_unverified",
+    "country_eligibility_unverified",
+    "grade_eligibility_unverified",
+    "citizenship_restriction_on_file",
+    "residency_restriction_on_file",
+  ] as const)("null (today's plain-warning treatment) for a bare %s note", (code) => {
+    expect(classifyEligibilityGap([{ code, params: code.includes("restriction") ? { restriction: "x" } : undefined }])).toBeNull();
+  });
+
+  test.each([
+    "age_eligibility_checked_not_stated",
+    "country_eligibility_checked_not_stated",
+    "grade_eligibility_checked_not_stated",
+  ] as const)("checked_not_stated for a bare %s note", (code) => {
+    expect(classifyEligibilityGap([{ code, params: { checkedAt: "" } }])).toBe("checked_not_stated");
+  });
+
+  test("profile_incomplete wins when mixed with an unverified note on a different axis", () => {
+    const notes = [{ code: "age_unknown" as const }, { code: "country_eligibility_unverified" as const }];
+    expect(classifyEligibilityGap(notes)).toBe("profile_incomplete");
+  });
+
+  test("profile_incomplete wins when mixed with a checked_not_stated note on a different axis", () => {
+    const notes = [{ code: "age_unknown" as const }, { code: "country_eligibility_checked_not_stated" as const, params: { checkedAt: "" } }];
+    expect(classifyEligibilityGap(notes)).toBe("profile_incomplete");
+  });
+
+  // Deliberate: a row with even one fully-unresearched dimension hasn't earned the calmer,
+  // more specific "checked_not_stated" wording, which implies "we looked into this" — see
+  // classifyEligibilityGap's own doc comment. Not softened just because ANOTHER dimension on
+  // the same row was checked.
+  test("unverified (null) wins over checked_not_stated when both are present with no profile_incomplete note", () => {
+    const notes = [{ code: "age_eligibility_unverified" as const }, { code: "country_eligibility_checked_not_stated" as const, params: { checkedAt: "" } }];
+    expect(classifyEligibilityGap(notes)).toBeNull();
+  });
+
+  test("null for notes this function doesn't classify (already_applied, not_yet_computed) — falls through safely, no crash", () => {
+    expect(classifyEligibilityGap([{ code: "already_applied" }])).toBeNull();
+    expect(classifyEligibilityGap([{ code: "not_yet_computed" }])).toBeNull();
   });
 });
