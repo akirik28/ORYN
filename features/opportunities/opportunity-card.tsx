@@ -231,6 +231,21 @@ export function OpportunityCard({
   // The confidence tier is a claim Proxola can only make about a row it can vouch for.
   const canClaimMatch = eligible && !needsVerification;
 
+  // The eligibility caveat badge — four real states, not one warning shown whenever
+  // eligibilityNotes is non-empty (the bug a second lane measured precisely: 24 of 27
+  // researched rows kept an identical badge after real research improved them, because the
+  // old condition only ever asked "is there a note", never "which kind"). profile_incomplete
+  // gets no badge at all (see the link block below instead). Computed once here rather than
+  // inline in the JSX below, now that it's four branches instead of one.
+  const eligibilityBadge: { label: string; tone: "warning" | "info" } | null =
+    !eligible || !eligibilityNotes || eligibilityGap === "profile_incomplete"
+      ? null
+      : eligibilityGap === "checked_not_stated"
+        ? { label: t("checkedNotStated"), tone: "info" }
+        : eligibilityGap === "partially_known"
+          ? { label: t("partiallyChecked"), tone: "warning" }
+          : { label: t("eligibilityUnknown"), tone: "warning" };
+
   const daysUntilDeadline = opportunity.deadline
     ? differenceInCalendarDays(new Date(opportunity.deadline), new Date())
     : null;
@@ -438,14 +453,9 @@ export function OpportunityCard({
                 restriction exists but Proxola is missing the fact needed to check it (see
                 computeEligibility's unknownNotes). Never silently badge that as a plain match.
                 profile_incomplete gets no badge here at all — see the subtext block below,
-                which turns it into a link instead of a caveat. checked_not_stated gets its own
-                calmer, distinct badge (0129/0133's whole point was that it shouldn't read the
-                same as "nobody has looked at all"). Everything else keeps today's plain warning. */}
-            {eligible && eligibilityNotes && eligibilityGap === "checked_not_stated" ? (
-              <StatusBadge label={t("checkedNotStated")} tone="info" />
-            ) : eligible && eligibilityNotes && eligibilityGap !== "profile_incomplete" ? (
-              <StatusBadge label={t("eligibilityUnknown")} tone="warning" />
-            ) : null}
+                which turns it into a link instead of a caveat. See eligibilityBadge above for
+                the other three. */}
+            {eligibilityBadge ? <StatusBadge label={eligibilityBadge.label} tone={eligibilityBadge.tone} /> : null}
           </div>
         ) : null}
 

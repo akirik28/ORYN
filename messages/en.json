@@ -1050,6 +1050,7 @@
       "ineligibleLabel": "Not eligible",
       "eligibilityUnknown": "Eligibility unknown",
       "checkedNotStated": "Checked, not stated",
+      "partiallyChecked": "Partly checked",
       "view": "View",
       "saved": "Saved",
       "applied": "Applied",

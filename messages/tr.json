@@ -1050,6 +1050,7 @@
       "ineligibleLabel": "Uygun değil",
       "eligibilityUnknown": "Uygunluk belirsiz",
       "checkedNotStated": "Kontrol edildi, belirtilmemiş",
+      "partiallyChecked": "Kısmen kontrol edildi",
       "view": "Görüntüle",
       "saved": "Kaydedildi",
       "applied": "Başvuruldu",
