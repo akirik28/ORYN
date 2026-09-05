@@ -870,3 +870,126 @@ values
 ```
 
 ---
+
+## 28. University of Stirling
+
+`id = 'a8c482c1-0d60-46bd-858b-d70c2c283411'` — QS rank 560.
+
+**Source actually used:** `https://www.stir.ac.uk/international/international-students/
+english-language-requirements/` — official page, directly fetched.
+
+**Twenty-first independent corroboration of the TOEFL iBT rescale today.**
+
+**What was checked and NOT found:** application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('a8c482c1-0d60-46bd-858b-d70c2c283411', 'english_proficiency',
+   'Standard undergraduate: IELTS Academic/UKVI 6.0 overall (5.5+ per sub-skill), TOEFL iBT 80 legacy / 4 new scale (from 21 Jan 2026), PTE Academic 60 overall (59+ per sub-skill); waiver available for certain qualifications taken within 5 years where the course requirement is 6.0 or 6.5',
+   'Standard undergraduate entry: IELTS Academic or UKVI 6.0 overall, no sub-skill below 5.5. TOEFL iBT before 21 January 2026: 80 overall (Reading 18, Writing 17, Listening 17, Speaking 20). TOEFL iBT from 21 January 2026 (new scale): 4 overall, no band below 4. PTE Academic: 60 overall, minimum 59 in each sub-skill. Test results must be within 2 years of course start. An English-language test waiver is available for courses with an overall IELTS requirement of 6.0 or 6.5 where the applicant holds certain qualifications obtained within 5 years of course start (specific qualifying qualifications not enumerated in this pass). Individual course pages may set additional or higher requirements.',
+   true, 'high', 'https://www.stir.ac.uk/international/international-students/english-language-requirements/', now());
+```
+
+---
+
+## 29. Bangor University
+
+`id = '8b36f863-7174-4312-aa36-44d38681f6e1'` — QS rank 567.
+
+**Source actually used:** `https://www.bangor.ac.uk/international/future/englishlanguage` —
+official page, directly fetched.
+
+**A notable inversion of a pattern seen elsewhere this batch:** Bangor's page states only
+new-scale TOEFL iBT figures (4.0 for standard entry, 4.5 for Law) with no legacy-scale number
+given at all -- the opposite gap from Royal Holloway and Huddersfield (entries #24 and #26),
+which stated only the legacy figure with no new-scale conversion. Recorded exactly as found on
+each page rather than assuming every UK university publishes both sides of the transition.
+
+**What was checked and NOT found:** the legacy (pre-21-Jan-2026) TOEFL score; application
+deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('8b36f863-7174-4312-aa36-44d38681f6e1', 'english_proficiency',
+   'Standard undergraduate: IELTS 6.0 overall (5.5+ per component for non-SELT), TOEFL iBT new-scale 4.0 (3.5 non-SELT) -- no legacy-scale figure stated; Law requires a higher IELTS 6.5 (6.0+ non-SELT), TOEFL new-scale 4.5 (4.0 non-SELT)',
+   'Standard undergraduate entry: IELTS 6.0 overall, with 5.5 minimum per component for non-SELT test types. Equivalent TOEFL iBT (new scale only -- no legacy/pre-21-Jan-2026 figure given on this page): 4.0 overall (3.5 for non-SELT). Law is a stricter exception: IELTS 6.5 overall (6.0+ non-SELT), equivalent TOEFL new-scale 4.5 (4.0 non-SELT). Nationals of UKVI-defined majority English-speaking countries may be exempt if they hold Grade C or above in IGCSE/O-Level English Language or equivalent. Bangor recognises Cambridge English, Trinity ISE II/III, and various Non-SELT and Online tests for direct entry. Pre-sessional English and Study Skills courses are available for applicants below the required level.',
+   true, 'high', 'https://www.bangor.ac.uk/international/future/englishlanguage', now());
+```
+
+---
+
+## 30. University of Hull
+
+`id = '2c85e2ff-58b0-4ece-a245-776b69bb4cc0'` — QS rank 575.
+
+**Source actually used:** `https://www.hull.ac.uk/study/international-students/how-to-apply/
+english-language-requirements` — official page, directly fetched.
+
+**Third UK university this batch (after Royal Holloway #24 and Huddersfield #26) where the
+page does not reference the 21 January 2026 TOEFL rescale at all** -- only a legacy-scale
+range is given. Recorded as NULL for the new-scale figure rather than assumed.
+
+**What was checked and NOT found:** the new-scale TOEFL figure; application deadline, tuition,
+admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('2c85e2ff-58b0-4ece-a245-776b69bb4cc0', 'english_proficiency',
+   'For most courses: IELTS 6.0 overall (5.5+ per skill), TOEFL iBT 60-78 range (legacy scale only, no new-scale figure stated -- Reading 10+, Listening 9+, Speaking 17+, Writing 19+), PTE Academic 59 overall (51+ per skill); some courses set higher',
+   'For most undergraduate courses: IELTS (Academic) 6.0 overall, minimum 5.5 in each of Reading/Writing/Speaking/Listening, test within 2 years of course start. Equivalent TOEFL iBT (legacy scale, no 21-January-2026 new-scale conversion given on this page): overall in the 60-78 range, with at least Reading 10, Listening 9, Speaking 17, Writing 19. PTE Academic: overall 59, minimum 51 in all skills. Some courses require higher scores, checked on individual course pages. Applicants below the requirement may receive a conditional offer requiring a pre-sessional English course.',
+   true, 'high', 'https://www.hull.ac.uk/study/international-students/how-to-apply/english-language-requirements', now());
+```
+
+---
+
+## 31. Coventry University
+
+`id = 'a56ecc22-5a49-4601-93f2-097f18b80bb5'` — QS rank 581.
+
+**Source actually used:** `https://www.coventry.ac.uk/international-students-hub/apply/
+english-requirements/` — official page, directly fetched, confirming the CEFR framework
+directly; the numeric IELTS figure (6.0) comes from a general search rather than this
+session's own direct read of a specific number, recorded at `medium` for that part.
+
+**What was checked and NOT found:** TOEFL iBT numeric equivalents (page gives only CEFR
+levels, no conversion table); application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('a56ecc22-5a49-4601-93f2-097f18b80bb5', 'english_proficiency',
+   'Undergraduate (NQF 6+): CEFR B2 minimum across all four components, officially confirmed, though most courses require higher than this Home-Office floor; a reported IELTS figure is 6.0 overall, not independently confirmed by number; a Secure English Language Test (SELT) is required; pre-sessional course entry floor reportedly as low as IELTS 4.5',
+   'Officially confirmed via CEFR framework: undergraduate and postgraduate (NQF Level 6 and above) requires a minimum CEFR B2 across Reading, Listening, Writing, and Speaking, via a Secure English Language Test (SELT) -- Coventry states most courses set a higher bar than this Home Office minimum. A general search separately reports IELTS 6.0 overall as the commonly-cited undergraduate figure, not independently confirmed as the exact official number. Coventry''s own below-NQF-6 Pre-Sessional English Programme requires only CEFR B1, and a general search reports IELTS 4.5 as the minimum starting point Coventry will accept onto a pre-sessional pathway. No TOEFL iBT numeric conversion table was found on the official page.',
+   true, 'medium', 'https://www.coventry.ac.uk/international-students-hub/apply/english-requirements/', now());
+```
+
+---
+
+## 32. Ulster University
+
+`id = '38f97dc1-8bfe-4932-83fc-c8b9c3825868'` — QS rank 595.
+
+**Access note:** the official English-language-requirements page returned HTTP 403 to a direct
+fetch. Recorded at `medium` confidence from a general search's summary instead.
+
+**What was checked and NOT found:** TOEFL iBT numeric equivalents, application deadline,
+tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('38f97dc1-8bfe-4932-83fc-c8b9c3825868', 'english_proficiency',
+   'Usually IELTS Academic 6.0 overall (no band below 5.5); some courses require higher; Duolingo English Test accepted only for tests taken after July 2024; conditional offers available with a requirement to meet the level before course start',
+   'The minimum English language entry requirement is usually IELTS (Academic) 6.0 overall, with no band below 5.5 -- some courses ask for a higher score, checked on individual course pages. Ulster accepts the Duolingo English Test, but only for tests taken after July 2024 -- a specific cutoff date, not a blanket acceptance of any Duolingo result. Applicants below the requirement may receive a conditional offer, subject to meeting the requirement before the course begins; pre-sessional English preparation courses are available (including a named 12-week "Pre-Sessional Plus" option).',
+   true, 'medium', 'https://www.ulster.ac.uk/global/apply/english-language-requirements', now());
+```
+
+---
