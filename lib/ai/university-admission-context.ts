@@ -81,9 +81,18 @@ export function formatUniversityAdmissionContext(facts: TargetUniversityAdmissio
   return `\n\nInstitution-wide admission-rate facts for this student's target universities (each one is exactly what the institution has published or explicitly not published — never state or imply this is any student's personal chance of admission, and never invent a rate for a university not listed here):\n${lines.map((l) => `- ${l}`).join("\n")}`;
 }
 
-export async function buildUniversityAdmissionContextText(userId: string): Promise<string> {
+// `supabaseClient` (2026-09-05, wiring this into weekly-plan.ts alongside advisor-chat.ts):
+// this used to always build its own session-scoped client, silently correct for
+// advisor-chat's own caller (which always has a real session) but wrong the moment a
+// session-less caller exists — lib/plan/generate-for-active-students.ts (Job D), which
+// would otherwise read zero target_universities under a null auth.uid() and return "" every
+// time, not because the student has no targets but because this function couldn't see them.
+// Same fix shape as buildStudentAdvisorContext/buildCounselorGrounding in the same weekly-
+// plan.ts file — advisor-chat.ts's own call is unaffected, since omitting the argument keeps
+// today's exact behavior.
+export async function buildUniversityAdmissionContextText(userId: string, supabaseClient?: Awaited<ReturnType<typeof createClient>>): Promise<string> {
   try {
-    const supabase = await createClient();
+    const supabase = supabaseClient ?? (await createClient());
     const { data: targets } = await supabase.from("target_universities").select("university_id").eq("user_id", userId);
     const universityIds = [...new Set((targets ?? []).map((t) => t.university_id))];
     if (universityIds.length === 0) return "";

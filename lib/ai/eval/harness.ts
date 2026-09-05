@@ -53,8 +53,18 @@ import type { EvalCase, EvalCaseFailure, EvalCaseResult, EvalReport } from "./ty
  * weekly_plan closed the prompt half of this gap (2026-09-02): buildWeeklyPlanPrompt below
  * now calls lib/ai/weekly-plan.ts's own exported buildWeeklyPlanInstruction() for the one
  * part that used to be hand-copied (context/grounding formatting were already shared via
- * formatContextForPrompt/formatCounselorGrounding) — there is nothing left to drift in
- * what gets *sent* to the model for this target. counselor_explain never had this problem:
+ * formatContextForPrompt/formatCounselorGrounding).
+ *
+ * One real gap reopened this claim, 2026-09-05: both buildWeeklyPlanPrompt below (now) and
+ * buildAdvisorChatPrompt above (already true since B7, 2026-09-04, just unnoticed until now
+ * — found in passing while fixing this for weekly_plan, not a separate investigation) omit
+ * lib/ai/university-admission-context.ts's contribution, which neither can add honestly:
+ * it needs a real Supabase client reading real target_universities/university_statistics
+ * rows, and this whole file's point is running with no database at all. Documented instead
+ * of faked — cost-estimate.ts's own projections for both targets understate real prompt size
+ * by roughly 234-569 tokens (B7's own measurement) for a student whose target universities
+ * have researched admission-rate data, per lib/ai/eval/cost-estimate.ts's own "report a
+ * range with stated assumptions" standard. counselor_explain never had this problem:
  * buildCounselorExplainPrompt below calls the real, exported buildCounselorExplanationPrompt
  * directly, and runCounselorExplain calls explainCounselorRecommendations itself — there is
  * nothing to drift.

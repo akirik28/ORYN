@@ -50,6 +50,7 @@ function baseContext(overrides: Partial<StudentAdvisorContext> = {}): StudentAdv
       busyModeUntil: null,
       birthYear: null,
       citizenshipCountries: [],
+      targetGeographies: [],
       tier: "standard",
       advisorInstructions: null,
     },
@@ -734,6 +735,47 @@ describe("formatContextForPrompt — skills", () => {
     const text = formatContextForPrompt({ ...baseContext(), skills: [{ name: "Java", category: "technical", proficiency: null }] });
     expect(text).toContain("Java [Technical]");
     expect(text).not.toContain("Java [Technical] —");
+  });
+});
+
+/**
+ * 2026-09-05, CEO-directed: `profiles.target_geographies` (Phase 3 Screen 4, onboarding) was
+ * already fetched via buildStudentAdvisorContext's own select("*") — zero marginal DB cost —
+ * but never read into StudentAdvisorContext or rendered here before this. `TargetGeography`
+ * is a closed DB enum, so it needs the same label-before-interpolation treatment as every
+ * other enum in this file; wording copied verbatim from onboarding-wizard.tsx's own real
+ * `t("geographyOptions.*")` catalog keys.
+ */
+describe("formatContextForPrompt — target geography", () => {
+  function withTargetGeographies(values: StudentAdvisorContext["student"]["targetGeographies"]): StudentAdvisorContext {
+    const base = baseContext();
+    return { ...base, student: { ...base.student, targetGeographies: values } };
+  }
+
+  test("a single target geography renders its readable label, not the raw enum member", () => {
+    const text = formatContextForPrompt(withTargetGeographies(["uk"]));
+    expect(text).toContain("Target geography (student's own broad stated preference, not the specific universities below): UK");
+    expect(text).not.toContain(": uk");
+  });
+
+  test("multiple target geographies render as a comma-joined list", () => {
+    const text = formatContextForPrompt(withTargetGeographies(["usa", "europe"]));
+    expect(text).toContain("Target geography (student's own broad stated preference, not the specific universities below): USA, Europe");
+  });
+
+  test("none set renders 'not set', not an empty line — distinct from the six real values, including not_sure", () => {
+    const text = formatContextForPrompt(withTargetGeographies([]));
+    expect(text).toContain("Target geography (student's own broad stated preference, not the specific universities below): not set");
+  });
+
+  test("'not_sure' is a real, distinct answer and renders as such, not folded into the empty case", () => {
+    const text = formatContextForPrompt(withTargetGeographies(["not_sure"]));
+    expect(text).toContain("Target geography (student's own broad stated preference, not the specific universities below): Not sure");
+  });
+
+  test("Turkish locale uses the real Turkish catalog wording, not the English label", () => {
+    const text = formatContextForPrompt(withTargetGeographies(["usa", "uk"]), "tr");
+    expect(text).toContain(": ABD, Birleşik Krallık");
   });
 });
 

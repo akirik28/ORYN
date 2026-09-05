@@ -28,6 +28,7 @@ import type {
   ProfileDimension,
   ReflectionOutcome,
   SkillCategory,
+  TargetGeography,
   TargetStatus,
   TimeBudget,
 } from "@/types/database";
@@ -206,6 +207,39 @@ export function employmentTypeLabel(value: EmploymentType, locale: Locale): stri
   return locale === "tr" ? EMPLOYMENT_TYPE_LABEL_TR[value] : EMPLOYMENT_TYPE_LABEL_EN[value];
 }
 
+/**
+ * 2026-09-05 — CEO-directed, closing the gap the skills/proficiency comment above already
+ * flagged the same day it was found: `profiles.target_geographies` (Phase 3 Screen 4, onboarding)
+ * was already fetched into every advisor/weekly-plan caller via the same `select("*")` this
+ * function already runs — zero marginal DB cost — but never read into `StudentAdvisorContext`
+ * at all, so neither surface could reason about where a student says they want to go, distinct
+ * from lib/opportunities/matching.ts's own separate targetGeographies use (opportunity-relevance
+ * scoring, a different consumer of the same column). Wording copied verbatim from
+ * features/onboarding/onboarding-wizard.tsx's own `t("geographyOptions.*")` keys — the same
+ * catalog the student saw when they picked these during onboarding — not invented fresh.
+ */
+const TARGET_GEOGRAPHY_LABEL_EN: Record<TargetGeography, string> = {
+  usa: "USA",
+  uk: "UK",
+  europe: "Europe",
+  canada: "Canada",
+  turkey: "Turkey",
+  not_sure: "Not sure",
+};
+
+const TARGET_GEOGRAPHY_LABEL_TR: Record<TargetGeography, string> = {
+  usa: "ABD",
+  uk: "Birleşik Krallık",
+  europe: "Avrupa",
+  canada: "Kanada",
+  turkey: "Türkiye",
+  not_sure: "Emin değilim",
+};
+
+export function targetGeographyLabel(value: TargetGeography, locale: Locale): string {
+  return locale === "tr" ? TARGET_GEOGRAPHY_LABEL_TR[value] : TARGET_GEOGRAPHY_LABEL_EN[value];
+}
+
 export interface StudentAdvisorContext {
   student: {
     displayName: string;
@@ -233,6 +267,15 @@ export interface StudentAdvisorContext {
      * inferred from `country` (residence/school location, a separate fact). Not used in
      * prompt text today, same as birthYear. */
     citizenshipCountries: string[];
+    /** Phase 3 Screen 4 (onboarding) — the student's own broad stated preference for where
+     * they want to study, distinct from both `citizenshipCountries` above (never rendered)
+     * and the specific `targetUniversities` list below (concrete choices). Unlike
+     * citizenshipCountries, this one IS rendered — see formatContextForPrompt — since it's
+     * exactly the kind of signal spec §8.2 asks the advisor to reason with, not a Counselor
+     * Core eligibility-only fact. Found unread by either advisor or weekly-plan on
+     * 2026-09-05 despite already being fetched via this function's own select("*").
+     */
+    targetGeographies: TargetGeography[];
     /** 2026-09-03, the Ultra tier-economics build: `resolvePlanTier`'s own decision, computed
      * from the same profile row this whole function already fetches — not a second query.
      * The one real consumer so far is `weekly-plan.ts`, which needs it to pass the right
@@ -534,6 +577,7 @@ export async function buildStudentAdvisorContext(userId: string, supabaseClient?
       busyModeUntil: profile?.busy_mode_until ?? null,
       birthYear: profile?.birth_year ?? null,
       citizenshipCountries: profile?.citizenship_countries ?? [],
+      targetGeographies: profile?.target_geographies ?? [],
       tier: resolvePlanTier(profile ?? { plan_tier: "standard", ultra_gift_expires_at: null, paid_ultra_expires_at: null }),
       advisorInstructions: resolveAdvisorInstructions(profile ?? { advisor_instructions: null }),
     },
@@ -858,6 +902,16 @@ export function formatContextForPrompt(context: StudentAdvisorContext, locale: L
    * recorded: `__tests__/i18n/ai-prompt-enum-labels.test.ts`'s `EXEMPT` list names this
    * exact field, so a future accidental removal of this reasoning would still be caught.
    */
+  // Rendered even when empty ("not set") rather than omitted — the model should be able to
+  // tell "this student hasn't said" apart from "this student wants X", the same distinction
+  // Confidence System (spec §68) already applies elsewhere. `not_sure` is one of the six real
+  // values, not an absence — it renders like any other pick if that's genuinely what the
+  // student selected, since silently treating it as empty would misstate what they said.
+  lines.push(
+    `Target geography (student's own broad stated preference, not the specific universities below): ${
+      context.student.targetGeographies.map((g) => targetGeographyLabel(g, locale)).join(", ") || "not set"
+    }`,
+  );
   lines.push(
     `Target universities: ${
       context.targetUniversities
