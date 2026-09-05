@@ -25,10 +25,11 @@ export async function POST(request: NextRequest) {
   }
 
   const result = await runWithTracking("notify_university_changes", async () => {
-    const { notified, checked } = await scanUniversityDataChanges();
-    // Same as deadline-reminders' identical shape: no per-item external call here that can
-    // fail short of the whole run throwing, so 0 is a real fact, not an unset placeholder.
-    return { itemsProcessed: notified, errorsEncountered: 0, result: { notified, checked } };
+    const { notified, checked, failed } = await scanUniversityDataChanges();
+    // `failed` (2026-09-05 fix) counts only genuine createNotification write errors, never a
+    // student's own muted-category preference — see that function's own updated docstring
+    // for why those two used to collapse into the same reported 0 here.
+    return { itemsProcessed: notified, errorsEncountered: failed, result: { notified, checked, failed } };
   });
 
   return NextResponse.json(result);

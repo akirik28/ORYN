@@ -22,7 +22,7 @@ import { describe, expect, test, vi, beforeEach } from "vitest";
  * 2's behavior" is exactly the property under test.
  */
 
-vi.mock("@/lib/notifications/create", () => ({ createNotification: vi.fn(async () => true) }));
+vi.mock("@/lib/notifications/create", () => ({ createNotification: vi.fn(async () => "sent") }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => fakeSupabase }));
 vi.mock("@/lib/universities/canonical", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/universities/canonical")>();
@@ -257,8 +257,8 @@ describe("scanDeadlines — anti-spam: the same deadline must never notify twice
     expect(deadlineNotificationLogBacking.map((r) => r.threshold_days).sort((a, b) => (a as number) - (b as number))).toEqual([7, 14]);
   });
 
-  test("a failed notification write is NOT logged as delivered — the next run gets another chance rather than silently losing the reminder forever", async () => {
-    vi.mocked(createNotification).mockResolvedValueOnce(false);
+  test("a failed notification write is NOT logged as delivered, and IS counted as a real error — the next run gets another chance rather than silently losing the reminder forever", async () => {
+    vi.mocked(createNotification).mockResolvedValueOnce("failed");
 
     const today = new Date();
     db.applications = [{ id: "app-1", user_id: STUDENT_ID, deadline: daysFromAnchor(today, 3), target_university_id: "target-1", status: "in_progress" }];
@@ -267,11 +267,30 @@ describe("scanDeadlines — anti-spam: the same deadline must never notify twice
 
     const first = await scanDeadlines();
     expect(first.notified).toBe(0); // the write failed, so nothing counts as delivered
+    expect(first.failed).toBe(1); // 2026-09-05 fix: a genuine write error is now a counted fact,
+    // not silently indistinguishable from a student who simply muted this category
     expect(deadlineNotificationLogBacking).toEqual([]); // and nothing was logged
 
     const second = await scanDeadlines(); // this time createNotification succeeds (default mock)
     expect(second.notified).toBe(1);
+    expect(second.failed).toBe(0);
     expect(createNotification).toHaveBeenCalledTimes(2);
+  });
+
+  test("a student who muted this category is NOT counted as a failure — a legitimate preference is not an error", async () => {
+    vi.mocked(createNotification).mockResolvedValueOnce("muted");
+
+    const today = new Date();
+    db.applications = [{ id: "app-1", user_id: STUDENT_ID, deadline: daysFromAnchor(today, 3), target_university_id: "target-1", status: "in_progress" }];
+    db.target_universities = [{ id: "target-1", user_id: STUDENT_ID, university_id: "univ-1", program_id: null, status: "target" }];
+    db.universities = [{ id: "univ-1", name: "Yale University" }];
+
+    const result = await scanDeadlines();
+    expect(result.notified).toBe(0); // nothing was delivered, same observable count as "failed"...
+    expect(result.failed).toBe(0); // ...but this is the exact distinction the 2026-09-05 fix
+    // exists for: a muted category must never inflate the job's real error count, even though
+    // it produces the identical "not delivered" outcome a genuine failure also produces.
+    expect(deadlineNotificationLogBacking).toEqual([]); // still not logged as delivered either
   });
 });
 

@@ -65,44 +65,46 @@ async function categoryIsEnabled(
 }
 
 /**
+ * `"sent"` covers both a genuine insert and losing migration 0087's unique-index race on a
+ * `new_opportunity` notification — the state the caller actually wants (this student has a
+ * notification for this match) is satisfied by whichever concurrent call won, same as
+ * `lib/deadlines/scan.ts`'s own `upsert(..., { ignoreDuplicates: true })` already treats a
+ * duplicate deadline-log row as success, not failure.
+ *
+ * `"muted"` and `"failed"` used to collapse to the same `false` — the bug this type exists
+ * to fix (see createNotification's own docstring below). They stay distinguished all the way
+ * up to any caller that counts outcomes, the same "declined vs. errored" split
+ * scanStaleOutlooks's own `refused`/`failed` counters already establish for a different job —
+ * applied here as a return-value discriminant rather than throw-vs-return, since throwing
+ * would change behavior for the five other call sites that only ever discard this promise.
+ */
+export type NotificationSendOutcome = "sent" | "muted" | "failed";
+
+/**
  * Notifications are always system-generated (Phase 24) — there is deliberately no RLS
  * insert policy allowing a normal request to create one for itself, so this always goes
  * through the admin client, whether the caller is a background job or a user-triggered
  * Server Action that wants to notify that same user as a side effect (e.g. "your weekly
  * plan is ready").
  *
- * Returns whether the write actually landed. Every pre-existing caller ignores the return
- * value and keeps working exactly as before (a discarded `Promise<boolean>` still awaits
- * fine where a discarded `Promise<void>` did) — added for lib/deadlines/scan.ts, which
- * needs to know a notification really landed before it logs the deadline as "already
- * notified" (see deadline_notification_log, migration 0075): logging on a failed write
- * would silently and permanently suppress a reminder the student never actually received.
- * Previously this neither threw nor surfaced a Postgres-level insert error at all — only a
- * thrown exception (e.g. createAdminClient() on a missing secret) was ever caught; a
- * rejected insert (an RLS violation, a constraint) returned normally with `error` set and
- * nothing here ever looked at it. Checking `.error` explicitly is a real fix, not just
- * plumbing for the new return type.
+ * Returns which of three things happened, not just whether a row landed. Most callers still
+ * only care about the sent/not-sent boundary (`outcome !== "sent"`) and need no changes — a
+ * discarded `Promise<NotificationSendOutcome>` still awaits fine where a discarded
+ * `Promise<boolean>` did. `lib/deadlines/scan.ts` and `lib/universities/data-change-scan.ts`
+ * are the two callers that need the finer distinction: both aggregate many students'
+ * outcomes into one job-tracking result, and until this fix, `"muted"` (a student's own
+ * legitimate preference — nothing went wrong) and `"failed"` (the insert genuinely errored)
+ * were the identical `false` value. Both jobs' routes then hardcoded `errorsEncountered: 0`,
+ * reasoning (in a comment that was itself wrong) that nothing here has a per-item failure
+ * mode short of the whole run throwing — a real Postgres insert error was silently
+ * indistinguishable from a student who muted a category on purpose, and neither ever
+ * surfaced as a counted error.
  *
- * A `new_opportunity` insert that loses migration 0087's unique-index race returns `true`,
- * not `false` — the state the caller actually wants (this student has a notification for
- * this match) is satisfied by whichever concurrent call won, same as
- * `lib/deadlines/scan.ts`'s own `upsert(..., { ignoreDuplicates: true })` already treats a
- * duplicate deadline-log row as success, not failure. This works identically whether or not
- * migration 0087 is applied: unapplied, no such constraint exists, so no insert can ever
- * violate it and this branch is simply never reached — today's exact behavior, unchanged.
- * Applied, a genuine race (two `refreshOpportunityMatches` calls landing within the same
- * window — the documented cause of the 12-row live duplicate this migration exists to close,
- * see docs/notification-center-live-verification-2026-09-02.md) now loses cleanly instead of
- * writing a second identical row. `notifyNewlyEligibleMatches`'s own pre-flight `SELECT`
- * still runs first and is kept deliberately — it avoids a pointless insert attempt in the
- * ordinary, non-racing case; this catch is the backstop for the case it can't close on its
- * own, not a replacement for it.
- *
- * Also returns `false` — the same "no notification landed" value a failed insert already
- * returns — when the student has muted this category (migration 0090). Every pre-existing
- * caller already treats a discarded/checked `false` as "nothing to do," so a muted category
- * needs no new handling at any of the seven call sites; see categoryIsEnabled above for the
- * degrade behavior when 0090 hasn't applied yet.
+ * Checking `.error` explicitly on the insert is itself a real fix, not just plumbing for the
+ * new return type: previously this neither threw nor surfaced a Postgres-level insert error
+ * at all — only a thrown exception (e.g. createAdminClient() on a missing secret) was ever
+ * caught; a rejected insert (an RLS violation, a constraint) returned normally with `error`
+ * set and nothing here ever looked at it.
  */
 export async function createNotification(params: {
   userId: string;
@@ -110,14 +112,14 @@ export async function createNotification(params: {
   title: string;
   body?: string | null;
   link?: string | null;
-}): Promise<boolean> {
+}): Promise<NotificationSendOutcome> {
   try {
     const supabase = createAdminClient();
     // Going-forward only: this stops a FUTURE row for a muted category, never touches one
     // already written. If a student reports "I turned this off and still see old ones," that
     // is expected -- see migration 0090's own header for the live numbers that motivated it.
     if (!(await categoryIsEnabled(supabase, params.userId, params.category))) {
-      return false;
+      return "muted";
     }
     const { error } = await supabase.from("notifications").insert({
       user_id: params.userId,
@@ -128,14 +130,14 @@ export async function createNotification(params: {
     });
     if (error) {
       if (isUniqueViolation(error, NEW_OPPORTUNITY_DEDUPE_INDEX)) {
-        return true;
+        return "sent";
       }
       console.warn("[notifications] failed to create", { category: params.category, error });
-      return false;
+      return "failed";
     }
-    return true;
+    return "sent";
   } catch (error) {
     console.warn("[notifications] failed to create", { category: params.category, error });
-    return false;
+    return "failed";
   }
 }

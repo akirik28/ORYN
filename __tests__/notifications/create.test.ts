@@ -7,6 +7,15 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
  * applied and unapplied, explicitly, not just the happy path — per this codebase's own
  * standing discipline (lib/supabase/errors.ts's isUndefinedColumnError, lib/plan/persist.ts's
  * carried_forward comment).
+ *
+ * UPDATED 2026-09-05: createNotification's return type changed from `boolean` to
+ * NotificationSendOutcome ("sent" | "muted" | "failed") — every assertion below that used to
+ * read `toBe(false)` is now split into `toBe("muted")` (the preference-gate tests) or
+ * `toBe("failed")` (every genuine-error test), which is the actual bug this file's own
+ * boolean assertions were blind to: both used to be the identical `false`, indistinguishable
+ * to any caller that counted outcomes. See __tests__/deadlines/dedupe-and-aggregation.test.ts
+ * and __tests__/universities/data-change-scan-write.test.ts for the end-to-end proof that a
+ * real write failure is now counted while a muted category is not.
  */
 
 const { insertMock, profilesSelectMock } = vi.hoisted(() => ({ insertMock: vi.fn(), profilesSelectMock: vi.fn() }));
@@ -44,7 +53,7 @@ describe("createNotification — migration 0087 unapplied (today's actual state)
 
     const result = await createNotification(baseParams);
 
-    expect(result).toBe(true);
+    expect(result).toBe("sent");
     expect(insertMock).toHaveBeenCalledTimes(1);
   });
 
@@ -54,14 +63,14 @@ describe("createNotification — migration 0087 unapplied (today's actual state)
     const first = await createNotification(baseParams);
     const second = await createNotification(baseParams);
 
-    expect(first).toBe(true);
-    expect(second).toBe(true);
+    expect(first).toBe("sent");
+    expect(second).toBe("sent");
     expect(insertMock).toHaveBeenCalledTimes(2);
   });
 });
 
 describe("createNotification — migration 0087 applied, a genuine race loses cleanly", () => {
-  test("a 23505 against the new_opportunity dedupe index returns true, not false -- the wanted state (student has this notification) is already satisfied by whichever call won", async () => {
+  test("a 23505 against the new_opportunity dedupe index returns \"sent\", not \"failed\" -- the wanted state (student has this notification) is already satisfied by whichever call won", async () => {
     insertMock.mockResolvedValue({
       error: { code: "23505", message: 'duplicate key value violates unique constraint "notifications_new_opportunity_link_unique_idx"' },
     });
@@ -69,36 +78,36 @@ describe("createNotification — migration 0087 applied, a genuine race loses cl
 
     const result = await createNotification(baseParams);
 
-    expect(result).toBe(true);
+    expect(result).toBe("sent");
     expect(warnSpy).not.toHaveBeenCalled();
     warnSpy.mockRestore();
   });
 });
 
 describe("createNotification — a real failure still fails loudly, the catch is narrow", () => {
-  test("a unique violation on a DIFFERENT constraint is not swallowed", async () => {
+  test("a unique violation on a DIFFERENT constraint is not swallowed -- returns \"failed\", a real error, never \"muted\"", async () => {
     insertMock.mockResolvedValue({ error: { code: "23505", message: 'duplicate key value violates unique constraint "notifications_pkey"' } });
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     const result = await createNotification(baseParams);
 
-    expect(result).toBe(false);
+    expect(result).toBe("failed");
     expect(warnSpy).toHaveBeenCalledTimes(1);
     warnSpy.mockRestore();
   });
 
-  test("an unrelated error (not a unique violation at all) still returns false and logs", async () => {
+  test("an unrelated error (not a unique violation at all) still returns \"failed\" and logs", async () => {
     insertMock.mockResolvedValue({ error: { code: "PGRST301", message: "JWT expired" } });
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     const result = await createNotification(baseParams);
 
-    expect(result).toBe(false);
+    expect(result).toBe("failed");
     expect(warnSpy).toHaveBeenCalledTimes(1);
     warnSpy.mockRestore();
   });
 
-  test("a thrown exception (e.g. createAdminClient failing outright) still returns false", async () => {
+  test("a thrown exception (e.g. createAdminClient failing outright) still returns \"failed\"", async () => {
     insertMock.mockImplementation(() => {
       throw new Error("network error");
     });
@@ -106,7 +115,7 @@ describe("createNotification — a real failure still fails loudly, the catch is
 
     const result = await createNotification(baseParams);
 
-    expect(result).toBe(false);
+    expect(result).toBe("failed");
     expect(warnSpy).toHaveBeenCalledTimes(1);
     warnSpy.mockRestore();
   });
@@ -119,19 +128,19 @@ describe("createNotification — other categories are never affected by the new_
 
     const result = await createNotification({ userId: "user-1", category: "weekly_plan", title: "Your weekly plan is ready", link: "/plan" });
 
-    expect(result).toBe(false);
+    expect(result).toBe("failed");
     expect(warnSpy).toHaveBeenCalledTimes(1);
     warnSpy.mockRestore();
   });
 });
 
 describe("createNotification — migration 0090 preference gate", () => {
-  test("category explicitly disabled -- skips the insert entirely, returns false", async () => {
+  test("category explicitly disabled -- skips the insert entirely, returns \"muted\", not \"failed\" -- a legitimate preference, never an error", async () => {
     profilesSelectMock.mockResolvedValue({ data: { notify_new_opportunity: false }, error: null });
 
     const result = await createNotification(baseParams);
 
-    expect(result).toBe(false);
+    expect(result).toBe("muted");
     expect(insertMock).not.toHaveBeenCalled();
   });
 
@@ -141,7 +150,7 @@ describe("createNotification — migration 0090 preference gate", () => {
 
     const result = await createNotification(baseParams);
 
-    expect(result).toBe(true);
+    expect(result).toBe("sent");
     expect(insertMock).toHaveBeenCalledTimes(1);
   });
 
@@ -166,8 +175,8 @@ describe("createNotification — migration 0090 preference gate", () => {
     const weeklyPlanResult = await createNotification({ userId: "user-1", category: "weekly_plan", title: "Your weekly plan is ready", link: "/plan" });
     const opportunityResult = await createNotification(baseParams);
 
-    expect(weeklyPlanResult).toBe(false);
-    expect(opportunityResult).toBe(true);
+    expect(weeklyPlanResult).toBe("muted");
+    expect(opportunityResult).toBe("sent");
     expect(insertMock).toHaveBeenCalledTimes(1); // only the enabled category actually inserted
   });
 
@@ -179,7 +188,7 @@ describe("createNotification — migration 0090 preference gate", () => {
 
     const result = await createNotification(baseParams);
 
-    expect(result).toBe(true);
+    expect(result).toBe("sent");
     expect(insertMock).toHaveBeenCalledTimes(1);
     expect(warnSpy).not.toHaveBeenCalled();
     warnSpy.mockRestore();
@@ -192,7 +201,7 @@ describe("createNotification — migration 0090 preference gate", () => {
 
     const result = await createNotification(baseParams);
 
-    expect(result).toBe(true);
+    expect(result).toBe("sent");
     expect(insertMock).toHaveBeenCalledTimes(1);
     expect(warnSpy).toHaveBeenCalledTimes(1); // unlike the undefined-column case, this one is worth knowing about
     warnSpy.mockRestore();
@@ -204,7 +213,7 @@ describe("createNotification — migration 0090 preference gate", () => {
 
     const result = await createNotification(baseParams);
 
-    expect(result).toBe(true);
+    expect(result).toBe("sent");
     expect(insertMock).toHaveBeenCalledTimes(1);
   });
 
@@ -214,6 +223,6 @@ describe("createNotification — migration 0090 preference gate", () => {
 
     const result = await createNotification(baseParams);
 
-    expect(result).toBe(true);
+    expect(result).toBe("sent");
   });
 });

@@ -399,21 +399,31 @@ export function buildDigestNotification(hits: readonly DeadlineHit[], translate:
  * Returns the number of deadline hits actually surfaced to a student (post-dedup, pre-
  * grouping) — a more meaningful "items processed" figure for runWithTracking than the
  * number of notification rows, the same way every other Phase 30 job counts real facts
- * written rather than batches sent.
+ * written rather than batches sent. `failed` counts only genuine write errors
+ * (`createNotification` returning `"failed"`) — a `"muted"` outcome is a student's own
+ * legitimate preference, not a fact this job's error count should ever reflect, same as
+ * scanStaleOutlooks's own `refused` counter is deliberately kept separate from its `failed`
+ * one.
  */
-async function writeDeadlineNotifications(supabase: SupabaseClient<Database>, hits: DeadlineHit[], translators: Record<Locale, NotificationTranslator>): Promise<number> {
+async function writeDeadlineNotifications(
+  supabase: SupabaseClient<Database>,
+  hits: DeadlineHit[],
+  translators: Record<Locale, NotificationTranslator>
+): Promise<{ notified: number; failed: number }> {
   const hitsByUser = new Map<string, DeadlineHit[]>();
   for (const hit of hits) {
     hitsByUser.set(hit.userId, [...(hitsByUser.get(hit.userId) ?? []), hit]);
   }
 
   let notified = 0;
+  let failed = 0;
   for (const [userId, userHits] of hitsByUser) {
     const translate = translators[userHits[0].locale];
     const { title, body, link } = buildDigestNotification(userHits, translate);
 
-    const sent = await createNotification({ userId, category: "deadline", title, body, link });
-    if (!sent) continue;
+    const outcome = await createNotification({ userId, category: "deadline", title, body, link });
+    if (outcome === "failed") failed++;
+    if (outcome !== "sent") continue;
 
     const logRows: DeadlineNotificationLogInsert[] = userHits.map((hit) => ({
       user_id: hit.userId,
@@ -427,7 +437,7 @@ async function writeDeadlineNotifications(supabase: SupabaseClient<Database>, hi
     }
     notified += userHits.length;
   }
-  return notified;
+  return { notified, failed };
 }
 
 /**
@@ -440,7 +450,7 @@ async function writeDeadlineNotifications(supabase: SupabaseClient<Database>, hi
  * one notification per run (see writeDeadlineNotifications). See lib/deadlines/upcoming.ts
  * for the read-side ("Due soon" widget) that mirrors this same three-source union.
  */
-export async function scanDeadlines(): Promise<{ notified: number; checked: number }> {
+export async function scanDeadlines(): Promise<{ notified: number; checked: number; failed: number }> {
   const supabase = createAdminClient();
   const today = new Date();
   // Loaded once and threaded into the two functions below that need it — both run inside the
@@ -458,10 +468,11 @@ export async function scanDeadlines(): Promise<{ notified: number; checked: numb
 
   const allHits = [...applications.hits, ...opportunities.hits, ...universities.hits];
   const freshHits = await filterAlreadyNotified(supabase, allHits);
-  const notified = await writeDeadlineNotifications(supabase, freshHits, translators);
+  const { notified, failed } = await writeDeadlineNotifications(supabase, freshHits, translators);
 
   return {
     notified,
+    failed,
     checked: applications.checked + opportunities.checked + universities.checked,
   };
 }
