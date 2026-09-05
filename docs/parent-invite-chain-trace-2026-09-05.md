@@ -4,6 +4,48 @@ Report only, per CEO's explicit instruction: "Kod yazma, önce yürü ve raporla
 fixed or written here. Confirmed `parent_links` row count directly: 0 total, 0 pending,
 0 active, 0 revoked.
 
+## Addendum (same day, CEO's follow-up): a real ambiguity in the zero, resolved with
+## data that already exists — no new instrumentation needed to answer it today
+
+**The finding, named explicitly because it wasn't in the first pass**: `generateParentInvite`
+(step 3 below) writes nothing to the database — the token alone carries the invite's
+identity, by design (`lib/parent/invite-token.ts`'s own comment). So `parent_links = 0`
+is consistent with two genuinely different situations that this table alone cannot tell
+apart: **"no student has ever generated a link"** versus **"links were generated and
+shared, but no parent has ever clicked through and finished."** These point to opposite
+fixes — the first is a discoverability problem (nudge harder, or differently); the second
+is a parent-side friction problem (something about the accept form, or the act of a parent
+receiving and trusting an unsolicited-looking link). Conflating them would risk fixing the
+wrong one.
+
+**Resolved for today's actual data, with a real (if smaller and more granular) question
+than "was a link ever generated" — checked directly, not assumed**: `generateParentInvite`
+only ever runs once `profiles.parent_invite_email` is set (`loadGeneratedInvitePreview`'s
+own gate), and that column write happens on step 2, a full step before any link exists.
+**0 of 11 profiles have `parent_invite_email` set at all.** Every one of today's students is
+still at the very first step — nobody has gotten far enough to generate a link, let alone
+share one or have a parent fail to complete it. Today's zero is the "undiscovered" case,
+not the "parent stuck" case. This didn't need new instrumentation because
+`parent_invite_email` already exists and is already the correct proxy for "did the student
+start this at all" — one query away, not a future measurement.
+
+**The recommendation, since this distinction will matter again once usage is non-zero and
+this exact snapshot stops being available (the moment a student clears a saved email
+without ever generating a link, or the sample grows past a size where "reread the whole
+table by eye" stays practical)**: add one product analytics event, not a new table or any
+content storage — matching Phase 52's own existing convention (`logEvent(userId, "...")`,
+the same call `registerUltraInterestAction` already makes for an identically low-stakes
+signal). `parent_invite_link_generated`, fired from `loadGeneratedInvitePreview` the
+moment it actually returns a preview, with **only the student's own `user_id` and a
+timestamp** — never the parent's email, never the token, never anything that identifies
+or reaches the parent. This keeps the three numbers cleanly separable going forward:
+profiles with an email on file (started), `parent_invite_link_generated` count (link
+actually produced — should track the first number closely, since generation is automatic
+once an email is saved), and `parent_links` count (a parent actually finished). A gap
+between the second and third numbers, once either is non-zero, is exactly the "parent got
+stuck" signal this table alone can't currently produce. Not built here — a recommendation,
+per CEO's own instruction not to write code for this part.
+
 ## The one-line answer
 
 **Not a technical break. The chain is sound end-to-end.** Zero completions in under 24
