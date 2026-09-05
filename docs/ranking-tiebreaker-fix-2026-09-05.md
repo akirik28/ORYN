@@ -108,6 +108,40 @@ cutoff).
 
 No 4th instance found. Reported as a real "no" for the rest, not silence.
 
+### Addendum — raw SQL `ORDER BY`, not just `.order(` calls
+
+CEO's follow-up: the first pass only greps PostgREST `.order(` calls in TypeScript — a
+`security definer` SQL function's own `ORDER BY` (called via `.rpc()`) would be invisible to
+that grep entirely. Searched `supabase/migrations/*.sql` and `supabase/functions/*` for
+`order by` directly. Four real hits, none a new instance of this bug:
+
+- **`get_parent_child_commentary` (`0130_parent_commentary_entries.sql:106`)**:
+  `order by e.generated_at desc limit greatest(1, least(p_limit, 50))` — single-key, real
+  tie risk (a digest batch could plausibly write several rows with the same `generated_at`).
+  But its only caller (`lib/parent/commentary.ts:38`) always passes `p_limit: 1` — this asks
+  "the single latest commentary entry," the same already-excluded `.limit(1)` question above
+  (which of several same-instant rows counts as "the" latest), not "which N of many tied
+  candidates survives a competitive cutoff." Same exclusion, found by the other search method.
+- **The canonical-entity-resolution function** (`0038_canonical_entity_registry.sql:720`,
+  reconciled again verbatim in `0039_canonical_registry_reconciliation.sql:84`):
+  `order by case verification_state ... end, last_verified_at desc nulls last limit 1` —
+  already a TWO-key order (verification tier, then recency), inside a
+  `pg_advisory_xact_lock` scoped to the exact same normalized name+country+city. A residual tie
+  needs two candidate entities matching on both keys at once, and the result decides which
+  existing entity a NEW mention attaches to at write time (once per mention created), not a
+  value re-rendered to a student on every visit. Lower severity by construction (two keys, not
+  one) and lower stakes (a write-time backend dedup choice, not a repeated live ranking
+  surface) — noted, not fixed; a real residual, but not this bug's shape.
+- **The fuzzy entity-search function** (`0038_canonical_entity_registry.sql:665-673`):
+  `row_number() over (partition by entity_id order by score desc, matched_via) ... order by
+  score desc, display_name limit greatest(1, least(p_limit, 50))` — two-key order at both the
+  per-entity dedup stage and the final ranking, an admin/ingestion-time entity search, not a
+  student-facing recommendation surface. Same reasoning as above.
+
+No raw-SQL instance of the actual bug shape (single-key order, no tiebreaker, feeding a
+repeated live "top N > 1" surface) found. The two-key cases above are already meaningfully
+better-guarded than `home-strip.ts`'s original single-key order was, not equivalent to it.
+
 ## Not done here
 
 Nothing merged to `main` — CEO is sole merge authority. No live database touched (this was a
