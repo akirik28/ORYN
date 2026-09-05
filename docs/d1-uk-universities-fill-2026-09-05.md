@@ -1097,3 +1097,91 @@ values
 ```
 
 ---
+
+## 37. University of Plymouth
+
+`id = 'd58420d2-3e01-49ef-a056-e6dbad0342cb'` — QS rank 691.
+
+**Source actually used:** `https://www.plymouth.ac.uk/international/how-to-apply/english-
+language-requirements` — official page, directly fetched for the validity-period structure;
+the score table lives on separate per-qualification linked pages not fetched in this pass, so
+the numeric IELTS figure (6.0/5.5) comes from a general search instead, recorded at `medium`.
+
+**A genuinely counter-intuitive validity split, confirmed directly on the official page:**
+non-SELT academic IELTS is valid for 3 years, while SELT (UKVI-required) academic IELTS is
+valid for only 2 years -- the opposite of an assumption that the more official/regulated test
+type would carry the longer validity.
+
+**What was checked and NOT found:** the exact numeric IELTS score (not independently confirmed
+by direct fetch); TOEFL iBT equivalents; application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('d58420d2-3e01-49ef-a056-e6dbad0342cb', 'english_proficiency',
+   'Usually IELTS 6.0 overall (5.5+ per component) for undergraduate, not independently confirmed by number; non-SELT IELTS valid 3 years, SELT (UKVI) IELTS valid only 2 years from CAS issuance -- confirmed directly, a counter-intuitive reversal of which test type has the longer shelf life; IELTS Life Skills and IELTS Online NOT accepted for direct degree entry',
+   'A general search reports the University of Plymouth usually requires IELTS 6.0 overall with no component below 5.5 for undergraduate courses, not independently confirmed by this session''s own direct page read. Officially confirmed directly: non-SELT academic IELTS tests must have been taken no more than 3 years before the course start date, while SELT (Secure English Language Test, required by UKVI) academic IELTS tests must have been taken within 2 years of the CAS issuance date -- the SELT version, despite being the more regulated/official route, carries the SHORTER validity window. Plymouth does not accept the IELTS Life Skills test or IELTS Online test for direct entry onto degree programmes. Pre-sessional courses are available for applicants not yet meeting the requirement.',
+   true, 'medium', 'https://www.plymouth.ac.uk/international/how-to-apply/english-language-requirements', now());
+```
+
+---
+
+## 38. Goldsmiths, University of London
+
+`id = 'bd5e07ee-175b-4569-9700-c72ffbda0b41'` — QS rank 701-710.
+
+**Source actually used:** `https://www.gold.ac.uk/apply/english-language-requirements/` —
+official page, directly fetched.
+
+**A genuine five-tier system, more granular than any other UK university confirmed in this
+batch:** Goldsmiths sets requirements per programme across at least five distinct IELTS levels
+(7.5, 7.0, 6.5, 6.0, 5.5) rather than the two-or-three-tier structures seen at Sussex (#9) or
+Kent (#19).
+
+**Twenty-second independent corroboration of the TOEFL iBT rescale today.**
+
+**What was checked and NOT found:** which specific programmes map to which of the five tiers
+(out of scope for this pass, beyond BA English's own confirmed figure); application deadline,
+tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('bd5e07ee-175b-4569-9700-c72ffbda0b41', 'english_proficiency',
+   'Set per programme across at least five IELTS tiers: 7.5, 7.0, 6.5, 6.0, 5.5 -- no single university-wide figure; BA English specifically requires 6.5 overall (6.5 Writing, 6.0+ other elements); TOEFL iBT for the 7.0 tier is 100 legacy (24 Reading/Listening, 26 Speaking/Writing) / 5.0 new scale (5.0 each component) from Jan 2026',
+   'Goldsmiths sets English-language requirements per programme, spanning at least five distinct IELTS thresholds: 7.5, 7.0, 6.5, 6.0, and 5.5 overall -- applicants must check their specific programme page rather than one university-wide figure. As a concrete example, BA English specifically requires IELTS 6.5 overall, with 6.5 in Writing and no other element below 6.0. For the IELTS-7.0 tier specifically, TOEFL iBT before January 2026 requires 24 in Reading and Listening and 26 in Speaking and Writing; from January 2026 (new scale), a total of 5, with 5 in each of Reading/Writing/Speaking/Listening. Qualifications must be less than 2 years old at course start. Pre-sessional English courses are available for applicants not yet meeting their programme''s tier.',
+   true, 'high', 'https://www.gold.ac.uk/apply/english-language-requirements/', now());
+```
+
+---
+
+## 39. Keele University
+
+`id = '09516940-5485-4100-af18-71e19d4e461c'` — QS rank 801-850.
+
+**Source actually used:** `https://www.keele.ac.uk/study/undergraduate/apply/entryrequirements/
+internationalentryrequirements/englishlanguagerequirements/` — official page, directly fetched.
+
+**A claim checked and NOT asserted because it couldn't be confirmed:** a general search implied
+Keele''s International Year One (delivered via Keele University International College, KUIC)
+requires a HIGHER IELTS (7.0) than direct undergraduate entry (6.0) -- a counter-intuitive
+ordering for what reads like a foundation-style pathway. The official page itself does not
+state KUIC's specific figures at all, deferring to KUIC's own separate site, so this
+comparison is NOT included below rather than repeated as fact from an unconfirmed source.
+
+**What was checked and NOT found:** KUIC/International Year One's own English requirement;
+application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('09516940-5485-4100-af18-71e19d4e461c', 'english_proficiency',
+   'Direct undergraduate entry: IELTS Academic 6.0 overall (5.5+ per component), TOEFL iBT 4 new scale (3.5 Reading, 3 Listening/Writing/Speaking) -- no legacy-scale figure stated on this page',
+   'Direct undergraduate entry (Group A): IELTS Academic 6.0 overall, 5.5 in each component. TOEFL iBT: 4 overall (3.5 Reading, 3 Listening, 3 Writing, 3 Speaking) -- this page gives only this figure with no explicit before/after 21-January-2026 distinction, so it is recorded as the new-scale figure per the pattern from other UK universities, but this page itself does not label it that way. Meeting the minimum undergraduate requirement typically also satisfies the separate Student visa English requirement. A separate International Foundation Year / International Year One pathway exists via Keele University International College (KUIC), but its own specific score requirements are not stated on this page and were not independently confirmed in this pass.',
+   true, 'high', 'https://www.keele.ac.uk/study/undergraduate/apply/entryrequirements/internationalentryrequirements/englishlanguagerequirements/', now());
+```
+
+---
