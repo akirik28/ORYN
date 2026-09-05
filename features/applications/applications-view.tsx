@@ -11,6 +11,8 @@ import { DeadlineBadge } from "@/components/proxola/deadline-badge";
 import type { ApplicationReadiness } from "@/lib/applications/readiness";
 import type { ApplicationStatus, ApplicationType, RequirementStatus, PlanTier } from "@/types/database";
 import { heroGradientStyleCompact } from "@/components/proxola/hero-gradient";
+import { PreSeniorGuidanceBanner } from "@/features/applications/pre-senior-guidance-banner";
+import type { ApplicationsPageGuidance } from "@/lib/applications/grade-relevance";
 
 const APPLICATION_STATUS_TONE: Record<ApplicationStatus, StatusTone> = {
   not_started: "neutral",
@@ -38,6 +40,7 @@ export async function ApplicationsView({
   hasTargets,
   availableTargets,
   tier = "standard",
+  guidance = null,
 }: {
   applications: ApplicationsViewRow[];
   hasTargets: boolean;
@@ -46,6 +49,10 @@ export async function ApplicationsView({
    *  (features/dashboard/dashboard-view.tsx) for why the dev-preview harness caller isn't
    *  required to pass it. */
   tier?: PlanTier;
+  /** E1 (2026-09-05) — null for a senior or an undeterminable grade (no note at all, per
+   * lib/applications/grade-relevance.ts's own contract); optional/defaulting to null for the
+   * same dev-preview-harness reason `tier` is. */
+  guidance?: ApplicationsPageGuidance | null;
 }) {
   const t = await getTranslations("applications");
   const locale = await getLocale();
@@ -85,6 +92,8 @@ export async function ApplicationsView({
           </div>
         </div>
       </div>
+
+      {guidance ? <div className="mt-10"><PreSeniorGuidanceBanner guidance={guidance} /></div> : null}
 
       <div className="mt-10 space-y-5">
         {applications.length > 0 ? (

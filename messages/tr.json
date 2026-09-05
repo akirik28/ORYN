@@ -1298,6 +1298,17 @@
     },
     "due": "Son tarih",
     "ofChecklist": "kontrol listesi",
+    "gradeNote": {
+      "eyebrow": "Son sınıftan önce",
+      "whenUsefulLead": "Bu sayfa son sınıfa geldiğinde işine yarayacak —",
+      "yearsUntilSenior": "{count, plural, one {yaklaşık # yıl sonra} other {yaklaşık # yıl sonra}}",
+      "rightNowLabel": "Şu an yapabileceğin şey",
+      "action": {
+        "deadlineLead": "Bilmen gereken yaklaşan bir son tarih var:",
+        "opportunityLead": "Göz atmaya değer yeni bir fırsat eşleşmesi:",
+        "none": "Profilin şu an için iyi durumda — yeni fırsatlar ve son tarihler geldikçe tekrar bak."
+      }
+    },
     "statusLabels": {
       "not_started": "Başlanmadı",
       "in_progress": "Devam ediyor",
