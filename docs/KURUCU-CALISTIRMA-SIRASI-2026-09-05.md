@@ -17,6 +17,31 @@ ikinci geçişte patlıyordu), düzeltildi.
 
 ---
 
+## ⚠️ ADIM 0 — BAŞLAMADAN ÖNCE: VERİTABANI ANLIK GÖRÜNTÜSÜ AL
+
+**Bu tek satır, aşağıdaki 30 işlemin sigortası.**
+
+Geri alma planı çıkarıldı (`docs/live-application-rollback-plan-2026-09-05.md`) ve
+sonuç net: **çoğu geri alınabilir, ama hepsi değil.**
+
+| ne | geri alınabilir mi |
+|---|---|
+| `0135`-`0140`, `0142` (tetikleyiciler + politika) | ✅ **temiz** — tetikleyiciyi/politikayı düşür, veri kaybı yok |
+| **`0141`** | ⚠️ mekanik olarak kolay **ama geri almak açığı yeniden AÇAR** — ileri teşhis et, refleksle geri alma |
+| **`0127`** | ⚠️ **şartlı** — kısıtı daraltmak, o değeri taşıyan satır varsa **başarısız olur** (önce kontrol sorgusu planda) |
+| Paketlerin diğer migration'ları | ⚠️ geri alınabilir **ama biriken veriyi kaybeder** |
+| `0130` | ⚠️ **yalnızca ilk veli notu üretilip okunmadan önce** temiz |
+| **~15 dolgu dosyası** | ✅ temiz — yalnızca araştırmayı kaybeder |
+| **~7 dolgu dosyası** | ❌ **geri alınamaz** — mevcut içeriği (açıklama/başlık/URL) **önceki değeri hiçbir yere kaydetmeden** üzerine yazıyorlar |
+
+**Son satır, bu adımın sebebi.** O yedi dosya için **script'ten geri dönüş yok.**
+Tek gerçek sigorta **oturumdan önce alınmış bir anlık görüntü.**
+
+**`waterloo-cemc-split-execute` bunu zaten doğru yapıyor** (silme değil devre dışı
+bırakma, doğal anahtarla silinebilir eklemeler) — **yeniden kullanılacak desen o.**
+
+---
+
 ## ADIM 1 — Sabah paketleri (14 → 15 → 16)
 
 `data/morning/14-toplu-paket-2026-09-04.sql` → `15-...` → `16-...`
