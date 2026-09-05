@@ -116,4 +116,41 @@ describe("getParentPanelData — enrichment on top of an active state", () => {
     expect(fromMock).not.toHaveBeenCalled();
     expect(getProfileScoresMock).not.toHaveBeenCalled();
   });
+
+  /**
+   * 2026-09-05 (ranking-tiebreaker fix, same root cause as
+   * lib/opportunities/home-strip.ts's own fix this same night): fetchOpportunities orders its
+   * opportunity_matches query by match_score alone too, then slices to 5 -- the exact same
+   * "which of many tied rows survives the cutoff is undefined" shape, on a different surface
+   * (the parent panel, not the student home strip). The shared `chainable()` builder above
+   * treats `.order()` as a no-op by design (nothing else in this file depends on order), so
+   * this test builds its own spied builder rather than extend that shared one.
+   */
+  test("orders opportunity_matches by match_score then a genuine tiebreaker, not match_score alone", async () => {
+    getParentChildPanelStateMock.mockResolvedValue({
+      state: "active",
+      profile: { display_name: "Ada" },
+      targetUniversities: [],
+      applications: [],
+    });
+
+    const orderSpy = vi.fn(() => matchesBuilder);
+    const matchesBuilder: Record<string, unknown> = {
+      select: () => matchesBuilder,
+      eq: () => matchesBuilder,
+      order: orderSpy,
+      limit: () => Promise.resolve({ data: [], error: null }),
+    };
+    fromMock.mockImplementation((table: string) => {
+      if (table === "opportunity_matches") return matchesBuilder;
+      return chainable({ data: [], error: null });
+    });
+
+    await getParentPanelData(STUDENT_ID);
+
+    expect(orderSpy.mock.calls).toHaveLength(2);
+    expect(orderSpy.mock.calls[0]).toEqual(["match_score", { ascending: false }]);
+    const [secondColumn] = orderSpy.mock.calls[1] as unknown as [string, unknown];
+    expect(secondColumn).not.toBe("match_score");
+  });
 });

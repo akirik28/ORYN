@@ -73,7 +73,13 @@ async function fetchOpportunities(studentUserId: string): Promise<ParentPanelOpp
     .select("opportunity_id, match_score")
     .eq("user_id", studentUserId)
     .eq("eligible", true)
+    // Secondary key added 2026-09-05 -- same fix, same reason, as
+    // lib/opportunities/home-strip.ts's own getHomeOpportunityStrip: match_score alone ties
+    // often enough (docs/home-strip-ranking-stability-2026-09-04.md) that an index scan's
+    // physical tie order, not the query, was deciding which opportunities survive this cutoff.
+    // `id` is opportunity_matches' own uuid primary key, so it's always a genuine tiebreaker.
     .order("match_score", { ascending: false })
+    .order("id", { ascending: true })
     .limit(20);
 
   const opportunityIds = (matches ?? []).map((m) => m.opportunity_id);
