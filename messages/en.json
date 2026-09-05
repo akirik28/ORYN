@@ -813,6 +813,7 @@
       "unavailable": "Unavailable",
       "admissionStatsEmptyMessage": "This university's admission rate, test scores, and graduation rate aren't in Proxola's records yet — that's a gap in our research, not a low number.",
       "applicationDeadlineUnconfirmedMessage": "Proxola hasn't confirmed this university's application deadline yet — check the official admissions page for the current date.",
+      "applicationDeadlineElapsedMessage": "The last known application deadline was {date}, and it has already passed. The next cycle's date hasn't been published yet — check the official admissions page for updates.",
       "notResearchedTitle": "Proxola hasn't researched this university in depth yet",
       "notResearchedDescription": "Program, requirement, and admissions details aren't in Proxola's records yet — that's a gap in our research, not a reflection of the university.",
       "undergradPostgradCaption": "{undergrad} undergrad · {postgrad} postgrad",

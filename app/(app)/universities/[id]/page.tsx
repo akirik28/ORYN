@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { MapPin, Users, DollarSign, GraduationCap, ExternalLink, Trophy, Target, TrendingUp, FileSearch } from "lucide-react";
 import { subjectLabel } from "@/lib/programs/subject-labels";
 import { EmptyState } from "@/components/proxola/empty-state";
-import { lacksResearchDepth, lacksApplicationDeadline, lacksCoreAdmissionStats } from "@/lib/universities/data-depth";
+import { lacksResearchDepth, lacksApplicationDeadline, lacksCoreAdmissionStats, mostRecentElapsedApplicationDeadline } from "@/lib/universities/data-depth";
 import { categorizeAndDedupeResearchTopics } from "@/lib/universities/research-taxonomy";
 import { requireUser, getCurrentProfile, getProfileScores } from "@/lib/security/dal";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
@@ -220,7 +220,8 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   // verification_state alone was trusted to mean "actionable" — it doesn't cover a date that
   // has simply passed since a row was last verified. isDatedDeadlineUpcoming applies the same
   // `>= today` rule lib/deadlines/upcoming.ts already does for the identical reason.
-  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const today = now.toISOString().slice(0, 10);
   const datedDeadlines = actionableDeadlines
     .filter((d) => isDatedDeadlineUpcoming(d, today))
     .sort((a, b) => a.deadline_date!.localeCompare(b.deadline_date!));
@@ -343,6 +344,15 @@ export default async function UniversityDetailPage({ params }: { params: Promise
   // here is whether an application deadline has ever been researched at all, not whether
   // one happens to be actionable right now.
   const missingApplicationDeadline = lacksApplicationDeadline((deadlinesRes.data ?? []).map((d) => d.deadline_type));
+  // CEO, 2026-09-05 (docs/elapsed-deadline-display-audit-2026-09-05.md): missingApplicationDeadline
+  // above only answers "was an application/early deadline ever researched" — it can't tell
+  // "never researched" from "researched, but every instance has since elapsed", so a university
+  // whose only application deadline passed made the whole Important Dates section vanish below
+  // with no message at all. Only worth computing when there's nothing else to show — a
+  // university with a real future or recurring deadline already has something to render, so an
+  // older elapsed row alongside it should just be dropped, not surfaced as the headline fact.
+  const elapsedApplicationDeadline =
+    datedDeadlines.length === 0 && recurringDeadlines.length === 0 ? mostRecentElapsedApplicationDeadline(deadlinesRes.data ?? [], now) : null;
   // lacksCoreAdmissionStats, not lacksAdmissionStatistics -- see that function's own header
   // in data-depth.ts for why cost is deliberately excluded from this specific render decision
   // (it has its own independent fallback, university_profile_metrics tuition, below).
@@ -830,8 +840,18 @@ export default async function UniversityDetailPage({ params }: { params: Promise
           never confirmed. Now always renders when there's something to show OR the specific
           gap to name, same "the section says so rather than disappearing" pattern already
           established for programs/requirements above. The note is additive, never replacing
-          a real row -- MIT's scholarship deadline still shows exactly as it does today. */}
-      {datedDeadlines.length > 0 || recurringDeadlines.length > 0 || missingApplicationDeadline ? (
+          a real row -- MIT's scholarship deadline still shows exactly as it does today.
+
+          2026-09-05: a THIRD case joined missingApplicationDeadline, found the same way D6's
+          own two were -- a real application deadline that has simply elapsed, with nothing
+          current to replace it, used to fall through both branches and render nothing at all
+          (docs/elapsed-deadline-display-audit-2026-09-05.md, 27 universities live in this
+          shape). "Never researched" and "researched, now stale" are different facts a student
+          needs told apart -- the message below says which one this is, states the actual date,
+          and says plainly that it passed, rather than the silence either omission used to
+          produce. Deliberately not the compare page's bare "N/A" for the same gap (CEO,
+          2026-09-05): there's room here for a real sentence, so it gets one. */}
+      {datedDeadlines.length > 0 || recurringDeadlines.length > 0 || missingApplicationDeadline || elapsedApplicationDeadline ? (
         <section className="space-y-4">
           <SectionHeader title={t("importantDatesTitle")} description={t("importantDatesDescription")} />
           {datedDeadlines.length > 0 ? (
@@ -843,6 +863,15 @@ export default async function UniversityDetailPage({ params }: { params: Promise
           {missingApplicationDeadline ? (
             <p lang={locale} className="text-sm text-muted-foreground">
               {t("applicationDeadlineUnconfirmedMessage")}{" "}
+              {officialSourceUrl ? (
+                <a href={officialSourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
+                  {t("visitWebsite")} <ExternalLink className="size-3.5" />
+                </a>
+              ) : null}
+            </p>
+          ) : elapsedApplicationDeadline ? (
+            <p lang={locale} className="text-sm text-muted-foreground">
+              {t("applicationDeadlineElapsedMessage", { date: formatDeadlineDate(elapsedApplicationDeadline.date.toISOString().slice(0, 10), locale) })}{" "}
               {officialSourceUrl ? (
                 <a href={officialSourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-brand-primary hover:underline">
                   {t("visitWebsite")} <ExternalLink className="size-3.5" />

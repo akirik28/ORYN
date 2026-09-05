@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { lacksResearchDepth, lacksApplicationDeadline, lacksAdmissionStatistics, lacksCoreAdmissionStats, soonestApplicationDeadline } from "@/lib/universities/data-depth";
+import { lacksResearchDepth, lacksApplicationDeadline, lacksAdmissionStatistics, lacksCoreAdmissionStats, soonestApplicationDeadline, mostRecentElapsedApplicationDeadline } from "@/lib/universities/data-depth";
 
 /**
  * CEO finding, 2026-09-02: 734 of 1,019 universities came from one bulk import with real
@@ -216,5 +216,65 @@ describe("soonestApplicationDeadline", () => {
         TODAY
       )
     ).toBeNull();
+  });
+});
+
+/**
+ * CEO, 2026-09-05 (docs/elapsed-deadline-display-audit-2026-09-05.md): built for the university
+ * detail page's own "Important Dates" section, which used to render nothing at all -- no date,
+ * no message -- for a university whose only application/early deadline had simply elapsed.
+ * `lacksApplicationDeadline` correctly says such a university isn't missing research (a real
+ * row of that type does exist), so the page's old render guard fell through both branches and
+ * showed nothing. This function is the third case the page needed: not "never researched"
+ * (lacksApplicationDeadline) and not "current" (soonestApplicationDeadline), but "researched,
+ * now stale."
+ */
+describe("mostRecentElapsedApplicationDeadline", () => {
+  const TODAY = new Date("2026-09-04T00:00:00Z");
+
+  test("RED-shaped: Humboldt-Universitat zu Berlin's real rows (queried live 2026-09-05) -- six elapsed 'application' dates plus one elapsed 'document' row, no future or recurring row at all; picks the MOST recent application date (Aug 31), not the earliest (Jan 15) or the wrong-type document row", () => {
+    const result = mostRecentElapsedApplicationDeadline(
+      [
+        { deadline_type: "application", deadline_date: "2026-01-15", recurrence: "dated_specific", verification_state: "VERIFIED_CURRENT", recurrence_month: null, recurrence_day: null },
+        { deadline_type: "application", deadline_date: "2026-02-28", recurrence: "dated_specific", verification_state: "VERIFIED_CURRENT", recurrence_month: null, recurrence_day: null },
+        { deadline_type: "document", deadline_date: "2026-05-15", recurrence: "dated_specific", verification_state: "VERIFIED_CURRENT", recurrence_month: null, recurrence_day: null },
+        { deadline_type: "application", deadline_date: "2026-06-14", recurrence: "dated_specific", verification_state: "VERIFIED_CURRENT", recurrence_month: null, recurrence_day: null },
+        { deadline_type: "application", deadline_date: "2026-06-28", recurrence: "dated_specific", verification_state: "VERIFIED_CURRENT", recurrence_month: null, recurrence_day: null },
+        { deadline_type: "application", deadline_date: "2026-07-15", recurrence: "dated_specific", verification_state: "VERIFIED_CURRENT", recurrence_month: null, recurrence_day: null },
+        { deadline_type: "application", deadline_date: "2026-08-31", recurrence: "dated_specific", verification_state: "VERIFIED_CURRENT", recurrence_month: null, recurrence_day: null },
+      ],
+      TODAY
+    );
+    expect(result?.deadlineType).toBe("application");
+    expect(result?.date.toISOString().slice(0, 10)).toBe("2026-08-31");
+  });
+
+  test("GREEN case for soonestApplicationDeadline, so this function must stay null: a future dated row exists, nothing is actually elapsed-with-no-replacement", () => {
+    const rows = [{ deadline_type: "application", deadline_date: "2026-10-15", recurrence: "dated_specific", verification_state: "unverified", recurrence_month: null, recurrence_day: null }];
+    expect(soonestApplicationDeadline(rows, TODAY)).not.toBeNull();
+    expect(mostRecentElapsedApplicationDeadline(rows, TODAY)).toBeNull();
+  });
+
+  test("a recurring_annual_undated row never counts as 'elapsed' -- soonestApplicationDeadline already rolls it forward, so this function correctly has nothing left to find", () => {
+    const rows = [{ deadline_type: "application", deadline_date: null, recurrence: "recurring_annual_undated", verification_state: "VERIFIED_RECURRING_UNDATED", recurrence_month: 1, recurrence_day: 15 }];
+    expect(mostRecentElapsedApplicationDeadline(rows, TODAY)).toBeNull();
+  });
+
+  test("a non-actionable verification_state excludes an otherwise-elapsed row, same rule as soonestApplicationDeadline", () => {
+    const result = mostRecentElapsedApplicationDeadline(
+      [{ deadline_type: "application", deadline_date: "2026-01-01", recurrence: "dated_specific", verification_state: "VERIFIED_HISTORICAL", recurrence_month: null, recurrence_day: null }],
+      TODAY
+    );
+    expect(result).toBeNull();
+  });
+
+  test("lacksApplicationDeadline's own case (no application/early type at all) leaves this function with nothing to find either -- the two functions partition the space, they don't overlap", () => {
+    const rows = [{ deadline_type: "scholarship", deadline_date: "2026-01-01", recurrence: "dated_specific", verification_state: "unverified", recurrence_month: null, recurrence_day: null }];
+    expect(lacksApplicationDeadline(rows.map((r) => r.deadline_type))).toBe(true);
+    expect(mostRecentElapsedApplicationDeadline(rows, TODAY)).toBeNull();
+  });
+
+  test("no rows at all returns null, not a crash", () => {
+    expect(mostRecentElapsedApplicationDeadline([], TODAY)).toBeNull();
   });
 });
