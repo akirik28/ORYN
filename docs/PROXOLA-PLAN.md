@@ -58,23 +58,33 @@
 >    **Yerine:** `git diff > /tmp/x.patch` + `git checkout --` + `git apply`, ya da
 >    geçici bir dala commit, ya da `cp` ile kopya.
 
-## 📋 KİMDE NE VAR — 5 Eylül (CEO tutar, dağıtmadan önce buraya bakar)
+## 📋 KİMDE NE VAR — 5 Eylül akşamı (CEO tutar, dağıtmadan önce buraya bakar)
 
-**Bugün aynı işi üç kez iki şeride verdim** (geçmiş son tarih ölçümü, E2 e-posta
-doğrulama, bir de fırsat ölçümü). Sebebi bayat doküman değil — **hiç kayıt
-tutmamam.** Plan işleri listeliyordu ama **kimde olduğunu** yazmıyordu.
+**Kurucunun kalıcı talimatı: boşta çalışmayan oturum kalmasın.** Bir şerit işini
+bitirip rapor ettiği anda yeni iş alır. **İş yoksa varsayılan iş belli:** fırsat ve
+üniversite boşluklarını doldurmak — ama **dilim açıkça bölünerek**, çünkü bugün üç
+kez aynı iş iki şeride gitti.
 
 | şerit | iş |
 |---|---|
-| `oryn-b1` (kullanım sınırları) | **RLS güvenlik** — `evidence_status` 10 tabloda, `target_universities` kabul görünümü sütunları |
-| production deployment | **Faz 12** — `profile_need`/`effort`/`confidence` ekrana |
-| i18n | **Uygunluk rozeti** — dört durumu ayır |
-| academic_tier | **Bildirim koruma** — `title`/`body`/`link`/`category` (madde 5), `0135` |
-| freemium | **`under_review` çıkmazı** — 27 satır, çıkış yolu yok |
-| yeni ülke | **Faz 16** — `academic_fit`/`profile_fit` eşleme katmanında düşüyor |
-| fırsatlar görsel | **Başvuru sayfası** — kabul görünümü rozeti |
-| hukuki çerçeve | **`LEGAL_REVIEW.md` §2** — yanlış iddia |
-| CFO | gözetim |
+| `oryn-b1` (kullanım sınırları) | **RLS süpürmesi §3** → sonra §6, §7 (§4 ve §8 sona) |
+| production deployment | **Fırsat dolgusu** — 190 boş satırın **son 95'i** |
+| i18n | **190 "hiçbir şey bilinmeyen" fırsat** — göstermeli miyiz? ölç ve öner |
+| academic_tier | **722 kart** — "profilindeki boşluğu kapatıyor" iddiası korumasız |
+| freemium | **`under_review`** — onayla düğmesi + detay sayfasının iki yüzünü tekleştir |
+| yeni ülke | **Üniversite dolgusu** — QS **101–150** |
+| fırsatlar görsel | **Üniversite dolgusu** — öğrencilerin **gerçekten hedeflediği** kurumlar |
+| hukuki çerçeve | **Fırsat dolgusu** — 190 boş satırın **ilk 95'i** |
+| CFO | gözetim + **333 worktree'nin disk ölçümü** |
+
+**Dolgu dilimleri çakışmaz:** iki üniversite şeridi **farklı eksende** (sıralama vs.
+gerçek kullanım) · iki fırsat şeridi **`id` sırasına göre yarı yarıya.** Bir kurum
+iki dilimde birden çıkarsa **CEO böler**, şerit kendi karar vermez.
+
+**Kurucu 5 Eylül akşamı evden çıktı. CEO'nun sınırı:** merge eder, gate koşturur,
+iş dağıtır. **Canlı veritabanına hiçbir şey uygulamaz** (üç sabah paketi + `0135`/
+`0136`/`0137` bekliyor) · **hiçbir e-posta gönderimini açmaz** · **sağlayıcı
+seçmez** · şirket/hukuk/para konularına dokunmaz.
 
 **Migration numaraları — CEO verir, şerit kendi almaz:**
 `0134` e-posta doğrulama (alındı) · `0135` bildirim koruma tetikleyicisi (academic_tier
