@@ -9,14 +9,24 @@ import { renderEligibilityNotes, classifyEligibilityGap, type EligibilityNote } 
 import type { Opportunity } from "@/types/database";
 
 /**
- * CEO, 2026-09-05: `opportunity-card.tsx` badged three meaningfully different "we don't have a
- * confirmed answer" situations identically — one generic orange "Eligibility unknown" warning,
- * regardless of whether the gap was in the OPPORTUNITY's own research (never looked / looked and
- * the source stayed silent) or in the STUDENT's own profile (age/country/grade not entered yet).
- * A brand-new, empty-profile account was the worst case: nearly every card on "For You" would
- * carry the identical warning, for a reason the student could fix in seconds. This file proves
- * the fix render-first (real component, real DOM, real message catalogs in both locales), not by
- * reading the JSX — same discipline as university-card-honest-badge.test.tsx.
+ * CEO, 2026-09-05: `opportunity-card.tsx` badged several meaningfully different "we don't have
+ * a confirmed answer" situations identically — one generic orange "Eligibility unknown"
+ * warning, regardless of whether the gap was in the OPPORTUNITY's own research (never looked /
+ * looked and the source stayed silent) or in the STUDENT's own profile (age/country/grade not
+ * entered yet). A brand-new, empty-profile account was the worst case: nearly every card on
+ * "For You" would carry the identical warning, for a reason the student could fix in seconds.
+ *
+ * Revised the same day: the first version of this fix split out profile_incomplete and
+ * checked_not_stated but kept everything else (including a MIX of unverified and
+ * checked_not_stated on the same row) on the plain warning. A second lane's direct measurement
+ * of 27 real researched opportunities (docs/d2-visible-set-fill-2026-09-05.md) found this left
+ * 24 of them showing the exact same badge as before their research — real progress on one
+ * dimension never changed what the student saw whenever another dimension was still
+ * unresearched. `partially_known` is the fourth state that closes that gap.
+ *
+ * This file proves the fix render-first (real component, real DOM, real message catalogs in
+ * both locales), not by reading the JSX — same discipline as
+ * university-card-honest-badge.test.tsx.
  */
 
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
@@ -172,15 +182,54 @@ describe("checked_not_stated — a real research pass, source silent — stays d
   });
 });
 
-describe("plain unverified — regression: the untouched case keeps today's exact behavior", () => {
-  test("still shows the plain warning badge, unchanged", () => {
+describe("plain unverified — only when NOTHING on the row has been checked at all", () => {
+  test("still shows the plain warning badge for a genuinely untouched row", () => {
     renderCard("en", [{ code: "age_eligibility_unverified" }]);
     expect(screen.getByText("Eligibility unknown")).toBeInTheDocument();
   });
 
-  test("stays the warning badge even alongside a checked_not_stated note on another axis (unverified doesn't get softened by proximity)", () => {
-    renderCard("en", [{ code: "age_eligibility_unverified" }, { code: "country_eligibility_checked_not_stated", params: { checkedAt: "" } }]);
+  test("stays the plain warning when every remaining note is unverified — no checked_not_stated anywhere", () => {
+    renderCard("en", [{ code: "age_eligibility_unverified" }, { code: "country_eligibility_unverified" }]);
     expect(screen.getByText("Eligibility unknown")).toBeInTheDocument();
+    expect(screen.queryByText("Partly checked")).not.toBeInTheDocument();
+  });
+});
+
+describe("partially_known — RED->GREEN fix for the measured 24-of-27 gap (docs/d2-visible-set-fill-2026-09-05.md)", () => {
+  test("a mix of unverified and checked_not_stated on the same row shows its own label, not the plain warning and not the calm one", () => {
+    renderCard("en", [{ code: "age_eligibility_unverified" }, { code: "country_eligibility_checked_not_stated", params: { checkedAt: "" } }]);
+    // This exact case is what the fill lane measured: before this fix, real research on one
+    // dimension (country) never changed what the student saw, because a different dimension
+    // (age) was still unverified and the old code only ever asked "is there a note."
+    expect(screen.getByText("Partly checked")).toBeInTheDocument();
+    expect(screen.queryByText("Eligibility unknown")).not.toBeInTheDocument();
     expect(screen.queryByText("Checked, not stated")).not.toBeInTheDocument();
+  });
+
+  test("keeps the same cautious (warning) tone as plain-unverified, not the calm info tone — a real gap still remains", () => {
+    renderCard("en", [{ code: "age_eligibility_unverified" }, { code: "country_eligibility_checked_not_stated", params: { checkedAt: "" } }]);
+    const badge = screen.getByText("Partly checked");
+    // StatusBadge's warning tone class (components/proxola/status-badge.tsx TONE_CLASS.warning).
+    expect(badge.className).toContain("bg-warning/15");
+  });
+
+  test("Turkish locale carries the same distinct label", () => {
+    renderCard("tr", [{ code: "age_eligibility_unverified" }, { code: "country_eligibility_checked_not_stated", params: { checkedAt: "" } }]);
+    expect(screen.getByText("Kısmen kontrol edildi")).toBeInTheDocument();
+  });
+
+  test("profile_incomplete still wins even in a three-way mix", () => {
+    renderCard("en", [
+      { code: "age_unknown" },
+      { code: "country_eligibility_unverified" },
+      { code: "grade_eligibility_checked_not_stated", params: { checkedAt: "" } },
+    ]);
+    expect(screen.getByRole("link", { name: /add your birth year to check/i })).toHaveAttribute("href", "/profile");
+    expect(screen.queryByText("Partly checked")).not.toBeInTheDocument();
+  });
+
+  test("the subtext below stays plain text here, same as checked_not_stated — nothing the student can personally act on", () => {
+    renderCard("en", [{ code: "age_eligibility_unverified" }, { code: "country_eligibility_checked_not_stated", params: { checkedAt: "" } }]);
+    expect(screen.queryByRole("link", { name: /not verified yet|doesn't state/i })).not.toBeInTheDocument();
   });
 });

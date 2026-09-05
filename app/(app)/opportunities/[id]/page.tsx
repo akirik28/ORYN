@@ -197,6 +197,19 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
   const needsVerification =
     !isOpportunitySufficientlyVerified(opportunity) && (!eligibility || (eligibility.eligible && !eligibility.notActionable));
 
+  // Same four-state badge as features/opportunities/opportunity-card.tsx — see that file's
+  // own eligibilityBadge comment for the full reasoning (a second lane's direct measurement,
+  // docs/d2-visible-set-fill-2026-09-05.md, is what caught the old condition only ever asking
+  // "is there a note" rather than "which kind").
+  const eligibilityBadge: { label: string; tone: "warning" | "info" } | null =
+    !eligibility || !eligibility.eligible || !eligibility.notes || eligibility.eligibilityGap === "profile_incomplete"
+      ? null
+      : eligibility.eligibilityGap === "checked_not_stated"
+        ? { label: tCard("checkedNotStated"), tone: "info" }
+        : eligibility.eligibilityGap === "partially_known"
+          ? { label: tCard("partiallyChecked"), tone: "warning" }
+          : { label: tCard("eligibilityUnknown"), tone: "warning" };
+
   const daysUntilDeadline = opportunity.deadline
     ? differenceInCalendarDays(new Date(opportunity.deadline), new Date())
     : null;
@@ -297,13 +310,11 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           needsVerification={needsVerification}
           locale={locale}
         />
-        {/* Same three-way split as the card (features/opportunities/opportunity-card.tsx) —
-            CEO's 2026-09-05 finding, confirmed this page shared the identical collapsed badge. */}
-        {eligibility && eligibility.eligible && eligibility.notes && eligibility.eligibilityGap === "checked_not_stated" ? (
-          <StatusBadge label={tCard("checkedNotStated")} tone="info" />
-        ) : eligibility && eligibility.eligible && eligibility.notes && eligibility.eligibilityGap !== "profile_incomplete" ? (
-          <StatusBadge label={tCard("eligibilityUnknown")} tone="warning" />
-        ) : null}
+        {/* Same four-way split as the card (features/opportunities/opportunity-card.tsx) —
+            CEO's 2026-09-05 finding, confirmed this page shared the identical collapsed badge,
+            then corrected the same day once a second lane's measurement showed the first,
+            three-way split still left 24 of 27 real researched rows unchanged. */}
+        {eligibilityBadge ? <StatusBadge label={eligibilityBadge.label} tone={eligibilityBadge.tone} /> : null}
       </div>
 
       {/* Only when the take didn't already carry it (an ineligible or unverifiable row has

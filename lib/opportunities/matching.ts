@@ -488,44 +488,63 @@ const CHECKED_NOT_STATED_CODES = new Set<EligibilityNoteCode>([
   "grade_eligibility_checked_not_stated",
 ]);
 
-export type EligibilityGapKind = "profile_incomplete" | "checked_not_stated";
+export type EligibilityGapKind = "profile_incomplete" | "checked_not_stated" | "partially_known";
 
 /**
- * CEO's 2026-09-05 finding: `renderEligibilityNote` above already distinguishes three
- * meaningfully different "we don't have a confirmed answer" situations by code, but every
- * caller before this function collapsed them into one identical warning badge (see
- * features/opportunities/opportunity-card.tsx / app/(app)/opportunities/[id]/page.tsx, pre-fix).
- * `computeEligibility` already tracks the distinction precisely; nothing downstream read it.
+ * CEO's 2026-09-05 finding, corrected the same day by direct measurement from a second lane
+ * (docs/d2-visible-set-fill-2026-09-05.md): `renderEligibilityNote` above already
+ * distinguishes several meaningfully different "we don't have a confirmed answer" situations
+ * by code, but every caller before this function's first version collapsed them into one
+ * identical warning badge. The first version of this function (same day) split out two of
+ * them but kept a precedence rule — "any unverified dimension keeps the plain warning even if
+ * another dimension is checked_not_stated" — that the fill lane's own measurement proved wrong
+ * in practice: of 27 real rows researched that day, the fill work resolved SOME dimension on
+ * nearly every row, but 24 of them still had at least one OTHER dimension left genuinely
+ * unresearched, so the old precedence rule left the plain warning badge showing on all 24,
+ * making days of real research invisible at the one place a student actually looks. The
+ * badge's tone and text must derive from the TYPE of what's known, not merely from whether
+ * anything is still unknown.
  *
  *   profile_incomplete  -> a fact about the STUDENT. The opportunity has a real, recorded
  *                          restriction; Proxola just doesn't know this student's own value yet
  *                          (age/country/grade/citizenship). Solvable by the student, right now,
  *                          by completing their profile — the one case that should read as an
- *                          invitation, not a warning.
- *   checked_not_stated  -> a fact about the OPPORTUNITY. A real research pass already checked
- *                          the official source and it simply doesn't state a rule either way
- *                          (migrations 0129/0133) — meaningfully calmer than "never researched"
- *                          and must not collapse back into it, which is the whole reason those
- *                          two migrations exist.
- *   null                -> everything else, including the plain "nobody has researched this at
- *                          all" case (*_eligibility_unverified) and not_yet_computed. Callers
- *                          keep today's existing plain-warning treatment for `null` — this
- *                          function only pulls OUT the two cases that must look different,
- *                          rather than re-classifying every case.
+ *                          invitation, not a warning. Still wins over every other case below,
+ *                          unchanged from the first version: it's the one thing the student can
+ *                          act on immediately, more valuable to surface than any caveat about
+ *                          Proxola's own data.
+ *   checked_not_stated  -> a fact about the OPPORTUNITY, and ONLY this fact — every remaining
+ *                          dimension was actually checked (migrations 0129/0133), none are
+ *                          still fully unresearched. The calmest of the three opportunity-side
+ *                          states, since nothing about this row has been left untouched.
+ *   partially_known     -> new in this revision, and the fix for the measured gap above: a
+ *                          MIX — at least one dimension has been checked and confirmed silent,
+ *                          AND at least one other dimension is still fully unresearched. Real,
+ *                          honest progress exists on this row and deserves different text from
+ *                          a row nobody has ever looked at, but a real gap also still remains,
+ *                          so this keeps the same cautious tone as the plain-unverified case
+ *                          (deliberately not softened to "info" — see the tone choice below)
+ *                          with a label that credits the partial research instead of implying
+ *                          total ignorance.
+ *   null                -> every remaining dimension is fully unresearched (no dimension has
+ *                          been checked at all), or the notes are empty, or the only codes
+ *                          present are ones this function doesn't classify (not_yet_computed).
+ *                          Callers keep today's original plain-warning treatment for `null`.
  *
- * Precedence when a card carries notes from more than one bucket (realistic: a new account
- * with an unresearched opportunity can trigger a profile-incomplete note on one axis and an
- * unverified note on another): profile_incomplete first — it's the one thing the student can
- * act on immediately, more valuable to surface than any caveat about Proxola's own data. Failing
- * that, a genuinely unverified dimension keeps the plain warning treatment even if some OTHER
- * dimension on the same row is checked_not_stated — a row with even one fully-unresearched
- * dimension hasn't earned the calmer, more specific wording that implies "we looked into this."
+ * Precedence, in order: profile_incomplete first (unchanged reasoning above). Then, among the
+ * remaining opportunity-side codes: any checked_not_stated code combined with any unverified
+ * code -> partially_known. Checked_not_stated with no unverified code at all -> checked_not_stated.
+ * Unverified with no checked_not_stated at all (including citizenship/residency
+ * restriction-on-file notes, bucketed here as in the first version) -> null, today's plain
+ * warning — genuinely nothing on this row has been looked into yet.
  */
 export function classifyEligibilityGap(notes: readonly EligibilityNote[]): EligibilityGapKind | null {
   const codes = notes.map((note) => note.code);
   if (codes.some((code) => PROFILE_INCOMPLETE_CODES.has(code))) return "profile_incomplete";
-  if (codes.some((code) => UNVERIFIED_CODES.has(code))) return null;
-  if (codes.some((code) => CHECKED_NOT_STATED_CODES.has(code))) return "checked_not_stated";
+  const hasUnverified = codes.some((code) => UNVERIFIED_CODES.has(code));
+  const hasCheckedNotStated = codes.some((code) => CHECKED_NOT_STATED_CODES.has(code));
+  if (hasCheckedNotStated && hasUnverified) return "partially_known";
+  if (hasCheckedNotStated) return "checked_not_stated";
   return null;
 }
 

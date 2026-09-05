@@ -1016,13 +1016,39 @@ describe("classifyEligibilityGap", () => {
     expect(classifyEligibilityGap(notes)).toBe("profile_incomplete");
   });
 
-  // Deliberate: a row with even one fully-unresearched dimension hasn't earned the calmer,
-  // more specific "checked_not_stated" wording, which implies "we looked into this" — see
-  // classifyEligibilityGap's own doc comment. Not softened just because ANOTHER dimension on
-  // the same row was checked.
-  test("unverified (null) wins over checked_not_stated when both are present with no profile_incomplete note", () => {
+  // Revised 2026-09-05, same day: the first version of this function returned null here
+  // (today's plain warning) on the reasoning that an unverified dimension shouldn't be
+  // softened by an unrelated checked dimension. A second lane's direct measurement
+  // (docs/d2-visible-set-fill-2026-09-05.md) proved that reasoning wrong in practice: of 27
+  // real researched rows, 24 had exactly this shape (some dimension resolved, another still
+  // fully unresearched) and every one of them kept the identical old badge, making days of
+  // real research invisible. partially_known is the fix — real progress gets its own label,
+  // while staying at the same cautious tone as plain-unverified since a real gap remains.
+  test("partially_known (not null, and not softened all the way to checked_not_stated) when both are present with no profile_incomplete note", () => {
     const notes = [{ code: "age_eligibility_unverified" as const }, { code: "country_eligibility_checked_not_stated" as const, params: { checkedAt: "" } }];
+    expect(classifyEligibilityGap(notes)).toBe("partially_known");
+  });
+
+  test("profile_incomplete still wins even in a three-way mix with unverified and checked_not_stated", () => {
+    const notes = [
+      { code: "age_unknown" as const },
+      { code: "country_eligibility_unverified" as const },
+      { code: "grade_eligibility_checked_not_stated" as const, params: { checkedAt: "" } },
+    ];
+    expect(classifyEligibilityGap(notes)).toBe("profile_incomplete");
+  });
+
+  test("pure unverified (null, today's plain warning) only when NOTHING has been checked at all — no checked_not_stated code anywhere", () => {
+    const notes = [{ code: "age_eligibility_unverified" as const }, { code: "country_eligibility_unverified" as const }];
     expect(classifyEligibilityGap(notes)).toBeNull();
+  });
+
+  test("pure checked_not_stated (not partially_known) only when nothing is left fully unresearched", () => {
+    const notes = [
+      { code: "age_eligibility_checked_not_stated" as const, params: { checkedAt: "" } },
+      { code: "country_eligibility_checked_not_stated" as const, params: { checkedAt: "" } },
+    ];
+    expect(classifyEligibilityGap(notes)).toBe("checked_not_stated");
   });
 
   test("null for notes this function doesn't classify (already_applied, not_yet_computed) — falls through safely, no crash", () => {
