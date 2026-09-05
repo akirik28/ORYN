@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { getConnectionWith } from "@/lib/social/connections";
 import { checkEndorsementEligibility } from "@/lib/social/skill-endorsements";
+import { assertConnectionsEnabled } from "@/lib/social/connections-feature-flag";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { assertWithinRateLimit, RateLimitExceededError } from "@/lib/security/rate-limit";
 import { RATE_LIMITS } from "@/lib/security/rate-limit-config";
@@ -26,6 +27,7 @@ const ENDORSEMENT_REASON_MESSAGES: Record<string, string> = {
  * reasoning as sendMessage/sendConnectionRequest. RLS is the real, final gate either way.
  */
 export async function endorseSkill(skillId: string, skillOwnerId: string): Promise<ActionResult> {
+  assertConnectionsEnabled();
   const session = await requireUser();
   if (!isUuidLike(skillId) || !isUuidLike(skillOwnerId)) return { error: "Invalid skill." };
 
