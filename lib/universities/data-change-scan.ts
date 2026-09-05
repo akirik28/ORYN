@@ -382,20 +382,31 @@ export function buildUniversityChangeNotification(hits: readonly UniversityChang
  * logging must happen strictly after createNotification reports a real insert (a failed
  * write must never be logged as delivered, or the student silently never gets a real
  * chance to hear about this change again — the dedupe key would already exist).
+ *
+ * `failed` counts only genuine write errors (`createNotification` returning `"failed"`) —
+ * a `"muted"` outcome is a student's own legitimate preference, not a fact this job's error
+ * count should ever reflect, same as scanStaleOutlooks's own `refused` counter is deliberately
+ * kept separate from its `failed` one.
  */
-async function writeUniversityChangeNotifications(supabase: SupabaseClient<Database>, hits: UniversityChangeHit[], translators: Record<Locale, NotificationTranslator>): Promise<number> {
+async function writeUniversityChangeNotifications(
+  supabase: SupabaseClient<Database>,
+  hits: UniversityChangeHit[],
+  translators: Record<Locale, NotificationTranslator>
+): Promise<{ notified: number; failed: number }> {
   const hitsByUser = new Map<string, UniversityChangeHit[]>();
   for (const hit of hits) {
     hitsByUser.set(hit.userId, [...(hitsByUser.get(hit.userId) ?? []), hit]);
   }
 
   let notified = 0;
+  let failed = 0;
   for (const [userId, userHits] of hitsByUser) {
     const translate = translators[userHits[0].locale];
     const { title, body, link } = buildUniversityChangeNotification(userHits, translate);
 
-    const sent = await createNotification({ userId, category: "university_data_changed", title, body, link });
-    if (!sent) continue;
+    const outcome = await createNotification({ userId, category: "university_data_changed", title, body, link });
+    if (outcome === "failed") failed++;
+    if (outcome !== "sent") continue;
 
     const logRows: UniversityNotificationLogInsert[] = userHits.map((hit) => ({
       user_id: hit.userId,
@@ -411,7 +422,7 @@ async function writeUniversityChangeNotifications(supabase: SupabaseClient<Datab
     }
     notified += userHits.length;
   }
-  return notified;
+  return { notified, failed };
 }
 
 /**
@@ -419,7 +430,7 @@ async function writeUniversityChangeNotifications(supabase: SupabaseClient<Datab
  * own top comment across every active target_universities row, and aggregates every change
  * per student into one notification per run.
  */
-export async function scanUniversityDataChanges(): Promise<{ notified: number; checked: number }> {
+export async function scanUniversityDataChanges(): Promise<{ notified: number; checked: number; failed: number }> {
   const supabase = createAdminClient();
   const supersessionMap = await loadSupersessionMap(supabase);
   const translators = await loadTranslators();
@@ -433,7 +444,7 @@ export async function scanUniversityDataChanges(): Promise<{ notified: number; c
 
   const allHits = [...universityChanges.hits, ...newRequirements.hits, ...newDeadlines.hits, ...statisticsChanges.hits];
   const freshHits = await filterAlreadyNotified(supabase, allHits);
-  const notified = await writeUniversityChangeNotifications(supabase, freshHits, translators);
+  const { notified, failed } = await writeUniversityChangeNotifications(supabase, freshHits, translators);
 
-  return { notified, checked: universityChanges.checked + newRequirements.checked + newDeadlines.checked + statisticsChanges.checked };
+  return { notified, failed, checked: universityChanges.checked + newRequirements.checked + newDeadlines.checked + statisticsChanges.checked };
 }

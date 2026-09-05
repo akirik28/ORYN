@@ -8,14 +8,22 @@ import { isUndefinedColumnError } from "@/lib/supabase/errors";
  * can see run history without digging through platform logs.
  *
  * `errorsEncountered` is required, not optional-with-a-default: a job with no per-item
- * external call that can fail short of the whole run throwing (deadline_reminders,
- * notify_university_changes, detect_stale_data) reports 0 correctly and explicitly; a job
- * that does catch per-item failures internally (discover_opportunities,
+ * call that can fail short of the whole run throwing (detect_stale_data) reports 0 correctly
+ * and explicitly; a job that does catch per-item failures internally (discover_opportunities,
  * discover_requirements, generate_weekly_plans, sync_us_universities) has no way to forget
  * to wire the real count through. Before this field existed, `items_processed: 0` meant
  * both "quiet run, nothing new tonight" and "every candidate this run tried threw" —
  * identical numbers for two facts the admin panel's empty-streak detector exists
  * specifically to tell apart, and couldn't.
+ *
+ * `deadline_reminders` and `notify_university_changes` used to be listed here too, on the
+ * reasoning that neither has a per-item call that can fail short of the whole run throwing.
+ * That was wrong (2026-09-05 fix): both write a notification per student via
+ * createNotification, which DOES have a per-item failure mode (a genuine insert error) that
+ * neither job counted — it collapsed into the same hardcoded `errorsEncountered: 0` as a
+ * student's own muted-category preference, meaning a real write failure silently reported as
+ * zero errors. See lib/notifications/create.ts's NotificationSendOutcome and each job's own
+ * scan function for the fix; both now correctly wire a real `failed` count through here.
  *
  * `fn` now receives the tracking row's own id (or null when the insert above failed) —
  * 2026-09-03, for lib/opportunities/reverification/'s run-level linkage

@@ -23,11 +23,13 @@ export async function POST(request: NextRequest) {
   }
 
   const result = await runWithTracking("deadline_reminders", async () => {
-    const { notified, checked } = await scanDeadlines();
-    // No per-item external call in this scan that can fail short of the whole run
-    // throwing (it reads already-stored deadlines and writes notifications) — 0 is a real
-    // fact here, not a placeholder standing in for a count nobody computed.
-    return { itemsProcessed: notified, errorsEncountered: 0, result: { notified, checked } };
+    const { notified, checked, failed } = await scanDeadlines();
+    // `failed` (2026-09-05 fix) counts only genuine createNotification write errors, never a
+    // student's own muted-category preference — see scanDeadlines' own updated docstring for
+    // why those two used to collapse into the same reported 0 here. This scan DOES have a
+    // per-item call that can fail short of the whole run throwing — the notification write
+    // itself — contrary to what this comment used to claim.
+    return { itemsProcessed: notified, errorsEncountered: failed, result: { notified, checked, failed } };
   });
 
   return NextResponse.json(result);
