@@ -100,8 +100,40 @@ export interface CompletenessChecklistItem {
  */
 /** Counseling-relevant signal (spec Phase 67: "do we know enough about the student to
  * counsel them") — academics, activities, goals, targets. Deliberately excludes the
- * professional-profile-pack items below. */
-function coreChecklist(facts: CompletenessFacts): CompletenessChecklistItem[] {
+ * professional-profile-pack items below.
+ *
+ * Exported 2026-09-05 for E1 (lib/applications/grade-relevance.ts) — a pre-senior applications
+ * page needs "the first real, counseling-relevant gap" specifically, not
+ * getCompletenessChecklist's full 15-item list, which would surface a cosmetic
+ * headline/bio/skills-count gap as if it were as actionable as "add a test score." Only the
+ * function became public; the underlying facts and ordering are unchanged.
+ *
+ * Parameter narrowed to exactly the fields this function reads, at the same time it was
+ * exported — its new caller has no headline/about (profile) or skillCount/featuredCount/
+ * hasContactInfo to give it (those back the professional-profile checklist this function
+ * deliberately excludes) and forcing it to invent placeholder values for fields it never reads
+ * would be its own small dishonesty. A plain `Pick<CompletenessFacts, ...>` can't express this
+ * — Pick only narrows top-level keys, and `profile` itself needs narrowing too — hence the
+ * explicit inline shape below instead. buildChecklist still passes a full CompletenessFacts
+ * object, which satisfies this narrower shape trivially (structural typing, not a cast). */
+export interface CoreChecklistFacts {
+  profile: Pick<CompletenessFacts["profile"], "country" | "school_name" | "graduation_year" | "curriculum">;
+  educationRecords: CompletenessFacts["educationRecords"];
+  courses: CompletenessFacts["courses"];
+  testScores: CompletenessFacts["testScores"];
+  activities: CompletenessFacts["activities"];
+  awards: CompletenessFacts["awards"];
+  certifications: CompletenessFacts["certifications"];
+  projects: CompletenessFacts["projects"];
+  researchExperiences: CompletenessFacts["researchExperiences"];
+  volunteeringExperiences: CompletenessFacts["volunteeringExperiences"];
+  workExperiences: CompletenessFacts["workExperiences"];
+  goals: CompletenessFacts["goals"];
+  interests: CompletenessFacts["interests"];
+  targetUniversities: CompletenessFacts["targetUniversities"];
+}
+
+export function coreChecklist(facts: CoreChecklistFacts): CompletenessChecklistItem[] {
   return [
     {
       key: "school_details",

@@ -7,6 +7,9 @@ import { computeReadiness } from "@/lib/applications/readiness";
 import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
 import { ApplicationsView } from "@/features/applications/applications-view";
 import type { RequirementStatus } from "@/types/database";
+import { buildDigestContent } from "@/lib/digest/build";
+import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
+import { computeApplicationsPageGuidance, type ApplicationsPageGuidance } from "@/lib/applications/grade-relevance";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("nav");
@@ -64,7 +67,35 @@ export default async function ApplicationsPage() {
     requirements: requirementsByApplication.get(application.id) ?? [],
   }));
 
-  const planTier = resolvePlanTier(await requireProfile());
+  const profile = await requireProfile();
+  const planTier = resolvePlanTier(profile);
+  const guidance = await loadApplicationsPageGuidance(supabase, userId, profile);
 
-  return <ApplicationsView applications={rows} hasTargets={targets.length > 0} availableTargets={availableTargets} tier={planTier} />;
+  return <ApplicationsView applications={rows} hasTargets={targets.length > 0} availableTargets={availableTargets} tier={planTier} guidance={guidance} />;
+}
+
+/**
+ * E1 (2026-09-05) — a pre-senior applications page reuses buildDigestContent (already
+ * `isOpportunityRecommendable` + competesInCoreRecommendations gated, the same primitive the
+ * student digest and parent-commentary features already call for the identical "what's
+ * actionable right now" question) with `since: null`, its own established meaning for "no
+ * prior cursor, everything currently eligible" — exactly right for a persistent page banner,
+ * which has no "since I last checked" concept the way a periodic email does.
+ */
+async function loadApplicationsPageGuidance(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  profile: Awaited<ReturnType<typeof requireProfile>>
+): Promise<ApplicationsPageGuidance | null> {
+  const [digestContent, scoringFacts] = await Promise.all([buildDigestContent(supabase, userId, null), assembleScoringFacts(supabase, userId)]);
+
+  return computeApplicationsPageGuidance({
+    graduationYear: profile.graduation_year,
+    deadlines: digestContent?.deadlines ?? [],
+    newMatches: digestContent?.newMatches ?? [],
+    completenessFacts: {
+      profile: { country: profile.country, school_name: profile.school_name, graduation_year: profile.graduation_year, curriculum: profile.curriculum },
+      ...scoringFacts,
+    },
+  });
 }

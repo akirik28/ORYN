@@ -274,6 +274,12 @@ describe("ICU plural counts that bypass formatNumber are deliberate", () => {
     // one-import ceiling as onboarding.import.foundItems just above, which already covers
     // the identical count. Added 2026-09-03, student-facing i18n audit.
     "onboarding.import.savedWithNotes",
+    // Years until a student becomes a senior (E1, lib/applications/grade-relevance.ts) — this
+    // note only renders for grades 9-11 (computeApplicationsPageGuidance returns null for
+    // grade 12 or an undeterminable grade), so yearsUntilSenior = 12 - grade is bounded to
+    // 1-3. Tighter than every other entry in this list, nowhere near needing a thousands
+    // separator. Added 2026-09-05.
+    "applications.gradeNote.yearsUntilSenior",
   ];
 
   test("no un-reviewed `#` inside a plural block", () => {

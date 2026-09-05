@@ -1298,6 +1298,17 @@
     },
     "due": "Due",
     "ofChecklist": "of checklist",
+    "gradeNote": {
+      "eyebrow": "Before senior year",
+      "whenUsefulLead": "This page becomes useful once you're a senior —",
+      "yearsUntilSenior": "{count, plural, one {about # year from now} other {about # years from now}}",
+      "rightNowLabel": "What you can do right now",
+      "action": {
+        "deadlineLead": "An upcoming deadline worth knowing about:",
+        "opportunityLead": "A new opportunity match worth a look:",
+        "none": "Your profile is in good shape for now — check back as new opportunities and deadlines come in."
+      }
+    },
     "statusLabels": {
       "not_started": "Not started",
       "in_progress": "In progress",

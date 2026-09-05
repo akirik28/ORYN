@@ -37,6 +37,16 @@ vi.mock("@/features/applications/new-application-dialog", () => ({
 vi.mock("@/features/applications/requirement-chip-grid", () => ({
   RequirementChipGrid: () => null,
 }));
+// PreSeniorGuidanceBanner (E1, 2026-09-05) is itself an async Server Component — same nested-
+// async limitation as RequirementChipGrid above, same fix. Its own real content is proven in
+// __tests__/applications/pre-senior-guidance-banner-render.test.tsx, which awaits it directly
+// as the one top-level async component instead. Rendered here as a visible marker (not null,
+// unlike RequirementChipGrid) specifically so this file can still prove ApplicationsView wires
+// the `guidance` prop to it conditionally — the one thing testing the banner in isolation can't
+// show.
+vi.mock("@/features/applications/pre-senior-guidance-banner", () => ({
+  PreSeniorGuidanceBanner: () => "GUIDANCE_BANNER_MOCK",
+}));
 
 import { ApplicationsView, type ApplicationsViewRow } from "@/features/applications/applications-view";
 
@@ -79,5 +89,31 @@ describe("ApplicationsView — list-view readiness badge (2026-09-04 fix)", () =
 
     expect(container.textContent).not.toContain("ofChecklist");
     expect(container.textContent).not.toMatch(/\d+%/);
+  });
+});
+
+/**
+ * E1 (2026-09-05) — proves ApplicationsView wires the `guidance` prop to the banner
+ * conditionally (present only when non-null). The banner's own real content (does a deadline
+ * action show the real title, does "none" stay honest, etc.) is proven in
+ * pre-senior-guidance-banner-render.test.tsx, which awaits it directly — see the mock above
+ * for why this file can't do that itself.
+ */
+describe("ApplicationsView — pre-senior guidance banner wiring (E1)", () => {
+  test("no guidance renders no banner at all", async () => {
+    const element = await ApplicationsView({ applications: [], hasTargets: false, availableTargets: [], guidance: null });
+    const { container } = render(element);
+    expect(container.textContent).not.toContain("GUIDANCE_BANNER_MOCK");
+  });
+
+  test("real guidance renders the banner", async () => {
+    const element = await ApplicationsView({
+      applications: [],
+      hasTargets: false,
+      availableTargets: [],
+      guidance: { grade: 10, yearsUntilSenior: 2, action: { kind: "none" } },
+    });
+    const { container } = render(element);
+    expect(container.textContent).toContain("GUIDANCE_BANNER_MOCK");
   });
 });
