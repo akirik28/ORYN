@@ -1701,8 +1701,11 @@
     "completenessMilestoneReached": "Your profile is now {percent}% complete",
     "newOpportunityMatch": "New match: {name}",
     "newOpportunityDigestTitle": "{count} new opportunities match your profile",
+    "universityDataAddedTitle": "{name} — information added for the first time",
     "universityDataChangedTitle": "{name} — information updated",
+    "universityNewInformationTitle": "{name} — new information available",
     "universityDataChangedDigestTitle": "{count} universities updated",
+    "universityNewInformationDigestTitle": "{count} universities have new information",
     "viewAll": "View all",
     "markAsRead": "Mark read",
     "categories": {

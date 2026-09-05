@@ -783,7 +783,11 @@ describe("migration numbering", () => {
     // below 0142, which landed from a different lane while they were still unpushed -- so both
     // correctly leave this at 142. The next migration above 142 breaks this deliberately; that
     // lane bumps it AND runs the full suite, not just its own file.
-    expect(Math.max(...numbers.map(Number))).toBe(142);
+    //
+    // 0143 (university_last_change_kind) -- the university-notification first-fill fix.
+    // CEO assigned this number directly after a fresh scan confirmed 0143/0144 were open on
+    // every remote branch; SQL staged in the migration file itself, not applied here.
+    expect(Math.max(...numbers.map(Number))).toBe(143);
   });
 });
 

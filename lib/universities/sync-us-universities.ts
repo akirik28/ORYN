@@ -34,28 +34,51 @@ interface ComparableUniversityFields {
 }
 
 /**
- * Whether a fresh College Scorecard read differs from what's already stored, for any field
- * this sync is capable of writing — pure, no I/O, so it's directly testable without a
- * database. Exists because `last_changed_at` is a real signal something downstream reads
- * (lib/universities/data-change-scan.ts, Phase 24's university_data_changed notification):
- * before this function existed, syncOne stamped `last_changed_at: now` on every run
- * unconditionally, insert or update, whether or not any field actually differed — which
- * would have made that column mean "was last synced", not "last changed", and made the
- * notification fire on every scheduled Job C run regardless of whether a student's tracked
- * university had anything new to report. `external_ids` is compared by value (JSON.stringify
- * on both sides, same shape either way since this function only ever receives what
- * `universityPayload` itself builds) rather than by reference, since a fresh object literal
- * is never `===` to a previously-stored one even when their contents are identical.
+ * One field's own transition, in the vocabulary this whole fix is built on: `null`/`undefined`
+ * on the "before" side is a fact becoming known for the first time, never a correction to a
+ * fact that was already there. Shared by both classifiers below.
  */
-export function hasUniversityDataChanged(existing: ComparableUniversityFields, incoming: ComparableUniversityFields): boolean {
-  return (
-    existing.name !== incoming.name ||
-    existing.city !== incoming.city ||
-    existing.institution_type !== incoming.institution_type ||
-    existing.website_url !== incoming.website_url ||
-    existing.student_size !== incoming.student_size ||
-    JSON.stringify(existing.external_ids) !== JSON.stringify(incoming.external_ids)
-  );
+type FieldTransition = "same" | "added" | "changed";
+
+function fieldTransition(existingValue: unknown, incomingValue: unknown): FieldTransition {
+  if (existingValue === incomingValue) return "same";
+  return existingValue === null || existingValue === undefined ? "added" : "changed";
+}
+
+/**
+ * 2026-09-05, the university-notification first-fill fix (CEO's own dispatch:
+ * "Oxford hiçbir şey yapmadı, biz ilk kez baktık" — a stub row's core facts being written for
+ * the first time and a genuine later correction were both simply "changed", so a student
+ * tracking a university before it was ever fully researched got told the university itself
+ * had updated its own information).
+ *
+ * Was `hasUniversityDataChanged` — a plain boolean. Renamed because a boolean can no longer
+ * describe what this function decides: whether a fresh College Scorecard read differs from
+ * what's stored (pure, no I/O, directly testable), AND, if so, whether that difference is
+ * something becoming known for the first time or an existing fact changing. `null` means "no
+ * relevant field differs at all" — the caller's existing "don't stamp anything" branch,
+ * unchanged. A field going from a stub's unset value to a real one is `"added"`; ANY field
+ * that already held a real, different value is `"changed"` — and one genuinely-changed field
+ * makes the whole event `"changed"`, even alongside other fields becoming known for the first
+ * time in the same sync, since a real correction is the stronger, more specific claim (same
+ * precedence rule OpportunityStandingBadge already uses: a real exclusion outranks a caveat).
+ * `external_ids` (an object, not a scalar) is compared by JSON value like before; an empty
+ * object is treated as "no value yet", matching every other field's own null-as-unset
+ * convention, since this sync never writes a genuinely empty-but-meaningful external_ids.
+ */
+export function classifyUniversityDataChange(existing: ComparableUniversityFields, incoming: ComparableUniversityFields): "added" | "changed" | null {
+  const hasExistingExternalIds = Object.keys(existing.external_ids ?? {}).length > 0;
+  const transitions: FieldTransition[] = [
+    fieldTransition(existing.name, incoming.name),
+    fieldTransition(existing.city, incoming.city),
+    fieldTransition(existing.institution_type, incoming.institution_type),
+    fieldTransition(existing.website_url, incoming.website_url),
+    fieldTransition(existing.student_size, incoming.student_size),
+    fieldTransition(hasExistingExternalIds ? JSON.stringify(existing.external_ids) : null, JSON.stringify(incoming.external_ids)),
+  ];
+  if (transitions.includes("changed")) return "changed";
+  if (transitions.includes("added")) return "added";
+  return null;
 }
 
 /** The fields this sync actually writes to `university_statistics` — same "shared type so
@@ -72,22 +95,35 @@ interface ComparableStatisticsFields {
 }
 
 /**
- * Same role as hasUniversityDataChanged, for university_statistics (migration 0080 gives
- * that table its own last_changed_at). `cost_currency`/`source`/`data_confidence` are
- * deliberately not compared: they are this sync's own fixed constants for every US row
- * ("USD"/"College Scorecard"/"high"), never a fact that varies between reads, so including
- * them could only ever produce a spurious "changed" reading against itself.
+ * Same role as classifyUniversityDataChange, for university_statistics (migration 0080 gives
+ * that table its own last_changed_at; migration 0143 gives it last_change_kind alongside it).
+ * `cost_currency`/`source`/`data_confidence` are deliberately not compared: they are this
+ * sync's own fixed constants for every US row ("USD"/"College Scorecard"/"high"), never a
+ * fact that varies between reads, so including them could only ever produce a spurious
+ * "changed" reading against itself.
+ *
+ * `existing: null` (2026-09-05, folded in from the call site's own former `!existingStats ||`
+ * check) means no statistics row has ever existed for this (university, stat_year) at all —
+ * the whole row is new, so the answer is unconditionally `"added"`, the same claim a single
+ * field going from unset to real would make. This was already effectively true before this
+ * fix, just written as "changed" by a call-site special case rather than as part of the
+ * classification itself — CEO's own instruction named this exact branch as "bilerek yazılmış,
+ * bilerek düzeltilecek" (written on purpose, to be fixed on purpose).
  */
-export function hasStatisticsChanged(existing: ComparableStatisticsFields, incoming: ComparableStatisticsFields): boolean {
-  return (
-    existing.admission_rate !== incoming.admission_rate ||
-    existing.sat_range_low !== incoming.sat_range_low ||
-    existing.sat_range_high !== incoming.sat_range_high ||
-    existing.act_range_low !== incoming.act_range_low ||
-    existing.act_range_high !== incoming.act_range_high ||
-    existing.graduation_rate !== incoming.graduation_rate ||
-    existing.cost_of_attendance !== incoming.cost_of_attendance
-  );
+export function classifyStatisticsDataChange(existing: ComparableStatisticsFields | null, incoming: ComparableStatisticsFields): "added" | "changed" | null {
+  if (!existing) return "added";
+  const transitions: FieldTransition[] = [
+    fieldTransition(existing.admission_rate, incoming.admission_rate),
+    fieldTransition(existing.sat_range_low, incoming.sat_range_low),
+    fieldTransition(existing.sat_range_high, incoming.sat_range_high),
+    fieldTransition(existing.act_range_low, incoming.act_range_low),
+    fieldTransition(existing.act_range_high, incoming.act_range_high),
+    fieldTransition(existing.graduation_rate, incoming.graduation_rate),
+    fieldTransition(existing.cost_of_attendance, incoming.cost_of_attendance),
+  ];
+  if (transitions.includes("changed")) return "changed";
+  if (transitions.includes("added")) return "added";
+  return null;
 }
 
 /**
@@ -146,26 +182,52 @@ async function syncOne(schoolName: string): Promise<SyncResult> {
   let universityId: string;
   if (existing) {
     universityId = existing.id;
-    // last_changed_at is spread in only when something actually differs -- omitting the
-    // key entirely (rather than assigning it `undefined`) both satisfies UniversityUpdate's
-    // `string | null` typing and, more importantly, is what actually leaves the column
+    // last_changed_at/last_change_kind are spread in only when something actually differs --
+    // omitting the keys entirely (rather than assigning `undefined`) both satisfies
+    // UniversityUpdate's typing and, more importantly, is what actually leaves the columns
     // untouched: PostgREST only writes columns present in the payload.
-    const changed = hasUniversityDataChanged(existing, incomingFields);
+    const changeKind = classifyUniversityDataChange(existing, incomingFields);
     const { error: updateError } = await supabase
       .from("universities")
-      .update({ ...sharedFields, ...(changed ? { last_changed_at: now } : {}) })
+      .update({ ...sharedFields, ...(changeKind ? { last_changed_at: now, last_change_kind: changeKind } : {}) })
       .eq("id", universityId);
-    if (updateError) return { schoolName, status: "error", detail: updateError.message };
+    if (updateError && isUndefinedColumnError(updateError, "last_change_kind")) {
+      // Same degrade-not-throw shape as the university_statistics.last_changed_at fallback
+      // below (migration 0080's own history) -- migration 0143 (last_change_kind) may not be
+      // live yet wherever this runs. Losing the added/changed distinction for this one sync is
+      // acceptable; losing the university data itself is not.
+      console.warn("[sync-us-universities] universities.last_change_kind not yet live (migration 0143 unapplied) -- retrying without it", { universityId });
+      const { error: retryError } = await supabase
+        .from("universities")
+        .update({ ...sharedFields, ...(changeKind ? { last_changed_at: now } : {}) })
+        .eq("id", universityId);
+      if (retryError) return { schoolName, status: "error", detail: retryError.message };
+    } else if (updateError) {
+      return { schoolName, status: "error", detail: updateError.message };
+    }
   } else {
-    // A brand-new row's own creation is its first "change" -- always stamped, same as
-    // scripts/expand-university-spine.ts's own convention for a freshly-created row.
+    // A brand-new row's own creation is its first "change", and unambiguously an addition --
+    // always stamped, same as scripts/expand-university-spine.ts's own convention for a
+    // freshly-created row.
     const { data: inserted, error } = await supabase
       .from("universities")
-      .insert({ ...sharedFields, last_changed_at: now })
+      .insert({ ...sharedFields, last_changed_at: now, last_change_kind: "added" })
       .select()
       .single();
-    if (error || !inserted) return { schoolName, status: "error", detail: error?.message ?? "insert failed" };
-    universityId = inserted.id;
+    if (error && isUndefinedColumnError(error, "last_change_kind")) {
+      console.warn("[sync-us-universities] universities.last_change_kind not yet live (migration 0143 unapplied) -- retrying without it", { schoolName });
+      const { data: retryInserted, error: retryError } = await supabase
+        .from("universities")
+        .insert({ ...sharedFields, last_changed_at: now })
+        .select()
+        .single();
+      if (retryError || !retryInserted) return { schoolName, status: "error", detail: retryError?.message ?? "insert failed" };
+      universityId = retryInserted.id;
+    } else if (error || !inserted) {
+      return { schoolName, status: "error", detail: error?.message ?? "insert failed" };
+    } else {
+      universityId = inserted.id;
+    }
   }
 
   // Upsert, not insert: migration 0032 added a (university_id, stat_year) unique index
@@ -187,10 +249,12 @@ async function syncOne(schoolName: string): Promise<SyncResult> {
     .eq("university_id", universityId)
     .eq("stat_year", statYear)
     .maybeSingle();
-  // Same last_changed_at discipline as universities above: only advance it when a number
-  // actually differs from what this exact (university, stat_year) row already holds, not
-  // on every scheduled re-sync regardless of outcome.
-  const statsChanged = !existingStats || hasStatisticsChanged(existingStats, incomingStats);
+  // Same last_change_kind discipline as universities above: only advance it (and
+  // last_changed_at) when a number actually differs from what this exact (university,
+  // stat_year) row already holds, not on every scheduled re-sync regardless of outcome.
+  // `existingStats ?? null` folds the former `!existingStats ||` special case into the
+  // classifier itself -- see classifyStatisticsDataChange's own header for why.
+  const statsChangeKind = classifyStatisticsDataChange(existingStats ?? null, incomingStats);
   const statsPayload = {
     university_id: universityId,
     stat_year: statYear,
@@ -202,15 +266,31 @@ async function syncOne(schoolName: string): Promise<SyncResult> {
   };
   const { error: statsError } = await supabase
     .from("university_statistics")
-    .upsert({ ...statsPayload, ...(statsChanged ? { last_changed_at: now } : {}) }, { onConflict: "university_id,stat_year" });
-  if (statsError && isUndefinedColumnError(statsError, "last_changed_at")) {
+    .upsert({ ...statsPayload, ...(statsChangeKind ? { last_changed_at: now, last_change_kind: statsChangeKind } : {}) }, { onConflict: "university_id,stat_year" });
+  if (statsError && isUndefinedColumnError(statsError, "last_change_kind")) {
+    // Migration 0143 (last_change_kind) may not be live yet wherever this runs -- same
+    // degrade-not-throw shape as the last_changed_at fallback just below, one column newer.
+    console.warn("[sync-us-universities] university_statistics.last_change_kind not yet live (migration 0143 unapplied) -- retrying without it", { universityId, statYear });
+    const { error: retryError } = await supabase
+      .from("university_statistics")
+      .upsert({ ...statsPayload, ...(statsChangeKind ? { last_changed_at: now } : {}) }, { onConflict: "university_id,stat_year" });
+    if (retryError && isUndefinedColumnError(retryError, "last_changed_at")) {
+      console.warn("[sync-us-universities] university_statistics.last_changed_at not yet live (migration 0080 unapplied) -- retrying without it either", { universityId, statYear });
+      const { error: secondRetryError } = await supabase
+        .from("university_statistics")
+        .upsert(statsPayload, { onConflict: "university_id,stat_year" });
+      if (secondRetryError) return { schoolName, status: "error", detail: secondRetryError.message };
+    } else if (retryError) {
+      return { schoolName, status: "error", detail: retryError.message };
+    }
+  } else if (statsError && isUndefinedColumnError(statsError, "last_changed_at")) {
     // Found 2026-09-02 (oryn-3f's unapplied-migration sweep, verified by CEO and independently
     // confirmed live above): this call used to check neither `error` nor `data` at all, so this
     // exact rejection -- Postgres refusing the whole upsert because last_changed_at doesn't
-    // exist on university_statistics yet -- was completely invisible, and statsChanged is true
-    // for both a real change AND `!existingStats`, i.e. every first-time sync. It would have
-    // silently blocked US institution statistics from ever being written the first time Job C
-    // runs, with the job still reporting success. Degrading (not throwing) matches
+    // exist on university_statistics yet -- was completely invisible, and statsChangeKind is
+    // non-null for both a real change AND a first-ever row, i.e. every first-time sync. It
+    // would have silently blocked US institution statistics from ever being written the first
+    // time Job C runs, with the job still reporting success. Degrading (not throwing) matches
     // lib/plan/persist.ts's rule: losing the change-notification signal is acceptable, losing
     // the statistics themselves is not.
     console.warn("[sync-us-universities] university_statistics.last_changed_at not yet live (migration 0080 unapplied) -- retrying without it", { universityId, statYear });

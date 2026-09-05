@@ -1063,6 +1063,17 @@ export interface University {
   data_status: DataStatus;
   last_checked_at: string | null;
   last_changed_at: string | null;
+  /** Migration 0143. Whether the change that most recently advanced `last_changed_at` was a
+   * previously-unset field becoming known for the first time ('added') or an existing real
+   * value differing ('changed') — see lib/universities/sync-us-universities.ts's
+   * classifyUniversityDataChange for how it's derived, and lib/universities/data-change-scan.ts
+   * for why the distinction exists (a stub's core facts being researched for the first time is
+   * not the university itself changing anything). `null` on a row whose `last_changed_at` was
+   * stamped before this column existed means genuinely unknown provenance, not "no change" —
+   * every pre-migration row's most recent recorded change predates this column by
+   * construction, and must read as its own honest, weaker claim rather than defaulting to
+   * either state. */
+  last_change_kind: "added" | "changed" | null;
   /** 'canonical' (default) or 'superseded' — migration 0043. A 'superseded' row is a
    * confirmed duplicate of superseded_by_id (same real-world institution, kept rather than
    * deleted so nothing that references it silently loses data) and must be excluded from
@@ -1100,6 +1111,11 @@ export type UniversityInsert = Insertable<
   // audit.ts --supersede), never at ordinary insert time.
   | "duplicate_status"
   | "superseded_by_id"
+  // Migration 0143 — null until the first classified change; a brand-new insert stamps it
+  // explicitly ('added', per sync-us-universities.ts), but nothing else in this codebase needs
+  // to set it, so it stays optional here the same way last_changed_at already is by being
+  // absent from this list only because every caller either sets it or means to leave it null.
+  | "last_change_kind"
 >;
 export type UniversityUpdate = Updatable<University, "id" | "created_at" | "updated_at">;
 
@@ -1401,16 +1417,19 @@ export interface UniversityStatistic {
   data_confidence: DataConfidence;
   retrieved_at: string | null;
   /** Migration 0080. Same role as universities.last_changed_at (migration 0006) and the
-   * same discipline lib/universities/sync-us-universities.ts's hasStatisticsChanged
+   * same discipline lib/universities/sync-us-universities.ts's classifyStatisticsDataChange
    * applies: only advances when a number genuinely differs from what this exact
    * (university_id, stat_year) row already held, never on every scheduled re-sync
    * regardless of outcome. Null until the first change is observed after this column
    * existed — see migration 0080's own comment for why it is not backfilled. */
   last_changed_at: string | null;
+  /** Migration 0143. Same role and same "null means genuinely unknown provenance, not no
+   * change" reading as universities.last_change_kind — see that column's own comment. */
+  last_change_kind: "added" | "changed" | null;
   created_at: string;
   updated_at: string;
 }
-export type UniversityStatisticInsert = Insertable<UniversityStatistic, "id" | "created_at" | "updated_at" | "data_confidence" | "last_changed_at" | "admission_rate_basis">;
+export type UniversityStatisticInsert = Insertable<UniversityStatistic, "id" | "created_at" | "updated_at" | "data_confidence" | "last_changed_at" | "last_change_kind" | "admission_rate_basis">;
 
 /** One row per (programme, admission cycle, scholarship/fee tier, faculty) — migration 0055,
  * revised against the live YOK Atlas API before first application. Never overwritten by the

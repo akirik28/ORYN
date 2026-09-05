@@ -56,6 +56,7 @@ const MIT: University = {
   data_status: "fresh",
   last_checked_at: null,
   last_changed_at: null,
+  last_change_kind: null,
   duplicate_status: "canonical",
   superseded_by_id: null,
   created_at: "2026-01-01T00:00:00Z",
