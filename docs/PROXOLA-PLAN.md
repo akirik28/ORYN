@@ -56,6 +56,35 @@
 
 ---
 
+## ✅ PAKETLER GÜVENLE ÇALIŞTIRILABİLİR — şema denetimi bitti (5 Eylül)
+
+**"67 migration uygulanmamış" YANLIŞTI. Gerçek sayı 8.** Kayıt tablosuna değil,
+`information_schema`/`pg_catalog`'a karşı dosya dosya diff'lenerek ölçüldü.
+0072-0123 arasındaki 48 dosya **uygulanmış**; kayıt tablosunun "0066'da duruyor"
+görüntüsü yanıltıcıydı (0070/0071 numarasız kaydedilmiş).
+
+**Eksik olan 8:** `0123` (ödeme kesişimi) + **paket 14/15/16'nın kendi 7
+migration'ı** (0124/0126/0127/0129/0130/0132/0133).
+
+**Yani paketlerde tekrar-çalıştırma riski yok** — hiçbiri zaten orada değil.
+Dünkü sıra testinin tabanı canlının gerçek haline yakın çıktı, sonucu geçerli.
+**Paket 14 → 15 → 16 çalıştırılabilir.**
+
+**Gelecek için üç tuzak, paketlerin dışında:** `0104`'ün `ADD COLUMN`'u
+`IF NOT EXISTS` taşımıyor **ve zaten uygulanmış** — ileride "aralığı topluca
+uygula" tarzı bir işlem **sessizce ikinci, ölü bir sütun** yaratır. `0108`/`0109`
+aynı korumadan yoksun ama **yüksek sesle patlar** (güvenli). `0082`'nin üç
+indeksinden biri canlıda **farklı bir isimle** duruyor.
+
+**İki bonus bulgu, sorulmamıştı:**
+- **Kendi hesabını Ultra'ya yükseltme açığı canlıda gerçekten kapalı** — fonksiyon
+  gövdesi `pg_get_functiondef` ile doğrudan okundu. İsim/sütun karşılaştırmasıyla
+  asla anlaşılamazdı.
+- **`parent_accounts` ve bağımlıları (0116-0122) canlıda VAR** — dosyaların kendi
+  yorumları "henüz uygulanmadı" dese de. **Yorum yine yanlış çıktı** (bugün beşinci).
+
+---
+
 ## 🟠 DÜNKÜ DÜRÜSTLÜK İŞİ CANLIDA DEĞİL — 5 Eylül, CEO doğruladı
 
 **Canlı veritabanı `opportunities` tablosunda altı uygunluk sütunundan beşi yok.**
