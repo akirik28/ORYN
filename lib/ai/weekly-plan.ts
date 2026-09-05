@@ -6,6 +6,7 @@ import { withUsageLogging } from "./usage";
 import { selectModelForWeeklyPlan } from "./limits/weekly-plan-budget";
 import { ADVISOR_SYSTEM_PROMPT } from "./advisor-prompt";
 import { buildStudentAdvisorContext, formatContextForPrompt } from "./student-context";
+import { buildUniversityAdmissionContextText } from "./university-admission-context";
 import { formatEligibilityCaveat } from "./eligibility-text";
 import { formatFeeCaveat } from "./fee-text";
 import { formatRequirementsCaveat } from "./requirements-text";
@@ -469,6 +470,13 @@ export function buildWeeklyPlanInstruction(): string {
 export async function generateWeeklyPlan(userId: string, supabaseClient?: Parameters<typeof buildStudentAdvisorContext>[1]): Promise<WeeklyPlanGeneration> {
   const context = await buildStudentAdvisorContext(userId, supabaseClient);
   const { text: counselorGrounding, recommendedTitles, recommendations } = await buildCounselorGrounding(userId, context.student.preferredLanguage, supabaseClient);
+  // 2026-09-05: measured first (docs/weekly-plan-admission-context-2026-09-05.md) against
+  // this feature's own $10/month aggregate ceiling before wiring it in, per CEO's explicit
+  // instruction not to just reuse the advisor's own "this was fine there" as proof it's fine
+  // here — same function advisor-chat.ts already calls (~234-569 tokens/call, B7), safe by a
+  // wide margin against weekly-plan's real measured ~5,120 avg input tokens/call and ~$0.20
+  // spent this calendar month against the $10 ceiling.
+  const universityAdmissionContext = await buildUniversityAdmissionContextText(userId, supabaseClient);
   const provider = getAIProvider();
 
   // withUsageLogging resolves a model selection itself and threads degraded/degradeReason
@@ -499,7 +507,7 @@ export async function generateWeeklyPlan(userId: string, supabaseClient?: Parame
     (model) =>
       provider.generateStructured({
         system: withOutputLanguage(ADVISOR_SYSTEM_PROMPT, context.student.preferredLanguage),
-        prompt: `Here is the student's current context:\n\n${formatContextForPrompt(context, context.student.preferredLanguage)}${counselorGrounding}\n\n${buildWeeklyPlanInstruction()}`,
+        prompt: `Here is the student's current context:\n\n${formatContextForPrompt(context, context.student.preferredLanguage)}${universityAdmissionContext}${counselorGrounding}\n\n${buildWeeklyPlanInstruction()}`,
         schema: WeeklyPlanSchema,
         schemaName: "record_weekly_plan",
         schemaDescription: "Records this week's prioritized action plan for the student.",

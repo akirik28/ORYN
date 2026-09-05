@@ -36,7 +36,6 @@ const { generateWeeklyPlanMock, actionsRef, updateErrorRef } = vi.hoisted(() => 
 vi.mock("@/lib/ai/weekly-plan", () => ({ generateWeeklyPlan: generateWeeklyPlanMock }));
 vi.mock("@/lib/notifications/create", () => ({ createNotification: vi.fn(async () => {}) }));
 vi.mock("@/lib/supabase/admin", () => ({ tryCreateAdminClient: () => null }));
-vi.mock("next-intl/server", () => ({ getTranslations: async () => (key: string) => key }));
 // The rate limit added inside getOrCreateWeeklyPlan 2026-09-02 (docs/ai-spend-cap-2026-09-02.md)
 // is a real dependency of every test below now, not something any of them is testing —
 // __tests__/plan/rate-limit-coverage.test.ts owns that behavior directly, against the real

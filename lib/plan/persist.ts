@@ -1,15 +1,32 @@
 import "server-only";
 
 import { startOfWeek, formatISO } from "date-fns";
-import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { isUndefinedColumnError } from "@/lib/supabase/errors";
 import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { generateWeeklyPlan } from "@/lib/ai/weekly-plan";
 import { assertWithinAIRateLimit } from "@/lib/ai/rate-limit";
 import { createNotification } from "@/lib/notifications/create";
-import { toLocale } from "@/lib/i18n/config";
+import { toLocale, type Locale } from "@/lib/i18n/config";
 import type { WeeklyAction, WeeklyPlan } from "@/types/database";
+
+/**
+ * Inline, not routed through next-intl's getTranslations() — found 2026-09-04 (docs/
+ * weekly-plan-recheck-2026-09-04.md): this function is reached by Job D
+ * (lib/plan/generate-for-active-students.ts), which has no request of its own, and
+ * getTranslations() throws outside a real Next.js request lifecycle regardless of an
+ * explicit locale argument, confirmed live for the identical shape one file over — see
+ * lib/opportunities/persist-matches.ts's newOpportunityMatchTitle, the same fix applied to
+ * the same root cause six weeks earlier. This site is worse than that one: it used to sit
+ * before the AI call and every weekly_plans/weekly_actions write, so Job D wouldn't just
+ * lose grounding quality, it would fail to produce a plan at all, silently, for every
+ * student, every run — generateForStudent's own per-student try/catch would report
+ * {status: "error"} while the job itself "succeeded." Values copied verbatim from
+ * messages/en.json / messages/tr.json's real `notifications.weeklyPlanReady` key.
+ */
+function weeklyPlanReadyTitle(locale: Locale): string {
+  return locale === "tr" ? "Haftalık planın hazır" : "Your weekly plan is ready";
+}
 
 function currentWeekStart(): string {
   return formatISO(startOfWeek(new Date(), { weekStartsOn: 1 }), { representation: "date" });
@@ -89,7 +106,6 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
   // same value, just consulted a few lines sooner.
   const { data: profileForLocale } = await supabase.from("profiles").select("preferred_language").eq("id", userId).maybeSingle();
   const locale = toLocale(profileForLocale?.preferred_language);
-  const t = await getTranslations({ locale, namespace: "notifications" });
 
   // FIXED 2026-09-02: this used to live only in the Regenerate Server Action
   // (app/(app)/plan/actions.ts), which is a fine place for a fast, friendly pre-check
@@ -304,7 +320,7 @@ export async function getOrCreateWeeklyPlan(userId: string, opts?: { force?: boo
       // generation.summary (the body) is already in the student's language -- weekly-plan.ts's
       // withOutputLanguage makes the AI write it that way. Only the title was ever hardcoded
       // English; translated here from the same preferred_language this function just read.
-      title: t("weeklyPlanReady"),
+      title: weeklyPlanReadyTitle(locale),
       body: generation.summary,
       link: "/plan",
     });

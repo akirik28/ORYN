@@ -21,6 +21,7 @@ const h = vi.hoisted(() => ({
   provider: null as AIProvider | null,
   recommendations: [] as CounselorRecommendation[],
   counselorFails: false,
+  universityAdmissionContext: "",
 }));
 
 vi.mock("@/lib/ai/index", () => ({
@@ -43,6 +44,10 @@ vi.mock("@/lib/ai/student-context", () => ({
   // only because the mock is untyped.
   buildStudentAdvisorContext: vi.fn().mockResolvedValue({ student: { preferredLanguage: "en" } }),
   formatContextForPrompt: () => "STUDENT CONTEXT BLOCK",
+}));
+
+vi.mock("@/lib/ai/university-admission-context", () => ({
+  buildUniversityAdmissionContextText: vi.fn(async () => h.universityAdmissionContext),
 }));
 
 vi.mock("@/lib/counselor", () => ({
@@ -708,5 +713,35 @@ describe("resilience — counselor grounding stays strictly additive", () => {
 
     expect(prompt).toContain("STUDENT CONTEXT BLOCK");
     expect(prompt).not.toContain("prefer these");
+  });
+});
+
+/**
+ * 2026-09-05, CEO-directed: weekly-plan generation never carried university admission-rate
+ * context at all, unlike advisor-chat.ts (wired in for B7, 2026-09-04) — a real, confirmed
+ * gap between the two consumers of the same shared context-building surface. Measured first
+ * (docs/weekly-plan-admission-context-2026-09-05.md) against this feature's own $10/month
+ * aggregate ceiling before wiring it in, per explicit instruction not to reuse the advisor's
+ * own "this was fine there" as proof it's fine here. These tests prove the wiring itself,
+ * not the token math (already measured live, not something a unit test re-derives) — the
+ * mock above stands in for buildUniversityAdmissionContextText exactly as
+ * @/lib/ai/student-context is already stood in for above, same file, same reasoning.
+ */
+describe("university admission-rate context — reaches the weekly-plan prompt (2026-09-05)", () => {
+  test("a non-empty admission-rate context actually reaches the final prompt sent to the model", async () => {
+    h.universityAdmissionContext = "\n\nInstitution-wide admission-rate facts for this student's target universities:\n- University of Oxford: institution-wide admission rate 14.2%.";
+
+    const { prompt } = await runPlan();
+
+    expect(prompt).toContain("University of Oxford: institution-wide admission rate 14.2%");
+  });
+
+  test("an empty admission-rate context (no target universities, or none researched) adds nothing — no stray section", async () => {
+    h.universityAdmissionContext = "";
+
+    const { prompt } = await runPlan();
+
+    expect(prompt).not.toContain("admission rate");
+    expect(prompt).not.toContain("admission-rate");
   });
 });
