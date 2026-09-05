@@ -728,7 +728,9 @@ describe("migration numbering", () => {
     // to-restored the same way as 0135 -- docs/evidence-status-and-target-universities-rls-
     // guard-proof-2026-09-05.md.
     //
-    // 0138 (messages_guard_identity_columns), 0139 (connections_guard_identity_columns) --
+    // 0138 (messages_guard_identity_columns), 0139 (connections_guard_identity_columns),
+    // 0142 (birth_year_changes_export_policy -- 0140/0141 are reserved for the recommendations
+    // and advisor_generation_locks guards, still unpushed at the time this ceiling moved) --
     // items 6 and 7 of the same sweep, CEO-assigned both together after checking every remote
     // branch. Same guard shape again, but no paired code change needed for either -- neither
     // legitimate writer (app/(app)/messages/actions.ts, app/(app)/connections/actions.ts) ever
@@ -742,7 +744,7 @@ describe("migration numbering", () => {
     // rather than skipped on the grounds that "today's writer never touches these columns" --
     // written up explicitly as defense-in-depth against a writer that doesn't exist yet, not a
     // description of the one that exists now.
-    expect(Math.max(...numbers.map(Number))).toBe(139);
+    expect(Math.max(...numbers.map(Number))).toBe(142);
   });
 });
 
