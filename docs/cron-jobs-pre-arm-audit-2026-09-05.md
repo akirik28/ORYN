@@ -188,7 +188,84 @@ audited clean against all three questions, including two jobs (`sync_us_universi
 `refresh_admission_outlooks`) that already show the correct pattern in-repo as a template for
 fixing the one real gap, if that's the founder's call.
 
+## Addendum — the `research-generator` "recorded exactly once" flake under load
+
+CEO flagged a second, separate signal the same day: after merging `0140`, a full-suite run
+showed 7 failures, a later run showed 1, and the one repeating across runs was
+`research-generator > a successful generation is recorded in ai_usage exactly once` — passing
+3/3 in isolation. Asked whether this is test flakiness or a genuine `ai_usage` double-write
+that would scale the moment cron runs this path daily, per-student. Same measure-and-report
+instruction; counted as part of this audit since it's the same "silent success hiding a real
+problem" question, aimed at the one job-adjacent path (`withUsageLogging`) shared by every
+AI-calling feature in the app, not just one cron job.
+
+**Read first, not assumed:** `lib/ai/usage.ts`'s `withUsageLogging` is exactly-once by
+construction — the success path and the catch-and-log-then-rethrow path are structurally
+mutually exclusive branches of the same `try`, with no loop or retry around either. The one
+internal retry that exists (`lib/ai/anthropic-provider.ts`'s own one-retry-on-schema-validation-
+failure, up to 2 real attempts) sums usage across every attempt into a single combined figure
+*before* it ever reaches `withUsageLogging` — the file's own comment names exactly why: using
+only the last attempt's usage would silently under-bill by whatever the discarded first attempt
+already spent. Separately — this is the protection CEO referenced from yesterday — the
+Anthropic SDK's own default automatic-retry-on-timeout (`maxRetries: 2`, which would silently
+turn one logical call into up to three real billed requests) was already closed 2026-09-04:
+both `generateText`/`generateStructured` and the streaming call pass `maxRetries: 0` explicitly,
+with the exact "up to three attempts instead of one" shape already named in that fix's own
+comment. Reading the code alone gives no route to a genuine double-`ai_usage`-row write.
+
+**Then reproduced directly, not left as a read-only inference:** ran the specific test 15× in
+isolation (15/15 green, confirming CEO's own report), then generated real contention — two
+full 444-file suites launched concurrently in the background, plus 40 additional isolated runs
+of just this test hammering against that load. Caught 5 real failures. Every one of the 5 was:
+
+```
+Error: Test timed out in 20000ms.
+```
+
+**Never once** an assertion failure on `recorded.length` (which would read `expected 1, got 2`
+or similar) — the test never reached its own assertion at all under load; the mocked
+`generateResearchProjects` call itself simply took longer than the 20s ceiling to resolve.
+Meanwhile, both full 444-file suites running concurrently *with* that same contention finished
+100% green (444/444, 6661/6663 with the 2 already-known expected fails, both runs) — across 888
+total executions of this exact test plus the 45 isolated ones, zero assertion-count failures
+anywhere. The failures landed specifically in the smallest, most-frequently-relaunched process
+(a fresh Vitest process spun up per hammer-loop iteration), not the two large steady-state
+processes — the shape of CPU-scheduling contention starving a short-lived process, not a
+deterministic code path.
+
+This is also not a new class for this repo: `vitest.config.mts`'s own header comment (dated
+2026-09-02, raising the global timeout from vitest's 5000ms default to 20000ms) already
+documents this exact mechanism for a different test — "two lanes reported 8-13 failures in a
+full run, in a DIFFERENT set of files each time, none related to their own changes... a busy
+machine can't manufacture a red run" was the stated goal, at a 20s ceiling. Today's fleet
+(5 parallel research agents + several local Postgres instances + this session's own full-suite
+runs, per CEO's own description) is exactly the condition that ceiling was raised against, once
+more crossing it rather than a new failure mode appearing.
+
+**Answering CEO's three questions directly:**
+
+1. **Is the test itself fragile?** Yes — under genuine heavy concurrent load, confirmed by
+   direct reproduction, not inferred.
+2. **Does `ai_usage` actually get written twice?** No evidence of this anywhere in this pass —
+   zero assertion-count failures across 933 total executions under real contention, and the
+   code path has no structural route to it (exactly-once by construction, retries already
+   summed/capped as of yesterday's fix).
+3. **What happens at cron scale?** Low risk from *this* specific mechanism — production cron
+   runs won't be competing against multiple concurrent full local test suites the way this
+   reproduction did; that condition is specific to this development environment's own resource
+   pressure, not something a live daily cron invocation recreates. The genuine cron-scale risk
+   this whole audit actually surfaces is the separate, real finding above (`createNotification`'s
+   conflated `false`) — not this test's flakiness.
+
+Not fixed here (raising the timeout further, or marking this specific test to run outside the
+global ceiling, would be the two obvious options if the flake rate under real fleet conditions
+is bothersome enough to act on) — measured and reported per standing instruction; the decision
+belongs to CEO/founder.
+
 ## Verification
 
 Read-only pass — no code changed, no live writes, nothing merged. All claims above traced to
-the actual source file and line, not inferred from naming or grepped-and-trusted.
+the actual source file and line, not inferred from naming or grepped-and-trusted. The load
+reproduction in the addendum above is the one place this pass generated real (if temporary)
+system load rather than only reading — two background `vitest run` processes and one loop of
+45, all completed, nothing left running.
