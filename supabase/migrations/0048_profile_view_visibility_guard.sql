@@ -44,3 +44,18 @@ create policy "record own view" on public.profile_views
     viewer_id = auth.uid()
     and public.can_record_profile_view(viewed_user_id, auth.uid())
   );
+
+-- STATUS, re-verified 2026-09-05 (CEO's own live check, confirmed independently): still NOT
+-- APPLIED -- can_record_profile_view does not exist live, and pg_policies still shows the
+-- original bare `(viewer_id = auth.uid())` WITH CHECK on "record own view". Every schema
+-- dependency this file names was re-checked against the current live database, not assumed
+-- from 2026-08-20: profiles.is_public, connections.status/requester_id/recipient_id, and
+-- profile_views' own columns are all unchanged since this was written. Content below is
+-- final as written -- no edit needed, only confirmation that nothing has drifted underneath
+-- it in the three weeks it sat unapplied. Real-Postgres proof (red: the exact attack this
+-- header describes succeeds today; green: the same attack fails after this file applies,
+-- while both a genuinely public profile and a genuinely accepted-connection profile can
+-- still be viewed normally; broken: reverting to the original policy reopens the gap,
+-- confirming the check itself is meaningful): docs/profile-views-rls-proof-2026-09-05.md.
+-- profile_views currently holds exactly one live row -- a real gap, not yet exploited by a
+-- real user, still worth closing before one arrives.
