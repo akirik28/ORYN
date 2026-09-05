@@ -2345,3 +2345,273 @@ were QS band-ranked, confirming this is now the steady state going forward. UCF'
 testing is flagged as consistent with (not contradicting) Florida State's Board-of-Governors
 mandate from batch 6. NJIT's exact test-optional cycle list is disclosed as unresolved rather
 than asserted from a garbled search summary.
+
+---
+
+# Batch 10
+
+## 64. Missouri University of Science and Technology (QS band 751-760, list position 756)
+
+`id = '9d696c04-19f5-4122-ad69-644405e7ae67'`
+
+**Sources:** secondary sources (`prepscholar.com` and corroborating pages) for the general
+policy; no single official `mst.edu` admissions page with all details resolved cleanly in this
+pass (the catalog's admission-requirements page covers structure, not every numeric detail).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('9d696c04-19f5-4122-ad69-644405e7ae67', 'standardized_test',
+   'Test-optional; graduates of non-accredited or non-state-approved high schools must submit a minimum ACT composite of 27 (or SAT equivalent)',
+   'Missouri S&T does not require SAT/ACT for admission, but considers scores if submitted. Real, distinct exception: graduates of high schools not accredited by a recognized regional accrediting association or approved by a recognized state agency must submit a minimum ACT composite of 27 or SAT equivalent -- a real minimum floor within an otherwise test-optional policy, same shape as Delaware''s and Utah''s non-accredited-school exceptions in earlier batches. Reported range for score-submitters: SAT 1190-1420, ACT 25-31.',
+   false, 'medium', 'https://www.prepscholar.com/sat/s/colleges/Missouri-University-of-Science-and-Technology-admission-requirements', now()),
+  ('9d696c04-19f5-4122-ad69-644405e7ae67', 'english_proficiency',
+   'TOEFL required for international applicants; no specific numeric minimum confirmed in this pass',
+   'International applicants must submit TOEFL scores. No specific numeric minimum score, nor alternative accepted tests (IELTS, Duolingo, etc.), was confirmed in this pass.',
+   true, 'medium', 'https://www.prepscholar.com/sat/s/colleges/Missouri-University-of-Science-and-Technology-admission-requirements', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('9d696c04-19f5-4122-ad69-644405e7ae67', 'https://www.prepscholar.com/sat/s/colleges/Missouri-University-of-Science-and-Technology-admission-requirements',
+   'prepscholar.com', 'secondary_source', now(), 'medium',
+   'Submission of SAT or ACT scores is not required for admission to Missouri University of Science and Technology...Graduates of high schools that are not accredited...are required to have a minimum ACT composite of 27 or equivalent SAT... TOEFL is required for international applicants.');
+```
+
+## 65. Temple University (QS band 751-760, list position 760)
+
+`id = '325f7842-462b-471b-bd52-b4b9e7e3e0a2'`
+
+**Sources:** `https://admissions.temple.edu/apply/first-year-students/test-optional` (official
+test-optional page) and `https://admissions.temple.edu/sites/admissions/files/English_Language_Proficiency_7.13.pdf`
+(official English-language-proficiency document).
+
+**Real, distinct three-path mechanism worth flagging on its own:** unlike a simple two-tier
+"direct admission or conditional admission" split, Temple has a genuine third path -- academically
+qualified applicants can apply with NO language test at all and receive provisional admission
+plus placement in the Intensive English Language Program.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('325f7842-462b-471b-bd52-b4b9e7e3e0a2', 'standardized_test',
+   'SAT/ACT entirely optional, not required for admission',
+   'Temple University standardized test scores (SAT/ACT) are entirely optional and in no way required for undergraduate admission.',
+   false, 'medium', 'https://admissions.temple.edu/apply/first-year-students/test-optional', now()),
+  ('325f7842-462b-471b-bd52-b4b9e7e3e0a2', 'english_proficiency',
+   'Direct admission: TOEFL iBT 79 / IELTS 6.0; conditional admission: TOEFL 65-78 / IELTS 5.5; OR apply with no language test at all for provisional admission plus Intensive English Language Program placement',
+   'Three real paths, not just a single cutoff: (1) direct admission with TOEFL iBT 79 or IELTS 6.0 minimum; (2) conditional admission with a lower TOEFL 65-78 or IELTS 5.5; (3) academically-qualified applicants may apply with NO language test score at all, receiving provisional admission with placement in the Intensive English Language Program. Exempt: native English speakers, or applicants with 3+ years in a curriculum taught solely in English.',
+   true, 'medium', 'https://admissions.temple.edu/sites/admissions/files/English_Language_Proficiency_7.13.pdf', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('325f7842-462b-471b-bd52-b4b9e7e3e0a2', 'https://admissions.temple.edu/apply/first-year-students/test-optional',
+   'admissions.temple.edu', 'official_admissions_office', now(), 'medium',
+   'Standardized test scores (SAT/ACT) are entirely optional and in no way required for admission to Temple University''s undergraduate program.'),
+  ('325f7842-462b-471b-bd52-b4b9e7e3e0a2', 'https://admissions.temple.edu/sites/admissions/files/English_Language_Proficiency_7.13.pdf',
+   'admissions.temple.edu', 'official_admissions_office', now(), 'medium',
+   'The minimum test scores for direct admission are TOEFL iBT: 79, IELTS: 6.0. For conditional admission, the minimum scores are TOEFL iBT: 65-78 and IELTS: 5.5... Academically qualified students who submit no language test scores will receive provisional admission...and will be placed in the Intensive English Language Program.');
+```
+
+## 66. Texas Tech University (QS band 761-770, list position 767)
+
+`id = 'a9e0e681-a786-4f80-b4d4-e8044aaaa023'`
+
+**Sources:** `https://www.depts.ttu.edu/admissions/testoptional/` (official test-optional page,
+title confirmed via search results; a WebSearch classifier outage prevented fetching its full
+summarized content in this pass, so no specific score range is asserted) and
+`https://www.depts.ttu.edu/admissions/international/admission/englishproof.php` (official
+English-proficiency page).
+
+**Gap disclosed rather than guessed at:** a transient tool outage cut short the general
+standardized-testing search before a detailed summary came back; only the policy's existence and
+official URL are confirmed, not score ranges. The English-proficiency source itself notes its
+figures come from the graduate-admissions context ("these requirements apply to graduate
+students; undergraduate requirements follow similar standards") -- recorded with that hedge
+attached rather than presented as undergraduate-confirmed.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('a9e0e681-a786-4f80-b4d4-e8044aaaa023', 'standardized_test',
+   'Test-optional (official policy page confirmed to exist); specific score ranges not confirmed in this pass due to a tool outage',
+   'Texas Tech maintains an official test-optional admissions policy per its own admissions.ttu.edu test-optional page. A tool outage interrupted this pass before a detailed score-range summary was retrieved; no specific SAT/ACT range is asserted here.',
+   false, 'medium', 'https://www.depts.ttu.edu/admissions/testoptional/', now()),
+  ('a9e0e681-a786-4f80-b4d4-e8044aaaa023', 'english_proficiency',
+   'TOEFL iBT 79 / Essentials 8.5; IELTS Academic 6.5 (General Training NOT accepted); Duolingo 100; PTE Academic 60; Cambridge CPE 180+/CAE 175+ -- source-labeled as graduate figures, said to be similar for undergraduate',
+   'Texas Tech''s own source states these figures for graduate admissions and explicitly notes undergraduate requirements "follow similar standards" without giving separately-confirmed undergraduate numbers: TOEFL iBT 79 minimum (TOEFL Essentials 8.5), IELTS Academic 6.5 overall (IELTS General Training explicitly NOT accepted), Duolingo English Test 100, PTE Academic 60, Cambridge C2 Proficiency (CPE) 180+, Cambridge C1 Advanced (CAE) 175+. All language-test scores valid for 2 years.',
+   true, 'medium', 'https://www.depts.ttu.edu/admissions/international/admission/englishproof.php', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('a9e0e681-a786-4f80-b4d4-e8044aaaa023', 'https://www.depts.ttu.edu/admissions/testoptional/',
+   'depts.ttu.edu', 'official_admissions_office', now(), 'medium',
+   'Test-Optional Admissions at Texas Tech (page title/URL confirmed; full content not retrieved in this pass due to a tool outage).'),
+  ('a9e0e681-a786-4f80-b4d4-e8044aaaa023', 'https://www.depts.ttu.edu/admissions/international/admission/englishproof.php',
+   'depts.ttu.edu', 'official_admissions_office', now(), 'medium',
+   'The minimum TOEFL iBT score required is 79...The minimum IELTS required score is an overall band score of 6.5 on the Academic version, and IELTS General Training results are not acceptable...These requirements apply to graduate students; undergraduate requirements follow similar standards.');
+```
+
+## 67. University of South Florida (QS band 761-770, list position 769)
+
+`id = '535d9941-2d33-4df0-b6bf-7b761a54bba2'`
+
+**Sources:** `https://www.usf.edu/admissions/freshmen/admission-information/academic-requirements.aspx`
+(official freshman academic-requirements page) and
+`https://www.usf.edu/admissions/international/admission-information/undergraduate/freshmen-academic-requirements.aspx`
+(official international freshman academic-requirements page).
+
+**Fourth Florida institution in this document requiring tests (after Florida State in batch 6,
+UCF in batch 9) -- strengthens confidence this is the statewide Florida Board of Governors
+mandate rather than an institution-by-institution choice.** Real, distinct mechanism: USF does
+NOT accept TOEFL/IELTS/Duolingo as substitutes for its own SAT/ACT/CLT-based English-proficiency
+requirement -- the required test itself doubles as the English-proficiency evidence. The specific
+qualifying SAT/ACT sub-score was not extracted from the source page in this pass (referenced by
+the page's structure but the numeric table did not come through two search passes) -- disclosed
+as a gap rather than guessed.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('535d9941-2d33-4df0-b6bf-7b761a54bba2', 'standardized_test',
+   'SAT, ACT, or CLT required for freshman applicants (consistent with the Florida Board of Governors mandate seen at Florida State and UCF)',
+   'USF requires freshman applicants to submit official results for at least one college-entrance exam: SAT, ACT, or CLT. Consistent with (likely the same statewide cause as) Florida State''s and UCF''s testing mandates documented earlier in this document -- a fourth Florida public university with this exact pattern. Both SAT and ACT are superscored across test dates. Reported range: SAT 1130-1320, ACT 24-29. SAT code 5828, ACT code 0761.',
+   true, 'medium', 'https://www.usf.edu/admissions/freshmen/admission-information/academic-requirements.aspx', now()),
+  ('535d9941-2d33-4df0-b6bf-7b761a54bba2', 'english_proficiency',
+   'For international students from non-English-speaking countries, English proficiency is demonstrated via the required SAT/ACT/CLT score itself -- TOEFL, IELTS, and Duolingo are explicitly NOT accepted as substitutes; specific qualifying sub-score not confirmed in this pass',
+   'International students from non-English-speaking countries must demonstrate English-language proficiency via minimum scores on the same standardized test (SAT, ACT, or CLT) already required for admission. Real, distinct mechanism: USF explicitly does not accept TOEFL, IELTS, Duolingo, or similar tests as substitutes for this requirement -- unlike most peer institutions in this document, there is no separate English-proficiency exam pathway. The specific qualifying sub-score was not extracted from the official page in two search passes; not asserted here rather than guessed.',
+   true, 'medium', 'https://www.usf.edu/admissions/international/admission-information/undergraduate/freshmen-academic-requirements.aspx', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('535d9941-2d33-4df0-b6bf-7b761a54bba2', 'https://www.usf.edu/admissions/freshmen/admission-information/academic-requirements.aspx',
+   'usf.edu', 'official_admissions_office', now(), 'medium',
+   'USF requires freshman applicants to submit official results for at least one college entrance exam (SAT, ACT or CLT)... USF''s code for SAT is 5828 and for ACT is 0761.'),
+  ('535d9941-2d33-4df0-b6bf-7b761a54bba2', 'https://www.usf.edu/admissions/international/admission-information/undergraduate/freshmen-academic-requirements.aspx',
+   'usf.edu', 'official_admissions_office', now(), 'medium',
+   'International students from non-English-speaking countries must demonstrate English language proficiency by achieving the following minimum scores on one of the standardized tests listed below...USF does not accept English proficiency tests such as TOEFL, IELTS, Duolingo or others as substitutes for these minimum test score requirements.');
+```
+
+## 68. Drexel University (QS band 771-780, list position 773)
+
+`id = '38fd2c0e-e7d2-417e-92b6-919b023281e1'`
+
+**Sources:** `https://drexel.edu/admissions/apply/undergrad-instructions/first-year-instructions/standardized-tests`
+(official standardized-testing-policy page).
+
+**Real, distinctly-named policy, same spirit as Hawaii Manoa's "Do No Harm" policy in batch 8:**
+Drexel calls its own policy "No Harm Test-Optional" -- weak scores are ignored entirely rather
+than merely de-emphasized.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('38fd2c0e-e7d2-417e-92b6-919b023281e1', 'standardized_test',
+   '"No Harm Test-Optional" policy: weak scores are ignored entirely, not merely de-emphasized; BA/BS+MD Early Assurance Program requires scores',
+   'Drexel''s "No Harm Test-Optional" policy means a submitted weak score is ignored by Admissions rather than counted against the applicant, while a strong score can still help. Real, distinct exception (same recurring pattern as RPI''s B.S./M.D. and Iowa''s Tippie College of Business in earlier batches): the BA/BS+MD Early Assurance Program requires an SAT or ACT score. Reported range: SAT 1220-1430, ACT 27-32.',
+   false, 'medium', 'https://drexel.edu/admissions/apply/undergrad-instructions/first-year-instructions/standardized-tests', now()),
+  ('38fd2c0e-e7d2-417e-92b6-919b023281e1', 'english_proficiency',
+   'SAT EBRW 600+ or ACT English 27+ required for international applicants as the qualifying mechanism (highest score across all submitted attempts is used)',
+   'For international students, English proficiency is demonstrated via a minimum SAT Evidence-Based Reading and Writing score of 600, or a minimum ACT English section score of 27 -- another instance (alongside USF in this batch) of a required standardized-test sub-score substituting for a dedicated English-proficiency exam. Drexel encourages resubmission each time an approved exam is taken and uses the highest section scores across all submitted attempts for the final decision.',
+   true, 'medium', 'https://drexel.edu/admissions/apply/undergrad-instructions/first-year-instructions/standardized-tests', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('38fd2c0e-e7d2-417e-92b6-919b023281e1', 'https://drexel.edu/admissions/apply/undergrad-instructions/first-year-instructions/standardized-tests',
+   'drexel.edu', 'official_admissions_office', now(), 'medium',
+   'Drexel has implemented a No Harm Test-Optional policy...weak test scores will be ignored by Admissions...applies to all programs except for the BA/BS+MD Early Assurance Program...applicants need to have received a minimum score of 600 on the SAT Evidence-Based Reading and Writing section or a minimum score of 27 on the ACT English section.');
+```
+
+## 69. University of New Mexico (QS band 771-780, list position 778)
+
+`id = 'c516acde-a1fb-4859-9bc5-d0d53a6eae9d'`
+
+**Sources:** `https://admissions.unm.edu/future-students/freshmen/admission-requirements.html`
+(official admission-requirements page) and `https://international.unm.edu/english-proficiency.html`
+(official English-proficiency page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('c516acde-a1fb-4859-9bc5-d0d53a6eae9d', 'standardized_test',
+   'Test-optional; no preference between SAT/ACT; SAT Writing sub-section not considered',
+   'UNM does not require ACT, SAT, or CLT for admission consideration, though scores may help in some cases if submitted. No preference is given between test types, and the SAT Writing sub-section is not used. The highest available ACT composite, or highest SAT Total (Critical Reading + Math sub-scores), is used. Reported range: SAT 890-1170, ACT 19-26.',
+   false, 'medium', 'https://admissions.unm.edu/future-students/freshmen/admission-requirements.html', now()),
+  ('c516acde-a1fb-4859-9bc5-d0d53a6eae9d', 'english_proficiency',
+   'IELTS 6.5, TOEFL 520 PBT / 190 CBT / 68 iBT, Cambridge CPE/CAE grade C, or Duolingo 95',
+   'Required if English is not the applicant''s first language or not the official language of their country. Minimums: IELTS 6.5; TOEFL 520 (paper-based), 190 (computer-based), or 68 (internet-based); Cambridge Certificate of Proficiency in English (CPE) or Certificate of Advanced English (CAE) grade "C"; Duolingo English Test 95.',
+   true, 'medium', 'https://international.unm.edu/english-proficiency.html', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('c516acde-a1fb-4859-9bc5-d0d53a6eae9d', 'https://admissions.unm.edu/future-students/freshmen/admission-requirements.html',
+   'admissions.unm.edu', 'official_admissions_office', now(), 'medium',
+   'Standardized scores (ACT, SAT or CLT) are not required to be considered for admission but may be helpful in some cases... No preference is given to either score type and the Writing sub-section of the SAT is not needed/considered.'),
+  ('c516acde-a1fb-4859-9bc5-d0d53a6eae9d', 'https://international.unm.edu/english-proficiency.html',
+   'international.unm.edu', 'official_admissions_office', now(), 'medium',
+   'For those applying as undergraduate students, the minimum score on the IELTS is 6.5; and for the TOEFL, 520 on the paper-based test, 190 on the computerized test, or 68 on the internet-based test... DuoLingo English Test minimum score is 95.');
+```
+
+## 70. University of Oklahoma (QS band 771-780, list position 779)
+
+`id = '8dfe0af5-9832-44bd-b3b2-d9047875a6d8'`
+
+**Sources:** `https://www.ou.edu/web/news_events/articles/news_2020/ou-to-adopt-test-optional-admissions-policy-for-the-next-five-years`
+(official 2020 news release) and a secondary source for the English-proficiency figure.
+
+**Real staleness risk, self-caught by checking the publication date against today -- same class
+of issue named repeatedly this session (admission-cycle documents going stale by publication
+date):** OU's own announcement frames the test-optional policy as running for "the next 5 years"
+from a 2020 announcement -- meaning the stated window (roughly through 2025) has already elapsed
+as of today (2026-09-06). No newer OU source confirming an extension or reversal was found in
+this pass. Recorded with this staleness explicitly flagged rather than presented as current fact.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('8dfe0af5-9832-44bd-b3b2-d9047875a6d8', 'standardized_test',
+   'STALE SOURCE WARNING: test-optional per a 2020 announcement framed as "the next 5 years" -- that window has already elapsed as of today; no newer confirmation found',
+   'OU''s own 2020 announcement states a test-optional admissions policy "for the next 5 years," which would run through approximately 2025 -- already in the past relative to today''s date. No source confirming an extension, reversal, or the current 2026-27-cycle policy was found in this pass. This should be treated as unconfirmed for the current cycle, not as a live fact, until re-verified against a current OU source. If still in effect at the time of this search, OU does not require ACT/SAT, though submission is encouraged for scholarship consideration and faster award notification.',
+   false, 'low', 'https://www.ou.edu/web/news_events/articles/news_2020/ou-to-adopt-test-optional-admissions-policy-for-the-next-five-years', now()),
+  ('8dfe0af5-9832-44bd-b3b2-d9047875a6d8', 'english_proficiency',
+   'TOEFL 79 (also reported as the average, not clearly distinguished as a hard minimum); IELTS/PTE/Duolingo also accepted with no specific numbers confirmed; waived for students from English-medium universities',
+   'International undergraduate applicants: a TOEFL score around 79 is required, though the source does not clearly distinguish this from a reported average. IELTS, PTE, and Duolingo are also accepted, but no specific numeric minimums for those three were confirmed in this pass. The requirement can be waived for students coming from a university where instruction is in English.',
+   true, 'low', 'https://static.uni-graz.at/fileadmin/_files/_administrative_sites/_international/Dokumente/Outgoing/Infosheets_weiteres_Material/istudy_usa_university_of_oklahoma_infoshee.pdf', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('8dfe0af5-9832-44bd-b3b2-d9047875a6d8', 'https://www.ou.edu/web/news_events/articles/news_2020/ou-to-adopt-test-optional-admissions-policy-for-the-next-five-years',
+   'ou.edu', 'official_institution_website', now(), 'low',
+   'OU to adopt test-optional admissions policy for the next 5 years (published 2020 -- the stated window has already elapsed relative to today''s date).'),
+  ('8dfe0af5-9832-44bd-b3b2-d9047875a6d8', 'https://static.uni-graz.at/fileadmin/_files/_administrative_sites/_international/Dokumente/Outgoing/Infosheets_weiteres_Material/istudy_usa_university_of_oklahoma_infoshee.pdf',
+   'static.uni-graz.at', 'secondary_source', now(), 'low',
+   'The University of Oklahoma requires a minimum TOEFL score of 79 for undergraduate admissions, with an average score of 79.');
+```
+
+---
+
+## Verification (batch 10)
+
+Read-only against the live database plus `WebSearch` for content — no code changed, no live
+database writes. SQL staged for CEO/founder review and application, not applied. USF is the
+fourth Florida public university in this document found to require testing (after Florida State
+and UCF), reinforcing rather than contradicting the statewide Board of Governors mandate theory.
+A WebSearch classifier outage interrupted the Texas Tech general-testing-policy search; recorded
+with reduced confidence rather than filled in from assumption. University of Oklahoma's
+test-optional status rests on a 2020 announcement whose own stated "5 years" window has already
+elapsed relative to today (2026-09-06) — flagged as stale and given `data_confidence: 'low'`
+rather than `'medium'`, the first time this document has downgraded confidence for that specific
+reason.
