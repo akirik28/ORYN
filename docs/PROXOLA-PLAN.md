@@ -324,12 +324,24 @@ bile yok."* Üç iş:
 
 ---
 
-**B5. Ücret rakamının hangi yıla ait olduğu ekranda görünsün.**
+**B5. Ücret tarihi — ✅ BÜYÜK KISMI YAPILDI (`82a85d95`, 4 Eylül). Kalan: karşılaştırma sayfası.**
+Üniversite detay sayfasında `SourceBadge`'e `asOf` eklendi ve tuition rozetine
+bağlandı; veli tarafında ayrı bir satır olarak zaten gösteriliyor (`04aa5053`).
+Canlı ölçüm bugün tekrar alındı: **296/296 dolu, sıfır boş** — sapma yok.
+**Gerçek açık, ve tarif ettiğimden kötü:** karşılaştırma sayfasında tuition
+satırının **hiçbir kaynak rozeti yok** — ne `asOf`, ne `checkedAt`, ne kaynak.
+Aynı tablodaki `costOfAttendance`/`admissionRate` bir `statisticsSource` rozeti
+paylaşıyor, `researchStrengths`'in kendi rozeti var; **tuition tek çıplak satır.**
+Kartlarda hiçbir metriğin rozeti yok — bu bilinçli tasarım, açık sayılmıyor.
+**Sahibi var, sürüyor.**
+
+<details><summary>Özgün madde (artık geçersiz — "sahibi yok" yazıyordu)</summary>
 `university_profile_metrics.stats_as_of` ve `notes` **var ama hiçbir uygulama
 kodu okumuyor** — yani ürün her ücreti tarihsiz gösteriyor. Pekin Üniversitesi'nin
 2026 harcı henüz yayınlanmadığı için 2025 rakamı yazılıyor; etiketi olmadan
 öğrenci güncel sanır. Sorun tek üniversite değil, **tüm ücret gösterimi.**
 Sorgudan geçir, rakamın yanında göster. Sahibi yok.
+</details>
 
 **B6. Veli için güvenli üniversite/fırsat detay sayfası — ERTELENDİ, bilerek.**
 Öğrencinin `[id]` detay sayfası **bakan kişinin kendi profiline göre** kabul
