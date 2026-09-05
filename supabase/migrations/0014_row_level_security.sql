@@ -34,7 +34,15 @@ begin
   end loop;
 end $$;
 
--- ---------- notifications: system-generated, user can read/acknowledge/delete but not create ----------
+-- ---------- notifications: system-generated, user can read/acknowledge but not create ----------
+-- Corrected 2026-09-05 (migration 0135's own investigation): this comment previously also
+-- said "delete." The delete policy two lines below is real and has always worked at this
+-- layer -- but no Server Action, UI button, or any other application code anywhere in this
+-- codebase has ever called it (grepped for any `.from("notifications").delete(`: zero
+-- hits). Not a feature that regressed -- one that was never actually built, described here
+-- as if it had been since the day this table was created. See migration 0135's own header
+-- for the real, separate finding this file's UPDATE policy has (title/body/link/category
+-- smuggleable) -- a different gap from this one.
 alter table public.notifications enable row level security;
 create policy "select own notifications" on public.notifications for select using (user_id = auth.uid());
 create policy "update own notifications" on public.notifications for update using (user_id = auth.uid()) with check (user_id = auth.uid());
