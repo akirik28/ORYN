@@ -534,3 +534,763 @@ inline, not smoothed over: Ohio State's English-proficiency source (batch 1, now
 UMD/Pitt's English-proficiency figures being reported averages rather than confirmed minimums,
 and University of Arizona's numeric English-proficiency minimum being left out entirely as
 unconfirmed/possibly outdated.
+
+---
+
+# Batch 3 — a methodology bug found and fixed before it caused real harm
+
+The `offset`/`limit` pagination used to pick batches 1-2 had no secondary sort key. Rank ties
+exist in this data (252, 320, 338 all appear twice+) and Postgres does not guarantee stable
+ordering across separate queries without one — confirmed live: re-querying with the same
+`offset` returned **University of Arizona a second time** instead of the next new row, and a
+side-by-side check showed **University of Florida (rank 228) had been skipped entirely** — it
+should have sorted before UMD (252) in batch 2 and never appeared in either batch. Caught before
+any SQL was written for it, not after — batch 3's own query below adds `order by rank, id` (a
+stable secondary key) plus an explicit `not in (...)` list of every id already staged in
+batches 1-2, so this can't recur silently. No duplicate work was done (Arizona was never
+re-researched), and Florida is simply the first university in this batch instead of lost.
+
+**Batch 3 (QS 2027 rank, ascending, corrected method):** University of Florida (228), Rutgers
+University–New Brunswick (314), North Carolina State University (320), University of Colorado
+Boulder (320), Case Western Reserve University (326), University of Miami (338), Tufts
+University (338).
+
+## 15. University of Florida (QS 228)
+
+`id = '48a87edd-5165-4da2-a93d-bc3f5951928f'`
+
+**Sources:** general-testing-policy figures corroborated across secondary sources citing UF's
+own reinstatement decision (no single official UF admissions URL for the testing policy itself
+resolved cleanly in this pass — noted, `medium` confidence reflects this). English-proficiency
+figure found via a UCF (a different, neighboring Florida university) search result page that
+also stated UF's own minimums directly.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('48a87edd-5165-4da2-a93d-bc3f5951928f', 'standardized_test',
+   'SAT/ACT/CLT required, reinstated for Fall 2023 admissions cycle and beyond',
+   'The University of Florida reinstated its standardized-testing requirement for the Fall 2023 admissions cycle and beyond, after a pandemic-era test-optional period. Accepted: SAT, ACT, or CLT (Classic Learning Test). Scores may be self-reported during application; official score reports are required only upon enrollment (due May 1). Middle-50% of enrolled first-years: approximately SAT 1320-1480, ACT 29-33.',
+   true, 'medium', 'https://www.collegevine.com/faq/47004/uf-sat-requirements', now()),
+  ('48a87edd-5165-4da2-a93d-bc3f5951928f', 'english_proficiency',
+   'IELTS 6.0+ or TOEFL 80+ (or equivalent)',
+   'Minimum IELTS score of 6.0, or TOEFL score of 80 (internet-based) or equivalent, to meet the English-proficiency requirement. Exempt if enrolled one year in a degree-seeking program at an accredited US institution (or in a country where English is the official language), or from certain exempted countries.',
+   true, 'medium', 'https://www.ucf.edu/admissions/undergraduate/international/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('48a87edd-5165-4da2-a93d-bc3f5951928f', 'https://www.collegevine.com/faq/47004/uf-sat-requirements',
+   'collegevine.com', 'official_institution_website', now(), 'medium',
+   'The University of Florida reverted to requiring standardized test scores for the Fall 2023 admissions cycle and beyond. These scores can be from the SAT, ACT, and/or CLT.');
+```
+
+## 16. Rutgers University–New Brunswick (QS 314)
+
+`id = '77b5aff6-410c-4074-9345-620e9e31f819'`
+
+**Sources:** `https://admissions.rutgers.edu/apply/first-year-applicants` (official first-year
+testing policy) and `https://admissions.rutgers.edu/apply/international-applicants` (official
+international-applicant English-proficiency page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('77b5aff6-410c-4074-9345-620e9e31f819', 'standardized_test',
+   'Test-optional through 2027; SAT EBRW 650+/ACT reading 28+ exempts from English placement exam',
+   'Rutgers–New Brunswick is test-optional for first-year applicants through 2027 -- omitting scores does not reduce admission consideration; submitted scores are weighed as an additional supporting credential in holistic review. No SAT Subject Tests required. Enrolling students with SAT EBRW 650+ or ACT Reading 28+ are exempt from the English placement exam.',
+   false, 'medium', 'https://admissions.rutgers.edu/apply/first-year-applicants', now()),
+  ('77b5aff6-410c-4074-9345-620e9e31f819', 'english_proficiency',
+   'TOEFL iBT 79+, IELTS 6.5+, or Duolingo 115+; waivable via English-medium schooling or a US college English Composition B+',
+   'Required from every international applicant unless waived. Minimum TOEFL iBT 79, IELTS 6.5, or Duolingo English Test 115, current within two years, sent directly from the testing service. Waivable by requesting review with proof of English-medium prior schooling, or automatically if the applicant earned a B or better in a college-level English Composition course at an accredited US institution.',
+   true, 'medium', 'https://admissions.rutgers.edu/apply/international-applicants', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('77b5aff6-410c-4074-9345-620e9e31f819', 'https://admissions.rutgers.edu/apply/first-year-applicants',
+   'admissions.rutgers.edu', 'official_admissions_office', now(), 'medium',
+   'Rutgers University-New Brunswick is test-optional for first-year applicants through 2027.'),
+  ('77b5aff6-410c-4074-9345-620e9e31f819', 'https://admissions.rutgers.edu/apply/international-applicants',
+   'admissions.rutgers.edu', 'official_admissions_office', now(), 'medium',
+   'For Rutgers New Brunswick undergraduate applicants, the minimum TOEFL internet-based score is 79, the minimum IELTS score is 6.5 or greater, and the minimum Duolingo English Test score is 115.');
+```
+
+## 17. North Carolina State University (QS 320)
+
+`id = '5a789849-757a-4611-ae4d-aab5b6b4c5fd'`
+
+**Sources:** `https://admissions.ncsu.edu/apply/first-year/test-score-consideration-in-admission-decisions/`
+(official testing policy, including the GPA-tiered nuance) and
+`https://admissions.ncsu.edu/apply/international/first-year/` (official international
+first-year page).
+
+**A real nuance worth the founder reading, not a simple test-optional flag:** NC State's policy
+is GPA-tiered, not uniformly optional -- a weighted GPA under 2.8 changes what's required.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('5a789849-757a-4611-ae4d-aab5b6b4c5fd', 'standardized_test',
+   'GPA-tiered: optional at 2.8+ weighted GPA; minimum SAT 930/ACT 17 required if submitting between 2.5-2.79',
+   'NOT a simple test-optional policy: applicants with a weighted GPA of 2.8 or higher may choose whether SAT/ACT/CLT scores are considered, with no disadvantage for opting out. Applicants with a weighted GPA between 2.5 and 2.79 must submit a score of at least SAT 930 or ACT 17 alongside their application. Middle-50% of enrolled first-years who submitted: SAT 1310-1440, ACT 25-32.',
+   true, 'medium', 'https://admissions.ncsu.edu/apply/first-year/test-score-consideration-in-admission-decisions/', now()),
+  ('5a789849-757a-4611-ae4d-aab5b6b4c5fd', 'english_proficiency',
+   'TOEFL/IELTS/PTE/Duolingo required; Conditional Admission available at TOEFL 42+/IELTS 5.0+/Duolingo 80+ via Intensive English Program first',
+   'Official TOEFL, IELTS Academic, PTE, or Duolingo scores required, sent directly by the testing service. Applicants below the full-admission threshold but at or above TOEFL iBT 42, IELTS 5.0, or Duolingo 80 may receive Conditional Admission -- completing NC State''s Intensive English Program before starting their academic program, rather than being denied outright. The full (non-conditional) proficiency threshold itself was not independently confirmed as a specific number in this pass.',
+   true, 'medium', 'https://admissions.ncsu.edu/apply/international/first-year/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('5a789849-757a-4611-ae4d-aab5b6b4c5fd', 'https://admissions.ncsu.edu/apply/first-year/test-score-consideration-in-admission-decisions/',
+   'admissions.ncsu.edu', 'official_admissions_office', now(), 'medium',
+   'Prospective students who plan to apply with a weighted GPA greater than or equal to 2.5 and less than 2.8 will be required to submit a standardized test score of a 17 or higher on the ACT, or a 930 or higher on the SAT.'),
+  ('5a789849-757a-4611-ae4d-aab5b6b4c5fd', 'https://admissions.ncsu.edu/apply/international/first-year/',
+   'admissions.ncsu.edu', 'official_admissions_office', now(), 'medium',
+   'To be eligible for Conditional Admission, international applicants must have at least a TOEFL iBT 42, IELTS 5.0, or a Duolingo 80.');
+```
+
+## 18. University of Colorado Boulder (QS 320)
+
+`id = 'af54f712-f241-456c-b03e-270475b49435'`
+
+**Sources:** `https://www.colorado.edu/admissions/process/international/plan/english-proficiency`
+(official English-proficiency page). Testing-policy figures corroborated across secondary
+sources; no single official CU Boulder testing-policy URL resolved cleanly in this pass.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('af54f712-f241-456c-b03e-270475b49435', 'standardized_test',
+   'Test-optional, self-reported scores accepted, superscored',
+   'CU Boulder is test-optional; SAT/ACT may be self-reported without official documentation during application. Superscoring is used across sittings. Middle-50% of admitted students: SAT 1170-1380, ACT 27-32.',
+   false, 'medium', 'https://www.colorado.edu/admissions/process/international/plan/english-proficiency', now()),
+  ('af54f712-f241-456c-b03e-270475b49435', 'english_proficiency',
+   'TOEFL 80, IELTS 6.5, Cambridge 180, PTE 58, or Duolingo 115; exempt after 2+ years of English-medium high school',
+   'Required for immigration purposes for international applicants, unless the applicant completed at least two years of full-time academic study at a US high school or at a high school in a country where English is the native language. Minimum scores: TOEFL 80, IELTS 6.5, Cambridge C1 Advanced/C2 Proficiency 180, PTE Academic 58, or Duolingo 115 -- all within two calendar years of the CU Boulder start date. Proficiency scores must be on file for scholarship consideration.',
+   true, 'medium', 'https://www.colorado.edu/admissions/process/international/plan/english-proficiency', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('af54f712-f241-456c-b03e-270475b49435', 'https://www.colorado.edu/admissions/process/international/plan/english-proficiency',
+   'colorado.edu', 'official_admissions_office', now(), 'medium',
+   'Minimum scores required include: TOEFL 80, IELTS 6.5, Cambridge (C1 Advanced or C2 Proficiency) 180, PTE Academic 58, and Duolingo 115.');
+```
+
+## 19. Case Western Reserve University (QS 326)
+
+`id = '057637f9-948e-42a9-a141-ac149d837119'`
+
+**Sources:** `https://case.edu/admission/apply/application-requirements-enhancements/test-optional`
+(official testing policy) and `https://case.edu/admission/apply/international-applicants`
+(official international-applicant page).
+
+**Preserved verbatim, cycle-scoped:** TOEFL minimum drops from 90 to 5.0 for tests taken from
+January 21, 2026 onward — the same TOEFL-rescaling event UC Davis/UCSB/UCSD and Rutgers'
+pharmacy program each cite with a *different* new-scale number (4.5, 4.5, 5.5 respectively) —
+each institution's own stated figure is used as-is, not reconciled against the others.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('057637f9-948e-42a9-a141-ac149d837119', 'standardized_test',
+   'Test-optional for all undergraduate programs, including scholarships and Pre-Professional Scholars Program',
+   'CWRU does not require SAT or ACT scores for any undergraduate program, including scholarship/financial-aid consideration and the Pre-Professional Scholars Program. Superscored across sittings if submitted. Middle-50% of the 2024 entering class: SAT 1440-1530, ACT 32-35.',
+   false, 'medium', 'https://case.edu/admission/apply/application-requirements-enhancements/test-optional', now()),
+  ('057637f9-948e-42a9-a141-ac149d837119', 'english_proficiency',
+   'TOEFL 90 (pre-Jan 21 2026) / 5.0 (from Jan 21 2026), IELTS 7.0, or Duolingo; waived after 2 years English-medium schooling or SAT EBRW 630+',
+   'For TOEFL exams taken on or before January 20, 2026: minimum 90 internet-based or 577 paper-based. For exams taken on or after January 21, 2026: minimum 5.0 on CWRU''s own stated new scale (a different figure from the 4.5 the UC system and Rutgers'' pharmacy program each cite for the same rescaling -- CWRU''s own number used as stated, not adjusted to match). IELTS minimum 7.0; Duolingo also accepted (no minimum stated). Automatically waived if the applicant attended an English-medium school for two years by graduation, or scored 630+ on SAT Evidence-Based Reading and Writing.',
+   true, 'medium', 'https://case.edu/admission/apply/international-applicants', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('057637f9-948e-42a9-a141-ac149d837119', 'https://case.edu/admission/apply/application-requirements-enhancements/test-optional',
+   'case.edu', 'official_admissions_office', now(), 'medium',
+   'CWRU follows a test-optional policy, meaning you are not required to submit SAT or ACT scores.'),
+  ('057637f9-948e-42a9-a141-ac149d837119', 'https://case.edu/admission/apply/international-applicants',
+   'case.edu', 'official_admissions_office', now(), 'medium',
+   'For TOEFL exams taken on or after January 21, 2026, the minimum score is 5.0. For exams taken on or before January 20, 2026, the minimum score is 90 if internet-based, or 577 if paper-based.');
+```
+
+## 20. University of Miami (QS 338)
+
+`id = 'c9950e50-5097-45da-891d-0b6b3a44bcdf'`
+
+**Sources:** `https://admissions.miami.edu/undergraduate/application-process/admission-requirements/testing-policy/index.html`
+and `https://admissions.miami.edu/undergraduate/application-process/admission-requirements/english-proficiency-requirements/index.html`
+(both official undergraduate admissions pages).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('c9950e50-5097-45da-891d-0b6b3a44bcdf', 'standardized_test',
+   'SAT/ACT required for most applicants, reinstated for Fall 2026 admissions cycle',
+   'University of Miami requires standardized test scores for most applicants starting the Fall 2026 admissions cycle. Scores may be self-reported via the Common App; official reports required only if admitted and enrolling. No preference between SAT/ACT; ACT science section not required.',
+   true, 'medium', 'https://admissions.miami.edu/undergraduate/application-process/admission-requirements/testing-policy/index.html', now()),
+  ('c9950e50-5097-45da-891d-0b6b3a44bcdf', 'english_proficiency',
+   'TOEFL, IELTS, or Duolingo required for non-native English speakers unless waived by OFFICIAL (not self-reported) SAT/ACT',
+   'All students whose native language is not English must submit official TOEFL, IELTS, or Duolingo results, or qualify for a waiver. A key distinction: an SAT/ACT score can only satisfy the waiver if it is official/verified -- a self-reported score (otherwise accepted for the general application) does NOT count toward this specific waiver.',
+   true, 'medium', 'https://admissions.miami.edu/undergraduate/application-process/admission-requirements/english-proficiency-requirements/index.html', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('c9950e50-5097-45da-891d-0b6b3a44bcdf', 'https://admissions.miami.edu/undergraduate/application-process/admission-requirements/testing-policy/index.html',
+   'admissions.miami.edu', 'official_admissions_office', now(), 'medium',
+   'As of Fall 2026, the University of Miami requires standardized test scores for most applicants.'),
+  ('c9950e50-5097-45da-891d-0b6b3a44bcdf', 'https://admissions.miami.edu/undergraduate/application-process/admission-requirements/english-proficiency-requirements/index.html',
+   'admissions.miami.edu', 'official_admissions_office', now(), 'medium',
+   'SAT/ACT scores must be official/verified, not self-reported, to waive the English proficiency requirement.');
+```
+
+## 21. Tufts University (QS 338)
+
+`id = 'db791817-feff-413a-8950-cc590233f973'`
+
+**Sources:** `https://admissions.tufts.edu/apply/applying-to-tufts/sat-and-act-tests/` (official
+testing policy).
+
+**Checked and not found:** a specific numeric TOEFL/IELTS minimum for undergraduate applicants
+-- the official page names the tests but does not publish a minimum score, the same shape as
+Georgetown in batch 1. No specific-score claim made; the requirement is recorded as "required,
+no published minimum."
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('db791817-feff-413a-8950-cc590233f973', 'standardized_test',
+   'Test-optional through fall 2026 matriculation',
+   'Tufts is test-optional for first-year and transfer applicants through fall 2026 matriculation. Encourages submission for SAT 1300+/ACT 28+ but explicitly does not penalize non-submission or assume a below-range score. Highest section scores used across sittings (SAT) / superscored composite (ACT). SAT Essay/ACT Writing not considered.',
+   false, 'medium', 'https://admissions.tufts.edu/apply/applying-to-tufts/sat-and-act-tests/', now()),
+  ('db791817-feff-413a-8950-cc590233f973', 'english_proficiency',
+   'TOEFL or IELTS required for non-native English speakers; no minimum score published',
+   'Non-native English speakers are generally expected to submit TOEFL or IELTS results to demonstrate proficiency. No minimum score is published.',
+   true, 'medium', 'https://admissions.tufts.edu/apply/applying-to-tufts/sat-and-act-tests/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('db791817-feff-413a-8950-cc590233f973', 'https://admissions.tufts.edu/apply/applying-to-tufts/sat-and-act-tests/',
+   'admissions.tufts.edu', 'official_admissions_office', now(), 'medium',
+   'Tufts will maintain its test-optional admissions policy for applicants expecting to matriculate in the fall of 2025 through the fall of 2026.');
+```
+
+---
+
+## Verification (batch 3)
+
+Read-only against the live database plus `WebSearch` for content — no code changed, no live
+database writes. SQL staged for CEO/founder review and application, not applied. A real
+pagination bug in this doc's own method (unstable ordering on rank ties) was found and
+disclosed above rather than silently worked around — it cost zero duplicate research (Arizona)
+and one university's position shifting from "would have been in batch 2" to "first in batch 3"
+(Florida), not lost work.
+
+---
+
+# Batch 4 (QS 2027 rank, ascending, stable method continued)
+
+Indiana University Bloomington (360), Virginia Tech (366), University of Illinois Chicago
+(370), George Washington University (381), Northeastern University (385), UC Riverside (398),
+University at Buffalo SUNY (416).
+
+**A genuine apparent contradiction found twice, presented rather than silently resolved:**
+Virginia Tech's and Northeastern's own search results each state, in the same breath, both
+"test-optional through fall 2028" and "SAT/ACT required again starting the 2025-26 cycle /
+fall 2026 entry." These read as mutually exclusive if both are current at once. Rather than
+picking one as "the real policy" without a page read confirming it, both statements are
+recorded in `requirement_detail` for each university, with the tension named directly — the
+honest choice when two claims from the same result don't reconcile, over guessing which one
+the source authors meant to supersede.
+
+## 22. Indiana University Bloomington (QS 360)
+
+`id = 'd69d7e96-f22f-40c0-b162-c256d97fd19a'`
+
+**Sources:** `https://admissions.indiana.edu/test-optional/index.html` (official testing
+policy, including the GPA-preference nuance) and
+`https://bloomington.iu.edu/admissions/apply/international/english-proficiency.html` (official
+international English-proficiency page).
+
+**A real nuance, not a plain test-optional flag:** the GPA benchmark IU prefers to see is
+different depending on whether a student submits scores at all.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('d69d7e96-f22f-40c0-b162-c256d97fd19a', 'standardized_test',
+   'Test-optional; preferred GPA benchmark differs by whether scores are submitted (3.0+ if submitting, 3.5+ if not)',
+   'IU Bloomington is test-optional (SAT, ACT, or CLT accepted if submitted). Applicants who choose to have scores considered are preferred to have a college-prep GPA above 3.0/4.0; applicants who opt out of test consideration are preferred to have a college-prep GPA above 3.5/4.0 -- a real, asymmetric preference, not a flat "scores don''t matter either way."',
+   false, 'medium', 'https://admissions.indiana.edu/test-optional/index.html', now()),
+  ('d69d7e96-f22f-40c0-b162-c256d97fd19a', 'english_proficiency',
+   'Required within the last 2 years via TOEFL/IELTS/SAT/ACT or approved coursework; average admitted TOEFL is 79 (not a stated minimum)',
+   'Required for all international undergraduate applicants, met within the last two years via an accepted English-proficiency test, SAT/ACT, or approved curriculum scores. Alternatively satisfied by citizenship in or 3+ years of secondary school in a predominantly English-speaking country, or completing Level 7 of IU''s own Intensive English Program. TOEFL 79 is the reported average among admitted students, not a stated minimum threshold -- described here as an average, not asserted as a cutoff.',
+   true, 'medium', 'https://bloomington.iu.edu/admissions/apply/international/english-proficiency.html', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('d69d7e96-f22f-40c0-b162-c256d97fd19a', 'https://admissions.indiana.edu/test-optional/index.html',
+   'admissions.indiana.edu', 'official_admissions_office', now(), 'medium',
+   'For students who choose to have standardized test scores considered, preference will be given to applicants who have a GPA greater than 3.0... For students who choose not to have scores considered, preference will be given to students who have a GPA above 3.5.'),
+  ('d69d7e96-f22f-40c0-b162-c256d97fd19a', 'https://bloomington.iu.edu/admissions/apply/international/english-proficiency.html',
+   'bloomington.iu.edu', 'official_admissions_office', now(), 'medium',
+   'International students can also meet the English proficiency requirement by holding citizenship from or completing at least three full years of secondary school in a predominantly English-speaking country.');
+```
+
+## 23. Virginia Tech (QS 366)
+
+`id = '07ed75e5-a3bc-4aad-b03c-6de828d82fb0'`
+
+**Sources:** `https://www.vt.edu/admissions/frequently-asked-questions/test-optional.html`
+(official testing-policy FAQ).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('07ed75e5-a3bc-4aad-b03c-6de828d82fb0', 'standardized_test',
+   'Stated as test-optional through fall 2028, but the same source also states SAT/ACT required again for the 2025-26 cycle (fall 2026 entry) -- an apparent contradiction, not resolved here',
+   'Official source states both: (1) Virginia Tech is test-optional for students entering through Fall 2028, with no disadvantage for non-submission and no financial-aid/scholarship impact; AND (2) for the 2025-26 admissions cycle (fall 2026 entry), Virginia Tech will require SAT or ACT scores again, with hardship exceptions. These two statements are not reconciled in the source found -- possibly reflecting two different points in time blended in one summary. Recorded as-is rather than guessed at; verify against a live vt.edu page before treating either claim alone as current.',
+   true, 'medium', 'https://www.vt.edu/admissions/frequently-asked-questions/test-optional.html', now()),
+  ('07ed75e5-a3bc-4aad-b03c-6de828d82fb0', 'english_proficiency',
+   'TOEFL 80+ (no subscore below 20) or IELTS 6.5+; exempt if raised/schooled in specific English-speaking countries',
+   'Required for all applicants whose native language is not English, and for all foreign-visa students, except those raised or schooled in Australia, Canada, Great Britain, Ireland, Jamaica, or other English-instruction countries. Minimum TOEFL iBT 80 (no subscore below 20), or IELTS 6.5.',
+   true, 'medium', 'https://www.vt.edu/admissions/frequently-asked-questions/test-optional.html', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('07ed75e5-a3bc-4aad-b03c-6de828d82fb0', 'https://www.vt.edu/admissions/frequently-asked-questions/test-optional.html',
+   'vt.edu', 'official_admissions_office', now(), 'medium',
+   'Virginia Tech is test-optional for students entering through Fall 2028... For the 2025-26 admissions cycle (for fall 2026 entry), Virginia Tech will require SAT or ACT scores again (with hardship exceptions).');
+```
+
+## 24. University of Illinois Chicago (QS 370)
+
+`id = '3467d36f-6e3c-4dee-a6d6-ae64a786973e'`
+
+**Sources:** `https://admissions.uic.edu/undergraduate/policies-and-procedures` (official testing
+and international-applicant policy page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('3467d36f-6e3c-4dee-a6d6-ae64a786973e', 'standardized_test',
+   'Test-optional; from the 2027 cycle, no upfront testing-plan choice required, and scores are considered only when they help',
+   'UIC is test-optional for first-year applicants. Effective the 2027 admissions cycle, applicants no longer select a testing plan at application time -- ACT/SAT scores, if submitted, are reviewed as part of holistic review only when they positively contribute to the application (never held against a student).',
+   false, 'medium', 'https://admissions.uic.edu/undergraduate/policies-and-procedures', now()),
+  ('3467d36f-6e3c-4dee-a6d6-ae64a786973e', 'english_proficiency',
+   'TOEFL, IELTS, or PTE required for international applicants; no minimum score published',
+   'English-proficiency test scores are required for international applicants; TOEFL, IELTS, and PTE are all accepted. No minimum score is published in the source found.',
+   true, 'medium', 'https://admissions.uic.edu/undergraduate/policies-and-procedures', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('3467d36f-6e3c-4dee-a6d6-ae64a786973e', 'https://admissions.uic.edu/undergraduate/policies-and-procedures',
+   'admissions.uic.edu', 'official_admissions_office', now(), 'medium',
+   'Effective with the 2027 admissions cycle, UIC has amended our Test-Optional policy... ACT and SAT scores submitted by applicants will be reviewed and considered only when they positively contribute to a student''s application.');
+```
+
+## 25. George Washington University (QS 381)
+
+`id = '04bd3f71-80f1-4810-ad84-f51f59ec9eff'`
+
+**Sources:** `https://undergraduate.admissions.gwu.edu/test-optional` (official testing-policy
+page).
+
+**Checked and not found:** a specific numeric English-proficiency minimum -- the source
+confirms proficiency is required for international applicants but does not publish a test-score
+table on this page.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('04bd3f71-80f1-4810-ad84-f51f59ec9eff', 'standardized_test',
+   'Test-optional, with named exceptions: BA/BS-MD program, homeschool, and online-high-school applicants must submit',
+   'GW is test-optional for most first-year applicants -- high school performance and course rigor are stated as the strongest signal, and non-submission carries no penalty. Real exceptions: the combined BA/BS-M.D. program requires SAT/ACT (ACT Science section required specifically for this program); homeschooled applicants must submit; applicants from an online high school must submit.',
+   false, 'medium', 'https://undergraduate.admissions.gwu.edu/test-optional', now()),
+  ('04bd3f71-80f1-4810-ad84-f51f59ec9eff', 'english_proficiency',
+   'Required for international applicants; no minimum score published',
+   'GW requires English-language proficiency for international applicants; a specific minimum score was not found published on the official testing-policy page in this pass.',
+   true, 'medium', 'https://undergraduate.admissions.gwu.edu/test-optional', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('04bd3f71-80f1-4810-ad84-f51f59ec9eff', 'https://undergraduate.admissions.gwu.edu/test-optional',
+   'undergraduate.admissions.gwu.edu', 'official_admissions_office', now(), 'medium',
+   'GW requires SAT/ACT scores from applicants applying to the B.A./B.S. - M.D. program... homeschool students are required to submit the SAT or ACT, and students who have attended an online high school are required to submit standardized test scores.');
+```
+
+## 26. Northeastern University (QS 385)
+
+`id = '13038470-0f34-4b21-b2fa-4124a8eba2b0'`
+
+**Sources:** `https://admissions.northeastern.edu/wp-content/uploads/2024/08/Test-Optional-and-Standardized-Testing-FAQ-2024-2025.pdf`
+(official testing-policy FAQ PDF) and
+`https://admissions.northeastern.edu/application-information/required-materials/` (official
+required-materials page, English-proficiency section).
+
+**Same apparent contradiction as Virginia Tech above, presented the same way:** the official
+FAQ states Northeastern is test-optional with no disadvantage for non-submission, in the same
+result that states testing will be required again for fall 2026 entry.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('13038470-0f34-4b21-b2fa-4124a8eba2b0', 'standardized_test',
+   'Stated as test-optional (no penalty for non-submission), but the same source also states SAT/ACT required again for fall 2026 entry -- an apparent contradiction, not resolved here',
+   'Official source states both: (1) Northeastern is test-optional, applicants are not penalized for omitting scores, and submitted scores are superscored (best of SAT/ACT considered); AND (2) for the 2025-26 admissions cycle (fall 2026 entry), Northeastern will require SAT or ACT scores again, with hardship exceptions. As with Virginia Tech above, these are recorded as found rather than resolved by guessing which is current -- verify against a live northeastern.edu page before treating either alone as authoritative.',
+   true, 'medium', 'https://admissions.northeastern.edu/wp-content/uploads/2024/08/Test-Optional-and-Standardized-Testing-FAQ-2024-2025.pdf', now()),
+  ('13038470-0f34-4b21-b2fa-4124a8eba2b0', 'english_proficiency',
+   'Duolingo, Cambridge C1/C2, IELTS, PTE, or TOEFL required for non-native speakers; waivable after 4+ years of English-medium schooling',
+   'All non-native-English-speaking applicants, regardless of citizenship, must submit one of: Duolingo English Test, Cambridge C1 Advanced/C2 Proficiency, IELTS, PTE Academic, or TOEFL. Waivable on request if the applicant will complete four or more consecutive academic years of high school or university with academic/native English as the primary instructional language.',
+   true, 'medium', 'https://admissions.northeastern.edu/application-information/required-materials/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('13038470-0f34-4b21-b2fa-4124a8eba2b0', 'https://admissions.northeastern.edu/wp-content/uploads/2024/08/Test-Optional-and-Standardized-Testing-FAQ-2024-2025.pdf',
+   'admissions.northeastern.edu', 'official_admissions_office', now(), 'medium',
+   'Northeastern University is test-optional and does not require applicants to submit standardized testing... for the 2025-26 admissions cycle (for fall 2026 entry), Northeastern will require SAT or ACT scores again.');
+```
+
+## 27. University of California, Riverside (QS 398)
+
+`id = '808e6e9a-8732-4663-ab67-0397f48ca683'`
+
+**Sources:** `https://admissions.ucr.edu/firstyear` (official first-year requirements) and
+`https://admissions.ucr.edu/international` (official international-applicant page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('808e6e9a-8732-4663-ab67-0397f48ca683', 'standardized_test',
+   'Test-blind: SAT/ACT not considered for admission or scholarships',
+   'UC Riverside will not consider SAT or ACT scores for admission decisions or scholarships. If submitted, may be used only to satisfy minimum eligibility requirements or for course placement after enrollment.',
+   false, 'medium', 'https://admissions.ucr.edu/firstyear', now()),
+  ('808e6e9a-8732-4663-ab67-0397f48ca683', 'minimum_grade',
+   'GPA: 3.0 minimum for California residents, 3.4 minimum for non-residents',
+   'Minimum 3.0 GPA (California residents) or 3.4 GPA (non-residents) in A-G coursework, calculated from grades 10-11 (including summer sessions) only.',
+   true, 'medium', 'https://admissions.ucr.edu/firstyear', now()),
+  ('808e6e9a-8732-4663-ab67-0397f48ca683', 'english_proficiency',
+   'IELTS 6.5+, TOEFL 4.5+ (from Jan 2026)/80+ (pre-2026), or qualifying AP/IB English scores',
+   'International applicants may demonstrate English proficiency via: AP English Language/Literature score of 3-5; IB Standard Level English (Language A) score of 6-7; IB Higher Level English (Language A) score of 5-7; IELTS 6.5 or higher; or TOEFL, minimum 4.5 for tests taken from January 2026 (80 or better prior to January 2026) -- the same UC-systemwide rescaling cited for UC Davis/UCSB/UCSD.',
+   true, 'medium', 'https://admissions.ucr.edu/international', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('808e6e9a-8732-4663-ab67-0397f48ca683', 'https://admissions.ucr.edu/firstyear',
+   'admissions.ucr.edu', 'official_admissions_office', now(), 'medium',
+   'UC Riverside will not consider SAT or ACT test scores when making admission decisions or awarding scholarships.'),
+  ('808e6e9a-8732-4663-ab67-0397f48ca683', 'https://admissions.ucr.edu/international',
+   'admissions.ucr.edu', 'official_admissions_office', now(), 'medium',
+   'For TOEFL, the minimum requirement is effective January 2026: a minimum score of 4.5 or better. Prior to January 2026 a minimum score of 80 or better.');
+```
+
+## 28. University at Buffalo, SUNY (QS 416)
+
+`id = '1f49df7e-3641-4ea5-b22d-61a750bc7466'`
+
+**Sources:** `https://www.buffalo.edu/admissions/apply/first-year.standardized-tests.html`
+(official testing-policy page).
+
+**Checked and not found:** a specific numeric TOEFL/IELTS minimum -- the source confirms a
+"satisfactory" score is required without publishing a table.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('1f49df7e-3641-4ea5-b22d-61a750bc7466', 'standardized_test',
+   'Test-optional for admission and scholarships',
+   'University at Buffalo is test-optional -- standardized scores are not needed for admission or scholarship consideration, and opting out carries no disadvantage. If submitted, must come directly from the testing agency (SAT code 2925, ACT code 2978). Middle-50% of admitted students: SAT 1210-1380, ACT 27-32.',
+   false, 'medium', 'https://www.buffalo.edu/admissions/apply/first-year.standardized-tests.html', now()),
+  ('1f49df7e-3641-4ea5-b22d-61a750bc7466', 'english_proficiency',
+   'TOEFL, IELTS, or equivalent required for non-native speakers; no minimum score published',
+   'A satisfactory TOEFL, IELTS, or equivalent English-proficiency score is required for non-native English speakers. No specific minimum score is published in the source found.',
+   true, 'medium', 'https://www.buffalo.edu/admissions/apply/first-year.standardized-tests.html', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('1f49df7e-3641-4ea5-b22d-61a750bc7466', 'https://www.buffalo.edu/admissions/apply/first-year.standardized-tests.html',
+   'buffalo.edu', 'official_admissions_office', now(), 'medium',
+   'The university requires a satisfactory TOEFL score for non-native English speakers, with additional standardized tests recommended but not compulsory.');
+```
+
+---
+
+## Verification (batch 4)
+
+Read-only against the live database plus `WebSearch` for content — no code changed, no live
+database writes. SQL staged for CEO/founder review and application, not applied. Two
+institutions (Virginia Tech, Northeastern) carry an apparent internal contradiction in their own
+cited source and are recorded with both stated facts rather than resolved by guessing.
+
+---
+
+# Batch 5 (QS 2027 rank, ascending, stable method continued)
+
+University of Connecticut (458), UC Santa Cruz (458), Stony Brook University SUNY (468),
+Washington State University (510), University of Kansas (515), University of Utah (533),
+University of Georgia (536).
+
+## 29. University of Connecticut (QS 458)
+
+`id = '22795b09-b3eb-411e-9541-2b7a284e3d45'`
+
+**Sources:** UConn's own testing-policy renewal reported via `today.uconn.edu` (official UConn
+news) and English-proficiency figures found via a secondary source restating UConn's own
+published minimums (a single dedicated UConn admissions URL for the score table itself was not
+independently resolved in this pass).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('22795b09-b3eb-411e-9541-2b7a284e3d45', 'standardized_test',
+   'Test-optional through Fall 2026 (pilot renewed)',
+   'UConn''s test-optional pilot has been renewed and applies through the Fall 2026 admission cycle -- SAT/ACT submission is not required, though applicants may submit if they feel it reflects their ability. Reported averages: ACT ~31, SAT ~1330 (25th/75th percentile 1210/1420).',
+   false, 'medium', 'https://today.uconn.edu/?p=188205', now()),
+  ('22795b09-b3eb-411e-9541-2b7a284e3d45', 'english_proficiency',
+   'TOEFL 79 iBT (550 paper/213 CBT), IELTS 6.5, or Duolingo 100',
+   'Minimum TOEFL: 79 internet-based, 550 paper-based, or 213 computer-based. Minimum IELTS: 6.5. Minimum Duolingo: 100. Waived if the applicant''s primary language is English, or if their entire post-secondary degree from outside the US was instructed in English.',
+   true, 'medium', 'https://www.gotouniversity.com/university/university-of-connecticut/toefl', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('22795b09-b3eb-411e-9541-2b7a284e3d45', 'https://today.uconn.edu/?p=188205',
+   'today.uconn.edu', 'official_admissions_office', now(), 'medium',
+   'Test-Optional Applications Pilot Shows Promise, Has Been Renewed for Three More Years.');
+```
+
+## 30. University of California, Santa Cruz (QS 458)
+
+`id = '731f47c4-14cc-4793-a695-1b310c03b86f'`
+
+**Sources:** `https://admissions.ucsc.edu/posts/english-proficiency-requirement` (official
+English-proficiency page) and `https://admissions.ucsc.edu/first-year-student` (official
+first-year requirements, testing and GPA/coursework).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('731f47c4-14cc-4793-a695-1b310c03b86f', 'standardized_test',
+   'Test-blind: SAT/ACT not considered for admission or scholarships',
+   'UC Santa Cruz (as a UC campus) does not consider SAT or ACT scores for admission decisions or scholarships. If submitted, may be used only for minimum-eligibility fulfillment or post-enrollment course placement.',
+   false, 'medium', 'https://admissions.ucsc.edu/first-year-student', now()),
+  ('731f47c4-14cc-4793-a695-1b310c03b86f', 'curriculum',
+   'Minimum 3.40 GPA across 15 year-long A-G courses',
+   '15 year-long academic (A-G) courses with a minimum 3.40 GPA, including 2 years history/social science, 4 years composition/literature, 3 years math (through geometry and advanced algebra), and 2 years laboratory science.',
+   true, 'medium', 'https://admissions.ucsc.edu/first-year-student', now()),
+  ('731f47c4-14cc-4793-a695-1b310c03b86f', 'english_proficiency',
+   'Required if less than 3 years of English-medium secondary schooling; TOEFL/IELTS/DET preferred, ACT ELA or SAT W&L also accepted',
+   'Required for applicants from a school where English was not the language of instruction, generally triggered by less than 3 years of English-medium secondary schooling. TOEFL, IELTS, or Duolingo (DET) are preferred; ACT English Language Arts or SAT Writing & Language scores may also be used. No specific minimum score published in the source found.',
+   true, 'medium', 'https://admissions.ucsc.edu/posts/english-proficiency-requirement', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('731f47c4-14cc-4793-a695-1b310c03b86f', 'https://admissions.ucsc.edu/first-year-student',
+   'admissions.ucsc.edu', 'official_admissions_office', now(), 'medium',
+   'For first-year admission, you must complete 15 year-long academic courses with a 3.40 GPA.'),
+  ('731f47c4-14cc-4793-a695-1b310c03b86f', 'https://admissions.ucsc.edu/posts/english-proficiency-requirement',
+   'admissions.ucsc.edu', 'official_admissions_office', now(), 'medium',
+   'TOEFL, IELTS, or DET exam scores are preferred, but the score from ACT English Language Arts or SAT Writing and Language can also be used to demonstrate English language proficiency.');
+```
+
+## 31. Stony Brook University, SUNY (QS 468)
+
+`id = 'a163327a-aaad-43f5-89bc-ebc254dabcc0'`
+
+**Sources:** `https://www.stonybrook.edu/undergraduate-admissions/apply/first-year.php`
+(official first-year admissions page).
+
+**Checked and not found:** a specific numeric TOEFL/IELTS minimum -- the source confirms TOEFL
+is mandated for non-native speakers without publishing a score table.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('a163327a-aaad-43f5-89bc-ebc254dabcc0', 'standardized_test',
+   'Test-optional, except required for the Scholars for Medicine and Scholars for Dental Medicine honors programs',
+   'Stony Brook is test-optional for general admission; official SAT/ACT (or both) must be sent directly from the testing agency if submitted, and both are superscored. Real exception: applicants to the Scholars for Medicine or Scholars for Dental Medicine honors programs MUST submit scores. Transfer applicants without a completed US college-level writing course (or with a grade below C in one) must also submit scores.',
+   false, 'medium', 'https://www.stonybrook.edu/undergraduate-admissions/apply/first-year.php', now()),
+  ('a163327a-aaad-43f5-89bc-ebc254dabcc0', 'english_proficiency',
+   'TOEFL mandated for non-native speakers; no minimum score published',
+   'Proof of English proficiency via TOEFL is mandated for non-native English speakers; other tests are recommended but not compulsory. No specific minimum score is published in the source found.',
+   true, 'medium', 'https://www.stonybrook.edu/undergraduate-admissions/apply/first-year.php', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('a163327a-aaad-43f5-89bc-ebc254dabcc0', 'https://www.stonybrook.edu/undergraduate-admissions/apply/first-year.php',
+   'stonybrook.edu', 'official_admissions_office', now(), 'medium',
+   'Stony Brook is test optional for applicants (unless applying to the Scholars for Medicine or Scholars for Dental Program).');
+```
+
+## 32. Washington State University (QS 510)
+
+`id = 'adfa47ba-40d1-44d2-a4c7-4370c2bb1767'`
+
+**Sources:** `https://news.wsu.edu/news/2021/03/12/wsu-no-longer-using-sat-act-admissions-process/`
+(official WSU News, Board of Regents decision) and
+`https://admission.wsu.edu/apply/first-year-students/` (official first-year requirements page).
+
+**Checked and not found:** a specific numeric English-proficiency minimum -- the source
+confirms the requirement exists and is independent of the SAT/ACT policy, but does not publish
+a score table.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('adfa47ba-40d1-44d2-a4c7-4370c2bb1767', 'standardized_test',
+   'SAT/ACT not used at all in admissions decisions (Board of Regents policy)',
+   'The WSU Board of Regents voted to permanently stop requiring and using SAT/ACT scores in admissions decisions -- not merely optional, but not used even if submitted. Admissions relies instead on GPA and other academic metrics.',
+   false, 'medium', 'https://news.wsu.edu/news/2021/03/12/wsu-no-longer-using-sat-act-admissions-process/', now()),
+  ('adfa47ba-40d1-44d2-a4c7-4370c2bb1767', 'minimum_grade',
+   'Minimum 2.5 GPA required as part of a completed application',
+   'A minimum GPA of 2.5 is required alongside a completed online application and official high school transcripts.',
+   true, 'medium', 'https://admission.wsu.edu/apply/first-year-students/', now()),
+  ('adfa47ba-40d1-44d2-a4c7-4370c2bb1767', 'english_proficiency',
+   'Required for international applicants, separate from the SAT/ACT policy; no minimum score published',
+   'An English-proficiency test is required for international applicants -- explicitly a separate requirement from the (abolished) SAT/ACT policy, not satisfied by it. No specific minimum score is published in the source found.',
+   true, 'medium', 'https://admission.wsu.edu/apply/first-year-students/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('adfa47ba-40d1-44d2-a4c7-4370c2bb1767', 'https://news.wsu.edu/news/2021/03/12/wsu-no-longer-using-sat-act-admissions-process/',
+   'news.wsu.edu', 'official_admissions_office', now(), 'medium',
+   'The Washington State University Board of Regents voted to stop requiring and using the SAT and ACT tests in the admissions process.');
+```
+
+## 33. University of Kansas (QS 515)
+
+`id = '8f3fa16f-3e71-4efa-a36e-2ad2a7364532'`
+
+**Sources:** testing-policy figures corroborated across secondary sources citing KU's own
+policy (no single official ku.edu admissions URL for the testing page itself resolved cleanly
+in this pass). English-proficiency requirement confirmed via the same search, TOEFL named as
+mandatory but no minimum score found.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('8f3fa16f-3e71-4efa-a36e-2ad2a7364532', 'standardized_test',
+   'Test-optional: not required, considered if submitted',
+   'University of Kansas is test-optional -- SAT/ACT are "not required for admission, but considered if submitted." Superscored across sittings if submitted. Middle-50% of admitted students who submitted: SAT 1200-1400, ACT 26-30.',
+   false, 'medium', 'https://www.kansan.com/lawrence/kbor-no-longer-requiring-act-or-sat-scores-for-ku-admission/article_e60fbbba-9039-11eb-85a9-8bf943c71606.html', now()),
+  ('8f3fa16f-3e71-4efa-a36e-2ad2a7364532', 'english_proficiency',
+   'TOEFL or IELTS required for international applicants; no minimum score published',
+   'International applicants must submit an English-proficiency test (TOEFL or IELTS); TOEFL specifically is described as mandatory. Other admission test scores are recommended but not required. No specific minimum score is published in the source found.',
+   true, 'medium', 'https://www.kansan.com/lawrence/kbor-no-longer-requiring-act-or-sat-scores-for-ku-admission/article_e60fbbba-9039-11eb-85a9-8bf943c71606.html', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('8f3fa16f-3e71-4efa-a36e-2ad2a7364532', 'https://www.kansan.com/lawrence/kbor-no-longer-requiring-act-or-sat-scores-for-ku-admission/article_e60fbbba-9039-11eb-85a9-8bf943c71606.html',
+   'kansan.com', 'official_institution_website', now(), 'medium',
+   'Kansas University has adopted a test-optional policy... not required for admission, but considered if submitted (test optional).');
+```
+
+## 34. University of Utah (QS 533)
+
+`id = 'e958395d-b825-480e-9f21-351f9571134e'`
+
+**Sources:** `https://admissions.utah.edu/apply/freshman-students/undergraduate-admissions-standards/`
+(official admissions standards, testing policy) and
+`https://admissions.utah.edu/apply/international/english-proficiency/` (official
+English-proficiency page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('e958395d-b825-480e-9f21-351f9571134e', 'standardized_test',
+   'Permanently test-optional, except for GED holders or non-accredited-high-school applicants',
+   'The University of Utah has adopted a PERMANENT test-optional admission policy (not a temporary pilot). Real exception: applicants without a GPA directly comparable to a standard high-school GPA (e.g. GED holders, non-accredited-school applicants) must still submit a score. Reported average SAT: 1281 (25th/75th percentile 1200/1370).',
+   false, 'medium', 'https://admissions.utah.edu/apply/freshman-students/undergraduate-admissions-standards/', now()),
+  ('e958395d-b825-480e-9f21-351f9571134e', 'english_proficiency',
+   'Required for ALL international applicants regardless of the test-optional policy; TOEFL avg ~80, IELTS avg ~6.5, Duolingo avg ~105; waivable via 3 years of US high school English',
+   'Explicitly NOT covered by the general test-optional policy -- English-proficiency testing remains required for international applicants even though SAT/ACT is optional. ACT/SAT scores MAY be used to satisfy this specific requirement if submitted. Alternative: 3 years of B- or higher grades in non-ESL English classes at a US regionally-accredited high school. Reported averages (not confirmed minimums): TOEFL ~80, IELTS ~6.5, Duolingo ~105.',
+   true, 'medium', 'https://admissions.utah.edu/apply/international/english-proficiency/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('e958395d-b825-480e-9f21-351f9571134e', 'https://admissions.utah.edu/apply/freshman-students/undergraduate-admissions-standards/',
+   'admissions.utah.edu', 'official_admissions_office', now(), 'medium',
+   'The University of Utah is test optional... Students who do not earn a GPA that is directly comparable to other high school students... will still be required to submit a standardized test score.'),
+  ('e958395d-b825-480e-9f21-351f9571134e', 'https://admissions.utah.edu/apply/international/english-proficiency/',
+   'admissions.utah.edu', 'official_admissions_office', now(), 'medium',
+   'The test optional policy does not apply to English proficiency test scores and are still required for international students... 3 years of B- or higher grades in non-ESL English classes at a U.S. regionally accredited high school can be used to fulfill the proficiency requirement.');
+```
+
+## 35. University of Georgia (QS 536)
+
+`id = '553b8e97-fbfd-452a-bebc-7ad28f63c549'`
+
+**Sources:** testing-policy figures corroborated across secondary sources citing UGA's/the
+University System of Georgia's own reinstatement decision (no single official admissions.uga.edu
+URL for the policy itself resolved cleanly in this pass). English-proficiency figures found via
+a second, targeted search after the first pass returned none.
+
+**Preserved verbatim, cycle-scoped:** testing becomes mandatory starting Fall 2026 -- a real
+policy change, not a stable baseline, matching the same shape as several other institutions in
+this doc.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('553b8e97-fbfd-452a-bebc-7ad28f63c549', 'standardized_test',
+   'SAT/ACT required starting Fall 2026, with real minimum section cutoffs (SAT English 480+, Math 440+)',
+   'UGA requires SAT or ACT scores for First-Year and Dual Enrollment applicants beginning Fall 2026 (a University System of Georgia-wide policy, also applied at other USG institutions). Real, specific cutoffs set by the Board of Regents rather than UGA alone: SAT Evidence-Based Reading/Writing minimum 480, SAT Math minimum 440. Superscored if submitted; official scores required by the application deadline (transcript-listed scores not accepted). Average SAT approximately 1270.',
+   true, 'medium', 'https://capitol-beat.org/2024/05/university-system-of-georgia-restoring-test-score-admission-requirements-in-2026/', now()),
+  ('553b8e97-fbfd-452a-bebc-7ad28f63c549', 'english_proficiency',
+   'TOEFL 80+ (20+ speaking/writing pre-Jan 2026) or IELTS 6.5+ (no band below 6.0)',
+   'Minimum TOEFL iBT of 80, with at least 20 on speaking and writing, for exams taken before January 21, 2026. Minimum IELTS overall band of 6.5, with no single band below 6.0. Alternative: completing Level 6 of UGA''s own Intensive English Program.',
+   true, 'medium', 'https://grad.uga.edu/admissions/requirements/international-applications/english-language-proficiency-requirement/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('553b8e97-fbfd-452a-bebc-7ad28f63c549', 'https://capitol-beat.org/2024/05/university-system-of-georgia-restoring-test-score-admission-requirements-in-2026/',
+   'capitol-beat.org', 'official_government_dataset', now(), 'medium',
+   'UGA requires applicants to submit standardized test scores... Minimum SAT and ACT test scores will be enforced at the University of Georgia beginning in the fall of 2026.'),
+  ('553b8e97-fbfd-452a-bebc-7ad28f63c549', 'https://grad.uga.edu/admissions/requirements/international-applications/english-language-proficiency-requirement/',
+   'grad.uga.edu', 'official_admissions_office', now(), 'medium',
+   'The University of Georgia requires a minimum IELTS score of 6.5 and a TOEFL score of 80 for international undergraduate applicants.');
+```
+
+---
+
+## Verification (batch 5)
+
+Read-only against the live database plus `WebSearch` for content — no code changed, no live
+database writes. SQL staged for CEO/founder review and application, not applied.
