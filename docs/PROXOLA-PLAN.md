@@ -42,6 +42,14 @@
 >    beri ilgili dosyalara ne indiğine bak (`git log --since=<tarih> -- <yol>`).
 >    Doküman iddia eder; **kod gerçektir.**
 
+> 12. **Kırmızıyı kanıtlarken `git stash` KULLANMA.** Bugün üç ayrı şerit kullandı
+>    (biri iki kez uyarıldıktan sonra) — kimseye zarar gelmedi, **ama yığın bu
+>    ortamda şeritler arasında paylaşılıyor** ve dün bir şeridin `pop`'u başkasının
+>    dosyalarını kendi worktree'sine uygulamaya başladı. Risk kendi işini değil,
+>    **başkasının işini** kaybetmek — ve o kişi ne olduğunu anlamayacak.
+>    **Yerine:** `git diff > /tmp/x.patch` + `git checkout --` + `git apply`, ya da
+>    geçici bir dala commit, ya da `cp` ile kopya.
+
 ## 📋 KİMDE NE VAR — 5 Eylül (CEO tutar, dağıtmadan önce buraya bakar)
 
 **Bugün aynı işi üç kez iki şeride verdim** (geçmiş son tarih ölçümü, E2 e-posta
