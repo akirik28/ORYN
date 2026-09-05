@@ -795,3 +795,253 @@ pagination bug in this doc's own method (unstable ordering on rank ties) was fou
 disclosed above rather than silently worked around — it cost zero duplicate research (Arizona)
 and one university's position shifting from "would have been in batch 2" to "first in batch 3"
 (Florida), not lost work.
+
+---
+
+# Batch 4 (QS 2027 rank, ascending, stable method continued)
+
+Indiana University Bloomington (360), Virginia Tech (366), University of Illinois Chicago
+(370), George Washington University (381), Northeastern University (385), UC Riverside (398),
+University at Buffalo SUNY (416).
+
+**A genuine apparent contradiction found twice, presented rather than silently resolved:**
+Virginia Tech's and Northeastern's own search results each state, in the same breath, both
+"test-optional through fall 2028" and "SAT/ACT required again starting the 2025-26 cycle /
+fall 2026 entry." These read as mutually exclusive if both are current at once. Rather than
+picking one as "the real policy" without a page read confirming it, both statements are
+recorded in `requirement_detail` for each university, with the tension named directly — the
+honest choice when two claims from the same result don't reconcile, over guessing which one
+the source authors meant to supersede.
+
+## 22. Indiana University Bloomington (QS 360)
+
+`id = 'd69d7e96-f22f-40c0-b162-c256d97fd19a'`
+
+**Sources:** `https://admissions.indiana.edu/test-optional/index.html` (official testing
+policy, including the GPA-preference nuance) and
+`https://bloomington.iu.edu/admissions/apply/international/english-proficiency.html` (official
+international English-proficiency page).
+
+**A real nuance, not a plain test-optional flag:** the GPA benchmark IU prefers to see is
+different depending on whether a student submits scores at all.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('d69d7e96-f22f-40c0-b162-c256d97fd19a', 'standardized_test',
+   'Test-optional; preferred GPA benchmark differs by whether scores are submitted (3.0+ if submitting, 3.5+ if not)',
+   'IU Bloomington is test-optional (SAT, ACT, or CLT accepted if submitted). Applicants who choose to have scores considered are preferred to have a college-prep GPA above 3.0/4.0; applicants who opt out of test consideration are preferred to have a college-prep GPA above 3.5/4.0 -- a real, asymmetric preference, not a flat "scores don''t matter either way."',
+   false, 'medium', 'https://admissions.indiana.edu/test-optional/index.html', now()),
+  ('d69d7e96-f22f-40c0-b162-c256d97fd19a', 'english_proficiency',
+   'Required within the last 2 years via TOEFL/IELTS/SAT/ACT or approved coursework; average admitted TOEFL is 79 (not a stated minimum)',
+   'Required for all international undergraduate applicants, met within the last two years via an accepted English-proficiency test, SAT/ACT, or approved curriculum scores. Alternatively satisfied by citizenship in or 3+ years of secondary school in a predominantly English-speaking country, or completing Level 7 of IU''s own Intensive English Program. TOEFL 79 is the reported average among admitted students, not a stated minimum threshold -- described here as an average, not asserted as a cutoff.',
+   true, 'medium', 'https://bloomington.iu.edu/admissions/apply/international/english-proficiency.html', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('d69d7e96-f22f-40c0-b162-c256d97fd19a', 'https://admissions.indiana.edu/test-optional/index.html',
+   'admissions.indiana.edu', 'official_admissions_office', now(), 'medium',
+   'For students who choose to have standardized test scores considered, preference will be given to applicants who have a GPA greater than 3.0... For students who choose not to have scores considered, preference will be given to students who have a GPA above 3.5.'),
+  ('d69d7e96-f22f-40c0-b162-c256d97fd19a', 'https://bloomington.iu.edu/admissions/apply/international/english-proficiency.html',
+   'bloomington.iu.edu', 'official_admissions_office', now(), 'medium',
+   'International students can also meet the English proficiency requirement by holding citizenship from or completing at least three full years of secondary school in a predominantly English-speaking country.');
+```
+
+## 23. Virginia Tech (QS 366)
+
+`id = '07ed75e5-a3bc-4aad-b03c-6de828d82fb0'`
+
+**Sources:** `https://www.vt.edu/admissions/frequently-asked-questions/test-optional.html`
+(official testing-policy FAQ).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('07ed75e5-a3bc-4aad-b03c-6de828d82fb0', 'standardized_test',
+   'Stated as test-optional through fall 2028, but the same source also states SAT/ACT required again for the 2025-26 cycle (fall 2026 entry) -- an apparent contradiction, not resolved here',
+   'Official source states both: (1) Virginia Tech is test-optional for students entering through Fall 2028, with no disadvantage for non-submission and no financial-aid/scholarship impact; AND (2) for the 2025-26 admissions cycle (fall 2026 entry), Virginia Tech will require SAT or ACT scores again, with hardship exceptions. These two statements are not reconciled in the source found -- possibly reflecting two different points in time blended in one summary. Recorded as-is rather than guessed at; verify against a live vt.edu page before treating either claim alone as current.',
+   true, 'medium', 'https://www.vt.edu/admissions/frequently-asked-questions/test-optional.html', now()),
+  ('07ed75e5-a3bc-4aad-b03c-6de828d82fb0', 'english_proficiency',
+   'TOEFL 80+ (no subscore below 20) or IELTS 6.5+; exempt if raised/schooled in specific English-speaking countries',
+   'Required for all applicants whose native language is not English, and for all foreign-visa students, except those raised or schooled in Australia, Canada, Great Britain, Ireland, Jamaica, or other English-instruction countries. Minimum TOEFL iBT 80 (no subscore below 20), or IELTS 6.5.',
+   true, 'medium', 'https://www.vt.edu/admissions/frequently-asked-questions/test-optional.html', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('07ed75e5-a3bc-4aad-b03c-6de828d82fb0', 'https://www.vt.edu/admissions/frequently-asked-questions/test-optional.html',
+   'vt.edu', 'official_admissions_office', now(), 'medium',
+   'Virginia Tech is test-optional for students entering through Fall 2028... For the 2025-26 admissions cycle (for fall 2026 entry), Virginia Tech will require SAT or ACT scores again (with hardship exceptions).');
+```
+
+## 24. University of Illinois Chicago (QS 370)
+
+`id = '3467d36f-6e3c-4dee-a6d6-ae64a786973e'`
+
+**Sources:** `https://admissions.uic.edu/undergraduate/policies-and-procedures` (official testing
+and international-applicant policy page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('3467d36f-6e3c-4dee-a6d6-ae64a786973e', 'standardized_test',
+   'Test-optional; from the 2027 cycle, no upfront testing-plan choice required, and scores are considered only when they help',
+   'UIC is test-optional for first-year applicants. Effective the 2027 admissions cycle, applicants no longer select a testing plan at application time -- ACT/SAT scores, if submitted, are reviewed as part of holistic review only when they positively contribute to the application (never held against a student).',
+   false, 'medium', 'https://admissions.uic.edu/undergraduate/policies-and-procedures', now()),
+  ('3467d36f-6e3c-4dee-a6d6-ae64a786973e', 'english_proficiency',
+   'TOEFL, IELTS, or PTE required for international applicants; no minimum score published',
+   'English-proficiency test scores are required for international applicants; TOEFL, IELTS, and PTE are all accepted. No minimum score is published in the source found.',
+   true, 'medium', 'https://admissions.uic.edu/undergraduate/policies-and-procedures', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('3467d36f-6e3c-4dee-a6d6-ae64a786973e', 'https://admissions.uic.edu/undergraduate/policies-and-procedures',
+   'admissions.uic.edu', 'official_admissions_office', now(), 'medium',
+   'Effective with the 2027 admissions cycle, UIC has amended our Test-Optional policy... ACT and SAT scores submitted by applicants will be reviewed and considered only when they positively contribute to a student''s application.');
+```
+
+## 25. George Washington University (QS 381)
+
+`id = '04bd3f71-80f1-4810-ad84-f51f59ec9eff'`
+
+**Sources:** `https://undergraduate.admissions.gwu.edu/test-optional` (official testing-policy
+page).
+
+**Checked and not found:** a specific numeric English-proficiency minimum -- the source
+confirms proficiency is required for international applicants but does not publish a test-score
+table on this page.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('04bd3f71-80f1-4810-ad84-f51f59ec9eff', 'standardized_test',
+   'Test-optional, with named exceptions: BA/BS-MD program, homeschool, and online-high-school applicants must submit',
+   'GW is test-optional for most first-year applicants -- high school performance and course rigor are stated as the strongest signal, and non-submission carries no penalty. Real exceptions: the combined BA/BS-M.D. program requires SAT/ACT (ACT Science section required specifically for this program); homeschooled applicants must submit; applicants from an online high school must submit.',
+   false, 'medium', 'https://undergraduate.admissions.gwu.edu/test-optional', now()),
+  ('04bd3f71-80f1-4810-ad84-f51f59ec9eff', 'english_proficiency',
+   'Required for international applicants; no minimum score published',
+   'GW requires English-language proficiency for international applicants; a specific minimum score was not found published on the official testing-policy page in this pass.',
+   true, 'medium', 'https://undergraduate.admissions.gwu.edu/test-optional', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('04bd3f71-80f1-4810-ad84-f51f59ec9eff', 'https://undergraduate.admissions.gwu.edu/test-optional',
+   'undergraduate.admissions.gwu.edu', 'official_admissions_office', now(), 'medium',
+   'GW requires SAT/ACT scores from applicants applying to the B.A./B.S. - M.D. program... homeschool students are required to submit the SAT or ACT, and students who have attended an online high school are required to submit standardized test scores.');
+```
+
+## 26. Northeastern University (QS 385)
+
+`id = '13038470-0f34-4b21-b2fa-4124a8eba2b0'`
+
+**Sources:** `https://admissions.northeastern.edu/wp-content/uploads/2024/08/Test-Optional-and-Standardized-Testing-FAQ-2024-2025.pdf`
+(official testing-policy FAQ PDF) and
+`https://admissions.northeastern.edu/application-information/required-materials/` (official
+required-materials page, English-proficiency section).
+
+**Same apparent contradiction as Virginia Tech above, presented the same way:** the official
+FAQ states Northeastern is test-optional with no disadvantage for non-submission, in the same
+result that states testing will be required again for fall 2026 entry.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('13038470-0f34-4b21-b2fa-4124a8eba2b0', 'standardized_test',
+   'Stated as test-optional (no penalty for non-submission), but the same source also states SAT/ACT required again for fall 2026 entry -- an apparent contradiction, not resolved here',
+   'Official source states both: (1) Northeastern is test-optional, applicants are not penalized for omitting scores, and submitted scores are superscored (best of SAT/ACT considered); AND (2) for the 2025-26 admissions cycle (fall 2026 entry), Northeastern will require SAT or ACT scores again, with hardship exceptions. As with Virginia Tech above, these are recorded as found rather than resolved by guessing which is current -- verify against a live northeastern.edu page before treating either alone as authoritative.',
+   true, 'medium', 'https://admissions.northeastern.edu/wp-content/uploads/2024/08/Test-Optional-and-Standardized-Testing-FAQ-2024-2025.pdf', now()),
+  ('13038470-0f34-4b21-b2fa-4124a8eba2b0', 'english_proficiency',
+   'Duolingo, Cambridge C1/C2, IELTS, PTE, or TOEFL required for non-native speakers; waivable after 4+ years of English-medium schooling',
+   'All non-native-English-speaking applicants, regardless of citizenship, must submit one of: Duolingo English Test, Cambridge C1 Advanced/C2 Proficiency, IELTS, PTE Academic, or TOEFL. Waivable on request if the applicant will complete four or more consecutive academic years of high school or university with academic/native English as the primary instructional language.',
+   true, 'medium', 'https://admissions.northeastern.edu/application-information/required-materials/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('13038470-0f34-4b21-b2fa-4124a8eba2b0', 'https://admissions.northeastern.edu/wp-content/uploads/2024/08/Test-Optional-and-Standardized-Testing-FAQ-2024-2025.pdf',
+   'admissions.northeastern.edu', 'official_admissions_office', now(), 'medium',
+   'Northeastern University is test-optional and does not require applicants to submit standardized testing... for the 2025-26 admissions cycle (for fall 2026 entry), Northeastern will require SAT or ACT scores again.');
+```
+
+## 27. University of California, Riverside (QS 398)
+
+`id = '808e6e9a-8732-4663-ab67-0397f48ca683'`
+
+**Sources:** `https://admissions.ucr.edu/firstyear` (official first-year requirements) and
+`https://admissions.ucr.edu/international` (official international-applicant page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('808e6e9a-8732-4663-ab67-0397f48ca683', 'standardized_test',
+   'Test-blind: SAT/ACT not considered for admission or scholarships',
+   'UC Riverside will not consider SAT or ACT scores for admission decisions or scholarships. If submitted, may be used only to satisfy minimum eligibility requirements or for course placement after enrollment.',
+   false, 'medium', 'https://admissions.ucr.edu/firstyear', now()),
+  ('808e6e9a-8732-4663-ab67-0397f48ca683', 'minimum_grade',
+   'GPA: 3.0 minimum for California residents, 3.4 minimum for non-residents',
+   'Minimum 3.0 GPA (California residents) or 3.4 GPA (non-residents) in A-G coursework, calculated from grades 10-11 (including summer sessions) only.',
+   true, 'medium', 'https://admissions.ucr.edu/firstyear', now()),
+  ('808e6e9a-8732-4663-ab67-0397f48ca683', 'english_proficiency',
+   'IELTS 6.5+, TOEFL 4.5+ (from Jan 2026)/80+ (pre-2026), or qualifying AP/IB English scores',
+   'International applicants may demonstrate English proficiency via: AP English Language/Literature score of 3-5; IB Standard Level English (Language A) score of 6-7; IB Higher Level English (Language A) score of 5-7; IELTS 6.5 or higher; or TOEFL, minimum 4.5 for tests taken from January 2026 (80 or better prior to January 2026) -- the same UC-systemwide rescaling cited for UC Davis/UCSB/UCSD.',
+   true, 'medium', 'https://admissions.ucr.edu/international', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('808e6e9a-8732-4663-ab67-0397f48ca683', 'https://admissions.ucr.edu/firstyear',
+   'admissions.ucr.edu', 'official_admissions_office', now(), 'medium',
+   'UC Riverside will not consider SAT or ACT test scores when making admission decisions or awarding scholarships.'),
+  ('808e6e9a-8732-4663-ab67-0397f48ca683', 'https://admissions.ucr.edu/international',
+   'admissions.ucr.edu', 'official_admissions_office', now(), 'medium',
+   'For TOEFL, the minimum requirement is effective January 2026: a minimum score of 4.5 or better. Prior to January 2026 a minimum score of 80 or better.');
+```
+
+## 28. University at Buffalo, SUNY (QS 416)
+
+`id = '1f49df7e-3641-4ea5-b22d-61a750bc7466'`
+
+**Sources:** `https://www.buffalo.edu/admissions/apply/first-year.standardized-tests.html`
+(official testing-policy page).
+
+**Checked and not found:** a specific numeric TOEFL/IELTS minimum -- the source confirms a
+"satisfactory" score is required without publishing a table.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('1f49df7e-3641-4ea5-b22d-61a750bc7466', 'standardized_test',
+   'Test-optional for admission and scholarships',
+   'University at Buffalo is test-optional -- standardized scores are not needed for admission or scholarship consideration, and opting out carries no disadvantage. If submitted, must come directly from the testing agency (SAT code 2925, ACT code 2978). Middle-50% of admitted students: SAT 1210-1380, ACT 27-32.',
+   false, 'medium', 'https://www.buffalo.edu/admissions/apply/first-year.standardized-tests.html', now()),
+  ('1f49df7e-3641-4ea5-b22d-61a750bc7466', 'english_proficiency',
+   'TOEFL, IELTS, or equivalent required for non-native speakers; no minimum score published',
+   'A satisfactory TOEFL, IELTS, or equivalent English-proficiency score is required for non-native English speakers. No specific minimum score is published in the source found.',
+   true, 'medium', 'https://www.buffalo.edu/admissions/apply/first-year.standardized-tests.html', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('1f49df7e-3641-4ea5-b22d-61a750bc7466', 'https://www.buffalo.edu/admissions/apply/first-year.standardized-tests.html',
+   'buffalo.edu', 'official_admissions_office', now(), 'medium',
+   'The university requires a satisfactory TOEFL score for non-native English speakers, with additional standardized tests recommended but not compulsory.');
+```
+
+---
+
+## Verification (batch 4)
+
+Read-only against the live database plus `WebSearch` for content — no code changed, no live
+database writes. SQL staged for CEO/founder review and application, not applied. Two
+institutions (Virginia Tech, Northeastern) carry an apparent internal contradiction in their own
+cited source and are recorded with both stated facts rather than resolved by guessing.
