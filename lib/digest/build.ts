@@ -6,6 +6,7 @@ import { readOr } from "@/lib/supabase/safe-read";
 import { getUpcomingDeadlines, type UpcomingDeadline } from "@/lib/deadlines/upcoming";
 import { isOpportunityRecommendable } from "@/lib/opportunities/lifecycle";
 import { competesInCoreRecommendations } from "@/lib/opportunities/commercial";
+import { hasAnyEligibilityDataAtAll } from "@/lib/opportunities/matching";
 
 /**
  * Content assembly for the periodic email digest — see docs/digest-email-design-2026-09-03.md
@@ -61,7 +62,7 @@ export interface DigestContent {
  * the gate below runs, not before — this is a periodic summary, not an exhaustive match list
  * (the student's own Opportunities page already is that).
  *
- * Two gates applied, both a defense-in-depth re-check of state that can go stale between
+ * Three gates applied, all a defense-in-depth re-check of state that can go stale between
  * refreshOpportunityMatches runs — see lib/opportunities/lifecycle.ts's own header ("Disabling
  * a record has to actually remove it, or moderation is decoration") and
  * app/(app)/dashboard/page.tsx's identical shape, which this mirrors:
@@ -80,6 +81,18 @@ export interface DigestContent {
  *   pay-to-enroll programme the student already asked about is legitimate for the advisor to
  *   reason about, it just shouldn't be proposed unprompted), a digest email has no "the
  *   student asked" context at all; every item in it is Oryn proposing.
+ * - `hasAnyEligibilityDataAtAll` (matching.ts, added 2026-09-05, CEO's own decision): the
+ *   recipient here is the PARENT, not the student. The student's own surfaces (the card, the
+ *   detail page) can carry an honest "eligibility unknown" caveat right next to the claim —
+ *   this narrative can't: the parent digest is a deliberately unhedged recommendation by
+ *   design ("we found these, applying this month is a good idea"), and a parent is not the
+ *   right audience for "we don't know if your child actually qualifies" — that decision
+ *   belongs on the student's own surfaces. So an opportunity with zero real eligibility data
+ *   on every axis is filtered out here entirely rather than hedged: a narrative this format
+ *   can't qualify shouldn't be sent unqualified. Confirmed live the same day this was found
+ *   (CEO): Harvard Pre-Collegiate Economics Challenge and International Economics Olympiad,
+ *   both genuinely unknown on every axis, both would otherwise have reached a parent as a
+ *   bare "New opportunity matches this month" title with no caveat anywhere in this format.
  */
 async function loadNewOpportunityMatches(
   supabase: SupabaseClient<Database>,
@@ -88,10 +101,19 @@ async function loadNewOpportunityMatches(
 ): Promise<DigestOpportunityMatchItem[]> {
   let query = supabase
     .from("opportunity_matches")
-    .select("opportunity_id, calculated_at")
+    .select("id, opportunity_id, match_score, calculated_at")
     .eq("user_id", userId)
     .eq("eligible", true)
-    .order("calculated_at", { ascending: false })
+    // Ordered by relevance, not recency -- CEO, 2026-09-05: "en son hesaplananı değil, en iyi
+    // fırsatı" (the best match, not the most recently computed one). Same ordering as
+    // app/(app)/dashboard/page.tsx's own opportunity preview and
+    // lib/opportunities/home-strip.ts's getHomeOpportunityStrip -- reused deliberately, not a
+    // fourth independent copy of the same ranking. `id` (opportunity_matches' own uuid
+    // primary key) as the tiebreaker for the identical reason home-strip.ts's own comment
+    // gives: match_score alone ties widely, and an untied secondary key means the digest's
+    // pick doesn't silently reorder itself between runs.
+    .order("match_score", { ascending: false })
+    .order("id", { ascending: true })
     .limit(OPPORTUNITY_MATCH_CANDIDATE_POOL);
   if (since) query = query.gt("calculated_at", since);
 
@@ -102,16 +124,37 @@ async function loadNewOpportunityMatches(
   const opportunityIds = [...new Set(matches.map((m) => m.opportunity_id))];
   const opportunitiesRes = await supabase
     .from("opportunities")
-    .select("id, title, organization, official_url, application_url, status, cycle_status, deadline, last_verified_at, verified_at, source_verified_at, cost, selectivity_tier")
+    .select(
+      "id, title, organization, official_url, application_url, status, cycle_status, deadline, last_verified_at, verified_at, source_verified_at, cost, selectivity_tier, minimum_age, maximum_age, eligible_grades, eligible_countries, eligible_citizenships, citizenship_restrictions, residency_restrictions, country_eligibility_confirmed_open, age_eligibility_confirmed_open, grade_eligibility_confirmed_open"
+    )
     .in("id", opportunityIds);
   const opportunities = readOr("digest.opportunityMatches.opportunities", opportunitiesRes, [], { userId });
   const byId = new Map(
-    opportunities.filter((o) => isOpportunityRecommendable(o) && competesInCoreRecommendations(o)).map((o) => [o.id, o])
+    opportunities
+      .filter(
+        (o) =>
+          isOpportunityRecommendable(o) &&
+          competesInCoreRecommendations(o) &&
+          hasAnyEligibilityDataAtAll({
+            minimumAge: o.minimum_age,
+            maximumAge: o.maximum_age,
+            ageEligibilityConfirmedOpen: o.age_eligibility_confirmed_open ?? false,
+            eligibleGrades: o.eligible_grades ?? [],
+            gradeEligibilityConfirmedOpen: o.grade_eligibility_confirmed_open ?? false,
+            eligibleCountries: o.eligible_countries,
+            eligibleCitizenships: o.eligible_citizenships ?? [],
+            citizenshipRestrictions: o.citizenship_restrictions,
+            residencyRestrictions: o.residency_restrictions,
+            countryEligibilityConfirmedOpen: o.country_eligibility_confirmed_open ?? false,
+          })
+      )
+      .map((o) => [o.id, o])
   );
 
-  // Order preserved from the match query (newest first), not the join result's own order.
-  // Sliced to the real display limit only after the gate above has already removed the dead
-  // records — filtering a pre-truncated top-5 would silently under-fill the digest instead.
+  // Order preserved from the match query (best match_score first, not the join result's own
+  // order). Sliced to the real display limit only after the gates above have already removed
+  // the dead/commercial/data-blank records — filtering a pre-truncated top-5 would silently
+  // under-fill the digest instead.
   return matches
     .map((m) => byId.get(m.opportunity_id))
     .filter((o): o is NonNullable<typeof o> => o !== undefined)

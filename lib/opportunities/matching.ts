@@ -582,7 +582,21 @@ export function classifyEligibilityGap(notes: readonly EligibilityNote[]): Eligi
  * shared-code drift this file's own comments elsewhere warn about (#140/#141). The three checks
  * below are intentionally kept in lockstep with computeEligibility's own definitions instead.
  */
-export function hasAnyEligibilityDataAtAll(opportunity: OpportunityForMatching): boolean {
+export function hasAnyEligibilityDataAtAll(
+  opportunity: Pick<
+    OpportunityForMatching,
+    | "minimumAge"
+    | "maximumAge"
+    | "ageEligibilityConfirmedOpen"
+    | "eligibleGrades"
+    | "gradeEligibilityConfirmedOpen"
+    | "eligibleCountries"
+    | "eligibleCitizenships"
+    | "citizenshipRestrictions"
+    | "residencyRestrictions"
+    | "countryEligibilityConfirmedOpen"
+  >
+): boolean {
   const hasAgeData = opportunity.minimumAge !== null || opportunity.maximumAge !== null || (opportunity.ageEligibilityConfirmedOpen ?? false);
   const hasGradeData = (opportunity.eligibleGrades ?? []).length > 0 || (opportunity.gradeEligibilityConfirmedOpen ?? false);
   const hasCountryData =
