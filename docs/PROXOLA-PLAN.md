@@ -35,6 +35,13 @@
 >    hangi hacimden baktığına göre değişiyor; boş alan değişmiyor. CEO bugün bu
 >    yüzden gözetmenin doğru rakamını yanlış diye "düzeltti."
 
+> 11. **Bir bulgu dokümanı bir iş listesi değildir.** Bugün on kez "yapılmamış"
+>    dediğim şey yapılmış çıktı, ve son üçünde kaynak **benim elimdeki bir doküman
+>    satırıydı** — biri bugün, benim kendi talimatımla, başka bir şeride
+>    düzelttirdiğim şeydi. **Dağıtmadan önce:** dokümanın tarihini al, o tarihten
+>    beri ilgili dosyalara ne indiğine bak (`git log --since=<tarih> -- <yol>`).
+>    Doküman iddia eder; **kod gerçektir.**
+
 **Çalışma penceresi: yarın akşam 22.00'a kadar.**
 
 **Bu dosya tek doğruluk kaynağı.** Bir oturum açtığında ona madde numarası ver:
@@ -524,12 +531,18 @@ döngüsünün kendisine kondu, `submit()` ve `retry()` bedavaya aldı.
 `c4-dashboard-content-audit`, `c6-knows-what-it-doesnt-know-audit`. "Tarayıcı
 engeli" gerekçesi de bayat: C4 gerçek QA hesaplarını kullan-at bir route'tan
 geçirerek engeli aşmış.
-**Dağıtılmamış gerçek bulgular, sahibi aranıyor:** dashboard'da hedef üniversite
-ve fırsat satırları **tıklanamıyor** (id elde var, `<Link>` yok) · fırsat
-kaydetme `/dashboard`'ı revalidate etmiyor, üniversite kaydetme ediyor ·
-onboarding'in `target_geographies` alanı toplanıyor, hiçbir yerde okunmuyor ·
-5 gerçek hesabın 2'sinde hedef üniversite var ama outlook hiç hesaplanmamış
-(yalnızca detay sayfası açılınca hesaplanıyor).
+**⚠️ O RAPORLARIN BULGULARI ZATEN DÜZELTİLDİ — raporlar güncellenmedi.**
+CEO bu bulguları 5 Eylül'de "dağıtılmamış iş" sanıp dağıttı; şerit bakıp üçünün de
+kapalı olduğunu gösterdi. **Bir bulgu dokümanı, yazıldığı anın fotoğrafıdır.**
+- Ana ekran satırları **tıklanıyor** — `dashboard-view.tsx:590` ve `:651` gerçek
+  `<Link>` ile sarılı, id `page.tsx:229`'da prop'a giriyor (`8d1311fc`, 4 Eylül).
+- Fırsat kaydı `/dashboard`'ı **tazeliyor** — `setOpportunityStatus` iki yolu da
+  revalidate ediyor, üniversiteyle simetrik (aynı commit).
+- `target_geographies` **iki yerde okunuyor**: fırsat alaka skorlamasında
+  (`matching.ts:668`) ve `StudentAdvisorContext`'te (`student-context.ts:580`,
+  yorumu "2026-09-05 — CEO-directed", kendi testiyle).
+**Hâlâ açık, tek madde:** 5 gerçek hesabın 2'sinde hedef üniversite var ama
+outlook hiç hesaplanmamış — outlook yalnızca detay sayfası açılınca hesaplanıyor.
 **İyi haber:** boş hesapta ana ekran dürüst ve sakin, çökme yok, güven
 seviyeleri karışmıyor; profil gücü / tamamlanma / hazırlık / kabul olasılığı
 dördü gerçekten ayrı.
