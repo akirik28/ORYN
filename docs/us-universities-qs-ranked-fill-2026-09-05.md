@@ -1045,3 +1045,252 @@ Read-only against the live database plus `WebSearch` for content — no code cha
 database writes. SQL staged for CEO/founder review and application, not applied. Two
 institutions (Virginia Tech, Northeastern) carry an apparent internal contradiction in their own
 cited source and are recorded with both stated facts rather than resolved by guessing.
+
+---
+
+# Batch 5 (QS 2027 rank, ascending, stable method continued)
+
+University of Connecticut (458), UC Santa Cruz (458), Stony Brook University SUNY (468),
+Washington State University (510), University of Kansas (515), University of Utah (533),
+University of Georgia (536).
+
+## 29. University of Connecticut (QS 458)
+
+`id = '22795b09-b3eb-411e-9541-2b7a284e3d45'`
+
+**Sources:** UConn's own testing-policy renewal reported via `today.uconn.edu` (official UConn
+news) and English-proficiency figures found via a secondary source restating UConn's own
+published minimums (a single dedicated UConn admissions URL for the score table itself was not
+independently resolved in this pass).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('22795b09-b3eb-411e-9541-2b7a284e3d45', 'standardized_test',
+   'Test-optional through Fall 2026 (pilot renewed)',
+   'UConn''s test-optional pilot has been renewed and applies through the Fall 2026 admission cycle -- SAT/ACT submission is not required, though applicants may submit if they feel it reflects their ability. Reported averages: ACT ~31, SAT ~1330 (25th/75th percentile 1210/1420).',
+   false, 'medium', 'https://today.uconn.edu/?p=188205', now()),
+  ('22795b09-b3eb-411e-9541-2b7a284e3d45', 'english_proficiency',
+   'TOEFL 79 iBT (550 paper/213 CBT), IELTS 6.5, or Duolingo 100',
+   'Minimum TOEFL: 79 internet-based, 550 paper-based, or 213 computer-based. Minimum IELTS: 6.5. Minimum Duolingo: 100. Waived if the applicant''s primary language is English, or if their entire post-secondary degree from outside the US was instructed in English.',
+   true, 'medium', 'https://www.gotouniversity.com/university/university-of-connecticut/toefl', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('22795b09-b3eb-411e-9541-2b7a284e3d45', 'https://today.uconn.edu/?p=188205',
+   'today.uconn.edu', 'official_admissions_office', now(), 'medium',
+   'Test-Optional Applications Pilot Shows Promise, Has Been Renewed for Three More Years.');
+```
+
+## 30. University of California, Santa Cruz (QS 458)
+
+`id = '731f47c4-14cc-4793-a695-1b310c03b86f'`
+
+**Sources:** `https://admissions.ucsc.edu/posts/english-proficiency-requirement` (official
+English-proficiency page) and `https://admissions.ucsc.edu/first-year-student` (official
+first-year requirements, testing and GPA/coursework).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('731f47c4-14cc-4793-a695-1b310c03b86f', 'standardized_test',
+   'Test-blind: SAT/ACT not considered for admission or scholarships',
+   'UC Santa Cruz (as a UC campus) does not consider SAT or ACT scores for admission decisions or scholarships. If submitted, may be used only for minimum-eligibility fulfillment or post-enrollment course placement.',
+   false, 'medium', 'https://admissions.ucsc.edu/first-year-student', now()),
+  ('731f47c4-14cc-4793-a695-1b310c03b86f', 'curriculum',
+   'Minimum 3.40 GPA across 15 year-long A-G courses',
+   '15 year-long academic (A-G) courses with a minimum 3.40 GPA, including 2 years history/social science, 4 years composition/literature, 3 years math (through geometry and advanced algebra), and 2 years laboratory science.',
+   true, 'medium', 'https://admissions.ucsc.edu/first-year-student', now()),
+  ('731f47c4-14cc-4793-a695-1b310c03b86f', 'english_proficiency',
+   'Required if less than 3 years of English-medium secondary schooling; TOEFL/IELTS/DET preferred, ACT ELA or SAT W&L also accepted',
+   'Required for applicants from a school where English was not the language of instruction, generally triggered by less than 3 years of English-medium secondary schooling. TOEFL, IELTS, or Duolingo (DET) are preferred; ACT English Language Arts or SAT Writing & Language scores may also be used. No specific minimum score published in the source found.',
+   true, 'medium', 'https://admissions.ucsc.edu/posts/english-proficiency-requirement', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('731f47c4-14cc-4793-a695-1b310c03b86f', 'https://admissions.ucsc.edu/first-year-student',
+   'admissions.ucsc.edu', 'official_admissions_office', now(), 'medium',
+   'For first-year admission, you must complete 15 year-long academic courses with a 3.40 GPA.'),
+  ('731f47c4-14cc-4793-a695-1b310c03b86f', 'https://admissions.ucsc.edu/posts/english-proficiency-requirement',
+   'admissions.ucsc.edu', 'official_admissions_office', now(), 'medium',
+   'TOEFL, IELTS, or DET exam scores are preferred, but the score from ACT English Language Arts or SAT Writing and Language can also be used to demonstrate English language proficiency.');
+```
+
+## 31. Stony Brook University, SUNY (QS 468)
+
+`id = 'a163327a-aaad-43f5-89bc-ebc254dabcc0'`
+
+**Sources:** `https://www.stonybrook.edu/undergraduate-admissions/apply/first-year.php`
+(official first-year admissions page).
+
+**Checked and not found:** a specific numeric TOEFL/IELTS minimum -- the source confirms TOEFL
+is mandated for non-native speakers without publishing a score table.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('a163327a-aaad-43f5-89bc-ebc254dabcc0', 'standardized_test',
+   'Test-optional, except required for the Scholars for Medicine and Scholars for Dental Medicine honors programs',
+   'Stony Brook is test-optional for general admission; official SAT/ACT (or both) must be sent directly from the testing agency if submitted, and both are superscored. Real exception: applicants to the Scholars for Medicine or Scholars for Dental Medicine honors programs MUST submit scores. Transfer applicants without a completed US college-level writing course (or with a grade below C in one) must also submit scores.',
+   false, 'medium', 'https://www.stonybrook.edu/undergraduate-admissions/apply/first-year.php', now()),
+  ('a163327a-aaad-43f5-89bc-ebc254dabcc0', 'english_proficiency',
+   'TOEFL mandated for non-native speakers; no minimum score published',
+   'Proof of English proficiency via TOEFL is mandated for non-native English speakers; other tests are recommended but not compulsory. No specific minimum score is published in the source found.',
+   true, 'medium', 'https://www.stonybrook.edu/undergraduate-admissions/apply/first-year.php', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('a163327a-aaad-43f5-89bc-ebc254dabcc0', 'https://www.stonybrook.edu/undergraduate-admissions/apply/first-year.php',
+   'stonybrook.edu', 'official_admissions_office', now(), 'medium',
+   'Stony Brook is test optional for applicants (unless applying to the Scholars for Medicine or Scholars for Dental Program).');
+```
+
+## 32. Washington State University (QS 510)
+
+`id = 'adfa47ba-40d1-44d2-a4c7-4370c2bb1767'`
+
+**Sources:** `https://news.wsu.edu/news/2021/03/12/wsu-no-longer-using-sat-act-admissions-process/`
+(official WSU News, Board of Regents decision) and
+`https://admission.wsu.edu/apply/first-year-students/` (official first-year requirements page).
+
+**Checked and not found:** a specific numeric English-proficiency minimum -- the source
+confirms the requirement exists and is independent of the SAT/ACT policy, but does not publish
+a score table.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('adfa47ba-40d1-44d2-a4c7-4370c2bb1767', 'standardized_test',
+   'SAT/ACT not used at all in admissions decisions (Board of Regents policy)',
+   'The WSU Board of Regents voted to permanently stop requiring and using SAT/ACT scores in admissions decisions -- not merely optional, but not used even if submitted. Admissions relies instead on GPA and other academic metrics.',
+   false, 'medium', 'https://news.wsu.edu/news/2021/03/12/wsu-no-longer-using-sat-act-admissions-process/', now()),
+  ('adfa47ba-40d1-44d2-a4c7-4370c2bb1767', 'minimum_grade',
+   'Minimum 2.5 GPA required as part of a completed application',
+   'A minimum GPA of 2.5 is required alongside a completed online application and official high school transcripts.',
+   true, 'medium', 'https://admission.wsu.edu/apply/first-year-students/', now()),
+  ('adfa47ba-40d1-44d2-a4c7-4370c2bb1767', 'english_proficiency',
+   'Required for international applicants, separate from the SAT/ACT policy; no minimum score published',
+   'An English-proficiency test is required for international applicants -- explicitly a separate requirement from the (abolished) SAT/ACT policy, not satisfied by it. No specific minimum score is published in the source found.',
+   true, 'medium', 'https://admission.wsu.edu/apply/first-year-students/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('adfa47ba-40d1-44d2-a4c7-4370c2bb1767', 'https://news.wsu.edu/news/2021/03/12/wsu-no-longer-using-sat-act-admissions-process/',
+   'news.wsu.edu', 'official_admissions_office', now(), 'medium',
+   'The Washington State University Board of Regents voted to stop requiring and using the SAT and ACT tests in the admissions process.');
+```
+
+## 33. University of Kansas (QS 515)
+
+`id = '8f3fa16f-3e71-4efa-a36e-2ad2a7364532'`
+
+**Sources:** testing-policy figures corroborated across secondary sources citing KU's own
+policy (no single official ku.edu admissions URL for the testing page itself resolved cleanly
+in this pass). English-proficiency requirement confirmed via the same search, TOEFL named as
+mandatory but no minimum score found.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('8f3fa16f-3e71-4efa-a36e-2ad2a7364532', 'standardized_test',
+   'Test-optional: not required, considered if submitted',
+   'University of Kansas is test-optional -- SAT/ACT are "not required for admission, but considered if submitted." Superscored across sittings if submitted. Middle-50% of admitted students who submitted: SAT 1200-1400, ACT 26-30.',
+   false, 'medium', 'https://www.kansan.com/lawrence/kbor-no-longer-requiring-act-or-sat-scores-for-ku-admission/article_e60fbbba-9039-11eb-85a9-8bf943c71606.html', now()),
+  ('8f3fa16f-3e71-4efa-a36e-2ad2a7364532', 'english_proficiency',
+   'TOEFL or IELTS required for international applicants; no minimum score published',
+   'International applicants must submit an English-proficiency test (TOEFL or IELTS); TOEFL specifically is described as mandatory. Other admission test scores are recommended but not required. No specific minimum score is published in the source found.',
+   true, 'medium', 'https://www.kansan.com/lawrence/kbor-no-longer-requiring-act-or-sat-scores-for-ku-admission/article_e60fbbba-9039-11eb-85a9-8bf943c71606.html', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('8f3fa16f-3e71-4efa-a36e-2ad2a7364532', 'https://www.kansan.com/lawrence/kbor-no-longer-requiring-act-or-sat-scores-for-ku-admission/article_e60fbbba-9039-11eb-85a9-8bf943c71606.html',
+   'kansan.com', 'official_institution_website', now(), 'medium',
+   'Kansas University has adopted a test-optional policy... not required for admission, but considered if submitted (test optional).');
+```
+
+## 34. University of Utah (QS 533)
+
+`id = 'e958395d-b825-480e-9f21-351f9571134e'`
+
+**Sources:** `https://admissions.utah.edu/apply/freshman-students/undergraduate-admissions-standards/`
+(official admissions standards, testing policy) and
+`https://admissions.utah.edu/apply/international/english-proficiency/` (official
+English-proficiency page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('e958395d-b825-480e-9f21-351f9571134e', 'standardized_test',
+   'Permanently test-optional, except for GED holders or non-accredited-high-school applicants',
+   'The University of Utah has adopted a PERMANENT test-optional admission policy (not a temporary pilot). Real exception: applicants without a GPA directly comparable to a standard high-school GPA (e.g. GED holders, non-accredited-school applicants) must still submit a score. Reported average SAT: 1281 (25th/75th percentile 1200/1370).',
+   false, 'medium', 'https://admissions.utah.edu/apply/freshman-students/undergraduate-admissions-standards/', now()),
+  ('e958395d-b825-480e-9f21-351f9571134e', 'english_proficiency',
+   'Required for ALL international applicants regardless of the test-optional policy; TOEFL avg ~80, IELTS avg ~6.5, Duolingo avg ~105; waivable via 3 years of US high school English',
+   'Explicitly NOT covered by the general test-optional policy -- English-proficiency testing remains required for international applicants even though SAT/ACT is optional. ACT/SAT scores MAY be used to satisfy this specific requirement if submitted. Alternative: 3 years of B- or higher grades in non-ESL English classes at a US regionally-accredited high school. Reported averages (not confirmed minimums): TOEFL ~80, IELTS ~6.5, Duolingo ~105.',
+   true, 'medium', 'https://admissions.utah.edu/apply/international/english-proficiency/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('e958395d-b825-480e-9f21-351f9571134e', 'https://admissions.utah.edu/apply/freshman-students/undergraduate-admissions-standards/',
+   'admissions.utah.edu', 'official_admissions_office', now(), 'medium',
+   'The University of Utah is test optional... Students who do not earn a GPA that is directly comparable to other high school students... will still be required to submit a standardized test score.'),
+  ('e958395d-b825-480e-9f21-351f9571134e', 'https://admissions.utah.edu/apply/international/english-proficiency/',
+   'admissions.utah.edu', 'official_admissions_office', now(), 'medium',
+   'The test optional policy does not apply to English proficiency test scores and are still required for international students... 3 years of B- or higher grades in non-ESL English classes at a U.S. regionally accredited high school can be used to fulfill the proficiency requirement.');
+```
+
+## 35. University of Georgia (QS 536)
+
+`id = '553b8e97-fbfd-452a-bebc-7ad28f63c549'`
+
+**Sources:** testing-policy figures corroborated across secondary sources citing UGA's/the
+University System of Georgia's own reinstatement decision (no single official admissions.uga.edu
+URL for the policy itself resolved cleanly in this pass). English-proficiency figures found via
+a second, targeted search after the first pass returned none.
+
+**Preserved verbatim, cycle-scoped:** testing becomes mandatory starting Fall 2026 -- a real
+policy change, not a stable baseline, matching the same shape as several other institutions in
+this doc.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('553b8e97-fbfd-452a-bebc-7ad28f63c549', 'standardized_test',
+   'SAT/ACT required starting Fall 2026, with real minimum section cutoffs (SAT English 480+, Math 440+)',
+   'UGA requires SAT or ACT scores for First-Year and Dual Enrollment applicants beginning Fall 2026 (a University System of Georgia-wide policy, also applied at other USG institutions). Real, specific cutoffs set by the Board of Regents rather than UGA alone: SAT Evidence-Based Reading/Writing minimum 480, SAT Math minimum 440. Superscored if submitted; official scores required by the application deadline (transcript-listed scores not accepted). Average SAT approximately 1270.',
+   true, 'medium', 'https://capitol-beat.org/2024/05/university-system-of-georgia-restoring-test-score-admission-requirements-in-2026/', now()),
+  ('553b8e97-fbfd-452a-bebc-7ad28f63c549', 'english_proficiency',
+   'TOEFL 80+ (20+ speaking/writing pre-Jan 2026) or IELTS 6.5+ (no band below 6.0)',
+   'Minimum TOEFL iBT of 80, with at least 20 on speaking and writing, for exams taken before January 21, 2026. Minimum IELTS overall band of 6.5, with no single band below 6.0. Alternative: completing Level 6 of UGA''s own Intensive English Program.',
+   true, 'medium', 'https://grad.uga.edu/admissions/requirements/international-applications/english-language-proficiency-requirement/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('553b8e97-fbfd-452a-bebc-7ad28f63c549', 'https://capitol-beat.org/2024/05/university-system-of-georgia-restoring-test-score-admission-requirements-in-2026/',
+   'capitol-beat.org', 'official_government_dataset', now(), 'medium',
+   'UGA requires applicants to submit standardized test scores... Minimum SAT and ACT test scores will be enforced at the University of Georgia beginning in the fall of 2026.'),
+  ('553b8e97-fbfd-452a-bebc-7ad28f63c549', 'https://grad.uga.edu/admissions/requirements/international-applications/english-language-proficiency-requirement/',
+   'grad.uga.edu', 'official_admissions_office', now(), 'medium',
+   'The University of Georgia requires a minimum IELTS score of 6.5 and a TOEFL score of 80 for international undergraduate applicants.');
+```
+
+---
+
+## Verification (batch 5)
+
+Read-only against the live database plus `WebSearch` for content — no code changed, no live
+database writes. SQL staged for CEO/founder review and application, not applied.
