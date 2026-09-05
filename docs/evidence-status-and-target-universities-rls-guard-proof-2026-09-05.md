@@ -90,6 +90,45 @@ despite lower "financial" stakes than `plan_tier`.
    **succeeds again**, all 8 columns take the fabricated values. Not vacuous.
 8. Restored the guard, re-ran once more — **blocked again**, confirmed clean.
 
+## Part 3 — the risk the guard fix itself introduces: RLS bypass needs its own ownership check
+
+CEO's own catch, after reviewing Parts 1/2: moving a write to `service_role` doesn't just let
+the *legitimate* writer through — it removes RLS's own ownership guarantee for that write
+entirely. Before this fix, `WHERE id = $1` alone was safe on the RLS-scoped client because
+Postgres itself silently added the equivalent of `AND user_id = auth.uid()` behind the policy;
+under `service_role`, nothing does that anymore, and the query's own WHERE clause is the *only*
+thing standing between "update my row" and "update anyone's row" — the same class as the
+still-open finding that `createApplication` never checks `target_university_id` belongs to the
+caller (`docs/still-open-findings-2026-09-05.md` #10). Neither of this fix's own two writes had
+been exploitable in practice (both are reached only after an earlier, RLS-scoped read already
+re-confirmed ownership), but relying on an *upstream* check to protect a *downstream*
+service-role write is a structural fragility, not a proof — a later reordering or a new call
+site could silently reopen it. Fixed by adding `.eq("user_id", userId)` to the
+`target_universities` write directly (`app/(app)/documents/actions.ts`'s `evidence_status`
+write already had the equivalent `.eq("user_id", userId)` from the start, confirmed by reading
+it, not assumed).
+
+Proved the same way as the guard itself — show the vulnerable shape actually vulnerable, then
+show the fixed shape actually protected — but at the query-filter level, in the same local
+Postgres instance, under `service_role` (RLS already fully bypassed for this role, so this
+isolates exactly the property in question: does the WHERE clause alone stand in for RLS
+correctly):
+
+1. **The vulnerable shape** (`WHERE id = <A's row>`, no owner filter — this session's own
+   original code for `target_universities`, and the shape `id`-only would be for
+   `evidence_status` too): as `service_role`, updates A's row successfully. Confirmed — this is
+   the shape that would be exploitable if the wrong id/user_id pairing ever reached it.
+2. **The fixed shape, correct owner** (`WHERE id = <A's row> AND user_id = <A>`): as
+   `service_role`, updates A's row successfully — the fix doesn't break the legitimate case.
+3. **The fixed shape, wrong owner** (`WHERE id = <A's row> AND user_id = <B>` — B is a second,
+   real profile inserted for this test): as `service_role`, **matches zero rows** — A's data is
+   confirmed unchanged (still whatever the correct-owner write in step 2 set it to). This is the
+   actual attack CEO named (a write scoped to the wrong `user_id`), reproduced and shown blocked
+   by the query's own filter, not by RLS (which isn't in effect for this role at all).
+
+Run for both `education_records` (evidence_status) and `target_universities` (outlook columns).
+`ALL OWNERSHIP-SCOPING ASSERTIONS PASSED`.
+
 ## Result
 
 `ALL ASSERTIONS PASSED`. Full transcript below for reproducibility. Ephemeral instance torn
@@ -464,3 +503,129 @@ select 'ALL ASSERTIONS PASSED' as result;
 PASSED` row — `ON_ERROR_ROLLBACK` deliberately lets later, independent assertions keep running
 after an earlier one throws, so the summary line can print even when one assertion earlier in
 the script failed.
+
+## proof-ownership-scoping.sql (Part 3)
+
+Run against the same `setup.sql` schema, a fresh instance (no guard triggers from Parts 1/2
+needed — this proof is entirely about the query's own WHERE clause under `service_role`, where
+RLS and any `BEFORE UPDATE OF <col>` guard are both moot: `service_role` is explicitly exempted
+from the guards' own `current_user <> 'service_role'` condition, so this isolates the ownership
+question cleanly).
+
+```sql
+\set ON_ERROR_ROLLBACK on
+
+insert into public.profiles (id) values
+  ('11111111-1111-1111-1111-111111111111'), -- student A
+  ('88888888-8888-8888-8888-888888888888'); -- student B
+
+insert into public.universities (id) values ('55555555-5555-5555-5555-555555555555');
+
+insert into public.education_records (id, user_id, school_name, evidence_status) values
+  ('22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'A''s school', 'self_reported');
+
+insert into public.target_universities (id, user_id, university_id, status) values
+  ('33333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111', '55555555-5555-5555-5555-555555555555', 'target');
+
+-- ===== PART 1 -- evidence_status =====
+
+set local role service_role;
+
+-- Vulnerable shape: WHERE id = <A's row> only, no ownership filter at all.
+update public.education_records set evidence_status = 'verification_rejected' where id = '22222222-2222-2222-2222-222222222222';
+
+do $$
+declare
+  v evidence_status;
+begin
+  select evidence_status into v from public.education_records where id = '22222222-2222-2222-2222-222222222222';
+  if v <> 'verification_rejected' then
+    raise exception 'SETUP CHECK FAILED: the id-only shape should have updated A''s row, got %', v;
+  end if;
+  raise notice 'CONFIRMED: an id-only WHERE clause under service_role updates the row regardless of who "should" own it -- this is the shape that would be vulnerable if the wrong id ever reached this query.';
+end $$;
+
+update public.education_records set evidence_status = 'self_reported' where id = '22222222-2222-2222-2222-222222222222';
+
+-- The FIXED shape: WHERE id = <target> AND user_id = <the row's REAL owner, A>.
+update public.education_records set evidence_status = 'evidence_added'
+  where id = '22222222-2222-2222-2222-222222222222' and user_id = '11111111-1111-1111-1111-111111111111';
+
+do $$
+declare
+  v evidence_status;
+begin
+  select evidence_status into v from public.education_records where id = '22222222-2222-2222-2222-222222222222';
+  if v <> 'evidence_added' then
+    raise exception 'FIXED SHAPE BROKEN: the id+user_id shape did not update A''s own row. Got %.', v;
+  end if;
+  raise notice 'CONFIRMED: the id+user_id shape still updates correctly when the ids genuinely match (A updating A''s own row).';
+end $$;
+
+-- The attack: WHERE id = <A''s row> AND user_id = <B, the WRONG owner>.
+update public.education_records set evidence_status = 'verified'
+  where id = '22222222-2222-2222-2222-222222222222' and user_id = '88888888-8888-8888-8888-888888888888';
+
+do $$
+declare
+  v evidence_status;
+begin
+  select evidence_status into v from public.education_records where id = '22222222-2222-2222-2222-222222222222';
+  if v <> 'evidence_added' then
+    raise exception 'OWNERSHIP SCOPING FAILED: A''s row changed to % even though the UPDATE was scoped to student B''s user_id, not A''s.', v;
+  end if;
+  raise notice 'CONFIRMED PROTECTED: id+user_id scoped to the WRONG owner (B) matched zero rows -- A''s row is untouched, still evidence_added.';
+end $$;
+
+reset role;
+
+-- ===== PART 2 -- target_universities =====
+
+set local role service_role;
+
+update public.target_universities set outlook = 'reach', academic_fit_score = 40
+  where id = '33333333-3333-3333-3333-333333333333';
+
+do $$
+declare
+  r record;
+begin
+  select * into r from public.target_universities where id = '33333333-3333-3333-3333-333333333333';
+  if r.outlook <> 'reach' or r.academic_fit_score <> 40 then
+    raise exception 'SETUP CHECK FAILED: the id-only shape should have updated A''s row, got outlook=%, academic_fit_score=%', r.outlook, r.academic_fit_score;
+  end if;
+  raise notice 'CONFIRMED: an id-only WHERE clause under service_role updates target_universities regardless of ownership -- this was this session''s own original code, before CEO''s catch.';
+end $$;
+
+update public.target_universities set outlook = 'competitive', academic_fit_score = 62
+  where id = '33333333-3333-3333-3333-333333333333' and user_id = '11111111-1111-1111-1111-111111111111';
+
+do $$
+declare
+  r record;
+begin
+  select * into r from public.target_universities where id = '33333333-3333-3333-3333-333333333333';
+  if r.outlook <> 'competitive' or r.academic_fit_score <> 62 then
+    raise exception 'FIXED SHAPE BROKEN: the id+user_id shape did not update A''s own row. Got outlook=%, academic_fit_score=%', r.outlook, r.academic_fit_score;
+  end if;
+  raise notice 'CONFIRMED: the id+user_id shape still updates correctly when the ids genuinely match (A refreshing A''s own outlook).';
+end $$;
+
+update public.target_universities set outlook = 'likely', academic_fit_score = 100
+  where id = '33333333-3333-3333-3333-333333333333' and user_id = '88888888-8888-8888-8888-888888888888';
+
+do $$
+declare
+  r record;
+begin
+  select * into r from public.target_universities where id = '33333333-3333-3333-3333-333333333333';
+  if r.outlook <> 'competitive' or r.academic_fit_score <> 62 then
+    raise exception 'OWNERSHIP SCOPING FAILED: A''s outlook changed to outlook=%, academic_fit_score=% even though the UPDATE was scoped to student B''s user_id, not A''s.', r.outlook, r.academic_fit_score;
+  end if;
+  raise notice 'CONFIRMED PROTECTED: id+user_id scoped to the WRONG owner (B) matched zero rows -- A''s outlook is untouched, still competitive/62.';
+end $$;
+
+reset role;
+
+select 'ALL OWNERSHIP-SCOPING ASSERTIONS PASSED' as result;
+```

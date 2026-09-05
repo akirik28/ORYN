@@ -212,6 +212,16 @@ describe("lib/admissions/persist.ts", () => {
     expect(src).toContain('await writeClient\n    .from("target_universities")\n    .update({');
   });
 
+  // 2026-09-05, CEO's own catch: RLS enforced ownership on this write for free before today;
+  // once it moved to writeClient (which can be the admin client), that guarantee is gone
+  // unless the query's own WHERE clause carries it. See docs/evidence-status-and-target-
+  // universities-rls-guard-proof-2026-09-05.md Part 3 for the real-Postgres proof that an
+  // id-only filter would let a service-role write touch the wrong owner's row, and that
+  // adding user_id back closes it.
+  test("the outlook update's own WHERE clause is scoped by user_id, not just id -- load-bearing now that RLS no longer covers this write", () => {
+    expect(src).toContain('.eq("id", targetUniversityId)\n    .eq("user_id", userId);');
+  });
+
   test("no write to target_universities' outlook columns still uses the RLS-scoped `supabase` directly", () => {
     expect(src).not.toMatch(/supabase\s*\n?\s*\.from\("target_universities"\)\s*\n?\s*\.update\(/);
   });
