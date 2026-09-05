@@ -58,6 +58,65 @@
 >    **Yerine:** `git diff > /tmp/x.patch` + `git checkout --` + `git apply`, ya da
 >    geçici bir dala commit, ya da `cp` ile kopya.
 
+## 🔴 EŞLEŞME SKORU UYGUNLUĞU HİÇ OKUMUYOR — 5 Eylül, canlıda doğrulandı
+
+**Ürün bir öğrenciye "%97 sana uygun" diyor, ve o fırsat hakkında yaş, sınıf ve
+ülke boyutlarının üçünde de hiçbir şey bilmiyor.**
+
+`matching.ts:1065` — `matchScore = relevance * 0,4 + profileNeed * 0,6`.
+`computeRelevance` yalnızca `fields`/`country`/`interests` okuyor; `computeProfileNeed`
+yalnızca `category`/`weakestDimensions`. **İkisi de `minimum_age`/`maximum_age`/
+`eligible_grades`/`eligible_countries`'e hiç dokunmuyor.** Ve boş uygunluk `eligible:
+false` üretmediği için **eleme de yok.**
+
+**Canlı kanıt** (CEO'nun sorgusu, üç boyutu da boş satırlar arasında en yüksek skorlar):
+
+| skor | fırsat |
+|--:|---|
+| **97** | Harvard Pre-Collegiate Economics Challenge |
+| **91** | International Economics Olympiad |
+| 73 | Oxbridge · Columbia · UCSB · Boston University · **Coursera** · Georgetown |
+
+**Coursera'nın 73 alması tek başına yeterli bir sağlama.**
+
+**Mevcut güvenlik ağı yakalamıyor:** `needsVerification` yalnızca `deadline`/
+`verified_at` tazeliğine bakıyor, **uygunluk alanlarının doluluğuna değil.** Yani
+gerçek son tarihi olan ama uygunluğu tamamen boş bir satır, **"94% Exceptional"
+başlığıyla** görünebilir — küçük "Eligibility unknown" rozeti yanında dursa bile.
+
+**Kaynak da ölçüldü:** bu 190 satırın **145'i (%76) tek bir yerden** — kurucunun okul
+danışmanından aldığı derleme. Hepsi "doğrulanmış" işaretli, **ama o doğrulama fırsatın
+VAR OLDUĞUNU doğruluyor, kimin başvurabileceğini değil.** Veride *"doğrulandı"* ile
+*"biliniyor"* ayrı şeyler; ürün ikisini karıştırıyor.
+
+**Düzeltme:** ayrı bir sinyal (`hasAnyEligibilityDataAtAll`), `needsVerification`'a
+**katılmadan** — o kapının kendi dosyası neyi iddia etmediğini bilerek yazmış.
+Ve etkisi **skora** olacak, sadece rozete değil.
+
+---
+
+## 🟠 HER ZAMAN "EVET" DİYEN BİR TAZELİK ALANI — 5 Eylül
+
+`university_requirements.data_status`: **1550/1550 satır "fresh".** "stale"/
+"needs_review"/"unavailable" **hiç kullanılmamış.**
+
+**Bu okunmayan bir sütun değil — hiç değişmeyen bir sütun**, ve o daha kötü: okunduğunda
+**yanlış cevap veriyor.** Her zaman evet diyen bir kontrol, kontrol değildir.
+
+**Kanıt aynı şemadan:** `universities.data_status` gerçekten ayrışıyor (285 fresh,
+734 needs_review). **Aynı alan, bir tabloda canlı, diğerinde ölü.**
+
+**Ve gerekliliklerde öğrenci hiçbir tarih görmüyor** — `SourceBadge` `checkedAt`/`asOf`
+ayrımını zaten çözmüş ve ücrette kullanılıyor, **gerekliliklerde sıfır kez.**
+Bağlanıyor. **Gereklilik ücretten önemli: öğrenci ücrete göre hayal kurar,
+gerekliliğe göre ders seçer.**
+
+**Ayrıca:** 12 hedeflenen kurumun hepsinde `universities.last_checked_at`, kendi
+gerekliliklerinin `retrieved_at`'inden **eski** — alt veri güncellenmiş, üst damga
+güncellenmemiş.
+
+---
+
 ## 📋 KİMDE NE VAR — 5 Eylül akşamı (CEO tutar, dağıtmadan önce buraya bakar)
 
 **Kurucunun kalıcı talimatı: boşta çalışmayan oturum kalmasın.** Bir şerit işini
