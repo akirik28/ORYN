@@ -81,3 +81,14 @@ Everything else in the packet not named above (§1/§1a document-rendering claim
 3, 5, 6 beyond what's touched above) was not independently re-verified against today's code —
 scoped this check to what the assignment named (§2, §4, §5) rather than a full re-read of the
 whole packet. If a fuller re-verification is wanted, that's a larger, separate pass.
+
+---
+
+## 🔍 2026-09-05 audit — still open, re-confirmed (not closed)
+
+`LEGAL_REVIEW.md` §2's "the student's school name is not sent" claim → **still open**.
+`LEGAL_REVIEW.md:84-85` today still reads that sentence verbatim, even though `schoolName` has
+been in the advisor context since commit `0833bd54` (2026-09-03). Checked `git log` on
+`LEGAL_REVIEW.md` for any commit since that might have touched §2: only `4c619a59`, `c111f979`,
+`57d09d2e` — all real, all ancestors of `origin/main`, none of them touch §2. Not marking this
+closed; the replacement text this doc already drafted has never been applied.

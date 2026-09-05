@@ -175,3 +175,13 @@ caught and given a narrow parity fix a few messages ago) and Garcia Summer Resea
 own code comment cites as its live-confirmed example landed on `a37fa810`, not the row
 (`d83d7048`) a student in the current visible set actually sees). Lehigh's pair carries no
 research to have landed on the wrong side of, since neither side has any.
+
+---
+
+## ✅ 2026-09-05 audit — closed
+
+The 3 real split-duplicate pairs (Edinburgh, Garcia, Lehigh) → **Closed** — commit `0fc819d7`
+(2026-09-04), "Package 16: consolidate 3 real opportunity duplicate pairs...", corroborated by
+`lib/opportunities/matching.ts`'s own comment naming the retired twin, and by a second,
+independent re-scan: commits `8613181b`/`e030cc38` (2026-09-04), "four methods, no fourth
+pair". All three verified via `git merge-base --is-ancestor` against `origin/main`.

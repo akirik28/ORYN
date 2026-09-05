@@ -127,3 +127,13 @@ instruction. Didn't pick a default other than `true` (opt-out) without stating w
 a grouped/clustered alternative to the 7-toggle shape, named as a possible future look rather than
 built. Didn't touch the existing 100-row backlog on the founder's account — a toggle is a
 going-forward fix, not a cleanup, and that distinction is stated above rather than implied.
+
+---
+
+## ✅ 2026-09-05 audit — closed
+
+No per-category or global notification toggle existing anywhere → **Closed** —
+`features/settings/notification-preferences-form.tsx` now exists, wired in, all 7 proposed
+`notify_*` columns present. Commit `0a4da24c` (2026-09-02), "feat(notifications): per-category
+preference toggles (migration 0090)". Verified via `git merge-base --is-ancestor 0a4da24c
+origin/main`.

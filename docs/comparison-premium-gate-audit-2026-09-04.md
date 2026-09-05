@@ -96,3 +96,13 @@ No upgrade-path UI was added or changed by this pass — the one that already ex
 stays as-is rather than adding a second upgrade surface while 48 builds the full-screen
 upgrade modal; if that modal is meant to replace these links, that's a follow-on decision,
 not something decided here.
+
+---
+
+## ✅ 2026-09-05 audit — closed
+
+Migration 0121 (blocks a student self-granting `plan_tier='ultra'`) not yet live → **Closed** —
+commit `a6747f27` (2026-09-04), "Merge 0121 -- a student could grant themselves Ultra, and now
+cannot". Verified via `git merge-base --is-ancestor a6747f27 origin/main`, and directly against
+the live `profiles_guard_protected_columns()` trigger, which now pins `plan_tier`/`account_role`/
+`ultra_gift_expires_at` to their old values on update.

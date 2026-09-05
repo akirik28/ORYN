@@ -175,3 +175,16 @@ tracker specifically, not the notification pipeline. Not audited.
      that would matter most against real data today.
   2. A well-researched-but-undated deadline (30% of the table) and a completely
      unresearched one currently look identical to a student: nothing.
+
+---
+
+## ✅ 2026-09-05 audit — all three findings closed
+
+Missing 4th (30-day) urgency tier, and undated-but-researched deadlines invisible → **Closed**
+— commit `b7045974` (2026-09-04), "Surface undated-but-researched deadlines; add the missing
+30-day urgency tier".
+
+Unverified vs. verified deadlines rendered identically → **Closed** — commit `7d969574`
+(2026-09-04), "Mark unverified university deadlines inline; per CEO's item-3 ruling".
+
+Both verified via `git merge-base --is-ancestor` against `origin/main`.

@@ -121,3 +121,13 @@ sessions are using. Didn't add `university_statistics`/`admission_rate_basis` to
 advisor's context — a real product decision (how much should the advisor say about a raw
 admission rate, given the whole "career profile score ≠ admission probability"-style honesty
 work elsewhere in this codebase), not mine to make unilaterally in a look-and-report pass.
+
+---
+
+## ✅ 2026-09-05 audit — closed
+
+admission_rate/university_statistics never reaching the advisor → **Closed** — commit
+`53d7f759` (2026-09-04), "B7: wire institution admission-rate facts into the advisor's
+context", merged via `165425ae` (2026-09-04), "Merge B7 -- admission rates reach the advisor,
+with the institution-not-you disclaimer in the text". Both verified as ancestors of
+`origin/main` via `git merge-base --is-ancestor`.

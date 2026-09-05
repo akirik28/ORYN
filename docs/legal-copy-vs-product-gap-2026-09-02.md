@@ -159,3 +159,12 @@ rather than waiting for the anonymization-vs-deletion question to resolve fully.
   (`legalBasis`, `internationalTransfer`, `liability`, `turkishLegalReview`,
   `kvkkLanguage`, `minorConsent`, `retention`) — nothing in this pass's five named areas bore on
   them, and re-litigating unrelated flags wasn't the assignment.
+
+---
+
+## ✅ 2026-09-05 audit — closed
+
+`ai_usage` surviving deletion (anonymized) while Terms/Privacy/KVKK claimed deletion is
+unqualified-"permanent" → **Closed** — commit `1d421074` (2026-09-02), "fix(legal): stop
+overclaiming account deletion is unqualified". Verified via `git merge-base --is-ancestor
+1d421074 origin/main`.

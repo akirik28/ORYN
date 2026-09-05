@@ -147,3 +147,13 @@ better-guarded than `home-strip.ts`'s original single-key order was, not equival
 Nothing merged to `main` — CEO is sole merge authority. No live database touched (this was a
 local ephemeral Postgres instance, entirely separate from Supabase). Full gate (typecheck, lint,
 vitest) run before push; see commit message for the exact numbers.
+
+---
+
+## ✅ 2026-09-05 update — merged the same day
+
+Merged via `c7d7ffb2` (2026-09-05), "Merge the ranking tiebreaker — proven unstable on two
+query plans, fixed in both surfaces", plus a same-day follow-up `03bbadc2`, "Close the Job D
+warning and the ranking instability: both proven, both fixed". Both verified via `git
+merge-base --is-ancestor` against `origin/main` — this doc's own "nothing merged yet" line is
+now stale and superseded by this note, not by an edit to the line itself.

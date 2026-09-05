@@ -84,3 +84,13 @@ any other deterministic column) turns "which of 191 tied rows appears" from an i
 accident into a defined, stable choice — every repeat visit shows the same opportunities in
 the same order until something in the underlying data genuinely changes. Likely the one-line
 fix CEO's own framing anticipated; not written here, since this task was look-and-report.
+
+---
+
+## ✅ 2026-09-05 audit — closed (same day)
+
+The recommended fix (secondary sort key) → **Closed** — commit `b798e0f8` (2026-09-05), "Fix
+the home-strip ranking tiebreaker, and its twin in the parent panel". See
+`docs/ranking-tiebreaker-fix-2026-09-05.md` for the full red-green proof and the empirical
+Postgres-level instability demonstration. Verified via `git merge-base --is-ancestor
+b798e0f8 origin/main`.

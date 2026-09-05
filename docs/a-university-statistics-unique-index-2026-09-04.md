@@ -95,3 +95,11 @@ any `.ts`/`.tsx` file — grepped the repo for the index's own name, nothing ref
 string; `tsc --noEmit` unaffected. No `types/database.ts` regeneration — index definitions
 aren't represented in generated Supabase types, and that file is hand-authored per standing
 convention regardless.
+
+---
+
+## ✅ 2026-09-05 audit — closed
+
+The finding (unique index never fires when `stat_year` is NULL) → **Closed** — commit
+`a7fde0cf` (2026-09-04), "fix: 0132 -- university_statistics's unique index never actually
+fires". Verified via `git merge-base --is-ancestor a7fde0cf origin/main`.

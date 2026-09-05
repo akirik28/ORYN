@@ -1735,3 +1735,12 @@ Oryn'in en güçlü yanı artık yalnızca fikir değil: yapılandırılmış pr
 En büyük risk, ürünün genişliğini olgunlukla karıştırmak. Binlerce veri satırı, çok sayıda route, yüzlerce commit veya binlerce test; tek başına doğru tavsiye, güvenli veri erişimi, güncel kaynak veya başarılı öğrenci deneyimi demek değildir.
 
 **28 Ağustos 2026 için doğru konumlandırma:** Çalışan ve ciddi biçimde geliştirilmiş bir pre-launch ürün; güvenlik/operasyon/temel kullanıcı döngüsü tamamlanıp kontrollü pilotla doğrulanması gereken aşamada. Yeni AI'nın görevi bu gerçeği koruyarak ilerlemek; eski belgelerin iyimserliğini veya kötümserliğini tekrar üretmek değildir.
+
+---
+
+## ✅ 2026-09-05 denetimi — bir bulgu kapandı
+
+Computed/protected sütunların owner-ALL RLS ile yazılabilir olması (6 tablo) → **Kapandı** —
+commit `932771ca` (2026-08-22), "fix(security): 0065 -- close INSERT-forgery on six
+computed-value tables (#113)". `git merge-base --is-ancestor 932771ca origin/main` ile
+doğrulandı. (Bu dokümandaki diğer bulgular ayrı ayrı değerlendirilmedi; bkz. genel denetim.)

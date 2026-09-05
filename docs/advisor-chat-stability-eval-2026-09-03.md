@@ -140,3 +140,15 @@ bypassing per-student usage logging since there is no real student here). Roughl
 based on actual reply lengths (none of the six replies approached the 8192-token ceiling).
 Zero real student data touched — both fixtures are the harness's own existing synthetic
 profiles.
+
+---
+
+## ✅ 2026-09-05 audit — one finding closed, one still open
+
+Advisor names the wrong second-lowest dimension → **Closed** — commit `fb9d62ae` (2026-09-03),
+"fix(ai): withhold rank-2 ordinal claim instead of tagging it -- clean live pass". Verified via
+`git merge-base --is-ancestor fb9d62ae origin/main`.
+
+Still open, re-confirmed 2026-09-05: the `generateText` success path never checks `stop_reason`
+for a truncated-but-present text block (`lib/ai/anthropic-provider.ts`) — no commit found
+addressing this, left as-is.

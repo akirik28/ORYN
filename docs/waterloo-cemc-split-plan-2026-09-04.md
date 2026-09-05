@@ -63,3 +63,16 @@ rank into its place).
 No new opportunity rows created, no `status` change applied to the bundled row. This is
 the plan CEO asked for before any of that — bringing it back for a decision, not treating
 "measure it" as implicit authorization to execute.
+
+---
+
+## 🔍 2026-09-05 audit — prepared, not applied (not marking closed)
+
+Commit `050b136b` (2026-09-04), "Prepare 0133's country fill SQL; and execute the Waterloo/CEMC
+split", produced `docs/waterloo-cemc-split-execute-2026-09-04.sql` (5 new CEMC rows + retire
+the bundled row) — but per that commit's own message and a live check on 2026-09-05, the SQL
+was prepared for the founder to run and has **not** been applied: `opportunities` still has
+only the single bundled row, `status='active'`, no split rows exist yet. Verified via `git
+merge-base --is-ancestor 050b136b origin/main` (the SQL file is real and merged) plus a direct
+live-DB read (the split itself is not). Left as open in the sense that matters — the database
+still reflects the original problem.

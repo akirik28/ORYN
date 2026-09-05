@@ -221,3 +221,16 @@ actually-strong profile.
   carries an eligibility caveat the code already knows how to display (Browse does it) and
   the homepage preview's existing pattern does not. Whatever the new strip's final ranking
   logic turns out to be, this gap exists independently of it.
+
+---
+
+## ✅ 2026-09-05 audit — one finding closed, one still open
+
+Strip would hide that 100% of top-5 results carry an eligibility caveat → **Closed** — commit
+`0b1df1bd` (2026-09-03), "fix(dashboard): drop the match-tier claim from the opportunity strip
+card" — strip now shows caveat badges instead. Verified via `git merge-base --is-ancestor
+0b1df1bd origin/main`.
+
+Still open, re-confirmed 2026-09-05: ranking doesn't distinguish "prestigious but unreachable"
+from "achievable starting point" — `lib/opportunities/matching.ts` still has zero references
+to `selectivity_tier`.

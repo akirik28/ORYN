@@ -163,3 +163,12 @@ touched by the still-unapplied `scrape_description_prose_rewrite_2026-09-03.sql`
 file's guards match the current live raw-scrape text and will simply no-op safely
 (`UPDATE 0`) if that other file runs first — noted in-line in the SQL file itself, not
 something this doc resolves, since it depends on which order a human applies both files in.
+
+---
+
+## ✅ 2026-09-05 audit — closed
+
+The 4 confirmed pairs (Lehigh, Edinburgh, SAIC, Stony Brook/Garcia) staged for disable →
+**Closed** — commit `0fc819d7` (2026-09-04), "Package 16: consolidate 3 real opportunity
+duplicate pairs, fix the code comment that cited the wrong twin". Verified via `git merge-base
+--is-ancestor 0fc819d7 origin/main`.

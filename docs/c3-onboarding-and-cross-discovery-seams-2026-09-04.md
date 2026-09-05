@@ -131,3 +131,15 @@ cached outlook fields — no country, no field of study. Those live on `universi
 
 Look and report only — no code changed. Which of these (if any) is worth fixing, and who does
 it, is CEO's call per the assignment.
+
+---
+
+## ✅ 2026-09-05 audit — closed (partially, by design)
+
+Universities and opportunities fully independent (targeting a university has zero effect on
+opportunity relevance) → **Closed, narrower than the original gap** — commit `3e540b06`
+(2026-09-04), "feat: boost opportunities in a targeted university's country", merged via
+`73543fab` (2026-09-04). This is a country-level relevance boost only, not a full
+program/field join — the underlying mechanism this doc described (no join at all) no longer
+holds, but a reader should not assume full cross-linking exists. Both hashes verified via
+`git merge-base --is-ancestor`.
