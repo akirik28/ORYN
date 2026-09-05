@@ -40,6 +40,13 @@ export interface DigestOpportunityMatchItem {
   title: string;
   organization: string | null;
   href: string | null;
+  /** Added 2026-09-05 for the parent-commentary opportunity-forward rewrite (founder: lead
+   * with "apply this month", not a bare title) — a real deadline is what makes "this month"
+   * a true claim rather than filler urgency. Already selected in the opportunities query
+   * below (`isOpportunityRecommendable`'s own deadline check needs it); this only threads it
+   * through to the returned shape. `null` when the opportunity has no fixed deadline — never
+   * inferred or defaulted to "soon". */
+  deadline: string | null;
 }
 
 export interface DigestContent {
@@ -109,7 +116,7 @@ async function loadNewOpportunityMatches(
     .map((m) => byId.get(m.opportunity_id))
     .filter((o): o is NonNullable<typeof o> => o !== undefined)
     .slice(0, OPPORTUNITY_MATCH_LIMIT)
-    .map((o) => ({ title: o.title, organization: o.organization, href: o.official_url ?? o.application_url }));
+    .map((o) => ({ title: o.title, organization: o.organization, href: o.official_url ?? o.application_url, deadline: o.deadline }));
 }
 
 /**
