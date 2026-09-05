@@ -9,7 +9,7 @@ import { CAREER_PROFILE_SCORE_VERSION } from "@/lib/scoring/types";
 import { computeOpportunityMatch, computeAvoidSignals, isNearStudent } from "./matching";
 import type { StudentMatchProfile, OpportunityForMatching, DismissedOpportunitySignal } from "./matching";
 import { rankDimensionGaps, toDimensionScoreRows } from "@/lib/counselor/gaps";
-import { evidenceStateFor, type EvidenceState } from "@/lib/scoring/signal";
+import { evidenceStateFor, canClaimGap, type EvidenceState, type DimensionSignal } from "@/lib/scoring/signal";
 import { isUndefinedColumnError } from "@/lib/supabase/errors";
 import { readOr } from "@/lib/supabase/safe-read";
 import type { ProfileDimension } from "@/types/database";
@@ -189,12 +189,23 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
   // lib/scoring/signal.ts's own function, imported directly rather than reimplemented,
   // per CEO's explicit instruction not to invent a second confidence vocabulary next to
   // the one that already governs how the dashboard talks about evidence depth.
-  const evidenceStateByDimension = new Map<ProfileDimension, EvidenceState>(
-    scores.map((row) => [
-      row.dimension,
-      evidenceStateFor(row.score, row.confidence, Array.isArray(row.reason_codes) && row.reason_codes.length > 0),
-    ])
-  );
+  //
+  // 2026-09-05 (docs/weakest-dimension-evidence-gap-2026-09-05.md, docs/opportunity-gap-
+  // canclaim-2026-09-05.md): a real DimensionSignal[] now, not just the reduced Map -- so
+  // buildReasonCodes below can call the SAME canClaimGap() the dashboard hero already uses
+  // (lib/scoring/dashboard-hero.ts), rather than a second, ad-hoc assessedness check.
+  // Measured live: 100% of 562 currently-stored "addresses a current gap" cards across the
+  // 6 affected students name a dimension canClaimGap would refuse -- weakestDimensions above
+  // is raw-score-only and cannot tell "genuinely weak" from "never assessed" (an unscored
+  // dimension scores exactly 0 by construction), and until this pass, nothing downstream of
+  // it could either.
+  const profileSignal: DimensionSignal[] = scores.map((row) => ({
+    dimension: row.dimension,
+    score: row.score,
+    confidence: row.confidence,
+    state: evidenceStateFor(row.score, row.confidence, Array.isArray(row.reason_codes) && row.reason_codes.length > 0),
+  }));
+  const evidenceStateByDimension = new Map<ProfileDimension, EvidenceState>(profileSignal.map((s) => [s.dimension, s.state]));
 
   const targetUniversityIds = readOr("refreshOpportunityMatches.targetUniversities", targetUniversitiesRes, [], { userId }).map((t) => t.university_id);
   const targetUniversitiesCountriesRes =
@@ -299,7 +310,7 @@ export async function refreshOpportunityMatches(userId: string, locale: Locale =
       match_score: match.matchScore,
       effort_estimate: null,
       match_confidence: matchConfidence,
-      reason_codes: buildReasonCodes(match, studentProfile, forMatching),
+      reason_codes: buildReasonCodes(match, studentProfile, forMatching, profileSignal),
       calculated_at: new Date().toISOString(),
     };
   });
@@ -475,11 +486,25 @@ export async function notifyNewlyEligibleMatches(
  * -- there is no true positive thing to say about them, and CEO's read (correct) is that an
  * eligible match with zero shared interest, no gap-relevance, and no proximity is a finding
  * about the matcher's own inclusion bar, not something a reason sentence should paper over.
+ *
+ * `addresses_a_current_gap` additionally requires `canClaimGap` (2026-09-05, docs/
+ * opportunity-gap-canclaim-2026-09-05.md): `matchedGapDimensions` comes from `student.
+ * weakestDimensions`, which ranks by raw score alone -- and an unscored dimension scores
+ * exactly 0 by construction, indistinguishable from a genuinely weak one at this layer.
+ * Measured live: 100% of the 562 currently-stored cards carrying this code for the 6
+ * affected students name a dimension `canClaimGap` refuses. Same underlying conflation the
+ * dashboard hero (`lib/scoring/dashboard-hero.ts`) was already patched for on 2026-08-31 --
+ * this is the second, until-now-unguarded surface built on the identical weakest-3
+ * selection. Fires when AT LEAST ONE matched dimension is claimable, not all of them: if an
+ * opportunity's category happens to target two of the student's weakest three and only one
+ * is genuinely assessed, there IS a real gap this opportunity addresses, even though the
+ * OTHER nominal match isn't one Oryn can vouch for.
  */
 export function buildReasonCodes(
   match: ReturnType<typeof computeOpportunityMatch>,
   student: StudentMatchProfile,
-  opportunity: OpportunityForMatching
+  opportunity: OpportunityForMatching,
+  profileSignal: DimensionSignal[]
 ): string[] {
   // An ineligible match's relevance/profile-need/proximity signals are still fully computed
   // above (computeOpportunityMatch never skips them for an ineligible student), but they
@@ -497,7 +522,9 @@ export function buildReasonCodes(
 
   const codes: string[] = [];
   if (match.relevanceScore >= 70) codes.push("matches_your_interests");
-  if (match.profileNeedScore >= 70) codes.push("addresses_a_current_gap");
+  if (match.profileNeedScore >= 70 && match.matchedGapDimensions.some((d) => canClaimGap(profileSignal, d))) {
+    codes.push("addresses_a_current_gap");
+  }
   if (isNearStudent(student, opportunity)) codes.push("near_you");
   if (match.relevanceScore < 70 && match.matchedInterests.length > 0) codes.push("shares_your_interest");
   // Independent of the four checks above — section 62's explainability requirement applies
