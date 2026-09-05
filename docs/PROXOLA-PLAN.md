@@ -163,6 +163,25 @@ dallar tarandı, üçü de boştu.
 
 ---
 
+> ## Bu dosyayı nasıl okuyacaksın
+>
+> **980 satır oldu ve bir bölüm iki kez yazılmıştı** (CEO düzeltti, 5 Eylül gecesi).
+> Bu dosya bugün uyardığı şeye dönüşmeye başladı: **uzun, ve bazı bölümleri bayat.**
+>
+> **Çalıştıracak bir şey arıyorsan buraya bakma** —
+> **[`KURUCU-CALISTIRMA-SIRASI-2026-09-05.md`](KURUCU-CALISTIRMA-SIRASI-2026-09-05.md)**
+> tek sayfa, sıralı, güncel.
+>
+> **Bu dosyanın canlı bölümleri:** 🔴/🟠 başlıklı olanlar · **📋 KİMDE NE VAR** ·
+> **A — KURUCUDA**.
+> **Tarihsel (okuma zorunlu değil):** ⏸️ mola notu · 4 Eylül durum/dağıtım bölümleri ·
+> ✅ işaretli kapanmış maddeler — **silinmediler çünkü nasıl kapandıkları da bilgi.**
+>
+> **Ve bir düzeltme:** aşağıdaki *"Kurucuyu bekleyen migration'lar — HİÇBİRİ ACİL DEĞİL"*
+> başlığı **artık yanlış.** Sekiz güvenlik migration'ı (`0135`-`0142`) uygulanmayı
+> bekliyor ve **gerçek açıklar kapatıyorlar** — biri, öğrencinin kendi başarısını
+> "doğrulandı" işaretlemesini engelliyor.
+
 **Çalışma penceresi: yarın akşam 22.00'a kadar.**
 
 **Bu dosya tek doğruluk kaynağı.** Bir oturum açtığında ona madde numarası ver:
@@ -283,34 +302,6 @@ kendi spy'ını yazdı.
 migration ve edge function'larda 4 isabet, **hiçbiri yeni örnek değil** — biri hep
 `limit 1` ile çağrılıyor, ikisi zaten iki anahtarlı ve yazma anında bir kez çalışıyor.
 **Dördüncü gerçek örnek yok**, ve bu ölçülerek söylendi.
-
----
-
-## 🟠 DÜNKÜ DÜRÜSTLÜK İŞİ CANLIDA DEĞİL — 5 Eylül, CEO doğruladı
-
-**Canlı veritabanı `opportunities` tablosunda altı uygunluk sütunundan beşi yok.**
-CEO kendi SQL'iyle doğruladı (bir şeridin bulgusu üzerine):
-
-| sütun | canlıda |
-|---|---|
-| `country_eligibility_confirmed_open` (0060) | ✅ var |
-| `age_eligibility_confirmed_open` | ❌ yok |
-| `grade_eligibility_confirmed_open` | ❌ yok |
-| `country_eligibility_basis` · `age_eligibility_basis` · `grade_eligibility_basis` | ❌ yok |
-
-**Sonuç: dün "%97 → %79" diye raporlanan iyileşme canlıda geçerli değil.** Kod ve
-migration'lar `main`'de duruyor, uygulanmayı bekliyor. Bir şeridin bugünkü bağımsız
-ölçümü (%94,8) **dünkü başlangıç sayısıyla birebir aynı** — tam da bu yüzden.
-
-**Ama arıza değil, ve yönü güvenli:** sorgular `select("*")` kullanıyor, yani eksik
-sütun hata değil **yokluk** olarak geliyor; kod `?? false` / `?? null` ile düşüyor.
-Bu da ürünü **daha çok uyarı gösteren** tarafa düşürüyor, daha az değil. Yani canlı
-ürün **fazla temkinli**, yanıltıcı değil. **Kullanıcı zarar görmüyor, iyileşme
-sadece teslim edilmemiş.**
-
-**Bu, aşağıdaki "Kurucuyu bekleyen migration'lar — HİÇBİRİ ACİL DEĞİL" başlığını
-geçersiz kılmıyor ama anlamını değiştiriyor:** acil değil çünkü bir şey bozuk değil;
-**ama uygulanmadan dünkü işin hiçbiri öğrenciye ulaşmıyor.**
 
 ---
 
