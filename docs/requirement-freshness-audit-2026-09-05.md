@@ -130,8 +130,44 @@ Not fixed here — noted per CEO's instruction ("Not düş") as a real product-c
 answer to "when did we last look at this" is currently wrong for 12 of 12 sampled institutions,
 not merely unmeasured.
 
+## 5. Correction to #3: the staleness logic already exists — it has simply never run
+
+Follow-up pass, same day. #3 above characterized `university_requirements.data_status` as a
+column nobody computes. That was incomplete. `lib/jobs/detect-stale-data.ts` (Phase 30 Job E)
+already contains the exact fix CEO asked whether was possible: `detectStaleUniversityRequirements`
+recomputes `data_status` from `last_checked_at ?? retrieved_at ?? created_at` against a
+**60-day** threshold (`UNIVERSITY_REQUIREMENT_STALE_AFTER_DAYS`) — deliberately shorter than
+`universities`' own 90-day threshold and longer than `university_deadlines`' 30-day one, with
+the reasoning already written into the file: an admissions requirement changes more often than
+an institution's name/country/type, and a deadline goes stale faster still. This is precisely
+Phase 29's own "set reasonable refresh intervals by information type" instruction, already
+implemented, per-table, correctly differentiated. Nothing new needed to be written for this.
+
+Two separate reasons the live data still shows 1550/1550 `fresh`, both measured directly rather
+than assumed:
+
+1. **The job has never actually executed.** `external_sync_jobs` has zero rows for
+   `job_name = 'detect_stale_data'`, even though the route (`app/api/jobs/detect-stale-data/
+   route.ts`) is real, registered in `lib/jobs/schedule.ts`'s `JOB_DEFINITIONS`, and present in
+   `vercel.json`'s cron list (`0 10 * * *`). Fully built and wired, never triggered — this is the
+   line for the founder's own cron-enabling checklist: **turning the cron on is what starts this
+   job running for the first time ever**, not re-enabling something that already ran.
+2. **Even if it had run every day since the data was created, today's result would be
+   identical.** The oldest `university_requirements` row's age reference is 20 days
+   (2026-08-16). Measured directly against every threshold from 30 to 365 days: **0 rows would
+   show `stale` under any of them.** The corpus is simply too young for this column to have had
+   anything to differentiate yet, independent of whether the job runs.
+
+Practical consequence for CEO's follow-up question (should a `stale` requirement look different
+to the student, now that `checkedAt` is visible per item #1): building that today would be
+invisible on every current row, for a benign reason (nothing has aged past any candidate
+threshold) rather than a broken one. The mechanism is sound and will start producing a real
+signal on its own, without further code, once (a) the cron actually fires and (b) real time
+passes. No code changed for this correction either — same read-only, no-live-write pass as
+#2/#3/#4.
+
 ## Verification
 
 tsc/eslint clean. Full suite passed with 0 regressions (exact numbers in the commit message for
-item #1's code change). #2/#3/#4 are read-only findings — no code changed for them, no live
+item #1's code change). #2/#3/#4/#5 are read-only findings — no code changed for them, no live
 writes made anywhere in this pass, per standing rule.
