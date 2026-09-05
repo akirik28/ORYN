@@ -17,16 +17,23 @@ the rest.
 
 ---
 
-## Security / RLS — the permissive-update sweep (8 unguarded columns, one sweep, none fixed)
+## Security / RLS — the permissive-update sweep (8 unguarded columns; 3 now closed, 5 open)
 
-All eight from `docs/permissive-update-policy-sweep-2026-09-04.md`, explicitly "nothing fixed"
-in that doc and reconfirmed unchanged through migration 0133 today:
+All eight from `docs/permissive-update-policy-sweep-2026-09-04.md`, that doc's own text says
+"nothing fixed" — **stale as of this writing**. See that doc's own "✅ 2026-09-05 audit" section
+for full detail on all three closures below; not repeated here beyond the headline.
 
-1. `target_universities` — 8 admission-outlook columns unguarded, owner can PATCH directly
-   (also served verbatim to a parent).
-2. `evidence_status` unguarded on 10 achievement tables (only `evidence_files` has the
-   equivalent guard).
-3. `advisor_conversations.summary`/`.summarized_at` unguarded (admin-only legitimate writer).
+~~1. `target_universities` — 8 admission-outlook columns unguarded, owner can PATCH directly
+   (also served verbatim to a parent).~~ **Closed** 2026-09-05, migrations 0136/0137, merged
+   `4a8c8307`/`2f75f022`.
+~~2. `evidence_status` unguarded on 10 achievement tables (only `evidence_files` has the
+   equivalent guard).~~ **Closed** 2026-09-05, same migrations/merge as #1.
+~~3. `advisor_conversations.summary`/`.summarized_at` unguarded (admin-only legitimate writer).~~
+   **Closed** — turns out to predate this very audit: migration 0122, commit `7e67def6`
+   (2026-09-04). This audit incorrectly carried it forward as open by trusting the sweep doc's
+   own "nothing fixed" framing instead of re-checking `pg_trigger` for this specific column —
+   worth a note on the audit methodology itself, not just this one line: "none fixed" in a
+   source doc is a claim as of that doc's own write time, not a live fact.
 4. `recommendations.body`/`author_id`/`relationship` smuggleable via the recipient's own
    visibility toggle.
 5. `notifications.title`/`body`/`link`/`category` smuggleable despite the migration's own

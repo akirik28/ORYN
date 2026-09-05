@@ -235,3 +235,26 @@ second `plan_tier` — nothing here is a live, self-serve financial bypass — b
 have a real third-party reader (a parent, a recommendation's own subject) who could be misled by
 tampered data, which is its own kind of consequence AGENTS.md's trust principles were written
 to prevent. Report only; nothing above has been fixed.
+
+## ✅ 2026-09-05 audit — three of eight closed
+
+**§3 (`advisor_conversations.summary`/`.summarized_at`) — Closed**, but not by this sweep's own
+follow-up work: commit `7e67def6` (2026-09-04, "feat(advisor): past sessions reachable on the
+right, titled by topic") bundled migration `0122_advisor_conversations_guard_admin_columns.sql`
+as a drive-by fix, same day as this sweep and possibly before it — the exact guard this section
+asked for, column-scoped to `summary, summarized_at`, reset-to-OLD on any
+`current_user <> 'service_role'` write, and its own header confirms the legitimate writer
+(`lib/advisor/retention.ts`) was already on `createAdminClient()`, so no paired code change was
+needed. Verified as an ancestor of `origin/main` via `git merge-base --is-ancestor`. **This was
+missed by the 2026-09-05 docs-findings audit** ([[project_oryn_docs_findings_audit_2026_09_05]]),
+which carried this section's own "nothing fixed" framing forward without re-checking the
+migrations directory for this specific column — caught only when actually starting the §3 work
+dispatched off that audit's backlog, not by the audit itself.
+
+**§1 (`target_universities`) and §2 (`evidence_status`) — Closed** this same night, deliberately
+(not a drive-by): migrations `0136`/`0137`, guard + the paired admin-client code change, plus a
+follow-up closing an RLS-bypass ownership gap CEO caught on review. Merged via `4a8c8307`,
+`2f75f022` (2026-09-05). Full writeup:
+[[project_oryn_evidence_status_target_universities_rls_fix_2026_09_05]].
+
+§4–8 not yet touched.
