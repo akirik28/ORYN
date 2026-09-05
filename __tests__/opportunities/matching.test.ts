@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { computeEligibility, computeOpportunityMatch, computeAvoidSignals, isNearStudent, isWithinTargetGeography, isTargetingCountry, renderEligibilityNotes, classifyEligibilityGap } from "@/lib/opportunities/matching";
+import { computeEligibility, computeOpportunityMatch, computeAvoidSignals, isNearStudent, isWithinTargetGeography, isTargetingCountry, renderEligibilityNotes, classifyEligibilityGap, hasAnyEligibilityDataAtAll } from "@/lib/opportunities/matching";
 import type { OpportunityForMatching, StudentMatchProfile, DismissedOpportunitySignal } from "@/lib/opportunities/matching";
 
 function opportunity(overrides: Partial<OpportunityForMatching> = {}): OpportunityForMatching {
@@ -411,6 +411,83 @@ describe("computeOpportunityMatch", () => {
     );
     expect(match.eligible).toBe(false);
     expect(match.matchScore).toBe(0);
+  });
+
+  // CEO, 2026-09-05, measured live: an opportunity with zero recorded eligibility data on
+  // every axis (age/grade/country all blank, no confirmed-open flags) still scored 97 for a
+  // real student (Harvard Pre-Collegiate Economics Challenge) because relevance/profileNeed
+  // never read eligibility fields at all, and `eligible` stays true for a blank axis (it's
+  // "unknown", never a confirmed mismatch). 190 of 289 visible-candidate opportunities were in
+  // exactly this state the day this was measured.
+  test("RED->GREEN: caps the score for a fully data-blank opportunity, even with perfect relevance and profile-need overlap", () => {
+    // Shaped to hit the theoretical maximum pre-fix: 100% interest overlap (relevanceScore
+    // 100) and a category matching the student's own weakest dimension (profileNeedScore 85)
+    // -- clampScore(100*0.4+85*0.6)=91, matching the real HPEC/IEO shape CEO measured live.
+    const match = computeOpportunityMatch(
+      student({ interests: ["Economics"], weakestDimensions: ["research"] }),
+      opportunity({ category: "research", fields: ["Economics"], minimumAge: null, maximumAge: null, eligibleGrades: [], eligibleCountries: [] })
+    );
+    expect(match.eligible).toBe(true); // never a confirmed exclusion -- this is the "unknown", not "ineligible", case
+    expect(match.relevanceScore).toBe(100);
+    expect(match.profileNeedScore).toBe(85);
+    // Would have been 91 ("Exceptional", matchTierKey >= 80) before this fix -- the exact
+    // shape of the real HPEC/IEO rows. Scaled proportionally (91 * 39 / 100, clamped/rounded
+    // like every other score in this file), not flattened to the cap itself -- see
+    // NO_ELIGIBILITY_DATA_SCORE_CAP's own comment for why a flat min() is wrong.
+    expect(match.matchScore).toBeLessThan(40); // never clears matchTierKey's "worthALook" floor
+    expect(match.matchScore).toBe(35);
+  });
+
+  test("does not cap when at least one axis has real data (confirmed_open counts, not just a real bound)", () => {
+    const match = computeOpportunityMatch(
+      student({ interests: ["Economics"], weakestDimensions: ["research"] }),
+      opportunity({
+        category: "research",
+        fields: ["Economics"],
+        minimumAge: null,
+        maximumAge: null,
+        eligibleGrades: [],
+        eligibleCountries: [],
+        countryEligibilityConfirmedOpen: true,
+      })
+    );
+    expect(match.matchScore).toBe(91); // uncapped -- one real signal (country) is enough
+  });
+
+  // The permanent distinction from classifyEligibilityGap's own badge work: checked_not_stated
+  // means a source was checked and stayed silent, which is real information for the BADGE, but
+  // it is not evidence this opportunity fits any given student -- the score must stay capped.
+  // HPEC/IEO will carry this exact shape once this session's own visible-27 fill and migrations
+  // 0126/0129/0133 both land, and must still never score "Exceptional".
+  test("checked_not_stated on every axis does NOT lift the cap -- it is not evidence of fit", () => {
+    const match = computeOpportunityMatch(
+      student({ interests: ["Economics"], weakestDimensions: ["research"] }),
+      opportunity({
+        category: "research",
+        fields: ["Economics"],
+        minimumAge: null,
+        maximumAge: null,
+        eligibleGrades: [],
+        eligibleCountries: [],
+        ageEligibilityBasis: "checked_not_stated",
+        gradeEligibilityBasis: "checked_not_stated",
+        countryEligibilityBasis: "checked_not_stated",
+      })
+    );
+    expect(match.matchScore).toBe(35);
+  });
+
+  test("a weaker data-blank match still sorts below a stronger one -- capped, not flattened to one value", () => {
+    const strongOverlap = computeOpportunityMatch(
+      student({ interests: ["Economics"], weakestDimensions: ["research"] }),
+      opportunity({ category: "research", fields: ["Economics"] })
+    );
+    const weakOverlap = computeOpportunityMatch(
+      student({ interests: ["Economics"], weakestDimensions: ["leadership"] }),
+      opportunity({ category: "research", fields: ["Chemistry"] })
+    );
+    expect(strongOverlap.matchScore).toBeGreaterThan(weakOverlap.matchScore);
+    expect(strongOverlap.matchScore).toBeLessThanOrEqual(39);
   });
 
   test("scores higher when the opportunity targets the student's weakest dimension", () => {
@@ -1054,5 +1131,57 @@ describe("classifyEligibilityGap", () => {
   test("null for notes this function doesn't classify (already_applied, not_yet_computed) — falls through safely, no crash", () => {
     expect(classifyEligibilityGap([{ code: "already_applied" }])).toBeNull();
     expect(classifyEligibilityGap([{ code: "not_yet_computed" }])).toBeNull();
+  });
+});
+
+// CEO, 2026-09-05, measured live: computeOpportunityMatch's score never read these fields at
+// all -- this function is the fix's own gate, checked directly rather than only through the
+// score it feeds (see the computeOpportunityMatch describe block above for the score-level
+// proof).
+describe("hasAnyEligibilityDataAtAll", () => {
+  test("false when every axis is genuinely blank -- the real, measured 190-of-289 shape", () => {
+    expect(hasAnyEligibilityDataAtAll(opportunity({ minimumAge: null, maximumAge: null, eligibleGrades: [], eligibleCountries: [] }))).toBe(false);
+  });
+
+  test("true for a real age bound alone", () => {
+    expect(hasAnyEligibilityDataAtAll(opportunity({ minimumAge: 16 }))).toBe(true);
+  });
+
+  test("true for a real grade list alone", () => {
+    expect(hasAnyEligibilityDataAtAll(opportunity({ eligibleGrades: ["11", "12"] }))).toBe(true);
+  });
+
+  test("true for a real country allow-list alone", () => {
+    expect(hasAnyEligibilityDataAtAll(opportunity({ eligibleCountries: ["United States"] }))).toBe(true);
+  });
+
+  test("true for a confirmed-open flag alone, even with every list/bound still empty", () => {
+    expect(hasAnyEligibilityDataAtAll(opportunity({ countryEligibilityConfirmedOpen: true }))).toBe(true);
+    expect(hasAnyEligibilityDataAtAll(opportunity({ ageEligibilityConfirmedOpen: true }))).toBe(true);
+    expect(hasAnyEligibilityDataAtAll(opportunity({ gradeEligibilityConfirmedOpen: true }))).toBe(true);
+  });
+
+  test("true for real free-text citizenship/residency restriction evidence", () => {
+    expect(hasAnyEligibilityDataAtAll(opportunity({ citizenshipRestrictions: "EU citizens only" }))).toBe(true);
+    expect(hasAnyEligibilityDataAtAll(opportunity({ residencyRestrictions: "Must reside in the UK" }))).toBe(true);
+  });
+
+  // The permanent distinction: checked_not_stated is real information for the badge, but it
+  // is never treated as "having eligibility data" here -- see this function's own doc comment
+  // for why conflating the two would let the score-blindness bug survive under a calmer badge.
+  test("false even when every axis carries a checked_not_stated basis -- that is not eligibility data", () => {
+    expect(
+      hasAnyEligibilityDataAtAll(
+        opportunity({
+          minimumAge: null,
+          maximumAge: null,
+          eligibleGrades: [],
+          eligibleCountries: [],
+          ageEligibilityBasis: "checked_not_stated",
+          gradeEligibilityBasis: "checked_not_stated",
+          countryEligibilityBasis: "checked_not_stated",
+        })
+      )
+    ).toBe(false);
   });
 });
