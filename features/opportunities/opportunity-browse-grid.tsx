@@ -89,12 +89,13 @@ export function OpportunityBrowseGrid({
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2">
-        {rows.map(({ opportunity, matchScore, eligible, eligibilityNotes, eligibilityGap, notActionable, needsVerification, reasonCodes }) => (
+        {rows.map(({ opportunity, matchScore, eligible, eligibilityNotes, eligibilityGap, notActionable, needsVerification, reasonCodes, matchConfidence }) => (
           <OpportunityCard
             key={opportunity.id}
             opportunity={opportunity}
             matchScore={matchScore}
             reasonCodes={reasonCodes}
+            matchConfidence={matchConfidence}
             eligible={eligible}
             eligibilityNotes={eligibilityNotes}
             eligibilityGap={eligibilityGap}

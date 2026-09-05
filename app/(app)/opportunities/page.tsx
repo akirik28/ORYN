@@ -11,6 +11,7 @@ import { renderEligibilityNotes, classifyEligibilityGap, type EligibilityNote } 
 import type { Locale } from "@/lib/i18n/config";
 import { browseOpportunities, getOpportunityFacets } from "@/lib/opportunities/browse";
 import { isOpportunityActionable, isOpportunitySufficientlyVerified } from "@/lib/opportunities/lifecycle";
+import type { EvidenceState } from "@/lib/scoring/signal";
 import { OpportunityCard } from "@/features/opportunities/opportunity-card";
 import { OpportunityBrowseGrid } from "@/features/opportunities/opportunity-browse-grid";
 import { OpportunityFilterBar } from "@/features/opportunities/opportunity-filter-bar";
@@ -173,6 +174,7 @@ async function ForYouView({
       opportunity={opportunity!}
       matchScore={match.match_score}
       reasonCodes={match.reason_codes as string[]}
+      matchConfidence={match.match_confidence as EvidenceState | null}
       eligible={match.eligible}
       eligibilityNotes={renderEligibilityNotes((match.eligibility_notes as EligibilityNote[] | null) ?? [], locale)}
       eligibilityGap={classifyEligibilityGap((match.eligibility_notes as EligibilityNote[] | null) ?? [])}

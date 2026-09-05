@@ -12,12 +12,13 @@ export default function OpportunitiesPreviewPage() {
   return (
     <PreviewShell signal={FIXTURE_PROFILE_SIGNAL}>
       <div className="grid gap-4 md:grid-cols-2">
-        {FIXTURE_OPPORTUNITIES.map(({ opportunity, matchScore, reasonCodes }) => (
+        {FIXTURE_OPPORTUNITIES.map(({ opportunity, matchScore, reasonCodes, matchConfidence }) => (
           <OpportunityCard
             key={opportunity.id}
             opportunity={opportunity}
             matchScore={matchScore}
             reasonCodes={reasonCodes}
+            matchConfidence={matchConfidence}
             initialStatus={null}
           />
         ))}

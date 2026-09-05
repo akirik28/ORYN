@@ -19,11 +19,13 @@ import { StatusBadge, type StatusTone } from "@/components/proxola/status-badge"
 import { DeadlineBadge } from "@/components/proxola/deadline-badge";
 import { Eyebrow } from "@/components/proxola/eyebrow";
 import { MediaImage } from "@/components/proxola/media-image";
+import { ConfidenceIndicator, type ConfidenceLevel } from "@/components/proxola/confidence-indicator";
 import { OpportunityStandingBadge } from "./standing-badge";
 import { setOpportunityStatus } from "@/app/(app)/opportunities/actions";
 import { selectivityLabel, cycleStatusLabel, CYCLE_STATUSES_WORTH_A_DESCRIPTOR } from "@/lib/opportunities/lifecycle";
 import { matchTierKey, type EligibilityGapKind } from "@/lib/opportunities/matching";
 import { categoryGlyph } from "@/lib/opportunities/category-glyph";
+import type { EvidenceState } from "@/lib/scoring/signal";
 import type { Locale } from "@/lib/i18n/config";
 import type { Opportunity, SavedOpportunityStatus } from "@/types/database";
 
@@ -58,6 +60,26 @@ function tierFor(score: number, t: Translator): { label: string; tone: StatusTon
   const key = matchTierKey(score);
   const tone: StatusTone = key === "exceptional" || key === "strong" ? "brand" : "neutral";
   return { label: t(key), tone };
+}
+
+/**
+ * Phase 12 (AGENTS.md): "show meaningful fields... Confidence — do not call this one opaque
+ * AI score." opportunity_matches.match_confidence stores an EvidenceState (5 values, how well
+ * evidenced the dimension this match addresses is), computed and persisted on every refresh,
+ * never previously read by any surface. ConfidenceIndicator (components/proxola/
+ * confidence-indicator.tsx — already shipped, already used by SourceBadge) takes the coarser
+ * 3-value ConfidenceLevel instead, by design ("a lit/unlit three-bar meter rather than a
+ * color-coded word, so low confidence reads as less signal, not something's wrong" — that
+ * component's own doc comment). This collapses the 5 states onto that meter rather than
+ * inventing a second confidence widget: "strong" is the only evidence state confident enough
+ * to read as "high"; "developing" is real but partial, "medium"; everything weaker
+ * (emerging/limited_evidence/not_assessed) reads as "low" — a genuinely thin or absent signal,
+ * which is also why `not_assessed` itself is never passed in here at all (see the render site).
+ */
+function confidenceLevelFor(state: EvidenceState): ConfidenceLevel {
+  if (state === "strong") return "high";
+  if (state === "developing") return "medium";
+  return "low";
 }
 
 /**
@@ -152,6 +174,7 @@ export function OpportunityCard({
   opportunity,
   matchScore,
   reasonCodes,
+  matchConfidence = null,
   initialStatus,
   eligible = true,
   eligibilityNotes = null,
@@ -164,6 +187,10 @@ export function OpportunityCard({
   opportunity: Opportunity;
   matchScore: number;
   reasonCodes: string[];
+  /** Phase 12 field, see confidenceLevelFor's own comment. Null is the honest common case
+   * today (Oryn has no assessed dimension behind most matches yet) — renders nothing, same
+   * silence-is-honest treatment as `reason` being null below. */
+  matchConfidence?: EvidenceState | null;
   initialStatus: SavedOpportunityStatus | null;
   /** Browse mode (unlike "For you", which pre-filters to eligible-only) can surface an
    * opportunity this student doesn't qualify for — a Discover surface shouldn't silently
@@ -368,6 +395,13 @@ export function OpportunityCard({
                 label" rule. */}
             <Eyebrow tone="brand" ultra={matchScore >= 80} locale={locale}>{tier.label}</Eyebrow>
             <p className="mt-2 text-sm leading-relaxed text-ink-2">{reason}</p>
+            {/* not_assessed is excluded deliberately: that state means Oryn never evaluated
+                this dimension at all, a different fact from "evaluated and it's thin" — the
+                same distinction resolveMatchConfidence draws by returning null outright when
+                there's no matched dimension in the first place. Neither case earns a badge. */}
+            {matchConfidence && matchConfidence !== "not_assessed" ? (
+              <ConfidenceIndicator level={confidenceLevelFor(matchConfidence)} locale={locale} className="mt-1.5" />
+            ) : null}
           </div>
         ) : null}
 
