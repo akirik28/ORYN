@@ -57,14 +57,15 @@ describe("data export table coverage", () => {
     expect(EXPORT_EXCLUDED_TABLES).not.toHaveProperty("product_events");
   });
 
-  // birth_year_changes stays excluded for a different reason than "migration not
-  // applied" now that migration 0072 has shipped (confirmed 2026-09-02) — RLS is enabled
-  // with zero policies, a deliberate open design question per DATA_RIGHTS_AUDIT.md Part
-  // 3a, not an oversight. This guards against the two reasons drifting apart silently:
-  // someone adding a policy without updating this list, or vice versa.
-  test("birth_year_changes stays excluded until its RLS design question is resolved", () => {
-    expect((EXPORT_TABLES as readonly string[]).includes("birth_year_changes")).toBe(false);
-    expect(EXPORT_EXCLUDED_TABLES).toHaveProperty("birth_year_changes");
+  // Same sequencing guard as product_events above, for the same reason: birth_year_changes
+  // was excluded because RLS had zero policies (DATA_RIGHTS_AUDIT.md Part 3a), not because
+  // the table was unapplied. Migration NNNN added a "select own birth year changes" policy,
+  // confirmed live (see that migration's own header), so this now belongs in EXPORT_TABLES.
+  // If this ever moves back, it means someone reverted that policy without reverting this
+  // line too.
+  test("birth_year_changes is exported, not excluded — its select-own RLS policy is live", () => {
+    expect((EXPORT_TABLES as readonly string[]).includes("birth_year_changes")).toBe(true);
+    expect(EXPORT_EXCLUDED_TABLES).not.toHaveProperty("birth_year_changes");
   });
 });
 
