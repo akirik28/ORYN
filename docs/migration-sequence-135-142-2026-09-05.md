@@ -20,13 +20,11 @@ minutes before CEO caught and fixed it.
   to that branch's current remote tip via a fresh `git fetch` + diff immediately before writing
   this doc (`diff` exit code 0), not merely trusted from an earlier read.
 - 0141: extracted from `oryn/advisor-generation-locks-guard-2026-09-05`, captured in full
-  earlier this session. **Could not be re-verified against a remote tip** — `git ls-remote
-  --heads origin` shows no branch by that name at the time of this run, consistent with CEO's
-  own "0140 ve 0141 hâlâ başka şeritte, henüz push edilmedi." Used anyway rather than waiting
-  idle, since the full content was already in hand; treat this one file's result as provisional
-  until CEO confirms the pushed version matches. Structurally low-risk to have drifted (a
-  REVOKE plus two short SECURITY DEFINER SQL functions, already proven individually per CEO's
-  own message), but named here rather than silently assumed.
+  earlier this session. At the time this test ran, `git ls-remote --heads origin` showed no
+  branch by that name — consistent with CEO's own "0140 ve 0141 hâlâ başka şeritte, henüz push
+  edilmedi" — so this result was reported as provisional. The branch was pushed (`07ab5841`)
+  minutes later; **re-fetched and byte-diffed once it appeared — identical to what was tested**
+  (`diff` exit code 0). No drift; the content this doc reports on is confirmed current.
 
 ## Method
 
