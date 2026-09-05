@@ -76,14 +76,41 @@ describe("createConversation — the actual session wall, not just the button", 
     expect(insertMock).not.toHaveBeenCalled();
   });
 
-  test("Ultra succeeds regardless of how many conversations already exist -- no count query even run", async () => {
+  test("Ultra below the 5-session cap succeeds -- the count query now runs for Ultra too", async () => {
+    // 2026-09-05 decision: Ultra is no longer unlimited. This replaces the old "no count query
+    // even run" test, whose premise this decision made false.
     vi.mocked(getCurrentProfile).mockResolvedValue(profile("ultra"));
+    countMock.mockResolvedValue({ count: 4, error: null });
     insertMock.mockResolvedValue({ data: { id: "conv-9" }, error: null });
 
     const result = await createConversation();
 
     expect(result.conversationId).toBe("conv-9");
-    expect(countMock).not.toHaveBeenCalled();
+    expect(countMock).toHaveBeenCalled();
+  });
+
+  test("Ultra at exactly 5 existing conversations is rejected -- the cap actually firing, with an actionable message", async () => {
+    vi.mocked(getCurrentProfile).mockResolvedValue(profile("ultra"));
+    countMock.mockResolvedValue({ count: 5, error: null });
+
+    const result = await createConversation();
+
+    expect(result.conversationId).toBeUndefined();
+    expect(insertMock).not.toHaveBeenCalled();
+    // CEO's explicit, non-negotiable requirement (2026-09-05 dispatch): the message must say
+    // both that the student is at the limit AND what to do about it -- not a generic error.
+    expect(result.error).toContain("5");
+    expect(result.error?.toLowerCase()).toContain("delete");
+  });
+
+  test("Ultra past the cap fails closed too, not just at exactly 5", async () => {
+    vi.mocked(getCurrentProfile).mockResolvedValue(profile("ultra"));
+    countMock.mockResolvedValue({ count: 7, error: null });
+
+    const result = await createConversation();
+
+    expect(result.error).toBeTruthy();
+    expect(insertMock).not.toHaveBeenCalled();
   });
 
   test("a Server Action call is directly callable regardless of the client -- Standard is blocked even without going through any UI", async () => {
