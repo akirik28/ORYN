@@ -654,3 +654,124 @@ values
 ```
 
 ---
+
+## 21. University of Essex
+
+`id = '2a45f192-251f-48e3-8ba7-8343f7c8ea25'` — QS rank 438.
+
+**Source actually used:** `https://www1.essex.ac.uk/documents/admissions/englishInternational.pdf`
+— official PDF, directly read in full (9 pages), dated 14 August 2026 -- genuinely current,
+not a stale document. The richest single source in this batch: a full table of 10+ accepted
+tests, each broken down by entry point (Foundation Year / First Year / Second-and-Final-Year
+Direct Entry).
+
+**Eighteenth independent corroboration of the TOEFL iBT rescale today**, with the same
+new-scale-compression pattern already flagged once this batch (Aberdeen's Medicine figure):
+Essex's legacy TOEFL requirement climbs by entry point (72 / 82 / 91) but the new-scale figure
+is a flat 4 overall across all three -- recorded exactly as published, not smoothed to imply a
+rising new-scale figure that was never actually stated.
+
+**A genuinely distinctive validity-period fact, confirmed directly rather than assumed
+uniform:** most accepted tests are valid for 5 years, but IELTS and PTE Academic are valid for
+only 3 years, and TOEFL for only 2 years -- the shortest-validity test (TOEFL) is also the one
+most commonly cited elsewhere in this batch, worth surfacing since a Turkish applicant
+comparing multiple UK universities' pages could otherwise assume the same shelf-life applies
+everywhere.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('2a45f192-251f-48e3-8ba7-8343f7c8ea25', 'english_proficiency',
+   'By entry point -- Foundation Year: IELTS 5.5 (5.5+/component), TOEFL 72 legacy/4 new scale; First Year: IELTS 6.0 (5.5+/component), TOEFL 82/4; Second-and-Final-Year Direct Entry: IELTS 6.5 (5.5+/component), TOEFL 91/4 -- new scale applies from 21 Jan 2026; validity: IELTS/PTE 3 years, TOEFL 2 years, most other tests 5 years',
+   'For applicants requiring a Student visa (excluding nationals of majority English-speaking countries per the UK Home Office list), by entry point: Foundation Year -- IELTS (Academic) 5.5 overall, 5.5+ each component; TOEFL iBT before 21 Jan 2026: 72 overall (Reading 18, Listening 17, Speaking 20, Writing 17); from 21 Jan 2026: 4 overall, 4+ each component. First Year entry -- IELTS 6.0 overall, 5.5+ each component; TOEFL 82 legacy / 4 new scale (same per-component structure). Second and Final Year Direct Entry -- IELTS 6.5 overall, 5.5+ each component; TOEFL 91 legacy / 4 new scale. Ten-plus other named tests (Cambridge English, LanguageCert, PTE Academic, Oxford Test of English, Trinity ISE, Michigan ECPE, KTE, and others) each have their own equivalent tier table in the same official document. Validity/shelf-life differs by test: IELTS and PTE Academic are valid 3 years, TOEFL 2 years, and most other listed tests up to 5 years before course start. Two tests of the same type may be combined if both overall and component minimums are met across the two sittings, within validity. Health and Social Care courses (Nursing, Social Work, Physiotherapy, etc.) and below-degree-level courses have separate, non-standard requirement tables not reproduced here.',
+   true, 'high', 'https://www1.essex.ac.uk/documents/admissions/englishInternational.pdf', now());
+```
+
+---
+
+## 22. University of Dundee
+
+`id = '8f294730-0018-4f65-85fd-aebda67388f3'` — QS rank 447.
+
+**Source actually used:** `https://www.dundee.ac.uk/guides/english-language-requirements` —
+official page, directly fetched. The page itself confirms English requirements are set per
+course/offer-letter rather than one fixed figure -- confirmed directly, not assumed.
+
+**A genuine, distinctive exclusion confirmed directly:** Dundee explicitly states it will
+"only accept TOEFL iBT scores taken in one sitting" and will NOT accept "MyBest" composite
+scores (TOEFL's own superscoring feature that combines an applicant's best section scores
+across multiple sittings) -- a specific policy several other UK universities in this batch do
+not appear to share, recorded as actually found rather than assumed universal or ignored.
+
+**What was checked and NOT found:** a single confirmed IELTS number -- a general search
+reports 6.5 overall as the figure for "most degree programmes," not independently confirmed by
+this session's own page read, recorded at `medium` confidence; TOEFL numeric equivalents (both
+scales), application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('8f294730-0018-4f65-85fd-aebda67388f3', 'english_proficiency',
+   'Set per course/offer letter rather than one fixed figure, officially confirmed; a commonly-cited figure is IELTS 6.5 overall for most degree programmes, not independently confirmed; TOEFL iBT accepted only from a single sitting -- MyBest composite scores explicitly NOT accepted',
+   'Dundee''s own page states English language requirements "depend on the academic level of the course" and directs applicants to their offer letter and course page rather than one university-wide figure. A general search separately reports IELTS 6.5 overall for most degree programmes, not independently confirmed by this session''s direct page read. TOEFL iBT is accepted, but only scores from a single test sitting -- Dundee explicitly does not accept TOEFL''s "MyBest" superscored/composite results, a specific policy confirmed directly on the official page. An alternative route exists via UK/international high-school English qualifications, or a home-country degree taught and assessed fully in English (medium of instruction), verified via an official signed and stamped institutional letter, provided obtained within the past 10 years.',
+   true, 'medium', 'https://www.dundee.ac.uk/guides/english-language-requirements', now());
+```
+
+---
+
+## 23. SOAS University of London
+
+`id = '9b3bd0ac-4ab4-447d-b067-5c05063b28c7'` — QS rank 458.
+
+**Source actually used:** `https://www.soas.ac.uk/international/english-language-requirements`
+— official page, directly fetched.
+
+**Nineteenth independent corroboration of the TOEFL iBT rescale today.** Also the SECOND UK
+university this batch (after Dundee, entry #22) to explicitly exclude TOEFL's "My Best Scores"
+composite -- confirmed as a real shared pattern across at least two institutions, not a one-off
+policy.
+
+**What was checked and NOT found:** application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('9b3bd0ac-4ab4-447d-b067-5c05063b28c7', 'english_proficiency',
+   'Direct entry: IELTS 6.5 overall (6.0+ per subscore), TOEFL iBT 95 legacy (23 Writing, 20+ others) / 5.0 new scale (4.5 Writing, 4.0+ others) -- "My Best Scores" explicitly not accepted; exempt for UK/majority-English-speaking-country nationals with English-medium education, or a UK/MESC/Canada/Ghana/Kenya/Nigeria/South-Africa degree within 10 years',
+   'Direct entry (no pre-sessional course needed): IELTS Academic/for UKVI/Online 6.5 overall, minimum 6.0 in all subscores. TOEFL iBT: 95 overall on the legacy scale (minimum 23 Writing, 20 in other components) or 5.0 on the new scale (minimum 4.5 Writing, 4.0 other components) -- "My Best Scores" superscored/composite results are explicitly not accepted. Exempt from providing test scores: UK nationals; nationals of a Majority English Speaking Country (MESC) who completed English-medium high school or a degree there; anyone who completed a degree in the UK or a MESC within the last decade; anyone with an English-taught degree from Canada, Ghana, Kenya, Nigeria, or South Africa within 10 years. Also acceptable: a UK university pre-sessional English course pass (2-year validity) or an International Foundation Programme completed with 55% in academic English (within 2 years).',
+   true, 'high', 'https://www.soas.ac.uk/international/english-language-requirements', now());
+```
+
+---
+
+## 24. Royal Holloway, University of London
+
+`id = '537f9703-8a8c-4326-91ea-0f3475404491'` — QS rank 485.
+
+**Source actually used:** `https://www.royalholloway.ac.uk/studying-here/international-
+students/english-language-requirements/` — official page, directly fetched.
+
+**A genuine absence worth flagging rather than silently filling in:** unlike roughly 19 other
+UK universities checked so far this batch, this page does NOT reference the 21 January 2026
+TOEFL iBT rescale at all -- only the legacy score (88) is given. Recorded as NULL/not-stated
+for the new-scale figure rather than assuming the same conversion pattern seen elsewhere; the
+page itself may simply not be updated yet, which is itself useful signal, not an error to
+correct silently.
+
+**What was checked and NOT found:** the new-scale TOEFL figure (see above); application
+deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('537f9703-8a8c-4326-91ea-0f3475404491', 'english_proficiency',
+   'IELTS 6.5 overall (Writing 6.0+, other components 5.5+); TOEFL iBT 88 (legacy scale only -- no new-scale figure stated on this page, unlike most other UK universities checked this batch); PTE Academic 67 (Writing 61+, others 54+); Cambridge English Advanced Grade C; STEM programmes generally lower, Business/Humanities/Social Sciences generally higher on Writing specifically',
+   'Standard undergraduate entry: IELTS 6.5 overall, Writing minimum 6.0, other components minimum 5.5. TOEFL iBT: 88 overall (Reading 18, Listening 17, Speaking 20, Writing 17-19) -- this page states only the legacy figure, with no 21-January-2026 new-scale conversion given, notably different from most other UK universities checked in this batch. PTE Academic: 67 overall, Writing minimum 61, other components minimum 54. Cambridge English Advanced (CAE): Grade C. Requirements vary by programme -- STEM programmes generally set lower thresholds, while Business, Humanities, and Social Sciences programmes generally require higher Writing scores specifically. A preparation programme at the Royal Holloway International Study Centre is available for applicants not yet meeting their course''s requirement.',
+   true, 'high', 'https://www.royalholloway.ac.uk/studying-here/international-students/english-language-requirements/', now());
+```
+
+---
