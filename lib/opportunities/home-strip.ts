@@ -172,7 +172,15 @@ export async function getHomeOpportunityStrip(
     .select("opportunity_id, match_score, eligibility_notes")
     .eq("user_id", userId)
     .eq("eligible", true)
+    // Secondary key added 2026-09-05 (docs/home-strip-ranking-stability-2026-09-04.md):
+    // match_score alone ties 191-way at some students' own rank-5 boundary, and an index
+    // scan's tie order is an accident of physical leaf-page layout, not something the query
+    // asks for -- one unrelated write to this table can silently reorder which opportunities
+    // land in a student's "best 5" between visits. `id` is opportunity_matches' own uuid
+    // primary key (migration 0008), so it's a genuine, always-unique tiebreaker -- unlike
+    // calculated_at, which a same-instant batch recompute could still tie.
     .order("match_score", { ascending: false })
+    .order("id", { ascending: true })
     .limit(HOME_STRIP_CANDIDATE_POOL);
 
   const opportunityIds = (matches ?? []).map((m) => m.opportunity_id);
