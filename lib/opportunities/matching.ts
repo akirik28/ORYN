@@ -1146,7 +1146,25 @@ export function computeOpportunityMatch(
   // exclusion (!eligible, which is genuinely 0) and a stronger data-blank match still
   // outranks a weaker one (see NO_ELIGIBILITY_DATA_SCORE_CAP's own comment on why this is a
   // proportional scale, not a flat min()).
-  const matchScore = !eligible ? 0 : hasAnyEligibilityDataAtAll(opportunity) ? rawScore : clampScore((rawScore * NO_ELIGIBILITY_DATA_SCORE_CAP) / 100);
+  //
+  // CEO's 2026-09-05 follow-up, measured against real data (docs/eligibility-confidence-
+  // consistency-audit-2026-09-05.md, docs/student-side-eligibility-check-impact-2026-09-05.md):
+  // hasAnyEligibilityDataAtAll alone only asks whether the OPPORTUNITY has real data on some
+  // axis — an opportunity with a real age/grade/country bound still reads as "confident" here
+  // even when the STUDENT's own matching field for that exact axis is unknown, because nobody
+  // has actually checked this student against the real restriction that exists.
+  // lib/counselor/eligibility.ts's evaluateCandidateEligibility already caught this (an
+  // unknown-note of any kind, including a profile-incomplete one, caps the counselor's own
+  // ranking) — the card's score did not, so the same student+opportunity pair could read
+  // "Exceptional" here while the Advisor deprioritized it for the identical reason. Reusing
+  // classifyEligibilityGap on the same `notes` this function already computes — not a new,
+  // separately-maintained student-side check — both because it's the established
+  // classification for exactly this shape and because it's the one the card's own
+  // profile_incomplete link (opportunity-card.tsx) already keys off of: capping the score here
+  // and showing "add your birth year" there read the identical `eligibility_notes`, so they
+  // can never appear one without the other.
+  const hasConfidentEligibilitySignal = hasAnyEligibilityDataAtAll(opportunity) && classifyEligibilityGap(notes) !== "profile_incomplete";
+  const matchScore = !eligible ? 0 : hasConfidentEligibilitySignal ? rawScore : clampScore((rawScore * NO_ELIGIBILITY_DATA_SCORE_CAP) / 100);
 
   return {
     eligible,
