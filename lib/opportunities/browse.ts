@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Opportunity, OpportunityCategory } from "@/types/database";
 import { canonicalCountryKey, isSameCountry, type EligibilityNote } from "./matching";
 import { INSUFFICIENT_VERIFICATION_REASON, isOpportunitySufficientlyVerified, resolveStoredEligibility } from "./lifecycle";
+import type { EvidenceState } from "@/lib/scoring/signal";
 
 export interface OpportunityBrowseFilters {
   q?: string;
@@ -28,6 +29,11 @@ export interface OpportunityBrowseRow {
    * demotion below, but never hides the row. */
   needsVerification: boolean;
   reasonCodes: string[];
+  /** Phase 12 (AGENTS.md): "show meaningful fields... Confidence — do not call this one
+   * opaque AI score." Null when Oryn has no assessed dimension to vouch a confidence level
+   * for (resolveMatchConfidence's own honest default) — the card renders nothing rather than
+   * a placeholder in that case, same as reasonCodes producing no sentence. */
+  matchConfidence: EvidenceState | null;
 }
 
 const PAGE_SIZE = 24;
@@ -88,7 +94,7 @@ export async function browseOpportunities(
 
   const { data: matches } = await supabase
     .from("opportunity_matches")
-    .select("opportunity_id, match_score, eligible, eligibility_notes, reason_codes")
+    .select("opportunity_id, match_score, eligible, eligibility_notes, reason_codes, match_confidence")
     .eq("user_id", userId)
     .in(
       "opportunity_id",
@@ -160,6 +166,7 @@ export async function browseOpportunities(
       notActionable,
       needsVerification,
       reasonCodes: (match?.reason_codes as string[] | null) ?? [],
+      matchConfidence: (match?.match_confidence as EvidenceState | null) ?? null,
     };
   });
 

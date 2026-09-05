@@ -6,7 +6,7 @@
 import type { ImpactLevel, OutlookLabel, Opportunity, ProfileDimension, University, UniversityProgram, UniversityRequirement, UniversityStatistic, WeeklyAction } from "@/types/database";
 import type { TargetUniversityWithDetails } from "@/lib/universities/queries";
 import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
-import { toProfileSignal } from "@/lib/scoring/signal";
+import { toProfileSignal, type EvidenceState } from "@/lib/scoring/signal";
 import type { ProfileChange } from "@/lib/scoring/change";
 import type { MonthlyReview } from "@/lib/scoring/monthly-review";
 import type { PortfolioItem, PortfolioSkill } from "@/lib/portfolio/types";
@@ -712,7 +712,7 @@ export const FIXTURE_OPPORTUNITY_SOURCES = [
   },
 ];
 
-export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: number; reasonCodes: string[] }[] = [
+export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: number; reasonCodes: string[]; matchConfidence?: EvidenceState | null }[] = [
   {
     opportunity: {
       id: "opp-1",
@@ -793,6 +793,11 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
     },
     matchScore: 91,
     reasonCodes: ["matches_your_interests", "addresses_a_current_gap"],
+    // Phase 12 field, deliberately shown here (high) and contrasted on opp-2 (low) — the
+    // exact "low confidence and high confidence shouldn't look the same" case this fixture
+    // pair exists to demonstrate visually, since neither state is otherwise reachable
+    // without live advisor-assessed data in this Supabase-less sandbox.
+    matchConfidence: "strong" as EvidenceState,
   },
   {
     opportunity: {
@@ -861,6 +866,7 @@ export const FIXTURE_OPPORTUNITIES: { opportunity: Opportunity; matchScore: numb
     },
     matchScore: 78,
     reasonCodes: ["addresses_a_current_gap"],
+    matchConfidence: "emerging" as EvidenceState,
   },
   // Three more categories, added 2026-09-03 specifically so this preview exercises the
   // category-glyph placeholder (features/opportunities/opportunity-card.tsx,
