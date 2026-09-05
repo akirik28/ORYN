@@ -1489,3 +1489,94 @@ values
 ```
 
 ---
+
+## 51. University of Westminster
+
+`id = 'aa422100-acf3-4cdf-829a-5cefe332cbf2'` — QS rank 851-900.
+
+**Caught a level mismatch before writing anything:** the first official page fetched
+(`westminster.ac.uk/entry-requirements`) turned out to be **postgraduate**-specific content
+(IELTS 6.5 overall, 5.5 per component) despite its generic URL -- confirmed by reading the
+page's own text, not assumed from the URL. The undergraduate-specific figure below comes from
+a general search of Westminster's separate international-students English-requirements page,
+recorded at `medium` confidence since this session did not itself directly fetch that
+correctly-scoped page.
+
+**What was checked and NOT found:** TOEFL iBT numeric equivalents, PTE score, application
+deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('aa422100-acf3-4cdf-829a-5cefe332cbf2', 'english_proficiency',
+   'Undergraduate (distinct from the higher 6.5 postgraduate figure found on a differently-scoped page): usually IELTS 6.0 overall (5.5+ per element); some courses set higher; also accepts LanguageCert Academic, PSI Skills for English, and Pearson PTE UKVI',
+   'For undergraduate entry, Westminster usually requires a minimum IELTS 6.0 overall with 5.5 in each element (or a recognised equivalent) -- distinct from the university''s own postgraduate figure of IELTS 6.5/5.5, found on a different, postgraduate-specific page despite its generic-looking URL. Some undergraduate courses set a higher minimum, checked on individual course pages. Applicants need not take IELTS before applying, but must reach the required score before joining the course. Accepted alternatives include LanguageCert Academic, PSI Skills for English, and Pearson PTE UKVI. Pre-sessional English programmes are available for applicants below the required level.',
+   true, 'medium', 'https://www.westminster.ac.uk/international/student-exchanges/how-to-apply/english-language-requirements', now());
+```
+
+---
+
+## 52. London South Bank University (LSBU)
+
+`id = 'a5745b82-63f0-49ee-9f9c-9fe7252234ce'` — QS rank 901-950.
+
+**Access note:** both the official undergraduate entry-requirements page and LSBU's own PDF
+guideline document returned HTTP 403 to a direct fetch. Recorded at `medium` confidence from a
+general search's summary instead.
+
+**A discrepancy noticed and explicitly left unresolved, rather than guessed at:** LSBU's own
+country-specific pages reportedly show IELTS 4.5 for Thailand and IELTS 6.0 for Angola --
+wildly different figures for what should be the same test. This most plausibly reflects
+different accepted-qualification pathways per country (e.g. a country''s own school-leaving
+credential substituting for a language test, or foundation-year vs direct-entry framing) rather
+than a genuine 1.5-band swing in the same test's requirement, but this wasn't confirmed in this
+pass -- not asserted as an explanation, and the general 6.0 figure below is used as the
+confirmed standard instead of averaging or guessing between the two country-page numbers.
+
+**What was checked and NOT found:** TOEFL iBT numeric equivalents, the Health-courses
+exception's specific figure, application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('a5745b82-63f0-49ee-9f9c-9fe7252234ce', 'english_proficiency',
+   'Undergraduate degrees (except Health courses): IELTS Academic 6.0 overall (5.5+ per component); some courses set higher; country-specific pages reportedly show very different figures (e.g. Thailand 4.5 vs Angola 6.0), most likely reflecting different accepted-qualification pathways rather than a real test-score swing -- not resolved further in this pass',
+   'For undergraduate degrees other than Health courses, LSBU''s standard requirement is IELTS Academic 6.0 overall, no component below 5.5 -- some courses require higher, checked on individual course pages. LSBU''s own per-country information pages reportedly cite very different figures for different countries (e.g. Thailand IELTS 4.5, Angola IELTS 6.0), most plausibly reflecting different accepted local qualifications or pathway routes rather than the same direct-entry test threshold varying by nationality -- this discrepancy was noticed but not resolved in this pass since neither the main entry-requirements page nor LSBU''s own English-language PDF guideline was accessible (both HTTP 403). Health courses reportedly require a higher, unspecified threshold.',
+   true, 'medium', 'https://www.lsbu.ac.uk/study/undergraduate/entry-requirements', now());
+```
+
+---
+
+## 53. Middlesex University London
+
+`id = '909e8ea8-a5a2-4a5c-bc7b-4832818f84b0'` — QS rank 901-950. **Last university in this
+batch** (54 total minus Newcastle, already staged in the QS 101-150 doc).
+
+**Source actually used:** `https://www.mdx.ac.uk/international/entry-requirements-for-
+international-students/english-language-requirements-for-international-students/` — official
+page, directly fetched.
+
+**A third UK university this batch running its own free/low-cost in-house English test**
+(after Bradford's BASALT and UWE Bristol's own free online ELT): the Middlesex English
+Language Test (MELT), required score 3.0 (minimum 2.5) for undergraduates, free with a
+conditional offer -- though this page does not itself state a MELT-to-IELTS conversion, so that
+mapping is not asserted here.
+
+**Only the new-scale (post-21-Jan-2026) TOEFL figure is given, with no legacy number at all** --
+matching the same one-sided gap already seen at Bangor (#29) and (partially) Keele (#39),
+distinct from the far more common "legacy-only" gap (Royal Holloway, Huddersfield, Hull,
+Manchester Met, Portsmouth, DMU, Brighton, Lincoln -- eight instances this batch).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('909e8ea8-a5a2-4a5c-bc7b-4832818f84b0', 'english_proficiency',
+   'IELTS 6.0 overall (5.5+ per component), TOEFL iBT 4 overall (4+ each component) -- new scale only, no legacy figure stated; alternatively, Middlesex''s own English Language Test (MELT) at 3.0 overall (2.5+ minimum), free with a conditional offer, IELTS-equivalence not stated',
+   'Undergraduate entry: IELTS 6.0 overall, minimum 5.5 in each component. TOEFL iBT: 4 overall, minimum 4 in all components -- this page gives only one TOEFL figure with no explicit before/after 21-January-2026 split, recorded as the new-scale number per the pattern from other UK universities. Test results are valid for 2 years from the test date. As an alternative, Middlesex runs its own English Language Test (MELT): undergraduates need an overall score of 3.0 (minimum 2.5), which can be taken for free by an applicant holding a conditional offer -- the page does not state how a MELT score maps to IELTS, so no equivalence is asserted. Applicants who meet academic requirements but not the English standard may receive a conditional offer requiring completion of Middlesex''s own Pre-Sessional Academic English course.',
+   true, 'high', 'https://www.mdx.ac.uk/international/entry-requirements-for-international-students/english-language-requirements-for-international-students/', now());
+```
+
+---
