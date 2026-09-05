@@ -147,6 +147,13 @@ describe("loadParentSafeUniversityDetail — read safety", () => {
       estimateRangeLow: 0.15,
       estimateRangeHigh: 0.25,
       estimateConfidence: "medium",
+      // CEO's dead-column audit, 2026-09-05: this fixture (RPC_WITH_MATCH above) already had
+      // realistic academic_fit_score/profile_fit_score values before this fix — this
+      // assertion just never checked for them, an under-matching verifier reporting a false
+      // pass on the exact bug it should have caught. See
+      // docs/target-fit-scores-surfaced-2026-09-05.md.
+      academicFitScore: 70,
+      profileFitScore: 65,
     });
   });
 

@@ -474,6 +474,36 @@ export default async function UniversityDetailPage({ params }: { params: Promise
                 : `(${outlookEstimate.confidence} confidence). This is not a guarantee or an official university probability.`}
             </p>
           ) : null}
+          {/* AGENTS.md Phase 16's named "Academic Fit"/"Profile Fit" (0-100 each) — CEO's
+              dead-column audit, 2026-09-05: computed by computeAdmissionOutlook and persisted
+              to target_universities on every view (lib/admissions/persist.ts), but never
+              rendered anywhere on this page. Placed directly above the strengths/gaps/unknowns
+              explanation below, matching Phase 16's own spec ordering (the two named scores,
+              then the qualitative "why") — a bare number with no explanation nearby is exactly
+              what CEO ruled against; sitting immediately next to the reasoning that produced it
+              is what makes a "72" mean something. Same freshest-value-over-stale-row pattern as
+              the badge/estimate above: outlook was just recomputed this request, targetRes.data
+              was read before that write. */}
+          {(outlook?.compositeScore ?? targetRes.data.academic_fit_score) != null || (outlook?.profileStrength ?? targetRes.data.profile_fit_score) != null ? (
+            <dl lang={locale} className="grid gap-4 border-t border-brand-primary-border pt-3 text-sm sm:grid-cols-2">
+              {(outlook?.compositeScore ?? targetRes.data.academic_fit_score) != null ? (
+                <div>
+                  <dt className="text-muted-foreground">{locale === "tr" ? "Akademik uyum" : "Academic fit"}</dt>
+                  <dd className="text-lg font-medium text-foreground">{outlook?.compositeScore ?? targetRes.data.academic_fit_score}</dd>
+                  <dd className="text-xs text-muted-foreground">
+                    {locale === "tr" ? "Bu üniversitenin seçiciliğine göre akademik profilin" : "Your academic profile weighed against this university's selectivity"}
+                  </dd>
+                </div>
+              ) : null}
+              {(outlook?.profileStrength ?? targetRes.data.profile_fit_score) != null ? (
+                <div>
+                  <dt className="text-muted-foreground">{locale === "tr" ? "Profil uyumu" : "Profile fit"}</dt>
+                  <dd className="text-lg font-medium text-foreground">{outlook?.profileStrength ?? targetRes.data.profile_fit_score}</dd>
+                  <dd className="text-xs text-muted-foreground">{locale === "tr" ? "Genel Kariyer Profili gücün" : "Your overall Career Profile strength"}</dd>
+                </div>
+              ) : null}
+            </dl>
+          ) : null}
           {/* Phase 16.2's explanation is mandatory, and for a target Proxola declined to rate, the
               explanation IS the reason — the sourced mechanism sentence, not a strengths/gaps
               grid describing a review step this system doesn't have. Before this, the reason was
