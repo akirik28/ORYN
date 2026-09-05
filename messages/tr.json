@@ -54,7 +54,7 @@
     "generateMyPlan": "Planımı oluştur",
     "thinking": "Düşünüyor…",
     "counselorFallbackDescription": "Doğrulanmış profil verilerine dayanır — yapay zekâ gerekmez.",
-    "counselorFallbackFewerThanThree": "Proxola bu hafta için sadece {count, plural, one {# güvenilir öneri} other {# güvenilir öneri}} buldu — üçe tamamlayacak kadar iyi belgelenmiş fırsat henüz yok. Profilin ve Proxola'nın kendi veri kapsamı büyüdükçe daha fazlası görünecek.",
+    "counselorFallbackFewerThanThree": "Proxola bu hafta sana güvenle sadece {count, plural, one {# öneri} other {# öneri}} sunabiliyor — üçe tamamlayacak kadar iyi belgelenmiş fırsat henüz yok. Profilin ve Proxola'nın kendi veri kapsamı büyüdükçe daha fazlası görünecek.",
     "planNotConfiguredTitle": "AI Danışman henüz yapılandırılmadı",
     "planFailedTitle": "Bu haftanın planını oluşturamadık",
     "noPlanTitle": "Henüz haftalık plan yok",
