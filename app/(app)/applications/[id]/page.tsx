@@ -16,6 +16,7 @@ import { updateApplicationNotes } from "@/app/(app)/applications/actions";
 import { PageHeader } from "@/components/proxola/page-header";
 import { SectionHeader } from "@/components/proxola/section-header";
 import { Progress } from "@/components/ui/progress";
+import { DeadlineBadge } from "@/components/proxola/deadline-badge";
 import type { RequirementEvaluationStatus } from "@/types/database";
 
 /** Same TS2589 ("type instantiation excessively deep") workaround as
@@ -115,7 +116,22 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
     <div className="max-w-2xl space-y-6">
       <PageHeader
         title={universityName}
-        description={`${applicationTypeLabel}${application.deadline ? ` · ${t("due")} ${application.deadline}` : ""}`}
+        description={
+          // FIXED 2026-09-05 (docs/past-deadline-honesty-measurement-2026-09-05.md): the
+          // plain string this used to be rendered application.deadline verbatim with no
+          // indication a past date had already passed, indistinguishable from one still
+          // ahead. DeadlineBadge is the same shared component the applications LIST view
+          // already uses correctly for this exact field a few lines away in this feature.
+          <span className="inline-flex flex-wrap items-center gap-x-1.5 gap-y-1">
+            {applicationTypeLabel}
+            {application.deadline ? (
+              <>
+                {" · "}
+                {t("due")} <DeadlineBadge date={application.deadline} locale={locale} />
+              </>
+            ) : null}
+          </span>
+        }
       />
 
       <ApplicationStatusControl applicationId={application.id} initialStatus={application.status} universityName={universityName} />
