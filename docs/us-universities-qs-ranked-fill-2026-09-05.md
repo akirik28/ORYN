@@ -1551,3 +1551,535 @@ database writes. SQL staged for CEO/founder review and application, not applied.
 and Iowa State tie at QS rank 540 and Colorado School of Mines/Delaware tie at 575; the stable
 `order by rank, id` tiebreaker from the batch-3 pagination fix kept both pairs distinct with no
 duplication or skip.
+
+---
+
+# Batch 7
+
+**Methodology correction found and applied before writing this batch:** the batch-7 selection
+query's raw candidate list included Massachusetts Institute of Technology at QS rank 1 with zero
+programs/requirements. Checked before treating it as a real gap: `public.universities` has TWO
+MIT rows -- the canonical one (`03167d0c-2315-49e3-a37e-f9c9c7d2d27c`) already has real profile
+data, and the zero-content one (`ba3a30b2-c6e2-4a0f-ba32-6da028175d35`) has
+`duplicate_status = 'superseded'`. Batches 1-6 never filtered on `duplicate_status`; re-checked
+all 49 previously-processed IDs from this batch and the earlier 7-partial batch against that
+column just now -- all 49 are `'canonical'`, so no retroactive fix is needed on already-staged
+work, but the selection query below adds `u.duplicate_status = 'canonical'` going forward.
+
+## 43. Rensselaer Polytechnic Institute (QS 581)
+
+`id = '99b6b9dd-9898-4012-b96a-3626f8d73ee4'`
+
+**Sources:** `https://undergrad.admissions.rpi.edu/prospective-students/prospective-students-frequently-asked-questions/fall-2026-admission-cycle-test`
+(official Fall 2026 test-optional FAQ) and the same office's general prospective-students FAQ
+page for the English-proficiency and self-report policy.
+
+**Preserved verbatim, cycle-scoped:** test-optional is confirmed only "through the Fall 2030
+application cycle" (a stated sunset, same shape as Houston's in batch 6), and Regular Decision
+score-submission has its own internal cutoff (tests taken before January 31, 2026).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('99b6b9dd-9898-4012-b96a-3626f8d73ee4', 'standardized_test',
+   'Test-optional through the Fall 2030 cycle; SAT superscored, ACT uses highest single composite only (not superscored); B.S./M.D. program requires official scores',
+   'RPI lets Fall 2026 applicants choose whether to submit SAT/ACT, and has confirmed test-optional admission through the Fall 2030 application cycle. SAT is superscored; ACT is NOT superscored -- only the highest single composite is considered, and the ACT may be taken with or without the science section. Test scores are not used to determine merit-aid eligibility. For Regular Decision, RPI accepts scores from tests taken before January 31, 2026; tests after that date may not receive full consideration. Exception: applicants to the Physician-Scientist (B.S./M.D.) Program must submit official SAT or ACT scores for their application to be reviewed at all.',
+   false, 'medium', 'https://undergrad.admissions.rpi.edu/prospective-students/prospective-students-frequently-asked-questions/fall-2026-admission-cycle-test', now()),
+  ('99b6b9dd-9898-4012-b96a-3626f8d73ee4', 'english_proficiency',
+   'Required for all non-native English speakers; self-reported English-proficiency scores are explicitly NOT accepted (unlike RPI''s own SAT/ACT self-report allowance)',
+   'An English-language proficiency examination is required for all non-native English speakers applying to RPI. Distinct from RPI''s SAT/ACT policy, self-reported English-proficiency exam scores are explicitly not accepted -- official score reports are required. No specific numeric minimum (TOEFL/IELTS/Duolingo) was confirmed in this pass.',
+   true, 'medium', 'https://undergrad.admissions.rpi.edu/prospective-students/prospective-students-frequently-asked-questions', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('99b6b9dd-9898-4012-b96a-3626f8d73ee4', 'https://undergrad.admissions.rpi.edu/prospective-students/prospective-students-frequently-asked-questions/fall-2026-admission-cycle-test',
+   'undergrad.admissions.rpi.edu', 'official_admissions_office', now(), 'medium',
+   'Students who apply to attend Rensselaer Polytechnic Institute as an undergraduate in the fall of 2026 will be able to choose whether or not to submit SAT or ACT scores... Rensselaer will remain test optional through the Fall 2030 application cycle.'),
+  ('99b6b9dd-9898-4012-b96a-3626f8d73ee4', 'https://undergrad.admissions.rpi.edu/prospective-students/prospective-students-frequently-asked-questions',
+   'undergrad.admissions.rpi.edu', 'official_admissions_office', now(), 'medium',
+   'An English language proficiency examination is required for all non-native English speakers... self-reported English proficiency exam scores will not be accepted.');
+```
+
+## 44. University of Iowa (QS 597)
+
+`id = '82805224-e03a-447f-ac2a-fc6c74f28588'`
+
+**Sources:** `https://admissions.uiowa.edu/node/196` (official standardized-test/admissions-process
+page) and `https://admissions.uiowa.edu/english-proficiency-requirements` (official
+English-proficiency page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('82805224-e03a-447f-ac2a-fc6c74f28588', 'standardized_test',
+   'Test-optional; scores used only if they benefit the applicant; Tippie College of Business direct-admit requires SAT 1230 / ACT 26 for guaranteed entry',
+   'The University of Iowa is test-optional for general admission, and standardized test scores are used only if they would benefit the applicant in admission and scholarship review (a benefit-only, "do no harm"-style mechanism). Institutional average benchmark: ACT 26 / SAT 1230 or above tends to unlock larger merit scholarship opportunities. Real, program-specific exception: the Tippie College of Business direct-admit pathway requires a minimum SAT of 1230 (or ACT 26) for guaranteed entry, unlike general admission.',
+   false, 'medium', 'https://admissions.uiowa.edu/node/196', now()),
+  ('82805224-e03a-447f-ac2a-fc6c74f28588', 'english_proficiency',
+   'TOEFL or IELTS scores sent by the testing agency; alternative on-campus English Language Placement Exam (EPE) available; proficiency beyond test scores can waive required English coursework',
+   'International first-year applicants may apply without standardized test scores by meeting course/GPA requirements and demonstrating English proficiency separately. The testing agency should send TOEFL or IELTS scores directly. Alternatively, students can take the university''s own English Language Placement Exam (EPE) during the first week of classes on arrival; if that exam demonstrates proficiency beyond what standardized scores showed, required English-language coursework can be waived. No specific minimum TOEFL/IELTS numeric cutoff was confirmed in this pass.',
+   true, 'medium', 'https://admissions.uiowa.edu/english-proficiency-requirements', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('82805224-e03a-447f-ac2a-fc6c74f28588', 'https://admissions.uiowa.edu/node/196',
+   'admissions.uiowa.edu', 'official_admissions_office', now(), 'medium',
+   'The University of Iowa is test optional for general admission... Standardized test scores will only be used if they benefit the applicant in the admission and scholarship review process.'),
+  ('82805224-e03a-447f-ac2a-fc6c74f28588', 'https://admissions.uiowa.edu/english-proficiency-requirements',
+   'admissions.uiowa.edu', 'official_admissions_office', now(), 'medium',
+   'Students can elect to take the English Language Placement Exam (EPE) upon arrival to campus during the first week of classes... required English Language coursework can be waived.');
+```
+
+## 45. Tulane University (QS 597)
+
+`id = 'e7e64d78-9b44-457f-8b7d-f3eee657263a'`
+
+**Sources:** `https://admission.tulane.edu/apply/instructions/standardized-tests` (official
+standardized-tests instructions page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('e7e64d78-9b44-457f-8b7d-f3eee657263a', 'standardized_test',
+   'Test-optional for admission since the Class of 2025; scores now considered for merit aid even when optional for admission; Pathway to Medicine program requires scores',
+   'Tulane has maintained an optional SAT/ACT submission policy for admission since the Class of 2025 -- submission is not required, but scores are considered if provided. Both SAT and ACT are superscored. Real, distinct exceptions: (1) the Pathway to Medicine program requires SAT/ACT scores; (2) standardized test submissions (SAT, ACT, AP, and Cambridge International A-Levels) are now factored into academic merit-aid decisions, separate from the admission decision itself. Students with 1300+ SAT or 28+ ACT are encouraged to submit, as strong scores may strengthen an already-strong academic record.',
+   false, 'medium', 'https://admission.tulane.edu/apply/instructions/standardized-tests', now()),
+  ('e7e64d78-9b44-457f-8b7d-f3eee657263a', 'english_proficiency',
+   'Required for non-native English speakers via TOEFL, IELTS, or Duolingo English Test',
+   'English-language proficiency is required for admission to Tulane. Applicants who are not native speakers of English must submit TOEFL, IELTS, or Duolingo English Test scores. No specific numeric minimum was confirmed in this pass.',
+   true, 'medium', 'https://admission.tulane.edu/apply/instructions/standardized-tests', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('e7e64d78-9b44-457f-8b7d-f3eee657263a', 'https://admission.tulane.edu/apply/instructions/standardized-tests',
+   'admission.tulane.edu', 'official_admissions_office', now(), 'medium',
+   'Submission of SAT or ACT scores is not required for admission to Tulane University... standardized test submissions...will now be considered in academic merit aid decisions... English language proficiency is required for admission to Tulane.');
+```
+
+## 46. Illinois Institute of Technology (QS 620)
+
+`id = '537a7cfb-870c-4a93-82e1-0004f9b75747'`
+
+**Sources:** secondary sources (`prepscholar.com`, `hellouni.org`) corroborating consistent
+figures; no single official `iit.edu` page with all details (SAT/ACT codes, English-proficiency
+waiver thresholds) resolved cleanly in this pass.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('537a7cfb-870c-4a93-82e1-0004f9b75747', 'standardized_test',
+   'Test-optional; not required but considered and superscored if submitted (SAT code 1318, ACT code 1040)',
+   'Illinois Institute of Technology (Illinois Tech) is test-optional: SAT/ACT scores are not required for admission but strengthen the application if submitted and are superscored. Reported range for admitted students: SAT 1180-1400 or ACT 26-32.',
+   false, 'medium', 'https://www.prepscholar.com/sat/s/colleges/Illinois-Institute-of-Technology-admission-requirements', now()),
+  ('537a7cfb-870c-4a93-82e1-0004f9b75747', 'english_proficiency',
+   'TOEFL 80+ or IELTS 6.5+ for most programs; waivable via SAT EBRW 550+ or ACT English 25+',
+   'Non-native English speakers must demonstrate proficiency via TOEFL or IELTS; most programs require a TOEFL score of 80 or higher, or an IELTS score of 6.5 or higher. The requirement may be waived if the applicant instead meets specific score thresholds: SAT Evidence-Based Reading and Writing of 550 or higher, or ACT English section of 25 or higher.',
+   true, 'medium', 'https://www.hellouni.org/blogs/usa-university/illinois-institute-of-technology-admission-requirements-all-you-need-for-your-application/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('537a7cfb-870c-4a93-82e1-0004f9b75747', 'https://www.prepscholar.com/sat/s/colleges/Illinois-Institute-of-Technology-admission-requirements',
+   'prepscholar.com', 'secondary_source', now(), 'medium',
+   'Illinois Institute of Technology is a test optional school... not required for admission, but considered if submitted.'),
+  ('537a7cfb-870c-4a93-82e1-0004f9b75747', 'https://www.hellouni.org/blogs/usa-university/illinois-institute-of-technology-admission-requirements-all-you-need-for-your-application/',
+   'hellouni.org', 'secondary_source', now(), 'medium',
+   'Most programs at Illinois Tech only accept students with a TOEFL score of 80 or an IELTS score of 6.5 or above... Illinois Tech may waive the English proficiency requirement if you meet specific score thresholds, such as 550 in SAT EBRW or 25 in ACT English.');
+```
+
+## 47. University of Hawaiʻi at Mānoa (QS 643)
+
+`id = '8e76fef0-04bf-4161-ad3c-7babc2cbdb88'`
+
+**Sources:** `https://manoa.hawaii.edu/admissions/freshman/` (official freshman-admissions page)
+and `https://testbook.com/en-us/college/university-of-hawaii-at-manoa-admissions` (secondary
+source, for the English-proficiency figures).
+
+**Recorded as found, not resolved by guessing:** the secondary source states the IELTS figure as
+both "average" and "minimum requirement" at the same 6.0 value in the same sentence -- likely a
+conflation in the source itself between reported cohort average and an actual minimum cutoff.
+Preserved as reported rather than picking one interpretation.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('8e76fef0-04bf-4161-ad3c-7babc2cbdb88', 'standardized_test',
+   'Test-optional with an explicit "Do No Harm" policy: submitted scores cannot be used to penalize the applicant',
+   'UH Manoa is test-optional for SAT/ACT. The university has adopted a "Do No Harm" policy, explicitly preventing a submitted test score from penalizing an applicant in the academic-ability assessment (distinct from most peers'' plain "optional" framing -- this is a named, one-directional-only-benefit mechanism). Reported mid-range: SAT 1130-1350 (25th-75th percentile); ACT 21-29. Scholarships or department direct-entry programs may still require test scores.',
+   false, 'medium', 'https://manoa.hawaii.edu/admissions/freshman/', now()),
+  ('8e76fef0-04bf-4161-ad3c-7babc2cbdb88', 'english_proficiency',
+   'TOEFL ~61 and IELTS 6.0 reported as both average and minimum (ambiguous in source); Duolingo minimum 95',
+   'For international students, a secondary source reports: average TOEFL score 61, IELTS average AND minimum both stated as 6.0 (the source does not clearly distinguish cohort average from an actual cutoff), and a Duolingo English Test minimum of 95. Given the TOEFL figure is explicitly labeled "average" rather than "minimum," it should not be treated as a confirmed cutoff.',
+   true, 'medium', 'https://testbook.com/en-us/college/university-of-hawaii-at-manoa-admissions', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('8e76fef0-04bf-4161-ad3c-7babc2cbdb88', 'https://manoa.hawaii.edu/admissions/freshman/',
+   'manoa.hawaii.edu', 'official_admissions_office', now(), 'medium',
+   'UH Manoa is test-optional... they have adopted a "Do No Harm" policy that prevents submitted test scores from penalizing you in our assessment of your academic ability.'),
+  ('8e76fef0-04bf-4161-ad3c-7babc2cbdb88', 'https://testbook.com/en-us/college/university-of-hawaii-at-manoa-admissions',
+   'testbook.com', 'secondary_source', now(), 'medium',
+   'For international students, the average TOEFL score is 61, and the Duolingo English test requires a minimum score of 95. The IELTS average score is 6.0, with a minimum requirement also at 6.0.');
+```
+
+## 48. American University (QS 646)
+
+`id = 'acab9043-31f7-4114-882f-71fa20e91da5'`
+
+**Sources:** `https://american.edu/admissions/first-year/test-optional.cfm` (official test-optional
+policy page) and a secondary source corroborating the specific TOEFL/IELTS/Duolingo minimums.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('acab9043-31f7-4114-882f-71fa20e91da5', 'standardized_test',
+   'Test-optional across all decision plans, does not affect merit aid or Honors consideration; not required at all for applicants from a non-US secondary school',
+   'American University is test-optional across every admission decision plan; applying without scores does not affect merit-award consideration or admission to the AU Honors Program. Distinct, real exception: applicants graduating from a secondary school located OUTSIDE the United States are not required to submit SAT or ACT at all (a flatter non-requirement than the general optional policy). Reported range for score-submitters: SAT 1280-1450, ACT 29-32 (of admitted applicants who submitted). Self-reported scores accepted at application; official scores required upon enrollment if admitted.',
+   false, 'medium', 'https://american.edu/admissions/first-year/test-optional.cfm', now()),
+  ('acab9043-31f7-4114-882f-71fa20e91da5', 'english_proficiency',
+   'TOEFL 85+, IELTS 6.5+, or Duolingo 115+',
+   'International applicants must meet one of the following English-proficiency minimums: TOEFL 85, IELTS 6.5, or Duolingo English Test 115.',
+   true, 'medium', 'https://www.clastify.com/knowledge-hub/score-requirements/american-university', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('acab9043-31f7-4114-882f-71fa20e91da5', 'https://american.edu/admissions/first-year/test-optional.cfm',
+   'american.edu', 'official_admissions_office', now(), 'medium',
+   'American University''s admissions process is test-optional... If you will be graduating from a secondary school located outside the United States, neither the SAT or ACT is required for admission.'),
+  ('acab9043-31f7-4114-882f-71fa20e91da5', 'https://www.clastify.com/knowledge-hub/score-requirements/american-university',
+   'clastify.com', 'secondary_source', now(), 'medium',
+   'English proficiency requirements include a minimum TOEFL score of 85, IELTS score of 6.5, and Duolingo score of 115.');
+```
+
+## 49. Florida International University (QS 659)
+
+`id = '8e8134ca-2b71-443d-ad53-3906b9335eea'`
+
+**Sources:** `https://admissions.fiu.edu/admission-standards/` (official admission-standards page).
+
+**Contradiction found and preserved, not resolved by guessing (same handling as Virginia
+Tech/Northeastern earlier in this document):** FIU's own official admission-standards page states
+scores are "required for first time in college applicants," while multiple independent secondary
+sources describe a test-optional policy in effect through Fall 2027. A second, targeted search
+did not resolve which is current. Both are recorded below rather than silently picking one.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('8e8134ca-2b71-443d-ad53-3906b9335eea', 'standardized_test',
+   'Contradictory sourcing: FIU''s own admission-standards page states SAT/ACT/CLT are required for first-time-in-college applicants; multiple secondary sources describe a test-optional policy through Fall 2027',
+   'FIU''s own official admission-standards page states that SAT, ACT, and/or CLT scores "are required for first time in college applicants." However, multiple independent secondary sources instead describe FIU as test-optional for most applicants through Fall 2027, with submitted scores reviewed holistically rather than mandated. A second, targeted search did not resolve the contradiction. Reported range if submitted: SAT 1070-1380 depending on source; average approximately 1310.',
+   true, 'medium', 'https://admissions.fiu.edu/admission-standards/', now()),
+  ('8e8134ca-2b71-443d-ad53-3906b9335eea', 'english_proficiency',
+   'TOEFL iBT 80, IELTS 6.5, or Duolingo 110; FIU English Language Institute Level 6 also accepted; a qualifying SAT/ACT score can substitute for the exam if the applicant attended high school outside the US',
+   'Accepted English-proficiency tests and minimums: TOEFL iBT 80, IELTS 6.5, Duolingo English Test 110. Completion of FIU''s own English Language Institute (ELI) Level Six with passing grades is also accepted. Distinct substitution rule: for international students who attended high school outside the United States, a qualifying SAT or ACT score can replace the English-proficiency exam entirely.',
+   true, 'medium', 'https://testbook.com/en-us/college/florida-international-university-admissions', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('8e8134ca-2b71-443d-ad53-3906b9335eea', 'https://admissions.fiu.edu/admission-standards/',
+   'admissions.fiu.edu', 'official_admissions_office', now(), 'medium',
+   'SAT, ACT and/or CLT scores are required for first time in college applicants.'),
+  ('8e8134ca-2b71-443d-ad53-3906b9335eea', 'https://testbook.com/en-us/college/florida-international-university-admissions',
+   'testbook.com', 'secondary_source', now(), 'medium',
+   'Accepted tests and minimum scores include: TOEFL iBT: 80; IELTS: 6.5; Duolingo English Test: 110... standardized test scores replace the need for an English language proficiency exam for international students attending high schools outside the U.S.');
+```
+
+---
+
+## Verification (batch 7)
+
+Read-only against the live database plus `WebSearch` for content — no code changed, no live
+database writes. SQL staged for CEO/founder review and application, not applied. University of
+Iowa and Tulane tie at QS rank 597; the stable `order by rank, id` tiebreaker kept both distinct.
+FIU's self-contradictory testing-policy sourcing (see above) is disclosed rather than guessed at,
+matching the Virginia Tech/Northeastern handling from an earlier batch.
+
+---
+
+# Batch 8
+
+**Second methodology correction found and applied before writing this batch:** the raw candidate
+list's `order by rank_numeric nulls last, id` put every QS band-ranked institution (QS publishes
+some institutions as a band, e.g. "701-710", with no discrete `rank_numeric`) after every
+discretely-ranked one regardless of true position -- surfaced when Wake Forest and Rutgers-Newark
+(band "801-850") outranked Oregon State/Oregon (band "711-720") under the old sort. The
+`university_rankings` table carries a `list_position` column that preserves QS's real published
+order even for band entries; switched the sort key to
+`coalesce(rank_numeric, list_position) nulls last, id`, which correctly reorders Wake Forest and
+Rutgers-Newark out of this batch and brings in Tennessee Knoxville, Oregon State, and Oregon
+instead. Same class of self-caught ordering bug as the batch-3 pagination fix -- disclosed the
+same way, not silently corrected.
+
+## 50. Lehigh University (QS 670)
+
+`id = '46dfb02d-669e-4165-94b9-b2a83a8bf3ff'`
+
+**Sources:** secondary sources (`prepscholar.com`, `testbook.com`) corroborating consistent
+figures; no single official `lehigh.edu` admissions page with all details resolved cleanly in
+this pass (the catalog's entrance-examinations page covers policy structure but not the specific
+numeric minimums).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('46dfb02d-669e-4165-94b9-b2a83a8bf3ff', 'standardized_test',
+   'Test-optional for first-year and transfer applicants; both SAT and ACT superscored',
+   'Lehigh does not require SAT/ACT for first-year or transfer applicants, but will consider scores if submitted, superscoring both tests. Reported middle-50: SAT 1380-1490; ACT 31-34.',
+   false, 'medium', 'https://www.prepscholar.com/sat/s/colleges/Lehigh-University-admission-requirements', now()),
+  ('46dfb02d-669e-4165-94b9-b2a83a8bf3ff', 'english_proficiency',
+   'TOEFL minimum 90, IELTS minimum 7.0; waived if English is the first language or the last 2 full years of instruction were in English',
+   'Required for applicants whose first language is not English, unless English is their first language or their last two full years of completed formal instruction were conducted in English. Reported minimum (matching the reported average): TOEFL 90, IELTS 7.0.',
+   true, 'medium', 'https://testbook.com/en-us/college/lehigh-university-admissions', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('46dfb02d-669e-4165-94b9-b2a83a8bf3ff', 'https://www.prepscholar.com/sat/s/colleges/Lehigh-University-admission-requirements',
+   'prepscholar.com', 'secondary_source', now(), 'medium',
+   'Lehigh University practices a "test-optional" policy regarding submission of the SAT or the ACT for both first-year and transfer applicants... Lehigh allows both SAT and ACT superscoring.'),
+  ('46dfb02d-669e-4165-94b9-b2a83a8bf3ff', 'https://testbook.com/en-us/college/lehigh-university-admissions',
+   'testbook.com', 'secondary_source', now(), 'medium',
+   'Lehigh requires official results from an English proficiency assessment for applicants whose first language is not English... the average TOEFL score is 90, and the minimum required score is also 90; the average IELTS score is 7.0 with a minimum of 7.0.');
+```
+
+## 51. Stevens Institute of Technology (QS 675)
+
+`id = '9213862d-e5aa-45f5-a5ae-962cdfa952f0'`
+
+**Sources:** `https://www.stevens.edu/page-basic/submit-your-test-scores` (official test-scores
+policy page) and `https://www.stevens.edu/admission-aid/undergraduate-admissions/international-students`
+(official international-students page).
+
+**Preserved verbatim, cycle-scoped:** test-optional through Fall 2029, with a real, dated
+exception carved out starting the Fall 2027 class specifically.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('9213862d-e5aa-45f5-a5ae-962cdfa952f0', 'standardized_test',
+   'Test-optional through Fall 2029 entry; Pinnacle Scholars Program requires SAT/ACT/AP starting with the Fall 2027 class',
+   'Stevens extends its SAT/ACT test-optional policy through Fall 2029 entry for first-year and transfer applicants. Real, dated exception: starting with the incoming Fall 2027 class, applicants must submit SAT, ACT, and/or AP scores to be considered for the Pinnacle Scholars Program specifically. Reported ranges: SAT 1380-1505; ACT composite 30-33.',
+   false, 'medium', 'https://www.stevens.edu/page-basic/submit-your-test-scores', now()),
+  ('9213862d-e5aa-45f5-a5ae-962cdfa952f0', 'english_proficiency',
+   'TOEFL 80 iBT, IELTS 6.0, Duolingo 105, PTE Academic 53, or SAT EBRW 550 (any one satisfies); waivable after 3 years studying in the US',
+   'International applicants (non-US citizen, non-permanent-resident) whose first language is not English must demonstrate proficiency via one of: TOEFL 80 iBT minimum, IELTS 6.0 overall minimum, Duolingo English Test 105 minimum, PTE Academic 53 minimum, or SAT Evidence-Based Reading & Writing 550 minimum. Waivers may be granted case-by-case for applicants who have studied in the US for at least 3 years at the time of application.',
+   true, 'medium', 'https://www.stevens.edu/admission-aid/undergraduate-admissions/international-students', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('9213862d-e5aa-45f5-a5ae-962cdfa952f0', 'https://www.stevens.edu/page-basic/submit-your-test-scores',
+   'stevens.edu', 'official_admissions_office', now(), 'medium',
+   'Stevens Institute of Technology is extending its SAT/ACT test optional policy... This policy applies to first-year and transfer applicants for entry terms through Fall 2029... starting for the incoming Fall 2027 class, students must submit SAT, ACT and/or AP scores to be considered for the Pinnacle Scholars Program.'),
+  ('9213862d-e5aa-45f5-a5ae-962cdfa952f0', 'https://www.stevens.edu/admission-aid/undergraduate-admissions/international-students',
+   'stevens.edu', 'official_admissions_office', now(), 'medium',
+   'TOEFL (minimum 80 iBT) IELTS (minimum 6.0 overall) Duolingo English Test (minimum 105) Pearson PTE Academic Test (minimum 53) SAT I Evidence-Based Reading & Writing (minimum 550)... waivers may be granted on a case-by-case basis for international students who have studied in the US for at least 3 years.');
+```
+
+## 52. City University of New York (QS 677)
+
+`id = '0fd60c92-ea8d-41f4-ac81-ee1b8eed09c9'`
+
+**Sources:** `https://www.cuny.edu/wp-content/uploads/sites/4/page-assets/academics/new-revised-policies/Resolution-to-Extend-Standardized-Test-Optional-Policy_through-spring-2027.pdf`
+(official CUNY Board of Trustees resolution) and `https://help.bmcc.cuny.edu/37085/kb/article/137229/toefl-ielts-and-duolingo-not-required`
+(one constituent college's own knowledge-base page, cited only to illustrate campus-level variance).
+
+**Real, load-bearing scoping note -- this row represents the whole CUNY system, not one
+campus:** the standardized-testing policy below is a genuine CUNY-wide Board of Trustees
+resolution and applies across all constituent colleges. English-proficiency requirements do
+NOT have an equivalent system-wide number: a targeted search confirmed "requirements vary by
+CUNY college" (one college's own admissions FAQ says this explicitly), with concrete examples
+found varying sharply between colleges (College of Staten Island: TOEFL 45 / IELTS 5.0; BMCC:
+TOEFL/IELTS/Duolingo not required at all). Recording one college's numbers under the generic
+"City University of New York" id would misrepresent them as system-wide when they are not, so
+no numeric minimum is asserted here -- this is the same "schema can't express it" situation as
+the requirement-freshness audit's cycle-scoping gap, applied to campus-scoping instead.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('0fd60c92-ea8d-41f4-ac81-ee1b8eed09c9', 'standardized_test',
+   'System-wide (CUNY Board of Trustees): test-optional through Spring 2027 for freshman admission across all constituent colleges; absence of scores cannot be used to deny admission',
+   'A CUNY Board of Trustees resolution extends test-optional undergraduate admission across the entire CUNY system through Spring 2027. Submitting SAT/ACT is optional; the admission decision is based primarily on high-school GPA, course grades, and curriculum rigor, and the absence of a test score cannot itself be used to deny admission. For freshman admission to an associate program specifically, English/math proficiency does not have to be demonstrated via SAT, ACT, NY State Regents, or CUNY''s own proficiency index; Regents exam scores are used when available, otherwise high-school GPA or High School Equivalency exam scores are used instead.',
+   false, 'medium', 'https://www.cuny.edu/wp-content/uploads/sites/4/page-assets/academics/new-revised-policies/Resolution-to-Extend-Standardized-Test-Optional-Policy_through-spring-2027.pdf', now()),
+  ('0fd60c92-ea8d-41f4-ac81-ee1b8eed09c9', 'english_proficiency',
+   'Required for international (visa-holding) applicants via TOEFL or IELTS, but the specific minimum score VARIES BY CONSTITUENT COLLEGE -- no single system-wide number exists',
+   'International applicants whose native language is not English and who hold a temporary visa must take TOEFL or IELTS, with exemptions for US permanent residents, refugees/asylees, applicants from English-official-language countries, and applicants with 2+ years of full-time study at an English-medium university. Critically, the specific minimum score is set per constituent college, not system-wide -- confirmed examples range from College of Staten Island (TOEFL 45 iBT / IELTS 5.0, notably low relative to typical university minimums) to BMCC (TOEFL/IELTS/Duolingo not required at all). No single number should be treated as representing "CUNY" as a whole; a student profile should resolve this at the specific constituent-college level once one is chosen.',
+   true, 'medium', 'https://help.bmcc.cuny.edu/37085/kb/article/137229/toefl-ielts-and-duolingo-not-required', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('0fd60c92-ea8d-41f4-ac81-ee1b8eed09c9', 'https://www.cuny.edu/wp-content/uploads/sites/4/page-assets/academics/new-revised-policies/Resolution-to-Extend-Standardized-Test-Optional-Policy_through-spring-2027.pdf',
+   'cuny.edu', 'official_government_dataset', now(), 'medium',
+   'CUNY is test optional for undergraduate admission... CUNY has extended its testing policy to test-optional through spring 2027... The absence of SAT or ACT exam scores cannot be used to deny a student admission.'),
+  ('0fd60c92-ea8d-41f4-ac81-ee1b8eed09c9', 'https://help.bmcc.cuny.edu/37085/kb/article/137229/toefl-ielts-and-duolingo-not-required',
+   'help.bmcc.cuny.edu', 'official_institution_website', now(), 'medium',
+   'TOEFL, IELTS, and DUOLINGO are not required... different CUNY colleges may have varying requirements, so it''s recommended to check with your specific college of interest for their exact proficiency requirements.');
+```
+
+## 53. University of Texas at Dallas (QS 686)
+
+`id = 'a51679e0-10d8-406d-87ec-8251ccfbd7a1'`
+
+**Sources:** secondary sources; conflicting on the testing policy itself (see below), consistent
+on the English-proficiency numbers.
+
+**Contradiction found and preserved, not resolved by guessing (same handling as FIU earlier in
+this batch and Virginia Tech/Northeastern previously):** one source describes UT Dallas as
+test-optional; another states it is "not a test-optional institution and does not allow
+self-reporting of scores." Recorded as found rather than picking one.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('a51679e0-10d8-406d-87ec-8251ccfbd7a1', 'standardized_test',
+   'Contradictory sourcing: described as test-optional by some secondary sources, described as not test-optional (no self-reporting allowed) by another',
+   'Secondary sources disagree on UT Dallas''s current testing policy: some describe a test-optional standardized-testing policy for admission; another states UT Dallas is not test-optional and does not allow self-reporting of scores. Not resolved in this pass. Reported range where scores are submitted: SAT 1160-1410, ACT 24-32; 78% of applicants reportedly submit SAT, 13% submit ACT.',
+   true, 'medium', 'https://testbook.com/en-us/college/university-of-texas-at-dallas-admissions', now()),
+  ('a51679e0-10d8-406d-87ec-8251ccfbd7a1', 'english_proficiency',
+   'TOEFL minimum 80, IELTS minimum 6.5',
+   'International applicants must meet a minimum TOEFL score of 80 or a minimum IELTS score of 6.5.',
+   true, 'medium', 'https://testbook.com/en-us/college/university-of-texas-at-dallas-admissions', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('a51679e0-10d8-406d-87ec-8251ccfbd7a1', 'https://testbook.com/en-us/college/university-of-texas-at-dallas-admissions',
+   'testbook.com', 'secondary_source', now(), 'medium',
+   'The University of Texas at Dallas has a test-optional standardized testing policy for use in admission. However...some sources indicate that the University of Texas at Dallas is not a test-optional institution and does not allow self-reporting of scores... requires a minimum IELTS score of 6.5 and a minimum TOEFL score of 80.');
+```
+
+## 54. University of Tennessee, Knoxville (QS band 701-710, list position 708)
+
+`id = '0fa9ed93-9712-43f0-8af4-6c00402e4652'`
+
+**Sources:** `https://admissions.utk.edu/undergraduate-application/test-score-policy/` (official
+first-year test-score policy page) and a secondary source (`applyweb.com`, a PDF hosted for UTK's
+own application platform) for the English-proficiency figures.
+
+**Preserved verbatim, cycle-scoped -- third instance of this pattern in the document (after
+Georgia/USG in batch 5 and Florida/Board-of-Governors in batch 6):** the University of Tennessee
+SYSTEM (not just the Knoxville campus) reversed from optional to REQUIRED testing, with concrete
+dated cutoffs.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('0fa9ed93-9712-43f0-8af4-6c00402e4652', 'standardized_test',
+   'SAT/ACT required system-wide (University of Tennessee System decision, not Knoxville-specific); self-report by Jan 20 2027, tests through Dec 2026 only, official scores due May 15 2027',
+   'The University of Tennessee System -- covering all UT campuses including Knoxville -- reversed its prior test-optional stance and now requires ACT or SAT for first-year applicants. Applicants must self-report scores by January 20, 2027; only tests taken through December 2026 are accepted for admission and institutional merit-scholarship consideration; official scores must be received from the testing agency by May 15, 2027. Superscored (highest section scores across test dates).',
+   true, 'medium', 'https://admissions.utk.edu/undergraduate-application/test-score-policy/', now()),
+  ('0fa9ed93-9712-43f0-8af4-6c00402e4652', 'english_proficiency',
+   'TOEFL 70 iBT / 523 PBT / 193 CBT, or IELTS 6.5, or ACT English 21+ / SAT Critical Reading 510+ as a substitute',
+   'International applicants demonstrate English proficiency via one of: TOEFL 70 (internet-based), 523 (paper-based), or 193 (computer-based) minimum; IELTS 6.5 minimum; or, as a substitute, ACT English section score of 21+ or SAT Critical Reading score of 510+. Alternatives: college credit (grade C or better) for English Composition 101/102, AP credit (score 4 or 5) on Literature & Composition, or completion of ELS Language Centers Level 112.',
+   true, 'medium', 'https://www.applyweb.com/utk/application-information.pdf', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('0fa9ed93-9712-43f0-8af4-6c00402e4652', 'https://admissions.utk.edu/undergraduate-application/test-score-policy/',
+   'admissions.utk.edu', 'official_admissions_office', now(), 'medium',
+   'The University of Tennessee System has decided that all campuses, including UT Knoxville, will now require standardized tests (ACT/SAT) for first-year applicants... by January 20, 2027... Official scores must be sent to UT from the testing agency and received by May 15, 2027.'),
+  ('0fa9ed93-9712-43f0-8af4-6c00402e4652', 'https://www.applyweb.com/utk/application-information.pdf',
+   'applyweb.com', 'secondary_source', now(), 'medium',
+   'A minimum score of 193 (computer-based), 523 (paper-based), or 70 on the iBT TOEFL; a minimum score of 6.5 on IELTS; or a minimum score of 21 on the English portion of the ACT or a score of 510 on the Critical Reading portion of the SAT.');
+```
+
+## 55. Oregon State University (QS band 711-720, list position 716)
+
+`id = '18a8ad38-0e8b-436d-96bd-251a3c71cc2b'`
+
+**Sources:** `https://admissions.oregonstate.edu/test-optional-admissions` (official test-optional
+policy page).
+
+**Real, state-wide policy, opposite direction from Tennessee above:** Oregon's public
+universities collectively no longer require standardized tests -- the mirror image of the
+Georgia/Florida/Tennessee system-mandate pattern, this time mandating optionality rather than
+requiring tests.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('18a8ad38-0e8b-436d-96bd-251a3c71cc2b', 'standardized_test',
+   'Test-optional since Fall 2021 entry, part of a state-wide Oregon public-university decision; no minimum score, no preference between SAT/ACT',
+   'Oregon State has been test-optional for students entering Fall 2021 and beyond, as part of a broader decision affecting all Oregon public universities to no longer require standardized admissions tests. No minimum score or test preference exists. OSU considers the best composite from a single test date only (no superscoring across dates); self-reported scores can be updated after applying and are validated, with official reports requested before enrollment.',
+   false, 'medium', 'https://admissions.oregonstate.edu/test-optional-admissions', now()),
+  ('18a8ad38-0e8b-436d-96bd-251a3c71cc2b', 'english_proficiency',
+   'Required for applicants educated primarily outside the US, Australia, UK, English-speaking Canada, or New Zealand; tests must be within the last 2 years',
+   'Students who completed a significant portion of their education outside the US, Australia, the UK, English-speaking Canada, or New Zealand may be required to submit English-proficiency test scores, taken within the last two years of the application term. No specific numeric minimum was confirmed in this pass.',
+   true, 'medium', 'https://admissions.oregonstate.edu/test-optional-admissions', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('18a8ad38-0e8b-436d-96bd-251a3c71cc2b', 'https://admissions.oregonstate.edu/test-optional-admissions',
+   'admissions.oregonstate.edu', 'official_admissions_office', now(), 'medium',
+   'OSU has adopted a test-optional admission policy for students entering in Fall 2021 and beyond... Oregon State does not have a preference which test a student takes nor is there a minimum test score requirement.'),
+  ('18a8ad38-0e8b-436d-96bd-251a3c71cc2b', 'https://news.oregonstate.edu/news/all-oregon-public-universities-no-longer-require-standardized-admissions-tests%C2%A0',
+   'news.oregonstate.edu', 'official_institution_website', now(), 'medium',
+   'All Oregon public universities to no longer require standardized admissions tests.');
+```
+
+## 56. University of Oregon (QS band 711-720, list position 722)
+
+`id = '9e170e9e-9266-4de1-876e-cd2a374ea01f'`
+
+**Sources:** `https://admissions.uoregon.edu/using-test-scores-admissions-process` (official
+test-optional policy page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('9e170e9e-9266-4de1-876e-cd2a374ea01f', 'standardized_test',
+   'Test-optional (same Oregon state-wide policy as Oregon State) and additionally test-BLIND for scholarships: submitted scores are never used in merit- or need-based award decisions',
+   'University of Oregon is test-optional for first-year admission, part of the same state-wide Oregon public-university policy as Oregon State. Distinct, stronger detail than Oregon State: UO is test-BLIND for scholarship consideration specifically -- even a submitted score is never factored into merit- or need-based awards.',
+   false, 'medium', 'https://admissions.uoregon.edu/using-test-scores-admissions-process', now()),
+  ('9e170e9e-9266-4de1-876e-cd2a374ea01f', 'english_proficiency',
+   'Required for visa-needing international applicants unless from an English-official-language country; SAT/ACT scores can substitute for the English-proficiency test',
+   'International students who would require a visa must take an English-proficiency test, except those from a country where English is the official language, or US students living abroad (who may instead use the standard test-optional route). Distinct substitution mechanism: SAT or ACT scores can themselves be used as one option to meet the English-proficiency requirement, or as an alternative requirement for applicants from nonaccredited schools. No specific numeric minimum was confirmed in this pass.',
+   true, 'medium', 'https://admissions.uoregon.edu/using-test-scores-admissions-process', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('9e170e9e-9266-4de1-876e-cd2a374ea01f', 'https://admissions.uoregon.edu/using-test-scores-admissions-process',
+   'admissions.uoregon.edu', 'official_admissions_office', now(), 'medium',
+   'The University of Oregon is a "test-optional" school... also "test-blind" for scholarship consideration... SAT and ACT tests are not required; however, the university does require international students to take one of the tests used to establish English proficiency.');
+```
+
+---
+
+## Verification (batch 8)
+
+Read-only against the live database plus `WebSearch` for content — no code changed, no live
+database writes. SQL staged for CEO/founder review and application, not applied. Ordering-key
+fix (see above) verified by re-running the selection query and confirming Wake Forest and
+Rutgers-Newark (both band 801-850) no longer rank ahead of Tennessee Knoxville/Oregon
+State/Oregon (band 701-720) — they will resurface correctly in a later batch once nearer
+band-701-720-and-below entries are exhausted. Tennessee Knoxville's system-wide mandatory-testing
+reversal is the third instance of this exact pattern (state/system board overriding individual
+institutional choice); Oregon's state-wide test-optional mandate is the same pattern in the
+opposite direction. CUNY's system-vs-campus scoping gap on English proficiency is disclosed
+rather than papered over with one college's numbers.
