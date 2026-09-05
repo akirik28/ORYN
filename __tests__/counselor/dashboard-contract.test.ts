@@ -218,7 +218,19 @@ describe("buildCounselorDashboardContract", () => {
   });
 
   test("recommendedOpportunities only includes opportunity-sourced, actually-recommended (do/consider) items", () => {
-    const opp = opportunity("research-fellowship", { category: "fellowship", fields: ["Research"] });
+    // known-eligible on purpose (2026-09-05, the unknown-eligibility score ceiling in
+    // lib/counselor/scoring.ts): this test is about which candidate KINDS land in
+    // recommendedOpportunities, not about eligibility -- the bare opportunity() default is
+    // eligibility-UNKNOWN, which the ceiling now correctly excludes from both "do" and
+    // "consider" (RANKING_THRESHOLDS.considerFloor is the same boundary for both), leaving
+    // this test with 0 opportunities to assert against otherwise.
+    const opp = opportunity("research-fellowship", {
+      category: "fellowship",
+      fields: ["Research"],
+      country_eligibility_confirmed_open: true,
+      age_eligibility_confirmed_open: true,
+      grade_eligibility_confirmed_open: true,
+    });
     const state = baseState({
       eligibleOpportunityMatches: [{ opportunity: opp, match: match("research-fellowship", { relevance_score: 90 }) }],
       completenessChecklist: [{ key: "career_goal", label: "Add a career goal", done: false }],

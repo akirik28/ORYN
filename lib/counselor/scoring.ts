@@ -70,12 +70,29 @@ function scoreOpportunityCandidate(candidate: CandidateAction, gaps: ProfileGap[
   const dataQuality = eligibility.verdict === "unknown" ? Math.round(dataQualityBase * 0.6) : dataQualityBase;
 
   const scoreBreakdown: Record<ScoreComponent, number> = { gapRelevance, fieldAlignment, urgency, dataQuality };
-  const score = clampScore(
+  const rawScore = clampScore(
     gapRelevance * OPPORTUNITY_SCORE_WEIGHTS.gapRelevance +
       fieldAlignment * OPPORTUNITY_SCORE_WEIGHTS.fieldAlignment +
       urgency * OPPORTUNITY_SCORE_WEIGHTS.urgency +
       dataQuality * OPPORTUNITY_SCORE_WEIGHTS.dataQuality
   );
+  // CEO's own 2026-09-05 measurement, real data: the 0.6 dataQuality discount alone was not
+  // enough -- 14 of 18 live "do" recommendations across 6 real students carried
+  // verdict === "unknown" (78%), two students with all 3 of their 3 "do" slots unknown. The
+  // discount can only ever soften one component out of four; a candidate strong on
+  // gapRelevance/fieldAlignment/urgency clears "do" regardless (worst case ~13 points off a
+  // 100-point scale, exactly the ceiling this session's own card-side fix
+  // (lib/opportunities/matching.ts's NO_ELIGIBILITY_DATA_SCORE_CAP) already had to solve the
+  // identical way). Same pattern reused here, not a second mechanism: a hard ceiling on the
+  // FINAL score, not a softer input to one component. RANKING_THRESHOLDS.considerFloor
+  // (not a new constant) is the natural ceiling -- rankCandidates' own `<= considerFloor`
+  // check already means a candidate at or below it can never become "do" or "consider", so
+  // capping there guarantees an unknown-eligibility opportunity always lands in
+  // "deprioritize" without introducing a second, competing threshold. Only the ranking score
+  // is capped; scoreBreakdown/confidence below still reflect the real (merely discounted)
+  // dataQuality, since those drive the recommendation's own "why" explanation and confidence
+  // label, not whether it's shown as this week's top pick.
+  const score = eligibility.verdict === "unknown" ? Math.min(rawScore, RANKING_THRESHOLDS.considerFloor) : rawScore;
 
   return {
     candidate,
