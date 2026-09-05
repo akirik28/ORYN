@@ -45,7 +45,22 @@ export async function streamAdvisorChat(endpoint: string, body: Record<string, u
   let finalEvent: Record<string, unknown> | null = null;
 
   for (;;) {
-    const { done, value } = await reader.read();
+    let done: boolean;
+    let value: Uint8Array | undefined;
+    try {
+      ({ done, value } = await reader.read());
+    } catch {
+      // A genuine network-level drop mid-read (WiFi lost, tab suspended, the server process
+      // killed) -- distinct from the clean-close-with-no-final-event case below, but
+      // informationally identical to a caller: there is no way to tell "the server never
+      // finished" apart from "it finished and saved, but the confirmation never arrived."
+      // Breaking here with finalEvent still null reuses the exact same, already-handled
+      // path immediately below rather than a second, parallel error branch -- and, just as
+      // importantly, turns what used to be an unhandled rejection (neither submit() nor
+      // retry() in features/advisor/advisor-chat.tsx wraps this call in try/catch) into the
+      // same ordinary { error } result they already both know how to render.
+      break;
+    }
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
     let boundary: number;
