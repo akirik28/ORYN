@@ -1269,3 +1269,111 @@ values
 ```
 
 ---
+
+## 43. UWE Bristol (University of the West of England)
+
+`id = 'fb2a3ebf-41f4-4a79-8bbb-fdff8d75e544'` — QS rank 761-770.
+
+**Source actually used:** `https://www.uwe.ac.uk/courses/applying/international-applications/
+english-language-requirements` — official page, directly fetched. A first search's summary
+garbled the "English First/Second Language" phrasing into an apparent IELTS 6.0-vs-7.0 split
+that made no sense against the same page's own single 6.0 figure -- discarded in favour of the
+actual page text rather than repeated as-is.
+
+**Twenty-fourth independent corroboration of the TOEFL iBT rescale today.**
+
+**A genuinely distinctive fact:** UWE Bristol offers its own free online English Language Test
+(ELT), in the same format as IELTS, to eligible international offer holders -- a specific,
+named alternative not seen at other universities in this batch (distinct from Bradford's
+BASALT, which is a full replacement test rather than IELTS-formatted).
+
+**What was checked and NOT found:** application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('fb2a3ebf-41f4-4a79-8bbb-fdff8d75e544', 'english_proficiency',
+   'IELTS Academic 6.0 overall (5.5+ per component), TOEFL iBT 80 legacy (17/18/20/17) / 4.0 new scale (3.5+ per component) from Jan 2026; IELTS General Training NOT accepted; UWE offers its own free IELTS-format online test to eligible offer holders',
+   'Undergraduate entry: IELTS Academic 6.0 overall, minimum 5.5 in each of Listening/Reading/Writing/Speaking. TOEFL iBT before January 2026: 80 or above overall, minimum 17 Listening, 18 Reading, 20 Speaking, 17 Writing. From January 2026 (new scale): 4.0 overall, minimum 3.5 per component. UWE Bristol explicitly does not accept IELTS General Training. UWE also offers its own free online English Language Test (ELT), formatted the same way as IELTS, to eligible international offer holders -- a distinctive, named alternative pathway. Requirements vary slightly by subject; a joint CAS covering a pre-sessional course (2/5/10 weeks) plus the main programme is available for eligible applicants.',
+   true, 'high', 'https://www.uwe.ac.uk/courses/applying/international-applications/english-language-requirements', now());
+```
+
+---
+
+## 44. University of Greenwich
+
+`id = 'b38511d3-407a-45eb-ab81-9f25260f6059'` — QS rank 791-800.
+
+**Source actually used:** `https://www.gre.ac.uk/international/support-and-help/courses` —
+official page, directly fetched. A first search's TOEFL figures (60 overall) diverged from the
+official page's own stated numbers (72/4.5) -- used the directly-fetched official figures, not
+the search synthesis.
+
+**Twenty-fifth independent corroboration of the TOEFL iBT rescale today.** A further
+distinctive restriction confirmed directly: the page labels its TOEFL and PTE routes
+"in-person only," implying home/online editions of these tests are not accepted here -- another
+data point in this batch''s recurring theme of UK universities differing on which test delivery
+modes they accept.
+
+**What was checked and NOT found:** application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('b38511d3-407a-45eb-ab81-9f25260f6059', 'english_proficiency',
+   'Undergraduate (BA/BSc/BEng): IELTS 6.0 overall (5.5+ per skill); TOEFL iBT 72 legacy / 4.5 new scale (4.0+ per skill), in-person only; Cambridge 169 overall (162+ per skill); PTE Academic 59 (51+ per skill), in-person only',
+   'Undergraduate entry (BA, BSc, BEng): IELTS 6.0 overall, minimum 5.5 in each skill. TOEFL iBT, in-person only: legacy scale 72 overall (Reading 18, Listening 17, Speaking 20, Writing 17), or the new 1-6 scale 4.5 overall with no skill below 4.0. Cambridge First/Advanced/Proficiency (post-2015): 169 overall, minimum 162 in each skill. PTE Academic, in-person only: 59 overall, minimum 51 in each skill. A UKVI-approved IELTS with any skill below 5.5 is required to join the pre-sessional programme: 6-week pre-sessional for IELTS 5.0 (no skill below 4.5), 12-week for IELTS 4.5 (no skill below 4.0).',
+   true, 'high', 'https://www.gre.ac.uk/international/support-and-help/courses', now());
+```
+
+---
+
+## 45. Aberystwyth University
+
+`id = 'a837637c-bd13-4bf3-a6bf-ad6728015967'` — QS rank 801-850.
+
+**Source actually used:** `https://www.aber.ac.uk/en/study-with-us/international/english-
+requirements/ug-english-requirements/` — official page, directly fetched.
+
+**Twenty-sixth independent corroboration of the TOEFL iBT rescale today.**
+
+**What was checked and NOT found:** Aberystwyth is a Welsh-medium-capable institution (it
+offers some study through Welsh), but this specific English-requirements page had no
+Welsh-language-specific admissions content -- not asserted here beyond noting the page's own
+silence on it; application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('a837637c-bd13-4bf3-a6bf-ad6728015967', 'english_proficiency',
+   'Computer Science (BSc) and Business: IELTS 6.0 overall (5.5+ per component), TOEFL 88 legacy/4.0 new scale; All other undergraduate courses: IELTS 6.5 overall (5.5+ per component), TOEFL 93 legacy/4.5 new scale; Nursing requires a stricter IELTS 7.0 (Writing 6.5+, Reading/Listening/Speaking 7.0+)',
+   'Computer Science (BSc) and Business courses: IELTS 6.0 overall, minimum 5.5 in each component; TOEFL iBT before 21 January 2026: 88 minimum (Reading 18, Listening 17, Speaking 20, Writing 17); from 21 January 2026 (new scale): 4.0 overall, minimum 4 in each component. All other undergraduate courses: IELTS 6.5 overall, minimum 5.5 in each component; TOEFL legacy 93 minimum (same component floors); TOEFL new scale 4.5 overall, minimum 4.5 in each component. Nursing is a stricter exception: IELTS 7.0 overall, minimum 6.5 in Writing and 7.0 in Reading, Listening, and Speaking. Applicants may apply before taking an English test, with proof required as a condition of any offer made.',
+   true, 'high', 'https://www.aber.ac.uk/en/study-with-us/international/english-requirements/ug-english-requirements/', now());
+```
+
+---
+
+## 46. Bournemouth University
+
+`id = '40e1773f-f595-4fd8-ac77-9dad9984ef57'` — QS rank 801-850.
+
+**Access note:** the official English-language-requirements page returned HTTP 403 to a direct
+fetch. Recorded at `medium` confidence from a general search's summary instead.
+
+**What was checked and NOT found:** TOEFL iBT numeric equivalents, application deadline,
+tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('40e1773f-f595-4fd8-ac77-9dad9984ef57', 'english_proficiency',
+   'Normally IELTS Academic 6.0 overall (5.5+ per component); exempt for UKVI-approved English-speaking-country nationals educated in English; also accepts LanguageCert and PTE Academic',
+   'Bournemouth normally requires a minimum IELTS (Academic) score of 6.0 overall, with a minimum of 5.5 in each component, for undergraduate courses. Accepted qualifications include IELTS, LanguageCert, and Pearson Test of English (Academic). Nationals of a UKVI-approved majority-English-speaking country who were taught through the medium of English do not need to provide a separate English-language qualification. An approved pre-sessional English for university study programme may also satisfy the requirement for Bachelor''s entry. TOEFL iBT numeric equivalents were not confirmed in this pass (official page returned HTTP 403).',
+   true, 'medium', 'https://www.bournemouth.ac.uk/study/international/international-entry-requirements/english-language-requirements', now());
+```
+
+---
