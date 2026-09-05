@@ -80,6 +80,30 @@ export const EXPORT_TABLES = [
    * access-vs-portability reasoning this shares with ai_usage/rate_limit_events above.
    */
   "product_events",
+  /**
+   * Migration 0072's audit trail of a student's own birth-year changes (previous_value,
+   * new_value, changed_at, the terms_accepted_at on file at that moment). Measured
+   * 2026-09-05 against oryn-qa-scratch: 2 rows total, both previous_value = null (a
+   * first-time onboarding set, not yet a real "edit" in the sense the table exists to
+   * catch) — thin today, but materiality here turns on what the table is FOR, not its
+   * current row count: this is the record of an action a specific, identifiable student
+   * took (stating or changing their own birth year), the same "generated about/by this
+   * student" shape DATA_RIGHTS_AUDIT.md Part 3 already ranked High for
+   * opportunity_matches/student_requirement_evaluations/ai_recommendations. Was excluded
+   * for a structural reason, not a content judgment: RLS was enabled with zero policies
+   * (see DATA_RIGHTS_AUDIT.md Part 3a) — a naive select("*") would have run, matched
+   * nothing, and reported success, exactly the "looks like it works, returns nothing"
+   * failure this file's own tests exist to catch elsewhere. Migration 0142 adds a plain
+   * "select own birth year changes" policy (same shape as ai_usage/product_events above),
+   * closing that gap rather than routing around it with an admin-client read — see that
+   * migration's own header for the tradeoff against the alternative. A table being thin
+   * today doesn't suspend the right this export exists to serve, and closing this gap
+   * now — while the product has few enough real users that nobody would notice a
+   * silently incomplete export either way — is cheaper than closing it later, once real
+   * birth-year edits are actually happening and a silent gap would go unnoticed by the
+   * person it actually affects.
+   */
+  "birth_year_changes",
 ] as const;
 
 /**
@@ -88,23 +112,6 @@ export const EXPORT_TABLES = [
  * __tests__/export/tables.test.ts fails on one.
  */
 export const EXPORT_EXCLUDED_TABLES: Record<string, string> = {
-  /**
-   * Migration 0072's audit trail of a student's birth-year changes. Their data, and it
-   * belongs here — but unlike product_events, applying the table wasn't the whole
-   * blocker. Confirmed live against oryn-qa-scratch on 2026-09-02 (this doc's own prior
-   * text, and docs/migration-state.md, both said "0072 not applied anywhere yet" as of
-   * 2026-09-01 — that had gone stale by the next day, so don't trust this comment either
-   * without re-probing): the table exists, RLS is enabled, and it carries zero policies —
-   * not even a select-own one. DATA_RIGHTS_AUDIT.md Part 3a lays out why that's deliberate
-   * rather than an oversight (the migration's own COMMENT ON TABLE leaves "should a
-   * student ever see this through any surface" as an open product question) and presents
-   * two ways to close it with a real tradeoff between them (an RLS select-own policy vs.
-   * an admin-client read scoped in this route's own code) — not resolved here, on purpose;
-   * whoever picks one should also update this comment and move the table into
-   * EXPORT_TABLES.
-   */
-  birth_year_changes:
-    "table exists (migration 0072 applied) and carries user_id, but RLS has zero policies — the read-access design question in DATA_RIGHTS_AUDIT.md Part 3a is still open, not just an unapplied migration",
   /**
    * Migration 0075's log of which deadline reminders a student has already received (see
    * lib/deadlines/scan.ts). Their data, benign, and the RLS policy is already select-own —
