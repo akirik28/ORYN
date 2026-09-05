@@ -117,24 +117,32 @@ güncellenmemiş.
 
 ---
 
-## 📋 KİMDE NE VAR — 5 Eylül akşamı (CEO tutar, dağıtmadan önce buraya bakar)
+## 📋 KİMDE NE VAR — 5 Eylül gecesi (CEO tutar, dağıtmadan önce buraya bakar)
 
-**Kurucunun kalıcı talimatı: boşta çalışmayan oturum kalmasın.** Bir şerit işini
-bitirip rapor ettiği anda yeni iş alır. **İş yoksa varsayılan iş belli:** fırsat ve
-üniversite boşluklarını doldurmak — ama **dilim açıkça bölünerek**, çünkü bugün üç
-kez aynı iş iki şeride gitti.
+**Kurucunun kalıcı talimatı: boşta çalışmayan oturum kalmasın.** Bir şerit raporladığı
+anda yeni iş alır. **İş yoksa varsayılan:** fırsat ve üniversite boşluklarını doldurmak,
+**dilim açıkça bölünerek.**
 
 | şerit | iş |
 |---|---|
-| `oryn-b1` (kullanım sınırları) | **RLS süpürmesi §3** → sonra §6, §7 (§4 ve §8 sona) |
-| production deployment | **Fırsat dolgusu** — 190 boş satırın **son 95'i** |
-| i18n | **190 "hiçbir şey bilinmeyen" fırsat** — göstermeli miyiz? ölç ve öner |
-| academic_tier | **722 kart** — "profilindeki boşluğu kapatıyor" iddiası korumasız |
-| freemium | **`under_review`** — onayla düğmesi + detay sayfasının iki yüzünü tekleştir |
-| yeni ülke | **Üniversite dolgusu** — QS **101–150** |
-| fırsatlar görsel | **Üniversite dolgusu** — öğrencilerin **gerçekten hedeflediği** kurumlar |
-| hukuki çerçeve | **Fırsat dolgusu** — 190 boş satırın **ilk 95'i** |
-| CFO | gözetim + **333 worktree'nin disk ölçümü** |
+| `oryn-b1` (kullanım sınırları) | **`createNotification`** — "kullanıcı kapattı" ile "yazma başarısız" aynı `false`'a düşüyor (Job D'nin ikizi) |
+| production deployment | **Fırsat dolgusu** — 190'ın **son 95'i**, ortam sıfırlanınca 4 paket yeniden başladı |
+| i18n | **Danışman/haftalık plan** — ölçüm script'i `server-only` yüzünden çalışmıyor, önce o |
+| academic_tier | **96 kısmi fırsat** — hepsinde `source_url` dolu, "bilinen sayfaya dön" işi |
+| freemium | **`ai_usage` faturalama testi** — yük altında kırılıyor: kırılganlık mı, yarış mı? |
+| yeni ülke | **Üniversite dolgusu** — Birleşik Krallık (79'un 54'ü boş) |
+| fırsatlar görsel | **Üniversite dolgusu** — ABD (131'in 94'ü boş) |
+| hukuki çerçeve | **Şikayet açığı** (ilgisiz öğrenci şikayet edilebiliyor) → sonra bayrak kontrolü |
+| CFO | gözetim + **her turda tek satır durum** (sessizlik = durmuş demek) |
+
+**Fırsat kataloğu üç kümeye bölündü, üçü de sahipli ve çakışmıyor** (CEO kendi sorgusuyla
+doğruladı): **190** üç boyut da boş · **96** kısmi · **3** üç boyut da dolu = **289**.
+
+**Üniversite dolgusu ülkeye göre bölündü:** İngiltere ve ABD ayrı şeritlerde. **Türkiye
+(12/12) ve Hollanda (13/13) zaten dolu** — oraya bakılmayacak.
+
+**Bilinen engelli alan adları** (üç bağımsız denemede 403, tekrar denenmeyecek):
+`girlup.org` · `summer.gwu.edu` · NYT Learning Network · STEM Fellowship Journal.
 
 **Dolgu dilimleri çakışmaz:** iki üniversite şeridi **farklı eksende** (sıralama vs.
 gerçek kullanım) · iki fırsat şeridi **`id` sırasına göre yarı yarıya.** Bir kurum
