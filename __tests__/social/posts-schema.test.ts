@@ -728,9 +728,7 @@ describe("migration numbering", () => {
     // to-restored the same way as 0135 -- docs/evidence-status-and-target-universities-rls-
     // guard-proof-2026-09-05.md.
     //
-    // 0138 (messages_guard_identity_columns), 0139 (connections_guard_identity_columns),
-    // 0142 (birth_year_changes_export_policy -- 0140/0141 are reserved for the recommendations
-    // and advisor_generation_locks guards, still unpushed at the time this ceiling moved) --
+    // 0138 (messages_guard_identity_columns), 0139 (connections_guard_identity_columns) --
     // items 6 and 7 of the same sweep, CEO-assigned both together after checking every remote
     // branch. Same guard shape again, but no paired code change needed for either -- neither
     // legitimate writer (app/(app)/messages/actions.ts, app/(app)/connections/actions.ts) ever
@@ -744,6 +742,24 @@ describe("migration numbering", () => {
     // rather than skipped on the grounds that "today's writer never touches these columns" --
     // written up explicitly as defense-in-depth against a writer that doesn't exist yet, not a
     // description of the one that exists now.
+    //
+    // 0140 (recommendations_guard_content_columns) -- item 4 of the same sweep, CEO-assigned
+    // after checking every remote branch. The "careful thought" CEO flagged this one for
+    // resolved to the same guard-only shape as 0138/0139, not a different mechanism -- checked
+    // by reading migration 0035's full policy set and every Server Action in
+    // recommendation-actions.ts: no legitimate author-side edit path for body/author_id/
+    // relationship exists anywhere (INSERT sets them once, UPDATE sends only {status}, DELETE
+    // is the author's only other option), so there's no existing writer of these three columns
+    // to preserve. What IS different about this table: the content is unambiguously a third
+    // party's words (the author's, not the recipient's, who the UPDATE policy scopes to) --
+    // same class as 0136's target_universities finding, misleading a third-party reader. Proven
+    // the same combined-statement way -- docs/recommendations-guard-proof-2026-09-05.md.
+    //
+    // 0142 (birth_year_changes_export_policy) -- a different, unrelated lane's fix, landed
+    // between this branch's first push and this rebase. 0141 (advisor_generation_locks_guard,
+    // this sweep's §8) exists on its own sibling branch, not yet merged as of this commit --
+    // the true max across every migration actually present here is 142, not 140, since 0142
+    // already exceeds this branch's own new addition.
     expect(Math.max(...numbers.map(Number))).toBe(142);
   });
 });
