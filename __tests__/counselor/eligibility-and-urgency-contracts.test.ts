@@ -215,8 +215,16 @@ describe("Test J (spec Part R) — deadline urgency", () => {
   });
 
   test("urgency alone doesn't overpower relevance: a far-deadline opportunity that addresses a real gap can still outrank a near-deadline one that addresses nothing", () => {
-    const relevantFar = opportunity("relevant-but-later", { deadline: "2027-01-20", category: "research" });
-    const irrelevantNear = opportunity("urgent-but-irrelevant", { deadline: "2026-08-30", category: "volunteering" });
+    // Both known-eligible (2026-09-05, the unknown-eligibility score ceiling): this test is
+    // about gapRelevance vs. urgency, not eligibility -- the bare opportunity() default here
+    // is eligibility-UNKNOWN (no age/grade/country data), which the new ceiling now caps both
+    // candidates to the identical RANKING_THRESHOLDS.considerFloor value, collapsing the very
+    // distinction this test exists to prove (25 is not > 25). Confirmed by running this exact
+    // test unmodified against the fix before adding these overrides: it failed on exactly that
+    // equality, not a code regression.
+    const confirmedOpen = { country_eligibility_confirmed_open: true, age_eligibility_confirmed_open: true, grade_eligibility_confirmed_open: true } as const;
+    const relevantFar = opportunity("relevant-but-later", { deadline: "2027-01-20", category: "research", ...confirmedOpen });
+    const irrelevantNear = opportunity("urgent-but-irrelevant", { deadline: "2026-08-30", category: "volunteering", ...confirmedOpen });
 
     const gaps = toDimensionScoreRows([
       { dimension: "research", score: 15, confidence: "high" as const, reason_codes: [] },

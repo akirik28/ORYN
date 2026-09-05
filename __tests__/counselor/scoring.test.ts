@@ -205,9 +205,17 @@ describe("rankCandidates — gap relevance", () => {
 
 describe("rankCandidates — recommendation class", () => {
   test("a top candidate addressing a critical gap is classified 'do'", () => {
-    const opp = opportunity();
+    // known-eligible on purpose (2026-09-05, the unknown-eligibility score cap below): this
+    // test is about gap relevance driving "do", not about eligibility -- the bare opportunity()
+    // default is eligibility-UNKNOWN (no age/grade/country data at all), which the cap below
+    // now correctly forces to "deprioritize" regardless of how strong the gap match is. Confirmed
+    // by running this exact test unmodified against the fix: it failed (do -> deprioritize),
+    // which is the fix working as intended, not a regression -- the fixture needed updating to
+    // still test what its name says, not the assertion.
+    const opp = opportunity({ country_eligibility_confirmed_open: true, age_eligibility_confirmed_open: true, grade_eligibility_confirmed_open: true });
     const candidate = opportunityCandidate("opp-1", ["research"]);
     const ranked = rankCandidates([candidate], [gap("research", 10, "critical", 1)], state([{ opp, match: match() }]));
+    expect(ranked[0].eligibility.verdict).toBe("known_eligible");
     expect(ranked[0].recommendationClass).toBe("do");
   });
 
@@ -329,5 +337,79 @@ describe("rankCandidates — non-opportunity kinds", () => {
       state([], { advisor: { student: { birthYear: 2009 }, completenessPercent: 90 } as CounselorState["advisor"] })
     )[0];
     expect(lowCompleteness.score).toBeGreaterThan(highCompleteness.score);
+  });
+});
+
+/**
+ * CEO's own live measurement, 2026-09-05: 14 of 18 real "do" recommendations across 6 real
+ * students (78%) carried eligibility.verdict === "unknown" -- two students with all 3 of their
+ * 3 "do" slots unknown. The pre-existing dataQuality*0.6 discount (still applied below, for
+ * scoreBreakdown/confidence) was proven insufficient by real data: it only softens one of four
+ * weighted components, so a candidate strong on gapRelevance/fieldAlignment/urgency clears "do"
+ * regardless. This is the same shape lib/opportunities/matching.ts's
+ * hasAnyEligibilityDataAtAll/NO_ELIGIBILITY_DATA_SCORE_CAP already fixed on the opportunity-card
+ * side, reused here rather than built twice.
+ */
+describe("rankCandidates — unknown-eligibility score ceiling (CEO, 2026-09-05)", () => {
+  test("RED->GREEN: an unknown-eligibility opportunity with a strong gap/field/urgency match is still forced to 'deprioritize', never 'do'", () => {
+    // Worst case, deliberately: critical gap (claimable, well under GAP_CLAIM_SCORE_CEILING),
+    // a fully relevant match, and a deadline inside the highest urgency band -- every
+    // non-eligibility component maxed. Confirmed this exact fixture produces "do" (score ~85)
+    // without the fix by temporarily reverting just the `score` line and re-running: this is a
+    // genuine regression pin, not a tautology.
+    const opp = opportunity(); // default: no age/grade/country data at all -> verdict "unknown"
+    const candidate = opportunityCandidate("opp-1", ["research"], { deadline: { date: "2026-01-08", sourceLabel: "test" } });
+    const ranked = rankCandidates(
+      [candidate],
+      [gap("research", 10, "critical", 1)],
+      state([{ opp, match: match({ relevance_score: 100 }) }]),
+      new Date("2026-01-01T00:00:00Z")
+    );
+    expect(ranked[0].eligibility.verdict).toBe("unknown");
+    expect(ranked[0].score).toBeLessThanOrEqual(25); // RANKING_THRESHOLDS.considerFloor
+    expect(ranked[0].recommendationClass).toBe("deprioritize");
+  });
+
+  test("an identical candidate that IS known-eligible is not capped and clears 'do'", () => {
+    // Same inputs as the test above, only the eligibility facts differ -- isolates that the
+    // ceiling is gated on verdict specifically, not some other side effect of this fixture shape.
+    const opp = opportunity({ country_eligibility_confirmed_open: true, age_eligibility_confirmed_open: true, grade_eligibility_confirmed_open: true });
+    const candidate = opportunityCandidate("opp-1", ["research"], { deadline: { date: "2026-01-08", sourceLabel: "test" } });
+    const ranked = rankCandidates(
+      [candidate],
+      [gap("research", 10, "critical", 1)],
+      state([{ opp, match: match({ relevance_score: 100 }) }]),
+      new Date("2026-01-01T00:00:00Z")
+    );
+    expect(ranked[0].eligibility.verdict).toBe("known_eligible");
+    expect(ranked[0].score).toBeGreaterThan(25);
+    expect(ranked[0].recommendationClass).toBe("do");
+  });
+
+  test("the ceiling caps ranking only -- scoreBreakdown.dataQuality and confidence still reflect the real (merely discounted) value, for the recommendation's own explanation", () => {
+    const opp = opportunity({ source_confidence: "high" });
+    const candidate = opportunityCandidate("opp-1", ["research"]);
+    const ranked = rankCandidates([candidate], [gap("research", 10, "critical", 1)], state([{ opp, match: match({ relevance_score: 100 }) }]));
+    expect(ranked[0].eligibility.verdict).toBe("unknown");
+    expect(ranked[0].score).toBeLessThanOrEqual(25);
+    // DATA_CONFIDENCE_SCORE.high (100) * 0.6, rounded -- the discount, not the ranking ceiling.
+    expect(ranked[0].scoreBreakdown.dataQuality).toBe(60);
+  });
+
+  test("a requirement_action candidate is never affected by the ceiling — it is always known_eligible by construction", () => {
+    const candidate: CandidateAction = {
+      source: { kind: "requirement_action", universityId: "uni-1", requirementId: "req-1", status: "not_met" },
+      title: "Address: SAT score (Test University)",
+      category: "requirement_action",
+      addressesDimensions: [],
+      verificationState: null,
+      sourceUrl: null,
+      deadline: null,
+      costOnFile: null,
+      applicationRequirements: [],
+    };
+    const ranked = rankCandidates([candidate], [], state([]));
+    expect(ranked[0].eligibility.verdict).toBe("known_eligible");
+    expect(ranked[0].recommendationClass).toBe("do");
   });
 });
