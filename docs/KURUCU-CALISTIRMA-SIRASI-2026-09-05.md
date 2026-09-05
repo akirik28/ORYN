@@ -94,7 +94,18 @@ engelleniyor, **ve koruma kaldırılınca saldırı yine başarılı** (kanıtı
 `official_url` bulundu ve düzeltildi (Bocconi'nin kayıtlı bağlantısı **lise
 öğrencisine kapalı** bir programa gidiyordu; Navarra'nınki bambaşka bir yarışmaya).
 
-> **Bu bölüm 5 Eylül gecesi iki kez güncellendi** — ilk yazımdan sonra üç dolgu
+**Fırsat katalog düzeltmeleri** (migration gerektirmez):
+`docs/opportunity-hub-description-fixes-2026-09-05.sql` — **9 "toplu sayfa" satırı.**
+Üçünün açıklaması **tek bir alt programın verisini** satırın tamamıymış gibi sunuyordu
+(biri **geçmiş bir tarihi şart olarak** taşıyordu: *"16 Haziran 2024'e kadar"*).
+Altısının başlığı *"(birden fazla program)"* diyecek. **Ve aynı dosyada** aynı yarışmanın
+iki kopyasının geri çekilmesi var — hangisinin asıl olduğu ölçüldü (biri 8 öğrenciyle
+eşleşmiş, diğeri 1), **silme yok, devre dışı.**
+
+**ABD üniversiteleri, beş parti** (`us-universities-*-2026-09-05.md`): **35 kurum**,
+QS sırasına göre, gereklilik odaklı. 65 kurum kaldı, sürüyor.
+
+> **Bu bölüm 5 Eylül gecesi üç kez güncellendi** — ilk yazımdan sonra üç dolgu
 > partisi daha indi. Bugünün dersi kendi belgeme de uygulandı: **bir liste,
 > yazıldığı anın fotoğrafıdır.**
 
