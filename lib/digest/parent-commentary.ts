@@ -111,6 +111,30 @@ export function honestNoActivityNarrative(studentDisplayName: string, locale: Lo
 }
 
 /**
+ * 2026-09-05, founder's own product call, relayed by CEO verbatim: the note's default shape
+ * flips from retrospective ("this month was quiet") to forward-looking ("here's what we
+ * found, worth applying to this month") — but ONLY when there's a real, actionable
+ * opportunity to anchor that on (see generateNarrative/buildParentMonthlyCommentary below,
+ * now gated on `newMatches.length > 0` rather than hasNotableMonthlySignal). This function is
+ * the other half of that same rule, stated as its own non-negotiable: "if there's genuinely
+ * no appropriate opportunity, an enthusiastic sentence cannot be built" — a calm sentence
+ * remains, but it must not silently reuse honestNoActivityNarrative's wording once real
+ * movement DID happen, since that sentence's own contract is "nothing notable happened," and
+ * claiming that here would be exactly the under-claim direction this whole feature was built
+ * to avoid (same discipline as filterNotableDimensionChanges' own comment on `steady`). A real
+ * score movement with no fresh opportunity to point at gets stated plainly, deterministically,
+ * with an explicit "nothing new to flag as a next step right now" close — never an invented
+ * opportunity, never forced excitement, exactly the founder's own line.
+ */
+export function noNewOpportunityNarrative(notableChange: ProfileChange, studentDisplayName: string, locale: Locale = DEFAULT_LOCALE): string {
+  const changeSentence = describeProfileChangeForParent(notableChange, studentDisplayName, locale, "month");
+  if (!changeSentence) return honestNoActivityNarrative(studentDisplayName, locale);
+  return locale === "tr"
+    ? `${changeSentence} Bu ay öğrenciye özel, öne çıkan yeni bir fırsat yok — bir sonraki uygun eşleşme çıktığında haber vereceğiz.`
+    : `${changeSentence} There isn't a specific new opportunity to flag for them this month — we'll follow up once a good match comes in.`;
+}
+
+/**
  * The second fallback (2026-09-04, degrade-gracefully per AGENTS.md Rule 4/Phase 34): real
  * signal existed this period, but the AI provider isn't configured (every dev/preview
  * environment today has no ANTHROPIC_API_KEY). Assembles a plain, deterministic sentence
@@ -147,10 +171,10 @@ export interface ParentMonthlyCommentaryContent {
  * PRE-REGISTERED over-claim definition (oryn-45's own instruction, 2026-09-04: "measuring
  * absence after the fact is the easiest score in the world to award yourself" — written
  * before any real output from this prompt has been read, matching this session's own earlier
- * ordinal-test discipline; carried forward unchanged by the weekly-to-monthly conversion,
- * since the underlying failure mode — a model reaching for a confident claim over an honest
- * hedge on thin signal — doesn't change with the window size). A generated narrative
- * over-claims if it contains ANY of:
+ * ordinal-test discipline). Extended 2026-09-05 for the opportunity-forward rewrite — items
+ * 1-4 are the original weekly-to-monthly criteria, unchanged; item 6 is new, for the new
+ * failure mode this framing specifically invites (oversold enthusiasm, not just an inflated
+ * retrospective). A generated narrative over-claims if it contains ANY of:
  *   1. A specific number (a score, a count, a percentage) not present in the fact sentences
  *      passed to the model.
  *   2. A specific date, or a relative time reference ("last month", "in March") beyond
@@ -160,11 +184,15 @@ export interface ParentMonthlyCommentaryContent {
  *      given never state a cause, only a magnitude and direction.
  *   5. Language that reads as resolved/certain about a WEAK signal — e.g. calling a single
  *      just-above-threshold dimension move "strong" or "significant" progress.
- * Not yet checked against real model output for the monthly framing specifically, for the
- * same reason it never was for weekly: no ANTHROPIC_API_KEY is configured in this
- * environment, so every real invocation here takes the ai_unavailable path, not the ai path
- * this criterion is actually about. Still the standard to hold the prompt to whenever someone
- * with real API access can run it.
+ *   6. Superlative or unearned-urgency language about the opportunity itself ("amazing,"
+ *      "perfect fit," "don't miss this," implied competitiveness or scarcity) not grounded in
+ *      anything the facts actually state — this prompt is now allowed, even expected, to say
+ *      applying is worth it, but that claim has to come from the real title/organization/
+ *      deadline given, not from tone alone.
+ * Not yet checked against real model output for either framing, for the same reason as
+ * before: no ANTHROPIC_API_KEY is configured in this environment, so every real invocation
+ * here takes the ai_unavailable path, not the ai path this criterion is actually about. Still
+ * the standard to hold the prompt to whenever someone with real API access can run it.
  */
 async function generateNarrative(signal: MonthlySignal, studentUserId: string, locale: Locale): Promise<{ narrative: string; source: NarrativeSource }> {
   const factSentences: string[] = [`Month: ${signal.periodStart} to ${signal.periodEnd}.`, `Student's name: ${signal.studentDisplayName}.`];
@@ -176,9 +204,13 @@ async function generateNarrative(signal: MonthlySignal, studentUserId: string, l
   // despite the explicit instruction not to.
   const changeSentence = describeProfileChangeForParent(signal.notableChange, signal.studentDisplayName, locale, "month");
   factSentences.push(changeSentence ? `Profile movement (already computed, do not recompute or explain its cause): ${changeSentence}` : "No profile-score history to compare against yet.");
+  // deadline appended per-match, not as a separate fact — 2026-09-05, so "apply this month" in
+  // the system prompt's own instruction has something real to ground against instead of being
+  // filler urgency. Omitted per-match when null (no fixed deadline on file), never defaulted
+  // to "soon" or any other invented urgency.
   factSentences.push(
     signal.newMatches.length > 0
-      ? `New opportunity matches this month: ${signal.newMatches.map((m) => `"${m.title}"${m.organization ? ` (${m.organization})` : ""}`).join("; ")}.`
+      ? `New opportunity matches this month: ${signal.newMatches.map((m) => `"${m.title}"${m.organization ? ` (${m.organization})` : ""}${m.deadline ? `, deadline ${m.deadline}` : ""}`).join("; ")}.`
       : "No new opportunity matches this month."
   );
 
@@ -271,8 +303,19 @@ async function loadMonthlySignal(supabase: SupabaseClient<Database>, studentUser
  * Tier-blind content assembly — see this file's own module comment. Always returns real
  * content, never null: unlike buildDigestContent (where "nothing to say" means "skip this
  * student, don't send"), a parent commentary that goes silent on a quiet month reads as the
- * product having broken, not as an honest report — see honestNoActivityNarrative's own
- * comment. The AI is only ever called when hasNotableMonthlySignal is true.
+ * product having broken, not as an honest report.
+ *
+ * REWRITTEN 2026-09-05, founder's own product call: the note's default shape is now
+ * forward-looking ("we found this, worth applying this month"), not retrospective ("this
+ * month was quiet"). The AI is therefore gated on `newMatches.length > 0` specifically, not
+ * on hasNotableMonthlySignal — a real, notable score movement with no fresh opportunity to
+ * anchor an "apply this month" note on no longer reaches the AI at all; it falls to
+ * noNewOpportunityNarrative, which states the real movement plainly without inventing a next
+ * step (a genuinely flat month, no movement AND no matches, keeps honestNoActivityNarrative's
+ * original wording unchanged). hasNotableMonthlySignal itself is untouched and still exported
+ * — it's the "crossed the threshold at all" count CEO's own measurement plan asks for; the
+ * split between "has a real opportunity" and "falls to the calm sentence" is the new thing
+ * layered on top of it, not a replacement for it.
  */
 export async function buildParentMonthlyCommentary(
   supabase: SupabaseClient<Database>,
@@ -288,11 +331,14 @@ export async function buildParentMonthlyCommentary(
 
   const signal = await loadMonthlySignal(supabase, studentUserId, studentDisplayName, since);
 
-  if (!hasNotableMonthlySignal(signal)) {
+  if (signal.newMatches.length === 0) {
+    const narrative = hasNotableMonthlySignal(signal)
+      ? noNewOpportunityNarrative(signal.notableChange, studentDisplayName, locale)
+      : honestNoActivityNarrative(studentDisplayName, locale);
     return {
       periodStart: signal.periodStart,
       periodEnd: signal.periodEnd,
-      narrative: honestNoActivityNarrative(studentDisplayName, locale),
+      narrative,
       narrativeSource: "no_activity",
       newMatches: [],
     };

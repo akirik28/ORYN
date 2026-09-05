@@ -43,10 +43,12 @@ vi.mock("@/lib/digest/build", async (importOriginal) => {
   return { ...actual, buildDigestContent: buildDigestContentMock };
 });
 
+import { MockAIProvider } from "../stubs/mock-ai-provider";
 import {
   filterNotableDimensionChanges,
   hasNotableMonthlySignal,
   honestNoActivityNarrative,
+  noNewOpportunityNarrative,
   buildParentMonthlyCommentary,
   resolveParentMonthlyCommentary,
 } from "@/lib/digest/parent-commentary";
@@ -98,7 +100,7 @@ describe("hasNotableMonthlySignal", () => {
   });
 
   test("true from a new opportunity match alone, even with a steady score", () => {
-    expect(hasNotableMonthlySignal({ ...empty, newMatches: [{ title: "Economics Challenge", organization: null, href: null }] })).toBe(true);
+    expect(hasNotableMonthlySignal({ ...empty, newMatches: [{ title: "Economics Challenge", organization: null, href: null, deadline: null }] })).toBe(true);
   });
 
   test("a steady score (hasHistory true, nothing crossed the threshold) is NOT signal by itself", () => {
@@ -133,6 +135,44 @@ describe("honestNoActivityNarrative", () => {
   test("says month, not week — the B3b conversion actually touched the string, not just the function name", () => {
     expect(honestNoActivityNarrative("Ada", "en").toLowerCase()).toContain("month");
     expect(honestNoActivityNarrative("Ada", "tr")).toContain("ay");
+  });
+});
+
+/**
+ * 2026-09-05, founder's own product call: honestNoActivityNarrative's "nothing notable
+ * happened" claim becomes FALSE the moment real profile movement exists — this function is
+ * the calm-but-honest fallback for that specific case (real signal, no fresh opportunity to
+ * lead with), kept deliberately separate from honestNoActivityNarrative rather than reusing
+ * its wording for a fact it would misstate.
+ */
+describe("noNewOpportunityNarrative", () => {
+  const movedUp = change({ improved: [{ dimension: "research", delta: 8 }] });
+
+  test("states the real movement plainly, not the 'nothing notable happened' claim", () => {
+    const text = noNewOpportunityNarrative(movedUp, "Ada");
+    expect(text).toContain("Ada");
+    expect(text.toLowerCase()).not.toContain("wasn't a notable");
+  });
+
+  test("does not invent an opportunity or force enthusiasm — states there isn't one to flag", () => {
+    const text = noNewOpportunityNarrative(movedUp, "Ada");
+    expect(text.toLowerCase()).toMatch(/no specific new opportunity|follow up/);
+  });
+
+  test("Turkish branch is a distinct, real sentence", () => {
+    const en = noNewOpportunityNarrative(movedUp, "Ada", "en");
+    const tr = noNewOpportunityNarrative(movedUp, "Ada", "tr");
+    expect(tr).toContain("Ada");
+    expect(tr).not.toBe(en);
+  });
+
+  test("falls back to honestNoActivityNarrative's own wording when there's no prior snapshot to compare against", () => {
+    // describeProfileChangeForParent returns null only when !hasHistory (lib/scoring/change.ts)
+    // — a defensive case buildParentMonthlyCommentary's real caller can't actually produce
+    // (no prior snapshot means improved/declined are necessarily empty too, so
+    // hasNotableMonthlySignal would already be false and this function never gets called), but
+    // this function's own contract should still hold called directly this way.
+    expect(noNewOpportunityNarrative(change({ hasHistory: false }), "Ada")).toBe(honestNoActivityNarrative("Ada"));
   });
 });
 
@@ -204,9 +244,32 @@ describe("buildParentMonthlyCommentary — the quiet month", () => {
   });
 });
 
+/**
+ * 2026-09-05, the actual behavior change: before this, a notable score movement alone
+ * (hasNotableMonthlySignal true via notableChange, zero newMatches) reached generateNarrative
+ * and got a real AI-caliber narrative. The founder's own call moves the AI gate to
+ * newMatches.length > 0 specifically — this case now falls to noNewOpportunityNarrative
+ * instead, still narrativeSource "no_activity", but its text must state the real movement,
+ * not honestNoActivityNarrative's "nothing notable happened" claim (that would be false here).
+ */
+describe("buildParentMonthlyCommentary — real movement, no fresh opportunity", () => {
+  test("a notable score improvement with zero new matches never touches the AI, and states the movement plainly", async () => {
+    const supabase = fakeSupabase(
+      { id: "s1", display_name: "Ada", preferred_language: "en", plan_tier: "ultra" },
+      { scores: [{ dimension: "research", score: 50 }], previousSnapshot: { dimension_scores: { research: 40 } } }
+    );
+    const content = await buildParentMonthlyCommentary(supabase, "s1", null);
+
+    expect(content.narrativeSource).toBe("no_activity");
+    expect(content.narrative).toContain("Ada");
+    expect(content.narrative.toLowerCase()).not.toContain("wasn't a notable");
+    expect(getAIProviderMock).not.toHaveBeenCalled();
+  });
+});
+
 describe("buildParentMonthlyCommentary — real signal, AI not configured", () => {
   test("degrades to a deterministic factual summary rather than throwing or going silent", async () => {
-    buildDigestContentMock.mockResolvedValue({ newMatches: [{ title: "Economics Challenge", organization: "Test Org", href: "/x" }], deadlines: [] });
+    buildDigestContentMock.mockResolvedValue({ newMatches: [{ title: "Economics Challenge", organization: "Test Org", href: "/x", deadline: null }], deadlines: [] });
     const supabase = fakeSupabase({ id: "s1", display_name: "Ada", preferred_language: "en", plan_tier: "ultra" });
 
     // getAIProviderMock left at its default no-op return is not realistic here -- exercise the
@@ -218,6 +281,50 @@ describe("buildParentMonthlyCommentary — real signal, AI not configured", () =
     const content = await buildParentMonthlyCommentary(supabase, "s1", null);
     expect(content.narrativeSource).toBe("ai_unavailable");
     expect(content.narrative).toContain("Economics Challenge");
+  });
+});
+
+/**
+ * 2026-09-05: proves the deadline actually reaches the model's own prompt, not just the
+ * digest's internal shape — the founder's "worth applying this month" framing is only a true
+ * claim when there's a real date behind it. Uses MockAIProvider (already established in
+ * __tests__/ai/research-generator.test.ts for the identical need) to exercise the real `ai`
+ * path, not the ai_unavailable fallback the rest of this file is limited to without a real key.
+ */
+describe("buildParentMonthlyCommentary — the real ai path", () => {
+  test("a match's deadline and title reach the prompt sent to the model", async () => {
+    buildDigestContentMock.mockResolvedValue({
+      newMatches: [{ title: "Youth Economics Challenge", organization: "OECD", href: "/x", deadline: "2026-10-15" }],
+      deadlines: [],
+    });
+    const provider = new MockAIProvider();
+    provider.queueStructured({ narrative: "A real opportunity is open for Ada this month." });
+    getAIProviderMock.mockReturnValue(provider);
+
+    const supabase = fakeSupabase({ id: "s1", display_name: "Ada", preferred_language: "en", plan_tier: "ultra" });
+    const content = await buildParentMonthlyCommentary(supabase, "s1", null);
+
+    expect(content.narrativeSource).toBe("ai");
+    const sentPrompt = provider.structuredCalls[0]?.prompt as string;
+    expect(sentPrompt).toContain("Youth Economics Challenge");
+    expect(sentPrompt).toContain("2026-10-15");
+  });
+
+  test("a match with no deadline on file does not invent one in the prompt", async () => {
+    buildDigestContentMock.mockResolvedValue({
+      newMatches: [{ title: "Open-Ended Fellowship", organization: null, href: null, deadline: null }],
+      deadlines: [],
+    });
+    const provider = new MockAIProvider();
+    provider.queueStructured({ narrative: "A real opportunity is open for Ada this month." });
+    getAIProviderMock.mockReturnValue(provider);
+
+    const supabase = fakeSupabase({ id: "s1", display_name: "Ada", preferred_language: "en", plan_tier: "ultra" });
+    await buildParentMonthlyCommentary(supabase, "s1", null);
+
+    const sentPrompt = provider.structuredCalls[0]?.prompt as string;
+    expect(sentPrompt).toContain("Open-Ended Fellowship");
+    expect(sentPrompt).not.toContain("deadline");
   });
 });
 

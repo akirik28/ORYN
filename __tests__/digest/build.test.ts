@@ -139,7 +139,7 @@ describe("buildDigestContent", () => {
     opportunitiesRef.current = [recommendableOpportunity({ id: "o-1", title: "Youth Research Fellowship", organization: "OECD Youth Lab", official_url: "https://example.org/fellowship" })];
     const { buildDigestContent } = await import("@/lib/digest/build");
     const content = await buildDigestContent(fakeSupabase(), "u-1", null);
-    expect(content!.newMatches).toEqual([{ title: "Youth Research Fellowship", organization: "OECD Youth Lab", href: "https://example.org/fellowship" }]);
+    expect(content!.newMatches).toEqual([{ title: "Youth Research Fellowship", organization: "OECD Youth Lab", href: "https://example.org/fellowship", deadline: null }]);
   });
 
   test("a match calculated before lastDigestSentAt is excluded — only genuinely new matches render", async () => {
