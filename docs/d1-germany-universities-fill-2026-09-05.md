@@ -1059,3 +1059,97 @@ values
 ```
 
 ---
+
+## 28. Universität Regensburg
+
+`id = '8107894d-f13d-4f4b-9fb6-98824e2ce809'` — QS rank 696. **Cycle-dependent policy: not
+established.**
+
+**Source actually used:** `https://www.uni-regensburg.de/en/international/coming-to-regensburg/
+pursuing-a-degree-program/application` — official page, directly fetched.
+
+**Uni-assist status: unconfirmed, not asserted.** This page names "Campusportal" (Regensburg''s
+own system) for most undergraduate applications and does not mention uni-assist at all --
+recorded as unconfirmed rather than assumed non-use, consistent with this batch''s treatment of
+silence elsewhere (Bochum #10, Jena #20).
+
+**A genuinely important limitation confirmed directly, worth surfacing rather than
+smoothing over:** for the Studienkolleg pathway specifically, Regensburg states applicants
+"must acquire the necessary level of German (B2) on their own, there are not German courses at
+the University of Regensburg for this case" -- unlike several other universities in this batch
+that offer their own preparatory German courses, Regensburg explicitly does not for this
+specific pathway.
+
+**What was checked and NOT found:** general (non-Studienkolleg) language requirements for
+direct-entry programmes; application deadline (a general search reports the usual 15 July/
+15 January pattern, not independently confirmed here); admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('8107894d-f13d-4f4b-9fb6-98824e2ce809', 'international_requirement',
+   'Applicants need a "direct HZB" (a home-country secondary qualification that itself grants university access); if the school-leaving certificate alone is insufficient, 1-2 additional years of university study in the home country must be proven instead; most applications go through Regensburg''s own Campusportal, uni-assist status unconfirmed',
+   'International applicants need a "direct HZB" (Hochschulzugangsberechtigung) -- typically a secondary school degree that itself qualifies the holder to study at a university in their home country. Where the school-leaving certificate alone is not sufficient, applicants must instead prove one to two additional years of study already completed at a university in their home country. Most undergraduate applications are submitted through Regensburg''s own Campusportal; postgraduate applications go directly to faculties. Uni-assist was not mentioned on this page and its involvement (if any) is unconfirmed.',
+   true, 'high', 'https://www.uni-regensburg.de/en/international/coming-to-regensburg/pursuing-a-degree-program/application', now()),
+  ('8107894d-f13d-4f4b-9fb6-98824e2ce809', 'language_proficiency',
+   'For the Studienkolleg pathway specifically: German B2, which applicants must acquire independently -- Regensburg does NOT offer its own German course for this specific case, unlike several other universities in this batch',
+   'For applicants who need the Studienkolleg (preparatory) pathway, German at level B2 is required before entry, and Regensburg explicitly states it does not offer German courses of its own to help applicants reach this level for this specific case -- a real limitation, not merely an omission, and a contrast with universities elsewhere in this batch (e.g. TU Bergakademie Freiberg, #24) that do run their own preparatory German courses.',
+   true, 'high', 'https://www.uni-regensburg.de/en/international/coming-to-regensburg/pursuing-a-degree-program/application', now());
+```
+
+---
+
+## 29. TUHH Hamburg University of Technology
+
+`id = '24835807-025b-4c93-ac2a-400f8c492603'` — QS rank 721-730. **Cycle-dependent policy:
+NO** — winter-only, single intake.
+
+**Source actually used:** TUHH's own official PDF, "First Information for International
+Applicants — Bachelor's Programs at TUHH" (dated May 2025, explicitly stated as valid for
+Winter Semester 2025 -- the underlying structure is used here as the most recent official
+statement found, not assumed identical for the current cycle without qualification), read in
+full (5 pages). The richest single source in this batch.
+
+**A summarization error caught by reading the source directly, not trusting a first-pass
+AI summary of the same PDF:** an initial automated read of this PDF stated it "confirms use of
+uni-assist" -- the PDF's own text says the exact opposite, in bold: **"TUHH doesn't cooperate
+with uniassist!"** Re-read the full document myself before writing anything, catching the
+inversion. TUHH is therefore a twelfth confirmed non-uni-assist university this batch, not a
+uni-assist member.
+
+**A genuinely distinctive two-step application process, different from every uni-assist-based
+university in this batch:** ALL TUHH bachelor applicants (not just those targeting numerus-
+clausus programmes, unlike Tübingen''s #6 narrower NC-only routing) first register at
+hochschulstart.de for an applicant ID and authentication number, THEN separately register and
+apply on TUHH''s own application portal.
+
+**A fully worked three-way language table, confirmed directly, is genuinely too rich to
+compress into one line -- captured in full below.** Also distinctive: TestAS is explicitly
+optional here ("not absolutely necessary"), the opposite of Cologne (#7) where it is mandatory
+for every applicant; and EU/Iceland/Liechtenstein/Norway citizens specifically must show maths
+grades from their last four school semesters, a nationality-conditioned document requirement
+not seen elsewhere in this batch.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('24835807-025b-4c93-ac2a-400f8c492603', 'international_requirement',
+   'TUHH does NOT cooperate with uni-assist; all applicants first register at hochschulstart.de for an applicant ID/authentication number, then apply separately on TUHH''s own portal; APS certificate mandatory for China/India/Vietnam degree-holders; TestAS explicitly optional (not required)',
+   'TUHH''s own official guide states in bold: "TUHH doesn''t cooperate with uniassist!" -- confirmed directly, correcting an initial mis-summary of the same document. Every bachelor applicant, regardless of programme, first registers at hochschulstart.de (Germany''s national coordination platform) to receive an applicant ID (BID) and authentication number (BAN), then registers and applies separately on TUHH''s own application portal; up to two Bachelor''s programmes may be applied to. Admission decisions are typically posted on hochschulstart.de by the end of July, only after the application period closes. An APS certificate is mandatory for applicants with a school or university degree from China, India, or Vietnam, regardless of current nationality. EU/Iceland/Liechtenstein/Norway citizens specifically must additionally show maths grades from their last four school semesters. TestAS (a study-aptitude test) can extend a subject-specific entrance qualification to cover all TUHH subjects, but is explicitly "not absolutely necessary" for an application -- optional, unlike Cologne (#7) where the same test is mandatory for every applicant. Non-EU students may legally work at most 120 days (or 240 half-days) per year in Germany -- a national limit, not TUHH-specific, but directly relevant to any student weighing self-funding.',
+   true, 'high', 'https://www.tuhh.de/t3resources/tuhh/download/studium/studieninteressierte/Bachelorstudiengaenge_englisch.pdf', now()),
+  ('24835807-025b-4c93-ac2a-400f8c492603', 'language_proficiency',
+   'Three distinct language tracks with different application-vs-enrollment thresholds -- German-taught: German B2.2 to apply, TestDaF-16/telc-C1/DSH-2 to enroll; English-taught: no German ever required, TOEFL 90/IELTS 6.5/Cambridge Advanced-or-Proficiency to enroll; bilingual Engineering Science: German B1.2 to apply + TestDaF-12/DSH-1 to enroll, same English enrollment bar as English track; bilingual CS/Data Science: German B2.2 to apply + TestDaF-16/DSH-2, but a LOWER English enrollment bar (TOEFL 72/IELTS 5.0/telc B2)',
+   'German-taught programmes: German B2.2 (CEFR) to apply; TestDaF 16+ points, telc German C1 Hochschule, DSH-2, or equivalent to enroll; no English required at all. English-taught programmes (the Engineering Science Vertiefungen in Advanced Materials, Data Science, ICT Systems, Mechanical Engineering and Management, Mechatronics): no German required at either stage; TOEFL iBT 90+, IELTS Academic 6.5+, or Cambridge Advanced/Proficiency to enroll. Bilingual Engineering Science (Biomedical/Electrical/Mechanical Engineering Vertiefungen): German B1.2 to apply, TestDaF 12+ or DSH-1 to enroll, plus the SAME higher English bar as the English-only track (TOEFL 90+/IELTS 6.5+). Bilingual Computer Science and Data Science specifically: German B2.2 to apply, TestDaF 16+/telc C1/DSH-2 to enroll (the higher German bar), but a NOTABLY LOWER English bar than the other bilingual track -- TOEFL 72+, IELTS 5.0+, Cambridge First, or telc English B2. Native English speakers from Australia/UK/Ireland/USA/New Zealand/Canada (except Quebec), or anyone who completed a full Bachelor''s degree in one of these countries, need no English proof at all. Only application-stage German (B2.2 or B1.2, never English) is required upfront; every enrollment-stage certificate can be supplied later, before enrollment specifically, not at application.',
+   true, 'high', 'https://www.tuhh.de/t3resources/tuhh/download/studium/studieninteressierte/Bachelorstudiengaenge_englisch.pdf', now());
+
+insert into public.university_deadlines
+  (university_id, deadline_type, recurrence, recurrence_month, recurrence_day, application_cycle, source_url, retrieved_at, deadline_text_verbatim)
+values
+  ('24835807-025b-4c93-ac2a-400f8c492603', 'application', 'recurring_annual_undated', 7, 15, 'Winter Semester only (start of studies October 1) -- no summer intake for first-semester bachelor entry',
+   'https://www.tuhh.de/t3resources/tuhh/download/studium/studieninteressierte/Bachelorstudiengaenge_englisch.pdf', now(),
+   'Official PDF (dated May 2025, stated valid for Winter Semester 2025 specifically): "Application is only possible for the winter semester (start of studies: October 1). Application period: June 1 - July 15." Recorded as a recurring annual pattern since the source itself frames it as TUHH''s standing structure, but the specific document is dated and self-disclaims: "Legally binding claims cannot be derived from this information" -- the exact dates should be re-checked against a current-cycle version before being treated as certain for a future intake.');
+```
+
+---
