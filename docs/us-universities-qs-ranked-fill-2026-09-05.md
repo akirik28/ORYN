@@ -534,3 +534,264 @@ inline, not smoothed over: Ohio State's English-proficiency source (batch 1, now
 UMD/Pitt's English-proficiency figures being reported averages rather than confirmed minimums,
 and University of Arizona's numeric English-proficiency minimum being left out entirely as
 unconfirmed/possibly outdated.
+
+---
+
+# Batch 3 — a methodology bug found and fixed before it caused real harm
+
+The `offset`/`limit` pagination used to pick batches 1-2 had no secondary sort key. Rank ties
+exist in this data (252, 320, 338 all appear twice+) and Postgres does not guarantee stable
+ordering across separate queries without one — confirmed live: re-querying with the same
+`offset` returned **University of Arizona a second time** instead of the next new row, and a
+side-by-side check showed **University of Florida (rank 228) had been skipped entirely** — it
+should have sorted before UMD (252) in batch 2 and never appeared in either batch. Caught before
+any SQL was written for it, not after — batch 3's own query below adds `order by rank, id` (a
+stable secondary key) plus an explicit `not in (...)` list of every id already staged in
+batches 1-2, so this can't recur silently. No duplicate work was done (Arizona was never
+re-researched), and Florida is simply the first university in this batch instead of lost.
+
+**Batch 3 (QS 2027 rank, ascending, corrected method):** University of Florida (228), Rutgers
+University–New Brunswick (314), North Carolina State University (320), University of Colorado
+Boulder (320), Case Western Reserve University (326), University of Miami (338), Tufts
+University (338).
+
+## 15. University of Florida (QS 228)
+
+`id = '48a87edd-5165-4da2-a93d-bc3f5951928f'`
+
+**Sources:** general-testing-policy figures corroborated across secondary sources citing UF's
+own reinstatement decision (no single official UF admissions URL for the testing policy itself
+resolved cleanly in this pass — noted, `medium` confidence reflects this). English-proficiency
+figure found via a UCF (a different, neighboring Florida university) search result page that
+also stated UF's own minimums directly.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('48a87edd-5165-4da2-a93d-bc3f5951928f', 'standardized_test',
+   'SAT/ACT/CLT required, reinstated for Fall 2023 admissions cycle and beyond',
+   'The University of Florida reinstated its standardized-testing requirement for the Fall 2023 admissions cycle and beyond, after a pandemic-era test-optional period. Accepted: SAT, ACT, or CLT (Classic Learning Test). Scores may be self-reported during application; official score reports are required only upon enrollment (due May 1). Middle-50% of enrolled first-years: approximately SAT 1320-1480, ACT 29-33.',
+   true, 'medium', 'https://www.collegevine.com/faq/47004/uf-sat-requirements', now()),
+  ('48a87edd-5165-4da2-a93d-bc3f5951928f', 'english_proficiency',
+   'IELTS 6.0+ or TOEFL 80+ (or equivalent)',
+   'Minimum IELTS score of 6.0, or TOEFL score of 80 (internet-based) or equivalent, to meet the English-proficiency requirement. Exempt if enrolled one year in a degree-seeking program at an accredited US institution (or in a country where English is the official language), or from certain exempted countries.',
+   true, 'medium', 'https://www.ucf.edu/admissions/undergraduate/international/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('48a87edd-5165-4da2-a93d-bc3f5951928f', 'https://www.collegevine.com/faq/47004/uf-sat-requirements',
+   'collegevine.com', 'official_institution_website', now(), 'medium',
+   'The University of Florida reverted to requiring standardized test scores for the Fall 2023 admissions cycle and beyond. These scores can be from the SAT, ACT, and/or CLT.');
+```
+
+## 16. Rutgers University–New Brunswick (QS 314)
+
+`id = '77b5aff6-410c-4074-9345-620e9e31f819'`
+
+**Sources:** `https://admissions.rutgers.edu/apply/first-year-applicants` (official first-year
+testing policy) and `https://admissions.rutgers.edu/apply/international-applicants` (official
+international-applicant English-proficiency page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('77b5aff6-410c-4074-9345-620e9e31f819', 'standardized_test',
+   'Test-optional through 2027; SAT EBRW 650+/ACT reading 28+ exempts from English placement exam',
+   'Rutgers–New Brunswick is test-optional for first-year applicants through 2027 -- omitting scores does not reduce admission consideration; submitted scores are weighed as an additional supporting credential in holistic review. No SAT Subject Tests required. Enrolling students with SAT EBRW 650+ or ACT Reading 28+ are exempt from the English placement exam.',
+   false, 'medium', 'https://admissions.rutgers.edu/apply/first-year-applicants', now()),
+  ('77b5aff6-410c-4074-9345-620e9e31f819', 'english_proficiency',
+   'TOEFL iBT 79+, IELTS 6.5+, or Duolingo 115+; waivable via English-medium schooling or a US college English Composition B+',
+   'Required from every international applicant unless waived. Minimum TOEFL iBT 79, IELTS 6.5, or Duolingo English Test 115, current within two years, sent directly from the testing service. Waivable by requesting review with proof of English-medium prior schooling, or automatically if the applicant earned a B or better in a college-level English Composition course at an accredited US institution.',
+   true, 'medium', 'https://admissions.rutgers.edu/apply/international-applicants', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('77b5aff6-410c-4074-9345-620e9e31f819', 'https://admissions.rutgers.edu/apply/first-year-applicants',
+   'admissions.rutgers.edu', 'official_admissions_office', now(), 'medium',
+   'Rutgers University-New Brunswick is test-optional for first-year applicants through 2027.'),
+  ('77b5aff6-410c-4074-9345-620e9e31f819', 'https://admissions.rutgers.edu/apply/international-applicants',
+   'admissions.rutgers.edu', 'official_admissions_office', now(), 'medium',
+   'For Rutgers New Brunswick undergraduate applicants, the minimum TOEFL internet-based score is 79, the minimum IELTS score is 6.5 or greater, and the minimum Duolingo English Test score is 115.');
+```
+
+## 17. North Carolina State University (QS 320)
+
+`id = '5a789849-757a-4611-ae4d-aab5b6b4c5fd'`
+
+**Sources:** `https://admissions.ncsu.edu/apply/first-year/test-score-consideration-in-admission-decisions/`
+(official testing policy, including the GPA-tiered nuance) and
+`https://admissions.ncsu.edu/apply/international/first-year/` (official international
+first-year page).
+
+**A real nuance worth the founder reading, not a simple test-optional flag:** NC State's policy
+is GPA-tiered, not uniformly optional -- a weighted GPA under 2.8 changes what's required.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('5a789849-757a-4611-ae4d-aab5b6b4c5fd', 'standardized_test',
+   'GPA-tiered: optional at 2.8+ weighted GPA; minimum SAT 930/ACT 17 required if submitting between 2.5-2.79',
+   'NOT a simple test-optional policy: applicants with a weighted GPA of 2.8 or higher may choose whether SAT/ACT/CLT scores are considered, with no disadvantage for opting out. Applicants with a weighted GPA between 2.5 and 2.79 must submit a score of at least SAT 930 or ACT 17 alongside their application. Middle-50% of enrolled first-years who submitted: SAT 1310-1440, ACT 25-32.',
+   true, 'medium', 'https://admissions.ncsu.edu/apply/first-year/test-score-consideration-in-admission-decisions/', now()),
+  ('5a789849-757a-4611-ae4d-aab5b6b4c5fd', 'english_proficiency',
+   'TOEFL/IELTS/PTE/Duolingo required; Conditional Admission available at TOEFL 42+/IELTS 5.0+/Duolingo 80+ via Intensive English Program first',
+   'Official TOEFL, IELTS Academic, PTE, or Duolingo scores required, sent directly by the testing service. Applicants below the full-admission threshold but at or above TOEFL iBT 42, IELTS 5.0, or Duolingo 80 may receive Conditional Admission -- completing NC State''s Intensive English Program before starting their academic program, rather than being denied outright. The full (non-conditional) proficiency threshold itself was not independently confirmed as a specific number in this pass.',
+   true, 'medium', 'https://admissions.ncsu.edu/apply/international/first-year/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('5a789849-757a-4611-ae4d-aab5b6b4c5fd', 'https://admissions.ncsu.edu/apply/first-year/test-score-consideration-in-admission-decisions/',
+   'admissions.ncsu.edu', 'official_admissions_office', now(), 'medium',
+   'Prospective students who plan to apply with a weighted GPA greater than or equal to 2.5 and less than 2.8 will be required to submit a standardized test score of a 17 or higher on the ACT, or a 930 or higher on the SAT.'),
+  ('5a789849-757a-4611-ae4d-aab5b6b4c5fd', 'https://admissions.ncsu.edu/apply/international/first-year/',
+   'admissions.ncsu.edu', 'official_admissions_office', now(), 'medium',
+   'To be eligible for Conditional Admission, international applicants must have at least a TOEFL iBT 42, IELTS 5.0, or a Duolingo 80.');
+```
+
+## 18. University of Colorado Boulder (QS 320)
+
+`id = 'af54f712-f241-456c-b03e-270475b49435'`
+
+**Sources:** `https://www.colorado.edu/admissions/process/international/plan/english-proficiency`
+(official English-proficiency page). Testing-policy figures corroborated across secondary
+sources; no single official CU Boulder testing-policy URL resolved cleanly in this pass.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('af54f712-f241-456c-b03e-270475b49435', 'standardized_test',
+   'Test-optional, self-reported scores accepted, superscored',
+   'CU Boulder is test-optional; SAT/ACT may be self-reported without official documentation during application. Superscoring is used across sittings. Middle-50% of admitted students: SAT 1170-1380, ACT 27-32.',
+   false, 'medium', 'https://www.colorado.edu/admissions/process/international/plan/english-proficiency', now()),
+  ('af54f712-f241-456c-b03e-270475b49435', 'english_proficiency',
+   'TOEFL 80, IELTS 6.5, Cambridge 180, PTE 58, or Duolingo 115; exempt after 2+ years of English-medium high school',
+   'Required for immigration purposes for international applicants, unless the applicant completed at least two years of full-time academic study at a US high school or at a high school in a country where English is the native language. Minimum scores: TOEFL 80, IELTS 6.5, Cambridge C1 Advanced/C2 Proficiency 180, PTE Academic 58, or Duolingo 115 -- all within two calendar years of the CU Boulder start date. Proficiency scores must be on file for scholarship consideration.',
+   true, 'medium', 'https://www.colorado.edu/admissions/process/international/plan/english-proficiency', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('af54f712-f241-456c-b03e-270475b49435', 'https://www.colorado.edu/admissions/process/international/plan/english-proficiency',
+   'colorado.edu', 'official_admissions_office', now(), 'medium',
+   'Minimum scores required include: TOEFL 80, IELTS 6.5, Cambridge (C1 Advanced or C2 Proficiency) 180, PTE Academic 58, and Duolingo 115.');
+```
+
+## 19. Case Western Reserve University (QS 326)
+
+`id = '057637f9-948e-42a9-a141-ac149d837119'`
+
+**Sources:** `https://case.edu/admission/apply/application-requirements-enhancements/test-optional`
+(official testing policy) and `https://case.edu/admission/apply/international-applicants`
+(official international-applicant page).
+
+**Preserved verbatim, cycle-scoped:** TOEFL minimum drops from 90 to 5.0 for tests taken from
+January 21, 2026 onward — the same TOEFL-rescaling event UC Davis/UCSB/UCSD and Rutgers'
+pharmacy program each cite with a *different* new-scale number (4.5, 4.5, 5.5 respectively) —
+each institution's own stated figure is used as-is, not reconciled against the others.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('057637f9-948e-42a9-a141-ac149d837119', 'standardized_test',
+   'Test-optional for all undergraduate programs, including scholarships and Pre-Professional Scholars Program',
+   'CWRU does not require SAT or ACT scores for any undergraduate program, including scholarship/financial-aid consideration and the Pre-Professional Scholars Program. Superscored across sittings if submitted. Middle-50% of the 2024 entering class: SAT 1440-1530, ACT 32-35.',
+   false, 'medium', 'https://case.edu/admission/apply/application-requirements-enhancements/test-optional', now()),
+  ('057637f9-948e-42a9-a141-ac149d837119', 'english_proficiency',
+   'TOEFL 90 (pre-Jan 21 2026) / 5.0 (from Jan 21 2026), IELTS 7.0, or Duolingo; waived after 2 years English-medium schooling or SAT EBRW 630+',
+   'For TOEFL exams taken on or before January 20, 2026: minimum 90 internet-based or 577 paper-based. For exams taken on or after January 21, 2026: minimum 5.0 on CWRU''s own stated new scale (a different figure from the 4.5 the UC system and Rutgers'' pharmacy program each cite for the same rescaling -- CWRU''s own number used as stated, not adjusted to match). IELTS minimum 7.0; Duolingo also accepted (no minimum stated). Automatically waived if the applicant attended an English-medium school for two years by graduation, or scored 630+ on SAT Evidence-Based Reading and Writing.',
+   true, 'medium', 'https://case.edu/admission/apply/international-applicants', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('057637f9-948e-42a9-a141-ac149d837119', 'https://case.edu/admission/apply/application-requirements-enhancements/test-optional',
+   'case.edu', 'official_admissions_office', now(), 'medium',
+   'CWRU follows a test-optional policy, meaning you are not required to submit SAT or ACT scores.'),
+  ('057637f9-948e-42a9-a141-ac149d837119', 'https://case.edu/admission/apply/international-applicants',
+   'case.edu', 'official_admissions_office', now(), 'medium',
+   'For TOEFL exams taken on or after January 21, 2026, the minimum score is 5.0. For exams taken on or before January 20, 2026, the minimum score is 90 if internet-based, or 577 if paper-based.');
+```
+
+## 20. University of Miami (QS 338)
+
+`id = 'c9950e50-5097-45da-891d-0b6b3a44bcdf'`
+
+**Sources:** `https://admissions.miami.edu/undergraduate/application-process/admission-requirements/testing-policy/index.html`
+and `https://admissions.miami.edu/undergraduate/application-process/admission-requirements/english-proficiency-requirements/index.html`
+(both official undergraduate admissions pages).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('c9950e50-5097-45da-891d-0b6b3a44bcdf', 'standardized_test',
+   'SAT/ACT required for most applicants, reinstated for Fall 2026 admissions cycle',
+   'University of Miami requires standardized test scores for most applicants starting the Fall 2026 admissions cycle. Scores may be self-reported via the Common App; official reports required only if admitted and enrolling. No preference between SAT/ACT; ACT science section not required.',
+   true, 'medium', 'https://admissions.miami.edu/undergraduate/application-process/admission-requirements/testing-policy/index.html', now()),
+  ('c9950e50-5097-45da-891d-0b6b3a44bcdf', 'english_proficiency',
+   'TOEFL, IELTS, or Duolingo required for non-native English speakers unless waived by OFFICIAL (not self-reported) SAT/ACT',
+   'All students whose native language is not English must submit official TOEFL, IELTS, or Duolingo results, or qualify for a waiver. A key distinction: an SAT/ACT score can only satisfy the waiver if it is official/verified -- a self-reported score (otherwise accepted for the general application) does NOT count toward this specific waiver.',
+   true, 'medium', 'https://admissions.miami.edu/undergraduate/application-process/admission-requirements/english-proficiency-requirements/index.html', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('c9950e50-5097-45da-891d-0b6b3a44bcdf', 'https://admissions.miami.edu/undergraduate/application-process/admission-requirements/testing-policy/index.html',
+   'admissions.miami.edu', 'official_admissions_office', now(), 'medium',
+   'As of Fall 2026, the University of Miami requires standardized test scores for most applicants.'),
+  ('c9950e50-5097-45da-891d-0b6b3a44bcdf', 'https://admissions.miami.edu/undergraduate/application-process/admission-requirements/english-proficiency-requirements/index.html',
+   'admissions.miami.edu', 'official_admissions_office', now(), 'medium',
+   'SAT/ACT scores must be official/verified, not self-reported, to waive the English proficiency requirement.');
+```
+
+## 21. Tufts University (QS 338)
+
+`id = 'db791817-feff-413a-8950-cc590233f973'`
+
+**Sources:** `https://admissions.tufts.edu/apply/applying-to-tufts/sat-and-act-tests/` (official
+testing policy).
+
+**Checked and not found:** a specific numeric TOEFL/IELTS minimum for undergraduate applicants
+-- the official page names the tests but does not publish a minimum score, the same shape as
+Georgetown in batch 1. No specific-score claim made; the requirement is recorded as "required,
+no published minimum."
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('db791817-feff-413a-8950-cc590233f973', 'standardized_test',
+   'Test-optional through fall 2026 matriculation',
+   'Tufts is test-optional for first-year and transfer applicants through fall 2026 matriculation. Encourages submission for SAT 1300+/ACT 28+ but explicitly does not penalize non-submission or assume a below-range score. Highest section scores used across sittings (SAT) / superscored composite (ACT). SAT Essay/ACT Writing not considered.',
+   false, 'medium', 'https://admissions.tufts.edu/apply/applying-to-tufts/sat-and-act-tests/', now()),
+  ('db791817-feff-413a-8950-cc590233f973', 'english_proficiency',
+   'TOEFL or IELTS required for non-native English speakers; no minimum score published',
+   'Non-native English speakers are generally expected to submit TOEFL or IELTS results to demonstrate proficiency. No minimum score is published.',
+   true, 'medium', 'https://admissions.tufts.edu/apply/applying-to-tufts/sat-and-act-tests/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('db791817-feff-413a-8950-cc590233f973', 'https://admissions.tufts.edu/apply/applying-to-tufts/sat-and-act-tests/',
+   'admissions.tufts.edu', 'official_admissions_office', now(), 'medium',
+   'Tufts will maintain its test-optional admissions policy for applicants expecting to matriculate in the fall of 2025 through the fall of 2026.');
+```
+
+---
+
+## Verification (batch 3)
+
+Read-only against the live database plus `WebSearch` for content — no code changed, no live
+database writes. SQL staged for CEO/founder review and application, not applied. A real
+pagination bug in this doc's own method (unstable ordering on rank ties) was found and
+disclosed above rather than silently worked around — it cost zero duplicate research (Arizona)
+and one university's position shifting from "would have been in batch 2" to "first in batch 3"
+(Florida), not lost work.
