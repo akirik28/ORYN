@@ -549,6 +549,69 @@ export function classifyEligibilityGap(notes: readonly EligibilityNote[]): Eligi
 }
 
 /**
+ * CEO's 2026-09-05 follow-up, measured live: the match SCORE (computeOpportunityMatch below)
+ * reads only `fields`/`category`/`country`/`interests` — never age, grade, or country
+ * eligibility — so an opportunity with zero recorded eligibility data on every axis can still
+ * score as high as a fully-verified one and land in the "Exceptional" tier. Confirmed against
+ * real live data the same day: Harvard Pre-Collegiate Economics Challenge (97), International
+ * Economics Olympiad (91), and a Coursera listing (73) all score this way while genuinely
+ * knowing nothing about who can apply — 190 of 289 visible-candidate opportunities (66%) are in
+ * exactly this state. `classifyEligibilityGap`'s own badge work does not touch this: even once
+ * migrations 0126/0129/0133 land and a research pass marks every axis `checked_not_stated`
+ * (this file's own visible-27 fill already did exactly that for HPEC/IEO), the row still has NO
+ * real bound/allow-list/confirmed-open flag on any axis — `checked_not_stated` means "we
+ * checked, and the source is silent," not "we know something about who this fits." A badge
+ * fix alone cannot repair a score built entirely from data this function still doesn't have.
+ *
+ * Deliberately checks only REAL, POSITIVE signals — a recorded bound, a confirmed-open flag, a
+ * real allow-list, or real free-text restriction evidence — and deliberately does NOT count
+ * `age_eligibility_basis`/`grade_eligibility_basis`/`country_eligibility_basis` (checked_not_
+ * stated). That's an intentional, permanent choice, not a stand-in until migrations apply:
+ * "the source was checked and said nothing" is real information for the BADGE (it's calmer
+ * than "nobody has ever looked"), but it is not evidence this specific opportunity fits any
+ * given student, which is the only thing the match score is claiming. HPEC will still read
+ * `checked_not_stated` on every axis after this session's own fill work fully lands, and
+ * should still never score as "Exceptional" — the two fixes solve genuinely different problems
+ * (what to tell the student vs. what number to show), and conflating them here would silently
+ * let the score-blindness bug survive underneath a calmer-looking badge.
+ *
+ * A separate, standalone check rather than a refactor of computeEligibility's own internal
+ * hasAgeRestriction/hasCountryRestriction/hasGradeRestriction locals: those are deliberately
+ * scoped to that function (each one immediately feeds a specific student-comparison branch),
+ * and widening its surface to also serve this unrelated caller risks exactly the kind of
+ * shared-code drift this file's own comments elsewhere warn about (#140/#141). The three checks
+ * below are intentionally kept in lockstep with computeEligibility's own definitions instead.
+ */
+export function hasAnyEligibilityDataAtAll(opportunity: OpportunityForMatching): boolean {
+  const hasAgeData = opportunity.minimumAge !== null || opportunity.maximumAge !== null || (opportunity.ageEligibilityConfirmedOpen ?? false);
+  const hasGradeData = (opportunity.eligibleGrades ?? []).length > 0 || (opportunity.gradeEligibilityConfirmedOpen ?? false);
+  const hasCountryData =
+    opportunity.eligibleCountries.length > 0 ||
+    (opportunity.eligibleCitizenships ?? []).length > 0 ||
+    Boolean(opportunity.citizenshipRestrictions) ||
+    Boolean(opportunity.residencyRestrictions) ||
+    (opportunity.countryEligibilityConfirmedOpen ?? false);
+  return hasAgeData || hasGradeData || hasCountryData;
+}
+
+/**
+ * The cap itself: one point below matchTierKey's own "worthALook" floor (40), so a
+ * data-blank opportunity can never clear into "worthALook", "strong", or "exceptional" —
+ * only ever "lowPriority", regardless of how strong its interest/profile-need signal is.
+ *
+ * Applied by scaling the raw 0-100 score proportionally into 0-cap (rawScore * cap / 100),
+ * NOT by Math.min(rawScore, cap) — caught by this file's own existing test suite, not by
+ * inspection: a flat min() maps every raw score at or above the cap to the identical capped
+ * value, so two data-blank opportunities with genuinely different relevance/profile-need
+ * signals (e.g. one addressing the student's actual weakest dimension, one not) would score
+ * identically once both raw scores cleared 39 — silently breaking several already-passing
+ * tests asserting that a stronger match always outranks a weaker one. Proportional scaling
+ * preserves that ordering across the FULL range, not just below the cap, while still
+ * guaranteeing the scaled maximum (a raw 100) lands at exactly the cap.
+ */
+const NO_ELIGIBILITY_DATA_SCORE_CAP = 39;
+
+/**
  * `locale` dropped 2026-09-03 (the eligibility_notes -> codes fix, docs/eligibility-notes-
  * codes-2026-09-03.md): this function used to render sentences directly, which is exactly how
  * a request's locale ended up frozen into a stored row read back by a student in a different
@@ -1062,7 +1125,14 @@ export function computeOpportunityMatch(
   const { eligible, notes } = computeEligibility(student, opportunity, savedStatus);
   const relevance = computeRelevance(student, opportunity);
   const profileNeed = computeProfileNeed(student, opportunity);
-  const matchScore = eligible ? clampScore(relevance.score * 0.4 + profileNeed.score * 0.6) : 0;
+  const rawScore = clampScore(relevance.score * 0.4 + profileNeed.score * 0.6);
+  // See hasAnyEligibilityDataAtAll's own doc comment: a row with zero real eligibility
+  // signal on every axis cannot claim a confident tier no matter how strong its interest
+  // overlap is — scaled down, not zeroed, so it stays distinguishable from a confirmed
+  // exclusion (!eligible, which is genuinely 0) and a stronger data-blank match still
+  // outranks a weaker one (see NO_ELIGIBILITY_DATA_SCORE_CAP's own comment on why this is a
+  // proportional scale, not a flat min()).
+  const matchScore = !eligible ? 0 : hasAnyEligibilityDataAtAll(opportunity) ? rawScore : clampScore((rawScore * NO_ELIGIBILITY_DATA_SCORE_CAP) / 100);
 
   return {
     eligible,
