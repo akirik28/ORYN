@@ -431,12 +431,28 @@ mailini alıyoruz ya, doğrulama kodu koysak çok iyi olur."*
 **C1. Veli uçtan uca doğrulama — ✅ TAMAM (4 Eylül).** 26 kontrol, hepsi geçti.
 Ayrıntı aşağıda; tek açık kalan, plan script'indeki savepoint'siz B7.
 
-**C2. Danışman akışı (streaming).** Plan yazılı:
-`docs/advisor-streaming-plan-2026-09-04.md`. 11 koruma tek tek listelenmiş.
-Birkaç günlük iş — ödeme oturduktan sonra.
+**C2. Danışman akışı — ✅ KAPANDI.** Zaten kurulmuş ve merge edilmişti
+(`b345e002`), plan onu "birkaç günlük iş" sanıyordu. 5 Eylül'de 11 korumanın
+**hepsinin hâlâ yerinde** olduğu koda karşı doğrulandı. Ve gerçek bir açık
+bulunup kapatıldı (`84cab58f`): `reader.read()`'in **kendisi reddettiğinde**
+(gerçek ağ kopması) hata yakalanmıyordu — "düşünüyor" balonu sonsuza kadar
+asılı kalıyor, hata görünmüyor, tek çare sayfa yenilemek. Düzeltme okuma
+döngüsünün kendisine kondu, `submit()` ve `retry()` bedavaya aldı.
 
-**C3. Öğrenci ana akışını gerçek hesapla yürü.** Bugüne kadar hiç yapılmadı;
-paylaşılan tarayıcıda kurucunun oturumu olduğu için engellendi.
+**C3. Öğrenci ana akışı — ✅ ZATEN YÜRÜNDÜ (4 Eylül, dört rapor).**
+`c3-core-loop-handoff-trace`, `c3-onboarding-and-cross-discovery-seams`,
+`c4-dashboard-content-audit`, `c6-knows-what-it-doesnt-know-audit`. "Tarayıcı
+engeli" gerekçesi de bayat: C4 gerçek QA hesaplarını kullan-at bir route'tan
+geçirerek engeli aşmış.
+**Dağıtılmamış gerçek bulgular, sahibi aranıyor:** dashboard'da hedef üniversite
+ve fırsat satırları **tıklanamıyor** (id elde var, `<Link>` yok) · fırsat
+kaydetme `/dashboard`'ı revalidate etmiyor, üniversite kaydetme ediyor ·
+onboarding'in `target_geographies` alanı toplanıyor, hiçbir yerde okunmuyor ·
+5 gerçek hesabın 2'sinde hedef üniversite var ama outlook hiç hesaplanmamış
+(yalnızca detay sayfası açılınca hesaplanıyor).
+**İyi haber:** boş hesapta ana ekran dürüst ve sakin, çökme yok, güven
+seviyeleri karışmıyor; profil gücü / tamamlanma / hazırlık / kabul olasılığı
+dördü gerçekten ayrı.
 
 ---
 
