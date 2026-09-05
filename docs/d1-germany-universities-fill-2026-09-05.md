@@ -983,3 +983,79 @@ values
 ```
 
 ---
+
+## 26. Otto-von-Guericke-Universität Magdeburg (OVGU)
+
+`id = 'faad0712-fea4-4897-9f2c-63eb49e2e3ff'` — QS rank 646. **Cycle-dependent policy: not
+established.**
+
+**Source actually used:** `https://www.ovgu.de/unimagdeburg/en/International/Incoming+_+Ways+
+to+the+University/International+Students/Full_Time+Studies/Applying+via+uni_assist+e_V_-p-
+107054.html` — official page (its own title is literally "Applying via uni-assist e.V."),
+directly fetched.
+
+**Tenth confirmed uni-assist-member university this batch**, applying "irrespective of the
+applicant's nationality" for any international qualification (A-Levels, High School Diploma,
+IB, Feststellungsprüfung, or similar).
+
+**A search-summary mix-up caught and corrected before writing anything:** a general search
+attributed a B2/C1 requirement to English-taught programmes -- the official page itself shows
+this pairing actually describes GERMAN proficiency (B2 to join a Studienkolleg, C1 to sit the
+DSH exam), while English proficiency for English-taught programmes is stated only generically
+as "TOEFL, IELTS or equivalent language certificate," with no specific score given. Used the
+directly-fetched, correctly-attributed version.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('faad0712-fea4-4897-9f2c-63eb49e2e3ff', 'international_requirement',
+   'Confirmed uni-assist member: ALL applicants with an international qualification (A-Levels, High School Diploma, IB, Feststellungsprüfung, etc.) apply via uni-assist, regardless of nationality; many bachelor''s programmes are offered in English, a notable contrast with most other universities in this batch',
+   'OVGU confirms directly: "all applications for admission from applicants who have obtained their entrance qualification for higher education...abroad are pre-checked by uni-assist e.V.," and this applies "irrespective of the applicant''s nationality." Many international Bachelor''s and Master''s programmes at OVGU are offered in English -- a notable structural contrast with most other German universities checked in this batch, where German-taught programmes dominate.',
+   true, 'high', 'https://www.ovgu.de/unimagdeburg/en/International/Incoming+_+Ways+to+the+University/International+Students/Full_Time+Studies/Applying+via+uni_assist+e_V_-p-107054.html', now()),
+  ('faad0712-fea4-4897-9f2c-63eb49e2e3ff', 'language_proficiency',
+   'German-taught programmes/Studienkolleg pathway: German B2 to join a Studienkolleg, C1 to sit the DSH exam; English-taught programmes: TOEFL, IELTS, or an equivalent certificate accepted, no specific score stated on this page',
+   'For the German-language pathway: German proficiency at level B2 is required to participate in a Studienkolleg, rising to C1 to sit the DSH exam itself. For English-taught programmes, the university accepts "TOEFL, IELTS or equivalent language certificate" without stating a specific minimum score on this page.',
+   true, 'high', 'https://www.ovgu.de/unimagdeburg/en/International/Incoming+_+Ways+to+the+University/International+Students/Full_Time+Studies/Applying+via+uni_assist+e_V_-p-107054.html', now());
+```
+
+---
+
+## 27. TU Dortmund University
+
+`id = 'bba6c707-2d7c-4e5c-87ee-16e4d0ae697f'` — QS rank 691. **Cycle-dependent policy: not
+established.**
+
+**Eleventh confirmed uni-assist-member university this batch**, via uni-assist's own directory
+confirming TU Dortmund at its correct address. Applications are online-only for the uni-assist
+pre-check (document uploads, not certified copies at this stage); officially certified copies
+are only required by the university later in some cases -- the same "uncertified upfront,
+certified later" convenience pattern already seen at Leipzig (#19).
+
+**A specific fact confirmed directly:** for English-taught programmes, competence at CEFR B2
+or above is required, proven by a language certificate.
+
+**What was checked and NOT found:** TU Dortmund's own international-applicant pages were
+reached but did not themselves state uni-assist usage, German language requirements, or
+deadlines (all deferred to contact/individual programme pages) -- the uni-assist confirmation
+above instead comes from uni-assist's own directory, checked as the more reliable source per
+this batch's established practice; German-taught programme language level; application
+deadline (the page notes restricted-admission Winter 2026/27 applications closed 15 July 2026,
+consistent with the pattern elsewhere, but does not give the international-applicant-specific
+date).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('bba6c707-2d7c-4e5c-87ee-16e4d0ae697f', 'international_requirement',
+   'Confirmed uni-assist member (via uni-assist''s own directory, not TU Dortmund''s own pages, which deferred the specifics); online-only document upload for the uni-assist pre-check, certified copies only required by the university later in some cases',
+   'TU Dortmund is confirmed as a uni-assist member university via uni-assist''s own official directory (its own international-applicant pages did not themselves state this, deferring instead to contact channels). The uni-assist pre-check accepts online document uploads; officially certified copies are only required by the university itself later, in some cases -- not at the initial uni-assist stage.',
+   true, 'high', 'https://www.uni-assist.de/en/tools/uni-assist-universities/detail/hochschule/316/', now()),
+  ('bba6c707-2d7c-4e5c-87ee-16e4d0ae697f', 'language_proficiency',
+   'English-taught programmes: CEFR B2 or above, proven by a language certificate; German-taught programme requirements not confirmed in this pass',
+   'For English-taught programmes, applicants must demonstrate English competence at least equivalent to CEFR B2, proven by a language certificate. Some degree programmes have additional specific requirements, such as a prior internship or an aptitude test. German-taught programme language requirements were not confirmed by direct fetch in this pass.',
+   true, 'high', 'https://www.tu-dortmund.de/en/international/studying-at-tu-dortmund-university/international-applicants/', now());
+```
+
+---
