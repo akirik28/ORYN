@@ -608,3 +608,109 @@ values
 ```
 
 ---
+
+## 15. University of Bayreuth
+
+`id = 'da15770e-4e7a-4804-b909-2c1b1ac4a38a'` — QS rank 472. **Cycle-dependent policy: not
+established.**
+
+**Uni-assist confirmed via two independent official-domain signals:** Bayreuth''s own
+International Office maintains a page whose URL literally is
+`international-office.uni-bayreuth.de/.../uni-assist/`, and uni-assist''s own directory lists
+Bayreuth as a member university (`uni-assist.de/tools/uni-assist-hochschulen/hochschul-
+details/hochschule/452/`). Applicants upload documents via uni-assist and receive a VPD, then
+submit it to the university; uni-assist states its own preliminary review can take 6-8 weeks.
+
+**What was checked and NOT found:** a general search reports German C1 (DSH-2/TestDaF 4) for
+German-taught bachelor''s degrees, IELTS 6.5 specifically for the bilingual Philosophy and
+Economics BA, and a distinctive German A1 requirement even for English-taught programmes (with
+a grace period to submit by the end of the second semester) -- none of these specific figures
+were independently confirmed by this session''s own successful fetch of a Bayreuth requirements
+page, recorded at `medium` confidence.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('da15770e-4e7a-4804-b909-2c1b1ac4a38a', 'international_requirement',
+   'Confirmed via Bayreuth''s own International Office page and uni-assist''s member directory: Bayreuth is a uni-assist university; the VPD preliminary review can take 6-8 weeks, so early application is advised',
+   'International applicants with a foreign degree upload their application documents through uni-assist, which issues a Vorprüfungsdokumentation (VPD); this is then submitted, alongside the rest of the application, directly to the university. Uni-assist itself states the preliminary documentation review may take 6-8 weeks, so applicants are advised to start as early as possible.',
+   true, 'high', 'https://www.international-office.uni-bayreuth.de/de/come-to-bayreuth/degree-students/uni-assist/index.html', now()),
+  ('da15770e-4e7a-4804-b909-2c1b1ac4a38a', 'language_proficiency',
+   'Reportedly: German C1 (DSH-2 or TestDaF 4) for German-taught bachelor''s degrees; IELTS 6.5 specifically for the bilingual Philosophy and Economics BA; a distinctive German A1 requirement even for English-taught programmes, submittable by the end of the 2nd semester -- none independently confirmed by direct fetch',
+   'A general search reports German proficiency at C1 (DSH Level 2 or TestDaF level 4) for German-taught bachelor''s programmes. The bilingual Philosophy and Economics BA reportedly requires IELTS 6.5 specifically. A genuinely distinctive reported fact: even Bayreuth''s English-taught programmes reportedly require German A1 proficiency, though the certificate may be submitted as late as the end of the second semester of study rather than at application. None of these specific figures were independently confirmed by this session''s own successful fetch of a Bayreuth-specific requirements page.',
+   true, 'medium', 'https://www.international-office.uni-bayreuth.de/de/come-to-bayreuth/degree-students/uni-assist/index.html', now());
+```
+
+---
+
+## 16. Johannes Gutenberg-Universität Mainz (JGU)
+
+`id = '1445766d-14d9-45e8-9a57-8b7425c17d6b'` — QS rank 500. **Cycle-dependent policy: not
+established.**
+
+**A name-collision risk caught before being repeated as fact:** searching uni-assist''s own
+directory for "Mainz" returns results for **Hochschule Mainz (University of Applied
+Sciences)** and **Mainz Catholic University of Applied Sciences** -- both real but entirely
+different institutions from Johannes Gutenberg-Universität Mainz (JGU), the one actually in
+scope here. Not conflated; JGU''s own uni-assist membership status was left unconfirmed rather
+than borrowed from a same-city, differently-named institution''s listing.
+
+**What was checked and NOT found:** definitive confirmation of uni-assist usage for JGU
+specifically (a general search states "the uni-assist portal is normally used," but this
+session could not independently verify it against JGU''s own official page, which returned
+HTTP 404); the specific IELTS/TOEFL/PTE figures for English-taught programmes and DSH/TestDaF/
+Goethe-Zertifikat for German-taught ones, both mentioned by a general search but not
+independently confirmed; application deadline, tuition.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('1445766d-14d9-45e8-9a57-8b7425c17d6b', 'international_requirement',
+   'Applications begin on JOGU-StINe, JGU''s own application platform; international applicants need a JGU certificate of recognition confirming their qualification''s equivalence, with a conversion of their grades into JGU''s own grading system; whether uni-assist is also involved was not independently confirmed',
+   'International applicants start their application on JOGU-StINe, JGU''s own platform. Applicants with international certificates require a certificate of recognition from JGU confirming their university entrance qualification and converting their grades into the system JGU uses -- distinct from (and not confirmed to be the same as) a uni-assist VPD. A general search states uni-assist is "normally used," but this was not independently confirmed against JGU''s own official page (404 on direct fetch), and should not be assumed identical to the JOGU-StINe/certificate-of-recognition process actually confirmed. JGU also hosts a preparatory German-language course and a Studienkolleg for applicants not yet meeting direct-entry requirements.',
+   true, 'medium', 'https://www.studium.uni-mainz.de/en/your-application/applying-with-international-certificates/applying-as-an-international-student/', now()),
+  ('1445766d-14d9-45e8-9a57-8b7425c17d6b', 'language_proficiency',
+   'German language proficiency required for German-taught programmes (specific test/level not independently confirmed); for English-taught programmes, a general search reports IELTS 6.5, TOEFL iBT 90, or PTE 58+',
+   'Proof of German language proficiency is required for German-taught programmes; the specific test and level (a general search separately mentions TestDaF, DSH, or Goethe-Zertifikat) were not independently confirmed by this session''s own successful page fetch. For English-taught programmes, the same general search reports IELTS 6.5, TOEFL iBT 90, or PTE 58+ as accepted thresholds, also not independently confirmed.',
+   true, 'medium', 'https://www.studium.uni-mainz.de/en/your-application/applying-with-international-certificates/applying-as-an-international-student/', now());
+```
+
+---
+
+## 17. Universität Potsdam
+
+`id = '0d02f20f-ff7e-47dd-bdae-cc09d94cf7cf'` — QS rank 500. **Cycle-dependent policy: not
+established.**
+
+**Access note:** uni-potsdam.de could not be fetched directly in this pass (blocked at the
+domain level by this session''s own tooling, not an HTTP error from the site itself). Recorded
+at `medium` confidence from a general search's summary instead.
+
+**A labeling confusion noticed in the search summary and NOT repeated as fact:** the summary
+stated the winter-semester deadline as "January 15," which is backwards from the July-15(WS)/
+January-15(SS) pattern independently confirmed at essentially every other German university in
+this batch. Most likely a summarization mixup rather than a genuine Potsdam-specific reversal --
+not resolved (uni-potsdam.de itself was inaccessible), so no deadline row is written below at
+all rather than risk recording it backwards.
+
+**What was checked and NOT found:** the specific July/January deadline dates directly (not
+written, per above); uni-assist confirmation independent of this search; English-taught
+programme score thresholds; tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('0d02f20f-ff7e-47dd-bdae-cc09d94cf7cf', 'international_requirement',
+   'International bachelor applicants need a secondary qualification equivalent to the Abitur (e.g. A-Levels, IB); international qualifications may require uni-assist evaluation for equivalence -- not independently confirmed against the official domain, which was inaccessible to this session''s tools',
+   'International bachelor applicants need a secondary school-leaving certificate equivalent to the German Abitur, such as A-Levels or the IB diploma. International qualifications reportedly may require evaluation via uni-assist to verify equivalence, though this session could not independently confirm it (uni-potsdam.de was inaccessible to this session''s own fetch tooling, not merely a page-level error).',
+   true, 'medium', 'https://www.uni-potsdam.de/en/international/incoming/international-students/degree', now()),
+  ('0d02f20f-ff7e-47dd-bdae-cc09d94cf7cf', 'language_proficiency',
+   'German-taught programmes: TestDaF, DSH, Goethe-Zertifikat, or equivalent, reportedly; English-taught programmes reportedly accept TOEFL/IELTS instead -- neither independently confirmed',
+   'For German-taught programmes, proof of language proficiency (TestDaF, DSH, Goethe-Zertifikat, or equivalent) is reportedly required. Some English-taught programmes reportedly require only English proficiency evidence (TOEFL, IELTS) instead of German. Neither was independently confirmed by this session''s own direct fetch, since the official domain was inaccessible to this session''s tooling.',
+   true, 'medium', 'https://www.uni-potsdam.de/en/international/incoming/international-students/degree', now());
+```
+
+---
