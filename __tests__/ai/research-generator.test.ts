@@ -74,6 +74,22 @@ vi.mock("@/lib/providers/openalex", () => ({
   openAlexProvider: { searchWorks: async () => ({ success: false, error: { message: "not queried in this test" } }) },
 }));
 
+// Hoisted to module scope, once, matching __tests__/ai/weekly-plan.test.ts's own convention.
+// 2026-09-05: docs/cron-jobs-pre-arm-audit-2026-09-05.md's billing-flake section already
+// measured this rigorously (933 executions under deliberate contention, 5 failures, every one
+// "Error: Test timed out in 20000ms", zero assertion-count mismatches) and explicitly concluded
+// "not fixed -- measured and reported per standing instruction." This is that fix, independently
+// re-derived and reproduced (twice, via genuine concurrent full-suite contention) before reading
+// that doc: every test below re-ran its own `await import(...)`, so whichever test happened to
+// execute FIRST in this file paid the real one-time module-transform cost for the whole
+// research-generator.ts dependency graph inside its OWN 20s testTimeout budget -- vitest's own
+// "import" timing bucket is untimed by testTimeout, unlike a per-test dynamic import, so moving
+// the import here removes the mechanism rather than just the symptom. Not a race in
+// generateResearchProjects itself, confirmed independently the same way that doc did:
+// withUsageLogging calls its callback exactly once, no loop, no retry -- a single call cannot
+// double-insert regardless of import timing.
+const { generateResearchProjects } = await import("@/lib/ai/research-generator");
+
 const USER_ID = "33333333-3333-4333-8333-333333333333";
 
 function usageInserts(): RecordedInsert[] {
@@ -108,7 +124,6 @@ beforeEach(() => {
 
 describe("generateResearchProjects — usage recording", () => {
   test("a successful generation is recorded in ai_usage exactly once", async () => {
-    const { generateResearchProjects } = await import("@/lib/ai/research-generator");
     providerRef.current!.queueStructured(sampleProjectList());
 
     await generateResearchProjects({ userId: USER_ID, interests: ["Economics"], field: "Economics", tier: "standard" });
@@ -122,7 +137,6 @@ describe("generateResearchProjects — usage recording", () => {
 describe("generateResearchProjects — grade-level context", () => {
   test("a known graduation year reaches the actual prompt sent to the model", async () => {
     graduationYearRef.current = new Date().getFullYear() + 2;
-    const { generateResearchProjects } = await import("@/lib/ai/research-generator");
     providerRef.current!.queueStructured(sampleProjectList());
 
     await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics", tier: "standard" });
@@ -134,7 +148,6 @@ describe("generateResearchProjects — grade-level context", () => {
 
   test("a missing graduation year degrades to an explicit 'not on file', not a silent omission", async () => {
     graduationYearRef.current = null;
-    const { generateResearchProjects } = await import("@/lib/ai/research-generator");
     providerRef.current!.queueStructured(sampleProjectList());
 
     await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics", tier: "standard" });
@@ -154,7 +167,6 @@ describe("generateResearchProjects — grade-level context", () => {
  */
 describe("generateResearchProjects — weekly time budget uses the real label", () => {
   test("the readable label reaches the prompt, not the raw enum member", async () => {
-    const { generateResearchProjects } = await import("@/lib/ai/research-generator");
     providerRef.current!.queueStructured(sampleProjectList());
 
     await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics", tier: "standard" });
@@ -173,7 +185,6 @@ describe("generateResearchProjects — weekly time budget uses the real label", 
 describe("generateResearchProjects — existing skills reach the prompt", () => {
   test("skills render with a readable category label, not the raw enum member", async () => {
     skillsRef.current = [{ name: "Financial modeling", category: "analytical", proficiency: null }];
-    const { generateResearchProjects } = await import("@/lib/ai/research-generator");
     providerRef.current!.queueStructured(sampleProjectList());
 
     await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics", tier: "standard" });
@@ -185,7 +196,6 @@ describe("generateResearchProjects — existing skills reach the prompt", () => 
 
   test("no skills on file degrades to an explicit 'none listed', not a silent omission or a crash", async () => {
     skillsRef.current = [];
-    const { generateResearchProjects } = await import("@/lib/ai/research-generator");
     providerRef.current!.queueStructured(sampleProjectList());
 
     await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics", tier: "standard" });
@@ -204,7 +214,6 @@ describe("generateResearchProjects — existing skills reach the prompt", () => 
 describe("generateResearchProjects — skill proficiency calibrates difficulty, not just decoration", () => {
   test("a stated proficiency reaches the prompt appended to its skill", async () => {
     skillsRef.current = [{ name: "Python", category: "technical", proficiency: "Advanced" }];
-    const { generateResearchProjects } = await import("@/lib/ai/research-generator");
     providerRef.current!.queueStructured(sampleProjectList());
 
     await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics", tier: "standard" });
@@ -215,7 +224,6 @@ describe("generateResearchProjects — skill proficiency calibrates difficulty, 
 
   test("a skill with no proficiency on file shows the name and category alone, no stray dash", async () => {
     skillsRef.current = [{ name: "Java", category: "technical", proficiency: null }];
-    const { generateResearchProjects } = await import("@/lib/ai/research-generator");
     providerRef.current!.queueStructured(sampleProjectList());
 
     await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics", tier: "standard" });
@@ -226,7 +234,6 @@ describe("generateResearchProjects — skill proficiency calibrates difficulty, 
   });
 
   test("the closing instruction tells the model to use stated proficiency to calibrate, not just note it", async () => {
-    const { generateResearchProjects } = await import("@/lib/ai/research-generator");
     providerRef.current!.queueStructured(sampleProjectList());
 
     await generateResearchProjects({ userId: USER_ID, interests: [], field: "Economics", tier: "standard" });
