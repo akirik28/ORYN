@@ -44,7 +44,15 @@ bırakma, doğal anahtarla silinebilir eklemeler) — **yeniden kullanılacak de
 
 ## ADIM 1 — Sabah paketleri (14 → 15 → 16)
 
-`data/morning/14-toplu-paket-2026-09-04.sql` → `15-...` → `16-...`
+| paket | çalıştırılacak dosya | okuma notu |
+|---|---|---|
+| **14** | `data/morning/14-toplu-paket-2026-09-04.sql` | `14-OKU-BENI.md` |
+| **15** | `data/morning/15-toplu-paket-2026-09-04.sql` | `15-OKU-BENI.md` |
+| **16** | ⚠️ **`docs/opportunity-duplicate-consolidation-2026-09-04.sql`** | `16-OKU-BENI.md` |
+
+**Paket 16'nın dosyası diğer ikisiyle aynı yerde DEĞİL** — `data/morning/` altında bir
+`16-toplu-paket` yok, SQL `docs/` altında duruyor. **Kendi OKU-BENI'si bunu söylüyor ama
+klasöre bakan biri kaçırır.** (CEO listeyi doğrularken buldu, 5 Eylül gecesi.)
 
 **Sıra testi yapıldı** (`scripts/check-morning-packages-14-15-16-sequence.sql`), iki
 koşu, temiz. Her paketin kendi **SHA sağlaması** var — kaynak dosya doğrulandıktan
