@@ -2,13 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdvisorChat } from "@/features/advisor/advisor-chat";
 import { MonthlyUsageMeter } from "@/features/advisor/monthly-usage-meter";
 import { SessionWallDialog } from "@/features/advisor/session-wall-dialog";
 import { SessionList, type SessionListItem } from "@/features/advisor/session-list";
-import { createConversation, getConversationMessages } from "@/app/(app)/advisor/actions";
+import { createConversation, getConversationMessages, deleteConversation } from "@/app/(app)/advisor/actions";
 import type { UpgradePromptDismissalState } from "@/lib/advisor/upgrade-prompt";
 import type { AdvisorMessage as AdvisorMessageRow, PlanTier, ResponseMode } from "@/types/database";
 import type { getMonthlyQuota } from "@/lib/ai/monthly-quota";
@@ -75,6 +76,10 @@ export function AdvisorWorkspace({
   const [conversations, setConversations] = useState(initialConversations);
   const [isLoadingConversation, startLoadingConversation] = useTransition();
   const [loadError, setLoadError] = useState<string | null>(null);
+  // The id currently mid-delete, or null -- see SessionList's own prop comment for why this
+  // is separate from isLoadingConversation (selecting a different session must stay possible
+  // while one specific row's delete is in flight).
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   function handleNewSession() {
     // Client-side check for immediate, correct UX -- Standard sees the wall instantly, no
@@ -128,6 +133,58 @@ export function AdvisorWorkspace({
     });
   }
 
+  /** Founder, 2026-09-05: the delete button's actual effect once confirmed (SessionList owns
+   *  the confirmation dialog itself; by the time this runs, the destructive choice is already
+   *  made). Deleting the currently-active conversation needs a real replacement, not just a
+   *  removal from the list -- falls back to the next-most-recent remaining session (loaded the
+   *  same way selecting it manually would be), or to the same "nothing yet" empty state a
+   *  brand-new student with zero conversations already sees, matching
+   *  initialConversationId={null}'s own existing, already-correct render path exactly rather
+   *  than inventing a second one. */
+  function handleDeleteConversation(id: string) {
+    setDeletingId(id);
+    startLoadingConversation(async () => {
+      let result: Awaited<ReturnType<typeof deleteConversation>>;
+      try {
+        result = await deleteConversation(id);
+      } catch {
+        // A genuinely thrown failure (e.g. requireUser() rejecting on an expired session) --
+        // distinct from deleteConversation's own returned { error }, which already covers
+        // every expected failure path. Same discipline as lib/advisor/stream-client.ts's own
+        // 2026-09-05 fix: nothing here may propagate as an unhandled rejection inside a
+        // transition, or this row would be stuck showing its spinner forever.
+        toast.error(tList("deleteFailed"));
+        setDeletingId(null);
+        return;
+      }
+      if (result.error) {
+        toast.error(result.error);
+        setDeletingId(null);
+        return;
+      }
+
+      const remaining = conversations.filter((c) => c.id !== id);
+      setConversations(remaining);
+      setDeletingId(null);
+
+      if (id !== activeConversationId) return;
+
+      const next = remaining[0] ?? null;
+      if (!next) {
+        setActiveConversationId(null);
+        setFreshMessages([]);
+        return;
+      }
+      const messagesResult = await getConversationMessages(next.id);
+      if (messagesResult.error) {
+        setLoadError(messagesResult.error);
+        return;
+      }
+      setActiveConversationId(next.id);
+      setFreshMessages(messagesResult.messages);
+    });
+  }
+
   return (
     <>
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
@@ -153,7 +210,14 @@ export function AdvisorWorkspace({
             </Button>
             {createError ? <p className="text-sm text-error">{createError}</p> : null}
           </div>
-          <SessionList conversations={conversations} activeConversationId={activeConversationId} onSelect={handleSelectConversation} isLoading={isLoadingConversation} />
+          <SessionList
+            conversations={conversations}
+            activeConversationId={activeConversationId}
+            onSelect={handleSelectConversation}
+            onDelete={handleDeleteConversation}
+            isLoading={isLoadingConversation}
+            isDeleting={deletingId}
+          />
           {loadError ? <p className="text-sm text-error">{loadError}</p> : null}
           <MonthlyUsageMeter quota={quota} budgetDegraded={budgetDegraded} />
         </aside>

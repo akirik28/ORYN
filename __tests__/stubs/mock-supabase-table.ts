@@ -88,7 +88,7 @@ function uniqueViolationError(constraint: UniqueConstraint): MockPostgrestError 
 
 class MockQueryBuilder {
   private filters: Filter[] = [];
-  private mode: "select" | "update" | "insert" | "upsert" = "select";
+  private mode: "select" | "update" | "insert" | "upsert" | "delete" = "select";
   // `.insert(...).select("id")` / `.upsert(...).select("id")` / `.update(...).select("id")`
   // are all real, common chains (this app's own "detect a zero-rows-affected write" pattern
   // — app/(app)/admin/actions.ts's setUserPlanTier, lib/payments/checkout.ts, this migration's
@@ -131,6 +131,19 @@ class MockQueryBuilder {
     return this;
   }
 
+  /** Real rows are spliced out of the shared array in resolve() below — the same
+   * "assert on the row objects' own state, not just the return value" property this whole
+   * harness exists for, extended to the one write mode that makes a row disappear entirely
+   * rather than mutate in place. First consumer: app/(app)/advisor/actions.ts's
+   * deleteConversation (2026-09-05), which needs to prove a DELETE scoped to the wrong
+   * user's row genuinely leaves that row present, not merely that a spy saw the right args. */
+  delete(opts?: { count?: string }): this {
+    this.mode = "delete";
+    this.hasWriteOp = true;
+    if (opts?.count) this.wantCount = true;
+    return this;
+  }
+
   insert(values: MockRow): this {
     this.mode = "insert";
     this.hasWriteOp = true;
@@ -162,6 +175,15 @@ class MockQueryBuilder {
   }
 
   order(): this {
+    return this;
+  }
+
+  /** Accepted, no-op — same posture as order() above: nothing currently under test needs
+   * real truncation (a caller pairs .limit(1) with .maybeSingle() precisely because its own
+   * .eq() filters already narrow to at most one real match), so this only needs to keep the
+   * chain callable, added when lib/advisor/conversation-title.ts's backfill became this
+   * mock's first .limit() consumer. */
+  limit(): this {
     return this;
   }
 
@@ -249,6 +271,20 @@ class MockQueryBuilder {
 
       const matches = this.matchingRows();
       for (const row of matches) Object.assign(row, values);
+      if (!this.wantDataBack) return { data: null, error: null, count: this.wantCount ? matches.length : null };
+      return { data: this.wantSingle ? (matches[0] ?? null) : matches, error: null, count: this.wantCount ? matches.length : null };
+    }
+
+    if (this.mode === "delete") {
+      const rows = this.config.rows ?? [];
+      const matches = this.matchingRows();
+      // Spliced out of the real backing array, not just filtered into a throwaway list --
+      // this is what lets a test assert the row is genuinely gone (or genuinely still
+      // there, for the wrong-user case) by reading the same seeded array afterward.
+      for (const row of matches) {
+        const index = rows.indexOf(row);
+        if (index !== -1) rows.splice(index, 1);
+      }
       if (!this.wantDataBack) return { data: null, error: null, count: this.wantCount ? matches.length : null };
       return { data: this.wantSingle ? (matches[0] ?? null) : matches, error: null, count: this.wantCount ? matches.length : null };
     }

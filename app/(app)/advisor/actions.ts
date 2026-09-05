@@ -517,6 +517,50 @@ export async function createConversation(): Promise<{ conversationId?: string; e
 }
 
 /**
+ * Founder, 2026-09-05, verbatim: "en fazla 5 session olsun ve bunları biz isimlendirelim,
+ * kısa isimler, ve silme butonu da lazım" — at most 5 sessions, we name them ourselves
+ * (short names), and a delete button too. This is the third part: irreversible on purpose
+ * (advisor_messages.conversation_id is `on delete cascade`, migration 0011 — every message
+ * in the conversation is genuinely, permanently removed by Postgres itself, not soft-marked;
+ * the client-side confirmation dialog exists precisely because there is no undo).
+ *
+ * `.eq("user_id", userId)` here is defense in depth, not the real enforcement — RLS's
+ * "owner full access" policy (`for all using (user_id = auth.uid())`) is what actually
+ * makes another student's row invisible to this DELETE regardless of what conversationId
+ * is passed in, same "a Server Action is directly callable with any argument" posture this
+ * file already applies to every other ownership check. Proven directly against a real
+ * Postgres RLS policy, not mocked: docs/advisor-session-delete-rls-proof-2026-09-05.md.
+ *
+ * A 0-row delete (RLS made the row invisible, or the id never existed) is reported as the
+ * same "not found" a real caller sees either way -- distinguishing "yours, but missing" from
+ * "not yours" would leak which ids exist to someone probing with ids they don't own.
+ */
+export async function deleteConversation(conversationId: string): Promise<{ success?: true; error?: string }> {
+  const session = await requireUser();
+  const userId = session.userId!;
+  const locale = await resolveLocale();
+  const tr = locale === "tr";
+
+  if (!isUuidLike(conversationId)) {
+    return { error: tr ? "Geçersiz konuşma." : "Invalid conversation." };
+  }
+
+  const supabase = await createClient();
+  const { error, count } = await supabase.from("advisor_conversations").delete({ count: "exact" }).eq("id", conversationId).eq("user_id", userId);
+
+  if (error) {
+    console.error("[advisor] failed to delete conversation", { conversationId, userId, error: error.message });
+    return { error: tr ? "Sohbet silinemedi." : "Couldn't delete the conversation." };
+  }
+  if (!count) {
+    return { error: tr ? "Konuşma bulunamadı." : "Conversation not found." };
+  }
+
+  revalidatePath("/advisor");
+  return { success: true };
+}
+
+/**
  * A passive dismiss of the upgrade prompt (click away, close without an explicit choice) —
  * suppresses for 7 days. Distinct control from notNowUpgradePrompt below: this is what a
  * plain close does, not the "Not now" button (docs/research/upgrade-prompt-frequency-

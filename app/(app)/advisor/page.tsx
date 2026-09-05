@@ -22,6 +22,7 @@ import { resolveResponseMode } from "@/lib/tier/response-mode";
 import { resolveAdvisorInstructions } from "@/lib/tier/advisor-instructions";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { extractUpgradePromptDismissalState } from "@/lib/advisor/upgrade-prompt";
+import { backfillGenericConversationTitles } from "@/lib/advisor/conversation-title";
 
 const CONVERSATION_LIST_LIMIT = 50;
 
@@ -50,7 +51,10 @@ export default async function AdvisorPage() {
     getProfileScores(userId),
     getUpcomingDeadlines(supabase, userId, 10),
   ]);
-  const conversations = conversationsRes.data ?? [];
+  // Lazy backfill (2026-09-05) for any conversation still on the generic placeholder
+  // title — see that function's own header for why this runs here rather than as a
+  // one-off script.
+  const conversations = await backfillGenericConversationTitles(supabase, conversationsRes.data ?? []);
 
   // getCurrentProfile() (unlike layout.tsx's requireProfile()) can return null — same
   // "balanced" default resolveResponseMode itself falls back to for a genuinely missing
