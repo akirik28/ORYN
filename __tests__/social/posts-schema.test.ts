@@ -700,7 +700,20 @@ describe("migration numbering", () => {
     // checked only by lib/email/verification.ts and whichever future feature actually sends
     // email to a student, notifies a parent by matching this address, or recovers an account
     // through it -- none of which exist as real, live functionality yet.
-    expect(Math.max(...numbers.map(Number))).toBe(134);
+    //
+    // 0135 (notifications_guard_system_generated_columns) -- item 5 of the 2026-09-04
+    // permissive-update sweep, CEO-assigned number (asked first this time, not self-picked --
+    // 0134 was correct but uncoordinated). Same guard shape as the six already-live in 0063:
+    // RESET title/body/link/category to OLD on a non-service-role UPDATE, not RAISE. No paired
+    // code change needed -- createNotification (lib/notifications/create.ts) already writes on
+    // createAdminClient(), confirmed in the code itself, not just its own doc comment. Proven
+    // red-to-green-to-broken-to-restored against a real local Postgres instance with 0014's own
+    // real update-own-notifications policy text, not a mock --
+    // docs/notifications-guard-rls-proof-2026-09-05.md. Also corrected 0014's own comment in
+    // the same pass: it claimed "read/acknowledge/delete" since the table's creation, but no
+    // application code anywhere has ever called notifications.delete() -- not a regression, a
+    // description of a feature that was never actually built.
+    expect(Math.max(...numbers.map(Number))).toBe(135);
   });
 });
 
