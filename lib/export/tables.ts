@@ -173,6 +173,19 @@ export const EXPORT_EXCLUDED_TABLES: Record<string, string> = {
    */
   checkout_sessions:
     "operational bridge table, not content — holds only a timestamp and which user started a checkout, superseded by subscriptions the moment one completes (see that table's own migration comment); stays excluded even once migration 0123 is applied",
+  /**
+   * Migration 0134's (E2, 2026-09-05) verification-code attempt log — the checkout_sessions
+   * case again, not feedback_reports: this holds a SHA-256 hash of a code (never the code
+   * itself, per the spec's own "never logged" requirement — see lib/contact/email-
+   * verification.ts's header), an expiry, and an attempt count. None of that is meaningful
+   * outside this table's own security mechanism — a hash cannot be turned back into a code
+   * a student ever saw, and the one durable, student-meaningful fact this whole flow
+   * produces (their email is verified) already lives in contact_info.email_verified_at,
+   * which IS exported as part of contact_info. Stays excluded even once this migration
+   * applies, same as checkout_sessions — not a "not applied yet" placeholder.
+   */
+  email_verifications:
+    "security-mechanism bookkeeping, not content — holds only a code hash (never the code itself), an expiry, and an attempt count; the one durable, meaningful fact (is this email verified) already lives in and exports via contact_info.email_verified_at",
 };
 
 /** Tables keyed by a participant pair rather than a plain user_id — each needs its own

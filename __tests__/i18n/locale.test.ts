@@ -274,6 +274,11 @@ describe("ICU plural counts that bypass formatNumber are deliberate", () => {
     // one-import ceiling as onboarding.import.foundItems just above, which already covers
     // the identical count. Added 2026-09-03, student-facing i18n audit.
     "onboarding.import.savedWithNotes",
+    // How many verification-code attempts a student has left — bounded by
+    // EMAIL_VERIFICATION_MAX_ATTEMPTS (5, lib/contact/email-verification.ts), the smallest
+    // possible bound in this whole list; never close to needing a thousands separator.
+    // Added 2026-09-05, E2.
+    "emailVerification.invalidCode",
   ];
 
   test("no un-reviewed `#` inside a plural block", () => {

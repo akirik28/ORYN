@@ -15,6 +15,7 @@ export function emptyContactInfo(userId: string): ContactInfo {
     phone_visibility: "private",
     email: null,
     email_visibility: "connections",
+    email_verified_at: null,
     linkedin_url: null,
     linkedin_visibility: "private",
     instagram_handle: null,

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updateContactInfo, type ContactInfoFormInput } from "@/app/(app)/profile/professional-actions";
+import { EmailVerificationStatus } from "@/features/profile/email-verification-status";
 import type { ContactInfo, ContactVisibility } from "@/types/database";
 
 interface FieldState {
@@ -111,6 +112,13 @@ export function ContactInfoForm({ initialContact, isAdult }: { initialContact: C
                 placeholder={meta.placeholder}
                 onChange={(e) => update(key, { value: e.target.value })}
               />
+              {key === "email" ? (
+                <EmailVerificationStatus
+                  email={fields.email.value}
+                  verified={initialContact.email_verified_at !== null}
+                  canVerify={fields.email.value === initial.email.value && fields.email.value !== ""}
+                />
+              ) : null}
             </div>
             <div className="w-full space-y-1.5 sm:w-36">
               <Label htmlFor={`contact-${key}-visibility`} className="sm:sr-only">

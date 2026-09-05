@@ -47,6 +47,12 @@ export const env = {
      *  building that provider's concrete adapter, not before. */
     provider: required(process.env.PAYMENT_PROVIDER),
   },
+  email: {
+    /** "resend" | "postmark" | "ses" — same unset-until-chosen shape as payments.provider
+     *  above (2026-09-05, E2's own verification-code send). No provider-specific credential
+     *  var declared yet, same reasoning. */
+    provider: required(process.env.EMAIL_PROVIDER),
+  },
 } as const;
 
 export const integrationStatus = {
@@ -61,6 +67,7 @@ export const integrationStatus = {
    *  the named provider is actually implemented; this flag alone answers "was one chosen,"
    *  not "is checkout actually possible right now." */
   payments: Boolean(env.payments.provider),
+  email: Boolean(env.email.provider),
 } as const;
 
 export type IntegrationName = keyof typeof integrationStatus;

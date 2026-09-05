@@ -320,6 +320,10 @@ export interface ContactInfo {
   phone_visibility: ContactVisibility;
   email: string | null;
   email_visibility: ContactVisibility;
+  /** Migration 0134 (E2) — set only by verifyEmailCode after a correct code, scoped to the
+   *  exact email it verified. Cleared automatically by a DB trigger the moment `email`
+   *  changes, so a verified status can never silently carry over to a different address. */
+  email_verified_at: string | null;
   linkedin_url: string | null;
   linkedin_visibility: ContactVisibility;
   instagram_handle: string | null;
@@ -339,6 +343,7 @@ export type ContactInfoUpsert = Insertable<
   ContactInfo,
   | "phone_visibility"
   | "email_visibility"
+  | "email_verified_at"
   | "linkedin_visibility"
   | "instagram_visibility"
   | "github_visibility"
@@ -348,6 +353,21 @@ export type ContactInfoUpsert = Insertable<
   | "open_to_visibility"
   | "updated_at"
 >;
+
+/** Migration 0134 (E2). One row per code sent, not one row per user — see that migration's
+ *  own header for why. Written/read only via the admin client (RLS grants the owner SELECT
+ *  only) — app/(app)/profile/email-verification-actions.ts is the sole writer. */
+export interface EmailVerification {
+  id: string;
+  user_id: string;
+  email: string;
+  code_hash: string;
+  expires_at: string;
+  attempts: number;
+  verified_at: string | null;
+  created_at: string;
+}
+export type EmailVerificationInsert = Insertable<EmailVerification, "id" | "attempts" | "verified_at" | "created_at">;
 
 export type FeaturedItemType =
   | "project"
@@ -2715,6 +2735,7 @@ export interface Database {
       blocked_users: Table<BlockedUser, BlockedUserInsert, Partial<BlockedUserInsert>>;
       message_reports: Table<MessageReport, MessageReportInsert, MessageReportUpdate>;
       contact_info: Table<ContactInfo, ContactInfoUpsert, Partial<ContactInfoUpsert>>;
+      email_verifications: Table<EmailVerification, EmailVerificationInsert, Partial<EmailVerificationInsert>>;
       featured_items: Table<FeaturedItem, FeaturedItemInsert, Partial<FeaturedItemInsert>>;
       skill_endorsements: Table<SkillEndorsement, SkillEndorsementInsert, Partial<SkillEndorsementInsert>>;
       recommendations: Table<Recommendation, RecommendationInsert, Partial<RecommendationInsert>>;

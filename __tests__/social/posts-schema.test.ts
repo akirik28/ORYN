@@ -688,7 +688,12 @@ describe("migration numbering", () => {
     // topic is simply never raised at all, which reads as "probably open," not "confirmed
     // hidden." Written down in both this migration's own column comment and here so a later
     // pass doesn't "fix" the two into false consistency.
-    expect(Math.max(...numbers.map(Number))).toBe(133);
+    //
+    // 0134 (contact_email_verification, E2) -- adds contact_info.email_verified_at plus the
+    // email_verifications attempt log, per docs/PROXOLA-PLAN.md's E2. Number provisional
+    // pending CEO confirmation (that migration's own header), same posture as every other
+    // staged-not-applied migration this file already tracks.
+    expect(Math.max(...numbers.map(Number))).toBe(134);
   });
 });
 
