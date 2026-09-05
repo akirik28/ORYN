@@ -42,6 +42,29 @@
 >    beri ilgili dosyalara ne indiğine bak (`git log --since=<tarih> -- <yol>`).
 >    Doküman iddia eder; **kod gerçektir.**
 
+## 📋 KİMDE NE VAR — 5 Eylül (CEO tutar, dağıtmadan önce buraya bakar)
+
+**Bugün aynı işi üç kez iki şeride verdim** (geçmiş son tarih ölçümü, E2 e-posta
+doğrulama, bir de fırsat ölçümü). Sebebi bayat doküman değil — **hiç kayıt
+tutmamam.** Plan işleri listeliyordu ama **kimde olduğunu** yazmıyordu.
+
+| şerit | iş |
+|---|---|
+| `oryn-b1` (kullanım sınırları) | **RLS güvenlik** — `evidence_status` 10 tabloda, `target_universities` kabul görünümü sütunları |
+| production deployment | **Faz 12** — `profile_need`/`effort`/`confidence` ekrana |
+| i18n | **Uygunluk rozeti** — dört durumu ayır |
+| academic_tier | *(boşta)* |
+| freemium | **`under_review` çıkmazı** — 27 satır, çıkış yolu yok |
+| yeni ülke | **Faz 16** — `academic_fit`/`profile_fit` eşleme katmanında düşüyor |
+| fırsatlar görsel | **Başvuru sayfası** — kabul görünümü rozeti |
+| hukuki çerçeve | **`LEGAL_REVIEW.md` §2** — yanlış iddia |
+| CFO | gözetim |
+
+**Migration numaraları:** `0134` = e-posta doğrulama (alındı). Sonrakini **CEO verir**,
+şerit kendi almaz.
+
+---
+
 **Çalışma penceresi: yarın akşam 22.00'a kadar.**
 
 **Bu dosya tek doğruluk kaynağı.** Bir oturum açtığında ona madde numarası ver:
