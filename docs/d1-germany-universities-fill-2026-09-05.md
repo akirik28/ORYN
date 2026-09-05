@@ -318,3 +318,158 @@ values
 ```
 
 ---
+
+## 7. University of Cologne (Universität zu Köln)
+
+`id = '85b3379b-bf33-4411-98e4-86d0199b0a02'` — QS rank 269. **Cycle-dependent policy: NO** —
+two intakes exist (Winter/Summer) with a symmetric 6-month deadline offset (15 July / 15
+January), but the actual requirement (DSH-2, TestAS) is identical for both; only the calendar
+date shifts. Per this document''s own working definition, a shifted date alone does not count
+as "cycle-dependent" -- only a case where the substance of the requirement differs by cycle
+would.
+
+**A claim checked and clarified rather than taken at face value:** a general search stated
+DSH-2 German is required "regardless of the language the programme is taught in," which read
+as a possible overgeneralization -- resolved by confirming directly: **the teaching language
+of every Bachelor's programme at Cologne is German**, so there simply are no English-taught
+bachelor's programmes for the claim to be an exception to.
+
+**TestAS is confirmed MANDATORY here, not merely a compensating option** (a real contrast with
+RWTH Aachen, entry #2, where TestAS only compensates for a grade below 2.5): every non-EU
+Cologne bachelor applicant must submit a TestAS certificate, used directly on the ranking list,
+regardless of home grading system.
+
+**What was checked and NOT found:** the specific APS-certificate requirement for applicants
+from China/India/Vietnam mentioned by a general search -- not independently confirmed by a
+successful direct fetch (the specific procedure page returned HTTP 404); tuition, admission
+rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('85b3379b-bf33-4411-98e4-86d0199b0a02', 'international_requirement',
+   'Non-EU applicants must apply via uni-assist AND submit a mandatory TestAS certificate, used directly on the ranking list regardless of home grading system; every Bachelor''s programme at Cologne is German-taught, with no English-taught bachelor''s option',
+   'Non-EU citizens applying for a Bachelor''s or state-examination programme starting in the first semester must apply through uni-assist e.V. TestAS (a standardized academic aptitude test) is mandatory, not optional or merely compensating -- every applicant must have already completed it and submit the certificate with the uni-assist application; the ranking list used to allocate places is based directly on the TestAS result, applied uniformly regardless of the applicant''s home education/grading system. The teaching language of every Bachelor''s programme at the University of Cologne is German -- there is no English-taught bachelor''s option under this "Studienstart International" pathway.',
+   true, 'high', 'https://uni-koeln.de/en/studying-teaching/international/study-in-cologne/studienstart-international', now()),
+  ('85b3379b-bf33-4411-98e4-86d0199b0a02', 'language_proficiency',
+   'DSH-2 (or equivalent) German proficiency required, certificate due by the same deadline as the rest of the application: 15 July for Winter Semester, 15 January for Summer Semester -- both intakes use the identical language threshold, only the calendar date shifts',
+   'A minimum of DSH-2 level (or an equivalent recognised German-language certificate) is required, submitted by the same deadline as the rest of the application -- 15 July for Winter Semester or 15 January for Summer Semester. Both intakes carry the identical DSH-2 requirement; only the filing date differs by six months, a standard symmetric structure rather than a substantive requirement change between cycles.',
+   true, 'high', 'https://uni-koeln.de/en/studying-teaching/international/study-in-cologne/studienstart-international', now());
+
+insert into public.university_deadlines
+  (university_id, deadline_type, deadline_date, application_cycle, source_url, retrieved_at)
+values
+  ('85b3379b-bf33-4411-98e4-86d0199b0a02', 'application', '2026-07-15', 'Winter Semester 2026/27 (Studienstart International, non-EU with formal HZB)', 'https://uni-koeln.de/en/studying-teaching/international/study-in-cologne/studienstart-international', now()),
+  ('85b3379b-bf33-4411-98e4-86d0199b0a02', 'application', '2027-01-15', 'Summer Semester 2027 (Studienstart International, non-EU with formal HZB)', 'https://uni-koeln.de/en/studying-teaching/international/study-in-cologne/studienstart-international', now());
+```
+
+---
+
+## 8. University of Münster (Universität Münster)
+
+`id = '6da7db50-14d0-4e34-9d09-fafdbf303492'` — QS rank 370. **Cycle-dependent policy: NO** —
+same symmetric WS(15 Jul)/SS(15 Jan) deadline pattern as Cologne, no stated difference in
+substance between the two.
+
+**Source actually used:** `https://www.uni-muenster.de/studieninteressierte/en/bewerbung/
+nichteu_bewerber_ba.html` — official page for non-EU/EEA applicants without a German Abitur,
+directly fetched.
+
+**A fifth confirmed non-uni-assist German university this batch:** Münster uses its own online
+application system, explicitly not uni-assist.
+
+**The APS certificate requirement (China/India/Vietnam) is now confirmed officially for the
+first time this batch** -- Tübingen and Cologne''s versions of this same fact came from
+unconfirmed general searches; Münster''s own page states it directly, corroborating that the
+pattern is real rather than a search artifact repeated across sources.
+
+**What was checked and NOT found:** a specific German-proficiency test/level (the page states
+a certificate is required "depending on the degree programme" without naming DSH/TestDaF
+directly); English-taught programme language requirements; tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('6da7db50-14d0-4e34-9d09-fafdbf303492', 'international_requirement',
+   'Applications go through Münster''s own online portal, not uni-assist; applicants may apply to up to 3 bachelor''s programmes per application; applicants from mainland China, India, or Vietnam must submit an APS certificate; Studienkolleg attendees submit their Studienkolleg assessment test instead',
+   'Non-EU/EEA applicants without a German Abitur apply online for both restricted and non-restricted bachelor''s programmes directly through Münster''s own portal -- not uni-assist. Up to three bachelor''s degree programmes may be included in one online application. After submission, applicants receive an emailed check-sheet PDF listing their application number and remaining steps. Applicants whose university entrance qualification is from mainland China, India, or Vietnam must provide an APS (Akademische Prüfstelle) certificate for document authentication. Applicants who attended a German Studienkolleg (preparatory college) instead submit their Studienkolleg assessment test result.',
+   true, 'high', 'https://www.uni-muenster.de/studieninteressierte/en/bewerbung/nichteu_bewerber_ba.html', now()),
+  ('6da7db50-14d0-4e34-9d09-fafdbf303492', 'language_proficiency',
+   'A certificate of sufficient German language proficiency is required, with the specific level/test depending on the degree programme; may be submitted after the initial application, by the same 15 July (Winter) / 15 January (Summer) deadline as the rest of the application',
+   'German language proficiency is mandatory; the required level/test is not fixed university-wide but depends on the specific degree programme (specific DSH/TestDaF thresholds not stated on this page). The proficiency certificate can be uploaded after the initial online application, by the same overall deadline: 15 July for Winter Semester, 15 January for Summer Semester.',
+   true, 'medium', 'https://www.uni-muenster.de/studieninteressierte/en/bewerbung/nichteu_bewerber_ba.html', now());
+```
+
+---
+
+## 9. Goethe-University Frankfurt am Main
+
+`id = 'c18c3469-e340-4406-b593-169153cb21a2'` — QS rank 376. **Cycle-dependent policy: not
+established** (only one deadline window found, no Summer Semester intake confirmed either way).
+
+**Access note:** the international-applicants landing page fetched directly was a generic hub
+with no procedural specifics; the facts below come from a general search of Goethe University's
+own uni-frankfurt.de sub-pages (per the search's own domain attribution), not independently
+re-confirmed by this session's own successful fetch of those specific sub-pages. Recorded at
+`medium` confidence for that reason.
+
+**What was checked and NOT found:** independent confirmation of uni-assist usage, DSH level,
+and APS requirement via direct fetch (search-derived only); tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('c18c3469-e340-4406-b593-169153cb21a2', 'international_requirement',
+   'International applicants with non-German credentials apply via uni-assist; APS certificate mandatory for applicants from India, Vietnam, and mainland China; some uni-assist documents must arrive as certified hard copies by the deadline, not only uploaded',
+   'Per a general search of Goethe University''s own pages: international applicants with non-German academic credentials apply through uni-assist. An APS certificate is mandatory for applicants from India, Vietnam, and the People''s Republic of China -- consistent with the same requirement independently confirmed this batch at Münster (#8). Some uni-assist documents, particularly for international degrees, must arrive as certified hard copies by the deadline date, not merely uploaded online -- a distinctive procedural detail.',
+   true, 'medium', 'https://www.uni-frankfurt.de/en/studium/bewerbung-einschreibung/internationale-studierende', now()),
+  ('c18c3469-e340-4406-b593-169153cb21a2', 'language_proficiency',
+   'German proficiency at DSH-2 or DSH-3 level (or recognized equivalent) reportedly required for German-taught study',
+   'A general search reports Goethe University requires German proficiency at DSH-2 or DSH-3 level (or an equivalent certificate) for German-taught programmes; this session''s own direct fetch of the international-applicants page confirmed only the general statement that "sufficient knowledge of German is required" without naming the specific test level itself.',
+   true, 'medium', 'https://www.uni-frankfurt.de/en/studium/bewerbung-einschreibung/internationale-studierende', now());
+```
+
+---
+
+## 10. Ruhr-Universität Bochum (RUB)
+
+`id = '36b88c27-6604-4afe-ae70-c3fe04e63b28'` — QS rank 402. **Cycle-dependent policy: NO** —
+same symmetric deadline-shift pattern as Cologne/Münster, same language requirement year-round.
+
+**Source actually used:** `https://studium.ruhr-uni-bochum.de/en/application-international-
+prospective-students` — official page, directly fetched.
+
+**A correction to a search summary caught before writing anything:** a general search had
+named "Goethe-Zertifikat C1" as an accepted qualification; the official page itself states
+**Goethe-Zertifikat C2**, a materially higher level -- used the directly-fetched figure, not
+the search's.
+
+**Uni-assist status: genuinely unconfirmed, not asserted either way.** Unlike RWTH Aachen, KIT,
+FAU, and Münster (all of which explicitly stated their own portal), this page simply never
+mentions uni-assist -- silence is not the same as an explicit "we don't use it," so this is
+recorded as unconfirmed rather than joining the confirmed non-uni-assist list.
+
+**What was checked and NOT found:** whether Bachelor's programmes here are genuinely NC-free
+(no numerus clausus) as a general search claimed -- not found on the page actually fetched;
+tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('36b88c27-6604-4afe-ae70-c3fe04e63b28', 'language_proficiency',
+   'German-taught programmes: TestDaF at least 16 points total, DSH level 2 or 3, Goethe-Zertifikat C2, or telc Deutsch C1 Hochschule',
+   'Accepted proof of German proficiency for German-taught programmes: TestDaF with at least 16 points total across the examination, DSH at level 2 or 3, Goethe-Zertifikat C2, or telc Deutsch C1 Hochschule. Whether uni-assist is used for the application itself was not stated on this page (unconfirmed either way, unlike several other universities in this batch that explicitly named their own portal).',
+   true, 'high', 'https://studium.ruhr-uni-bochum.de/en/application-international-prospective-students', now());
+
+insert into public.university_deadlines
+  (university_id, deadline_type, deadline_date, application_cycle, source_url, retrieved_at)
+values
+  ('36b88c27-6604-4afe-ae70-c3fe04e63b28', 'application', '2026-07-15', 'Winter Semester 2026/27 (Bachelor/State Examination, filing opens beginning of May)', 'https://studium.ruhr-uni-bochum.de/en/application-international-prospective-students', now()),
+  ('36b88c27-6604-4afe-ae70-c3fe04e63b28', 'application', '2027-01-15', 'Summer Semester 2027 (filing opens beginning of December)', 'https://studium.ruhr-uni-bochum.de/en/application-international-prospective-students', now());
+```
+
+---
