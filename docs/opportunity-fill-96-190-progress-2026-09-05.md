@@ -1326,3 +1326,263 @@ this program -- discrepancy noted.
 6. Inferred grade mappings on rows 136/137 (Turkish "lise", UK Year/S-levels) -- flagged as
    inference per the rules, human/compiler should decide whether to keep converted numbers or
    store raw source terms.
+
+## Batch 4 results (rows 153-171) -- final batch, redispatched after the reset
+
+WebFetch primary, fell back to direct browser navigation when blocked (403 on cty.jhu.edu and
+woodstockschool.in) -- browser succeeded both times. None of this batch's rows touched the
+known-blocked-domains list.
+
+```
+ID: d1c24acc-a289-459f-a476-110a731e2eb8
+TITLE: Venture & Tech Summer Program 2026
+STATUS: researched
+CONFIDENCE: page_silent
+QUOTE: "All high school students, along with international equivalents and those taking a gap
+year before university, are encouraged to apply."; "thousands of applications... from students
+across 50 countries."
+NOTES: No numeric age/grade/country restriction stated anywhere. Broad-sounding language, but
+nothing quantified -- left blank rather than guess.
+
+ID: d224a324-b3c0-4a5f-a361-3805efc20a14
+TITLE: CTY: Intensive Studies for 7th Graders and Above
+STATUS: could_not_access
+CONFIDENCE: could_not_access
+NOTES: *** FLAG *** Given official_url is dead -- confirmed 404 via direct browser navigation.
+cty.jhu.edu itself is live but restructured; no page titled "Intensive Studies" found anywhere
+on the current site (checked homepage, /summer/, grades7-12/index.html [also 404],
+testing/identification-levels). May have been renamed or folded into "Extreme Acceleration" or
+general Residential Programming during a redesign -- needs a human to find the current URL.
+
+ID: d35cf54a-1e8c-4ca0-b99c-cdacbacd506d
+TITLE: European Youth Parliament Türkiye (EYP Türkiye)
+STATUS: researched
+CONFIDENCE: page_silent
+NOTES: Checked homepage, /get-involved/events, /who-we-are, /what-we-do -- none state numeric
+eligibility. Delegate eligibility is typically published per-session on that session's own
+application form; next event's application link was "coming soon" at research time.
+
+ID: d4450b97-5d23-4ab1-acf7-8f3908117fd6
+TITLE: International Academic Marathon
+STATUS: researched
+eligible_grades: [9,10,11,12]
+SOURCE_URL: https://academic-marathon.org/
+RETRIEVED: 2026-09-05
+QUOTE: "An individual learning challenge for grades 9-12..."
+CONFIDENCE: explicit_stated
+NOTES: "29+ Countries & Regions" is a reach statistic, not a stated restriction -- left
+eligible_countries blank. No age given.
+
+ID: d49e827f-c66b-4112-8161-92209a6545ae
+TITLE: Oxbridge Academic Programs
+STATUS: researched
+CONFIDENCE: explicit_stated (per sub-program; not attributable to a single row)
+SOURCE_URL: https://oxbridgeprograms.com/programs
+RETRIEVED: 2026-09-05
+QUOTE: "The Oxford Tradition -- Grades 10-12" / "Oxbridge in Paris -- Grades 9-12" / "The
+Oxford Experience -- Grades 8-9" (+6 more programs, different bands each)
+NOTES: *** FLAG FOR HUMAN DECISION *** -- brand covering 9 distinct programs, union = grades
+8-12, no single program spans that range. Left blank -- unclear which sub-program this row
+represents. No country restriction found (one testimonial mentions New Zealand, anecdotal not
+policy).
+
+ID: d70e5392-9f0d-4191-8c8d-4921dbaa3651
+TITLE: BETA Camp
+STATUS: researched
+eligible_grades: [9,10,11]
+SOURCE_URL: https://www.joinprequel.com/
+RETRIEVED: 2026-09-05
+QUOTE: "Prequel is open to students in grades 9-11 in North America who are ambitious..."
+CONFIDENCE: explicit_stated
+NOTES: "BETA Camp" is the former brand name -- beta.camp now 301-redirects to joinprequel.com
+("Prequel"), confirmed directly. Region stated as "North America," not a specific country
+list -- left eligible_countries blank, recorded the verbatim term instead of guessing
+["United States","Canada"]. Separate middle-school track exists (grades 4-8/4-11), not
+applicable here.
+
+ID: d83d7048-537b-4450-8dfa-69e709cdb48f
+TITLE: Garcia Summer Scholars
+STATUS: researched
+minimum_age: 16
+SOURCE_URL: https://www.stonybrook.edu/garcia/summer-program/eligibility.html
+RETRIEVED: 2026-09-05
+QUOTE: "2026 Applicants MUST be at least 16 years old on or before July 4, 2026, no
+exceptions."; "We accept international students, but the Garcia program cannot support visa
+applications."
+CONFIDENCE: explicit_stated (age); page_silent (grade)
+NOTES: This is the High School track specifically (page also lists separate
+Undergraduate/Teacher tracks, not applicable). International students explicitly accepted, no
+country restriction -- visa responsibility placed on applicant, not framed as a nationality
+gate, left eligible_countries blank.
+
+ID: d99d1a5c-2b77-4bc1-af84-e429410eef68
+TITLE: InvestIN Young Lawyer / Young Political Leader Summer Experience (London)
+STATUS: researched
+minimum_age: 15
+maximum_age: 18
+SOURCE_URL: https://investin.org/products/young-political-leader-summer-experience-live-online
+RETRIEVED: 2026-09-05
+QUOTE: "This programme is for students aged 15-18."; "welcomed students onto InvestIN
+programmes from over 100 different countries."
+CONFIDENCE: explicit_stated (age); page_silent (grade)
+NOTES: *** FLAG FOR HUMAN DECISION *** -- official_url resolves to the "Live Online" version,
+but title says "(London)" (in-person). Real in-person London pages are separately named "The
+Young Lawyer Summer Experience" and "The Young International Politics Summer Experience" --
+no page literally titled "Young Political Leader" is in-person. Age (15-18) consistent across
+all versions checked, so that part is safe; the row bundles two distinct program names and its
+URL doesn't match the "(London)" qualifier in its own title. B2 English requirement also
+applies (outside the 3 fields); 100+ countries explicitly welcomed.
+
+ID: db06b920-a9fd-4967-af1a-a32f45db9327
+TITLE: International Chemistry Olympiad (IChO)
+STATUS: researched
+maximum_age: 20
+SOURCE_URL: https://www.ichosc.org/regulations
+RETRIEVED: 2026-09-05
+QUOTE: "Competitors must be under 20 years of age on the 1st of July..."; "secondary school
+students or recent graduates who have not started university education."; "must be passport
+holders of the country they represent or have taken part in the secondary school educational
+system of this country for more than one academic year."
+CONFIDENCE: explicit_stated (ceiling only, no floor given)
+NOTES: Country eligibility is structural (qualify to represent a country via passport or 1+
+year of schooling there), not a fixed list -- ~90 countries currently participate but that
+describes representation eligibility, not a residency restriction on applying, so not
+converted to a list.
+
+ID: dc08474d-8363-4125-b94e-33460354903e
+TITLE: SPINWIP
+STATUS: researched
+eligible_grades: [9,10,11]
+SOURCE_URL: https://physics.stanford.edu/about/inclusion/spinwip
+RETRIEVED: 2026-09-05
+QUOTE: "High school students in 9th through 11th grade at the time of application."; "Students
+from countries outside the U.S. are welcome to apply."
+CONFIDENCE: explicit_stated
+NOTES: none further.
+
+ID: dc4343ec-4856-483f-a3b0-7e0de9e38a09
+TITLE: Uygulamalı Moleküler Biyoloji ve Genetik Kampı
+STATUS: researched
+eligible_grades: [9,10,11,12] (inferred)
+SOURCE_URL: https://www.acibadem.edu.tr/merkezler/asegem/egitim-programlari/akademik-gelisim-programlari/lise-molekuler-biyoloji-ve-genetik-kis-kampi
+RETRIEVED: 2026-09-05
+QUOTE: "Hedef Kitle: Lise öğrencileri"
+CONFIDENCE: page_silent (literal numbers); [9,10,11,12] inferred, same as other Acıbadem rows
+NOTES: none further.
+
+ID: de7ab9aa-74a5-43d1-b02f-2730b2aed80f
+TITLE: Bahçeşehir Üniversitesi Yaz Okulu
+STATUS: researched
+eligible_grades: [9,10,11,12] (inferred)
+SOURCE_URL: https://bau.edu.tr/haber/10546-bau-lise-yaz-okulu-basliyor
+RETRIEVED: 2026-09-05
+QUOTE: "Lise öğrencilerine gerçek bir üniversite deneyimi yaşatacak olan BAU Lise Yaz
+Okulu'nda..."
+CONFIDENCE: page_silent (literal numbers); [9,10,11,12] inferred
+NOTES: Dedicated program site (liseyazokulu.bahcesehir.edu.tr) could NOT be accessed --
+invalid/broken SSL certificate on both http and https, confirmed via direct browser too. No
+numeric detail verifiable beyond the "lise" framing on the news page.
+
+ID: df90d914-6d20-44f2-ae29-d195f629540a
+TITLE: Global Achievers Academy
+STATUS: researched
+minimum_age: 13
+maximum_age: 17
+SOURCE_URL: https://globalachieversacademy.com/programme/
+RETRIEVED: 2026-09-05
+QUOTE: "Ages: 13-17" (stated identically across all 3 programme tracks)
+CONFIDENCE: explicit_stated
+NOTES: No grade or country restriction stated.
+
+ID: dfd08c03-75c6-4bc2-b087-70c58c64db2a
+TITLE: Woodstock School: Mussoorie, India
+STATUS: researched
+CONFIDENCE: page_silent
+SOURCE_URL: https://woodstockschool.in/summer/ (WebFetch 403'd, retrieved via direct browser)
+RETRIEVED: 2026-09-05
+QUOTE: "Each course has an age criteria and students have to elect the course accordingly."
+NOTES: Page confirms each of 7 courses has its own age criterion but doesn't publish the
+numbers -- likely only inside the application portal, not accessed. No grade/country info.
+
+ID: e0e1584c-5d96-41d6-a3a0-a62eaffa37d6
+TITLE: Columbia Junior Science Journal (CJSJ)
+STATUS: researched
+SOURCE_URL: https://columbiajuniorsciencejournal.org/faq
+RETRIEVED: 2026-09-05
+QUOTE: "High school students from anywhere in the world are welcome..."; "Students taking a
+gap year... are not eligible."; "we no longer accept submissions by high school graduates."
+CONFIDENCE: explicit_stated (enrollment-status restrictions); page_silent (no numeric age/grade)
+NOTES: Eligibility is "currently enrolled high school student" only -- no numeric fields to
+fill. "Anywhere in the world" is global openness, not a list, left blank. Row's source_url
+(cjsjournal.org) is a DEAD domain (confirmed DNS failure) -- official_url
+(columbiajuniorsciencejournal.org) is the live site and what was used.
+
+ID: e15c0e56-1434-41a5-af46-6641f18bf365
+TITLE: Maclaurin Olympiad
+STATUS: researched
+SOURCE_URL: https://ukmt.org.uk/intermediate-challenges/cayley-hamilton-maclaurin-olympiad-challenge
+RETRIEVED: 2026-09-05
+QUOTE: "Maclaurin Maths Olympiad: England, Wales and Overseas: Year 11 Scotland: S4 Northern
+Ireland: Year 12"
+CONFIDENCE: explicit_stated (UK year terms, not converted to numeric grade)
+NOTES: "Overseas" is its own explicit category alongside the UK nations -- NOT UK-only, left
+eligible_countries blank rather than incorrectly write "United Kingdom".
+
+ID: e5a8555d-7e5b-4fd4-8406-812efbe1de91
+TITLE: BMO Round 2
+STATUS: researched
+SOURCE_URL: https://ukmt.org.uk/senior-challenges/british-maths-olympiad-round-2
+RETRIEVED: 2026-09-05
+QUOTE: "England, Wales and Overseas: Year 13 and below... BMO1 and BMO2 are open entry
+competitions for students in full time secondary education."
+CONFIDENCE: explicit_stated (ceiling only, no floor)
+NOTES: *** IMPORTANT NUANCE *** a SEPARATE downstream step -- selection to represent the UK at
+the IMO -- carries a citizenship/3-years-UK-education requirement (bmos.ukmt.org.uk). That
+restriction applies to IMO TEAM SELECTION, not to entering BMO2 itself -- did not apply it to
+this row's eligible_countries. Flagging so the compiler doesn't conflate entry with selection.
+
+ID: e5dd5ce7-4730-42d7-84a3-b6492779b038
+TITLE: Purple Comet! Math Meet
+STATUS: researched
+SOURCE_URL: https://purplecomet.org/information
+RETRIEVED: 2026-09-05
+QUOTE: "middle and high school students" divisions; "over 12,000 students... from 80 countries"
+CONFIDENCE: page_silent
+NOTES: Two divisions (middle/high school) but no numeric grade band given for either. "80
+countries" is a participation stat, not a restriction.
+
+ID: e6f4c6d8-3e1d-4762-a6be-dd299592ac0e
+TITLE: Bocconi Summer School 2026
+STATUS: researched
+SOURCE_URL: https://www.unibocconi.it/en/programs/summer-school/summer-school-bachelor-students
+RETRIEVED: 2026-09-05
+QUOTE: "The summer school is dedicated to students from Italian and non-Italian Universities
+(it is not open to Bocconi students)."; "...students enrolled in a Bachelor program."
+CONFIDENCE: explicit_stated (this program is university-enrolled-only, NOT high schoolers)
+NOTES: *** CRITICAL -- FLAG FOR HUMAN DECISION *** the stored official_url is Bocconi's Summer
+School for students ALREADY ENROLLED in a Bachelor's program -- explicitly NOT open to high
+schoolers. Very likely the wrong program for this catalog. A separate, correct official
+"Summer School for High School Students" exists
+(unibocconi.it/en/programs/summer-school/summer-school-high-school-students): "Only students
+who will have already turned 15 years old by the start of the program are eligible," open to
+students in their "third-to-last and second-to-last year" of high school, "in Italy or
+abroad" (no country restriction). Deliberately did NOT substitute this correct data into the
+wrong row's official_url -- that's a human/compiler decision (which URL is authoritative), not
+one to make silently.
+```
+
+### Five items flagged for human decision across batch 4, not research answers:
+1. Oxbridge Academic Programs (157) -- 9-program hub, no single row-level value.
+2. InvestIN "(London)" (160) -- URL/title mismatch, bundles two distinct program names.
+3. **Bocconi (171) -- HIGHEST PRIORITY alongside Universidad de Navarra (188, batch 5): the
+   stored official_url is for the WRONG program (university-only), explicitly excluding the
+   14-18 audience this catalog is for. The correct high-school program exists at a different
+   URL. This is a catalog data error, not a research gap.**
+4. CTY Intensive Studies (154) -- official_url dead (404), site restructured, no clear
+   replacement found.
+5. UKMT Maclaurin/BMO2 (168/169) -- eligibility in UK Year-group terms, deliberately not
+   auto-converted to numeric grades.
+
+---
+
+# ALL 5 BATCHES COMPLETE (95/95 rows). Next: my own verification pass, then compile SQL.
