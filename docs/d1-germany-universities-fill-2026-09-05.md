@@ -714,3 +714,60 @@ values
 ```
 
 ---
+
+## 18. Justus-Liebig-University Giessen (JLU)
+
+`id = '69fed18d-298b-4b23-9c2d-2f70baf48f43'` — QS rank 521. **Cycle-dependent policy: not
+established.**
+
+**Access note:** the official application-overview page was a navigation hub with no
+substantive content in this pass (links to sub-pages not fetched). Recorded at `medium`
+confidence from a general search's summary instead.
+
+**A genuinely distinctive figure, if it survives independent confirmation:** a reported 15
+June deadline -- a full month earlier than the 15 July pattern confirmed at essentially every
+other German university in this batch. Recorded as reported, not independently confirmed.
+
+**What was checked and NOT found:** independent confirmation of the deadline, uni-assist usage,
+and language-test specifics via direct fetch; tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('69fed18d-298b-4b23-9c2d-2f70baf48f43', 'international_requirement',
+   'Non-EU applicants without a German Abitur or German Bachelor''s degree reportedly must apply via uni-assist; reported application window May 1 to June 15 -- a month earlier than the July 15 pattern seen at most other German universities in this batch, not independently confirmed',
+   'A general search reports that foreign applicants outside the EU who lack a German Abitur and German Bachelor''s degree must submit their application to JLU Giessen via uni-assist. The reported application window runs from 1 May to a deadline of 15 June -- notably earlier than the 15 July deadline confirmed at most other German universities checked this batch. Neither the uni-assist claim nor the deadline was independently confirmed by this session''s own successful fetch (the official application page was a navigation hub with no substantive content in this pass).',
+   true, 'medium', 'https://www.uni-giessen.de/en/international-pages/study/application/ug', now());
+```
+
+---
+
+## 19. Universität Leipzig
+
+`id = 'c907618e-18d0-40ed-8450-3e99c5def425'` — QS rank 540. **Cycle-dependent policy: NO** —
+same symmetric WS(15 Jul)/SS(15 Jan) pattern reported.
+
+**Access note:** the official page was successfully reached but its content was truncated
+mid-sentence twice in this pass, cutting off exactly the language-requirement detail sought.
+Recorded at `medium` confidence from a general search's summary of the same domain instead.
+
+**A genuinely useful procedural detail, if it survives independent confirmation:** simple
+(uncertified) document scans reportedly suffice for the application itself; certified copies
+are only required later, upon actually receiving and accepting an offer -- lowering the upfront
+barrier for an applicant still deciding between universities.
+
+**What was checked and NOT found:** the specific German proficiency level/test (page cut off
+exactly at this point); admission rate, tuition.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('c907618e-18d0-40ed-8450-3e99c5def425', 'international_requirement',
+   'Applicants with a foreign higher education entrance qualification (IB Diploma, A-Levels, high school diploma) or foreign Bachelor''s degree reportedly apply via uni-assist''s "My assist" online portal; simple uncertified scans reportedly suffice for the application, certified copies only required upon accepting an offer',
+   'A general search of Leipzig''s own domain reports that applicants with a foreign higher education entrance qualification (International Baccalaureate Diploma, A-Levels, a high school diploma) or a foreign Bachelor''s degree apply via uni-assist, submitted only online through the "My assist" portal. Simple, uncertified document scans reportedly suffice for the application itself; certified copies are only required later, if an offer is made and accepted. Reported deadlines: Winter Semester, beginning of April to 15 July; Summer Semester, beginning of November to 15 January. None of this was independently confirmed by this session''s own direct fetch, which reached the correct official pages but their content was truncated before the relevant sections.',
+   true, 'medium', 'https://www.uni-leipzig.de/en/international/studying-at-leipzig-university/application-and-preparing-to-study/bachelors-diplom-state-examination', now());
+```
+
+---
