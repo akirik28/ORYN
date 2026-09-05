@@ -105,3 +105,23 @@ o sürüm dizelerini taşımıyor. Bugünkü şema denetiminin bulgusu tekrar do
 88 değil 6), biri **hâlâ açık ve sahipsiz** (Hollanda dolgusu hazırlanmış, hiç
 uygulanmamış).
 
+
+## ✅ CEO'nun ikinci canlı geçişi — 5 Eylül akşamı
+
+| soru | canlı sonuç | anlamı |
+|---|---|---|
+| Caltech'in 37 satırlık gereklilik partisi | **37** | **uygulanmış** — bulgu kapandı |
+| "Bozuk Türkçe" partisi (`Proxola'ın`) | **0 bozuk, 9 doğru** | **yanlış alarm** — dokuzunda da `Proxola'nın`, doğru biçim |
+| CS50x / Zooniverse kategori düzeltmesi | **0 satır** | o başlıklar canlıda yok; parti hiç girmemiş ya da başlık farklı |
+| Breakthrough Junior Challenge | **1** | var |
+| `status='disabled'` fırsat | **27** | devre dışı bırakma mekanizması kullanılmış |
+| `profile_views` | **1 satır** | 0048'in RLS açığı gerçek ama **istismar edilmemiş** |
+| üniversite / fırsat toplamı | **1019 / 422** | ikisi de büyümüş (önce 1010 / 367) |
+
+**"Bozuk Türkçe" bulgusu özellikle not:** doküman **10 satırlık bozuk bir parti**
+iddia ediyordu. Canlıda **sıfır bozuk satır** var. Bugün on altıncı kez bir doküman
+yazıldığı anın fotoğrafı çıktı — **ve bu sefer fotoğraf hiç doğru olmamış olabilir.**
+
+**`profile_views` tek satır taşıyor:** 0048'in kapatmadığı açık (herhangi bir oturum
+açmış hesap, rastgele bir UUID'ye karşı satır ekleyebiliyor) **gerçek ama kimse
+kullanmamış.** Yine de kapatılmalı — gerçek kullanıcı gelmeden.
