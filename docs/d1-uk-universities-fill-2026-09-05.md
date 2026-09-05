@@ -1377,3 +1377,115 @@ values
 ```
 
 ---
+
+## 47. Liverpool John Moores University (LJMU)
+
+`id = 'd8a6d49c-ac19-4036-9028-a6d1e7603e10'` — QS rank 851-900.
+
+**Source actually used:** `https://www.ljmu.ac.uk/study/courses/international-entry-
+requirements` — official page, directly fetched.
+
+**Twenty-seventh independent corroboration of the TOEFL iBT rescale today.**
+
+**What was checked and NOT found:** application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('d8a6d49c-ac19-4036-9028-a6d1e7603e10', 'english_proficiency',
+   'Baseline undergraduate: IELTS Academic (UKVI) 6.0 overall (5.5+ per component), TOEFL iBT 78 legacy / 4 new scale (from 21 Jan 2026), PTE Academic (UKVI) 61 overall (59+ per component); courses may vary; exception for majority-English-speaking-country nationals with a recent English-medium high school diploma',
+   'Baseline undergraduate entry (individual programmes may differ): IELTS Academic (UKVI) 6.0 overall, minimum 5.5 in each component. TOEFL iBT: currently 78 overall (Reading 18, Writing 17, Listening 17, Speaking 20); new format from 21 January 2026: 4 overall, minimum 4 in each skill. Pearson PTE Academic (UKVI): 61 overall, minimum 59 in each component. Also accepted: Trinity ISE II (90 overall, 80+ per skill), LanguageCert (65/60-per-component for the IELTS-6.0 equivalent, or 70/60 for the IELTS-6.5 equivalent), and Cambridge English (B2 pass in all four components, equivalent to IELTS 6.0 with 5.5 per component). Applicants from a majority English-speaking country may satisfy the requirement via a recent high school diploma or equivalent instead of a separate test.',
+   true, 'high', 'https://www.ljmu.ac.uk/study/courses/international-entry-requirements', now());
+```
+
+---
+
+## 48. University of Hertfordshire
+
+`id = 'ae7a7382-9de2-4cbd-8540-17efd67352be'` — QS rank 851-900.
+
+**Access note:** the official application-requirements page returned HTTP 403 to a direct
+fetch. Recorded at `medium` confidence from a general search's summary instead.
+
+**A genuine contrast with two other universities in this batch:** Hertfordshire's own accepted-
+tests list reportedly includes "IELTS Indicator" -- the opposite policy from Birkbeck (#15) and
+Nottingham Trent (#34), which both explicitly exclude it. Recorded as found, not smoothed to a
+single UK-wide IELTS-Indicator policy.
+
+**What was checked and NOT found:** TOEFL iBT numeric equivalents, application deadline,
+tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('ae7a7382-9de2-4cbd-8540-17efd67352be', 'english_proficiency',
+   'Undergraduate: IELTS 6.0 overall (5.5+ per band); reportedly accepts IELTS Indicator (opposite of Birkbeck/NTU''s exclusion), Oxford International English Language Test, Password Online English Test, Kaplan Test of English, and LanguageCert Academic Online',
+   'For undergraduate courses, the University of Hertfordshire requires IELTS 6.0 overall, no less than 5.5 in any band. The university also accepts several alternative tests: the Oxford International English Language Test, Password Online English Test, IELTS Indicator, Kaplan Test of English (KTE), and LanguageCert Academic Online -- notably including IELTS Indicator, which at least two other UK universities in this batch (Birkbeck, Nottingham Trent) explicitly exclude. Pre-sessional English short courses or a Hertfordshire International College (HIC) pathway are available for applicants below the required level. TOEFL iBT numeric equivalents were not confirmed in this pass (official page returned HTTP 403).',
+   true, 'medium', 'https://www.herts.ac.uk/international/apply/application-requirements', now());
+```
+
+---
+
+## 49. University of Lincoln
+
+`id = 'b1383af3-abf2-492c-a940-3b520760e901'` — QS rank 851-900.
+
+**Source actually used:** `https://www.lincoln.ac.uk/studywithus/internationalstudents/
+englishlanguagerequirements/` — official page, directly fetched. A search summary produced an
+apparent internal contradiction ("requires 7.5" vs. "typically 6.0 to 7.0") -- resolved by
+reading the actual page: 7.5 is specifically Medicine''s own stricter figure, not the general
+undergraduate range, which genuinely is 6.0-7.0 across a four-level tier system.
+
+**Eighth UK university this batch with no reference to the 21 January 2026 TOEFL rescale** --
+this page gives a clean IELTS-to-TOEFL conversion table with no date-based distinction at all.
+
+**What was checked and NOT found:** application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('b1383af3-abf2-492c-a940-3b520760e901', 'english_proficiency',
+   'General undergraduate range: IELTS 6.0-7.0 across a four-level tier system (5.5/6.0/6.5/7.0), TOEFL iBT 79/90/100 for IELTS 6.0/6.5/7.0 respectively (no rescale distinction on this page); Medicine is a stricter exception at IELTS 7.5 overall (7.0+ per element)',
+   'Undergraduate (and postgraduate) English requirements typically range from IELTS 6.0 to 7.0, set per programme across a four-level tier system (5.5, 6.0, 6.5, 7.0), each with its own component minimums. TOEFL iBT equivalents given on the same page: IELTS 6.0 = TOEFL 79; IELTS 6.5 = TOEFL 90; IELTS 7.0 = TOEFL 100 -- no separate pre-/post-21-January-2026 conversion is given. Medicine is a stricter, separately-stated exception: IELTS Overall 7.5, no less than 7.0 in any element -- this is where an initial search''s "7.5" figure actually comes from, not the general undergraduate range.',
+   true, 'high', 'https://www.lincoln.ac.uk/studywithus/internationalstudents/englishlanguagerequirements/', now());
+```
+
+---
+
+## 50. University of the Arts London (UAL)
+
+`id = '573d7287-1fd5-40af-9ca5-13f375ca50ab'` — QS rank 851-900.
+
+**Source actually used:** `https://www.arts.ac.uk/study-at-ual/language-centre/english-
+language-requirements` — official page, directly fetched.
+
+**Twenty-eighth independent corroboration of the TOEFL iBT rescale today** for three of the
+four extracted tiers (IELTS 6.5/7.0/7.5, evenly spaced 10 points apart on the legacy scale --
+internally consistent with each other and with the wider pattern across this whole batch).
+
+**One extracted row flagged as likely a mis-extraction rather than accepted as fact:** the
+same table's IELTS-5.0-to-TOEFL-80 pairing does not fit the pattern -- every other UK
+university checked this batch pairs a legacy TOEFL score around 78-80 with an IELTS 6.0, not
+5.0 (real-world ETS concordance tables put IELTS 5.0 closer to TOEFL 35-45). Most likely this
+row's IELTS label was mis-read as 5.0 when the page actually said 6.0 -- not corrected outright
+since the source wasn't re-verified line-by-line, but NOT recorded as a confirmed fact either,
+per this session''s own standing rule about a number that looks wrong needing investigation
+before either dismissing or accepting it (the same discipline the TOEFL rescale itself was
+originally caught by).
+
+**What was checked and NOT found:** application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('573d7287-1fd5-40af-9ca5-13f375ca50ab', 'english_proficiency',
+   'IELTS range 6.0-7.5 across course-specific tiers (5.5+ per component at the 6.0 tier); TOEFL iBT for the 6.5/7.0/7.5 tiers: 90/100/110 legacy, 4.5/5.0/5.5 new scale (from Jan 2026); one extracted table row (claiming IELTS 5.0 = TOEFL 80) looks like a mis-extraction and is not asserted here',
+   'UAL expresses its English requirement as an overall IELTS score between 5.0 and 7.5, varying by course -- the minimum general threshold is IELTS 6.0 with 5.5 in each component, and certain courses require 6.5, 7.0, or 7.5. TOEFL iBT equivalents (legacy / new scale from January 2026): IELTS 6.5 = 90 legacy / 4.5 new (min 4.5 each skill); IELTS 7.0 = 100 legacy / 5.0 new (min 4.5 each skill); IELTS 7.5 = 110 legacy / 5.5 new (min 4.5 each skill, 22+ Speaking on the legacy scale). IELTS Academic, IELTS Academic for UKVI, and IELTS Academic Online are all accepted and valid for 2 years. UAL verifies test results directly with the issuing organisation. Individual course pages state the exact tier required.',
+   true, 'high', 'https://www.arts.ac.uk/study-at-ual/language-centre/english-language-requirements', now());
+```
+
+---
