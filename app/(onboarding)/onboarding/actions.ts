@@ -218,6 +218,15 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
       graduation_year: data.graduationYear,
       birth_year: data.birthYear,
       curriculum: data.curriculum,
+      // Written for completeness (the profile row should carry what the student typed), but
+      // `education_records.curriculum_other_text` below is the column every real reader uses
+      // today (field-config.ts's CURRICULUM_OTHER_TEXT_FIELD, profile/actions.ts, achievements
+      // validation) -- confirmed live 2026-09-05: both columns are 0/11 and 0/12 filled, so
+      // this isn't a case of a student's answer silently going missing, just an unread
+      // duplicate of a value its twin column already carries correctly. Measured before
+      // deciding whether to wire a reader here per CEO's own instruction: zero fill means
+      // clarify which column is authoritative, not add a second read path for one that isn't.
+      // education_records stays canonical for display; this copy is inert on purpose.
       ...(profilesCurriculumOtherTextLive ? { curriculum_other_text: data.curriculumOtherText ?? null } : {}),
       target_geographies: data.targetGeographies,
       onboarding_completed: true,
@@ -261,6 +270,9 @@ export async function completeOnboarding(input: CompleteOnboardingInput): Promis
         school_entity_id: schoolId,
         country: data.country,
         curriculum: data.curriculum,
+        // Canonical copy -- this is the one every real reader queries (see the comment on
+        // profiles.curriculum_other_text above, in this same function, for the other twin's
+        // status).
         ...(educationRecordsCurriculumOtherTextLive ? { curriculum_other_text: data.curriculumOtherText ?? null } : {}),
         start_date: null,
         end_date: null,
