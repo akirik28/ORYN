@@ -129,3 +129,50 @@ camp's country (a visa-cost mention is real process information, not a policy st
 `d2-visible-fill-additions-2026-09-05.sql` (no migration dependency) and
 `d2-visible-fill-requires-0126-0129-0133-2026-09-05.sql` (needs all three migrations
 applied first — stated at the top of that file, not just implied by its name).
+
+## Post-merge re-check (2026-09-05, second pass): the ranking fix, and the badge defect
+
+Merged as `2294f78d`. Ranking tiebreaker landed same day (`c7d7ffb2`, adds
+`.order("id", {ascending: true})` after `match_score` in `home-strip.ts`). Re-ran the
+identical visible-set query with the new stable ordering: **the set is byte-identical —
+same 28 opportunities, same gap flags.** My own original query already used
+`opportunity_id asc` as its tiebreak (matching the fix by coincidence, not by design),
+so nothing rotated. This also confirms nothing has actually been applied to the live
+database yet — not even the dependency-free additions file — since every gap flag that
+was true before is still true now (e.g. Yale Young Global Scholars still shows
+`age_gap: true`, meaning `minimum_age`/`maximum_age` are still null).
+
+**CEO's third question — does a fill actually remove the badge — required reading the
+render path, not re-running the gap query, since nothing's applied yet to observe
+directly. Traced it to the source:**
+
+`features/opportunities/opportunity-card.tsx:399` —
+`{eligible && eligibilityNotes ? <StatusBadge label={t("eligibilityUnknown")}
+tone="warning" /> : null}`. `eligibilityNotes` comes from
+`lib/opportunities/matching.ts`'s `renderEligibilityNotes`, which returns `null` only
+when the underlying `unknownNotes` array is empty — otherwise it joins EVERY note's
+text together, regardless of which code produced it. Confirmed at the message-catalog
+level too: `ageEligibilityCheckedNotStated`/`gradeEligibilityCheckedNotStated` (the
+calm, "checked and genuinely silent" wording 0129 exists to produce) still populate a
+real entry in that same array — they change WHICH sentence appears in the small grey
+text below the badge (line 409), but do **not** stop the badge itself from firing,
+because the badge's own condition never inspects which code fired, only whether the
+array is non-empty.
+
+**Consequence, computed precisely against this file's own two SQL files, not
+guessed**: of the 27 researched rows, the badge will disappear ONLY for rows where
+*every* dimension ends in a real resolved value (a populated bound, or
+`country_eligibility_confirmed_open = true`) — zero `checked_not_stated` anywhere,
+since even one is enough to keep the array non-empty. That's exactly **3 of 27**: Yale
+Young Global Scholars, TechGirls, Student Science Training Program. The other **24**
+rows get a real, honest, sourced improvement in the small print underneath (a calmer
+sentence, a correct date) but the exact same orange "Not Verified" badge a student
+sees at a glance today — no visible change at all for the majority of tonight's work,
+once applied.
+
+Not fixed here — this is the same shared-component defect another lane found
+elsewhere today, CEO's own framing, and changing `opportunity-card.tsx`'s badge logic
+is a decision with a wider blast radius (every opportunity card, not just these 27
+rows) than this task's own scope. Reported precisely so CEO can decide who owns it and
+whether the fill's real value gets communicated differently in the meantime (the small
+print already does, today, once applied — just not the badge).
