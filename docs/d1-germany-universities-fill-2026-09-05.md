@@ -771,3 +771,70 @@ values
 ```
 
 ---
+
+## 20. Friedrich-Schiller-Universität Jena
+
+`id = '8cd3cd81-6f15-483c-a988-1956061ebe0b'` — QS rank 567. **Cycle-dependent policy: NO** —
+same symmetric WS(15 Jul)/SS(15 Jan) pattern reported.
+
+**Source actually used:** `https://www.uni-jena.de/en/200/application-enrolment` — official
+page, directly fetched.
+
+**Applications go through "Friedolin 2.0," Jena's own portal** -- no mention of uni-assist on
+this page, recorded as unconfirmed either way (like Bochum, #10) rather than assumed non-use
+purely from silence.
+
+**What was checked and NOT found:** whether there is truly no application fee (a general search
+implies this, but the official page fetched neither confirmed nor denied it); the exact
+deadline dates (the page has an "Application & Deadlines" section but no dates rendered in this
+pass); English-taught programme thresholds.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('8cd3cd81-6f15-483c-a988-1956061ebe0b', 'language_proficiency',
+   'International students without a German Abitur need German language skills at DSH-2 level or an alternative German examination; a DSH preparation course is available; applications go through Jena''s own "Friedolin 2.0" portal, uni-assist status unconfirmed',
+   'Confirmed directly on the official page: applicants without a German Abitur "must also have German language skills at DSH-2 level or alternative German examinations." Jena offers its own DSH preparation course for applicants not yet at this level. Applications are submitted through Jena''s own portal, "Friedolin 2.0" -- uni-assist was not mentioned on this page, so its involvement (if any) is unconfirmed rather than ruled out. A general search separately reports IELTS/TOEFL acceptance for English-taught programmes and a July 15 (Winter) / January 15 (Summer) deadline pattern, neither independently confirmed by this session''s own fetch.',
+   true, 'high', 'https://www.uni-jena.de/en/200/application-enrolment', now());
+```
+
+---
+
+## 21. Ulm University
+
+`id = 'ca71f350-7e3b-46f3-88d8-5fb7345ca595'` — QS rank 575. **Cycle-dependent policy: not
+established** (only Winter Semester deadline confirmed in this pass).
+
+**Source actually used:** `https://www.uni-ulm.de/en/study/application-and-enrolment/1st-
+semester-foreign-applicants/grundstaendige-studiengaenge-1fachsemester/uni-assist/` — official
+page, directly fetched.
+
+**Fifth confirmed uni-assist-member university this batch** (after TU Dresden, Würzburg,
+Hannover, and Bayreuth), stated for first-semester Bachelor's and State Examination programmes
+specifically.
+
+**What was checked and NOT found:** a specific C1 German level -- a general search names C1,
+but the official page fetched states only "proof of German language proficiency" without a
+level, so C1 is recorded at `medium` confidence rather than as confirmed; admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('ca71f350-7e3b-46f3-88d8-5fb7345ca595', 'international_requirement',
+   'Confirmed uni-assist member for first-semester Bachelor''s/State Examination programmes; fee EUR 75 for the first programme, EUR 30 each additional; all documents must reach uni-assist in Berlin by the deadline',
+   'Uni-assist evaluates applications from foreign applicants (excluding EU/EEA nationals and those already holding a German university entrance qualification) for first-semester Bachelor''s and State Examination programmes at Ulm. Application to uni-assist costs EUR 75 for the first degree programme and EUR 30 for each additional one. All documents must be submitted online to uni-assist in Berlin by the deadline at the latest.',
+   true, 'high', 'https://www.uni-ulm.de/en/study/application-and-enrolment/1st-semester-foreign-applicants/grundstaendige-studiengaenge-1fachsemester/uni-assist/', now()),
+  ('ca71f350-7e3b-46f3-88d8-5fb7345ca595', 'language_proficiency',
+   'German-taught programmes: proof of German language proficiency required; a general search reports C1 specifically, not confirmed on the official page itself',
+   'Bachelor''s programmes at Ulm are primarily German-medium. Proof of German language proficiency is a required document, though the official page fetched did not itself state a specific level -- a general search separately reports C1 as the required level, recorded at medium confidence for that specific figure.',
+   true, 'medium', 'https://www.uni-ulm.de/en/study/application-and-enrolment/1st-semester-foreign-applicants/grundstaendige-studiengaenge-1fachsemester/uni-assist/', now());
+
+insert into public.university_deadlines
+  (university_id, deadline_type, deadline_date, application_cycle, source_url, retrieved_at)
+values
+  ('ca71f350-7e3b-46f3-88d8-5fb7345ca595', 'application', '2026-07-15', 'Winter Semester 2026/27 (via uni-assist, filing opens 1 June)', 'https://www.uni-ulm.de/en/study/application-and-enrolment/1st-semester-foreign-applicants/grundstaendige-studiengaenge-1fachsemester/uni-assist/', now());
+```
+
+---
