@@ -20,6 +20,13 @@ interface MatchRow {
   calculated_at: string;
   user_id: string;
   eligible: boolean;
+  /** Optional: the shared fakeSupabase() mock's `.order()` is a deliberate no-op (existing
+   * tests rely on fixture array order, not real sort behavior — same discipline as
+   * __tests__/stubs/mock-supabase-table.ts), so these two are only populated by the tests
+   * below that specifically exercise the eligibility-data filter or the order-construction
+   * spy. Every pre-existing test is unaffected either way. */
+  match_score?: number;
+  id?: string;
 }
 interface OpportunityRow {
   id: string;
@@ -35,13 +42,32 @@ interface OpportunityRow {
   source_verified_at: string | null;
   cost: number | null;
   selectivity_tier: string;
+  /** Added 2026-09-05 for the hasAnyEligibilityDataAtAll gate (CEO's own decision: filter,
+   * don't hedge, for the parent digest specifically). recommendableOpportunity's own default
+   * below sets a real minimum_age so every pre-existing test — none of which are about this
+   * gate — keeps passing it unaffected, same pattern the 2026-09-03 recommendable-gate
+   * fixtures already established for isOpportunityRecommendable/competesInCoreRecommendations. */
+  minimum_age: number | null;
+  maximum_age: number | null;
+  eligible_grades: string[];
+  eligible_countries: string[];
+  eligible_citizenships: string[];
+  citizenship_restrictions: string | null;
+  residency_restrictions: string | null;
+  country_eligibility_confirmed_open: boolean;
+  age_eligibility_confirmed_open: boolean;
+  grade_eligibility_confirmed_open: boolean;
 }
 
-/** A row that passes both isOpportunityRecommendable and competesInCoreRecommendations —
- * the baseline every fixture below starts from, overridden per-field where a test needs a
- * specific failure shape. `cost: null` alone passes the commercial gate (judgePayToEnroll
- * treats a null cost as `cost_unverified`, mapped to `not_pay_to_enroll` — see
- * lib/opportunities/commercial.ts), so selectivity_tier's exact value is unused here. */
+/** A row that passes isOpportunityRecommendable, competesInCoreRecommendations, AND (2026-09-05)
+ * hasAnyEligibilityDataAtAll — the baseline every fixture below starts from, overridden
+ * per-field where a test needs a specific failure shape. `cost: null` alone passes the
+ * commercial gate (judgePayToEnroll treats a null cost as `cost_unverified`, mapped to
+ * `not_pay_to_enroll` — see lib/opportunities/commercial.ts), so selectivity_tier's exact value
+ * is unused here. `minimum_age: 14` alone is enough real eligibility data to pass the new gate
+ * (only one of the three axes needs a real signal) — see hasAnyEligibilityDataAtAll's own
+ * "false even when every axis carries a checked_not_stated basis" test in matching.test.ts for
+ * why a bare basis marker would NOT be enough, deliberately. */
 function recommendableOpportunity(overrides: Partial<OpportunityRow> & { id: string; title: string }): OpportunityRow {
   return {
     organization: null,
@@ -55,6 +81,16 @@ function recommendableOpportunity(overrides: Partial<OpportunityRow> & { id: str
     source_verified_at: null,
     cost: null,
     selectivity_tier: "unknown",
+    minimum_age: 14,
+    maximum_age: null,
+    eligible_grades: [],
+    eligible_countries: [],
+    eligible_citizenships: [],
+    citizenship_restrictions: null,
+    residency_restrictions: null,
+    country_eligibility_confirmed_open: false,
+    age_eligibility_confirmed_open: false,
+    grade_eligibility_confirmed_open: false,
     ...overrides,
   };
 }
@@ -226,6 +262,109 @@ describe("buildDigestContent", () => {
       const { buildDigestContent } = await import("@/lib/digest/build");
       const content = await buildDigestContent(fakeSupabase(), "u-1", null);
       expect(content!.newMatches.map((m) => m.title)).toEqual(["Good 1", "Good 2", "Good 3", "Good 4", "Good 5"]);
+    });
+  });
+
+  /**
+   * CEO, 2026-09-05: the parent digest is a deliberately unhedged recommendation ("apply this
+   * month is a good idea") sent to the PARENT, who is not the right audience for an
+   * "eligibility unknown" caveat — that belongs on the student's own surfaces (the card, the
+   * detail page), which already carry it. Decision: filter a data-blank opportunity out
+   * entirely rather than hedge the narrative. Confirmed live the same day: Harvard
+   * Pre-Collegiate Economics Challenge and International Economics Olympiad, both genuinely
+   * unknown on every eligibility axis, both would otherwise reach a parent as a bare title
+   * with no caveat anywhere in this format.
+   */
+  describe("the eligibility-data gate (lib/opportunities/matching.ts's hasAnyEligibilityDataAtAll) — CEO's fix", () => {
+    test("RED->GREEN: an opportunity with zero real data on every axis is excluded, even though its match row is eligible and new", async () => {
+      matchesRef.current = [{ opportunity_id: "o-blank", calculated_at: "2026-09-02T00:00:00Z", user_id: "u-1", eligible: true }];
+      opportunitiesRef.current = [
+        recommendableOpportunity({ id: "o-blank", title: "Harvard Pre-Collegiate Economics Challenge", minimum_age: null, maximum_age: null, eligible_grades: [], eligible_countries: [] }),
+      ];
+      const { buildDigestContent } = await import("@/lib/digest/build");
+      const content = await buildDigestContent(fakeSupabase(), "u-1", null);
+      expect(content).toBeNull();
+    });
+
+    test("checked_not_stated on every axis does NOT count as data here either — same permanent distinction as the score cap", async () => {
+      matchesRef.current = [{ opportunity_id: "o-cns", calculated_at: "2026-09-02T00:00:00Z", user_id: "u-1", eligible: true }];
+      opportunitiesRef.current = [
+        recommendableOpportunity({
+          id: "o-cns",
+          title: "Checked Not Stated Programme",
+          minimum_age: null,
+          maximum_age: null,
+          eligible_grades: [],
+          eligible_countries: [],
+          // hasAnyEligibilityDataAtAll doesn't read the *_basis columns at all -- this row is
+          // shaped like it after this session's own visible-27 fill + migrations 0126/0129/
+          // 0133, and must still be excluded here, not just softened on the student's own card.
+        }),
+      ];
+      const { buildDigestContent } = await import("@/lib/digest/build");
+      const content = await buildDigestContent(fakeSupabase(), "u-1", null);
+      expect(content).toBeNull();
+    });
+
+    test("a real bound on just ONE axis is enough to include it — only genuinely blank rows are filtered", async () => {
+      matchesRef.current = [{ opportunity_id: "o-partial", calculated_at: "2026-09-02T00:00:00Z", user_id: "u-1", eligible: true }];
+      opportunitiesRef.current = [
+        recommendableOpportunity({ id: "o-partial", title: "Age-Gated Programme", minimum_age: 16, eligible_grades: [], eligible_countries: [] }),
+      ];
+      const { buildDigestContent } = await import("@/lib/digest/build");
+      const content = await buildDigestContent(fakeSupabase(), "u-1", null);
+      expect(content!.newMatches.map((m) => m.title)).toEqual(["Age-Gated Programme"]);
+    });
+
+    test("a confirmed-open flag alone is enough, even with every bound/list still empty", async () => {
+      matchesRef.current = [{ opportunity_id: "o-open", calculated_at: "2026-09-02T00:00:00Z", user_id: "u-1", eligible: true }];
+      opportunitiesRef.current = [
+        recommendableOpportunity({ id: "o-open", title: "Confirmed Open Programme", minimum_age: null, eligible_countries: [], country_eligibility_confirmed_open: true }),
+      ];
+      const { buildDigestContent } = await import("@/lib/digest/build");
+      const content = await buildDigestContent(fakeSupabase(), "u-1", null);
+      expect(content!.newMatches.map((m) => m.title)).toEqual(["Confirmed Open Programme"]);
+    });
+  });
+
+  /**
+   * CEO, 2026-09-05: "en son hesaplananı değil, en iyi fırsatı" (the best match, not the most
+   * recently computed one) — reusing app/(app)/dashboard/page.tsx's and
+   * lib/opportunities/home-strip.ts's own match_score-then-id ordering, not a fourth
+   * independent ranking. Modeled directly on
+   * __tests__/opportunities/home-strip.test.ts's own "query construction" test: the shared
+   * fakeSupabase() above treats `.order()` as an intentional no-op (nothing else in this file
+   * depends on real sort behavior, same discipline __tests__/stubs/mock-supabase-table.ts
+   * documents), so a query-CONSTRUCTION spy is the only way to actually prove which columns are
+   * requested, in which order -- reading fixture array order back out would just describe
+   * whatever order the test itself typed the fixtures in, not what the real query asks for.
+   */
+  describe("loadNewOpportunityMatches — query construction", () => {
+    test("RED->GREEN: orders by match_score, then by id — relevance, not calculated_at recency", async () => {
+      const orderSpy = vi.fn(() => matchesBuilder);
+      const matchesBuilder: Record<string, unknown> = {
+        select: () => matchesBuilder,
+        eq: () => matchesBuilder,
+        gt: () => matchesBuilder,
+        order: orderSpy,
+        limit: () => Promise.resolve({ data: [], error: null }),
+      };
+      const opportunitiesBuilder = {
+        select: () => ({ in: async () => ({ data: [], error: null }) }),
+      };
+      const from = vi.fn((table: string) => {
+        if (table === "opportunity_matches") return matchesBuilder;
+        if (table === "opportunities") return opportunitiesBuilder;
+        throw new Error(`unexpected table in test fixture: ${table}`);
+      });
+      const supabase = { from } as never;
+
+      const { buildDigestContent } = await import("@/lib/digest/build");
+      await buildDigestContent(supabase, "u-1", null);
+
+      expect(orderSpy.mock.calls).toHaveLength(2);
+      expect(orderSpy.mock.calls[0]).toEqual(["match_score", { ascending: false }]);
+      expect(orderSpy.mock.calls[1]).toEqual(["id", { ascending: true }]);
     });
   });
 });
