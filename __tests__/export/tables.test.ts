@@ -59,7 +59,7 @@ describe("data export table coverage", () => {
 
   // Same sequencing guard as product_events above, for the same reason: birth_year_changes
   // was excluded because RLS had zero policies (DATA_RIGHTS_AUDIT.md Part 3a), not because
-  // the table was unapplied. Migration NNNN added a "select own birth year changes" policy,
+  // the table was unapplied. Migration 0142 added a "select own birth year changes" policy,
   // confirmed live (see that migration's own header), so this now belongs in EXPORT_TABLES.
   // If this ever moves back, it means someone reverted that policy without reverting this
   // line too.

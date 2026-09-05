@@ -93,10 +93,15 @@ export const EXPORT_TABLES = [
    * for a structural reason, not a content judgment: RLS was enabled with zero policies
    * (see DATA_RIGHTS_AUDIT.md Part 3a) — a naive select("*") would have run, matched
    * nothing, and reported success, exactly the "looks like it works, returns nothing"
-   * failure this file's own tests exist to catch elsewhere. Migration NNNN adds a plain
+   * failure this file's own tests exist to catch elsewhere. Migration 0142 adds a plain
    * "select own birth year changes" policy (same shape as ai_usage/product_events above),
    * closing that gap rather than routing around it with an admin-client read — see that
-   * migration's own header for the tradeoff against the alternative.
+   * migration's own header for the tradeoff against the alternative. A table being thin
+   * today doesn't suspend the right this export exists to serve, and closing this gap
+   * now — while the product has few enough real users that nobody would notice a
+   * silently incomplete export either way — is cheaper than closing it later, once real
+   * birth-year edits are actually happening and a silent gap would go unnoticed by the
+   * person it actually affects.
    */
   "birth_year_changes",
 ] as const;

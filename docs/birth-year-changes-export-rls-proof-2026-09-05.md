@@ -38,9 +38,12 @@ and this one is not different in kind from those.
 ## 2. Migration number
 
 Asked CEO before writing any migration file (this fleet's own standing rule, after a
-self-picked number went uncoordinated once already). **Pending confirmation** — this
-document and the code change to `lib/export/tables.ts` are ready; only the migration
-file's actual name is blocked on a number.
+self-picked number went uncoordinated once already) — and the ask mattered this time, not
+just as a formality: `0140` and `0141` were already verbally reserved by a different, not
+yet pushed lane (`recommendations`/`advisor_generation_locks` guards). They wouldn't have
+shown up in a remote check — a reserved-but-unpushed number is invisible to `git`, which
+is exactly why the standing rule is "ask," not "check origin first." **Assigned: `0142`**
+(`0143` held open too, per CEO, if a second migration were needed here — it wasn't).
 
 ## 3. The fix, chosen and why
 
@@ -109,19 +112,31 @@ deliberately lets a later, independent phase keep running after an expected fail
 Phase 4's is the only place a failure was ever expected, and it was a `NOTICE`, not an
 `ERROR`, confirming the check ran to completion rather than aborting.)
 
-## 6. What's ready vs. what's pending
+## 6. On the objection "it's empty, does it really need this"
 
-**Ready now:**
+Raised and answered directly, not sidestepped: a table being thin today doesn't suspend
+the data right this export exists to serve — the six original gaps `DATA_RIGHTS_AUDIT.md`
+found were closed regardless of each table's row count, not conditioned on it. The
+timing argument is the sharper one: today there are effectively no real students, so
+closing this now costs nothing and nobody notices either way. The day real birth-year
+edits start happening — which is the entire reason this table exists — is exactly the day
+a silently incomplete export would go unnoticed by the one person it actually affects.
+Closing the gap while it's cheap is the point, not an unnecessary precaution against a
+hypothetical.
+
+## 7. Status — done
+
+- `supabase/migrations/0142_birth_year_changes_export_policy.sql` — the single
+  `create policy` statement proved in Phase 2/3 above. Migration number assigned by CEO
+  after flagging that `0140`/`0141` were already verbally reserved by a different,
+  not-yet-pushed lane (invisible to a remote check — the exact reason this fleet asks
+  rather than self-picks). Not applied anywhere; nothing in this branch touches the live
+  database.
 - `lib/export/tables.ts` — `birth_year_changes` moved from `EXPORT_EXCLUDED_TABLES` into
-  `EXPORT_TABLES`, with the measurement/materiality reasoning above in its own comment.
+  `EXPORT_TABLES`, with the measurement/materiality/timing reasoning above in its own
+  comment, referencing migration `0142` by number.
 - `__tests__/export/tables.test.ts` — the regression test flipped from "stays excluded"
   to "is exported, not excluded," mirroring the existing `product_events` precedent test
-  exactly. Full suite re-run: 84/84 pass.
+  exactly, referencing migration `0142` by number. Full suite re-run: 84/84 pass.
 - `lib/legal/content.ts` — a new `LAWYER_FLAGS` entry (`minorToMinorMessaging`, separate
   task, same session) — unrelated to this fix, committed alongside it.
-
-**Pending:** the actual migration file
-(`supabase/migrations/00NN_birth_year_changes_export_policy.sql`, content is the single
-`create policy` statement from Phase 2 above, final regardless of filename) — blocked on
-CEO assigning the number, per standing practice. Not applied anywhere; nothing here
-touches the live database.
