@@ -131,34 +131,43 @@ describe("applyRangeFilters — rank", () => {
  * data-depth.ts) and "extend it to browse" required a filter that's student-controlled
  * and off by default. detailedOnly is the narrowing half of that; the badge half lives in
  * browse-page.ts's getUniversityCardMeta.
+ *
+ * CEO, 2026-09-05: the set `detailedOnly` checks membership against changed from
+ * getAllResearchDepthUniversityIds (programs/requirements/sources/statistics — the badge's
+ * own, looser signal) to getAllSubstantiveContentUniversityIds (programs/requirements only).
+ * These tests are unchanged in what they exercise (applyRangeFilters is generic over
+ * whichever Set<string> it's handed under `data.substantiveIds` — it has no idea which DB
+ * tables fed it), only in the field/variable name, to match the type in filters.ts. The
+ * semantic guarantee that the *right* two tables feed this set lives in
+ * __tests__/universities/pagination-safety.test.ts instead, against queries.ts directly.
  */
 describe("applyRangeFilters — detailedOnly", () => {
-  const depthIds = new Set(["a", "c"]);
+  const substantiveIds = new Set(["a", "c"]);
 
   test("off by default: no detailedOnly filter passes every row through untouched", () => {
-    const { matched } = applyRangeFilters(ROWS, {}, { depthIds });
+    const { matched } = applyRangeFilters(ROWS, {}, { substantiveIds });
     expect(matched).toHaveLength(4);
   });
 
-  test("keeps only rows present in depthIds", () => {
-    const { matched } = applyRangeFilters(ROWS, { detailedOnly: true }, { depthIds });
+  test("keeps only rows present in substantiveIds", () => {
+    const { matched } = applyRangeFilters(ROWS, { detailedOnly: true }, { substantiveIds });
     expect(matched.map((r) => r.id).sort()).toEqual(["a", "c"]);
   });
 
-  test("detailedOnly: false behaves like the filter being off, even with depthIds present", () => {
-    const { matched } = applyRangeFilters(ROWS, { detailedOnly: false }, { depthIds });
+  test("detailedOnly: false behaves like the filter being off, even with substantiveIds present", () => {
+    const { matched } = applyRangeFilters(ROWS, { detailedOnly: false }, { substantiveIds });
     expect(matched).toHaveLength(4);
   });
 
-  test("missing depthIds (filter active, no set fetched) excludes every row rather than including everything", () => {
+  test("missing substantiveIds (filter active, no set fetched) excludes every row rather than including everything", () => {
     const { matched } = applyRangeFilters(ROWS, { detailedOnly: true });
     expect(matched).toEqual([]);
   });
 
   test("composes with size — a row must satisfy both to survive", () => {
-    // "a" (3000, under5k) is in depthIds; "c" (40000, 30k-plus) is also in depthIds but
+    // "a" (3000, under5k) is in substantiveIds; "c" (40000, 30k-plus) is also in substantiveIds but
     // doesn't fit under5k, so only "a" should survive both filters together.
-    const { matched } = applyRangeFilters(ROWS, { size: ["under5k"], detailedOnly: true }, { depthIds });
+    const { matched } = applyRangeFilters(ROWS, { size: ["under5k"], detailedOnly: true }, { substantiveIds });
     expect(matched.map((r) => r.id)).toEqual(["a"]);
   });
 });

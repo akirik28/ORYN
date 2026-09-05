@@ -17,7 +17,7 @@ import { UniversitySearchBox } from "@/features/universities/university-search-b
 import { SUPPORTED_COUNTRIES } from "@/lib/data/country-geo";
 import { regionById, regionLabel } from "@/lib/data/regions";
 import { getSupersededUniversityIds, loadSupersessionMap } from "@/lib/universities/canonical";
-import { getUniversityCountByCountry, getAllResolvedTuitionAmounts, getAllQsListPositions, getAllResearchDepthUniversityIds } from "@/lib/universities/queries";
+import { getUniversityCountByCountry, getAllResolvedTuitionAmounts, getAllQsListPositions, getAllResearchDepthUniversityIds, getAllSubstantiveContentUniversityIds } from "@/lib/universities/queries";
 import { formatNumber } from "@/lib/i18n/format";
 import {
   COST_BUCKETS,
@@ -140,16 +140,19 @@ export default async function UniversitiesPage({
   // getAllQsListPositions) and intersecting client-side avoids the limit entirely, at the cost
   // of one extra small query when these filters (or Ranking sort) are actually in use.
   const needsQsRankMap = !q && (sort === "ranking" || rank !== null);
-  // depthIds is fetched unconditionally, unlike costMap/qsRankMap: it feeds the "Detailed
-  // profile" card badge on every page regardless of whether the filter itself is active,
-  // not just the filtered-narrowing path.
-  const [costMap, qsRankMap, depthIds] = await Promise.all([
+  // depthIds is fetched unconditionally, unlike costMap/qsRankMap/substantiveIds: it feeds
+  // the "Researched" card badge on every page regardless of whether the detailedOnly filter
+  // itself is active, not just the filtered-narrowing path. substantiveIds is the filter's
+  // own, stricter signal (programs/requirements only — see getAllSubstantiveContentUniversityIds)
+  // and, like qsRankMap, is only worth fetching when the filter is actually in use.
+  const [costMap, qsRankMap, depthIds, substantiveIds] = await Promise.all([
     cost ? getAllResolvedTuitionAmounts(supabase) : Promise.resolve(null),
     needsQsRankMap ? getAllQsListPositions(supabase) : Promise.resolve(null),
     getAllResearchDepthUniversityIds(supabase),
+    detailedOnly ? getAllSubstantiveContentUniversityIds(supabase) : Promise.resolve(undefined),
   ]);
 
-  const rangeData = { costMap: costMap ?? undefined, qsRankMap: qsRankMap ?? undefined, depthIds };
+  const rangeData = { costMap: costMap ?? undefined, qsRankMap: qsRankMap ?? undefined, substantiveIds };
 
   const [browseResult, liveCountryCounts, targetsRes] = await Promise.all([
     loadUniversityBrowsePage(

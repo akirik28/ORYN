@@ -60,10 +60,40 @@ describe("universities explorer never repeats the 1000-row / large-.in() bug cla
     expect(extractFunction(queries, "getAllQsListPositions")).toContain(".range(");
   });
 
-  test("getAllResearchDepthUniversityIds paginates with .range() and refuses a partial result", () => {
-    const fn = extractFunction(queries, "getAllResearchDepthUniversityIds");
+  // 2026-09-05: the pagination logic itself moved into a shared allUniversityIdsForTable
+  // helper (both this function and getAllSubstantiveContentUniversityIds below call it), so
+  // the .range()/refusal assertion now targets that helper directly rather than either
+  // caller's own (now short) body.
+  test("allUniversityIdsForTable (shared by both depth-signal functions) paginates with .range() and refuses a partial result", () => {
+    const fn = extractFunction(queries, "allUniversityIdsForTable");
     expect(fn).toContain(".range(");
     expect(fn).toContain("Refusing to return a partial result");
+  });
+
+  test("getAllResearchDepthUniversityIds and getAllSubstantiveContentUniversityIds both delegate to the shared paginated helper", () => {
+    expect(extractFunction(queries, "getAllResearchDepthUniversityIds")).toContain("allUniversityIdsForTable(");
+    expect(extractFunction(queries, "getAllSubstantiveContentUniversityIds")).toContain("allUniversityIdsForTable(");
+  });
+
+  // CEO, 2026-09-05: measured 315 universities passing the browse filter's old (four-table)
+  // signal, 160 of those with zero programs and zero requirements — a bare source citation or
+  // an empty statistics row was enough to pass. getAllSubstantiveContentUniversityIds is the
+  // filter's replacement signal; this guards the actual fix (which two tables it unions), not
+  // just that it's paginated.
+  test("getAllSubstantiveContentUniversityIds unions only programs and requirements — not sources or statistics", () => {
+    const fn = extractFunction(queries, "getAllSubstantiveContentUniversityIds");
+    expect(fn).toContain('"university_programs"');
+    expect(fn).toContain('"university_requirements"');
+    expect(fn).not.toContain('"university_sources"');
+    expect(fn).not.toContain('"university_statistics"');
+  });
+
+  test("getAllResearchDepthUniversityIds (the badge signal) still unions all four tables — unchanged by the filter fix", () => {
+    const fn = extractFunction(queries, "getAllResearchDepthUniversityIds");
+    expect(fn).toContain('"university_programs"');
+    expect(fn).toContain('"university_requirements"');
+    expect(fn).toContain('"university_sources"');
+    expect(fn).toContain('"university_statistics"');
   });
 
   test("the id-intersection path only calls .in(\"id\", ...) against a page-sized slice, never a full scope array", () => {

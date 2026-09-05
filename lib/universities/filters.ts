@@ -115,10 +115,13 @@ export interface RangeFilters {
   size?: SizeBucketValue[];
   cost?: CostBucketValue[];
   rank?: RankTierValue | null;
-  /** Keep only rows with real program/requirement/source/statistics depth — see
-   *  lib/universities/data-depth.ts. Unlike size/cost/rank this isn't a range with an
-   *  "unknown" case of its own: a row is either in `data.depthIds` or it isn't, so there's
-   *  no separate *Unknown count to track the way sizeUnknown/costUnknown do. */
+  /** Keep only rows with a real program or requirement on file — see
+   *  lib/universities/queries.ts's getAllSubstantiveContentUniversityIds. Deliberately
+   *  stricter than the card badge's depth signal (a bare source citation or statistics row
+   *  doesn't count here) — see that function's own doc comment for why, CEO 2026-09-05.
+   *  Unlike size/cost/rank this isn't a range with an "unknown" case of its own: a row is
+   *  either in `data.substantiveIds` or it isn't, so there's no separate *Unknown count to
+   *  track the way sizeUnknown/costUnknown do. */
   detailedOnly?: boolean;
 }
 
@@ -149,7 +152,7 @@ export interface RangeFilterResult<T> {
 export function applyRangeFilters<T extends RangeFilterRow>(
   rows: T[],
   filters: RangeFilters,
-  data: { costMap?: Map<string, number>; qsRankMap?: Map<string, number>; depthIds?: Set<string> } = {}
+  data: { costMap?: Map<string, number>; qsRankMap?: Map<string, number>; substantiveIds?: Set<string> } = {}
 ): RangeFilterResult<T> {
   let stage = rows;
 
@@ -183,8 +186,8 @@ export function applyRangeFilters<T extends RangeFilterRow>(
   }
 
   if (filters.detailedOnly) {
-    const depthIds = data.depthIds ?? new Set<string>();
-    stage = stage.filter((r) => depthIds.has(r.id));
+    const substantiveIds = data.substantiveIds ?? new Set<string>();
+    stage = stage.filter((r) => substantiveIds.has(r.id));
   }
 
   return { matched: stage, sizeUnknown, costUnknown };
