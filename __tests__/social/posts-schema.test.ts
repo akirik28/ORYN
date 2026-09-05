@@ -688,7 +688,19 @@ describe("migration numbering", () => {
     // topic is simply never raised at all, which reads as "probably open," not "confirmed
     // hidden." Written down in both this migration's own column comment and here so a later
     // pass doesn't "fix" the two into false consistency.
-    expect(Math.max(...numbers.map(Number))).toBe(133);
+    //
+    // 0134 (email_verification) -- E2 (docs/PROXOLA-PLAN.md), CEO's decision 2026-09-05. A few
+    // columns on `profiles` (email_verified, email_verification_code_hash/expires_at/attempts/
+    // last_sent_at), not a separate table -- same "single current mutable fact per student"
+    // shape as busy_mode/busy_mode_until, and a better fit for "the code must never be logged"
+    // than a table's own row history would be. Deliberately NOT Supabase Auth's own native
+    // confirm-email mechanism (app/auth/confirm/route.ts, currently off) -- that gates session
+    // creation on confirmation by design, exactly backwards from this feature's own
+    // non-negotiable that the rest of the product must never block on it. Fully decoupled:
+    // checked only by lib/email/verification.ts and whichever future feature actually sends
+    // email to a student, notifies a parent by matching this address, or recovers an account
+    // through it -- none of which exist as real, live functionality yet.
+    expect(Math.max(...numbers.map(Number))).toBe(134);
   });
 });
 

@@ -267,6 +267,24 @@
       "confirmLabel": "Yeni şifreyi onayla",
       "updateButton": "Şifreyi güncelle"
     },
+    "emailVerification": {
+      "verifiedBadge": "Doğrulandı",
+      "unverifiedBadge": "Henüz doğrulanmadı",
+      "sendCodeButton": "E-postayı doğrula",
+      "resendCodeButton": "Kodu yeniden gönder",
+      "codeLabel": "Doğrulama kodu",
+      "submitButton": "Onayla",
+      "cancelButton": "Vazgeç",
+      "sentMessage": "E-postana bir kod gönderdik. 15 dakika içinde geçerliliğini yitirir.",
+      "notConfiguredMessage": "E-posta gönderimi henüz kurulmadı — doğrulama şu an kullanılamıyor.",
+      "cooldownError": "Yeni bir kod istemeden önce lütfen biraz bekle.",
+      "sendFailedError": "Kodu gönderemedik. Birazdan tekrar dene.",
+      "incorrectError": "Bu kod doğru değil.",
+      "expiredError": "Bu kodun süresi doldu — yenisini iste.",
+      "tooManyAttemptsError": "Çok fazla deneme yapıldı — yeni bir kod iste.",
+      "noCodePendingError": "Önce bir kod iste.",
+      "unavailableError": "Doğrulama şu an kullanılamıyor."
+    },
     "visibility": {
       "publicProfileTitle": "Herkese açık profil",
       "publicProfileDescription": "Projelerini, başarılarını ve becerilerini gösteren paylaşılabilir bir profil göster. Varsayılan olarak kapalı — notlar ve okul bilgileri asla dahil edilmez.",

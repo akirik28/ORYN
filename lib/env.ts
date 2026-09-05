@@ -47,6 +47,13 @@ export const env = {
      *  building that provider's concrete adapter, not before. */
     provider: required(process.env.PAYMENT_PROVIDER),
   },
+  email: {
+    /** E2 (docs/PROXOLA-PLAN.md), 2026-09-05 — same "name unset until the founder chooses
+     *  one" shape as payments.provider above, same reasoning: no provider-specific credential
+     *  var declared here until a concrete adapter exists for it (lib/email/index.ts's
+     *  getEmailProvider has no case yet, matching lib/payments/index.ts's own current state). */
+    provider: required(process.env.EMAIL_PROVIDER),
+  },
 } as const;
 
 export const integrationStatus = {
@@ -61,6 +68,9 @@ export const integrationStatus = {
    *  the named provider is actually implemented; this flag alone answers "was one chosen,"
    *  not "is checkout actually possible right now." */
   payments: Boolean(env.payments.provider),
+  /** Same "name set ≠ adapter built" caveat as payments above — lib/email/isEmailProviderConfigured
+   *  is the one that also checks for a real adapter. */
+  email: Boolean(env.email.provider),
 } as const;
 
 export type IntegrationName = keyof typeof integrationStatus;
