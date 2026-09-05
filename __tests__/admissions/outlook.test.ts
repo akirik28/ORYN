@@ -36,6 +36,32 @@ describe("dataConfidenceForCompleteness", () => {
 });
 
 describe("computeAdmissionOutlook", () => {
+  // CEO's dead-column audit, 2026-09-05: profileStrength was already an input to this
+  // function and already used to derive compositeScore, but never echoed back in the return
+  // value -- unlike compositeScore, which was. persist.ts writes both inputs.profileStrength
+  // (as target_universities.profile_fit_score) and result.compositeScore (as
+  // .academic_fit_score) to the database in the same call, but only the caller of THIS
+  // function -- the student and parent detail pages -- could see compositeScore fresh from
+  // the return value; profileStrength required a second, one-request-stale DB read to see at
+  // all. This just confirms the echo is exact, not derived or rounded differently.
+  test("echoes profileStrength verbatim in the return value -- what persist.ts writes to target_universities.profile_fit_score", () => {
+    const result = computeAdmissionOutlook({ profileStrength: 72, admissionRate: 0.3, dataConfidence: "high" });
+    expect(result.profileStrength).toBe(72);
+  });
+
+  test("profileStrength and compositeScore are genuinely different numbers, not aliases of each other", () => {
+    // A near-non-selective school (admissionRate 0.8) applies little to no selectivity
+    // penalty, so compositeScore stays close to profileStrength -- but a highly selective one
+    // (admissionRate 0.02) applies a real penalty, so the two diverge for the identical
+    // profileStrength input. If a future refactor collapsed these into one field, this would
+    // catch it.
+    const easy = computeAdmissionOutlook({ profileStrength: 80, admissionRate: 0.8, dataConfidence: "high" });
+    const selective = computeAdmissionOutlook({ profileStrength: 80, admissionRate: 0.02, dataConfidence: "high" });
+    expect(easy.profileStrength).toBe(80);
+    expect(selective.profileStrength).toBe(80);
+    expect(selective.compositeScore).toBeLessThan(easy.compositeScore);
+  });
+
   test("classifies a strong profile against a non-selective school as likely", () => {
     const result = computeAdmissionOutlook({ profileStrength: 80, admissionRate: 0.8, dataConfidence: "high" });
     expect(result.outlook).toBe("likely");

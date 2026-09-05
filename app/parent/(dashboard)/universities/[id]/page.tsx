@@ -62,6 +62,34 @@ export default async function ParentUniversityDetailPage({ params }: { params: P
           <div className="mt-3 flex items-center gap-3">
             <OutlookBadge outlook={childOutlook.outlook} locale={locale} />
           </div>
+          {/* AGENTS.md Phase 16's named "Academic Fit"/"Profile Fit" (0-100), CEO's
+              dead-column audit 2026-09-05: computed and persisted since the outlook feature
+              shipped, never shown here. Each gets a one-line caption, not a bare number —
+              this page deliberately has no per-dimension breakdown to show (it reads the
+              child's cached outlook only, never recomputes), so a caption naming what the
+              figure measures is the proportionate amount of context for a page this size,
+              short of building a second explanation panel this page's own scope doesn't
+              otherwise need. */}
+          {childOutlook.academicFitScore != null || childOutlook.profileFitScore != null ? (
+            <dl className="mt-3 grid grid-cols-2 gap-4 border-t pt-3 text-sm" style={{ borderColor: "var(--role-surface-border)" }}>
+              {childOutlook.academicFitScore != null ? (
+                <div>
+                  <dt className="text-muted-foreground">{tr ? "Akademik uyum" : "Academic fit"}</dt>
+                  <dd className="text-lg font-medium text-foreground">{childOutlook.academicFitScore}</dd>
+                  <dd className="text-xs text-muted-foreground">
+                    {tr ? "Bu üniversitenin seçiciliğine göre akademik profil" : "Academic profile weighed against this university's selectivity"}
+                  </dd>
+                </div>
+              ) : null}
+              {childOutlook.profileFitScore != null ? (
+                <div>
+                  <dt className="text-muted-foreground">{tr ? "Profil uyumu" : "Profile fit"}</dt>
+                  <dd className="text-lg font-medium text-foreground">{childOutlook.profileFitScore}</dd>
+                  <dd className="text-xs text-muted-foreground">{tr ? "Genel Kariyer Profili gücü" : "Overall Career Profile strength"}</dd>
+                </div>
+              ) : null}
+            </dl>
+          ) : null}
           {estimate ? (
             <p className="mt-2 text-sm text-muted-foreground">
               {tr ? "Proxola tahmini:" : "Proxola estimate:"}{" "}

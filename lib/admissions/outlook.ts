@@ -186,6 +186,15 @@ export interface AdmissionOutlookInputs {
 export interface AdmissionOutlookResult {
   outlook: OutlookLabel;
   compositeScore: number;
+  /** Echoes `inputs.profileStrength` verbatim — the same 0-100 figure `persist.ts` writes to
+   * `target_universities.profile_fit_score` (AGENTS.md Phase 16's "Profile Fit"). Added
+   * 2026-09-05, CEO's dead-column audit: this was already computed and persisted, but never
+   * returned to the caller (unlike `compositeScore`/`academic_fit_score`, which was), so the
+   * student and parent detail pages had no fresh value to show without a second DB read one
+   * request behind this one's own write. Kept as a plain field, not derived from
+   * `compositeScore`, since it measures something different — overall profile strength before
+   * this specific target's selectivity penalty, vs. compositeScore's after. */
+  profileStrength: number;
   selectivityTier: keyof typeof SELECTIVITY_PENALTY;
   /** Optional experimental range, whole-number percentage points, e.g. 15-25. Null unless there's enough real data to support even a wide approximation — never a single-point figure. */
   estimateRangeLow: number | null;
@@ -364,6 +373,7 @@ export function computeAdmissionOutlook(inputs: AdmissionOutlookInputs, locale: 
   return {
     outlook,
     compositeScore: Math.round(compositeScore),
+    profileStrength: inputs.profileStrength,
     selectivityTier: tier,
     estimateRangeLow,
     estimateRangeHigh,

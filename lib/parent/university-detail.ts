@@ -36,6 +36,14 @@ export interface ParentSafeChildOutlook {
   estimateRangeLow: number | null;
   estimateRangeHigh: number | null;
   estimateConfidence: string | null;
+  /** AGENTS.md Phase 16's named "Academic Fit" / "Profile Fit" (0-100 each). Added 2026-09-05,
+   * CEO's dead-column audit: both were already selected in TargetUniversityRpcRow below (the
+   * RPC itself returns them) but never copied into this mapped shape, so neither reached the
+   * parent page despite being fetched on every load. No comment anywhere justified the
+   * omission — found unintentional, not a deliberate parent-safety exclusion (unlike, say,
+   * excluding raw dimension scores would be, if this page ever grew one). */
+  academicFitScore: number | null;
+  profileFitScore: number | null;
 }
 
 export interface ParentSafeUniversityDetail {
@@ -110,6 +118,8 @@ export async function loadParentSafeUniversityDetail(
         estimateRangeLow: match.estimate_range_low,
         estimateRangeHigh: match.estimate_range_high,
         estimateConfidence: match.outlook_confidence,
+        academicFitScore: match.academic_fit_score,
+        profileFitScore: match.profile_fit_score,
       };
     }
   }
