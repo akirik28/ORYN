@@ -1185,3 +1185,87 @@ values
 ```
 
 ---
+
+## 40. De Montfort University (DMU)
+
+`id = '3be9964a-8f60-4e36-a15f-40e2fbb302b8'` — QS rank 851-900.
+
+**Source actually used:** `https://www.dmu.ac.uk/international/en/accepted-english-language-
+proficiency-tests.aspx` — official equivalency-table page, directly fetched.
+
+**Sixth UK university this batch with no reference to the 21 January 2026 TOEFL rescale.**
+Also worth flagging rather than silently smoothing: the extracted table shows the identical
+TOEFL per-component minimums (Reading 8, Listening 7, Speaking 16, Writing 18) repeated across
+all three IELTS bands, with only the overall figure changing (79/60/46) -- this may be a
+genuine flat per-component floor design (plausible for TOEFL, which sets its per-skill
+minimums independently of the overall target) or a table-extraction artifact; recorded exactly
+as extracted rather than assumed correct or corrected.
+
+**What was checked and NOT found:** which subject areas/courses map to which of the three
+IELTS bands (a general search separately named Art and Design, Business, Computing, and
+Engineering as using 6.0, not independently confirmed here); PTE for the lowest (5.5) band --
+absent from the source table itself; application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('3be9964a-8f60-4e36-a15f-40e2fbb302b8', 'english_proficiency',
+   'Three IELTS bands used across courses -- 6.5: TOEFL 79, PTE 61 (59+/component), Duolingo 120; 6.0: TOEFL 60, PTE 59, Duolingo 105; 5.5: TOEFL 46, PTE not listed, Duolingo 95 -- no new-scale TOEFL conversion found; reportedly Art and Design/Business/Computing/Engineering use the 6.0 band',
+   'DMU''s official equivalency table lists three IELTS overall bands used across its courses: 6.5 overall (TOEFL iBT 79; PTE Academic 61, no component below 59; Duolingo 120); 6.0 overall (TOEFL 60; PTE 59; Duolingo 105); 5.5 overall (TOEFL 46; PTE not stated in the source table; Duolingo 95). No post-21-January-2026 TOEFL new-scale conversion was found on this page. A general search separately reports Art and Design, Business, Computing, and Engineering courses use the 6.0 band specifically, not independently confirmed by this session''s own page read. Applicants who meet DMU''s academic entry requirements but cannot take IELTS may take an alternative online test assessing the same four skill areas; pre-sessional English courses are available for applicants below their course''s required level.',
+   true, 'high', 'https://www.dmu.ac.uk/international/en/accepted-english-language-proficiency-tests.aspx', now());
+```
+
+---
+
+## 41. Edinburgh Napier University
+
+`id = '8275c7d2-b5a5-457a-aac8-39e71901405f'` — QS rank 801-850.
+
+**Source actually used:** `https://www.napier.ac.uk/study-with-us/international-students/
+english-language/english-language-requirements` — official page, directly fetched.
+
+**Twenty-third independent corroboration of the TOEFL iBT rescale today.**
+
+**What was checked and NOT found:** application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('8275c7d2-b5a5-457a-aac8-39e71901405f', 'english_proficiency',
+   'IELTS Academic 6.0 overall (5.5+ per component), TOEFL iBT 80 legacy (17/18/20/17 per component) / 4 new scale (4+ each component, from Jan 2026); PTE Academic 59 overall (59+ per component); test results valid 2 years',
+   'Undergraduate entry: IELTS Academic 6.0 overall, no component below 5.5. TOEFL Internet Based Test before January 2026: 80 overall, minimum 17 Listening, 18 Reading, 20 Speaking, 17 Writing. From January 2026 (new scale): 4 overall, minimum 4 in each of Listening/Reading/Speaking/Writing. PTE Academic: 59 overall, minimum 59 per component. Also accepted: Cambridge qualifications, Trinity ISE, LanguageCert, PSI Service Skills for English, and Oxford Digital Institute ELLT. Test results must be less than 2 years old at course start.',
+   true, 'high', 'https://www.napier.ac.uk/study-with-us/international-students/english-language/english-language-requirements', now());
+```
+
+---
+
+## 42. University of Brighton
+
+`id = '792e783f-705f-4139-af33-fc2fa034f546'` — QS rank 901-950.
+
+**Source actually used:** `https://www.brighton.ac.uk/international/applying-here/how-to-
+apply/english-language-requirements/index.aspx` — official page, directly fetched.
+
+**A genuinely distinctive, specific policy worth surfacing rather than summarizing away:**
+Brighton states it will accept the majority of African English-medium qualifications
+equivalent to GCSE English "with no time limit" -- a real, named exception to the otherwise
+standard 2-5 year validity windows seen across every other UK university checked in this
+batch.
+
+**Seventh UK university this batch with no reference to the 21 January 2026 TOEFL rescale.**
+
+**What was checked and NOT found:** application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('792e783f-705f-4139-af33-fc2fa034f546', 'english_proficiency',
+   'Standard undergraduate: IELTS 6.0 overall (5.5+ per component), TOEFL iBT 72 (legacy scale only); IELTS/PTE/LanguageCert/Trinity SELT valid 2 years, other non-SELT qualifications valid 5 years; MOST African English-medium qualifications equivalent to GCSE English accepted with NO time limit',
+   'Standard undergraduate entry: IELTS Academic 6.0 overall, minimum 5.5 in all components. TOEFL iBT (standard level): 72 overall (Writing 18, Reading 10, Listening 10, Speaking 17) -- no post-21-January-2026 new-scale conversion given on this page. IELTS Academic UKVI, PTE Academic UKVI, LanguageCert SELT, and Trinity College London SELT (taken in the UK) must be within 2 years of course start. A wider range of non-SELT qualifications for degree-level entry may be used within 5 years, EXCEPT that the majority of African qualifications equivalent to at least GCSE English Language, delivered in English medium, are accepted with NO time limit at all -- a specific, named exception rather than a blanket policy.',
+   true, 'high', 'https://www.brighton.ac.uk/international/applying-here/how-to-apply/english-language-requirements/index.aspx', now());
+```
+
+---
