@@ -159,3 +159,42 @@ export function soonestApplicationDeadline(rows: readonly DeadlineRowForSoonest[
   candidates.sort((a, b) => a.date.getTime() - b.date.getTime());
   return candidates[0];
 }
+
+/**
+ * The most recent already-elapsed dated application/early deadline for one university — the
+ * complement of soonestApplicationDeadline above, only meaningful to call once that function
+ * has already returned null for the same rows (nothing current or upcoming survived).
+ *
+ * CEO, 2026-09-05 (docs/elapsed-deadline-display-audit-2026-09-05.md): the university detail
+ * page's "Important Dates" section used to go blank with no message at all for a university
+ * whose only application/early row was a real, correctly-sourced date that had simply passed —
+ * `lacksApplicationDeadline`'s own type-presence check reports `false` (a real row of that
+ * type does exist), so the section's render guard saw neither an actionable deadline nor a
+ * genuine research gap, and rendered nothing. 27 universities live in exactly this shape as of
+ * the audit above (e.g. Humboldt-Universitat zu Berlin's real application deadline, elapsed
+ * 2026-08-31). This function is what tells the two cases apart: "never researched" (this
+ * returns null, `lacksApplicationDeadline` is what fires) vs. "researched, now stale" (this
+ * returns the elapsed date, so the page can say so explicitly instead of going silent).
+ *
+ * Only considers `dated_specific` rows deliberately — a `recurring_annual_undated` row never
+ * "elapses" the way one specific date does (`soonestApplicationDeadline` always rolls it
+ * forward to its next occurrence), so if a university has one, `soonestApplicationDeadline`
+ * would already have returned it and this function is never reached for that university.
+ * Picks the MOST recent elapsed date, not the oldest — the one a student would actually
+ * recognize as "the deadline that was here," if a university somehow has several stale rows
+ * on file (an old Early Action alongside an old Regular Decision, say).
+ */
+export function mostRecentElapsedApplicationDeadline(rows: readonly DeadlineRowForSoonest[], today: Date): { date: Date; deadlineType: string } | null {
+  const todayStr = today.toISOString().slice(0, 10);
+  const candidates: { date: Date; deadlineType: string }[] = [];
+  for (const d of rows) {
+    if (d.deadline_type !== "application" && d.deadline_type !== "early") continue;
+    if (NON_ACTIONABLE_VERIFICATION_STATES.has(d.verification_state)) continue;
+    if (d.recurrence === "dated_specific" && d.deadline_date != null && d.deadline_date < todayStr) {
+      candidates.push({ date: new Date(`${d.deadline_date}T00:00:00Z`), deadlineType: d.deadline_type });
+    }
+  }
+  if (candidates.length === 0) return null;
+  candidates.sort((a, b) => b.date.getTime() - a.date.getTime());
+  return candidates[0];
+}
