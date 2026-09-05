@@ -473,3 +473,138 @@ values
 ```
 
 ---
+
+## 11. Universität Konstanz
+
+`id = '3e96d145-e116-4a9e-8ada-60d457428cc9'` — QS rank 425. **Cycle-dependent policy:
+unconfirmed.**
+
+**Source actually used:** `https://www.uni-konstanz.de/en/study/before-you-study/application-
+and-enrolment/faq-application-process/` — official page, directly fetched.
+
+**A search claim quietly corrected rather than repeated:** a general search stated applicants
+"must demonstrate proficiency in both German and English" for undergraduate programmes -- the
+official FAQ instead describes a normal per-programme split: DSH (or similar) for German-taught
+programmes, with TOEFL/IELTS/Cambridge accepted for whichever programmes are English-taught.
+Not the same claim as "both languages required simultaneously," which is not asserted here.
+
+**What was checked and NOT found:** uni-assist usage (not mentioned either way); a specific
+English score threshold; the Sports Entrance Exam for Bachelor of Education/Sports Science
+(mentioned by a general search, not found on the FAQ page itself); application deadline.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('3e96d145-e116-4a9e-8ada-60d457428cc9', 'language_proficiency',
+   'German-taught programmes: DSH certificate (or similar) submitted with the application; English-taught programmes: TOEFL, IELTS, or Cambridge English accepted -- requirement is per-programme, not a simultaneous dual-language requirement',
+   'Applicants must document German language skills by submitting a DSH certificate or similar along with the application, for German-taught programmes. The university states it "generally accepts all of the usual language certificates, such as TOEFL, IELTS and Cambridge English" -- implying these apply to whichever specific programmes are English-taught, rather than every applicant needing both languages simultaneously. The FAQ explicitly directs applicants to check each specific programme''s own page for its language requirement rather than stating one university-wide rule.',
+   true, 'medium', 'https://www.uni-konstanz.de/en/study/before-you-study/application-and-enrolment/faq-application-process/', now());
+```
+
+---
+
+## 12. Universität Mannheim — cheaper win: already has 4 programme rows, only requirements missing
+
+`id = '3c48effe-f883-4907-bb0b-5911eb39e021'` — QS rank 425. **Cycle-dependent policy: NO**
+(single Winter-Semester-focused deadline found, no Summer Semester substance difference).
+
+**Source actually used:** `https://www.uni-mannheim.de/en/academics/before-your-studies/
+applying/bachelors-program/citizens-from-outside-of-the-eu-eea/` — official page, directly
+fetched.
+
+**A sixth confirmed non-uni-assist German university this batch, and the most explicit
+statement yet:** "The University of Mannheim does not work with uni-assist. All international
+applicants must therefore apply directly to the University of Mannheim."
+
+**An internal naming inconsistency in the extracted text, flagged rather than silently
+resolved:** the page pairs "level C1" with "(Goethe Zertifikat C2)" -- CEFR C1 and Goethe C2 are
+not the same level (Goethe C2 corresponds to CEFR C2, a higher level than C1). This may be an
+extraction artifact or a genuine inconsistency on the source page itself; not resolved further
+in this pass, recorded exactly as extracted.
+
+**What was checked and NOT found:** a specific minimum percentage/grade for the Class 12/HSC
+qualification -- a general search states "no specific minimum score" is required but advises
+60%+ informally, not itself an official threshold and not recorded as one; admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('3c48effe-f883-4907-bb0b-5911eb39e021', 'international_requirement',
+   'The University of Mannheim explicitly does NOT work with uni-assist -- all international applicants apply directly; applicants from China, Vietnam, or India must provide an original APS certificate',
+   'Mannheim''s own page states directly: "The University of Mannheim does not work with uni-assist. All international applicants must therefore apply directly to the University of Mannheim." Applicants who obtained their university entrance qualification or degree in China, Vietnam, or India must provide the APS certificate in its original version -- consistent with the same requirement confirmed elsewhere in this batch (Muenster, #8).',
+   true, 'high', 'https://www.uni-mannheim.de/en/academics/before-your-studies/applying/bachelors-program/citizens-from-outside-of-the-eu-eea/', now()),
+  ('3c48effe-f883-4907-bb0b-5911eb39e021', 'language_proficiency',
+   'German-taught programmes: TestDaF level 4, DSH 2, or Goethe-Zertifikat (page''s own text pairs "C1" with "Goethe Zertifikat C2" -- an internal naming inconsistency, recorded as extracted); language proof must be received before the application deadline (15 July referenced)',
+   'For German-taught programmes, accepted proof of German proficiency includes TestDaF level 4, DSH level 2, or a Goethe-Zertifikat -- the official page''s own text describes this as "level C1 (Goethe Zertifikat C2)," an internally inconsistent pairing (CEFR C1 and Goethe C2 are different levels) not resolved further in this pass. Proof must be received by the university before the application deadline; 15 July is referenced as a key date for submitting the language certificate specifically.',
+   true, 'medium', 'https://www.uni-mannheim.de/en/academics/before-your-studies/applying/bachelors-program/citizens-from-outside-of-the-eu-eea/', now());
+```
+
+---
+
+## 13. Julius-Maximilians-Universität Würzburg (JMU)
+
+`id = 'bb06ba15-8664-456a-a960-0115f0dd5307'` — QS rank 430. **Cycle-dependent policy: not
+established.**
+
+**A more efficient source found and used going forward: uni-assist's own member-university
+list.** Rather than relying on each individual university''s own page (silent or ambiguous on
+uni-assist status at several universities already this batch), uni-assist.de itself publishes
+a searchable directory of its member institutions --
+`https://www.uni-assist.de/en/tools/uni-assist-universities/detail/hochschule/568/` confirms
+JMU Würzburg directly. This is the more authoritative source for this specific fact and will
+be checked directly for any remaining ambiguous cases in this batch.
+
+**What was checked and NOT found:** which specific degree levels (bachelor/master/all) JMU''s
+uni-assist membership covers -- the directory page didn't specify; a general search separately
+suggests it applies to bachelor''s programmes specifically; a specific DSH/TestDaF level number;
+tuition (confirmed as none, standard for German public universities) and the semester
+contribution amount (~EUR 130-150, not independently confirmed by direct fetch).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('bb06ba15-8664-456a-a960-0115f0dd5307', 'international_requirement',
+   'Confirmed via uni-assist''s own member directory: JMU Würzburg is a uni-assist member university -- applicants obtain a Vorprüfungsdokumentation (VPD) preliminary review document from uni-assist and submit it to the university as part of the application',
+   'Julius-Maximilians-Universität Würzburg is confirmed as a member university on uni-assist''s own official directory. Applicants apply through uni-assist, which issues a Vorprüfungsdokumentation (VPD) -- a preliminary review document confirming the foreign qualification''s equivalence to the German Abitur -- submitted alongside the rest of the application to the university.',
+   true, 'high', 'https://www.uni-assist.de/en/tools/uni-assist-universities/detail/hochschule/568/', now()),
+  ('bb06ba15-8664-456a-a960-0115f0dd5307', 'language_proficiency',
+   'German-taught programmes (most bachelor''s programmes at JMU): German proficiency via TestDaF or DSH, specific level not confirmed',
+   'Most bachelor''s programmes at JMU are taught in German, requiring proficiency typically demonstrated via TestDaF or DSH -- the specific minimum level/score was not confirmed by direct fetch in this pass. Application deadline for most programmes is reportedly 15 July, though some programmes may differ (not itemized here).',
+   true, 'medium', 'https://www.uni-assist.de/en/tools/uni-assist-universities/detail/hochschule/568/', now());
+```
+
+---
+
+## 14. Leibniz University Hannover (LUH)
+
+`id = '313b02bc-932e-441b-8901-2b28504e5c01'` — QS rank 470. **Cycle-dependent policy: not
+established.**
+
+**Source actually used:** `https://www.uni-hannover.de/en/studium/vor-dem-studium/bewerbung-
+zulassung/voraussetzungen-zum-studium/voraussetzungen-fuer-internationale-bewerber` — official
+page, directly fetched.
+
+**Uni-assist/VPD confirmed directly and officially.** Non-EU applicants must submit a
+preliminary examination documentation (VPD) from uni-assist, covering both Bachelor''s and
+Master''s programmes -- if the VPD determines the qualification is insufficient for direct
+admission, further steps (such as a Studienkolleg assessment test) may be required.
+
+**What was checked and NOT found:** the reported 5% non-EU admission quota, awarded purely on
+grades -- not found on the official page fetched, recorded at `medium` confidence from the
+general search only; application deadline, tuition (standard German public-university semester
+contribution, amount not confirmed here).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('313b02bc-932e-441b-8901-2b28504e5c01', 'international_requirement',
+   'Non-EU applicants must apply via uni-assist, which issues a Vorprüfungsdokumentation (VPD) determining whether the qualification permits direct admission or requires further steps (e.g. a Studienkolleg assessment test); a reported 5% non-EU quota, awarded by grade, was not confirmed on this page',
+   'Non-EU applicants to both Bachelor''s and Master''s programmes must submit a preliminary examination documentation (VPD) from uni-assist. The VPD determines whether the applicant''s school-leaving certificate is sufficient for direct admission, or whether further qualification (such as an assessment test at a Studienkolleg preparatory course) is required first. A general search separately reports a 5% quota of study places reserved for non-EU applicants, awarded purely on grades -- this specific quota mechanism was not found on the official page fetched in this pass.',
+   true, 'medium', 'https://www.uni-hannover.de/en/studium/vor-dem-studium/bewerbung-zulassung/voraussetzungen-zum-studium/voraussetzungen-fuer-internationale-bewerber', now());
+```
+
+---
