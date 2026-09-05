@@ -117,6 +117,38 @@ güncellenmemiş.
 
 ---
 
+## 🔴 GEREKLİLİK MOTORUNUN İKİNCİ AŞAMASI HİÇ ÇALIŞTIRILMADI — 5 Eylül gecesi
+
+**`university_requirements`'ta 1550 satırın 1550'sinde `structured_rule = null`.**
+Tüm katalogda, hiçbir üniversite için, tek bir tane bile yok.
+
+**Motor eksik değil** — `evaluateRequirement()` gerçek, çok dallı, çalışıyor (müfredat,
+ders, not, sınav skoru, dil mantığı hepsi yazılmış). **Admin formu var, AI destekli
+öneri aracı (`suggestRequirementRule`) var, ikisi de çalışıyor.**
+
+**Eksik olan: hiç kimse çalıştırmamış.** Toplu aktarım aracı `structured_rule: null`
+yazıyor — **tasarım gereği**, ikinci aşama insan yapılandırması olarak planlanmış.
+O aşama **bir kez bile işletilmemiş.**
+
+**Sonuç zinciri, ölçüldü:**
+`structured_rule` boş → `evaluateRequirement` **295/295** `needs_manual_review` döner →
+`candidates.ts` yalnızca `not_met`/`unknown`'dan aday üretir → **sıfır gereklilik önerisi** →
+**8 öğrencinin 6'sında "bu hafta 3 iş" bloğu 3'ün altına düşer.**
+
+**Kapsam ölçüldü: 1550 değil 205.** Öğrencilerin **gerçekten hedeflediği** üniversitelerin
+326 gerekliliği var; **205'i makine değerlendirilebilir türde** (dil/sınav/not/müfredat).
+Kalan 121'i **tasarım gereği manuel** (deneme yazısı, mülakat, portfolyo) — o kısım
+**dürüst ve eksiksiz**, düzeltilecek bir şey değil.
+
+**Ekran dürüst davranıyor:** boş tablo değil, *"bu gereklilik için henüz yapılandırılmış
+bir kural kaydedilmedi — kaynak bağlantısını doğrudan kontrol et"* + gerçek link.
+
+**Ve bir uyarı, iş başlamadan:** 205 kural yazılınca hepsi `met` çıkarsa blok **yine**
+boş kalır — ve o zaman sorun veri değil, öğrencinin gerçekten her şeyi karşılıyor
+olmasıdır. **İlk kanıt bunu da göstermeli.**
+
+---
+
 ## 📋 KİMDE NE VAR — 5 Eylül gecesi (CEO tutar, dağıtmadan önce buraya bakar)
 
 **Kurucunun kalıcı talimatı: boşta çalışmayan oturum kalmasın.** Bir şerit raporladığı
