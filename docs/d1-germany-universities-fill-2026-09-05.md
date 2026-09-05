@@ -1153,3 +1153,74 @@ values
 ```
 
 ---
+
+## 30. University of Hohenheim
+
+`id = '4605f354-e608-4cc3-b290-ad2362fe2316'` — QS rank 771-780. **Cycle-dependent policy:
+not established.**
+
+**Source actually used:** `https://dein-studium.uni-hohenheim.de/en/applying-and-enrollment/
+applying/applying-as-a-non-eu-citizen` — official page, directly fetched.
+
+**A precisely-dated policy CHANGE confirmed directly, more useful than a static yes/no:**
+"Since the winter semester 2022/23 no additional application via uni-assist is necessary" --
+Hohenheim used to require uni-assist and stopped, with a specific effective term named. A
+thirteenth data point for CEO''s uni-assist tracking, but a genuinely different shape from
+every other entry: not "does/doesn''t use it" but "used to, stopped in WS2022/23." Applications
+now go entirely through Hohenheim''s own HohCampus portal.
+
+**All Bachelor's programmes at Hohenheim are confirmed German-taught**, matching the pattern
+already seen at RWTH Aachen (#2) and Cologne (#7) -- three of the German universities in this
+batch with zero English-taught bachelor's options at all.
+
+**What was checked and NOT found:** the specific German proficiency level/score (the page
+references "a list of recognized proof of German language skills" without stating the required
+level itself); application deadline; admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('4605f354-e608-4cc3-b290-ad2362fe2316', 'international_requirement',
+   'Uni-assist was required until Winter Semester 2022/23; since then, applications go entirely through Hohenheim''s own HohCampus portal -- a specific, dated policy change, not a static rule',
+   'Hohenheim states directly: "Since the winter semester 2022/23 no additional application via uni-assist is necessary." Applicants now submit and track their application entirely through Hohenheim''s own HohCampus portal. German nationals with foreign qualifications must still have their certificates recognized by the appropriate German regional authority beforehand, a separate step from the (no-longer-required) uni-assist process for other applicants. Every Bachelor''s programme at Hohenheim is conducted in German.',
+   true, 'high', 'https://dein-studium.uni-hohenheim.de/en/applying-and-enrollment/applying/applying-as-a-non-eu-citizen', now()),
+  ('4605f354-e608-4cc3-b290-ad2362fe2316', 'language_proficiency',
+   'German proficiency required for every Bachelor''s programme (all are German-taught); specific level/test not stated on this page, which instead references a separate list of recognized certificates',
+   'Since every Bachelor''s programme at Hohenheim is taught in German, any applicant whose higher education entrance qualification was not obtained at a German-speaking institution must demonstrate sufficient German language skills. The page references a list of "recognized proof of German language skills" for this purpose without stating a specific test/level directly on the page itself; a general search separately names TestDaF, DSH, Deutsches Sprachdiplom, telc Deutsch C1 Hochschule, and Feststellungsprüfungszeugnis as accepted certificates, not independently confirmed here as an exhaustive or minimum-level list.',
+   true, 'medium', 'https://dein-studium.uni-hohenheim.de/en/applying-and-enrollment/applying/applying-as-a-non-eu-citizen', now());
+```
+
+---
+
+## 31. Technische Universität Braunschweig
+
+`id = 'd0f20043-ce4c-4fc4-ad2d-17399a128132'` — QS rank 781-790. **Cycle-dependent policy: not
+established.**
+
+**A direct contradiction between two search summaries, resolved by fetching the official page
+rather than picking either:** one search stated applicants "typically need to apply through
+uni-assist"; a second stated the opposite, that TU Braunschweig "does not use uni-assist" and
+handles assessment internally. The official page itself confirms the second: TU Braunschweig
+charges its own EUR 75 fee to assess foreign qualifications internally, with no mention of
+uni-assist anywhere -- a confirmed non-uni-assist university, and a genuinely confusing detail
+worth flagging on its own: this internal fee happens to be the identical EUR 75 amount
+uni-assist itself typically charges elsewhere in this batch, which could easily read as "this
+IS uni-assist's fee" to an applicant skimming multiple universities'' pages. It is not; it is
+Braunschweig''s own separate charge.
+
+**What was checked and NOT found:** German/English language proficiency specifics; the
+reported 15 October deadline for open-admission Bachelor''s programmes (plausible given the
+semester starts 1 October, but not independently confirmed by direct fetch); admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('d0f20043-ce4c-4fc4-ad2d-17399a128132', 'international_requirement',
+   'TU Braunschweig assesses foreign qualifications internally, NOT via uni-assist; charges its own EUR 75 assessment fee (coincidentally the same figure uni-assist itself typically charges, but a separate, university-specific charge); applications go through the connect.tu-braunschweig.de portal; fee exemptions exist for prior DAAD scholarship holders and existing TU Braunschweig students',
+   'TU Braunschweig''s own page states it "charges a fee of 75 Euro for the assessment of foreign qualifications" -- an internal process, not uni-assist, confirmed directly and resolving a direct contradiction between two general search results (one wrongly implied uni-assist is used). Applications are submitted through TU Braunschweig''s own connect.tu-braunschweig.de portal. Fee exemptions exist for applicants with a prior DAAD scholarship or already enrolled at TU Braunschweig.',
+   true, 'high', 'https://www.tu-braunschweig.de/en/international-students/application', now());
+```
+
+---
