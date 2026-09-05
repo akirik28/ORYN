@@ -141,7 +141,7 @@ export default async function DesignPreviewPage({ searchParams }: { searchParams
         <ApplicationsView
           hasTargets
           tier={tier}
-          availableTargets={[{ id: "t1", name: "Bocconi University" }]}
+          availableTargets={[{ id: "t1", name: "Bocconi University", universityId: "u1", outlook: "competitive" }]}
           applications={[
             {
               id: "a1", universityName: "University of Pennsylvania", applicationType: "early_decision", deadline: "2026-11-01", status: "in_progress", readiness: { kind: "measured", percent: 33 },

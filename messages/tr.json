@@ -1318,6 +1318,9 @@
     },
     "due": "Son tarih",
     "ofChecklist": "kontrol listesi",
+    "targetUniversities": {
+      "title": "Hedef üniversiteler"
+    },
     "gradeNote": {
       "eyebrow": "Son sınıftan önce",
       "whenUsefulLead": "Bu sayfa son sınıfa geldiğinde işine yarayacak —",

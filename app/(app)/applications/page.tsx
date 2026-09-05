@@ -4,12 +4,12 @@ import { requireUser, requireProfile } from "@/lib/security/dal";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { createClient } from "@/lib/supabase/server";
 import { computeReadiness } from "@/lib/applications/readiness";
-import { canonicalUniversityId, loadSupersessionMap } from "@/lib/universities/canonical";
 import { ApplicationsView } from "@/features/applications/applications-view";
 import type { RequirementStatus } from "@/types/database";
 import { buildDigestContent } from "@/lib/digest/build";
 import { assembleScoringFacts } from "@/lib/scoring/assemble-facts";
 import { computeApplicationsPageGuidance, type ApplicationsPageGuidance } from "@/lib/applications/grade-relevance";
+import { getTargetUniversitiesWithDetails } from "@/lib/universities/queries";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("nav");
@@ -21,23 +21,20 @@ export default async function ApplicationsPage() {
   const userId = session.userId!;
   const supabase = await createClient();
 
-  const [applicationsRes, targetsRes] = await Promise.all([
+  // C3's remaining open item (2026-09-05): getTargetUniversitiesWithDetails is the exact same
+  // call the dashboard already makes — its own refreshStaleOutlooks runs here too now, scoped
+  // to however many targets this page actually shows (measured live: 8 real/QA accounts today,
+  // max 4 targets each — nowhere near a cost concern, so no limit is passed here, same as the
+  // Saved page's own unlimited call). Before this, applications.page.tsx re-derived university
+  // names by hand (its own supersession/join logic) instead of reusing this shared function —
+  // that duplicate logic is gone now, not just the outlook gap.
+  const [applicationsRes, targets] = await Promise.all([
     supabase.from("applications").select("*").eq("user_id", userId).order("deadline", { ascending: true, nullsFirst: false }),
-    supabase.from("target_universities").select("id, university_id").eq("user_id", userId),
+    getTargetUniversitiesWithDetails(supabase, userId),
   ]);
 
   const applications = applicationsRes.data ?? [];
-  const targets = targetsRes.data ?? [];
-
-  // Canonicalized so a target referencing a known-duplicate loser row self-heals to the
-  // winner's name at read time. See lib/universities/canonical.ts.
-  const supersessionMap = await loadSupersessionMap(supabase);
-  const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(supersessionMap, t.university_id)))];
-  const { data: universities } = universityIds.length
-    ? await supabase.from("universities").select("id, name").in("id", universityIds)
-    : { data: [] };
-  const universityNameByTargetUniversityId = new Map((universities ?? []).map((u) => [u.id, u.name]));
-  const universityNameByTargetId = new Map(targets.map((t) => [t.id, universityNameByTargetUniversityId.get(canonicalUniversityId(supersessionMap, t.university_id)) ?? "Unknown"]));
+  const universityNameByTargetId = new Map(targets.map((t) => [t.id, t.university?.name ?? "Unknown"]));
 
   const applicationIds = applications.map((a) => a.id);
   const { data: requirements } = applicationIds.length
@@ -52,10 +49,14 @@ export default async function ApplicationsPage() {
     requirementsByApplication.set(req.application_id, [...(requirementsByApplication.get(req.application_id) ?? []), req]);
   }
 
+  // Widened with `outlook` (2026-09-05, C3) for the new Target Universities section below —
+  // same not-yet-applied filter NewApplicationDialog already used; a target already promoted
+  // into an application shows its outlook nowhere else redundant, since the applications list
+  // above it already represents that target via its own row.
   const appliedTargetIds = new Set(applications.map((a) => a.target_university_id));
   const availableTargets = targets
     .filter((t) => !appliedTargetIds.has(t.id))
-    .map((t) => ({ id: t.id, name: universityNameByTargetId.get(t.id) ?? "Unknown" }));
+    .map((t) => ({ id: t.id, name: universityNameByTargetId.get(t.id) ?? "Unknown", universityId: t.university?.id ?? null, outlook: t.outlook }));
 
   const rows = applications.map((application) => ({
     id: application.id,

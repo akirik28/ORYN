@@ -117,3 +117,53 @@ describe("ApplicationsView — pre-senior guidance banner wiring (E1)", () => {
     expect(container.textContent).toContain("GUIDANCE_BANNER_MOCK");
   });
 });
+
+/**
+ * C3 (2026-09-05) — before this, a not-yet-applied target university showed nothing next to
+ * its name: no badge, no "not yet assessed" sentence, nothing. A student reading silence there
+ * has no way to tell "Oryn hasn't looked at this yet" from "there's nothing to say" — the exact
+ * distinction this whole day's work kept coming back to. OutlookBadge itself isn't mocked here
+ * (it's a plain sync component, no server-only imports) — its real "Not yet assessed" string
+ * must appear verbatim, not a stand-in.
+ */
+describe("ApplicationsView — target universities section (C3)", () => {
+  test("no available targets renders no section at all", async () => {
+    const element = await ApplicationsView({ applications: [], hasTargets: false, availableTargets: [] });
+    const { container } = render(element);
+    expect(container.textContent).not.toContain("targetUniversities.title");
+  });
+
+  test("a target with a computed outlook shows its real label, not the null fallback", async () => {
+    const element = await ApplicationsView({
+      applications: [],
+      hasTargets: true,
+      availableTargets: [{ id: "t1", name: "Bocconi University", universityId: "u1", outlook: "competitive" }],
+    });
+    const { container } = render(element);
+    expect(container.textContent).toContain("targetUniversities.title");
+    expect(container.textContent).toContain("Bocconi University");
+    expect(container.textContent).not.toContain("Not yet assessed");
+  });
+
+  test("a target with no outlook computed yet shows the real honest fallback text, not silence", async () => {
+    const element = await ApplicationsView({
+      applications: [],
+      hasTargets: true,
+      availableTargets: [{ id: "t1", name: "LSE", universityId: "u1", outlook: null }],
+    });
+    const { container } = render(element);
+    expect(container.textContent).toContain("LSE");
+    expect(container.textContent).toContain("Not yet assessed");
+  });
+
+  test("a target with no resolvable university row still shows its row, as plain text with no dead link", async () => {
+    const element = await ApplicationsView({
+      applications: [],
+      hasTargets: true,
+      availableTargets: [{ id: "t1", name: "Unknown", universityId: null, outlook: null }],
+    });
+    const { container } = render(element);
+    expect(container.textContent).toContain("Unknown");
+    expect(container.querySelector("a[href='/universities/null']")).toBeNull();
+  });
+});

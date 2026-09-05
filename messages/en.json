@@ -1318,6 +1318,9 @@
     },
     "due": "Due",
     "ofChecklist": "of checklist",
+    "targetUniversities": {
+      "title": "Target universities"
+    },
     "gradeNote": {
       "eyebrow": "Before senior year",
       "whenUsefulLead": "This page becomes useful once you're a senior —",

@@ -8,8 +8,10 @@ import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/proxola/empty-state";
 import { StatusBadge, type StatusTone } from "@/components/proxola/status-badge";
 import { DeadlineBadge } from "@/components/proxola/deadline-badge";
+import { OutlookBadge } from "@/features/universities/outlook-badge";
+import { SectionHeader } from "@/components/proxola/section-header";
 import type { ApplicationReadiness } from "@/lib/applications/readiness";
-import type { ApplicationStatus, ApplicationType, RequirementStatus, PlanTier } from "@/types/database";
+import type { ApplicationStatus, ApplicationType, RequirementStatus, PlanTier, OutlookLabel } from "@/types/database";
 import { heroGradientStyleCompact } from "@/components/proxola/hero-gradient";
 import { PreSeniorGuidanceBanner } from "@/features/applications/pre-senior-guidance-banner";
 import type { ApplicationsPageGuidance } from "@/lib/applications/grade-relevance";
@@ -44,7 +46,13 @@ export async function ApplicationsView({
 }: {
   applications: ApplicationsViewRow[];
   hasTargets: boolean;
-  availableTargets: { id: string; name: string }[];
+  /** `outlook`/`universityId` added 2026-09-05 (C3) for the Target Universities section below
+   * — NewApplicationDialog itself only ever reads `id`/`name`, structurally unaffected by the
+   * wider shape. `universityId` (not the target row's own `id`) is what that section's own
+   * row link needs to point at the university detail page; null only for the same
+   * already-existing "no resolvable university row" case universityNameByTargetId's own
+   * "Unknown" fallback in the page above already handles. */
+  availableTargets: { id: string; name: string; universityId: string | null; outlook: OutlookLabel | null }[];
   /** Optional, defaulting to "standard" — see the same note on DashboardViewProps.tier
    *  (features/dashboard/dashboard-view.tsx) for why the dev-preview harness caller isn't
    *  required to pass it. */
@@ -185,6 +193,34 @@ export async function ApplicationsView({
           />
         )}
       </div>
+
+      {/* C3 (2026-09-05) — a target university listed here previously showed nothing next to
+          its name until the student opened its own detail page; that reads as "no data" when
+          the real fact is "not yet assessed," the exact distinction this app's own OutlookBadge
+          already exists to state honestly (features/universities/outlook-badge.tsx). Reuses it
+          as-is, fed by the SAME getTargetUniversitiesWithDetails call the dashboard's own
+          "University Outlook" card uses (app/(app)/applications/page.tsx) — no new refresh
+          logic, no new "not yet assessed" copy. Skipped entirely when there's nothing to show,
+          same as every other conditional section on this page. */}
+      {availableTargets.length > 0 ? (
+        <section className="mt-10">
+          <SectionHeader title={t("targetUniversities.title")} />
+          <ul className="mt-5">
+            {availableTargets.map((target) => (
+              <li key={target.id} className="flex items-center justify-between gap-3 border-b border-border/60 py-3 last:border-0">
+                {target.universityId ? (
+                  <Link href={`/universities/${target.universityId}`} className="min-w-0 truncate text-sm text-ink-2 hover:text-brand-primary hover:underline">
+                    {target.name}
+                  </Link>
+                ) : (
+                  <span className="min-w-0 truncate text-sm text-ink-2">{target.name}</span>
+                )}
+                <OutlookBadge outlook={target.outlook} locale={locale} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </div>
   );
 }
