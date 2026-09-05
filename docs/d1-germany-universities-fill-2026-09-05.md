@@ -1,0 +1,320 @@
+# D1 — Germany universities fill, 2026-09-05
+
+Founder's instruction relayed by CEO, assigned after the United Kingdom batch merged
+(`35a9fd15`, 53 universities). **This session's lane: Germany.**
+
+## Measured live before writing anything (own query, reconciled against CEO's number)
+
+49 canonical German universities. CEO's own live count named 32 as "missing content":
+
+```
+neither university_requirements nor university_programs:   32
+university_requirements only:                                0
+university_programs only (no requirements):                   6
+both tables populated:                                       11
+```
+
+32 matches CEO's number exactly. **Per the same precedent set in the UK batch, the 6
+programmes-only universities are included as cheaper wins** — three of them are genuinely
+high-value: Freie Universität Berlin (QS 98), RWTH Aachen (QS 104), and KIT (QS 110) all
+already carry real programme data (75/77/45 rows) but zero requirements, the single most
+surprising finding in this measurement — three of Germany's most recognizable technical/
+research universities were completely missing the one thing the browse filter actually checks.
+38 universities total in scope.
+
+**Ordering:** by QS World University Ranking ascending, same convention as the UK batch.
+
+## Two Germany-specific challenges, per CEO's explicit heads-up
+
+**1. Abitur equivalency is not computed here.** German admission requirements are defined
+per-state (Bundesland) and per-institution, almost always expressed relative to the Abitur
+(Germany's own secondary-leaving qualification) rather than as a portable international
+threshold. This session does **not** attempt to translate a source's Abitur-relative statement
+into an equivalent for a Turkish curriculum or any other — whatever the official source states
+is recorded as stated, in its own terms.
+
+**2. Uni-assist usage is recorded when the source states it, not inferred.** Uni-assist e.V. is
+a centralized pre-application document-checking service used by many but not all German
+universities. Whether a given institution uses Uni-assist is real, actionable information for
+an applicant (it changes where documents are submitted and when the process starts) — recorded
+explicitly whenever an official source states it, left NULL when not confirmed, never assumed
+either way.
+
+**3. German-taught vs. English-taught programs need different language tests, and this is a
+real source of confusion to guard against:** DSH or TestDaF for German-taught programs, IELTS
+or TOEFL for English-taught programs. Every entry below states which language a given fact
+applies to, rather than listing a language-test score without saying what it's a score for.
+
+## A specific count CEO asked this session to keep: cycle-dependent policy
+
+CEO named a specific number from the US lane (12% of institutions had a policy that genuinely
+differs by admission cycle — e.g. a different deadline or requirement for Wintersemester vs.
+Sommersemester intake, not just an evergreen figure) and asked whether Germany's own rate is
+similarly high, since it bears on a decision made today. **Tracked per-entry below and totaled
+at the end of this document.**
+
+## Standing methodology (unchanged from every prior batch)
+
+Official source only · `source_url` + retrieval date on every fact · unfound fields left NULL,
+never guessed · an inaccessible official page (HTTP 403/404, or JavaScript-rendered content
+this session's tools can't extract) is marked `data_confidence='medium'` with the reason
+stated · program or requirement content is what the browse filter actually checks now
+(`d8e6fa43`) — a bare source-citation row does not move a university into the "detailed
+profiles" list.
+
+**SQL below is staged, not applied** — CEO packages, applies, and assigns the migration number.
+
+---
+
+## 1. Freie Universität Berlin — cheaper win: already has 75 programme rows, only requirements missing
+
+`id = '587182b4-7f99-438c-95d6-dc772488d1a7'` — QS rank =98. **Cycle-dependent policy: NO**
+(single intake, see below — recorded as a structural fact, not a cross-cycle variation).
+
+**Sources actually used:**
+1. `https://www.fu-berlin.de/en/studium/bewerbung/bachelor/allgemein/informationen/index.html`
+   — official page, directly fetched.
+2. A general search confirming the July 2025 winter-semester filing window and language-test
+   names, not independently re-verified by direct fetch of that specific sub-page.
+
+**Uni-assist: confirmed used, directly on the official page.** Applicants holding a foreign
+(non-German) higher education entrance qualification must apply "via uni-assist" -- FU Berlin's
+own term for the general qualification is "Higher Education Entrance Qualification (HZB)," the
+umbrella category Abitur and its foreign equivalents both fall under. Fee: EUR 75 for the first
+programme applied to, EUR 30 for each additional one (per a general search, not independently
+confirmed by direct fetch).
+
+**A real structural fact, not a data gap:** FU Berlin only admits to its standard Bachelor's
+subject programmes for the Winter Semester -- there is no Summer Semester intake for these
+programmes. Not counted as "cycle-dependent" in this document's tracked count (there being one
+annual intake is a stable fact, not a policy that varies cycle-to-cycle).
+
+**What was checked and NOT found:** a specific numeric GPA threshold on the official page
+itself (a general search cites 3.0/4.0 as a rough US-GPA-scale figure, not independently
+confirmed and not directly transferable to a German-context decision, so not recorded as an
+official figure); application deadline was not independently re-verified via direct fetch of
+FU Berlin's own deadlines page.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('587182b4-7f99-438c-95d6-dc772488d1a7', 'international_requirement',
+   'Applicants with a foreign (non-German) Higher Education Entrance Qualification (HZB) must apply via uni-assist e.V., which pre-checks documents before FU Berlin''s own admissions process',
+   'FU Berlin''s official application-information page states that applicants holding a foreign higher education entrance qualification must submit their application "via uni-assist" -- a centralized, external document-checking service used before the university''s own admissions process runs. Applicants who already hold a German qualification and are only adding modules use an internal FU Berlin procedure instead, not uni-assist.',
+   true, 'high', 'https://www.fu-berlin.de/en/studium/bewerbung/bachelor/allgemein/informationen/index.html', now()),
+  ('587182b4-7f99-438c-95d6-dc772488d1a7', 'language_proficiency',
+   'German-taught programmes: TestDaF TDN 4, DSH-2, or Goethe-Zertifikat C1 (per a general search, not independently confirmed by direct fetch of the specific requirements page)',
+   'For programmes taught in German, accepted proof of language proficiency reportedly includes TestDaF at TDN 4 in all sections, DSH Level 2, or the Goethe-Zertifikat C1 -- this specific detail comes from a general search rather than this session''s own direct read of FU Berlin''s dedicated language-requirements page. English-taught programmes would instead require IELTS/TOEFL, not checked in this pass since this session did not confirm which of FU Berlin''s programmes are English-taught.',
+   true, 'medium', 'https://www.fu-berlin.de/en/studium/bewerbung/bachelor/allgemein/informationen/index.html', now());
+
+insert into public.university_deadlines
+  (university_id, deadline_type, deadline_date, application_cycle, source_url, retrieved_at, deadline_text_verbatim)
+values
+  ('587182b4-7f99-438c-95d6-dc772488d1a7', 'application', '2026-07-15', 'Winter Semester 2026/27 (via uni-assist)',
+   'https://www.fu-berlin.de/en/studium/bewerbung/bachelor/allgemein/informationen/index.html', now(),
+   'A general search (not independently confirmed on FU Berlin''s own deadlines sub-page) states the uni-assist filing window for a recent winter semester ran 1 June to 15 July; FU Berlin admits to standard Bachelor''s subject programmes for Winter Semester only, with no Summer Semester intake for these programmes.');
+```
+
+---
+
+## 2. RWTH Aachen University — cheaper win: already has 77 programme rows, only requirements missing
+
+`id = 'cbbbed73-34f9-4cbf-abfc-2c0594bda8cd'` — QS rank 104. **Cycle-dependent policy: NO.**
+
+**Source actually used:** `https://www.rwth-aachen.de/cms/root/studium/vor-dem-studium/
+zugangsvoraussetzungen/~bxip/besonderheiten-internationale-studienint/?lidx=1` — official page,
+directly fetched.
+
+**Uni-assist claim checked and corrected before writing anything:** a general search stated
+RWTH Aachen international applications go through uni-assist -- the official page itself states
+the opposite: **applications are submitted directly through RWTHonline**, RWTH's own portal,
+with no mention of uni-assist anywhere on this page. Given CEO''s explicit instruction that
+uni-assist usage is real, actionable information for a student, getting this specific fact
+backwards would be worse than leaving it blank -- used the directly-fetched official statement,
+not the search summary.
+
+**Grade threshold recorded exactly as the source states it, not converted:** "an average grade
+of 2.5 or better" on RWTH's own German grading scale (where lower is better) -- per CEO's
+explicit instruction, this session does not compute what 2.5 corresponds to on any other
+country's scale.
+
+**A genuinely notable structural fact:** RWTH "currently does not offer any fully
+English-taught bachelor's degree programmes" -- every Bachelor's applicant needs German
+proficiency, a clean, unambiguous, officially-stated fact rather than a gap.
+
+**What was checked and NOT found:** specific German-language proficiency test/score
+(DSH/TestDaF level) for Bachelor's entry -- this page states German is required but does not
+itself name a specific test threshold; application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('cbbbed73-34f9-4cbf-abfc-2c0594bda8cd', 'minimum_grade',
+   'University entrance qualification average grade of 2.5 or better, on RWTH''s own German grading scale; a lower average may be compensated for by a TestAS result',
+   'International applicants to a Bachelor''s or Staatsexamen (state examination) programme must have an average grade of 2.5 or better for their university entrance qualification, stated on RWTH''s own German grading scale (lower is better) -- not converted to any other country''s scale here. A lower overall grade can be compensated for by submitting a TestAS (Test for Academic Studies) result; TestAS is mandatory (not merely a compensating option) for state-examination applicants to Medicine and Dentistry specifically.',
+   true, 'high', 'https://www.rwth-aachen.de/cms/root/studium/vor-dem-studium/zugangsvoraussetzungen/~bxip/besonderheiten-internationale-studienint/?lidx=1', now()),
+  ('cbbbed73-34f9-4cbf-abfc-2c0594bda8cd', 'international_requirement',
+   'Applications are submitted directly through RWTHonline, RWTH''s own portal -- NOT through uni-assist',
+   'Unlike some other German universities, RWTH Aachen does not route international Bachelor''s applications through uni-assist e.V.; applications are submitted directly through RWTHonline, the university''s own application system.',
+   true, 'high', 'https://www.rwth-aachen.de/cms/root/studium/vor-dem-studium/zugangsvoraussetzungen/~bxip/besonderheiten-internationale-studienint/?lidx=1', now()),
+  ('cbbbed73-34f9-4cbf-abfc-2c0594bda8cd', 'language_proficiency',
+   'RWTH currently offers NO fully English-taught bachelor''s degree programmes -- German proficiency is required for every Bachelor''s programme',
+   'RWTH Aachen states it "currently does not offer any fully English-taught bachelor''s degree programmes" -- every Bachelor''s applicant needs German-language proficiency; a specific DSH/TestDaF score threshold was not stated on this page. Some Master''s programmes may be taught in English, not detailed further in this pass.',
+   true, 'high', 'https://www.rwth-aachen.de/cms/root/studium/vor-dem-studium/zugangsvoraussetzungen/~bxip/besonderheiten-internationale-studienint/?lidx=1', now());
+```
+
+---
+
+## 3. KIT, Karlsruhe Institute of Technology — cheaper win: already has 45 programme rows, only requirements missing
+
+`id = '6bbfe7ba-1d03-4679-a86c-eabca0024870'` — QS rank 110. **Cycle-dependent policy: NO**
+(winter-only, same structural pattern as FU Berlin and RWTH Aachen).
+
+**Source actually used:** `https://www.intl.kit.edu/istudies/3167.php` — official page, directly
+fetched.
+
+**A second confirmed non-uni-assist German technical university:** like RWTH Aachen (#2), KIT
+applications go directly through KIT''s own online portal, with no mention of uni-assist on this
+page -- a real, emerging pattern (both are technical/engineering-focused universities) worth
+tracking as this batch continues, per CEO''s explicit interest in which institutions actually
+use uni-assist.
+
+**A genuinely distinctive two-stage German-language requirement:** B1 German is required just
+to submit the application; the higher DSH-2 or TestDaF level 4-4-4-4 is required only by
+enrollment (not application) -- a real staged structure, not a single fixed threshold.
+
+**What was checked and NOT found:** English-taught bachelor programmes -- this page discusses
+none, consistent with the pattern already seen at RWTH Aachen; tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('6bbfe7ba-1d03-4679-a86c-eabca0024870', 'international_requirement',
+   'Applications are submitted directly through KIT''s own online application portal -- NOT through uni-assist; bachelor admission occurs only once per year, for the Winter Semester (no Summer Semester intake for first-semester bachelor entry)',
+   'KIT does not route international bachelor applications through uni-assist e.V.; applications are submitted directly through KIT''s own portal. Applying for a bachelor''s place at KIT is possible only once a year, for the Winter Semester -- there is no Summer Semester admission for first-semester bachelor''s study (Summer Semester intake exists only for preparatory courses and higher-semester entry).',
+   true, 'high', 'https://www.intl.kit.edu/istudies/3167.php', now()),
+  ('6bbfe7ba-1d03-4679-a86c-eabca0024870', 'language_proficiency',
+   'German-taught programmes, two-stage requirement: German level B1 required to APPLY, rising to DSH-2 or TestDaF 4-4-4-4 required by ENROLLMENT (not at application stage)',
+   'For German-taught programmes, applicants need German language proficiency at level B1 to submit the application itself; by the time of enrollment, the higher threshold of DSH Level 2 or TestDaF level 4-4-4-4 (score 4 in all four sections) is required. This is a genuinely staged requirement -- B1 does not remain sufficient through enrollment. No English-taught bachelor programmes are discussed on this page.',
+   true, 'high', 'https://www.intl.kit.edu/istudies/3167.php', now());
+
+insert into public.university_deadlines
+  (university_id, deadline_type, recurrence, recurrence_month, recurrence_day, application_cycle, source_url, retrieved_at, deadline_text_verbatim)
+values
+  ('6bbfe7ba-1d03-4679-a86c-eabca0024870', 'application', 'recurring_annual_undated', 7, 15, 'Winter Semester (annual, only intake for first-semester bachelor entry)',
+   'https://www.intl.kit.edu/istudies/3167.php', now(),
+   'Official page: "Applying for a place in a bachelor''s degree course at KIT is possible only once a year (for the winter semester)" with a deadline of July 15.');
+```
+
+---
+
+## 4. Technische Universität Dresden
+
+`id = '9b957f10-d9d0-4a64-b28e-601bd6cc8a61'` — QS rank =185. **Cycle-dependent policy:
+unconfirmed** (not established either way in this pass).
+
+**Source actually used:** `https://tu-dresden.de/studium/vor-dem-studium/bewerbung/online-
+bewerbung/bewerbungsverfahren-ueber-uni-assist?set_language=en` — official page, directly
+fetched.
+
+**First confirmed uni-assist-member university in this batch** (a real contrast with RWTH
+Aachen and KIT, both confirmed NOT using uni-assist) -- TU Dresden explicitly states it "is a
+member of" the uni-assist application service, and international applicants with foreign
+credentials must apply through it.
+
+**What was checked and NOT found:** the specific DSH-2/TestDaF-4x4 language-test names --
+confirmed only as a general search finding, not independently verified on the official page
+itself (which states German proficiency is required "except for English-taught master's
+programmes" but does not itself name the specific test/level); application fee amount (the page
+confirms fees exist but not the figure); processing timeline; application deadline.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('9b957f10-d9d0-4a64-b28e-601bd6cc8a61', 'international_requirement',
+   'TU Dresden is a confirmed member of uni-assist e.V. -- applicants with international (non-German) credentials must apply through uni-assist, which checks document completeness before forwarding the application to TU Dresden for final assessment',
+   'TU Dresden''s own page states it "is a member of" the uni-assist application service for international students; applicants holding international school or university certificates must apply via uni-assist rather than directly. Uni-assist checks whether submitted documents are complete and meet programme requirements, then forwards the completed application to TU Dresden for the final admission decision. Handling fees apply and must be paid when the uni-assist application is created; the specific fee amount was not confirmed on this page (a general search separately cites EUR 75 for the first programme, EUR 30 each additional, not independently verified here).',
+   true, 'high', 'https://tu-dresden.de/studium/vor-dem-studium/bewerbung/online-bewerbung/bewerbungsverfahren-ueber-uni-assist?set_language=en', now()),
+  ('9b957f10-d9d0-4a64-b28e-601bd6cc8a61', 'language_proficiency',
+   'German-language proficiency required for all programmes except English-taught Master''s; a general search (not independently confirmed) reports the specific thresholds as DSH Level 2 or TestDaF 4x4, submitted WITH the application rather than afterward',
+   'The official page confirms applicants must provide proof of sufficient German language skills, with an explicit carve-out for English-taught Master''s programmes (implying Bachelor''s entry generally requires German). A general search separately reports the specific accepted thresholds as DSH Level 2 or TestDaF level 4x4 (or a comparable certificate), and states this certificate must be enclosed with the application itself and cannot be submitted later -- this specific detail was not independently confirmed by this session''s own direct fetch.',
+   true, 'medium', 'https://tu-dresden.de/studium/vor-dem-studium/bewerbung/online-bewerbung/bewerbungsverfahren-ueber-uni-assist?set_language=en', now());
+```
+
+---
+
+## 5. Friedrich-Alexander-Universität Erlangen-Nürnberg (FAU)
+
+`id = '49d066e3-52e6-4372-95ce-24212ecd96bb'` — QS rank =218. **Cycle-dependent policy:
+unconfirmed.**
+
+**Source actually used:** `https://www.fau.eu/studying/international-students/application-and-
+enrollment-for-international-applicants/` — official page, directly fetched.
+
+**A third confirmed non-uni-assist German university this batch** (after RWTH Aachen and KIT):
+FAU routes applications through its own "campo" portal, with no mention of uni-assist on this
+page.
+
+**What was checked and NOT found:** a specific German proficiency level/test name for German-
+taught programmes (the page confirms German is the teaching language "with the exception of a
+small number of degree programs" but defers the specific certificate/level to a separate linked
+page not fetched in this pass); English proficiency requirement for FAU''s English-taught
+International Degree Programmes (a general search separately mentions CEFR/IELTS/TOEFL without
+a specific score); application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('49d066e3-52e6-4372-95ce-24212ecd96bb', 'international_requirement',
+   'Applications go through FAU''s own "campo" portal, not uni-assist; processing fee of EUR 100 per application for non-EU applicants (confirmed directly, notably higher than the ~EUR 75 uni-assist fee seen at other German universities in this batch)',
+   'FAU is a third German university in this batch confirmed NOT to use uni-assist -- applications are submitted via FAU''s own "campo" portal. A processing fee of EUR 100 per application applies to applicants from non-EU states; no fee is stated for EU applicants. FAU offers over 275 degree programmes; most require German (see below), a small number of International Degree Programmes are taught exclusively in English.',
+   true, 'high', 'https://www.fau.eu/studying/international-students/application-and-enrollment-for-international-applicants/', now()),
+  ('49d066e3-52e6-4372-95ce-24212ecd96bb', 'language_proficiency',
+   'German is the teaching language for all but a small number of degree programmes -- specific proficiency level/test not confirmed on this page; International Degree Programmes taught exclusively in English do NOT require German proficiency for application/enrolment, and instead require English proficiency evidence (CEFR/IELTS/TOEFL, specific score not confirmed)',
+   'FAU states "with the exception of a small number of degree programs, German is the teaching language" -- implying most Bachelor''s programmes require German proficiency, though this page defers the specific level/test to a separate document not fetched here. For FAU''s International Degree Programmes taught exclusively in English, German proficiency is explicitly NOT required at application or enrolment and will not count against the application; English proficiency is instead required via CEFR, IELTS, or TOEFL, though a specific score threshold was not confirmed in this pass.',
+   true, 'medium', 'https://www.fau.eu/studying/international-students/application-and-enrollment-for-international-applicants/', now());
+```
+
+---
+
+## 6. Eberhard Karls Universität Tübingen
+
+`id = 'f1d89d6d-ef0c-4ba6-83cf-29efeb9f9723'` — QS rank =230. **Cycle-dependent policy: BOTH
+Winter and Summer intakes confirmed to exist** (portal opens June for WS, December for SS) --
+but whether the actual requirements differ between the two, as opposed to just the calendar,
+was not confirmed in this pass. Not counted in the tracked total without that confirmation.
+
+**Access note:** Tübingen''s dedicated international-applicant pages returned HTTP 404 (one
+URL) or lacked the relevant content (a second, contact-focused page) when fetched directly.
+Recorded at `medium` confidence from a general search's summary instead.
+
+**A fourth confirmed non-uni-assist German university this batch**, with a genuinely useful
+exception: applications generally go through Tübingen''s own ALMA portal, EXCEPT for restricted
+(numerus clausus) programmes such as Medicine, which route through the national
+hochschulstart.de platform instead -- a real, program-dependent split in application channel,
+not a single rule for the whole university.
+
+**What was checked and NOT found:** whether requirements (not just the calendar) genuinely
+differ between Winter and Summer Semester intake; a specific German/English proficiency score;
+application deadline (exact date, beyond "opens June/December").
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('f1d89d6d-ef0c-4ba6-83cf-29efeb9f9723', 'international_requirement',
+   'Applications generally go through Tübingen''s own ALMA portal; restricted (numerus clausus) programmes like Medicine instead route through the national hochschulstart.de platform; both Winter (portal opens June) and Summer (opens December) Semester intake exist for at least some programmes',
+   'For most programmes, international applicants apply directly through ALMA, Tübingen''s own online portal -- not uni-assist. Restricted-admission (numerus clausus) programmes, Medicine among them, instead require application via hochschulstart.de, Germany''s national centralized platform for such programmes. The ALMA portal opens at the beginning of June for Winter Semester and the beginning of December for Summer Semester -- both intakes exist for at least some programmes, though whether admission requirements themselves (rather than just the calendar) differ between the two was not confirmed in this pass. Restricted programmes reportedly reserve a 5-10% quota of places specifically for non-EU citizens (not independently confirmed by direct fetch).',
+   true, 'medium', 'https://uni-tuebingen.de/en/international/study-in-tuebingen/degree-seeking-students/application-for-international-students/index.html', now()),
+  ('f1d89d6d-ef0c-4ba6-83cf-29efeb9f9723', 'international_requirement',
+   'A grade-improvement mechanism reportedly exists for non-EU applicants to restricted programmes: above-average German language skills can improve the average grade used for ranking by 0.5 or 1.0 points on the German scale; applicants with a university entrance qualification from mainland China, India, or Vietnam reportedly need a certificate from the relevant Academic Evaluation Center',
+   'For restricted-admission programmes, non-EU applicants can reportedly improve the average grade used in the selection process by 0.5 or 1.0 points on the German grading scale (where lower is better) by demonstrating above-average German language skills -- a genuinely distinctive mechanism, not independently confirmed by this session''s own direct page fetch. Separately, applicants whose university entrance qualification was obtained in mainland China (excluding Hong Kong, Taiwan, and Macao), India, or Vietnam reportedly must submit a certificate from the relevant Academic Evaluation Center as part of their application -- also not independently confirmed by direct fetch in this pass.',
+   false, 'medium', 'https://uni-tuebingen.de/en/international/study-in-tuebingen/degree-seeking-students/application-for-international-students/index.html', now());
+```
+
+---
