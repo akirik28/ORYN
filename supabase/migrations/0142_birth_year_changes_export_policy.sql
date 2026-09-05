@@ -22,5 +22,13 @@
 -- an empty-today table still carries this right, and why closing this while the product
 -- has no real users is cheaper than closing it once birth-year edits are actually
 -- happening and a silently-incomplete export would go unnoticed.
+-- Re-runnable: the 0135-0142 sequence test (docs/migration-sequence-135-142-2026-09-05.md)
+-- ran the whole chain twice and found this was the one statement that failed on the second
+-- pass -- "policy already exists". Noisy, not silent, and it left the policy count at 1 rather
+-- than duplicating anything, so nothing was corrupted; but a re-run of the range would stop
+-- here. Distinct from the 0104 class (ADD COLUMN without IF NOT EXISTS, already applied, which
+-- would silently create a second dead column).
+drop policy if exists "select own birth year changes" on public.birth_year_changes;
+
 create policy "select own birth year changes" on public.birth_year_changes
   for select using (user_id = auth.uid());
