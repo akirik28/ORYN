@@ -1,10 +1,14 @@
 # 96 partial-eligibility opportunities: research complete, fill package staged
 
 Follows `docs/opportunity-96-partial-eligibility-2026-09-05.md` (the measurement + id list, CEO
-overlap-confirmed, merged `b7b9b0f1`). SQL package:
-`data/opportunity-96-partial-eligibility-fill-2026-09-05.sql`. **Not applied — written for
-CEO/founder to package alongside migrations 0126/0129/0133, same two-step pattern as Packages
-14/15/16.**
+overlap-confirmed, merged `b7b9b0f1`). Two SQL files, neither applied:
+
+- **`data/opportunity-96-today-writable-2026-09-05.sql`** — 8 rows, a specific age/grade value,
+  live-writable right now, no migration needed. Split out on CEO's own follow-up request so the
+  founder can run this before, or independently of, packaging 0126/0129/0133.
+- **`data/opportunity-96-partial-eligibility-fill-2026-09-05.sql`** — everything else: staged
+  `confirmed_open`/`basis` writes for 0126/0129/0133, the 4 free-text writes (below), and the
+  4 still-flagged items.
 
 ## Method
 
@@ -37,40 +41,62 @@ already verified against live row counts in the measurement pass.)
 | FOUND | 22 | page states a specific value |
 | COULD_NOT_ACCESS | 12 | source blocked/unreachable (6 opportunities × 2 dimensions each) |
 
+## CEO's rule, applied after the first pass
+
+> "If the schema can't express a restriction, don't write a guessed encoding — write the truth
+> to free text."
+
+Confirmed independently 3 other times today (Massachusetts residency, Vanderbilt's cycle-
+dependent test policy, Harvard CURE) before this made it 4 — now the standing rule. Reworked the
+package against it: **checked whether a free-text fallback already exists** before deciding
+whether a finding is "flagged, no SQL" or "written to text." It does for country/citizenship
+(`citizenship_restrictions`/`residency_restrictions`, migration 0008/0047 — already read by
+`lib/counselor/eligibility.ts` and already surfaced to the student as an advisory note). It does
+**not** for age or grade — no equivalent column exists at all. Reusing `description` as an
+improvised substitute would just move the "guessed encoding" problem from the value to the
+schema, so that wasn't done either — those 4 stay flagged, now with that specific question for
+CEO instead of a vaguer "needs a decision."
+
 ## SQL package structure
 
-- **Section 1** (5 rows) — specific ages, live-writable today: `minimum_age`/`maximum_age` exist.
-- **Section 2** (3 rows) — specific grades, live-writable today: `eligible_grades` exists.
-- **Section 3a** — empty; no country finding this pass reduced to a clean specific list (the two
-  candidates that might have — Breakthrough, Erasmus+ — are flagged instead, see below).
-- **Section 3b** (23 rows) — `country_eligibility_confirmed_open`. This column is already live
-  (migration 0060), but staged like everything else per instruction.
+**`opportunity-96-today-writable-2026-09-05.sql`** (8 rows, live-writable now, no migration):
+- 5 specific ages (`minimum_age`/`maximum_age`).
+- 3 specific grades (`eligible_grades`).
+
+**`opportunity-96-partial-eligibility-fill-2026-09-05.sql`**:
+- **Section 3a** — empty; no country finding reduced to a clean specific list.
+- **Section 3b** (23 rows) — `country_eligibility_confirmed_open`. Already live (migration 0060)
+  like the today-writable file's 8 — stayed in this file only because CEO's request named "the 8
+  rows" specifically; flagged back in case that scope should widen to include these too.
 - **Section 3c** (5 rows) — `age_eligibility_confirmed_open` / `grade_eligibility_confirmed_open`
-  (0126). These were reclassified DOWN from a would-be "FOUND specific value": the source text
-  (e.g. IPhO's "students of general or technical secondary schools... or graduated the same
-  year... not yet started university") confirms no restriction across the whole population it
-  describes but never names a specific grade number — writing a specific `eligible_grades` value
-  the source never stated would be less honest than the correct "confirmed no restriction" shape.
-- **Section 4** (103 rows) — `age_eligibility_basis` / `grade_eligibility_basis` /
-  `country_eligibility_basis` = `'checked_not_stated'`, staged for 0129/0133. This is most of the
-  package by volume, and it's real value: it converts "nobody has looked" into "looked, genuinely
-  silent" for the majority of these 96 rows, which is exactly the state the "partially checked"
-  badge exists to represent.
-- **Section 5** (9 items) — flagged, **no SQL written**, needs a decision first:
+  (0126). Reclassified DOWN from a would-be "FOUND specific value": the source text (e.g. IPhO's
+  "students of general or technical secondary schools... or graduated the same year... not yet
+  started university") confirms no restriction across the whole population it describes but
+  never names a specific grade number.
+- **Section 4** (104 rows, +1 after reclassifying Stockholm's grade down from FOUND — see below)
+  — `*_eligibility_basis = 'checked_not_stated'`, staged for 0129/0133. Most of the package by
+  volume: converts "nobody has looked" into "looked, genuinely silent" for most of these 96 rows.
+- **Section 6** (4 rows, NEW) — the rule above, applied where a free-text home exists:
 
-| # | row / dimension | why it doesn't fit a mechanical write |
+| row | written to | why |
 |---|---|---|
-| 1 | Wharton Investment Competition, age | "16+" applies to the team **leader** role only, not every applicant |
-| 2 | Millfield Sixth Form Scholarships, grade | source names "Year 9 or the Lower Sixth" together; this opportunity is the Sixth Form one specifically |
-| 3 | Breakthrough Junior Challenge, country | eligibility is "not under comprehensive US sanctions" — an exclusion keyed to a changing OFAC list, not a stable allow-list or a clean "no restriction" |
-| 4 | İstanbul Kent Konseyi Gençlik Meclisi, country | real requirement is **city** residency (Istanbul), narrower than any country value can represent honestly |
-| 5 | Erasmus+ Youth Exchanges, country | a tiered EU-member/associated-country/neighboring-region rule, not a flat list — needs real geographic research to enumerate, not a mechanical read |
-| 6 | UK/non-US grade-system conversion (Millfield above, Nuffield's "Year 12", Blackstone's "Year 12–13 UK") | confirmed the live `eligible_grades` convention is plain US-style numeric strings ("9".."12") from existing rows, but found no prior art for how a UK Year maps onto that scale — flagging the convention question once rather than guessing per-row |
-| 7 | IPhO, country | the actual rule governs which countries the **organizing committee** may invite, not a per-student allow-list — real eligibility depends on whether a student's country fields a delegation, which this text doesn't resolve |
-| 8 | Stockholm Junior Water Prize, grade | Turkish source repeats the already-known age range and says "lise öğrencileri" (high school students) but names no specific grade — too vague to write |
+| Breakthrough Junior Challenge | `residency_restrictions` | sanctions-list-based, not a stable country name — would go stale the day OFAC's list changes |
+| İstanbul Kent Konseyi Gençlik Meclisi | `residency_restrictions` | real requirement is **city** residency (Istanbul); "Turkey" reads true but wrongly admits an Ankara student — a wrong value is worse than an empty one |
+| Erasmus+ Youth Exchanges | `residency_restrictions` | tiered EU-member/associated-country/neighboring-region rule, not a flat list |
+| International Physics Olympiad (IPhO) | `residency_restrictions` | the real gate is whether a student's country fields a national team (an organizing-committee decision), not a per-student allow-list |
 
-(Nuffield's **age** and Blackstone's **country** halves were clean and ARE written — only their
-grade halves hit the UK-Year question above.)
+- **Section 7** (4 items) — still flagged, **no SQL written**, real schema question for CEO:
+
+| row / dimension | why |
+|---|---|
+| Wharton Investment Competition, age | "16+" applies to the team **leader** role only, not every applicant — no `age_restrictions` field exists to carry that nuance |
+| Millfield Sixth Form Scholarships, grade | "Year 9 or the Lower Sixth" named together, and a UK Year value either way |
+| Nuffield Research Placements, grade | "Year 12 (or equivalent)" — its **age** half (over 16) IS written in the today-writable file |
+| Blackstone Law Review, Junior Division, grade | "Year 12–13 UK, or high school juniors/seniors internationally" — two systems, neither convertible without inventing an equivalence the source never states |
+
+Stockholm Junior Water Prize's grade (originally FOUND, a Turkish source repeating the known
+age range and saying only "lise öğrencileri"/high school students) moved from flagged into
+Section 4 as `checked_not_stated` instead — genuinely uninformative, not a schema-gap case.
 
 ## New blocked domains found this pass
 
@@ -95,9 +121,12 @@ reconcile (possibly two different program tiers on one page, not confirmed eithe
 
 ## Status
 
-No new migration number requested or needed — every write in this package targets a column
-either already live (0060) or already defined in a migration written earlier today (0126/0129/
-0133), just not yet applied. Nothing here touches production.
+No new migration number requested or needed for anything actually written — every write in this
+package targets a column either already live (0060, `citizenship_restrictions`/
+`residency_restrictions`) or already defined in a migration written earlier today (0126/0129/
+0133), just not yet applied. The one open question (Section 7 above: `age_restrictions`/
+`grade_restrictions` text columns, or leave those 4 flagged) would need a number if CEO wants it
+— not requested yet, waiting on that answer first. Nothing here touches production.
 
 ---
 
