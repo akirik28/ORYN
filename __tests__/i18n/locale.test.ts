@@ -280,6 +280,18 @@ describe("ICU plural counts that bypass formatNumber are deliberate", () => {
     // 1-3. Tighter than every other entry in this list, nowhere near needing a thousands
     // separator. Added 2026-09-05.
     "applications.gradeNote.yearsUntilSenior",
+    // The counselor's "do" slot count when it falls short of RANKING_THRESHOLDS.doSlots
+    // (lib/counselor/config.ts, 3) — dashboard-view.tsx's own fewerThanThreeNotice only ever
+    // computes this string when counselorThisWeek.length is strictly less than 3 and
+    // strictly greater than 0 (the ternary's own guard), so the interpolated count is always
+    // exactly 1 or 2. Added 2026-09-05, the dashboard silent-shortfall fix.
+    "dashboard.counselorFallbackFewerThanThree",
+    // The AI weekly-plan's own active (not carried-forward) action count when it falls
+    // short of three — weekly-focus.tsx's own fewerThanThreeNotice only computes this for
+    // active.length in {1, 2}, since active.length is bounded to [0,3] by
+    // WeeklyPlanSchema's actions.max(3) (lib/ai/weekly-plan.ts). Added 2026-09-05, same fix
+    // as the entry above, for the AI-generated plan's own equivalent surface.
+    "dashboard.weeklyFocus.fewerThanThree",
   ];
 
   test("no un-reviewed `#` inside a plural block", () => {

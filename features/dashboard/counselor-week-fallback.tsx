@@ -17,11 +17,27 @@ import type { CounselorRecommendation } from "@/lib/counselor";
  * CounselorPriorities already offers on the Advisor page (same visual language, no new
  * component pattern introduced).
  */
-export function CounselorWeekFallback({ actions, locale = DEFAULT_LOCALE }: { actions: CounselorRecommendation[]; locale?: Locale }) {
+export function CounselorWeekFallback({
+  actions,
+  locale = DEFAULT_LOCALE,
+  fewerThanThreeNotice = null,
+}: {
+  actions: CounselorRecommendation[];
+  locale?: Locale;
+  /** dashboard-view.tsx's own pre-resolved string (RANKING_THRESHOLDS.doSlots-aware, see
+   * that file's comment) when `actions.length` is a genuine shortfall, not the full three —
+   * CEO's own 2026-09-05 finding: this component used to render however many cards it got
+   * with nothing acknowledging the gap, the exact "silently shows fewer" failure this session
+   * spent the day fixing everywhere else. `null` (the default) renders nothing extra, same as
+   * before this fix, for the normal three-card case and for every dev-preview/test caller
+   * that doesn't pass it. */
+  fewerThanThreeNotice?: string | null;
+}) {
   if (actions.length === 0) return null;
 
   return (
     <div className="space-y-3">
+      {fewerThanThreeNotice ? <p className="text-sm text-ink-3">{fewerThanThreeNotice}</p> : null}
       {actions.map((action, index) => (
         <ActionCard
           key={action.id}
