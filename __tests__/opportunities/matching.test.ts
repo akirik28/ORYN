@@ -438,6 +438,34 @@ describe("computeOpportunityMatch", () => {
     expect(match.matchScore).toBe(35);
   });
 
+  // CEO, 2026-09-05, the second half of the same finding: hasAnyEligibilityDataAtAll only ever
+  // looked at the OPPORTUNITY, never the student -- so a student who hasn't recorded their own
+  // age/country/grade could score a real, age-restricted opportunity as "Exceptional" even
+  // though Proxola never actually checked them against it. Measured live: the counselor's own
+  // evaluateCandidateEligibility already caught exactly this case (student-side unknown ->
+  // verdict "unknown" -> capped ranking) while the card's own score did not -- the same
+  // student+opportunity pair could read "Exceptional" on the Opportunities page while the
+  // Advisor deprioritized it, for the identical reason. See
+  // docs/eligibility-confidence-consistency-audit-2026-09-05.md.
+  test("RED->GREEN: caps the score when the OPPORTUNITY has real data but the STUDENT's own matching field is unknown", () => {
+    const match = computeOpportunityMatch(
+      student({ age: null, interests: ["Economics"], weakestDimensions: ["research"] }),
+      opportunity({ category: "research", fields: ["Economics"], minimumAge: 16 })
+    );
+    expect(match.eligible).toBe(true); // unknown, never a confirmed exclusion
+    expect(match.eligibilityNotes.map((n) => n.code)).toContain("age_unknown");
+    // Would have been 91, uncapped, before this fix -- the opportunity itself has real age
+    // data (hasAnyEligibilityDataAtAll alone would say true), but nobody ever checked THIS
+    // student against it. Same cap as the fully-data-blank case, and for the same reason:
+    // no confident signal this specific opportunity fits this specific student.
+    expect(match.matchScore).toBe(35);
+    // The card's own profile_incomplete link (opportunity-card.tsx) is driven by
+    // classifyEligibilityGap on this exact same notes array read back from eligibility_notes
+    // -- capped score and "add your birth year" link can never appear one without the other,
+    // by construction, not by separate wiring.
+    expect(classifyEligibilityGap(match.eligibilityNotes)).toBe("profile_incomplete");
+  });
+
   test("does not cap when at least one axis has real data (confirmed_open counts, not just a real bound)", () => {
     const match = computeOpportunityMatch(
       student({ interests: ["Economics"], weakestDimensions: ["research"] }),
