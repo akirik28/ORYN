@@ -384,3 +384,273 @@ values
 ```
 
 ---
+
+## 11. University of Leicester — cheaper win: already has 98 programme rows, only requirements missing
+
+`id = '65a15e7d-1cfd-4108-91b0-130aa738b84c'` — QS rank 314.
+
+**Access note:** the main English-requirements page returned HTTP 403 to a direct fetch. The
+facts below come from Leicester's own page titles surfaced by search (literal official text,
+not a third-party synthesis) rather than a page body this session read directly -- recorded at
+`medium` confidence for that reason.
+
+**A genuinely useful structural fact confirmed via the pre-sessional course ladder itself:**
+Leicester's own course-title naming makes the IELTS-to-weeks-of-preparation relationship
+concrete: 40 weeks needs a starting IELTS of just 4.0, 30 weeks needs 4.5, 20 weeks needs 5.0,
+10 weeks needs 5.5, and 6 weeks needs 6.0 -- i.e. 6.0 reads as Leicester's de facto entry
+target, consistent with every UK university in this batch clustering around 6.0-6.5.
+
+**What was checked and NOT found:** a single confirmed IELTS overall figure for direct
+undergraduate entry -- Leicester states every course page sets its own minimum, and no
+university-wide number was found; TOEFL iBT equivalents, application deadline, tuition,
+admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('65a15e7d-1cfd-4108-91b0-130aa738b84c', 'english_proficiency',
+   'Every course page sets its own minimum IELTS score rather than one university-wide figure; the pre-sessional course ladder (6 weeks needs 6.0 to enter) implies 6.0 as the de facto standard entry target; test must be within the past 2 years; English-medium secondary/university education in an approved country is an alternative route',
+   'Leicester states every degree course page specifies its own minimum IELTS score rather than publishing one university-wide figure. English-medium secondary school or university education in a country the University approves as English-medium is an alternative way to demonstrate proficiency. IELTS results must be within the past two years. Leicester''s own pre-sessional course ladder (English Language Teaching Unit) implies the practical entry target: 40-week course requires a starting IELTS of 4.0, 30-week requires 4.5, 20-week requires 5.0, 10-week requires 5.5, and 6-week requires 6.0 -- i.e. IELTS 6.0 is the point at which no further pre-sessional study is needed, functioning as the de facto standard even though no single official figure was located directly.',
+   true, 'medium', 'https://le.ac.uk/study/international-students/english-language-requirements', now());
+```
+
+---
+
+## 12. Swansea University
+
+`id = 'c5386c21-9657-4ba9-9ce4-737de65bb045'` — QS rank 322.
+
+**Source actually used:** `https://www.swansea.ac.uk/admissions/english-language-requirements/`
+— official page, directly fetched, confirming the 6.0 headline figure; per-component minimums
+and TOEFL numbers were not present on this page and were not located elsewhere in this pass.
+
+**What was checked and NOT found:** IELTS per-component minimum, TOEFL iBT equivalents,
+application deadline, tuition, admission rate. A search summary separately reported that
+Swansea accepts IELTS (Academic) from any test centre for degree-level programmes (not
+restricted to UKVI-approved centres, unlike sub-degree pathway programmes) -- recorded at
+`medium` confidence since this specific nuance was not itself confirmed by this session's own
+page fetch.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('c5386c21-9657-4ba9-9ce4-737de65bb045', 'english_proficiency',
+   'Most academic departments require IELTS 6.0 (or equivalent) for undergraduate degrees; some courses set exceptions, checked per course page; reportedly IELTS from any test centre is accepted for degree-level study (not confirmed independently)',
+   'Swansea''s official page states: "Most academic departments will ask for an IELTS score of 6.0 (or equivalent) for undergraduate degrees," with exceptions on specific course pages. Per-component minimums and TOEFL iBT-equivalent scores were not stated on the page reached in this pass. Applicants below IELTS 6.0 are directed to Swansea''s own English Language Training Services (ELTS) pre-sessional courses. A separate, unconfirmed report states Swansea accepts IELTS (Academic) from any test centre (not limited to UKVI-approved ones) for degree-level programmes specifically, unlike its below-degree-level pathway programmes.',
+   true, 'medium', 'https://www.swansea.ac.uk/admissions/english-language-requirements/', now());
+```
+
+---
+
+## 13. Heriot-Watt University
+
+`id = 'fd61318c-882e-4d5d-a431-1ae057d88b29'` — QS rank 325.
+
+**Source actually used:** `https://www.hw.ac.uk/study/how-to-apply/entry-requirements/english-
+language-requirements` — official page, directly fetched. Heriot-Watt also operates Dubai and
+Malaysia campuses (surfaced by search); the page itself does not separate requirements by
+campus, so recorded as applying university-wide rather than assumed Edinburgh-specific.
+
+**Fourteenth independent corroboration of the TOEFL iBT rescale today.**
+
+**What was checked and NOT found:** application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('fd61318c-882e-4d5d-a431-1ae057d88b29', 'english_proficiency',
+   'IELTS Academic 6.0 overall (5.5+ per component), TOEFL iBT 79 legacy / 4 new scale (4.5 for Writing) from 21 Jan 2026; IELTS Indicator and General Training NOT accepted; PTE Academic and LanguageCert (UKVI versions) also accepted',
+   'Standard undergraduate entry (stated as applying across Heriot-Watt''s campuses, not Edinburgh-specific): IELTS Academic 6.0 overall, no component below 5.5 -- IELTS Academic Online and One Skill Retake accepted, but IELTS Indicator and IELTS General Training are explicitly NOT accepted. TOEFL iBT before 21 January 2026: 79 overall (Reading 18, Listening 17, Speaking 20, Writing 21). TOEFL iBT from 21 January 2026 (new scale): 4 overall, no component below 4 except Writing which must be at least 4.5. PTE Academic and LanguageCert (UKVI versions, from a UKVI-approved centre) also accepted; Trinity ISE II accepted for UK-based sittings. A Pre-Sessional English Language Programme is available for applicants scoring as low as 5.0-5.5 (depending on pathway), completable within 19 months of the degree start date.',
+   true, 'high', 'https://www.hw.ac.uk/study/how-to-apply/entry-requirements/english-language-requirements', now());
+```
+
+---
+
+## 14. Brunel University of London
+
+`id = 'e60df6fe-8d07-417d-b324-1c67d4c3e305'` — QS rank 353.
+
+**Source actually used:** `https://www.brunel.ac.uk/international/applicants/how-to-apply-
+international-students/requirements-for-international-students-at-Brunel` — official main-
+domain page, directly fetched (a first search had surfaced only `pathway.brunel.ac.uk`, a
+separate foundation-college subdomain, not the university's own direct-entry page -- re-searched
+to find the correct main-domain source).
+
+**What was checked and NOT found:** the page confirms Brunel sets requirements per course
+rather than one fixed figure, but did not itself state numbers -- a general search separately
+reports "between IELTS 6.0 and 7.0," most commonly 6.0 overall with 5.5 per component, and
+TOEFL iBT 79 (legacy scale), recorded at `medium` confidence since not confirmed by this
+session's own direct page read. Application deadline, tuition, admission rate: not found.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('e60df6fe-8d07-417d-b324-1c67d4c3e305', 'english_proficiency',
+   'Set per course rather than one fixed university-wide figure, officially confirmed; courses generally ask for IELTS 6.0-7.0, most commonly 6.0 overall (5.5+ per component) -- specific figure not confirmed by direct page read',
+   'Brunel''s own international-requirements page confirms English-language thresholds are set per course, directing applicants to each course''s own page rather than stating one figure -- confirmed directly. A general search separately reports Brunel''s courses generally require between IELTS 6.0 and 7.0, most commonly 6.0 overall with no component below 5.5, and TOEFL iBT 79 (legacy scale: Reading 18, Listening 17, Speaking 20, Writing 17); these specific numbers were not independently confirmed by this session''s own fetch of the official page. Pre-sessional English courses are available for applicants below their course''s threshold.',
+   true, 'medium', 'https://www.brunel.ac.uk/international/applicants/how-to-apply-international-students/requirements-for-international-students-at-Brunel', now());
+```
+
+---
+
+## 15. Birkbeck, University of London
+
+`id = '5b16dcd1-0945-4cf0-b590-2448b24ceb82'` — QS rank 354.
+
+**Source actually used:** `https://www.bbk.ac.uk/student-services/admissions/english-language-
+qualifications-and-tests` — official page, directly fetched (reached via the general
+entry-requirements page, which itself deferred to this one).
+
+**Fifteenth independent corroboration of the TOEFL iBT rescale today.**
+
+**What was checked and NOT found:** application deadline, tuition, admission rate. Birkbeck is
+historically a part-time/evening-study specialist within the University of London federation;
+this was not separately verified as still true for its current undergraduate offering and is
+not asserted here.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('5b16dcd1-0945-4cf0-b590-2448b24ceb82', 'english_proficiency',
+   'IELTS Academic 6.5 overall (6.0+ per sub-test), TOEFL iBT 79 legacy / 4.5 new scale (from Jan 2026); a reduced 5.5-equivalent pathway exists for applicants with prior UK visa approval at RQF Level 6, subject to Admissions Tutor review; IELTS Academic Online and IELTS Indicator NOT accepted',
+   'Standard taught-programme requirement: IELTS Academic (no more than 2 years old) 6.5 overall, minimum 6.0 in each sub-test. TOEFL iBT before January 2026: 79 total (Reading 18, Listening 19, Speaking 19, Writing 23). TOEFL iBT from January 2026 (new scale): 4.5 total (Reading 4, Listening 4, Speaking 4, Writing 4.5). A lower, conditional pathway (IELTS 5.5-equivalent, CEFR B2) exists for applicants who already hold UK visa approval at RQF Level 6, but is referred to an Admissions Tutor for individual review and may require additional testing. Birkbeck explicitly does NOT accept the IELTS Academic Online test or the IELTS Indicator test -- a specific exclusion, confirmed directly on the official page.',
+   true, 'high', 'https://www.bbk.ac.uk/student-services/admissions/english-language-qualifications-and-tests', now());
+```
+
+---
+
+## 16. City St George's, University of London — cheaper win: already has 97 programme rows, only requirements missing
+
+`id = '36fb76fa-9b86-48dc-a8c9-530cf13f43d6'` — QS rank 361. Formed by the 2024 merger of City,
+University of London and St George's, University of London (the medical school); the merged
+institution's admissions structure was not independently verified beyond what the current
+official domain states.
+
+**Access note:** the official entry-requirements page returned HTTP 403 to a direct fetch.
+Recorded at `medium` confidence from a general search's summary instead.
+
+**What was checked and NOT found:** TOEFL iBT equivalents, application deadline, tuition,
+admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('36fb76fa-9b86-48dc-a8c9-530cf13f43d6', 'english_proficiency',
+   'Most courses require IELTS 6.0-6.5 (no band below 6.0); highly selective courses (e.g. Journalism, Law) require IELTS 7.0 with 7.0 in Writing; set per course, checked against individual course pages; test must be within 2 years of CAS issuance',
+   'Individual course pages set the exact IELTS requirement; most programmes fall in the 6.0-6.5 overall range with no band below 6.0. Selective courses including Journalism and Law require a materially higher IELTS 7.0 overall with at least 7.0 specifically in Writing. Test results must be no more than two years old at the point the Confirmation of Acceptance for Studies (CAS) is generated. TOEFL iBT-equivalent figures were not confirmed in this pass (official page returned HTTP 403).',
+   true, 'medium', 'https://www.citystgeorges.ac.uk/prospective-students/apply/entry-requirements', now());
+```
+
+---
+
+## 17. University of East Anglia (UEA)
+
+`id = '922a3d0c-87b5-4920-a1fe-95460b8eac0d'` — QS rank 381.
+
+**Source actually used:** `https://www.uea.ac.uk/apply/our-admissions-policy/english-language-
+equivalencies` — official page, directly fetched for the exemption list (confirmed at `high`
+confidence); the page's own IELTS score tables are interactive elements that did not render as
+extractable text in this pass -- exactly the "renders only client-side" case this batch's
+methodology names as a reason to keep the numeric figures at `medium` rather than treat the
+page as having stated nothing.
+
+**What was checked and NOT found:** TOEFL iBT-equivalent numbers; application deadline,
+tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('922a3d0c-87b5-4920-a1fe-95460b8eac0d', 'english_proficiency',
+   'For access to all modules: IELTS 6.5 overall (6.0+ per category); a lower IELTS 6.0 (6.0+ Writing/Speaking, 5.5+ Reading/Listening) grants restricted access limited to Economics and Language and Communication Studies modules only; some courses set their own higher levels',
+   'For unrestricted access to any module: IELTS 6.5 overall, at least 6.0 in each category. A lower threshold -- IELTS 6.0 overall with a minimum of 6.0 in Writing and Speaking and 5.5 in Reading and Listening -- grants access restricted specifically to modules in Economics, and Language and Communication Studies (not a general-purpose lower tier). Individual course pages may set higher or more specific requirements. These figures come from a general search summarizing UEA''s policy rather than this session''s own direct read, since the official equivalencies page''s score tables are interactive and did not render as extractable text.',
+   true, 'medium', 'https://www.uea.ac.uk/apply/our-admissions-policy/english-language-equivalencies', now()),
+  ('922a3d0c-87b5-4920-a1fe-95460b8eac0d', 'international_requirement',
+   'Nationals of 17 listed countries (mostly Caribbean, plus Australia/Canada/Ireland/Malta/New Zealand/USA) are exempt from providing English-language test evidence; also exempt if a full Bachelor''s-equivalent qualification was completed in English in a qualifying country',
+   'Exempt from English-language proficiency evidence: nationals of Antigua and Barbuda, Australia, The Bahamas, Barbados, Belize, Canada, Dominica, Grenada, Guyana, Ireland, Jamaica, Malta, New Zealand, St Kitts and Nevis, St Lucia, St Vincent and the Grenadines, Trinidad and Tobago, and the United States of America. Also exempt: applicants who have completed a full academic qualification at least equivalent to a UK Bachelor''s degree, taught in a qualifying English-speaking country.',
+   false, 'high', 'https://www.uea.ac.uk/apply/our-admissions-policy/english-language-equivalencies', now());
+```
+
+---
+
+## 18. Oxford Brookes University
+
+`id = '7d527043-8559-4681-95a0-9977e820cc5a'` — QS rank 411.
+
+**Source actually used:** `https://www.brookes.ac.uk/study/international-students/applying-to-
+arriving/how-to-apply/english-language-requirements` — official page, directly fetched.
+
+**Sixteenth independent corroboration of the TOEFL iBT rescale today** -- though the page's own
+post-21-Jan-2026 figure extracted as per-skill minimums (Reading 20, Listening 21, Speaking 24,
+Writing 19) without a clean single overall number in this pass; recorded as extracted rather
+than inferring a rounded overall figure.
+
+**What was checked and NOT found:** application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('7d527043-8559-4681-95a0-9977e820cc5a', 'english_proficiency',
+   'Most undergraduate courses: IELTS 6.0 overall (6.0 Reading/Writing, 5.5 Listening/Speaking), TOEFL iBT 80 legacy; Law, Architecture, Interior Architecture, and English Literature require a higher IELTS 6.5 overall (6.0 Reading/Writing, 5.5 Listening/Speaking)',
+   'Most undergraduate courses: IELTS 6.0 overall, with 6.0 in Reading and Writing and 5.5 in Listening and Speaking. TOEFL iBT before 21 January 2026: 80 overall. TOEFL iBT from 21 January 2026 (new scale): per-skill minimums extracted as Reading 20, Listening 21, Speaking 24, Writing 19, without a single clean overall figure in this pass. Law, Architecture, Interior Architecture, and English Literature require a higher IELTS 6.5 overall (same 6.0 Reading/Writing, 5.5 Listening/Speaking component split). A UKVI-approved Secure English Language Test (SELT) is required only for a Pre-sessional English course or a programme below the IELTS 6.0 level -- not required for standard-level direct undergraduate entry.',
+   true, 'high', 'https://www.brookes.ac.uk/study/international-students/applying-to-arriving/how-to-apply/english-language-requirements', now());
+```
+
+---
+
+## 19. University of Kent
+
+`id = 'f75a14a2-97e6-452e-9f9a-b0d598709fac'` — QS rank 415.
+
+**Source actually used:** `https://www.kent.ac.uk/courses/undergraduate/apply/english-language-
+requirements` — official page, directly fetched. A third distinct UK tier-naming convention
+found in this batch alone: Kent's "Good/Very Good/Excellent" (this batch's other two: Sussex's
+Standard/High/Advanced, and universities with no named tiers at all, e.g. Lancaster) -- each
+university's own structure recorded as actually found, not normalized to a single assumed
+UK-wide pattern.
+
+**What was checked and NOT found:** TOEFL iBT-equivalent scores (Kent accepts TOEFL with its
+own institution code but a score table was not reached in this pass); application deadline,
+tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('f75a14a2-97e6-452e-9f9a-b0d598709fac', 'english_proficiency',
+   'Three named CEFR-linked tiers by course -- Good (CEFR B2): IELTS 6.0 (5.5+/component); Very Good (CEFR B2): IELTS 6.5 (5.5+/component); Excellent (CEFR C1): IELTS 7.0 (7.0/component); actual course requirement stated on each course''s own entry-criteria section',
+   'Kent publishes a general CEFR-benchmarked reference: "Good" (CEFR B2) = IELTS 6.0 overall, minimum 5.5 in each component; "Very Good" (CEFR B2) = IELTS 6.5 overall, minimum 5.5 in each component; "Excellent" (CEFR C1) = IELTS 7.0 overall, minimum 7.0 in each component. The specific level required for a given course is stated in that course''s own entry-criteria section, not fixed university-wide. Accepted alternative tests include Oxford ELLT (fully online), TOEFL (Kent''s own institution code 0826), LanguageCert Academic, and the LRN International English Language Competency Assessment (IELCA). Students needing a Student visa must take IELTS at a UKVI-approved centre with the UKVI number on the certificate. Pre-sessional courses are available for applicants not yet meeting their course''s required level.',
+   true, 'high', 'https://www.kent.ac.uk/courses/undergraduate/apply/english-language-requirements', now());
+```
+
+---
+
+## 20. Aston University
+
+`id = 'bc0a028a-30c0-4be7-9f05-7302bcd98fca'` — QS rank 416.
+
+**Source actually used:** `https://www.aston.ac.uk/international/english-language-requirements`
+— official page, directly fetched.
+
+**Seventeenth independent corroboration of the TOEFL iBT rescale today.**
+
+**What was checked and NOT found:** application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('bc0a028a-30c0-4be7-9f05-7302bcd98fca', 'english_proficiency',
+   'General undergraduate (Engineering/Physical Sciences, Law/Social Sciences): IELTS 6.0 overall (5.5+ each component), TOEFL iBT 78 legacy / 4 new scale (from 21 Jan 2026); BSc Biochemistry/Neuroscience/Biology/Psychology allow one band at 5.5 with others 6.0+; Medical School requires 7.0 across all components; Nursing/Pharmacy/Optometry require 6.5-7.0',
+   'General undergraduate entry (Engineering and Physical Sciences; School of Law and Social Sciences): IELTS 6.0 overall, minimum 5.5 in Reading, Writing, Listening, and Speaking. TOEFL iBT before 21 January 2026: Overall 78 (Reading 12, Writing 20, Listening 11, Speaking 17). TOEFL iBT from 21 January 2026 (new scale): Overall 4 (Reading 3.5, Writing 4, Listening 3, Speaking 3). A distinct exception applies to BSc Biochemistry, BSc Neuroscience, BSc Biology, and BSc Psychology (all variants): one band may be as low as 5.5 provided the others are 6.0 or above, a modest relaxation versus other Health and Life Sciences programmes. Materially stricter thresholds apply elsewhere: Medical School requires 7.0 across all components; Nursing, Pharmacy, and Optometry require 6.5-7.0. Test results must be within 2 years of course start.',
+   true, 'high', 'https://www.aston.ac.uk/international/english-language-requirements', now());
+```
+
+---
