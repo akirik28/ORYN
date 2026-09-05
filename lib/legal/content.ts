@@ -162,11 +162,16 @@ export interface DataProcessor {
  * trusting eyeballing two 5-row arrays.
  *
  * Each `dataSent` line was read out of the code on 2026-08-31 rather than assumed from the
- * service's general purpose, because the two differ in ways that matter here: the advisor
- * prompt sends a display name but NOT the student's school name, and Tavily — despite
- * being the "search the live web" integration — never receives student data at all,
- * because discovery builds one shared global catalogue instead of searching per student.
- * `verifiedIn` names the file to re-read when checking whether a line is still true.
+ * service's general purpose, because the two differ in ways that matter here: Tavily —
+ * despite being the "search the live web" integration — never receives student data at
+ * all, because discovery builds one shared global catalogue instead of searching per
+ * student. `verifiedIn` names the file to re-read when checking whether a line is still
+ * true — which is exactly what caught the anthropic entry going stale below: this comment
+ * used to also say "the advisor prompt sends a display name but NOT the student's school
+ * name," true on 2026-08-31, false since commit `0833bd54` (2026-09-03) deliberately added
+ * school name plus six other previously-fetched-but-unrendered categories. Corrected
+ * 2026-09-05 (LEGAL_REVIEW.md §2 has the full history) — re-read `verifiedIn` before
+ * trusting any line in this array, not just this one.
  *
  * If you add a provider, add it to BOTH arrays in the same commit. This table is the
  * answer to the first question outside counsel will ask.
@@ -189,7 +194,7 @@ export const DATA_PROCESSORS_EN: DataProcessor[] = [
     name: "Anthropic (Claude API)",
     role: "The model behind profile analysis, the advisor, weekly plans, and CV import.",
     dataSent:
-      "A compact profile summary — your display name, graduation year, curriculum, country, weekly time budget, dimension scores, and the titles of your activities, projects, research, awards and goals — plus the message you send the advisor. Your school name is not included. When you import a CV, the entire document is sent for extraction.",
+      "A compact profile summary — your display name, graduation year, curriculum, country, school name, weekly time budget, dimension scores, your stated interests, and — for your activities, projects, research, awards, goals, education records, courses, test scores, certifications, volunteering, and work experience — their titles (education records and courses also include a GPA or grade; goals also include a category) — plus the message you send the advisor. When you import a CV, the entire document is sent for extraction.",
     location: "Anthropic's infrastructure, outside the EU/EEA.",
     retention: "Governed by Anthropic's API terms — to be confirmed by counsel against the current data processing addendum.",
     personalData: true,
@@ -247,7 +252,7 @@ export const DATA_PROCESSORS_TR: DataProcessor[] = [
     name: "Anthropic (Claude API)",
     role: "Profil analizinin, danışmanın, haftalık planların ve özgeçmiş aktarımının arkasındaki model.",
     dataSent:
-      "Kaydınızın tamamı değil, özet bir profil: görünen adınız, mezuniyet yılınız, müfredatınız, ülkeniz, haftalık zaman bütçeniz, boyut puanlarınız ve etkinlik, proje, araştırma, ödül ve hedeflerinizin başlıkları — buna danışmana gönderdiğiniz mesaj da dahildir. Okul adınız bu özete dahil edilmez. Bir özgeçmiş yüklediğinizde, içeriğinin çıkarılabilmesi için belgenin tamamı gönderilir.",
+      "Kaydınızın tamamı değil, özet bir profil: görünen adınız, mezuniyet yılınız, müfredatınız, ülkeniz, okul adınız, haftalık zaman bütçeniz, boyut puanlarınız, ilgi alanlarınız, ve etkinlik, proje, araştırma, ödül, hedef, eğitim geçmişi, ders, standart sınav sonucu, sertifika, gönüllülük ve iş deneyiminizin başlıkları (eğitim geçmişi ve dersler ayrıca bir not ortalaması da içerir; hedefler ayrıca bir kategori de içerir) — buna danışmana gönderdiğiniz mesaj da dahildir. Bir özgeçmiş yüklediğinizde, içeriğinin çıkarılabilmesi için belgenin tamamı gönderilir.",
     location: "Anthropic altyapısı, AB/AEA dışında.",
     retention: "Anthropic'in API şartlarına tabidir — güncel veri işleme ekiyle (data processing addendum) karşılaştırılarak hukuk danışmanınca teyit edilecektir.",
     personalData: true,
@@ -648,7 +653,7 @@ export const legalCopyEn: LegalCopy = {
           heading: "How your information reaches an AI model",
           body: [
             "Proxola's analysis, weekly plans, advisor answers, and CV import all run on Anthropic's Claude API. This is the part of the product that sends your information outside our own database, so it is worth being precise about.",
-            "When you use the advisor or generate a plan, we send a compact summary rather than your whole record: your display name, graduation year, curriculum, country, weekly time budget, your dimension scores, and the titles of your activities, projects, research, awards and goals. Your school name is not included in this summary.",
+            "When you use the advisor or generate a plan, we send a compact summary rather than your whole record: your display name, graduation year, curriculum, country, school name, weekly time budget, your dimension scores, your stated interests, and the titles of your activities, projects, research, awards, goals, education records, courses, test scores, certifications, volunteering, and work experience. Education records and courses also carry a GPA or grade; your goals also carry a category.",
             "When you import a CV, the whole document is sent to Anthropic so its contents can be extracted. Whatever is in that file — including anything we would not otherwise collect — is sent with it. Nothing extracted from it is saved to your profile until you review it and confirm.",
             "AI calls happen on our servers. Our API credentials are never exposed to your browser.",
             "Anthropic is outside the EU/EEA. The safeguards covering that transfer are still being confirmed by counsel and are listed as an open question in this draft rather than asserted.",
@@ -1078,7 +1083,7 @@ export const legalCopyTr: LegalCopy = {
           heading: "Bilgileriniz bir yapay zekâ modeline nasıl ulaşır",
           body: [
             "Proxola'nın analizi, haftalık planları, danışman yanıtları ve özgeçmiş aktarımının tümü Anthropic'in Claude API'si üzerinde çalışır. Bu, ürünün bilgilerinizi kendi veritabanımızın dışına gönderdiği bölümdür; bu yüzden burada net olmakta fayda var.",
-            "Danışmanı kullandığınızda veya bir plan oluşturduğunuzda, kaydınızın tamamını değil özet bir profil göndeririz: görünen adınız, mezuniyet yılınız, müfredatınız, ülkeniz, haftalık zaman bütçeniz, boyut puanlarınız ve etkinlik, proje, araştırma, ödül ve hedeflerinizin başlıkları. Okul adınız bu özete dahil edilmez.",
+            "Danışmanı kullandığınızda veya bir plan oluşturduğunuzda, kaydınızın tamamını değil özet bir profil göndeririz: görünen adınız, mezuniyet yılınız, müfredatınız, ülkeniz, okul adınız, haftalık zaman bütçeniz, boyut puanlarınız, ilgi alanlarınız, ve etkinlik, proje, araştırma, ödül, hedef, eğitim geçmişi, ders, standart sınav sonucu, sertifika, gönüllülük ve iş deneyiminizin başlıkları. Eğitim geçmişi ve dersler ayrıca bir not ortalaması da içerir; hedefleriniz ayrıca bir kategori de içerir.",
             "Bir özgeçmiş aktardığınızda, içeriğinin çıkarılabilmesi için belgenin tamamı Anthropic'e gönderilir. O dosyada ne varsa — normalde toplamayacağımız bilgiler de dahil — belgeyle birlikte gönderilir. Belgeden çıkarılan hiçbir bilgi, siz inceleyip onaylamadan profilinize kaydedilmez.",
             "Yapay zekâ çağrıları sunucularımızda gerçekleşir. API kimlik bilgilerimiz hiçbir zaman tarayıcınıza açılmaz.",
             "Anthropic, AB/AEA dışındadır. Bu aktarımı kapsayan güvenceler hâlâ hukuk danışmanınca teyit edilmekte olup, burada kesin bir iddia olarak değil bu taslaktaki çözülmemiş bir soru olarak listelenmiştir.",
