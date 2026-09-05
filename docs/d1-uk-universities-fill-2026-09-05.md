@@ -993,3 +993,107 @@ values
 ```
 
 ---
+
+## 33. Manchester Metropolitan University
+
+`id = 'e4b55140-51ae-4fd8-b2f9-768d95cea5b8'` — QS rank 600.
+
+**Source actually used:** `https://www.mmu.ac.uk/study/international/before-you-apply/
+english-language-requirements` — official page, directly fetched.
+
+**A genuine, opposite-direction policy from Essex (this batch's entry #21):** MMU explicitly
+states it "cannot accept students based on a combination of scores from different tests or
+different sittings of the same test," and assesses only the most recent complete sitting --
+Essex explicitly allows combining two same-type sittings. Two UK universities with directly
+contradictory score-combination policies, both confirmed on their own official pages -- a real
+difference a Turkish applicant retaking IELTS should know before assuming UK-wide uniformity.
+
+**Fourth UK university this batch (after Royal Holloway #24, Huddersfield #26, Hull #30) with
+no reference to the 21 January 2026 TOEFL rescale at all** -- a pattern now large enough to
+note explicitly rather than treat each instance as an isolated gap.
+
+**What was checked and NOT found:** the new-scale TOEFL figure; application deadline, tuition,
+admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('e4b55140-51ae-4fd8-b2f9-768d95cea5b8', 'english_proficiency',
+   'Most undergraduate courses: IELTS 6.0 overall (5.5+ per component), TOEFL iBT 79 (legacy scale only, no new-scale figure stated on this page); scores/sittings from different tests or different dates CANNOT be combined -- assessed on the single most recent complete sitting only',
+   'For most undergraduate programmes: IELTS 6.0 overall, no component below 5.5. TOEFL iBT: 79 overall (Listening 17, Reading 18, Speaking 20, Writing 17) -- this page does not give a post-21-January-2026 new-scale conversion. Some courses set a higher requirement, stated on the individual offer letter. Test results are valid for 2 years from the test date. MMU explicitly does not accept a combination of scores from different tests or different sittings of the same test -- applications are assessed on the single most recent complete test sitting only, a stricter and directly opposite policy to the University of Essex (this batch''s entry #21), which explicitly does allow combining two sittings of the same test type.',
+   true, 'high', 'https://www.mmu.ac.uk/study/international/before-you-apply/english-language-requirements', now());
+```
+
+---
+
+## 34. Nottingham Trent University (NTU)
+
+`id = '22289ce8-45b1-4b16-8ee5-83cb5faf4714'` — QS rank 639.
+
+**Access note:** the official English-requirements page returned HTTP 403 to a direct fetch.
+Recorded at `medium` confidence from a general search's summary instead.
+
+**A real, distinctive exclusion, consistent with a pattern seen elsewhere this batch (Birkbeck,
+entry #15, excludes the same two test types):** NTU explicitly does not accept "IELTS
+Indicator" or "IELTS Online" scores.
+
+**What was checked and NOT found:** TOEFL iBT numeric equivalents, application deadline,
+tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('22289ce8-45b1-4b16-8ee5-83cb5faf4714', 'english_proficiency',
+   'Most undergraduate courses: IELTS Academic 6.5 overall (5.5+ per component); IELTS Indicator and IELTS Online explicitly NOT accepted; also accepts Pearson, Oxford, LanguageCert, and various country-specific qualifications',
+   'For most undergraduate courses, NTU requires an English-language grade equivalent to IELTS 6.5 overall, minimum 5.5 in all components. NTU explicitly does not accept "IELTS Indicator" or "IELTS Online" test results -- a specific exclusion (same two test types Birkbeck, this batch''s entry #15, also excludes). Other accepted tests/qualifications include Pearson (PTE), Oxford English tests, LanguageCert, and various country-specific qualifications. Applicants below the requirement may upload a certificate at the required grade once obtained, or complete NTU''s own Pre-sessional English for Academic Purposes (PEAP) course at the required grade. TOEFL iBT numeric equivalents were not confirmed in this pass (page returned HTTP 403).',
+   true, 'medium', 'https://www.ntu.ac.uk/international/your-application/entry-requirements/english-language-requirements', now());
+```
+
+---
+
+## 35. University of Portsmouth
+
+`id = '9fd071b6-e5bf-4e9d-a62f-31ac2ca91173'` — QS rank 662.
+
+**Source actually used:** `https://www.port.ac.uk/study/international-students/english-
+language-requirements` — official page, directly fetched.
+
+**Fifth UK university this batch with no reference to the 21 January 2026 TOEFL rescale.**
+
+**What was checked and NOT found:** application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('9fd071b6-e5bf-4e9d-a62f-31ac2ca91173', 'english_proficiency',
+   'Undergraduate: IELTS 6.0 overall (5.5+ per component), TOEFL iBT 79 (legacy scale only); Foundation/pathway courses: IELTS 5.5 overall (5.5+ per component), TOEFL 72',
+   'Undergraduate entry: IELTS 6.0 overall, no component below 5.5. TOEFL iBT: 79 overall (Reading 18, Listening 17, Speaking 20, Writing 17) -- no post-21-January-2026 new-scale figure given on this page. Foundation/pathway courses (a lower entry tier): IELTS 5.5 overall, no component below 5.5; TOEFL 72 overall (same per-component minimums as undergraduate). Other accepted tests include LanguageCert and Oxford ELLT, with their own equivalency tables. A pre-sessional English programme is available for applicants not yet meeting their course''s level.',
+   true, 'high', 'https://www.port.ac.uk/study/international-students/english-language-requirements', now());
+```
+
+---
+
+## 36. Kingston University, London
+
+`id = '5aa8b40c-45ad-4ca2-bf7e-1938c0d4c29e'` — QS rank 686.
+
+**Access note:** the official English-language-entry-requirements page returned HTTP 403 to a
+direct fetch. Recorded at `medium` confidence from a general search's summary instead.
+
+**What was checked and NOT found:** TOEFL iBT numeric equivalents, application deadline,
+tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('5aa8b40c-45ad-4ca2-bf7e-1938c0d4c29e', 'english_proficiency',
+   'Minimum Academic IELTS 6.0 overall (5.5+ per element); some courses set exceptions; a two-tier pre-sessional pathway exists -- Long course for applicants up to 1.5 IELTS points below target, Extended course for up to 2.0 points below',
+   'Minimum Academic IELTS requirement for undergraduate courses: 6.0 overall, with 5.5 in each of Reading, Writing, Listening, and Speaking -- some courses set exceptions, checked on individual course pages. Applicants who have studied or lived in a Majority English Speaking Country (MESC) may not need to provide additional proof. A two-tier pre-sessional structure exists: applicants scoring up to 1.5 IELTS points below their target entry requirement can apply for the Long Pre-sessional English course, and those up to 2.0 points below can apply for the Extended Pre-sessional English course. TOEFL iBT numeric equivalents were not confirmed in this pass (official page returned HTTP 403).',
+   true, 'medium', 'https://www.kingston.ac.uk/study/international-students/english-language-entry-requirements', now());
+```
+
+---
