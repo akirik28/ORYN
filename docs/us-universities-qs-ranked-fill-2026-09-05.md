@@ -297,9 +297,240 @@ values
 
 ---
 
+---
+
+# Batch 2 (QS 2027 rank, ascending, continuing from batch 1)
+
+University of Maryland College Park (252), UC Irvine (252, tied), University of Minnesota
+Twin Cities (255), UMass Amherst (260), Dartmouth College (270), University of Pittsburgh
+(279), University of Arizona (313). Same rules, same `medium` confidence, same
+requirements-only scope as batch 1 — see this doc's own header for the full reasoning, not
+repeated per-institution below.
+
+## 8. University of Maryland, College Park (QS 252)
+
+`id = 'b5310e8f-b1ab-4119-9ed3-031d6693be5f'`
+
+**Sources:** `https://admissions.umd.edu/apply/freshman-application-faqs` (official freshman
+FAQ — testing policy; English-proficiency averages found via search summary attributed to this
+same institution's international-student profile, not independently re-fetched from a single
+dedicated page — noted, not hidden).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('b5310e8f-b1ab-4119-9ed3-031d6693be5f', 'standardized_test',
+   'Test-optional through Spring and Fall 2027 application cycles',
+   'UMD is test-optional through the Spring and Fall 2027 application cycles -- applicants decide whether to submit SAT/ACT. Not used as one of the university''s 23 reviewed admission factors when omitted. Middle-50% of admitted students who did submit: SAT 1390-1530, ACT 32-35.',
+   false, 'medium', 'https://admissions.umd.edu/apply/freshman-application-faqs', now()),
+  ('b5310e8f-b1ab-4119-9ed3-031d6693be5f', 'english_proficiency',
+   'Reported international-applicant averages: IELTS ~6.5, TOEFL ~83, Duolingo ~115 (averages, not confirmed minimums)',
+   'Reported average scores among international applicants: IELTS approximately 6.5, TOEFL approximately 83, Duolingo English Test approximately 115. These are reported averages, not a confirmed official minimum threshold -- a dedicated UMD international-admissions minimum-score page was not independently resolved in this pass.',
+   true, 'medium', 'https://admissions.umd.edu/apply/freshman-application-faqs', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('b5310e8f-b1ab-4119-9ed3-031d6693be5f', 'https://admissions.umd.edu/apply/freshman-application-faqs',
+   'admissions.umd.edu', 'official_admissions_office', now(), 'medium',
+   'UMD is currently test-optional and has extended this policy through to the Spring and Fall 2027 application cycles.');
+```
+
+## 9. University of California, Irvine (QS 252)
+
+`id = 'cf6219b4-efb2-453b-8a7d-2c11e3f5685a'`
+
+**Sources:** `https://admissions.uci.edu/apply/first-year-students/index.php` (official
+first-year admissions page — testing and English-proficiency policy, both from the same page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('cf6219b4-efb2-453b-8a7d-2c11e3f5685a', 'standardized_test',
+   'Test-blind: SAT/ACT not considered for admission or scholarships',
+   'UC Irvine does not consider SAT or ACT scores for admission or scholarship purposes. After enrollment, exams may be used only for course placement or certain graduation requirements.',
+   false, 'medium', 'https://admissions.uci.edu/apply/first-year-students/index.php', now()),
+  ('cf6219b4-efb2-453b-8a7d-2c11e3f5685a', 'english_proficiency',
+   'Required only if less than 3 years of English-medium secondary instruction; ACT ELA 24+, SAT W&L 31+, AP English 3+, or TOEFL/IELTS/Duolingo',
+   'English proficiency demonstration is required only for applicants with less than 3 years of English-medium high school instruction by graduation. May be satisfied by: ACT English Language Arts 24+, SAT Writing & Language 31+, a score of 3-5 on the AP English Language/Literature exam, or standard tests (TOEFL, IELTS, Duolingo) for those with non-English-medium schooling.',
+   true, 'medium', 'https://admissions.uci.edu/apply/first-year-students/index.php', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('cf6219b4-efb2-453b-8a7d-2c11e3f5685a', 'https://admissions.uci.edu/apply/first-year-students/index.php',
+   'admissions.uci.edu', 'official_admissions_office', now(), 'medium',
+   'UC Irvine does not consider SAT or ACT scores for admission or scholarship purposes... Score 24 or higher for the ACT English Language Arts (ELA), Score 31 or higher on Writing and Language in the SAT.');
+```
+
+## 10. University of Minnesota, Twin Cities (QS 255)
+
+`id = '5b407d80-4709-4b02-b7a3-d90053fef689'`
+
+**Sources:** `https://admissions.tc.umn.edu/apply/application-checklist/application-checklist-international-freshman`
+(official international-freshman checklist — testing policy) and
+`https://admissions.tc.umn.edu/admissions/international-admission/english-proficiency-information`
+(official English-proficiency page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('5b407d80-4709-4b02-b7a3-d90053fef689', 'standardized_test',
+   'Test-optional through Fall 2027',
+   'Undergraduate applicants are not required to submit an ACT or SAT score for admission through the fall 2027 term.',
+   false, 'medium', 'https://admissions.tc.umn.edu/apply/application-checklist/application-checklist-international-freshman', now()),
+  ('5b407d80-4709-4b02-b7a3-d90053fef689', 'english_proficiency',
+   'TOEFL 79+, IELTS 6.5+, PTE 59+, CAE 180+, or Duolingo 110+; waivable via SAT/ACT, transfer credit, curriculum, or country of origin',
+   'Required for international students (except from an exempt country) and non-international students whose first language is not English and/or under 4 years of US schooling. Accepted: TOEFL iBT 79+, IELTS Academic 6.5+, PTE Academic 59+, Cambridge CAE C1 Advanced 180+, or Duolingo 110+. May be waived via qualifying SAT/ACT results, transfer coursework from other US institutions, a specific high school curriculum, or country of origin.',
+   true, 'medium', 'https://admissions.tc.umn.edu/admissions/international-admission/english-proficiency-information', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('5b407d80-4709-4b02-b7a3-d90053fef689', 'https://admissions.tc.umn.edu/apply/application-checklist/application-checklist-international-freshman',
+   'admissions.tc.umn.edu', 'official_admissions_office', now(), 'medium',
+   'Undergraduate applicants to the University of Minnesota Twin Cities are not required to submit an ACT or SAT score for admission through the fall 2027 term.'),
+  ('5b407d80-4709-4b02-b7a3-d90053fef689', 'https://admissions.tc.umn.edu/admissions/international-admission/english-proficiency-information',
+   'admissions.tc.umn.edu', 'official_admissions_office', now(), 'medium',
+   'Accepts TOEFL iBT (minimum 79), IELTS Academic (6.5), PTE Academic (59), CAE C1 Advanced (180), and Duolingo (110).');
+```
+
+## 11. University of Massachusetts Amherst (QS 260)
+
+`id = '4b538368-3ed1-42fc-babe-4a22c26a6c18'`
+
+**Sources:** `https://www.umass.edu/admissions/undergraduate-admissions/connect/information-policies/test-optional-policy`
+(official testing policy) and `https://www.umass.edu/admissions/english-language-proficiency`
+(official undergraduate English-proficiency page — a first search pass returned only Amherst
+College's, a different institution's, policy; corrected with a more targeted second search
+before writing anything, not left mismatched).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('4b538368-3ed1-42fc-babe-4a22c26a6c18', 'standardized_test',
+   'Test-optional through Fall 2026, all majors',
+   'UMass Amherst is test-optional for first-year applicants through the Fall 2026 enrollment term, across all majors. Holistic review -- no single factor (score, GPA, activities) alone determines admission. If submitted, SAT is superscored.',
+   false, 'medium', 'https://www.umass.edu/admissions/undergraduate-admissions/connect/information-policies/test-optional-policy', now()),
+  ('4b538368-3ed1-42fc-babe-4a22c26a6c18', 'english_proficiency',
+   'TOEFL 80+ (no subscore below 20) or IELTS 6.5+ (no subscore below 6.5)',
+   'Minimum TOEFL composite of 80 with no individual subscore below 20, or minimum IELTS Academic composite of 6.5 with no subscore below 6.5. Score reports must be no more than two years old and sent directly from the testing service to Undergraduate Admissions.',
+   true, 'medium', 'https://www.umass.edu/admissions/english-language-proficiency', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('4b538368-3ed1-42fc-babe-4a22c26a6c18', 'https://www.umass.edu/admissions/undergraduate-admissions/connect/information-policies/test-optional-policy',
+   'umass.edu', 'official_admissions_office', now(), 'medium',
+   'At UMass Amherst, standardized tests are optional for first-year entering applicants... UMass Amherst is test-optional through the Fall 2026 enrollment term.'),
+  ('4b538368-3ed1-42fc-babe-4a22c26a6c18', 'https://www.umass.edu/admissions/english-language-proficiency',
+   'umass.edu', 'official_admissions_office', now(), 'medium',
+   'TOEFL requires a minimum composite score of 80 with no subscore lower than 20, and IELTS requires a minimum composite score of 6.5 on the academic test with no subscore lower than 6.5.');
+```
+
+## 12. Dartmouth College (QS 270)
+
+`id = '67da2609-df23-4c95-a8fa-5ba31a4a3a9e'`
+
+**Sources:** `https://admissions.dartmouth.edu/apply/testing-policy` (official testing-policy
+page). English-proficiency figures cross-referenced against
+`https://admissions.dartmouth.edu/glossary-question/there-minimum-test-score-sat-or-act-required-admission-dartmouth`.
+
+**Preserved verbatim, cycle-scoped:** testing was reactivated starting with the Class of 2029 —
+a real policy change, not a stable baseline.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('67da2609-df23-4c95-a8fa-5ba31a4a3a9e', 'standardized_test',
+   'SAT/ACT required starting with the Class of 2029 (US applicants); alternate exams accepted for non-US applicants',
+   'Dartmouth reactivated its testing requirement beginning with the Class of 2029: US high school applicants must submit SAT or ACT (no institutional preference, superscored across sittings). Applicants from schools outside the US may instead submit three AP exam results, or predicted/final IB, British A-Level, or an equivalent national exam. No minimum score is published -- every application is still reviewed holistically.',
+   true, 'medium', 'https://admissions.dartmouth.edu/apply/testing-policy', now()),
+  ('67da2609-df23-4c95-a8fa-5ba31a4a3a9e', 'english_proficiency',
+   'TOEFL required if English is not the first language or not the primary language of instruction for at least two years; no minimum score published',
+   'Required for applicants whose first language is not English, or for whom English has not been the primary language of instruction for at least two years. TOEFL is the test named; no minimum score is published.',
+   true, 'medium', 'https://admissions.dartmouth.edu/apply/testing-policy', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('67da2609-df23-4c95-a8fa-5ba31a4a3a9e', 'https://admissions.dartmouth.edu/apply/testing-policy',
+   'admissions.dartmouth.edu', 'official_admissions_office', now(), 'medium',
+   'Beginning with the Class of 2029, Dartmouth will once again require applicants from high schools within the United States to submit results of either the SAT or ACT.');
+```
+
+## 13. University of Pittsburgh (QS 279)
+
+`id = '1b503ef1-6563-41af-9b56-2c442c88676e'`
+
+**Sources:** `https://admissions.pitt.edu/test-optional/` (official testing-policy page,
+includes international-English-proficiency averages on the same page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('1b503ef1-6563-41af-9b56-2c442c88676e', 'standardized_test',
+   'Test-optional through Fall 2028 admission, including international and homeschool applicants',
+   'SAT/ACT scores are not required for students applying to enter for fall 2025 through fall 2028, for first-year and transfer applicants alike, including international and homeschool students. Without scores, the committee weighs coursework, activities, and the personal statement/essay more heavily. If submitted: highest ACT composite and highest SAT superscore are used.',
+   false, 'medium', 'https://admissions.pitt.edu/test-optional/', now()),
+  ('1b503ef1-6563-41af-9b56-2c442c88676e', 'english_proficiency',
+   'Required for international applicants; reported averages TOEFL ~79, IELTS ~6.5, Duolingo ~105 (averages, minimum thresholds not independently confirmed)',
+   'Proof of English proficiency continues to be required for international students. Reported average scores: TOEFL 79, IELTS 6.5, Duolingo 105 -- these are described as averages with corresponding minimums also referenced on the source page, but a specific minimum-score table was not independently re-extracted in this pass.',
+   true, 'medium', 'https://admissions.pitt.edu/test-optional/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('1b503ef1-6563-41af-9b56-2c442c88676e', 'https://admissions.pitt.edu/test-optional/',
+   'admissions.pitt.edu', 'official_admissions_office', now(), 'medium',
+   'Scores from the ACT or SAT exams will not be required for students applying to enter the university for fall 2025, 2026, 2027, and 2028... the average TOEFL score is 79, the average IELTS score is 6.5, and the average Duolingo score is 105.');
+```
+
+## 14. University of Arizona (QS 313)
+
+`id = '80129e72-cebc-4422-bb22-3442e2a542d1'`
+
+**Checked and a real gap, left blank rather than guessed:** a first search attributed TOEFL
+70/IELTS 6.0/PTE 53 to this university specifically; a second, more targeted search for the
+same figures could not independently confirm them and flagged the only supporting reference it
+found as dated 2012-2013 -- too old to trust as current without a live page confirming it. The
+3-year-US-high-school exemption rule is corroborated by both searches and is kept; the specific
+numeric minimums are not.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('80129e72-cebc-4422-bb22-3442e2a542d1', 'standardized_test',
+   'Test-optional for most applicants',
+   'The University of Arizona is test-optional; SAT/ACT submission is not required for most applicants. Middle-50% of admitted students: SAT 1090-1320, ACT 20-28.',
+   false, 'medium', 'https://www.collegevine.com/faq/77790/what-are-the-sat-requirements-for-the-university-of-arizona', now()),
+  ('80129e72-cebc-4422-bb22-3442e2a542d1', 'english_proficiency',
+   'TOEFL exempt with 3+ years of US high school English at "C" or better; numeric minimum score not confirmed current in this pass',
+   'Exempt from TOEFL if the applicant completed 3+ years of regular English classes with a "C" or better at an accredited American high school (domestic or abroad). Applicants with less than 3 years, or ESL-level classes only, must still demonstrate proficiency. A specific current minimum TOEFL/IELTS score could not be confirmed from an official, clearly-dated page in this pass -- left unspecified rather than asserting a number from an unconfirmed, possibly-outdated (2012-2013) reference.',
+   true, 'medium', 'https://international-admissions.arizona.edu/info/faq', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('80129e72-cebc-4422-bb22-3442e2a542d1', 'https://international-admissions.arizona.edu/info/faq',
+   'international-admissions.arizona.edu', 'official_admissions_office', now(), 'medium',
+   'If you have completed 3 years of regular English classes with a "C" or better at an accredited American high school (domestic or abroad), you do not need to take the TOEFL.');
+```
+
+---
+
 ## Verification
 
 Read-only against the live database plus `WebSearch` for content — no code changed, no live
-database writes. SQL staged for CEO/founder review and application, not applied. One fact (Ohio
-State's English-proficiency minimums) is flagged above as needing re-verification against the
-correct domain before being trusted at the same level as everything else in this batch.
+database writes. SQL staged for CEO/founder review and application, not applied. Flagged
+inline, not smoothed over: Ohio State's English-proficiency source (batch 1, now corrected),
+UMD/Pitt's English-proficiency figures being reported averages rather than confirmed minimums,
+and University of Arizona's numeric English-proficiency minimum being left out entirely as
+unconfirmed/possibly outdated.
