@@ -53,6 +53,13 @@ Sırayla, `supabase/migrations/` altından. **Ardışık test edildi, iki geçi�
 engelleniyor, **ve koruma kaldırılınca saldırı yine başarılı** (kanıtın kendisinin
 çalıştığının kanıtı).
 
+**✅ VE SENİN GERÇEK SIRAN PROVA EDİLDİ.** Sekiz koruma ilk olarak **canlının bugünkü
+tabanına** karşı test edilmişti — ama sen **önce paketleri** çalıştıracaksın. O kombinasyon
+ayrıca prova edildi: **paketler → sekiz koruma → ve baştan bir kez daha.** Üç adlandırılmış
+risk de ölçüldü ve **negatif çıktı:** `0127`'nin yeni sütunu korumayı bozmuyor · `0130`'un
+yeni tablosu `0135` ile kesişmiyor · `0141`'in yetki değişikliği diğer altı korumayı
+etkilemiyor (`has_table_privilege()` ile doğrudan ölçüldü, okunup varsayılmadı).
+
 **`0123` (ödeme) ayrı ve isteğe bağlı** — ödeme sağlayıcısı seçilmeden işe yaramaz.
 
 ---
