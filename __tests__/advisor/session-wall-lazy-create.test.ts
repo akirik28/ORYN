@@ -144,15 +144,32 @@ describe("sendAdvisorMessage's lazy-create — now walled the same as createConv
     expect(result.error).toBeTruthy();
   });
 
-  test("Ultra, conversationId: null, regardless of existing count — always succeeds, count never even queried", async () => {
+  test("Ultra below the 5-session cap, conversationId: null — succeeds, count now queried for Ultra too", async () => {
+    // 2026-09-05 decision replaced Ultra's old unlimited short-circuit with a 5-session cap;
+    // this replaces the prior "count never even queried" test, whose premise is no longer true.
     getCurrentProfileMock.mockResolvedValue({ plan_tier: "ultra", ultra_gift_expires_at: null, paid_ultra_expires_at: null, response_mode: "balanced" });
-    conversationCountMock.mockReturnValue({ count: 99, error: null, data: null });
+    conversationCountMock.mockReturnValue({ count: 4, error: null, data: null });
 
     const result = await sendAdvisorMessage(null, "A third, fourth, whatever thing to ask.");
 
-    expect(conversationCountMock).not.toHaveBeenCalled();
+    expect(conversationCountMock).toHaveBeenCalledTimes(1);
     expect(conversationInsertMock).toHaveBeenCalledTimes(1);
     expect(result.conversationId).toBe("conv-new");
+  });
+
+  test("Ultra at the 5-session cap, conversationId: null — lazy-create is blocked too, same cap as the button, with an actionable message", async () => {
+    getCurrentProfileMock.mockResolvedValue({ plan_tier: "ultra", ultra_gift_expires_at: null, paid_ultra_expires_at: null, response_mode: "balanced" });
+    conversationCountMock.mockReturnValue({ count: 5, error: null, data: null });
+
+    const result = await sendAdvisorMessage(null, "A sixth thing to ask, from a stale client with no convId in state.");
+
+    expect(conversationInsertMock).not.toHaveBeenCalled();
+    expect(result.conversationId).toBe("");
+    expect(result.error).toBeTruthy();
+    // Same non-negotiable requirement as createConversation's own cap test: name the limit and
+    // what to do about it, not a generic error.
+    expect(result.error).toContain("5");
+    expect(result.error?.toLowerCase()).toContain("delete");
   });
 
   test("a count-query failure fails CLOSED here too, not open — same posture as createConversation's own identical check", async () => {

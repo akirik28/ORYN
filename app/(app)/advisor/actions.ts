@@ -23,33 +23,39 @@ import type { AdvisorMessage, PlanTier } from "@/types/database";
 
 /**
  * docs/ozellesme-spec-2026-09-03.md §2's actual wall — Standard gets exactly one conversation,
- * ever; Ultra gets unlimited. Extracted once (2026-09-04, CEO's own "instructions ve session
- * şeyi de çalışmıyor" audit) so createConversation and sendAdvisorMessage's own lazy-create
- * branch can never drift apart the way they had: createConversation enforced this from the
- * start, but sendAdvisorMessage's lazy-create insert — the path that fires on a student's very
- * first message, with no conversationId yet, and identically on ANY later call that happens to
- * arrive with none — inserted unconditionally, with nothing checking tier or count at all. A
- * Standard-tier caller who already had a conversation could get a second (or unlimited) one
- * through that path alone, invisibly, since ordinary client behavior never triggers it once a
- * real conversationId exists in the caller's state — exactly the shape this file's own
- * standing discipline already names: "a Server Action is directly callable with any argument
- * regardless of what's rendered... the button being disabled client-side is UX, not
- * enforcement." Proved with a real test before this fix, not assumed from reading:
+ * ever; Ultra gets up to ULTRA_MAX_CONVERSATIONS (2026-09-05 decision below). Extracted once
+ * (2026-09-04, CEO's own "instructions ve session şeyi de çalışmıyor" audit) so
+ * createConversation and sendAdvisorMessage's own lazy-create branch can never drift apart the
+ * way they had: createConversation enforced this from the start, but sendAdvisorMessage's
+ * lazy-create insert — the path that fires on a student's very first message, with no
+ * conversationId yet, and identically on ANY later call that happens to arrive with none —
+ * inserted unconditionally, with nothing checking tier or count at all. A Standard-tier caller
+ * who already had a conversation could get a second (or unlimited) one through that path
+ * alone, invisibly, since ordinary client behavior never triggers it once a real conversationId
+ * exists in the caller's state — exactly the shape this file's own standing discipline already
+ * names: "a Server Action is directly callable with any argument regardless of what's
+ * rendered... the button being disabled client-side is UX, not enforcement." Proved with a
+ * real test before this fix, not assumed from reading:
  * __tests__/advisor/session-wall-lazy-create.test.ts's own "THE FINDING" case passed against
  * the unfixed code, meaning the insert really did run unconditionally.
  *
- * Ultra skips the count entirely via the same short-circuit both callers already used
- * individually — not because the count happens to allow it, but because the tier check short-
- * circuits first, matching createConversation's own original comment on this exact point.
+ * Ultra's cap (2026-09-05, CEO decision on the session-list delete feature's own deferred
+ * proposal): "Karar: 5'te engelle. Migration yok." The founder's own wording named a ceiling
+ * ("en fazla 5 olsun"), not an archive scheme, and a new migration would join an unmeasured
+ * live-DB-drift queue instead of shipping today — so this reuses the exact count-and-compare
+ * shape Standard already had rather than inventing new machinery for Ultra. No separate
+ * archive state either: the already-shipped delete button (features/advisor/session-list.tsx)
+ * is the visible way to make room, so the block message below tells the student to use it by
+ * name instead of describing a generic limit.
  */
+const ULTRA_MAX_CONVERSATIONS = 5;
+
 async function assertConversationLimitNotExceeded(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   planTier: PlanTier,
   locale: Locale
 ): Promise<{ error?: string }> {
-  if (planTier === "ultra") return {};
-
   const tr = locale === "tr";
   // Same fail-closed posture as the original createConversation check: a count query failing
   // is a real, unexpected error (advisor_conversations has existed since migration 0011), not
@@ -60,6 +66,18 @@ async function assertConversationLimitNotExceeded(
     console.error("[advisor] failed to count existing conversations", { userId, error: countError.message });
     return { error: tr ? "Yeni bir sohbet başlatılamadı." : "Couldn't start a new conversation." };
   }
+
+  if (planTier === "ultra") {
+    if ((count ?? 0) >= ULTRA_MAX_CONVERSATIONS) {
+      return {
+        error: tr
+          ? `${ULTRA_MAX_CONVERSATIONS} oturum sınırındasın. Yeni bir tane açmak için birini sil.`
+          : `You're at the ${ULTRA_MAX_CONVERSATIONS}-session limit — delete one to open a new one.`,
+      };
+    }
+    return {};
+  }
+
   if ((count ?? 0) > 0) {
     return {
       error: tr
