@@ -838,6 +838,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
                 evaluationByRequirement={evaluationByRequirement}
                 locale={locale}
                 t={t}
+                tSourceBadge={tSourceBadge}
               />
             ) : null}
             {[...requirementsByProgram.entries()].map(([programId, items]) => (
@@ -848,6 +849,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
                 evaluationByRequirement={evaluationByRequirement}
                 locale={locale}
                 t={t}
+                tSourceBadge={tSourceBadge}
               />
             ))}
           </>

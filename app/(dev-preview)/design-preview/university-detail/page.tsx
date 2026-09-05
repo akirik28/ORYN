@@ -368,10 +368,11 @@ export default async function UniversityDetailPreviewPage({ searchParams }: { se
                   evaluationByRequirement={FIXTURE_REQUIREMENT_EVALUATIONS}
                   locale={locale}
                   t={t}
+                  tSourceBadge={tSourceBadge}
                 />
               ) : null}
               {[...requirementsByProgram.entries()].map(([programId, items]) => (
-                <RequirementGroup key={programId} title={programNameById.get(programId) ?? t("programFallback")} items={items} evaluationByRequirement={FIXTURE_REQUIREMENT_EVALUATIONS} locale={locale} t={t} />
+                <RequirementGroup key={programId} title={programNameById.get(programId) ?? t("programFallback")} items={items} evaluationByRequirement={FIXTURE_REQUIREMENT_EVALUATIONS} locale={locale} t={t} tSourceBadge={tSourceBadge} />
               ))}
             </>
           ) : (

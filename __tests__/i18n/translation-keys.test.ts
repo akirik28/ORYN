@@ -241,8 +241,15 @@ describe("every statically-resolvable t() key exists in the catalog", () => {
     // `t: Translator` parameter (the home page rotating strip's compact card) — same
     // dashboard-view.tsx/opportunity-card.tsx TS-generic workaround already accepted twice
     // over in this project, threaded through one more file for the identical reason.
+    // 2026-09-05: bumped 42 → 44. features/universities/requirement-group.tsx's new
+    // `tSourceBadge: Translator` parameter — three call sites (source/checked/viewSource),
+    // added so requirements finally show the same "Checked X ago" freshness chrome the
+    // detail page's tuition/statistics rows already had (requirement-freshness-audit-
+    // 2026-09-05.md). Same already-accepted shape as the existing `t: Translator` parameter
+    // one line above this comment in the same file, not a new pattern — a second translator
+    // namespace passed into one component, one parameter binding it, three calls off it.
     const report = skipped.map((s) => `${s.file}:${s.line} ${s.call}`).join("\n");
-    expect(skipped.length, `unresolvable calls (nearest binding is a parameter):\n${report}`).toBeLessThan(42);
+    expect(skipped.length, `unresolvable calls (nearest binding is a parameter):\n${report}`).toBeLessThan(44);
   });
 
   test("no call resolves to a key en.json does not have", () => {
