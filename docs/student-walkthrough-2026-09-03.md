@@ -155,3 +155,18 @@ not walk every screen (Danışman/Advisor chat, Applications, Documents, Saved) 
 the surfaces CEO named plus the ones the walk naturally passed through. Did not attempt to
 quantify how many of the full ~366-row catalogue show the English-leak pattern — the 15-of-24
 figure is what was actually read, not extrapolated.
+
+---
+
+## ✅ 2026-09-05 audit — one finding closed, two still uncertain
+
+Dashboard crash (`OpportunityStripCard` passing a Lucide icon as a prop across the
+Server→Client boundary) AND the `opportunity_matches` upsert rejecting a float into an integer
+column (dropping the whole batch) → **Both closed** — commit `75d10796` (2026-09-03), "Fix the
+upsert that silently threw away a student's entire match set", `clampScore()` now used on both
+return paths; the icon fix landed the same day per `features/opportunities/opportunity-strip-
+card.tsx`'s own comment. Verified via `git merge-base --is-ancestor 75d10796 origin/main`.
+
+Still uncertain, not re-verified live: the English-leak issue and the bare-currency-number case
+— code paths are now locale-aware in `matching.ts`, but whether the underlying stored
+`description` prose was itself cleaned up is a data question this pass didn't check.

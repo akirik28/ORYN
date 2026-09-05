@@ -241,3 +241,18 @@ of a deeper government-form problem.
    edit/delete per item, the now-live skills/languages provenance tagging, screens 1-4's
    validation and optionality, and the three stuck accounts' actual database state — held up
    under both a source read and a live walkthrough, with no daylight between the two.
+
+---
+
+## ✅ 2026-09-05 audit — two findings closed, one still open
+
+`linkedToVerified` mislabels a self-added unverified entity as verified → **Closed** — current
+`features/entities/entity-combobox.tsx` branches correctly on `isCustom`.
+
+`onboarding_step` written to exactly one value once, can't show drop-off point → **Closed** —
+commit `06d02ab2` (2026-09-04), "Record onboarding step transitions for drop-off analysis".
+Verified via `git merge-base --is-ancestor 06d02ab2 origin/main`.
+
+Still open, re-confirmed 2026-09-05: "Enter manually" and "Skip for now" are the identical path
+(`features/onboarding/steps/import-step.tsx` both call `setMethod("manual")`) despite different
+subtitle copy.

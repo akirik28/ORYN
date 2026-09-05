@@ -138,3 +138,15 @@ as one. Did not classify all ~74 individually into delete/rewrite — the 92/8 r
 the 38 rows actually read in full, not the full estimated population. Did not touch the
 locale-propagation bug, the currency defect, or any of the three "noticed in passing" items
 above — all reported, none fixed, none staged.
+
+---
+
+## ✅ 2026-09-05 audit — one finding closed, rest still open
+
+UCSB stale-date recommendation → **Closed** — commit `994ed8b8` (2026-09-03), "Merge the
+match-score diagnosis — one line explains the 91, and a deeper problem underneath it". Verified
+via `git merge-base --is-ancestor 994ed8b8 origin/main`.
+
+Still open, re-confirmed 2026-09-05: ~74 rows with leaked internal research notes in
+`description` (live spot-check found 6 active rows still matching the leak pattern; no SQL was
+ever staged for the rest).

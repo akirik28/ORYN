@@ -223,3 +223,13 @@ This session's own scratch Supabase project (`oryn-qa-scratch`) is left active; 
 unrelated project in the same org (`menter-chatbot`) was paused to make room for it under
 the org's free-tier limit and has not yet been restored — see the session's final message
 for exact current state and what's needed to resolve it.
+
+---
+
+## ✅ 2026-09-05 audit — one finding closed
+
+`profiles.target_geography` collected, never read into matching/outlook logic → **Closed** —
+field renamed plural (`target_geographies`), now read in `lib/opportunities/matching.ts`.
+Commits `92cfb028` (2026-09-04), "Wire target_geographies into opportunity relevance -- a
+boost, not a gate", and `707d74e6` (2026-09-04), "Merge the target-geography relevance boost --
+the field students fill is finally read". Both verified via `git merge-base --is-ancestor`.

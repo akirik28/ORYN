@@ -283,3 +283,11 @@ Fixed: failures are data, the run continues, and the report carries them alongsi
 Also closed in the same package: `harness.ts` had been **hand-copying** the weekly-plan prompt,
 so an edit to the real one was not being measured at all — a drift risk the file's own header
 had warned about since it was written. It now calls the real exported builder.
+
+---
+
+## ✅ 2026-09-05 audit — closed
+
+`scripts/run-ai-eval.ts` never loading `.env.local` → **Closed** — commit `32c90027`
+(2026-09-02), "fix(eval): load .env.local before the harness's own module graph reads it".
+Verified via `git merge-base --is-ancestor 32c90027 origin/main`.

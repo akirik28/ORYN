@@ -184,3 +184,12 @@ project's history.
   out.
 
 No code was changed for this audit.
+
+---
+
+## ✅ 2026-09-05 audit — all three findings closed
+
+All three (undisclaimed readiness badge, bell's overconfident empty state, exact-day deadline
+threshold bug) → **Closed**, same commit: `cbf5e966` (2026-09-04), "Fix the exact-day deadline
+threshold bug, the bell's overconfident empty state, and the undisclaimed readiness badge".
+Verified via `git merge-base --is-ancestor cbf5e966 origin/main`.

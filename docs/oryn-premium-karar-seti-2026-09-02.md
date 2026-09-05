@@ -267,3 +267,12 @@ bekleyerek geri dönüş** — yeni bir ödeme/rıza yüzeyi açmıyor, güvenli
 (doğrudan açılıp okundu); USD/TRY kuru —
 [tradingeconomics.com](https://tradingeconomics.com/turkey/currency), 2026-09-02 (arama
 özetinden, sayfa doğrudan doğrulanmadı — kur verisi olduğu için düşük risk).
+
+---
+
+## ✅ 2026-09-05 denetimi — kapandı
+
+Karar 2 (advisor_chat kotası 300, $1 tavanla ilişkisiz, ~56'ya çekilmeli) → **Kapandı** —
+commit `5ea61cfc` (2026-09-02), "fix(ai): advisor_chat quota 300 -> 50, re-derived against
+real token data" (önerilenden de düşük). `git merge-base --is-ancestor 5ea61cfc origin/main`
+ile doğrulandı.

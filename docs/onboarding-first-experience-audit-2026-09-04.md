@@ -112,3 +112,14 @@ Per the brief: this is a look-and-report pass. Three items carried forward or ne
 product/priority decision, none touched: the Enter-manually/Skip-for-now copy convergence,
 `onboarding_step`'s inability to show real drop-off, and (informational, not a bug) the
 design-preview harness's own mobile-viewport overlap trap for future testers.
+
+---
+
+## ✅ 2026-09-05 audit — one finding closed, one still open
+
+`onboarding_step` cannot show real drop-off → **Closed** — commit `06d02ab2` (2026-09-04),
+"Record onboarding step transitions for drop-off analysis" (landed the day after this audit).
+Verified via `git merge-base --is-ancestor 06d02ab2 origin/main`.
+
+Still open, re-confirmed 2026-09-05: Enter-manually/Skip-for-now copy convergence — both still
+call `setMethod("manual")`.
