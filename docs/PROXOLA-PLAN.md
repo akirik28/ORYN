@@ -49,6 +49,34 @@
 
 ---
 
+## 🟠 DÜNKÜ DÜRÜSTLÜK İŞİ CANLIDA DEĞİL — 5 Eylül, CEO doğruladı
+
+**Canlı veritabanı `opportunities` tablosunda altı uygunluk sütunundan beşi yok.**
+CEO kendi SQL'iyle doğruladı (bir şeridin bulgusu üzerine):
+
+| sütun | canlıda |
+|---|---|
+| `country_eligibility_confirmed_open` (0060) | ✅ var |
+| `age_eligibility_confirmed_open` | ❌ yok |
+| `grade_eligibility_confirmed_open` | ❌ yok |
+| `country_eligibility_basis` · `age_eligibility_basis` · `grade_eligibility_basis` | ❌ yok |
+
+**Sonuç: dün "%97 → %79" diye raporlanan iyileşme canlıda geçerli değil.** Kod ve
+migration'lar `main`'de duruyor, uygulanmayı bekliyor. Bir şeridin bugünkü bağımsız
+ölçümü (%94,8) **dünkü başlangıç sayısıyla birebir aynı** — tam da bu yüzden.
+
+**Ama arıza değil, ve yönü güvenli:** sorgular `select("*")` kullanıyor, yani eksik
+sütun hata değil **yokluk** olarak geliyor; kod `?? false` / `?? null` ile düşüyor.
+Bu da ürünü **daha çok uyarı gösteren** tarafa düşürüyor, daha az değil. Yani canlı
+ürün **fazla temkinli**, yanıltıcı değil. **Kullanıcı zarar görmüyor, iyileşme
+sadece teslim edilmemiş.**
+
+**Bu, aşağıdaki "Kurucuyu bekleyen migration'lar — HİÇBİRİ ACİL DEĞİL" başlığını
+geçersiz kılmıyor ama anlamını değiştiriyor:** acil değil çünkü bir şey bozuk değil;
+**ama uygulanmadan dünkü işin hiçbiri öğrenciye ulaşmıyor.**
+
+---
+
 ## 🔴 CRON'LARI AÇMADAN ÖNCE OKU — moladan hemen önce bulundu
 
 **Haftalık plan işi (Job D) açılırsa, hiçbir öğrenciye plan üretmeden "başarılı"
