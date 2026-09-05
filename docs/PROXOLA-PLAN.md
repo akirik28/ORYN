@@ -42,6 +42,14 @@
 >    beri ilgili dosyalara ne indiğine bak (`git log --since=<tarih> -- <yol>`).
 >    Doküman iddia eder; **kod gerçektir.**
 
+> 13. **Yeşil bir test, hiçbir şey kontrol etmiyor olabilir.** Bugün üç ayrı yerde
+>    bir test aracı hatayı **yuttu**: `mock-supabase-table` `.order()`'ı bilinçli
+>    no-op sayıyordu (sıralama hatası görünmezdi) · eski bir `next-intl` mock'u
+>    hiçbir şey yapmıyordu (Job D hatası saklanıyordu) · ve veli eşleme testinin
+>    fixture'ı **gerçekçi skorlar taşıyordu ama assertion dardı** — test baştan beri
+>    hatayla birlikte yaşıyormuş. **Kontrolün kırmızıya dönebildiğini kanıtlamak
+>    yetmiyor; kontrolün DOĞRU ŞEYE baktığını da kanıtlamak gerekiyor.**
+
 > 12. **Kırmızıyı kanıtlarken `git stash` KULLANMA.** Bugün üç ayrı şerit kullandı
 >    (biri iki kez uyarıldıktan sonra) — kimseye zarar gelmedi, **ama yığın bu
 >    ortamda şeritler arasında paylaşılıyor** ve dün bir şeridin `pop`'u başkasının
