@@ -53,15 +53,20 @@ tutmamam.** Plan işleri listeliyordu ama **kimde olduğunu** yazmıyordu.
 | `oryn-b1` (kullanım sınırları) | **RLS güvenlik** — `evidence_status` 10 tabloda, `target_universities` kabul görünümü sütunları |
 | production deployment | **Faz 12** — `profile_need`/`effort`/`confidence` ekrana |
 | i18n | **Uygunluk rozeti** — dört durumu ayır |
-| academic_tier | *(boşta)* |
+| academic_tier | **Bildirim koruma** — `title`/`body`/`link`/`category` (madde 5), `0135` |
 | freemium | **`under_review` çıkmazı** — 27 satır, çıkış yolu yok |
 | yeni ülke | **Faz 16** — `academic_fit`/`profile_fit` eşleme katmanında düşüyor |
 | fırsatlar görsel | **Başvuru sayfası** — kabul görünümü rozeti |
 | hukuki çerçeve | **`LEGAL_REVIEW.md` §2** — yanlış iddia |
 | CFO | gözetim |
 
-**Migration numaraları:** `0134` = e-posta doğrulama (alındı). Sonrakini **CEO verir**,
-şerit kendi almaz.
+**Migration numaraları — CEO verir, şerit kendi almaz:**
+`0134` e-posta doğrulama (alındı) · `0135` bildirim koruma tetikleyicisi (academic_tier
+şeridi) · `0136`-`0137` **ayrıldı**, `oryn-b1`'in RLS düzeltmeleri için. Tüm uzak
+dallar tarandı, üçü de boştu.
+
+| şerit | iş | *(academic_tier şeridi artık boşta değil)* |
+|---|---|---|
 
 ---
 
