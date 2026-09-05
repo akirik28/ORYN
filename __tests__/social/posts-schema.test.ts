@@ -727,7 +727,22 @@ describe("migration numbering", () => {
     // id+user_id combination confirmed matching zero rows. Both proven red-to-green-to-broken-
     // to-restored the same way as 0135 -- docs/evidence-status-and-target-universities-rls-
     // guard-proof-2026-09-05.md.
-    expect(Math.max(...numbers.map(Number))).toBe(137);
+    //
+    // 0138 (messages_guard_identity_columns), 0139 (connections_guard_identity_columns) --
+    // items 6 and 7 of the same sweep, CEO-assigned both together after checking every remote
+    // branch. Same guard shape again, but no paired code change needed for either -- neither
+    // legitimate writer (app/(app)/messages/actions.ts, app/(app)/connections/actions.ts) ever
+    // used an admin client, confirmed by reading both files, so RLS stays fully in force for
+    // both writes and there is no ownership-bypass question the way 0136/0137 raised. Proven
+    // against a real local Postgres instance with each table's own unmodified RLS policy text
+    // -- docs/messages-connections-guard-proof-2026-09-05.md -- as a single combined statement
+    // (the legitimate field alongside the smuggled one, matching a real PATCH) rather than two
+    // separate operations, so the proof also confirms the legitimate field still updates in the
+    // same statement the smuggled one is blocked. Both guards are deliberately column-scoped
+    // rather than skipped on the grounds that "today's writer never touches these columns" --
+    // written up explicitly as defense-in-depth against a writer that doesn't exist yet, not a
+    // description of the one that exists now.
+    expect(Math.max(...numbers.map(Number))).toBe(139);
   });
 });
 
