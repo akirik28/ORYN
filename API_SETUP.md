@@ -148,6 +148,42 @@ configuration, since OpenAlex has no auth requirement.
 
 ---
 
+## Payments (Ultra tier checkout — 2026-09-04)
+
+**Purpose:** Starts checkout for the Ultra plan tier (`lib/payments/checkout.ts`'s
+`startUltraCheckout`, one function both the plan page and the full-screen upgrade modal call
+via `app/(app)/upgrade-interstitial-actions.ts`'s `startUltraCheckoutAction`) and applies the
+resulting entitlement once the provider confirms payment
+(`lib/payments/webhook-handler.ts`).
+
+**Environment variables:** `PAYMENT_PROVIDER` — **not yet chosen** (founder decision pending;
+candidates on the table are Stripe, iyzico, and PayTR). Provider-specific credential vars
+(e.g. `STRIPE_SECRET_KEY`) are deliberately not declared anywhere yet — inventing them for a
+vendor that might not be picked would be exactly the premature-abstraction `lib/env.ts`'s own
+header warns against. Setting this name alone does nothing: `lib/payments/index.ts`'s
+`getPaymentProvider()` has no `case` for any value yet — a real adapter class needs to be
+added there, implementing `lib/payments/provider.ts`'s `PaymentProvider` interface, before
+checkout can actually redirect anywhere.
+
+**Where it's used:** `lib/payments/checkout.ts` (creating a checkout session),
+`app/api/webhooks/payment/route.ts` via `lib/payments/webhook-handler.ts` (applying
+`subscription_renewed`/`subscription_canceled`/`payment_failed`/`refunded` events back to
+the student's entitlement).
+
+**How to verify:** no automated check yet — `npm run check:integrations` will need a case
+added the same day a concrete adapter is, mirroring the pattern every other provider there
+already follows.
+
+**Typical failure (today):** always "not configured" — the expected, permanent state until
+a provider is chosen and implemented, not a transient error.
+
+**How the app handles failure:** `startUltraCheckout` returns `{status: "not_configured"}`,
+surfaced by the upgrade modal/plan page as the honest, visible default (not a broken or fake
+checkout flow) — see that function's own header comment: this is a real, checked branch, not
+a stub nobody wired up yet.
+
+---
+
 ## Email (student email verification — E2, 2026-09-05)
 
 **Purpose:** Sends the one-time code that verifies a student controls their own account
