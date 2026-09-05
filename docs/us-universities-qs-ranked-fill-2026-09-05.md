@@ -2615,3 +2615,264 @@ test-optional status rests on a 2020 announcement whose own stated "5 years" win
 elapsed relative to today (2026-09-06) — flagged as stale and given `data_confidence: 'low'`
 rather than `'medium'`, the first time this document has downgraded confidence for that specific
 reason.
+
+---
+
+# Batch 11
+
+## 71. Georgia State University (QS band 801-850, list position 818)
+
+`id = '85430ad6-8afd-418f-a8e2-9f28ce3fbbd3'`
+
+**Sources:** `https://admissions.gsu.edu/test-optional-m/` (official test-optional page) and
+`https://admissions.gsu.edu/kb/what-are-your-english-language-proficiency-elp-requirements/`
+(official ELP-requirements knowledge-base page).
+
+**Directly confirms, not just resembles, the same University System of Georgia mandate found for
+the University of Georgia in batch 5** -- Georgia State is a separate USG institution subject to
+the identical system-wide decision, strengthening that finding from "similar pattern" to
+"confirmed same policy body covering multiple named institutions."
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('85430ad6-8afd-418f-a8e2-9f28ce3fbbd3', 'standardized_test',
+   'Test-optional through Summer 2025 (waived outright at 3.4+ recalculated GPA); SAT/ACT REQUIRED from Fall 2026 onward per the same University System of Georgia decision documented for UGA in batch 5',
+   'Through Summer 2025, Georgia State does not require SAT/ACT for bachelor''s/associate/dual-enrollment applicants, and applicants with a 3.4+ GPA (recalculated on the 17-unit Required High School Curriculum) are not required to submit a score at all for the admission decision. For Fall 2026 and later (Atlanta campus), SAT or ACT IS required -- this is the same University System of Georgia system-wide decision already documented for the University of Georgia in batch 5, now confirmed to cover Georgia State as a separate named institution too.',
+   true, 'medium', 'https://admissions.gsu.edu/test-optional-m/', now()),
+  ('85430ad6-8afd-418f-a8e2-9f28ce3fbbd3', 'english_proficiency',
+   'TOEFL iBT 69, IELTS Academic 6, OR a qualifying SAT Reading (480+) / ACT English (17+) sub-score as an alternative',
+   'Georgia State requires proof of English proficiency from applicants who attended school internationally. Accepted: TOEFL iBT 69 minimum, IELTS Academic 6 minimum, 4-Skills Michigan English Test, or Pearson Test of English (Academic). Real, distinct alternative (same pattern as USF, Drexel, and UCF elsewhere in this document): a qualifying SAT Reading score of 480+ or ACT English score of 17+ can substitute for a dedicated English-proficiency exam.',
+   true, 'medium', 'https://admissions.gsu.edu/kb/what-are-your-english-language-proficiency-elp-requirements/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('85430ad6-8afd-418f-a8e2-9f28ce3fbbd3', 'https://admissions.gsu.edu/test-optional-m/',
+   'admissions.gsu.edu', 'official_admissions_office', now(), 'medium',
+   'For applicants to Georgia State''s Atlanta Campus applying for Fall 2026 or later, SAT or ACT scores are required...This requirement stems from the University System of Georgia''s decision to require test scores...for applicants with a 3.4 GPA or higher...the university will not require test scores for an admissions decision.'),
+  ('85430ad6-8afd-418f-a8e2-9f28ce3fbbd3', 'https://admissions.gsu.edu/kb/what-are-your-english-language-proficiency-elp-requirements/',
+   'admissions.gsu.edu', 'official_admissions_office', now(), 'medium',
+   'The university accepts SAT Reading (minimum score 480), ACT English (minimum score 17), TOEFL iBT (minimum score 69), IELTS Academic (minimum score 6) and other examinations.');
+```
+
+## 72. Rutgers University–Newark (QS band 801-850, list position 826)
+
+`id = '15212593-977b-44ea-a47a-943f5a437f43'`
+
+**Sources:** `https://admissions.rutgers.edu/apply/first-year-applicants` (official
+required-credentials page) and `https://admissions.rutgers.edu/apply/international-applicants`
+(official international-applicants page).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('15212593-977b-44ea-a47a-943f5a437f43', 'standardized_test',
+   'Test-optional AND test-blind through 2027 for most applicants; required for the 7-year BA/MD joint-degree program',
+   'Rutgers (university-wide, covering the Newark campus) does not require SAT/ACT for most undergraduate applicants and maintains both test-optional and test-blind policies through 2027. Real, distinct exception (same recurring pattern as RPI, Iowa''s Tippie, Drexel''s BA/BS+MD, and Stevens'' Pinnacle Scholars elsewhere in this document): the 7-year BA/MD joint-degree program requires SAT/ACT scores. Applicants still in or recently out of high school (fewer than 12 college credits) may still optionally submit a score.',
+   false, 'medium', 'https://admissions.rutgers.edu/apply/first-year-applicants', now()),
+  ('15212593-977b-44ea-a47a-943f5a437f43', 'english_proficiency',
+   'TOEFL iBT 79, IELTS 6.5+ (as of Jan 1 2024), or Duolingo 115',
+   'Required of all students whose undergraduate degree (or, for freshmen, secondary schooling) was completed outside the US in a country where English is not the principal language. Minimums: TOEFL internet-based 79, IELTS 6.5 or greater (effective January 1, 2024 -- a real, dated threshold change), Duolingo English Test 115. Scores must be within 2 years of the application semester. Waivable for a bachelor''s degree completed at an English-medium institution.',
+   true, 'medium', 'https://admissions.rutgers.edu/apply/international-applicants', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('15212593-977b-44ea-a47a-943f5a437f43', 'https://admissions.rutgers.edu/apply/first-year-applicants',
+   'admissions.rutgers.edu', 'official_admissions_office', now(), 'medium',
+   'Rutgers...maintains test-optional and test-blind policies through 2027...SAT/ACT scores ARE required for students applying to the Rutgers-Newark 7-year BA/MD joint-degree program.'),
+  ('15212593-977b-44ea-a47a-943f5a437f43', 'https://admissions.rutgers.edu/apply/international-applicants',
+   'admissions.rutgers.edu', 'official_admissions_office', now(), 'medium',
+   'The minimum internet-based TOEFL score is 79...As of January 1, 2024, an acceptable IELTS score is 6.5 or greater...The minimum Duolingo score is 115.');
+```
+
+## 73. University of Maryland, Baltimore (QS band 801-850, list position 842)
+
+`id = '847190a9-ddc2-4c75-ae24-04e07e20f180'`
+
+**Data-quality risk caught and avoided before writing anything:** a first search pass for "University
+of Maryland Baltimore" returned University of Maryland COLLEGE PARK's testing policy and score
+ranges (SAT 1380-1510) -- a different, much larger, more selective sibling institution sharing
+part of a name, the same class of mixup as the Ohio State/ASU citation catch in an earlier batch.
+Those College Park figures are NOT used here. UMB itself is primarily a professional/graduate
+campus (six professional schools -- medicine, law, pharmacy, dentistry, nursing, social work --
+plus a graduate school) with a small undergraduate population (reported as roughly 15% of
+students). A targeted re-search found a secondary aggregator (testbook.com) reporting a
+UMB-specific SAT/ACT range distinct from and lower than College Park's, which increases confidence
+UMB is tracked as its own institution rather than another mixup, but no official `umaryland.edu`
+page stating a specific UMB testing policy (required/optional) was found in this pass, nor any
+UMB-specific English-proficiency minimum -- both left unstated rather than guessed or borrowed
+from College Park.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('847190a9-ddc2-4c75-ae24-04e07e20f180', 'standardized_test',
+   'Presumed covered by the University System of Maryland''s system-wide optional-testing extension (through 2027); no UMB-specific official policy page confirmed in this pass; NOT the same institution as University of Maryland, College Park',
+   'UMB is a University System of Maryland (USM) constituent institution, and USM as a system extended optional SAT/ACT testing (through Spring/Fall 2027 per USM-wide coverage). No UMB-specific official page confirming this directly was found in this pass. A secondary aggregator (testbook.com) reports a UMB-specific admitted-student range of SAT 1060-1310 / ACT 23-30 -- distinct from and lower than College Park''s own range, supporting that this is genuinely UMB-specific data rather than a repeat of the College Park mixup caught during this search. UMB''s undergraduate population is a small fraction of its total enrollment (~15%), reflecting its primary identity as a professional/graduate campus.',
+   false, 'low', 'https://foxbaltimore.com/news/local/satact-scores-no-longer-required-for-university-system-of-maryland-admissions', now()),
+  ('847190a9-ddc2-4c75-ae24-04e07e20f180', 'english_proficiency',
+   'No UMB-specific numeric minimum confirmed in this pass',
+   'No UMB-specific (as opposed to College Park, or one of UMB''s individual professional schools) English-proficiency minimum was confirmed in this pass. Not asserted rather than guessed or borrowed from a different institution or a graduate/professional program.',
+   true, 'low', 'https://www.umaryland.edu/admissions/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('847190a9-ddc2-4c75-ae24-04e07e20f180', 'https://foxbaltimore.com/news/local/satact-scores-no-longer-required-for-university-system-of-maryland-admissions',
+   'foxbaltimore.com', 'secondary_source', now(), 'low',
+   'SAT/ACT scores no longer required for University System of Maryland admissions.'),
+  ('847190a9-ddc2-4c75-ae24-04e07e20f180', 'https://testbook.com/en-us/college/university-of-maryland-baltimore-admissions',
+   'testbook.com', 'secondary_source', now(), 'low',
+   'The University of Maryland Baltimore SAT requirement for admitted students typically ranges from 1060 to 1310...the middle 50% of admitted students generally score between 23 and 30 on the ACT.');
+```
+
+## 74. University of Maryland, Baltimore County (UMBC) (QS band 801-850, list position 843)
+
+`id = '3629d0fc-5c35-4c84-aba1-5fb38ba02d20'`
+
+**Sources:** secondary sources corroborating consistent figures; no single official `umbc.edu`
+page with every detail resolved cleanly in this pass.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('3629d0fc-5c35-4c84-aba1-5fb38ba02d20', 'standardized_test',
+   'Test-optional for first-year and most transfer applicants',
+   'UMBC does not require SAT/ACT for first-year or most transfer applicants; scores are considered if submitted but do not overshadow GPA and course rigor. Reported averages: SAT 1320 combined (661 Reading/Writing, 659 Math), ACT composite 27.75.',
+   false, 'medium', 'https://umbc.edu/undergraduate/first-year-students/application-ready/', now()),
+  ('3629d0fc-5c35-4c84-aba1-5fb38ba02d20', 'english_proficiency',
+   'TOEFL, IELTS, Duolingo, Cambridge English, or a qualifying SAT EBRW score (another instance of test-substitutes-for-EP); no specific numeric minimums confirmed in this pass',
+   'International applicants must submit proof of English proficiency via one of: TOEFL, IELTS, Duolingo English Test, Cambridge English Qualification, or the SAT Evidence-Based Reading and Writing section (the last being another instance of a standardized-test sub-score substituting for a dedicated exam, alongside USF/Drexel/Georgia State elsewhere in this document). No specific numeric minimums were confirmed for any of these in this pass.',
+   true, 'medium', 'https://www.collegevine.com/faq/55146/umbc-admission-requirements', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('3629d0fc-5c35-4c84-aba1-5fb38ba02d20', 'https://umbc.edu/undergraduate/first-year-students/application-ready/',
+   'umbc.edu', 'official_admissions_office', now(), 'medium',
+   'UMBC is currently test-optional...you are not required to submit SAT or ACT scores...if submitted, scores are considered but do not overshadow GPA and course rigor.'),
+  ('3629d0fc-5c35-4c84-aba1-5fb38ba02d20', 'https://www.collegevine.com/faq/55146/umbc-admission-requirements',
+   'collegevine.com', 'secondary_source', now(), 'medium',
+   'International applicants must submit proof of English proficiency through one of several accepted tests: TOEFL, IELTS, Duolingo English Test, Cambridge English Qualification, or the SAT Evidence-Based Reading and Writing section.');
+```
+
+## 75. University of Nebraska-Lincoln (QS band 801-850, list position 847)
+
+`id = '9ca050bf-cf04-4a8a-9d00-519891a5b5f2'`
+
+**Sources:** secondary sources; figures for English proficiency are explicitly reported as
+"averages," not confirmed minimums -- recorded with that hedge rather than treated as a hard cutoff.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('9ca050bf-cf04-4a8a-9d00-519891a5b5f2', 'standardized_test',
+   'Test-optional, dropped for BOTH admissions and scholarships (not just admissions)',
+   'University of Nebraska-Lincoln does not require SAT/ACT for admission, and scores are not required for merit scholarships either -- a real, notable detail since many test-optional peers in this document keep scores relevant to scholarship decisions even when dropping them for admission. Reported competitive range: SAT 1240-1490, ACT 25-32. GPA of 3.5+ generally preferred.',
+   false, 'medium', 'https://nebraska.tv/news/local/unl-drops-act-and-sat-requirement-for-scholarships-and-admissions', now()),
+  ('9ca050bf-cf04-4a8a-9d00-519891a5b5f2', 'english_proficiency',
+   'Reported as averages, not confirmed minimums: IELTS 6.5, TOEFL 75, Duolingo 110',
+   'Reported figures for international applicants -- IELTS 6.5, TOEFL 75, Duolingo 110 -- are stated as averages in the source, not explicitly as hard minimum cutoffs. Not asserted as confirmed minimums given that ambiguity.',
+   true, 'medium', 'https://www.prepscholar.com/sat/s/colleges/University-of-Nebraska---Lincoln-admission-requirements', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('9ca050bf-cf04-4a8a-9d00-519891a5b5f2', 'https://nebraska.tv/news/local/unl-drops-act-and-sat-requirement-for-scholarships-and-admissions',
+   'nebraska.tv', 'secondary_source', now(), 'medium',
+   'UNL drops ACT and SAT requirement for scholarships and admissions.'),
+  ('9ca050bf-cf04-4a8a-9d00-519891a5b5f2', 'https://www.prepscholar.com/sat/s/colleges/University-of-Nebraska---Lincoln-admission-requirements',
+   'prepscholar.com', 'secondary_source', now(), 'medium',
+   'For international students, English proficiency test averages include an IELTS score of 6.5, a TOEFL score of 75, and a Duolingo score of 110.');
+```
+
+## 76. Wake Forest University (QS band 801-850, list position 850)
+
+`id = '126d7147-0a13-48bf-9044-d0e0b3591ed1'`
+
+**Sources:** `https://admissions.wfu.edu/become-a-deacon/test-optional/` (official test-optional
+page).
+
+**Real, distinct origin story worth flagging on its own:** unlike nearly every other
+test-optional policy recorded in this document (traceable to 2020-2021 pandemic responses or
+subsequent state/system decisions), Wake Forest's dates to May 2008 -- over a decade earlier,
+framed as an admissions philosophy rather than a reaction to a disruption.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('126d7147-0a13-48bf-9044-d0e0b3591ed1', 'standardized_test',
+   'Test-optional since May 2008 -- a long-standing philosophy predating the pandemic-era wave seen at most peers in this document, not a reactive policy',
+   'Wake Forest announced in May 2008 that it would no longer require SAT/ACT, a genuinely older and philosophy-driven policy (valuing individual achievement, initiative, talent, and character over standardized testing) rather than a 2020-2021 pandemic response like most other test-optional policies in this document. Scores are never penalized if submitted. Reported figures for score-submitters: average SAT 1450-1470, middle 50% 1410-1500; average ACT 33.',
+   false, 'medium', 'https://admissions.wfu.edu/become-a-deacon/test-optional/', now()),
+  ('126d7147-0a13-48bf-9044-d0e0b3591ed1', 'english_proficiency',
+   'TOEFL, IELTS, or Duolingo required for non-native English speakers; no specific numeric minimum confirmed in this pass',
+   'International students whose first language is not English must submit TOEFL, IELTS, or Duolingo. No specific numeric minimum was confirmed for any of the three in this pass.',
+   true, 'medium', 'https://admissions.wfu.edu/become-a-deacon/test-optional/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('126d7147-0a13-48bf-9044-d0e0b3591ed1', 'https://admissions.wfu.edu/become-a-deacon/test-optional/',
+   'admissions.wfu.edu', 'official_admissions_office', now(), 'medium',
+   'Wake Forest announced in May 2008 that it would no longer require applicants to submit scores in standardized tests such as the SAT or the ACT...International students whose first language is not English are required to submit a TOEFL, IELTS or Duolingo score.');
+```
+
+## 77. Wayne State University (QS band 801-850, list position 851)
+
+`id = 'c97e2a64-8ff0-4972-8e83-8857838b2a2b'`
+
+**Sources:** `https://bulletins.wayne.edu/undergraduate/general-information/admission/` (official
+undergraduate-admission catalog page) and `https://wayne.edu/admissions/international/english-proficiency`
+(official English-proficiency page).
+
+**Real, distinct dual-pathway mechanism worth flagging on its own, not just "test-optional":**
+Wayne State names two formal, parallel admission pathways rather than a single optional/required
+axis.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('c97e2a64-8ff0-4972-8e83-8857838b2a2b', 'standardized_test',
+   'Two named, parallel pathways: "test-considered" (official SAT/ACT required) or "test-optional" (no score, but additional holistic materials like an essay may be required)',
+   'Wayne State offers two distinct, formally-named admission pathways rather than a single optional/required policy: a "test-considered" pathway requiring official SAT/ACT submission, and a "test-optional" pathway requiring no score but potentially additional supporting materials (e.g. a personal essay) for holistic review. Reported middle-50 for the test-considered pathway: SAT 1060-1260, ACT 23-29; average SAT 1145, ACT 25.',
+   false, 'medium', 'https://bulletins.wayne.edu/undergraduate/general-information/admission/', now()),
+  ('c97e2a64-8ff0-4972-8e83-8857838b2a2b', 'english_proficiency',
+   'TOEFL iBT 79, IELTS 6.5+, Michigan English Test (MET) 64, or Duolingo 110; completing Wayne State''s own English Language Institute top level also satisfies the requirement',
+   'International undergraduate applicants must meet one of: TOEFL iBT 79, IELTS 6.5 or higher, Michigan English Test (MET) 64, or Duolingo English Test 110. Alternative: advancing through the highest level of Wayne State''s own English Language Institute (ELI) satisfies the general English-proficiency requirement without a standardized test.',
+   true, 'medium', 'https://wayne.edu/admissions/international/english-proficiency', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('c97e2a64-8ff0-4972-8e83-8857838b2a2b', 'https://bulletins.wayne.edu/undergraduate/general-information/admission/',
+   'bulletins.wayne.edu', 'official_admissions_office', now(), 'medium',
+   'Wayne State University offers two pathways: a test-considered pathway where students must submit official ACT or SAT scores, and a test-optional pathway where students are not required to submit standardized test scores.'),
+  ('c97e2a64-8ff0-4972-8e83-8857838b2a2b', 'https://wayne.edu/admissions/international/english-proficiency',
+   'wayne.edu', 'official_admissions_office', now(), 'medium',
+   'TOEFL iBT: minimum score of 79...IELTS: scores of 6.5 or higher...Michigan English Test (MET): minimum score of 64...Duolingo English Test: minimum score of 110...Students who advance from the highest level of the English Language Institute...satisfy the university''s general English proficiency requirement.');
+```
+
+---
+
+## Verification (batch 11)
+
+Read-only against the live database plus `WebSearch` for content — no code changed, no live
+database writes. SQL staged for CEO/founder review and application, not applied. Georgia State
+directly confirms (not just resembles) the same University System of Georgia mandate found for
+UGA in batch 5 — the first time this document has verified a system-mandate finding against a
+second named institution under the identical governing body. University of Maryland, Baltimore
+required real care: a first search pass returned College Park's data under a UMB query, caught
+and discarded before writing anything, with the entry left at `data_confidence: 'low'` and an
+explicit note that no UMB-specific official policy page was confirmed — the second time this
+document has downgraded confidence for a source-quality reason rather than a cycle-scoping one
+(after Oklahoma in batch 10).
