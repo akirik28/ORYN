@@ -80,7 +80,7 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
     supabase.from("university_rankings").select("university_id, rank_display").eq("ranking_provider", "QS").in("university_id", requestedIds),
     supabase
       .from("university_profile_metrics")
-      .select("university_id, metric_code, value_text, value_numeric, unit, precision_state, source_url, verified_at")
+      .select("university_id, metric_code, value_text, value_numeric, unit, precision_state, source_url, source_type, verified_at, stats_as_of")
       .in("university_id", requestedIds)
       .in("metric_code", ["research_topics_top5", "tuition_domestic_annual", "tuition_international_annual"]),
     supabase
@@ -173,12 +173,18 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
   const internationalTuitionByUniId = new Map(
     (metrics ?? [])
       .filter((m) => m.metric_code === "tuition_international_annual" && m.value_numeric != null)
-      .map((m) => [m.university_id, { amount: m.value_numeric!, unit: m.unit, precisionState: m.precision_state }])
+      .map((m) => [
+        m.university_id,
+        { amount: m.value_numeric!, unit: m.unit, precisionState: m.precision_state, sourceType: m.source_type, sourceUrl: m.source_url, verifiedAt: m.verified_at, statsAsOf: m.stats_as_of },
+      ])
   );
   const domesticTuitionByUniId = new Map(
     (metrics ?? [])
       .filter((m) => m.metric_code === "tuition_domestic_annual" && m.value_numeric != null)
-      .map((m) => [m.university_id, { amount: m.value_numeric!, unit: m.unit, precisionState: m.precision_state }])
+      .map((m) => [
+        m.university_id,
+        { amount: m.value_numeric!, unit: m.unit, precisionState: m.precision_state, sourceType: m.source_type, sourceUrl: m.source_url, verifiedAt: m.verified_at, statsAsOf: m.stats_as_of },
+      ])
   );
 
   const rows: { label: string; render: (u: University) => React.ReactNode }[] = [
@@ -235,13 +241,40 @@ export default async function CompareUniversitiesPage({ searchParams }: { search
       // Deliberately never fed costOfAttendance — this row exists specifically for the
       // tuition-only concept, so a US university's cost of attendance (already its own row
       // above) can't also surface here under a different label.
+      //
+      // Source badge (2026-09-05, CEO follow-up to B5): before this, every other row with a
+      // verifiable fact (statisticsSource, researchStrengths) carried its own per-column
+      // badge — tuition was the one bare row on the table, worse than a missing date, missing
+      // attribution entirely. ctx.kind picks the same entry (intl over dom, matching
+      // deriveTuitionContext's own priority) that already produced displayValue, so the badge
+      // can never cite the figure the row isn't actually showing. asOf mirrors the detail
+      // page's SourceBadge usage (B5) — free text, rendered only when non-blank.
       label: t("tuition"),
       render: (u) => {
         const intl = internationalTuitionByUniId.get(u.id) ?? null;
         const dom = domesticTuitionByUniId.get(u.id) ?? null;
         if (!intl && !dom) return NA;
         const ctx = deriveTuitionContext({ costOfAttendance: null, internationalTuition: intl, domesticTuition: dom }, locale);
-        return ctx.displayValue ?? NA;
+        if (!ctx.displayValue) return NA;
+        const sourceEntry = ctx.kind === "international" ? intl : ctx.kind === "domestic" ? dom : null;
+        return (
+          <div className="flex flex-col gap-1.5">
+            <span>{ctx.displayValue}</span>
+            {sourceEntry ? (
+              <SourceBadge
+                sourceName={sourceEntry.sourceType}
+                checkedAt={sourceEntry.verifiedAt}
+                asOf={sourceEntry.statsAsOf}
+                url={sourceEntry.sourceUrl}
+                locale={locale}
+                sourceLabel={tSourceBadge("source")}
+                checkedLabel={(time) => tSourceBadge("checked", { time })}
+                asOfLabel={tSourceBadge("asOf")}
+                viewSourceLabel={tSourceBadge("viewSource")}
+              />
+            ) : null}
+          </div>
+        );
       },
     },
     {
