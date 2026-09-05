@@ -3,9 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/security/dal";
 import { createClient } from "@/lib/supabase/server";
+import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { getConnectionWith } from "@/lib/social/connections";
 import { checkRecommendationEligibility } from "@/lib/social/recommendations";
+import { assertConnectionsEnabled } from "@/lib/social/connections-feature-flag";
 import { isUuidLike } from "@/lib/validation/uuid";
 import { assertWithinRateLimit, RateLimitExceededError } from "@/lib/security/rate-limit";
 import { RATE_LIMITS } from "@/lib/security/rate-limit-config";
@@ -30,6 +32,7 @@ const MAX_BODY_LENGTH = 3000;
  * via lib/social/recommendations.ts's pure predicate before the DB constraint would —
  * same "friendly error, not a raw RLS denial" convention as endorsements and messages. */
 export async function writeRecommendation(recipientId: string, relationship: RecommendationRelationship, body: string): Promise<ActionResult> {
+  assertConnectionsEnabled();
   const session = await requireUser();
   if (!isUuidLike(recipientId)) return { error: "Invalid recipient." };
   if (!isRelationship(relationship)) return { error: "Invalid relationship." };
@@ -100,9 +103,22 @@ export async function deleteRecommendation(recommendationId: string): Promise<Ac
   return {};
 }
 
-export async function reportRecommendation(recommendationId: string, reportedUserId: string, reason: string): Promise<ActionResult> {
+/**
+ * `reported_user_id` is resolved from the recommendation's own `author_id` rather than
+ * taken from the caller, exactly the shape `reportPostForUser` (lib/social/
+ * post-actions.ts) already uses and for the same reason stated there: a client-supplied
+ * value would let anyone file a report naming an uninvolved student as the accused party.
+ * The lookup uses the admin client, not the caller's RLS-scoped session, deliberately —
+ * migration 0035's "select involved recommendations" policy only lets the author or
+ * recipient read a row directly, but the person reporting is typically neither: a
+ * recommendation reaches a public profile page via getRecommendationsFor's own
+ * admin-client read (lib/social/recommendations-query.ts), so most real reporters are
+ * third-party viewers whose own RLS-scoped session cannot see this row at all. Only
+ * `author_id` is read and used server-side, never returned to the caller.
+ */
+export async function reportRecommendation(recommendationId: string, reason: string): Promise<ActionResult> {
   const session = await requireUser();
-  if (!isUuidLike(recommendationId) || !isUuidLike(reportedUserId)) return { error: "Invalid report." };
+  if (!isUuidLike(recommendationId)) return { error: "Invalid report." };
   const trimmedReason = reason.trim().slice(0, 1000);
   if (!trimmedReason) return { error: "Please describe the issue." };
 
@@ -113,10 +129,19 @@ export async function reportRecommendation(recommendationId: string, reportedUse
     throw error;
   }
 
+  const admin = tryCreateAdminClient();
+  if (!admin) return { error: "Reporting isn't available right now. Please try again shortly." };
+
+  const { data: recommendation } = await admin.from("recommendations").select("author_id").eq("id", recommendationId).maybeSingle();
+  if (!recommendation) return { error: "That recommendation is no longer available." };
+
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("message_reports")
-    .insert({ reporter_id: session.userId!, reported_user_id: reportedUserId, recommendation_id: recommendationId, reason: trimmedReason });
+  const { error } = await supabase.from("message_reports").insert({
+    reporter_id: session.userId!,
+    reported_user_id: recommendation.author_id,
+    recommendation_id: recommendationId,
+    reason: trimmedReason,
+  });
   if (error) return { error: "Couldn't submit that report." };
   return {};
 }

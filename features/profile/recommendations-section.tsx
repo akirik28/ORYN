@@ -114,11 +114,7 @@ export function RecommendationsSection({
   function submitReport() {
     if (!reportTarget || !reportReason.trim()) return;
     startTransition(async () => {
-      const result = await reportRecommendation(
-        reportTarget.id,
-        reportTarget.authorId,
-        reportReason,
-      );
+      const result = await reportRecommendation(reportTarget.id, reportReason);
       if (result.error) {
         toast.error(result.error);
         return;
