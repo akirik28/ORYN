@@ -395,6 +395,37 @@ turda **satır içi açılım** yapıyor; gerçek detay sayfası ayrı bir karar
 
 ---
 
+## E — KURUCUNUN 5 EYLÜL İSTEKLERİ (kararlar verildi, sahibi aranıyor)
+
+**E1. Başvuru sayfası 11. sınıfa bilgilendirme notu.** Kurucu: *"11. sınıf bir
+öğrenci için application sayfası çok bir işe yaramaz."* Doğru — başvurular son
+sınıfta açılıyor, o yüzden sayfa erken sınıflarda yapısal olarak boş.
+**Karar: sınıfa duyarlı olacak, sabit bir uyarı değil.** Statik "yakında işinize
+yarayacak" notu, sayfayı boş bırakmakla aynı işe yaramazlığa sahip.
+- Öğrencinin `graduation_year`'ından hangi sınıfta olduğunu türet.
+- Son sınıf **değilse**: bu sayfanın **ne zaman** işe yarayacağını söyle, ve
+  **şu an ne yapılabileceğini** göster — bu, ürünün "ne yapmalıyım" sorusuna
+  cevap verme sözünün ta kendisi. Boş bir tabloya "henüz başvuru yok" demek değil.
+- Son sınıfsa: not hiç çıkmasın.
+- **Uydurma yok:** "şu an şunu yap" cümlesi öğrencinin gerçek verisinden çıkmalı
+  (açık fırsat, yaklaşan son tarih, eksik profil alanı) — genel tavsiye değil.
+
+**E2. Öğrencinin kendi e-postasına doğrulama kodu.** Kurucu: *"çocuktan kendi
+mailini alıyoruz ya, doğrulama kodu koysak çok iyi olur."*
+**Karar: evet, ama ürünü kilitlemeden.**
+- Kod e-posta **toplandığı anda** gider; doğrulanana kadar o e-posta **hiçbir
+  şey için kullanılmaz** (veli bağlama, bildirim, kurtarma).
+- **Ürünün geri kalanı engellenmez** — 16 yaşındaki biri doğrulama yüzünden
+  onboarding'de takılmamalı. Doğrulanmamış e-posta = kullanılmayan e-posta,
+  kilitli hesap değil.
+- **Reşit olmayan kullanıcı kuralı geçerli:** bu **veri toplamayı genişletmez.**
+  Zaten aldığımız e-postayı doğruluyoruz, yeni alan istemiyoruz.
+- Kod süresi dolmalı, deneme sayısı sınırlı olmalı, ve **kod loglanmamalı.**
+- Doğrulama durumu ekranda dürüst görünsün — "doğrulandı" ile "doğrulanmadı"
+  farkı, kanıt sistemindeki `self_reported`/`verified` ayrımının aynısı.
+
+---
+
 ## C — KALİTE / DOĞRULAMA
 
 **C1. Veli uçtan uca doğrulama — ✅ TAMAM (4 Eylül).** 26 kontrol, hepsi geçti.
