@@ -267,6 +267,24 @@
       "confirmLabel": "Confirm new password",
       "updateButton": "Update password"
     },
+    "emailVerification": {
+      "verifiedBadge": "Verified",
+      "unverifiedBadge": "Not verified yet",
+      "sendCodeButton": "Verify email",
+      "resendCodeButton": "Resend code",
+      "codeLabel": "Verification code",
+      "submitButton": "Confirm",
+      "cancelButton": "Cancel",
+      "sentMessage": "We sent a code to your email. It expires in 15 minutes.",
+      "notConfiguredMessage": "Email sending isn't set up yet — verification isn't available right now.",
+      "cooldownError": "Please wait a moment before requesting another code.",
+      "sendFailedError": "We couldn't send the code. Try again in a moment.",
+      "incorrectError": "That code isn't right.",
+      "expiredError": "That code has expired — request a new one.",
+      "tooManyAttemptsError": "Too many attempts — request a new code.",
+      "noCodePendingError": "Request a code first.",
+      "unavailableError": "Verification isn't available right now."
+    },
     "visibility": {
       "publicProfileTitle": "Public profile",
       "publicProfileDescription": "Show a shareable profile with your projects, achievements, and skills. Off by default — grades and school details are never included.",

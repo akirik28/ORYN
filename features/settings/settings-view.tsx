@@ -19,6 +19,8 @@ import { PasswordForm } from "@/features/settings/password-form";
 import { ParentInviteSection, type GeneratedInvitePreview } from "@/features/settings/parent-invite-section";
 import { getParentLinksForStudent } from "@/lib/parent/links";
 import { generateParentInvite } from "@/lib/parent/invite";
+import { EmailVerificationSection } from "@/features/settings/email-verification-section";
+import { isEmailProviderConfigured } from "@/lib/email";
 import { env } from "@/lib/env";
 import type { NotificationCategory, Profile } from "@/types/database";
 
@@ -118,6 +120,12 @@ export async function SettingsView({ email, userId, profile, unreadNotificationC
               the default. */}
           <Eyebrow rule={false} locale={locale}>{t("signedInAs")}</Eyebrow>
           <p className="mt-1 text-sm break-all text-ink-1">{email}</p>
+          {/* E2 (docs/PROXOLA-PLAN.md), 2026-09-05 — honest verified/unverified status right
+              under the address it describes, same self_reported/verified distinction the
+              evidence system already uses elsewhere. Never blocks anything else on this page. */}
+          <div className="mt-2">
+            <EmailVerificationSection verified={profile?.email_verified ?? false} providerConfigured={isEmailProviderConfigured()} />
+          </div>
         </div>
 
         <DisplayNameForm initialName={profile?.display_name ?? ""} />

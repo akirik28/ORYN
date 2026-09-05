@@ -148,6 +148,40 @@ configuration, since OpenAlex has no auth requirement.
 
 ---
 
+## Email (student email verification — E2, 2026-09-05)
+
+**Purpose:** Sends the one-time code that verifies a student controls their own account
+email (`lib/email/verification.ts`) — the moment that address is collected (at signup) it
+goes out; nothing else sends real email yet. Verification never blocks signup, onboarding,
+or any other part of the product — it degrades to an honest "not verified yet" state
+instead, permanently if needed.
+
+**Environment variables:** `EMAIL_PROVIDER` — **not yet chosen** (founder decision pending,
+same "name unset until chosen" shape as `PAYMENT_PROVIDER`/`lib/payments/`). Setting this
+alone does nothing yet: `lib/email/index.ts`'s `getEmailProvider()` has no case for any
+value — a real adapter (Resend, Postmark, SES, or whichever the founder picks) needs to be
+added there before this can send anything.
+
+**Where it's used:** `app/(auth)/actions.ts`'s `signUp()` (the initial send) and
+`app/(app)/settings/actions.ts`'s `resendEmailVerificationCodeAction`/
+`submitEmailVerificationCodeAction` (resend + code entry from Settings).
+
+**How to verify:** no automated check yet — `npm run check:integrations` will need a case
+added the same day a concrete adapter is, mirroring the pattern every other provider there
+already follows.
+
+**Typical failure (today):** always "not configured" — this is the expected, permanent
+state until a provider is chosen and implemented, not a transient error.
+
+**How the app handles failure:** Settings shows "Email sending isn't set up yet —
+verification isn't available right now" (`features/settings/email-verification-section.tsx`)
+instead of a form that looks functional but silently does nothing (AGENTS.md Phase 72). A
+send failure from a real, configured provider surfaces the provider's own error, logged
+server-side by reason — never the code itself, and never presented to the student as if the
+code went out.
+
+---
+
 ## Background jobs
 
 Four scheduled jobs exist as protected Route Handlers rather than a cron dependency

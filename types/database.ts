@@ -307,6 +307,30 @@ export interface Profile {
   parent_email_prompt_not_now_at: string | null;
   parent_email_prompt_not_now_count: number;
   parent_email_prompt_dismissed_forever: boolean;
+  /** Migration 0134, staged, not applied -- E2 (docs/PROXOLA-PLAN.md), CEO's decision
+   * 2026-09-05. Whether the student has confirmed the email on their own account (the
+   * Supabase Auth sign-in address shown read-only in Settings) via lib/email/verification.ts's
+   * own code flow -- independent of Supabase Auth's native confirm-email mechanism
+   * (app/auth/confirm/route.ts), which stays off. False by default, including for accounts
+   * that predate this column; never back-filled from auth.users.email_confirmed_at, which can
+   * be true for unrelated reasons (every signup auto-confirms while Supabase's own project
+   * setting is off) and would misrepresent an unverified address. Must gate the student's own
+   * email being used for anything not yet built as of this migration: parent-account linking,
+   * an email notification to the student, or email-based account recovery outside Supabase
+   * Auth's own reset flow. */
+  email_verified: boolean;
+  /** SHA-256 hex digest of the current one-time code, never the raw code -- storage follows
+   * the same "never logged" rule the spec applies to application logs. Null when no code is
+   * outstanding. */
+  email_verification_code_hash: string | null;
+  /** When email_verification_code_hash stops being acceptable -- an expired code is rejected
+   * the same way a wrong one is. */
+  email_verification_code_expires_at: string | null;
+  /** Failed attempts against the CURRENT code_hash, reset to 0 on every new code issued -- not
+   * a lifetime counter. */
+  email_verification_attempts: number;
+  /** When the last code was actually sent (or attempted) -- the resend-cooldown clock. */
+  email_verification_last_sent_at: string | null;
   created_at: string;
   updated_at: string;
 }

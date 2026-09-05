@@ -13,6 +13,7 @@ import { logEvent } from "@/lib/analytics/log";
 import { resolvePlanTier } from "@/lib/tier/plan-tier";
 import { getTranslations } from "next-intl/server";
 import { advisorInstructionsMaxLength } from "@/lib/tier/advisor-instructions";
+import { sendVerificationCode, verifyEmailCode } from "@/lib/email/verification";
 import type { NotificationCategory, TimeBudget, ResponseMode } from "@/types/database";
 
 /**
@@ -444,5 +445,54 @@ export async function deleteMyAccount(): Promise<{ error?: string }> {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/");
+}
+
+/**
+ * E2 (docs/PROXOLA-PLAN.md), 2026-09-05. Thin Server Action wrappers around
+ * lib/email/verification.ts's own honest result unions — this layer's only job is turning
+ * each named failure reason into the student's own language, never collapsing them into one
+ * generic error the way that would defeat the whole point of the closed union underneath.
+ * Session-scoped client throughout: unlike the signup-time send (app/(auth)/actions.ts,
+ * no session yet), a resend or a code submission from Settings always has one.
+ */
+export async function resendEmailVerificationCodeAction(): Promise<{ error?: string; sent?: true }> {
+  const session = await requireUser();
+  const t = await getTranslations("settings.emailVerification");
+  const supabase = await createClient();
+  const result = await sendVerificationCode(session.userId!, session.email!, supabase);
+  if (result.sent) return { sent: true };
+  switch (result.reason) {
+    case "not_configured":
+      return { error: t("notConfiguredMessage") };
+    case "cooldown":
+      return { error: t("cooldownError") };
+    case "send_failed":
+      return { error: t("sendFailedError") };
+    case "unavailable":
+      return { error: t("unavailableError") };
+  }
+}
+
+export async function submitEmailVerificationCodeAction(code: string): Promise<{ error?: string; verified?: true }> {
+  const session = await requireUser();
+  const t = await getTranslations("settings.emailVerification");
+  const supabase = await createClient();
+  const result = await verifyEmailCode(session.userId!, code, supabase);
+  if (result.verified) {
+    revalidatePath("/settings");
+    return { verified: true };
+  }
+  switch (result.reason) {
+    case "no_code_pending":
+      return { error: t("noCodePendingError") };
+    case "expired":
+      return { error: t("expiredError") };
+    case "too_many_attempts":
+      return { error: t("tooManyAttemptsError") };
+    case "incorrect":
+      return { error: t("incorrectError") };
+    case "unavailable":
+      return { error: t("unavailableError") };
+  }
 }
 

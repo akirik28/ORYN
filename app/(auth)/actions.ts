@@ -19,6 +19,7 @@ import { isSafeRedirectTarget } from "@/lib/security/safe-redirect";
 import { resolveLocale } from "@/lib/i18n/locale";
 import { getLegalCopy, LEGAL_REVIEW_STATUS } from "@/lib/legal/content";
 import { setParentInviteEmail } from "@/lib/parent/links";
+import { sendVerificationCode } from "@/lib/email/verification";
 import { logEvent } from "@/lib/analytics/log";
 
 async function getOrigin() {
@@ -128,6 +129,25 @@ export async function signUp(_prevState: AuthFormState, formData: FormData): Pro
       console.error("[signUp] failed to save parent_invite_email", { userId: data.user.id, error: result.error });
     } else {
       await logEvent(data.user.id, "parent_email_provided_at_signup");
+    }
+  }
+
+  /**
+   * E2 (docs/PROXOLA-PLAN.md), CEO's decision 2026-09-05 — "the code goes out the moment the
+   * email is collected." Signup is that moment for every student, since every account needs
+   * one. Same best-effort discipline as the parent_invite_email write just above (own admin
+   * client, for the identical reason — no reliable session yet): the account this student
+   * came here to create must never fail or stall because a verification send did. Every
+   * outcome (not_configured, cooldown — unreachable on a brand-new account but the function's
+   * contract either way, send_failed, unavailable) is logged with its own reason, not folded
+   * into one generic catch, so a real send failure is findable rather than indistinguishable
+   * from "no provider chosen yet."
+   */
+  if (data.user) {
+    const admin = createAdminClient();
+    const sendResult = await sendVerificationCode(data.user.id, email, admin);
+    if (!sendResult.sent) {
+      console.error("[signUp] verification code not sent", { userId: data.user.id, reason: sendResult.reason });
     }
   }
 
