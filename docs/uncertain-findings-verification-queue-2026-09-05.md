@@ -78,3 +78,30 @@ branch-specific findings from `docs/unmerged-branch-audit-2026-09-02.md` (each n
 
 Full source-doc citations for every one of these are in `docs/still-open-findings-2026-09-05.md`'s
 own "Uncertain" section if a query result needs the original finding's full context before acting.
+
+---
+
+## ✅ CEO'nun canlı geçişi — 5 Eylül
+
+**Grup A'nın sorgusu boş döndü ve bu beklenen:** `supabase_migrations.schema_migrations`
+o sürüm dizelerini taşımıyor. Bugünkü şema denetiminin bulgusu tekrar doğrulandı —
+**kayıt tablosu bir iddia, şema bir gerçek.** O yüzden migration'ların kendisi yerine
+**yarattıkları nesneler** sorgulandı.
+
+| soru | canlı sonuç | anlamı |
+|---|---|---|
+| `ai_model_pricing` (0100) | **var** | uygulanmış |
+| `weekly_plan_budget_settings` (0102) | **var** | uygulanmış |
+| `story_notes` (0029) | **yok** | uygulanmamış (ya da düşürülmüş) |
+| `payment_events` (0123) | **yok** | 0123 uygulanmamış — şema denetimiyle birebir tutarlı |
+| `subscriptions` (0123) | **yok** | aynı |
+| `profiles.ultra_gift_granted_at` | **yok** | uygulanmamış |
+| `_backup_*` tabloları (0069 düşürüyor) | **0 tane** | düşürme uygulanmış, artık kalıntı yok |
+| `opportunities.organization is null` | **6** | dolgu çalışmış — kayıtta ~197 → beklenen 88 → **gerçek 6** |
+| aktif + tarihi geçmiş fırsat | **40** | fırsat şeridinin bağımsız sayımıyla **birebir aynı** |
+| Hollanda üniversitesi | **13** | 36 satırlık HBO + 2 WO dolgusu **uygulanmamış** |
+
+**Sekiz belirsiz bulgu kapandı, biri beklenenden iyi çıktı** (`organization` boşluğu
+88 değil 6), biri **hâlâ açık ve sahipsiz** (Hollanda dolgusu hazırlanmış, hiç
+uygulanmamış).
+
