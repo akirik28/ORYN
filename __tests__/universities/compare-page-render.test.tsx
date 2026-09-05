@@ -106,7 +106,20 @@ const universityProfileMetrics: MockTableConfig = {
   rows: [
     // Oxford's real tuition figures — value_numeric, not value_text (the column the real page reads).
     { university_id: OXFORD_ID, metric_code: "tuition_domestic_annual", value_text: null, value_numeric: 9790, unit: "GBP/year", precision_state: "exact" },
-    { university_id: OXFORD_ID, metric_code: "tuition_international_annual", value_text: null, value_numeric: 37380, unit: "GBP/year", precision_state: "range" },
+    // source_type/source_url/verified_at/stats_as_of queried live 2026-09-05 (B5 compare-page
+    // follow-up, CEO) — the real row backing the new per-column tuition SourceBadge below.
+    {
+      university_id: OXFORD_ID,
+      metric_code: "tuition_international_annual",
+      value_text: null,
+      value_numeric: 37380,
+      unit: "GBP/year",
+      precision_state: "range",
+      source_type: "official_primary",
+      source_url: "https://www.ox.ac.uk/admissions/undergraduate/fees-and-funding/course-fees",
+      verified_at: "2026-08-19T09:18:54.725Z",
+      stats_as_of: "2026/27 entry",
+    },
     // Real full 5-topic string + real source_url/verified_at, queried live 2026-09-04 — only
     // "Physics" survives categorization (2 of 5 topics; "Genomics"/"Malaria"/"Data Analysis"
     // don't match any current taxonomy keyword — see research-taxonomy.test.ts's own comment
@@ -122,7 +135,25 @@ const universityProfileMetrics: MockTableConfig = {
       verified_at: "2026-08-18T07:14:22.069236+00:00",
     },
     { university_id: EDINBURGH_ID, metric_code: "tuition_domestic_annual", value_text: null, value_numeric: 9790, unit: "GBP/year", precision_state: "exact" },
-    { university_id: EDINBURGH_ID, metric_code: "tuition_international_annual", value_text: null, value_numeric: 29600, unit: "GBP/year", precision_state: "exact" },
+    // source_type/source_url/verified_at are the real row (queried live 2026-09-05, same query
+    // as Oxford's above) — stats_as_of is deliberately overridden to null here, NOT the real
+    // captured value ("2026/27 entry"). CEO's explicit ask: 0/296 live rows are empty today, so
+    // the empty branch has never been proven against real data — D1 is adding 25 universities
+    // today and any of them could land with stats_as_of unset. This is the fake row that proves
+    // it: SourceBadge must still render (sourceType/url/checkedAt are all real), only the "As
+    // of" line must be absent.
+    {
+      university_id: EDINBURGH_ID,
+      metric_code: "tuition_international_annual",
+      value_text: null,
+      value_numeric: 29600,
+      unit: "GBP/year",
+      precision_state: "exact",
+      source_type: "official_primary",
+      source_url: "https://registryservices.ed.ac.uk/tuition-fees/find/undergraduate/2026-2027/full-time-new-students",
+      verified_at: "2026-08-19T09:18:48.413Z",
+      stats_as_of: null,
+    },
     { university_id: EDINBURGH_ID, metric_code: "research_topics_top5", value_text: "Informatics | Medicine | Law", value_numeric: null, unit: "text", precision_state: "category_only" },
     // Real full 5-topic string, queried live — none of the 5 categorize under the current
     // taxonomy (marine/geology-worded; no matching keywords in any bucket).
@@ -227,6 +258,59 @@ describe("universities compare page — real render, real captured data (C7 + CE
     const rows = cellsByRowLabel(container);
 
     expect(rows.get("tuition")?.[oxfordCol]?.textContent).not.toBe("—");
+  });
+
+  // B5 compare-page follow-up (2026-09-05, CEO): before this, the tuition row was the one bare
+  // cell on the whole table — costOfAttendance/admissionRate share a statisticsSource badge,
+  // researchStrengths has its own, tuition had neither. ctx.kind picks international over
+  // domestic (deriveTuitionContext's own priority), same entry displayValue is already reading,
+  // so the badge can never cite a row the cell isn't showing.
+  describe("tuition — per-column SourceBadge (previously the one bare row on the table)", () => {
+    test("Oxford: real source, checked date, and as-of period all render", async () => {
+      const element = await renderCompare([MIT_ID, OXFORD_ID, EDINBURGH_ID]);
+      const { container } = render(element);
+      const oxfordCol = columnIndexFor(container, "University of Oxford");
+      const rows = cellsByRowLabel(container);
+
+      const cell = rows.get("tuition")?.[oxfordCol];
+      expect(cell?.textContent).toContain("official_primary");
+      expect(cell?.textContent).toContain("2026/27 entry");
+      const link = cell?.querySelector("a");
+      expect(link?.getAttribute("href")).toBe("https://www.ox.ac.uk/admissions/undergraduate/fees-and-funding/course-fees");
+    });
+
+    // The row that actually proves the untested branch: 0/296 live tuition rows have a blank
+    // stats_as_of today (confirmed live against the DB before writing this), so this path has
+    // never run against real data — an unrun branch is an assumed branch, not a proven one. D1
+    // is adding 25 universities today; any of them could land with stats_as_of unset. Edinburgh's
+    // fixture row above deliberately overrides stats_as_of to null (its real captured value is
+    // "2026/27 entry", same as Oxford's) to force this exact path.
+    test("Edinburgh: stats_as_of is null on this row — the badge still renders (real source, real link), but the as-of line is absent, not a blank placeholder", async () => {
+      const element = await renderCompare([MIT_ID, OXFORD_ID, EDINBURGH_ID]);
+      const { container } = render(element);
+      const edinburghCol = columnIndexFor(container, "University of Edinburgh");
+      const rows = cellsByRowLabel(container);
+
+      const cell = rows.get("tuition")?.[edinburghCol];
+      expect(cell?.textContent).toContain("official_primary");
+      const link = cell?.querySelector("a");
+      expect(link?.getAttribute("href")).toBe("https://registryservices.ed.ac.uk/tuition-fees/find/undergraduate/2026-2027/full-time-new-students");
+      // asOfLabel is mocked to the literal key "asOf" (see getTranslationsMock) — its absence
+      // here is what proves the empty branch, not a formatted-label check.
+      expect(cell?.textContent).not.toContain("asOf");
+      expect(cell?.textContent).not.toContain("2026/27");
+    });
+
+    test("MIT: no tuition_* rows at all (US, cost_of_attendance covers it) — plain '—', no badge, no crash", async () => {
+      const element = await renderCompare([MIT_ID, OXFORD_ID, EDINBURGH_ID]);
+      const { container } = render(element);
+      const mitCol = columnIndexFor(container, "Massachusetts Institute of Technology");
+      const rows = cellsByRowLabel(container);
+
+      const cell = rows.get("tuition")?.[mitCol];
+      expect(cell?.textContent?.trim()).toBe("—");
+      expect(cell?.querySelector("a")).toBeNull();
+    });
   });
 
   test("NEW ROW: applicationDeadline is now the 5th row, right after students — full ordered label list", async () => {
