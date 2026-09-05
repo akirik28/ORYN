@@ -84,8 +84,19 @@ engelleniyor, **ve koruma kaldırılınca saldırı yine başarılı** (kanıtı
 `docs/slice-a-requires-...` + `-part2` · `docs/d2-visible-fill-requires-...` ·
 `docs/d2-checked-not-stated-requires-0129-...` · `docs/d2-country-checked-not-stated-requires-0133-...`
 
-**Üniversite dolguları:** `docs/d1-qs-top100-fill-2026-09-05.md` (23 kurum) ·
-`docs/d1-qs-101-150-fill-2026-09-05.md` (29 kurum) — SQL dokümanların içinde.
+**Üniversite dolguları** (SQL dokümanların içinde):
+`d1-qs-top100-fill-2026-09-05.md` (23) · `d1-qs-101-150-fill-2026-09-05.md` (29) ·
+`us-universities-requirements-gap-fill-2026-09-05.md` (7) ·
+`us-universities-qs-ranked-fill-2026-09-05.md` (7)
+
+**Fırsat dolgusu, ikinci dilim:** `docs/opportunity-fill-96-190-sql-2026-09-05.sql`
+— 95 satır araştırıldı, **51'i UPDATE alıyor, 44'ü gerekçesiyle hariç.** İki yanlış
+`official_url` bulundu ve düzeltildi (Bocconi'nin kayıtlı bağlantısı **lise
+öğrencisine kapalı** bir programa gidiyordu; Navarra'nınki bambaşka bir yarışmaya).
+
+> **Bu bölüm 5 Eylül gecesi iki kez güncellendi** — ilk yazımdan sonra üç dolgu
+> partisi daha indi. Bugünün dersi kendi belgeme de uygulandı: **bir liste,
+> yazıldığı anın fotoğrafıdır.**
 
 ---
 
