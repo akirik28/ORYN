@@ -95,6 +95,7 @@ export function OpportunityModerationList({ initialRows }: { initialRows: AdminO
                   opportunityId={row.id}
                   title={row.title}
                   isDisabled={row.status === "disabled"}
+                  isUnderReview={row.status === "under_review"}
                   onChanged={(nowDisabled) => applyLocalChange(row.id, nowDisabled)}
                 />
               </div>

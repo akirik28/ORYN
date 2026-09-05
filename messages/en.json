@@ -1981,6 +1981,10 @@
       "statusDisabled": "Disabled",
       "disableButton": "Disable",
       "reactivateButton": "Reactivate",
+      "approveButton": "Approve",
+      "disableButtonAriaLabel": "Disable {title}",
+      "reactivateButtonAriaLabel": "Reactivate {title}",
+      "approveButtonAriaLabel": "Approve {title}",
       "disableReasonPlaceholder": "Reason (recorded)",
       "confirmDisableTitle": "Disable {title}?",
       "confirmDisableDescription": "Hides it from every student immediately. Reversible — you can reactivate it the same way.",
@@ -1988,8 +1992,12 @@
       "confirmReactivateTitle": "Reactivate {title}?",
       "confirmReactivateDescription": "Makes it visible to students again immediately.",
       "confirmReactivateButton": "Reactivate",
+      "confirmApproveTitle": "Approve {title}?",
+      "confirmApproveDescription": "Makes it visible to students for the first time — nobody has seen this record yet.",
+      "confirmApproveButton": "Approve",
       "disableSuccess": "{title} is now hidden from students.",
       "reactivateSuccess": "{title} is visible to students again.",
+      "approveSuccess": "{title} is now visible to students.",
       "changeNoop": "{title} was already in that state. Nothing changed."
     },
     "warnings": {

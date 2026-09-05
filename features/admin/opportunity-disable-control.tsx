@@ -34,16 +34,27 @@ import { setOpportunityDisabled } from "@/app/(app)/admin/actions";
  * rule exactly: the reason is the audit trail (logged to admin_action_log, not a new
  * column — see the action's own comment for why this table doesn't need posts' three-column
  * shape).
+ *
+ * `isUnderReview` (2026-09-05, the under_review-graveyard fix): a third real status this
+ * control must present differently, discovered by measuring what actually blocked a real
+ * approval path (docs/under-review-pool-audit-2026-09-03*.md, three independent passes) —
+ * setOpportunityDisabled already writes "active" for ANY prior status when called with
+ * `disabled: false`, so approving an under_review row is the IDENTICAL call reactivating a
+ * disabled one already made. Only the copy differs ("Approve" vs "Reactivate" — "reactivate"
+ * would wrongly imply the row was ever visible before), and only non-destructive styling
+ * applies to both, since neither direction hides anything from a student who could see it.
  */
 export function OpportunityDisableControl({
   opportunityId,
   title,
   isDisabled,
+  isUnderReview = false,
   onChanged,
 }: {
   opportunityId: string;
   title: string;
   isDisabled: boolean;
+  isUnderReview?: boolean;
   /** Called after a confirmed, successful change so the parent list can update its own
    * copy of this row without a full re-fetch — the list owns its own state (client-side
    * search), unlike every other admin section, which just calls router.refresh(). */
@@ -55,8 +66,13 @@ export function OpportunityDisableControl({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
+  // The only real write-direction question: disable (true) only applies when the row is
+  // currently neither disabled nor under_review. Approving and reactivating are both the
+  // `target: false` call -- see this component's own header for why that's correct, not a
+  // coincidence.
+  const target = !isDisabled && !isUnderReview;
+
   function submit() {
-    const target = !isDisabled;
     if (target && !reason.trim()) {
       toast.error(t("disableReasonPlaceholder"));
       return;
@@ -72,25 +88,36 @@ export function OpportunityDisableControl({
       if (result.changed === false) {
         toast.success(t("changeNoop", { title }));
       } else {
-        toast.success(t(target ? "disableSuccess" : "reactivateSuccess", { title }));
+        toast.success(t(target ? "disableSuccess" : isUnderReview ? "approveSuccess" : "reactivateSuccess", { title }));
         onChanged(target);
       }
     });
   }
 
+  const buttonKey = target ? "disableButton" : isUnderReview ? "approveButton" : "reactivateButton";
+  const titleKey = target ? "confirmDisableTitle" : isUnderReview ? "confirmApproveTitle" : "confirmReactivateTitle";
+  const descriptionKey = target ? "confirmDisableDescription" : isUnderReview ? "confirmApproveDescription" : "confirmReactivateDescription";
+  const confirmButtonKey = target ? "confirmDisableButton" : isUnderReview ? "confirmApproveButton" : "confirmReactivateButton";
+  // Per-item aria-label so a screen-reader user with several rows on this page knows WHICH
+  // opportunity a bare "Disable"/"Reactivate"/"Approve" acts on before ever reaching the
+  // confirmation dialog -- same reasoning (and same shape) as achievement-section.tsx's own
+  // deleteItemAriaLabel, from the 2026-09-01 a11y sweep. The visible label stays the short
+  // verb; only the accessible name gains the title.
+  const ariaLabelKey = target ? "disableButtonAriaLabel" : isUnderReview ? "approveButtonAriaLabel" : "reactivateButtonAriaLabel";
+
   return (
     <>
-      <Button type="button" variant="outline" size="sm" onClick={() => setConfirmOpen(true)}>
-        {t(isDisabled ? "reactivateButton" : "disableButton")}
+      <Button type="button" variant="outline" size="sm" onClick={() => setConfirmOpen(true)} aria-label={t(ariaLabelKey, { title })}>
+        {t(buttonKey)}
       </Button>
 
       <AlertDialog open={confirmOpen} onOpenChange={(open) => !open && !isPending && setConfirmOpen(false)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t(isDisabled ? "confirmReactivateTitle" : "confirmDisableTitle", { title })}</AlertDialogTitle>
-            <AlertDialogDescription>{t(isDisabled ? "confirmReactivateDescription" : "confirmDisableDescription")}</AlertDialogDescription>
+            <AlertDialogTitle>{t(titleKey, { title })}</AlertDialogTitle>
+            <AlertDialogDescription>{t(descriptionKey)}</AlertDialogDescription>
           </AlertDialogHeader>
-          {!isDisabled ? (
+          {target ? (
             <Input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
@@ -101,9 +128,9 @@ export function OpportunityDisableControl({
           ) : null}
           <AlertDialogFooter>
             <AlertDialogCancel render={<Button variant="outline" disabled={isPending} />}>{tCommon("cancel")}</AlertDialogCancel>
-            <Button type="button" variant={isDisabled ? "default" : "destructive"} disabled={isPending} onClick={submit}>
+            <Button type="button" variant={target ? "destructive" : "default"} disabled={isPending} onClick={submit}>
               {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-              {t(isDisabled ? "confirmReactivateButton" : "confirmDisableButton")}
+              {t(confirmButtonKey)}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

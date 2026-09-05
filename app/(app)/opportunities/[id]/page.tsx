@@ -13,6 +13,7 @@ import { matchTierKey, type EligibilityNote } from "@/lib/opportunities/matching
 import {
   insufficientVerificationReason,
   isOpportunitySufficientlyVerified,
+  resolveDetailPageStanding,
   resolveStoredEligibility,
   selectivityLabel,
   cycleStatusLabel,
@@ -189,6 +190,12 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
     ? resolveStoredEligibility(opportunity, { eligible: match.eligible, notes: (match.eligibility_notes as EligibilityNote[] | null) ?? [] }, undefined, locale)
     : null;
 
+  // 2026-09-05, the under_review-graveyard fix: unifies what the standing badge shows
+  // regardless of whether a match row exists -- see resolveDetailPageStanding's own header
+  // for why the old `eligibility?.eligible ?? true` fallback silently hid a status change from
+  // a student who saved this opportunity directly rather than via an algorithmic match.
+  const standing = resolveDetailPageStanding(opportunity, eligibility);
+
   // The third lifecycle gate. This page never hides an opportunity (it's reachable by id by
   // design), so the freshness rule only ever labels here — and only when the row is otherwise
   // fine, so a closed cycle keeps its own more specific explanation rather than being described
@@ -305,8 +312,8 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
             "needs verification" (about Proxola's data) from ever being described in each other's
             words, in one place rather than two that drift. */}
         <OpportunityStandingBadge
-          eligible={eligibility?.eligible ?? true}
-          notActionable={eligibility?.notActionable ?? false}
+          eligible={standing.eligible}
+          notActionable={standing.notActionable}
           needsVerification={needsVerification}
           locale={locale}
         />

@@ -222,6 +222,36 @@ export function resolveStoredEligibility(
 }
 
 /**
+ * The opportunity detail page's own OpportunityStandingBadge inputs, unified regardless of
+ * whether a match row exists for this student (2026-09-05, the under_review-graveyard fix).
+ *
+ * Before this: the page only computed eligibility `if (match)` -- when no opportunity_matches
+ * row existed (a student who saved the opportunity directly via Browse, never had it
+ * algorithmically matched), the badge fell back to a bare `eligible ?? true` / `notActionable ??
+ * false`, silently treating ANY status as fine. A student reached via a real match saw "Not
+ * open right now" for the identical non-active opportunity; a student who saved it directly
+ * saw nothing at all -- the same status rendering two different pages, decided by an
+ * implementation detail neither student could see or control (docs/under-review-pool-audit-
+ * 2026-09-03*.md's own three passes never measured this; CEO's own live query found zero real
+ * students currently affected, which made the bug latent, not nonexistent).
+ *
+ * isOpportunityActionable is the single source of truth either way: resolveStoredEligibility
+ * already routes through it when a match exists, so this only fixes the previously-uncomputed
+ * branch, not the already-correct one.
+ */
+export function resolveDetailPageStanding(
+  opportunity: Pick<Opportunity, "status" | "cycle_status" | "deadline">,
+  eligibility: Pick<ResolvedEligibility, "eligible" | "notActionable"> | null,
+  referenceDate: Date = new Date()
+): { eligible: boolean; notActionable: boolean } {
+  if (eligibility) {
+    return { eligible: eligibility.eligible, notActionable: eligibility.notActionable };
+  }
+  const actionable = isOpportunityActionable(opportunity, referenceDate);
+  return { eligible: actionable, notActionable: !actionable };
+}
+
+/**
  * Write-time derivation for a backfill/maintenance pass (scripts/derive-opportunity-cycle-
  * status.ts) — never called from a request path. Returns the `cycle_status` a row should have
  * once its deadline has passed with no newer one on file, or `null` when no change is

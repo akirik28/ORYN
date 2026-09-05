@@ -102,6 +102,19 @@ describe("setOpportunityDisabled — the three real outcomes", () => {
     expect(logPayload).toMatchObject({ action: "reactivate_opportunity", detail: { from: "disabled", to: "active" } });
   });
 
+  test("approving an under_review record works with zero backend changes -- the moderation list's own missing button was the whole gap (2026-09-05 under_review-graveyard finding), not this function", async () => {
+    selectMaybeSingleMock.mockResolvedValue({ data: { status: "under_review", title: "Duke University Talent Identification Program 2024" }, error: null });
+    updateSelectMock.mockResolvedValue({ data: [{ id: OPPORTUNITY_ID }], error: null });
+
+    const result = await setOpportunityDisabled(OPPORTUNITY_ID, false);
+
+    expect(result).toEqual({ changed: true });
+    const [updatePayload] = updateSelectMock.mock.calls[0];
+    expect(updatePayload).toEqual({ status: "active" });
+    const [logPayload] = insertMock.mock.calls[0];
+    expect(logPayload).toMatchObject({ detail: { from: "under_review", to: "active" } });
+  });
+
   test("a no-op (already disabled): reports changed:false, writes and logs nothing", async () => {
     selectMaybeSingleMock.mockResolvedValue({ data: { status: "disabled", title: "AI Scholars" }, error: null });
 

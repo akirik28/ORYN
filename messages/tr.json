@@ -1981,6 +1981,10 @@
       "statusDisabled": "Devre dışı",
       "disableButton": "Devre dışı bırak",
       "reactivateButton": "Yeniden etkinleştir",
+      "approveButton": "Onayla",
+      "disableButtonAriaLabel": "{title} devre dışı bırak",
+      "reactivateButtonAriaLabel": "{title} yeniden etkinleştir",
+      "approveButtonAriaLabel": "{title} onayla",
       "disableReasonPlaceholder": "Neden (kaydedilir)",
       "confirmDisableTitle": "{title} devre dışı bırakılsın mı?",
       "confirmDisableDescription": "Bunu tüm öğrencilerden hemen gizler. Geri alınabilir — aynı şekilde yeniden etkinleştirebilirsiniz.",
@@ -1988,8 +1992,12 @@
       "confirmReactivateTitle": "{title} yeniden etkinleştirilsin mi?",
       "confirmReactivateDescription": "Öğrencilere hemen tekrar görünür hale gelir.",
       "confirmReactivateButton": "Yeniden etkinleştir",
+      "confirmApproveTitle": "{title} onaylansın mı?",
+      "confirmApproveDescription": "Öğrencilere ilk kez görünür hale gelir — bu kaydı henüz kimse görmedi.",
+      "confirmApproveButton": "Onayla",
       "disableSuccess": "{title} artık öğrencilerden gizli.",
       "reactivateSuccess": "{title} öğrencilere tekrar görünüyor.",
+      "approveSuccess": "{title} artık öğrencilere görünüyor.",
       "changeNoop": "{title} zaten bu durumdaydı. Bir şey değişmedi."
     },
     "warnings": {
