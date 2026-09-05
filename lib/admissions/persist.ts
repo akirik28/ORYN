@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Profile, ProfileScore, University, UniversityStatistic } from "@/types/database";
 import { createClient } from "@/lib/supabase/server";
+import { tryCreateAdminClient } from "@/lib/supabase/admin";
 import { getCurrentProfile, getProfileScores } from "@/lib/security/dal";
 import { CAREER_PROFILE_SCORE_VERSION } from "@/lib/scoring/types";
 import { getUniversity, getUniversityStatistics } from "@/lib/universities/detail-reads";
@@ -183,7 +184,21 @@ export async function refreshAdmissionOutlook(
   // return value, which is why it returns the result rather than void: `not_applicable` is
   // one enum member covering several unrelated reasons, and a badge that renders the label
   // without the kind can only describe one of them correctly (see OutlookBadge).
-  const { error: updateError } = await supabase
+  // Service-role, not `supabase` (the request-scoped client every normal caller reads
+  // with above): this pairs with the new target_universities RLS guard (docs/permissive-
+  // update-policy-sweep-2026-09-04.md §1). Every read above stays on whichever client was
+  // passed in — nothing here widens what a student can see, since `outlook` was already
+  // fully computed, server-side, before this line — only the write of the already-decided
+  // cache moves to service-role, the same shape migration 0063 already established for
+  // profile_scores/opportunity_matches. The background-sweep caller (scanStaleOutlooks)
+  // already passes an admin client as `client`; reuse it instead of opening a second one.
+  const writeClient = client ?? tryCreateAdminClient();
+  if (!writeClient) {
+    console.error(`[admission-outlook] cannot persist for target_universities.id=${targetUniversityId}: admin client unavailable`);
+    return outlook;
+  }
+
+  const { error: updateError } = await writeClient
     .from("target_universities")
     .update({
       academic_fit_score: outlook.compositeScore,

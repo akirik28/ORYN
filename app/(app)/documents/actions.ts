@@ -100,7 +100,15 @@ export async function uploadEvidence(formData: FormData): Promise<{ error?: stri
   // silently swallowed (as this call was until migration 0079) so a real gap — a table
   // in EVIDENCE_LINKABLE_TABLES missing this column, as education_records/test_scores
   // both were — surfaces somewhere instead of nowhere.
-  const { error: statusUpdateError } = await supabase.from(linkedTable).update({ evidence_status: "evidence_added" }).eq("id", linkedId).eq("user_id", userId);
+  //
+  // `admin`, not `supabase`, as of the evidence_status RLS guard (docs/permissive-update-
+  // policy-sweep-2026-09-04.md §2): the ownership check above already confirmed, via the
+  // caller's own RLS-scoped read, that `linkedId` belongs to `userId` -- this write only
+  // ever sets the fixed literal below, never attacker-supplied data, so moving it to the
+  // service-role client closes the direct-REST-PATCH path (any owner could otherwise set
+  // their own evidence_status straight to "verified") without widening what a student can
+  // see. Same shape as migration 0063's profile_scores/opportunity_matches writers.
+  const { error: statusUpdateError } = await admin.from(linkedTable).update({ evidence_status: "evidence_added" }).eq("id", linkedId).eq("user_id", userId);
   if (statusUpdateError) {
     console.error("[evidence] evidence_files row saved, but updating the linked item's own evidence_status failed", {
       linkedTable,
