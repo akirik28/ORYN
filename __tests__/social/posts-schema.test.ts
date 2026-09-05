@@ -784,7 +784,6 @@ describe("migration numbering", () => {
     // correctly leave this at 142. The next migration above 142 breaks this deliberately; that
     // lane bumps it AND runs the full suite, not just its own file.
     expect(Math.max(...numbers.map(Number))).toBe(142);
-    expect(Math.max(...numbers.map(Number))).toBe(142);
   });
 });
 
