@@ -917,3 +917,69 @@ values
 ```
 
 ---
+
+## 24. TU Bergakademie Freiberg
+
+`id = 'f6475a38-61ff-4bcb-ae81-b0c69a8004f2'` — QS rank 594. **Cycle-dependent policy: not
+established.**
+
+**Source actually used:** `https://tu-freiberg.de/en/study/your-studies/incoming-students-
+abroad/application/bachelor-and-diplom` — official page, directly fetched.
+
+**Eighth confirmed uni-assist-member university this batch**, with the same two-stage language
+structure already seen at KIT (#3): B1 German required at application, rising to DSH-2 by
+admission.
+
+**A genuinely useful, named official resource confirmed directly and worth recording for its
+own sake:** the ANABIN database (anabin.de, run by Germany''s Kultusministerkonferenz) is the
+standard tool for determining whether a specific foreign school-leaving certificate qualifies
+for German university study, and at what level (direct access, restricted-subject access, or
+requiring prior university study) -- this applies to a Turkish Lise diploma as much as any
+other country''s qualification, making it a directly actionable resource for this product''s
+own users, not specific to Freiberg.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('f6475a38-61ff-4bcb-ae81-b0c69a8004f2', 'international_requirement',
+   'Confirmed uni-assist member (EUR 75 first programme, EUR 30 each additional); educational qualification checked against the ANABIN database (anabin.de), which determines direct access, restricted-subject access, or a requirement for prior university study; Studienkolleg + Feststellungsprüfung (FSP) pathway exists for insufficient certificates',
+   'International applicants apply via uni-assist, described as "the working service point for international student applications" -- EUR 75 for the first programme, EUR 30 per additional programme. Whether a foreign school-leaving certificate qualifies is checked against the ANABIN database (anabin.de), maintained by Germany''s Kultusministerkonferenz, which classifies certificates as granting direct access, restricted-subject access, or requiring completed prior university study -- a resource directly applicable to Turkish qualifications, not Freiberg-specific. Applicants whose certificate is insufficient can prepare via a Studienkolleg and sit the Feststellungsprüfung (FSP, university entrance exam), with intensive German courses offered at B2 and C1 levels during preparation.',
+   true, 'high', 'https://tu-freiberg.de/en/study/your-studies/incoming-students-abroad/application/bachelor-and-diplom', now()),
+  ('f6475a38-61ff-4bcb-ae81-b0c69a8004f2', 'language_proficiency',
+   'Two-stage: German B1 required to apply, DSH-2 (Deutsche Sprachprüfung für den Hochschulzugang, level 2) required for admission; exempt for German-Abitur holders, FSP-language-section passers, Goethe-Zertifikat C2, or telc Deutsch C1 Hochschule holders',
+   'Applicants need German at level B1 to apply, rising to DSH-2 by the time of admission -- the same staged structure already confirmed at KIT (#3). Exemptions from this specific test exist for applicants who completed a German Abitur, passed the language section of the Feststellungsprüfung at a Studienkolleg, or hold a Goethe-Zertifikat C2 or telc Deutsch C1 Hochschule certificate.',
+   true, 'high', 'https://tu-freiberg.de/en/study/your-studies/incoming-students-abroad/application/bachelor-and-diplom', now());
+```
+
+---
+
+## 25. Christian-Albrechts-Universität zu Kiel (CAU Kiel)
+
+`id = '7581ae79-c186-41ae-9aec-bacfb2bc6e54'` — QS rank 620. **Cycle-dependent policy: not
+established.**
+
+**Ninth confirmed uni-assist-member university this batch**, confirmed directly via
+uni-assist's own member directory (`uni-assist.de/en/tools/uni-assist-universities/detail/
+hochschule/173/`), which names the institution as "Kiel University (CAU)" at its correct
+address.
+
+**What was checked and NOT found:** a specific German-proficiency test level (TestDaF/DSH
+mentioned generically by a general search, no number confirmed); English-taught programme
+thresholds; application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('7581ae79-c186-41ae-9aec-bacfb2bc6e54', 'international_requirement',
+   'Confirmed uni-assist member university (Kiel University / CAU); non-German secondary qualifications evaluated for Abitur-equivalence through uni-assist',
+   'CAU Kiel is confirmed as a uni-assist member university via uni-assist''s own official directory. Applicants need a secondary school-leaving certificate equivalent to the German Abitur; non-German certificates are evaluated for this equivalence through uni-assist.',
+   true, 'high', 'https://www.uni-assist.de/en/tools/uni-assist-universities/detail/hochschule/173/', now()),
+  ('7581ae79-c186-41ae-9aec-bacfb2bc6e54', 'language_proficiency',
+   'German-taught programmes: TestDaF or DSH (or equivalent) reportedly required, specific level not confirmed; some English-taught programmes reportedly accept TOEFL/IELTS instead',
+   'For programmes taught in German, proof of German language proficiency (TestDaF, DSH, or equivalent) is reportedly required; the specific level was not confirmed by direct fetch. Some programmes offered in English reportedly instead accept English proficiency tests (TOEFL, IELTS). Additional subject-specific requirements (particular high school courses or grades) may apply depending on the programme.',
+   true, 'medium', 'https://www.uni-assist.de/en/tools/uni-assist-universities/detail/hochschule/173/', now());
+```
+
+---
