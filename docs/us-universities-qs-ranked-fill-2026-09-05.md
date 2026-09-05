@@ -2083,3 +2083,265 @@ reversal is the third instance of this exact pattern (state/system board overrid
 institutional choice); Oregon's state-wide test-optional mandate is the same pattern in the
 opposite direction. CUNY's system-vs-campus scoping gap on English proficiency is disclosed
 rather than papered over with one college's numbers.
+
+---
+
+# Batch 9
+
+All 7 candidates in this batch are QS band-ranked (711-760), confirming the ordering-key fix
+from batch 8 is now the normal case rather than the exception -- essentially every remaining
+university in this fill effort from here on will be band-ranked, not discretely numbered.
+
+## 57. University of South Carolina (QS band 711-720, list position 723)
+
+`id = '80eab8b7-5726-468a-bf68-01fe2873f581'`
+
+**Sources:** `https://sc.edu/about/offices_and_divisions/undergraduate_admissions/apply/for_freshmen/test_optional/`
+(official test-optional FAQ) and `https://sc.edu/about/offices_and_divisions/undergraduate_admissions/apply/for_international_students/`
+(official international-applicants page).
+
+**Preserved verbatim, cycle-scoped -- another instance of the TOEFL-rescaling pattern seen with
+Georgia (batch 5) and Boston College (batch 6):** USC states two different TOEFL score
+requirements depending on the exam date, straddling January 21, 2026.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('80eab8b7-5726-468a-bf68-01fe2873f581', 'standardized_test',
+   'Test-optional for Columbia-campus freshman admission through Spring/Summer/Fall 2027 terms, covering general admission, Honors College, and Undergraduate-Admissions-awarded merit scholarships; SAT/ACT superscored (ACT Science excluded from the superscore calculation)',
+   'The University of South Carolina''s Columbia campus will not require SAT/ACT for freshman admission for the Spring, Summer, or Fall 2027 terms; this covers general admission, the South Carolina Honors College, and merit scholarships awarded by the Office of Undergraduate Admissions specifically. If submitted, USC superscores SAT and ACT across all attempts, but for the ACT only English, Math, and Reading sections feed the superscore (Science is excluded).',
+   false, 'medium', 'https://sc.edu/about/offices_and_divisions/undergraduate_admissions/apply/for_freshmen/test_optional/', now()),
+  ('80eab8b7-5726-468a-bf68-01fe2873f581', 'english_proficiency',
+   'TOEFL 100 (pre-Jan 21 2026) or 5 on the new scale (on/after that date), IELTS 7, PTE 68, or SAT EBRW 650 as a substitute',
+   'Required for all international applicants whose native language is not English, including those already residing in the US, regardless of the general test-optional policy. USC-approved exams: TOEFL (minimum 100 with no section below 20, for exams before January 21, 2026; minimum 5 with no section below 4, for exams on or after that date -- reflecting a TOEFL scoring-scale change also seen elsewhere in this document), IELTS 7, or PTE 68. A 650 on SAT Evidence-Based Reading and Writing can substitute. Exempt: applicants from countries where English is the primary language of instruction, and US high school graduates.',
+   true, 'medium', 'https://sc.edu/about/offices_and_divisions/undergraduate_admissions/apply/for_international_students/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('80eab8b7-5726-468a-bf68-01fe2873f581', 'https://sc.edu/about/offices_and_divisions/undergraduate_admissions/apply/for_freshmen/test_optional/',
+   'sc.edu', 'official_admissions_office', now(), 'medium',
+   'Students seeking freshman admission to the University of South Carolina''s Columbia campus will not be required to submit SAT or ACT scores for the spring, summer or fall 2027 terms... USC will superscore the SAT and ACT (ACT English, Math, and Reading sections only).'),
+  ('80eab8b7-5726-468a-bf68-01fe2873f581', 'https://sc.edu/about/offices_and_divisions/undergraduate_admissions/apply/for_international_students/',
+   'sc.edu', 'official_admissions_office', now(), 'medium',
+   'All international applicants whose native language is not English...must submit a USC-approved English proficiency examination... for exams taken prior to 21 January 2026, a minimum score of 100 with no less than 20 in each section; for exams taken on or after that date, a minimum score of 5 with no less than 4 on each section.');
+```
+
+## 58. University of Missouri, Columbia (QS band 721-730, list position 733)
+
+`id = '708aeddc-a28c-42e1-8a30-4c4a25979a56'`
+
+**Sources:** `https://admissions.missouri.edu/apply/international/english-language-requirements/`
+(official English-language-requirements page); no single official page with the general
+SAT/ACT test-optional policy statement resolved as cleanly, so that half relies on corroborating
+secondary sources.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('708aeddc-a28c-42e1-8a30-4c4a25979a56', 'standardized_test',
+   'Test-optional; not required but considered if submitted',
+   'University of Missouri-Columbia (Mizzou) is test-optional: SAT/ACT is not required for admission but is considered if submitted. Reported range: SAT 1150-1330 or ACT 23-30; reported averages: SAT 1230, ACT 26.',
+   false, 'medium', 'https://www.prepscholar.com/sat/s/colleges/University-of-Missouri---Columbia-admission-requirements', now()),
+  ('708aeddc-a28c-42e1-8a30-4c4a25979a56', 'english_proficiency',
+   'IELTS 6.5 minimum (no section below 6) as the general university floor; individual schools/colleges and specific programs set higher requirements; TOEFL Essentials and IELTS Online explicitly NOT accepted',
+   'General university minimum: IELTS 6.5 overall with no section below 6. Accepted tests: Duolingo English Test, TOEFL iBT, IELTS Academic, Cambridge C1 Advanced/C2 Proficiency, or PTE Academic -- but Mizzou explicitly does NOT accept TOEFL Essentials (formerly TOEFL at Home) or IELTS Online. Real, general-vs-program-specific distinction: many individual schools/colleges at Mizzou require higher scores than the general floor -- e.g. Pre-Journalism requires TOEFL PBT 550 / iBT 80, or IELTS 6.5 with no section below 6 (numerically the same overall band as the general floor, but with an explicit per-section minimum the general policy does not state).',
+   true, 'medium', 'https://admissions.missouri.edu/apply/international/english-language-requirements/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('708aeddc-a28c-42e1-8a30-4c4a25979a56', 'https://www.prepscholar.com/sat/s/colleges/University-of-Missouri---Columbia-admission-requirements',
+   'prepscholar.com', 'secondary_source', now(), 'medium',
+   'University of Missouri-Columbia is a test optional college, meaning the SAT and ACT score is not required, but considered for admission.'),
+  ('708aeddc-a28c-42e1-8a30-4c4a25979a56', 'https://admissions.missouri.edu/apply/international/english-language-requirements/',
+   'admissions.missouri.edu', 'official_admissions_office', now(), 'medium',
+   'International students must earn a minimum IELTS score of 6.5 with no section score below a 6... Mizzou does not accept the TOEFL Essentials (formerly TOEFL at Home) or the IELTS Online... many schools and colleges at Mizzou require higher IELTS and TOEFL scores.');
+```
+
+## 59. Syracuse University (QS band 731-740, list position 741)
+
+`id = '86e67cd8-c242-4a8f-9e65-b8a38f465db0'`
+
+**Sources:** `https://news.syr.edu/2025/03/07/syracuse-university-extends-test-optional-policy-for-students-applying-for-fall-2026-admission/`
+(official news release extending the policy) and secondary sources for the English-proficiency
+figures.
+
+**Preserved verbatim, cycle-scoped:** the test-optional extension explicitly spans four named
+terms (Fall 2026, Spring 2027, Fall 2027, Spring 2028) rather than being framed as indefinite.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('86e67cd8-c242-4a8f-9e65-b8a38f465db0', 'standardized_test',
+   'Test-optional through Fall 2026, Spring 2027, Fall 2027, and Spring 2028 admission; not required at all for students in non-US-system schools abroad (including US citizens living abroad)',
+   'Syracuse does not require SAT/ACT for Fall 2026, Spring 2027, Fall 2027, or Spring 2028 admission; non-submitters are not disadvantaged and remain eligible for merit scholarships. Distinct, stronger exception: SAT/ACT is not required at all (not just optional) for students studying outside the US in a school that does not follow the American education system, including US citizens living abroad. Self-reporting is allowed, and both tests are superscored.',
+   false, 'medium', 'https://news.syr.edu/2025/03/07/syracuse-university-extends-test-optional-policy-for-students-applying-for-fall-2026-admission/', now()),
+  ('86e67cd8-c242-4a8f-9e65-b8a38f465db0', 'english_proficiency',
+   'TOEFL 80, IELTS 6.5, or Duolingo 120 (each given as both average and minimum)',
+   'For non-native English speakers, reported average and minimum are the same value for each accepted test: TOEFL 80, IELTS 6.5, Duolingo English Test 120.',
+   true, 'medium', 'https://www.prepscholar.com/sat/s/colleges/Syracuse-University-admission-requirements', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('86e67cd8-c242-4a8f-9e65-b8a38f465db0', 'https://news.syr.edu/2025/03/07/syracuse-university-extends-test-optional-policy-for-students-applying-for-fall-2026-admission/',
+   'news.syr.edu', 'official_institution_website', now(), 'medium',
+   'SAT/ACT scores are not required for students applying for Fall 2026, Spring 2027, Fall 2027 or Spring 2028 admission... The SAT/ACT is not required if you are a student studying outside the U.S. and currently enrolled in a school that does not follow the American system of education.'),
+  ('86e67cd8-c242-4a8f-9e65-b8a38f465db0', 'https://www.prepscholar.com/sat/s/colleges/Syracuse-University-admission-requirements',
+   'prepscholar.com', 'secondary_source', now(), 'medium',
+   'For non-native English speakers, the average TOEFL score is 80, the IELTS average score is 6.5, and Duolingo scores average 120, with minimum requirements of 80, 6.5, and 120 respectively.');
+```
+
+## 60. University of Central Florida (QS band 731-740, list position 744)
+
+`id = 'f915f8f6-44f7-432e-9d42-a38f3af68adf'`
+
+**Sources:** `https://www.ucf.edu/admissions/undergraduate/freshman/` (official freshman-admissions
+page) and `https://www.ucf.edu/admissions/undergraduate/international/` (official
+international-applicants page).
+
+**Cross-reference to an existing finding, not a new contradiction:** UCF requiring test scores is
+consistent with -- likely the same underlying cause as -- Florida State's Florida-Board-of-Governors
+testing mandate recorded in batch 6. Both are Florida public universities; this strengthens rather
+than conflicts with that earlier finding.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('f915f8f6-44f7-432e-9d42-a38f3af68adf', 'standardized_test',
+   'SAT or ACT required (consistent with the Florida Board of Governors mandate also seen at Florida State in batch 6); ACT Science section optional as of April 2025; scores valid within 5 years',
+   'UCF requires SAT or ACT for admission -- consistent with (likely the same statewide cause as) the Florida Board of Governors mandate documented for Florida State University in batch 6, both being Florida public universities. Real, dated policy change: effective April 2025, the ACT Science section became optional and is no longer required for consideration. Scores are valid if taken within the last five years. Both tests are superscored. Reported range: SAT 1200-1350, ACT 25-29.',
+   true, 'medium', 'https://www.ucf.edu/admissions/undergraduate/freshman/', now()),
+  ('f915f8f6-44f7-432e-9d42-a38f3af68adf', 'english_proficiency',
+   'IELTS 6.5, TOEFL iBT 4 (Jan 2026+ new scale) or 80 (pre-Jan 2026 old scale), or Duolingo 120',
+   'International applicants need one of: IELTS 6.5 minimum, TOEFL iBT minimum of 4 on the new scale for exams from January 2026 onward or 80 on the old scale for exams before that date (another instance of the TOEFL rescaling pattern seen elsewhere in this document -- USC in this same batch, Georgia and Boston College in earlier batches), or Duolingo English Test 120 minimum. Exemptions available via specific coursework or alternative assessments (not itemized in this pass).',
+   true, 'medium', 'https://www.ucf.edu/admissions/undergraduate/international/', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('f915f8f6-44f7-432e-9d42-a38f3af68adf', 'https://www.ucf.edu/admissions/undergraduate/freshman/',
+   'ucf.edu', 'official_admissions_office', now(), 'medium',
+   'Admission test scores are compulsory...SAT and ACT exam scores are valid if taken within the last five years... effective April 2025, the Science section of the ACT exam is optional.'),
+  ('f915f8f6-44f7-432e-9d42-a38f3af68adf', 'https://www.ucf.edu/admissions/undergraduate/international/',
+   'ucf.edu', 'official_admissions_office', now(), 'medium',
+   'UCF requires a minimum qualifying score of 6.5 on IELTS; a minimum qualifying score of 4 (iBT January 2026 and later) or 80 (iBT prior to January 2026) on TOEFL; or a minimum qualifying score of 120 on the Duolingo English Test.');
+```
+
+## 61. New Jersey Institute of Technology (NJIT) (QS band 741-750, list position 747)
+
+`id = '967220c2-ee38-4b05-abca-57b9195fb7c4'`
+
+**Sources:** `https://news.njit.edu/njit-adopts-test-optional-admission-policy-incoming-freshman-students`
+(official news release).
+
+**Gap disclosed rather than guessed at:** the news release's exact list of covered admission
+cycles did not resolve cleanly across two search passes (one summarized pass returned an
+internally inconsistent cycle list); rather than assert a specific but unverified set of terms,
+this is recorded as "test-optional, confirmed current" without the precise cycle boundaries.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('967220c2-ee38-4b05-abca-57b9195fb7c4', 'standardized_test',
+   'Test-optional for first-year applicants (exact covered cycles not cleanly confirmed in this pass), but NOT for Albert Dorman Honors College or accelerated-program applicants; scores encouraged for endowed scholarships specifically',
+   'NJIT allows first-year applicants to not submit SAT/ACT scores; the official news release confirming this did not yield a clean, internally-consistent list of exactly which admission terms it covers in this pass, so no specific term list is asserted. Real, distinct exception: the test-optional policy does NOT apply to Albert Dorman Honors College or accelerated-program applicants, who must submit scores. Students who do test are encouraged to submit for endowed scholarships specifically (other scholarships remain available without scores). Reported averages: SAT ~1285, ACT ~26.',
+   false, 'medium', 'https://news.njit.edu/njit-adopts-test-optional-admission-policy-incoming-freshman-students', now()),
+  ('967220c2-ee38-4b05-abca-57b9195fb7c4', 'english_proficiency',
+   'Non-native speakers and transfers from foreign universities take NJIT''s own English Placement Test; TOEFL/IELTS may additionally be required',
+   'Students whose native language is not English, including transfers from other US colleges or foreign universities, are required to take NJIT''s own English Placement Test. International applicants may additionally be required to submit TOEFL or IELTS scores. No specific numeric minimum was confirmed in this pass.',
+   true, 'medium', 'https://news.njit.edu/njit-adopts-test-optional-admission-policy-incoming-freshman-students', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('967220c2-ee38-4b05-abca-57b9195fb7c4', 'https://news.njit.edu/njit-adopts-test-optional-admission-policy-incoming-freshman-students',
+   'news.njit.edu', 'official_institution_website', now(), 'medium',
+   'First-year students applying to NJIT...can choose to not submit SAT and/or ACT scores. However, this does not apply to Albert Dorman Honors College or accelerated program applicants... Students whose native language is not English...are required to take the English Placement Test.');
+```
+
+## 62. University of Cincinnati (QS band 741-750, list position 751)
+
+`id = '8b966fbf-ee54-42cf-b9a2-87ab0de9add4'`
+
+**Sources:** `https://www.admissions.uc.edu/information/high-school/fymc-information/test-optional-admission.html`
+(official test-optional policy page) and `https://www.grad.uc.edu/admissions/criteria/english.html`
+(English-proficiency page, cross-checked against secondary sources for the undergraduate-specific
+minimums since that exact page is graduate-focused).
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('8b966fbf-ee54-42cf-b9a2-87ab0de9add4', 'standardized_test',
+   'Test-optional, explicitly including international undergraduate applicants',
+   'University of Cincinnati is test-optional: applicants are considered with or without a score and are not disadvantaged either way. Notable, explicit detail not always stated by peer institutions: this test-optional policy is confirmed to extend to international undergraduate applicants as well, not just domestic ones. Reported range: SAT 1160-1370, ACT 24-29.',
+   false, 'medium', 'https://www.admissions.uc.edu/information/high-school/fymc-information/test-optional-admission.html', now()),
+  ('8b966fbf-ee54-42cf-b9a2-87ab0de9add4', 'english_proficiency',
+   'TOEFL iBT 79 minimum, IELTS 6.5 minimum; PTE and Duolingo also accepted; conditional admission available',
+   'International applicants whose first language is not English typically need TOEFL iBT 79 or IELTS 6.5 minimum. Additional accepted tests: PTE, Duolingo (DET), no specific minimums confirmed for those two in this pass. Conditional admission is available for students who meet academic coursework requirements but need additional time to reach the English-proficiency bar.',
+   true, 'medium', 'https://www.nomadcredit.com/usa-university/university-of-cincinnati/admissions', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('8b966fbf-ee54-42cf-b9a2-87ab0de9add4', 'https://www.admissions.uc.edu/information/high-school/fymc-information/test-optional-admission.html',
+   'admissions.uc.edu', 'official_admissions_office', now(), 'medium',
+   'University of Cincinnati''s programs will consider students for admission with or without a standardized test score as part of their application, and choosing not to send a test score will not disadvantage any student.'),
+  ('8b966fbf-ee54-42cf-b9a2-87ab0de9add4', 'https://www.nomadcredit.com/usa-university/university-of-cincinnati/admissions',
+   'nomadcredit.com', 'secondary_source', now(), 'medium',
+   'International students whose first language is not English have to prove their fluency with a TOEFL minimum score of 79 (iBT) or IELTS minimum score of 6.5... conditional admission is available for students who meet academic coursework requirements but need additional time to improve their English language skills.');
+```
+
+## 63. Brandeis University (QS band 751-760, list position 752)
+
+`id = '40d70344-74bd-413d-b3bb-445cdcf8d1d5'`
+
+**Sources:** `https://www.brandeis.edu/admissions/apply/test-optional-policy.html` (official
+test-optional policy page, describing the 3-exam alternative) and a secondary source for the
+specific English-proficiency numeric minimums.
+
+**Real, distinct mechanism worth flagging on its own, not just "test-optional":** Brandeis offers
+a genuine second path for applicants who skip SAT/ACT -- three approved exams covering
+science/math, English/social-science, and a free choice -- rather than plain non-submission.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('40d70344-74bd-413d-b3bb-445cdcf8d1d5', 'standardized_test',
+   'Test-optional, with a genuine second path: submit 3 approved exams (1 science/math, 1 English/social-science, 1 of the applicant''s choice) instead of a single SAT/ACT score',
+   'Brandeis does not require SAT/ACT. Beyond plain non-submission, applicants who want to submit something other than SAT/ACT can instead submit three exams from Brandeis''s approved list: one from a Science or Math discipline, one from an English or Social Science discipline, and a third of the student''s choice -- a real, distinct flexible-testing mechanism, not merely "optional."',
+   false, 'medium', 'https://www.brandeis.edu/admissions/apply/test-optional-policy.html', now()),
+  ('40d70344-74bd-413d-b3bb-445cdcf8d1d5', 'english_proficiency',
+   'TOEFL iBT 100 (or ITP 627), IELTS 7.0, Duolingo 130, or PTE Academic 68; exempt after 4+ years at an English-medium high school or for direct UWC applicants',
+   'International applicants for whom English is not native should submit TOEFL iBT 100 (or TOEFL ITP 627), IELTS 7.0, Duolingo English Test 130, or PTE Academic 68. Exempt: applicants who attended a high school with a fully English-language curriculum for 4+ years, and applicants applying directly from a United World College (UWC) campus. Scores valid up to 2 years.',
+   true, 'medium', 'https://www.nomadcredit.com/usa-university/brandeis-university', now());
+
+insert into public.university_sources
+  (university_id, source_url, source_domain, source_type, retrieved_at, confidence, raw_excerpt)
+values
+  ('40d70344-74bd-413d-b3bb-445cdcf8d1d5', 'https://www.brandeis.edu/admissions/apply/test-optional-policy.html',
+   'brandeis.edu', 'official_admissions_office', now(), 'medium',
+   'Brandeis has a test-optional policy...Option 2: Submit three exams from the approved list. One exam must be from a Science or Math discipline, one exam must be from an English or Social Science discipline, and the third exam may be from a discipline of the student''s choice.'),
+  ('40d70344-74bd-413d-b3bb-445cdcf8d1d5', 'https://www.nomadcredit.com/usa-university/brandeis-university',
+   'nomadcredit.com', 'secondary_source', now(), 'medium',
+   'Brandeis recommends a TOEFL iBT score of at least 100, a TOEFL ITP score of at least 627, IELTS score of at least 7.0, Duolingo English Test score of at least 130 or PTE Academic score of at least 68.');
+```
+
+---
+
+## Verification (batch 9)
+
+Read-only against the live database plus `WebSearch` for content — no code changed, no live
+database writes. SQL staged for CEO/founder review and application, not applied. All 7 candidates
+were QS band-ranked, confirming this is now the steady state going forward. UCF's mandatory
+testing is flagged as consistent with (not contradicting) Florida State's Board-of-Governors
+mandate from batch 6. NJIT's exact test-optional cycle list is disclosed as unresolved rather
+than asserted from a garbled search summary.
