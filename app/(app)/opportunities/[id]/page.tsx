@@ -27,7 +27,7 @@ import { NextMove } from "@/components/proxola/next-move";
 import { differenceInCalendarDays } from "date-fns";
 import { OpportunityActions } from "@/features/opportunities/opportunity-actions";
 import { formatMoney } from "@/lib/i18n/format";
-import { urgencyLabel } from "@/components/proxola/deadline-badge";
+import { urgencyLabel, DeadlineBadge } from "@/components/proxola/deadline-badge";
 import type { Locale } from "@/lib/i18n/config";
 import type { ConfidenceLevel } from "@/components/proxola/confidence-indicator";
 
@@ -314,9 +314,20 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
         {opportunity.deadline ? (
           <div className="flex items-center gap-2">
             <Calendar className="size-4 shrink-0 text-muted-foreground" />
-            <span>
+            <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
               {t("deadlineLabel")} <span className="font-medium">{opportunity.deadline}</span>
               {opportunity.current_cycle_label ? ` (${opportunity.current_cycle_label})` : ""}
+              {/* FIXED 2026-09-05 (docs/past-deadline-honesty-measurement-2026-09-05.md): the
+                  raw date above renders identically whether it's three months out or three
+                  months gone -- this badge is the only thing on this page that actually says
+                  so, reusing the exact same DeadlineBadge every other real surface (the
+                  parent-facing version of this same page included) already uses. Deliberately
+                  not touching daysUntilDeadline/urgencyLabel's own `>= 0` gate a few lines up
+                  in this file -- that gate is a different, correct decision (urgency framing
+                  belongs in "Proxola's Take", only for a deadline still ahead); DeadlineBadge
+                  is the right fix specifically because its own internal logic already branches
+                  on the same sign this page was failing to check at all. */}
+              <DeadlineBadge date={opportunity.deadline} locale={locale} />
             </span>
           </div>
         ) : opportunity.current_cycle_label ? (
