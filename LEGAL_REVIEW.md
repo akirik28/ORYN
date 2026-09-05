@@ -80,9 +80,33 @@ test enforces that the facts can't drift apart between the two.
 ### Anthropic (Claude API) — *receives personal data*
 - **Role:** the model behind profile analysis, the advisor, weekly plans, and CV import.
 - **Receives:** a compact profile summary — display name, graduation year, curriculum,
-  country, weekly time budget, dimension scores, and the *titles* of activities, projects,
-  research, awards and goals — plus the student's advisor messages. **The student's school
-  name is not sent.** On CV import, the **entire uploaded document** is sent.
+  country, weekly time budget, dimension scores, **the student's school name** (folded
+  into the same sentence as curriculum/country), and — for activities, projects,
+  research, awards, education records, courses, test scores, certifications, volunteering
+  experiences, work experiences, and goals — the *titles* (education records and courses
+  also carry a GPA or grade value; goals also carry a category) — plus a list of the
+  student's stated interests, and the student's advisor messages. On CV import, the
+  **entire uploaded document** is sent.
+- **CORRECTED 2026-09-05, found auditing this section, not by a later code change being
+  reflected back here — the claims below were true when this document was drafted and
+  became false three days later.** This entry previously read: *"a compact profile
+  summary — display name, graduation year, curriculum, country, weekly time budget,
+  dimension scores, and the titles of activities, projects, research, awards and goals —
+  plus the student's advisor messages. **The student's school name is not sent.**"*
+  Verified against `lib/ai/student-context.ts`'s own git history: that was accurate on
+  2026-08-31 (this document's drafting date) — the code's own comment on the school-name
+  field states plainly it was "fetched into context since the assembler's first version,
+  never rendered." It stopped being accurate on **2026-09-03** (commit `0833bd54`, *"advisor
+  context surfaces six already-fetched categories it was dropping"*), which deliberately
+  added school name, education records (with GPA), courses, test scores, certifications,
+  volunteering experiences, work experiences, interests, and a goal's category to what
+  reaches the model — framed in that commit's own message as closing an unintentional gap,
+  not as a new decision to send more. This section was not updated when that commit landed;
+  a lawyer reading the old text would have been told a materially narrower data flow
+  (five categories, titles only, no GPA or test scores, no school name) than what the
+  product has actually sent for the last two days. Left the original wording quoted above
+  rather than silently removed, per this document's own practice elsewhere (§6.1) of
+  distinguishing what was true at drafting time from what is true now.
 - **Location:** Anthropic infrastructure, outside the EU/EEA.
 - **Retention:** governed by Anthropic's API terms. **Not asserted here — counsel to confirm
   against the current data processing addendum.**
