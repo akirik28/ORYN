@@ -48,6 +48,21 @@ vi.mock("@/lib/supabase/admin", () => {
 
 vi.mock("@/lib/ai/index", () => ({ getAIProvider: () => providerRef.current }));
 
+// Hoisted to module scope, once each, matching __tests__/ai/weekly-plan.test.ts's own
+// convention -- see research-generator.test.ts's identical fix (2026-09-05) for the full
+// reasoning, including the cross-reference to docs/cron-jobs-pre-arm-audit-2026-09-05.md's
+// 933-execution measurement of this exact failure shape on that file. Not independently
+// reproduced live on THIS file specifically, but the mechanism is identical and unconditional:
+// every test below re-ran its own `await import(...)`, so whichever test executed FIRST paid
+// the real one-time module-transform cost for that import inside its own 20s testTimeout
+// budget. This file carries five distinct imports across ten tests -- five separate
+// first-mover risks, one per describe block, all removed the same way.
+const { extractCVData, CVExtractionFailedError } = await import("@/lib/ai/cv-extraction");
+const { generateEssayOutlines } = await import("@/lib/ai/essay-outlines");
+const { interpretRequirementText } = await import("@/lib/ai/interpret-requirement");
+const { explainCounselorRecommendations } = await import("@/lib/ai/counselor-explain");
+const { refineAchievementDescription } = await import("@/lib/ai/refine-achievement");
+
 const USER_ID = "22222222-2222-4222-8222-222222222222";
 
 function usageInserts(): RecordedInsert[] {
@@ -62,7 +77,6 @@ beforeEach(() => {
 
 describe("extractCVData — usage recording", () => {
   test("a successful extraction is recorded in ai_usage exactly once", async () => {
-    const { extractCVData } = await import("@/lib/ai/cv-extraction");
     providerRef.current!.queueStructured({
       education: [],
       activities: [],
@@ -83,7 +97,6 @@ describe("extractCVData — usage recording", () => {
   });
 
   test("a retry-exhausted failure still records the real, billed usage before surfacing as CVExtractionFailedError", async () => {
-    const { extractCVData, CVExtractionFailedError } = await import("@/lib/ai/cv-extraction");
     providerRef.current!.queueStructured(
       new AIStructuredResponseFailedError({ lastError: "education[0].title: Required", usage: { inputTokens: 5000, outputTokens: 800 }, model: "claude-sonnet-5" }),
     );
@@ -115,7 +128,6 @@ describe("generateEssayOutlines — usage recording", () => {
   ];
 
   test("a successful generation is recorded in ai_usage exactly once", async () => {
-    const { generateEssayOutlines } = await import("@/lib/ai/essay-outlines");
     providerRef.current!.queueStructured({
       candidates: [
         {
@@ -147,7 +159,6 @@ describe("generateEssayOutlines — usage recording", () => {
   });
 
   test("a retry-exhausted failure still records the real, billed usage rather than throwing silently", async () => {
-    const { generateEssayOutlines } = await import("@/lib/ai/essay-outlines");
     providerRef.current!.queueStructured(
       new AIStructuredResponseFailedError({ lastError: "candidates: Required", usage: { inputTokens: 3200, outputTokens: 600 }, model: "claude-sonnet-5" }),
     );
@@ -164,7 +175,6 @@ describe("generateEssayOutlines — usage recording", () => {
 
 describe("interpretRequirementText — usage recording", () => {
   test("a successful interpretation is recorded in ai_usage exactly once", async () => {
-    const { interpretRequirementText } = await import("@/lib/ai/interpret-requirement");
     providerRef.current!.queueStructured({ minGpa: 3.5, scale: 4 });
 
     await interpretRequirementText({
@@ -180,7 +190,6 @@ describe("interpretRequirementText — usage recording", () => {
   });
 
   test("a retry-exhausted failure still records the real, billed usage rather than throwing silently", async () => {
-    const { interpretRequirementText } = await import("@/lib/ai/interpret-requirement");
     providerRef.current!.queueStructured(
       new AIStructuredResponseFailedError({ lastError: "minGpa: Required", usage: { inputTokens: 400, outputTokens: 90 }, model: "claude-sonnet-5" }),
     );
@@ -229,7 +238,6 @@ describe("explainCounselorRecommendations — usage recording", () => {
   };
 
   test("a successful explanation is recorded in ai_usage exactly once", async () => {
-    const { explainCounselorRecommendations } = await import("@/lib/ai/counselor-explain");
     providerRef.current!.queueStructured({
       summary: "Research is the clearest current gap.",
       perRecommendation: [{ id: "opportunity:opp-1", narrative: "A strong, achievable next step for research." }],
@@ -243,7 +251,6 @@ describe("explainCounselorRecommendations — usage recording", () => {
   });
 
   test("a retry-exhausted failure still records the real, billed usage — even though the caller only ever sees null", async () => {
-    const { explainCounselorRecommendations } = await import("@/lib/ai/counselor-explain");
     providerRef.current!.queueStructured(
       new AIStructuredResponseFailedError({ lastError: "summary: Required", usage: { inputTokens: 1500, outputTokens: 300 }, model: "claude-sonnet-5" }),
     );
@@ -262,7 +269,6 @@ describe("explainCounselorRecommendations — usage recording", () => {
 
 describe("refineAchievementDescription — usage recording", () => {
   test("a successful refinement is recorded in ai_usage exactly once", async () => {
-    const { refineAchievementDescription } = await import("@/lib/ai/refine-achievement");
     providerRef.current!.queueStructured({ improvedDescription: "Led weekly meetings for 12 members.", suggestedQuestions: [] });
 
     await refineAchievementDescription({ userId: USER_ID, achievementType: "activity", title: "Club lead", organization: null, description: "ran a club", tier: "standard" });
@@ -273,7 +279,6 @@ describe("refineAchievementDescription — usage recording", () => {
   });
 
   test("a retry-exhausted failure still records the real, billed usage rather than throwing silently", async () => {
-    const { refineAchievementDescription } = await import("@/lib/ai/refine-achievement");
     providerRef.current!.queueStructured(
       new AIStructuredResponseFailedError({ lastError: "improvedDescription: Expected string, received number", usage: { inputTokens: 900, outputTokens: 200 }, model: "claude-sonnet-5" }),
     );
