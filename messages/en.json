@@ -54,6 +54,7 @@
     "generateMyPlan": "Generate my plan",
     "thinking": "Thinking…",
     "counselorFallbackDescription": "Based on your verified profile data — no AI required.",
+    "counselorFallbackFewerThanThree": "Proxola only has {count, plural, one {# confident recommendation} other {# confident recommendations}} for you this week — not enough well-documented opportunities to fill three yet. More will show up as your profile and Proxola's own data coverage grow.",
     "planNotConfiguredTitle": "The AI Advisor isn't configured yet",
     "planFailedTitle": "We couldn't generate this week's plan",
     "noPlanTitle": "No weekly plan yet",
@@ -85,6 +86,7 @@
       "whatHappened": "What happened?",
       "reflectionPlaceholder": "Add a short note (optional)",
       "noActions": "No actions in this week's plan yet.",
+      "fewerThanThree": "Proxola picked {count, plural, one {# focused action} other {# focused actions}} for you this week.",
       "completedThisWeek": "Completed this week",
       "reflectionOptions": {
         "completedSuccessfully": "Completed successfully",

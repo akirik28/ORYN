@@ -269,3 +269,41 @@ describe("WeeklyFocus — carried-forward completed actions (migration 0077)", (
     expect(screen.getByRole("button", { name: "Mark as not started" })).toBeInTheDocument(); // still interactive, not read-only
   });
 });
+
+/**
+ * CEO's own 2026-09-05 finding, same session as dashboard-view.tsx's identical fix for the
+ * deterministic counselor fallback: an AI-generated plan with fewer than three active actions
+ * rendered exactly that many cards with nothing acknowledging the shortfall against the "three
+ * primary actions" spec. Deliberately does not claim a specific cause the way the counselor
+ * fallback's notice does — an AI choosing fewer can be a genuine quality judgment, not
+ * necessarily a data gap this component can attribute.
+ */
+describe("WeeklyFocus — fewer-than-three notice (CEO, 2026-09-05)", () => {
+  test("RED->GREEN: exactly one active action shows the fewer-than-three notice", () => {
+    renderWeeklyFocus([action()]);
+    expect(screen.getByText("Proxola picked 1 focused action for you this week.")).toBeInTheDocument();
+  });
+
+  test("exactly two active actions shows the plural form", () => {
+    renderWeeklyFocus([action(), action({ id: "action-2", priority: 2 })]);
+    expect(screen.getByText("Proxola picked 2 focused actions for you this week.")).toBeInTheDocument();
+  });
+
+  test("a full three-action plan shows no notice — this is the normal case, unaffected", () => {
+    renderWeeklyFocus([action(), action({ id: "action-2", priority: 2 }), action({ id: "action-3", priority: 3 })]);
+    expect(screen.queryByText(/focused action/)).not.toBeInTheDocument();
+  });
+
+  test("a carried-forward action does not count toward the notice's threshold on its own", () => {
+    // 1 active + 1 carried-forward: the notice is about the ACTIVE list specifically (what's
+    // still to do), not the total row count — a fully-completed carried-forward item isn't
+    // part of "this week's three things" the way an active one is.
+    renderWeeklyFocus([action(), action({ id: "old-1", status: "completed", carried_forward: true, priority: 2 })]);
+    expect(screen.getByText("Proxola picked 1 focused action for you this week.")).toBeInTheDocument();
+  });
+
+  test("Turkish: the notice translates", () => {
+    renderWeeklyFocus([action()], tr);
+    expect(screen.getByText("Proxola bu hafta senin için 1 odaklı eylem seçti.")).toBeInTheDocument();
+  });
+});

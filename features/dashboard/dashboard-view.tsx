@@ -30,6 +30,7 @@ import type { getUpcomingDeadlines, getUpcomingUndatedUniversityDeadlines, Deadl
 import type { HomeStripOpportunity } from "@/lib/opportunities/home-strip";
 import type { WeeklyPlanWithActions } from "@/lib/plan/persist";
 import type { CounselorRecommendation } from "@/lib/counselor";
+import { RANKING_THRESHOLDS } from "@/lib/counselor/config";
 import type { ProfileDimension, Opportunity, PlanTier } from "@/types/database";
 import { heroGradientStyle } from "@/components/proxola/hero-gradient";
 
@@ -154,6 +155,27 @@ export async function DashboardView({
   const tTier = await getTranslations({ locale, namespace: "opportunities.matchTier" });
   const hasAiPlan = Boolean(weeklyPlan && weeklyPlan.actions.length > 0);
   const usingCounselorFallback = !hasAiPlan && counselorThisWeek.length > 0;
+  /**
+   * CEO's own live measurement, 2026-09-05: once the unknown-eligibility score ceiling
+   * (lib/counselor/scoring.ts) went live, 6 of 8 real students' "do" count fell below
+   * RANKING_THRESHOLDS.doSlots (3) — 5 of them down to exactly one. Before this, the count
+   * simply rendered however many cards CounselorWeekFallback received, with nothing
+   * acknowledging the shortfall — "Based on your verified profile data" (the description
+   * above) explains the MECHANISM, not the COUNT, so a student seeing one card had no way to
+   * tell "Proxola only trusts one thing this week" apart from "Proxola is broken."
+   *
+   * Deliberately doesn't name a specific cause (e.g. "eligibility data is missing") — the
+   * real reason varies by student (thin opportunity data, no target universities yet, a
+   * profile already near 100% complete), and this file has no cheap way to attribute which
+   * one applies without a second pass over the ranked pool. The honest, always-true claim is
+   * the count itself and that it's a floor, not a ceiling. Attributing a specific cause is a
+   * larger, separate change (would need the counselor pipeline to expose why candidates were
+   * excluded, not just which ones survived) — flagged to CEO rather than built here.
+   */
+  const fewerThanThreeNotice =
+    usingCounselorFallback && counselorThisWeek.length < RANKING_THRESHOLDS.doSlots
+      ? t("counselorFallbackFewerThanThree", { count: counselorThisWeek.length })
+      : null;
   // See lib/scoring/dashboard-hero.ts for why this needs three states, not two — a rich
   // profile whose literal weakest dimension happens to be unassessed used to render the
   // same "nothing recorded" copy as a genuinely empty profile (live Gate 2 finding,
@@ -429,7 +451,7 @@ export async function DashboardView({
                 {hasAiPlan ? (
                   <WeeklyFocus actions={weeklyPlan!.actions} />
                 ) : usingCounselorFallback ? (
-                  <CounselorWeekFallback actions={counselorThisWeek} locale={locale} />
+                  <CounselorWeekFallback actions={counselorThisWeek} locale={locale} fewerThanThreeNotice={fewerThanThreeNotice} />
                 ) : (
                   <EmptyState
                     icon={Compass}

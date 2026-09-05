@@ -189,11 +189,27 @@ export function WeeklyFocus({ actions }: { actions: WeeklyAction[] }) {
   // falls out of plain JS truthiness with no special-case code required; don't add one.
   const active = actions.filter((action) => !action.carried_forward);
   const carriedForward = actions.filter((action) => action.carried_forward);
+  /**
+   * CEO's own 2026-09-05 finding (dashboard-view.tsx's identical fix for the deterministic
+   * counselor fallback): this component rendered however many active actions it got, silently
+   * fewer than the "three primary actions" spec (AGENTS.md) whenever the AI plan itself
+   * contained fewer. `active.length` is bounded to [0,3] by WeeklyPlanSchema's own
+   * `actions.max(3)` (lib/ai/weekly-plan.ts) minus whatever carried_forward already claimed,
+   * so this only ever renders for exactly 1 or 2.
+   *
+   * Deliberately doesn't name a cause the way the counselor fallback's notice does ("not
+   * enough well-documented opportunities") -- an AI-generated plan choosing fewer than three
+   * can be a genuine quality judgment (fewer, more focused actions), not necessarily a data
+   * shortfall, and this component has no way to tell the two apart. The honest, always-true
+   * thing to say is the count itself.
+   */
+  const fewerThanThreeNotice = active.length > 0 && active.length < 3 ? t("fewerThanThree", { count: active.length }) : null;
 
   return (
     <div className="space-y-6">
       {active.length > 0 ? (
         <div className="space-y-3">
+          {fewerThanThreeNotice ? <p className="text-sm text-ink-3">{fewerThanThreeNotice}</p> : null}
           {active.map((action, index) => (
             <ActionRow key={action.id} action={action} index={index} />
           ))}
