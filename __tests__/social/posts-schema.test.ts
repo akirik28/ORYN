@@ -713,7 +713,21 @@ describe("migration numbering", () => {
     // the same pass: it claimed "read/acknowledge/delete" since the table's creation, but no
     // application code anywhere has ever called notifications.delete() -- not a regression, a
     // description of a feature that was never actually built.
-    expect(Math.max(...numbers.map(Number))).toBe(135);
+    //
+    // 0136 (target_universities_guard), 0137 (evidence_status_guard) -- items 1 and 2 of the
+    // same sweep, CEO-assigned both together after checking every remote branch. Same guard
+    // shape again; 0137 is one shared trigger function attached to all 10 evidence-linkable
+    // tables (the column name is identical everywhere it's guarded, unlike 0063's own six
+    // tables which each guard a different column set). Paired code change for both: the one
+    // legitimate writer for each moved from the caller's own RLS-scoped session to the admin
+    // client (app/(app)/documents/actions.ts, lib/admissions/persist.ts). A second, CEO-caught
+    // risk closed in the same pass: an admin-client write bypasses RLS's own ownership
+    // guarantee entirely, so 0136's write needed its own `.eq("user_id", ...)` added directly
+    // (0137's already had it) -- proven separately, real Postgres, service_role, a wrong-owner
+    // id+user_id combination confirmed matching zero rows. Both proven red-to-green-to-broken-
+    // to-restored the same way as 0135 -- docs/evidence-status-and-target-universities-rls-
+    // guard-proof-2026-09-05.md.
+    expect(Math.max(...numbers.map(Number))).toBe(137);
   });
 });
 

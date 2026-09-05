@@ -1,14 +1,15 @@
--- PENDING MIGRATION NUMBER -- CEO assigns, per standing rule (5 numbering collisions
--- yesterday). Rename this file to 01XX_evidence_status_guard.sql with the real number before
--- applying. Do not renumber it yourself.
+-- Migration number 0137, assigned by CEO (2026-09-05) after checking every remote branch.
+-- Applies after 0136 (target_universities), per CEO's stated order: target_universities
+-- (misleads a parent) before evidence_status (self-verification) before the sweep's
+-- remaining lower-stakes findings.
 --
--- docs/permissive-update-policy-sweep-2026-09-04.md §2, priority order (CEO: "2 first"):
--- evidence_status is unguarded on 10 achievement tables -- the exact column
--- evidence_files_guard_verification_status() (migration 0063) already protects on the ONE
--- table that trigger covers. AGENTS.md §11, non-negotiable #4: "Uploaded evidence does not
--- equal independent verification." Today, a direct REST PATCH to any of these ten tables, on
--- the owner's own row, with {"evidence_status": "verified"}, is not stopped by RLS, GRANT, or
--- any trigger -- a student can mark their own achievement independently verified.
+-- docs/permissive-update-policy-sweep-2026-09-04.md §2: evidence_status is unguarded on 10
+-- achievement tables -- the exact column evidence_files_guard_verification_status()
+-- (migration 0063) already protects on the ONE table that trigger covers. AGENTS.md §11,
+-- non-negotiable #4: "Uploaded evidence does not equal independent verification." Today, a
+-- direct REST PATCH to any of these ten tables, on the owner's own row, with
+-- {"evidence_status": "verified"}, is not stopped by RLS, GRANT, or any trigger -- a student
+-- can mark their own achievement independently verified.
 --
 -- MECHANISM, identical to 0063/0121: reset the protected column to its OLD value on a
 -- non-service-role UPDATE (never raise -- a silent no-op can't tell an attacker which column
@@ -29,9 +30,16 @@
 -- 0063's own header names for is_admin/profile_strength_score/etc: the guard alone would
 -- silently break the real feature too, since the app's own legitimate write runs as the
 -- student, not service-role. That write now goes through the `admin` client already created
--- in the same function for the evidence_files insert (migration 0065) -- the ownership check
--- immediately above it already confirmed, via the caller's own RLS-scoped read, that the
--- target row belongs to this user, so this is not a privilege widening.
+-- in the same function for the evidence_files insert (migration 0065).
+--
+-- ON RLS-BYPASS OWNERSHIP (CEO's own catch, closed the same day for target_universities/0136
+-- and confirmed already correct here): moving a write to the admin client removes RLS's
+-- ownership guarantee for that write entirely -- unlike the original target_universities
+-- write, THIS write was never scoped by id alone: `.update({ evidence_status: "evidence_added"
+-- }).eq("id", linkedId).eq("user_id", userId)` already carries its own `user_id` filter,
+-- independent of the ownership check performed just above it in the same function. Confirmed,
+-- not assumed -- see the proof doc's Part 3, which reproduces this exact WHERE-clause shape
+-- under service_role directly.
 --
 -- A REAL, NAMED LIMIT, not silently left out: this is a `BEFORE UPDATE OF evidence_status`
 -- guard -- it protects an EXISTING row from being overwritten. A freshly INSERTed row with a
@@ -53,9 +61,11 @@
 -- profile_score_snapshots.
 --
 -- PROOF: docs/evidence-status-and-target-universities-rls-guard-proof-2026-09-05.md -- real
--- local Postgres 17, same-user privilege-escalation attempt reproduced, guard confirmed
--- blocking it, service_role path confirmed still working, and the proof itself confirmed
--- capable of failing (dropped the trigger, re-ran the attack, it succeeded).
+-- local Postgres 17. Part 1: same-user privilege-escalation attempt reproduced, guard
+-- confirmed blocking it, service_role path confirmed still working, and the proof itself
+-- confirmed capable of failing (dropped the trigger, re-ran the attack, it succeeded). Part 3:
+-- the id+user_id WHERE-clause shape confirmed matching zero rows when scoped to a different,
+-- real student's id under service_role.
 
 create or replace function public.achievement_guard_evidence_status()
 returns trigger
@@ -120,5 +130,5 @@ create trigger work_experiences_00_guard_evidence_status
   before update of evidence_status on public.work_experiences
   for each row execute function public.achievement_guard_evidence_status();
 
--- STATUS: WRITTEN BUT NOT APPLIED. Prepared for CEO/founder to apply after assigning the
--- real migration number and reviewing. Do not run against the live project from here.
+-- STATUS: WRITTEN BUT NOT APPLIED. Prepared for CEO/founder to apply. Do not run against the
+-- live project from here.

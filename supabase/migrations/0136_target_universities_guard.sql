@@ -1,7 +1,6 @@
--- PENDING MIGRATION NUMBER -- CEO assigns, per standing rule (5 numbering collisions
--- yesterday). Rename this file to 01XX_target_universities_guard.sql with the real number
--- before applying. Do not renumber it yourself. Depends on nothing above; can apply before or
--- after PENDING_evidence_status_guard.sql, CEO's stated order is evidence_status first.
+-- Migration number 0136, assigned by CEO (2026-09-05) after checking every remote branch.
+-- Applies first, per CEO's stated order: target_universities (misleads a parent) before
+-- evidence_status (0137, self-verification) before the sweep's remaining lower-stakes findings.
 --
 -- docs/permissive-update-policy-sweep-2026-09-04.md §1: target_universities' 8 admission-
 -- outlook columns (academic_fit_score, profile_fit_score, outlook, estimate_range_low,
@@ -36,11 +35,24 @@
 -- computed, server-side, before this line, exactly the same reasoning 0063's own header gives
 -- for profile_scores/opportunity_matches.
 --
+-- A SECOND, CEO-CAUGHT RISK IN THE FIX ITSELF, closed in the same PR: moving this write to
+-- the admin/service-role client bypasses RLS for it entirely -- the guarantee that a student
+-- can only affect their OWN row moves from "enforced by Postgres" to "enforced by whatever the
+-- application's own WHERE clause says." The write was originally scoped by `.eq("id",
+-- targetUniversityId)` alone, relying on an EARLIER, RLS-scoped read (this same function's own
+-- ownership lookup) having already confirmed the row belongs to the caller -- structurally
+-- fragile (a future reordering or a new call site could silently reopen it), the same class as
+-- the still-open finding that createApplication never checks target_university_id belongs to
+-- its caller either. Fixed by adding `.eq("user_id", userId)` directly to this write, so it
+-- carries its own ownership guarantee independent of what ran before it.
+--
 -- PROOF: docs/evidence-status-and-target-universities-rls-guard-proof-2026-09-05.md -- real
--- local Postgres 17, a same-user fabrication attempt (the concrete scenario above: outlook =
--- 'likely', academic_fit_score = 100) reproduced, guard confirmed blocking it, the
--- service_role path confirmed still producing a real refreshed outlook, and the proof itself
--- confirmed capable of failing (dropped the trigger, re-ran the attack, it succeeded).
+-- local Postgres 17. Part 2: a same-user fabrication attempt (outlook = 'likely',
+-- academic_fit_score = 100) reproduced, guard confirmed blocking it, the service_role path
+-- confirmed still producing a real refreshed outlook, and the proof itself confirmed capable
+-- of failing (dropped the trigger, re-ran the attack, it succeeded). Part 3: the id-only WHERE
+-- clause confirmed genuinely vulnerable to a wrong-owner write under service_role, and the
+-- id+user_id shape confirmed matching zero rows when scoped to a different, real student's id.
 
 create or replace function public.target_universities_guard_computed_columns()
 returns trigger
@@ -69,5 +81,5 @@ create trigger target_universities_00_guard_computed_columns
   on public.target_universities
   for each row execute function public.target_universities_guard_computed_columns();
 
--- STATUS: WRITTEN BUT NOT APPLIED. Prepared for CEO/founder to apply after assigning the
--- real migration number and reviewing. Do not run against the live project from here.
+-- STATUS: WRITTEN BUT NOT APPLIED. Prepared for CEO/founder to apply. Do not run against the
+-- live project from here.

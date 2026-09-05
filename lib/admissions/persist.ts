@@ -210,7 +210,20 @@ export async function refreshAdmissionOutlook(
       outlook_model_version: outlook.modelVersion,
       outlook_calculated_at: new Date().toISOString(),
     })
-    .eq("id", targetUniversityId);
+    // `.eq("user_id", userId)` here, not just `.eq("id", ...)`, is load-bearing now that
+    // `writeClient` can be the admin client (CEO's own catch, 2026-09-05): the
+    // `target_universities` SELECT above already re-confirms `targetUniversityId` belongs
+    // to `userId` before any of this runs, so this line is redundant *today* -- but with
+    // RLS bypassed for this specific write, that earlier check is no longer a structural
+    // guarantee the write itself carries, only a guarantee this one call path currently
+    // happens to uphold. A future edit to this file that reorders these two queries, or a
+    // new caller that skips the read, would silently reopen exactly the same class of gap
+    // named in the still-open findings list (#10, createApplication's target_university_id
+    // has no ownership check of its own either) -- scoping the write's own WHERE clause is
+    // what makes this call safe on its own terms, not dependent on a different query
+    // upstream staying correct forever.
+    .eq("id", targetUniversityId)
+    .eq("user_id", userId);
 
   // Computed successfully but not persisted is worse than either step failing cleanly: both
   // call sites discard this function's return value, so nothing surfaces the failure, and the
