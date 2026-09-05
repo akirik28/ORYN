@@ -57,28 +57,80 @@ Plus, separately:
 
 ## Legal / compliance
 
-1. `LEGAL_REVIEW.md` §2 still says "the student's school name is not sent" to Anthropic —
+Re-verified in full 2026-09-05 (second pass, same day), against current code rather than
+re-trusting the original 174-item pass's own text — CEO's own standing rule after
+`LEGAL_REVIEW.md` §2 (below) was found wrong the same way once already: a document is a
+claim as of when it was written, code is the fact. Every item below was individually
+re-checked; none carried forward on the strength of the source doc alone.
+
+~~1. `LEGAL_REVIEW.md` §2 still says "the student's school name is not sent" to Anthropic —
    false since `schoolName` entered the advisor context (commit `0833bd54`, 2026-09-03).
    Replacement text already drafted in `docs/legal-review-s2-duzeltme-2026-09-03.md`, never
    applied. (`docs/legal-review-currency-check-2026-09-03.md`,
-   `docs/legal-review-s2-duzeltme-2026-09-03.md`)
+   `docs/legal-review-s2-duzeltme-2026-09-03.md`)~~ **✅ Closed 2026-09-05, commit `8c18c0e7`**
+   (verified reachable from `origin/main` via `git merge-base --is-ancestor`, not assumed from
+   `git log` alone) — corrected in both `LEGAL_REVIEW.md` §2 and the live, published bilingual
+   Privacy Notice text (`lib/legal/content.ts`, 4 occurrences: the doc-comment, `DATA_
+   PROCESSORS_EN`'s Anthropic entry, its Turkish equivalent, the Privacy Notice's "ai" section
+   body in both languages). Closed by this same session, earlier today, before this
+   re-verification pass — the exact kind of same-day staleness this pass exists to catch.
 2. Seven `COMPANY` legal-identity fields still `unresolved()` in `lib/legal/content.ts`
    (legalName, registrationNumber, registeredAddress, privacyContactEmail, verbisRegistration,
-   dataProtectionOfficer, governingLaw) — needs founder + counsel input.
+   dataProtectionOfficer, governingLaw) — **still open**, re-grepped the live file directly
+   2026-09-05: all seven still wrapped in `unresolved(...)`. Needs founder + counsel input.
    (`docs/founder-blocked-backlog.md` item 43, `docs/kurucu-sirket-bilgileri-eksikleri-
    2026-09-04.md` — same 7 fields, duplicate finding)
-3. `companyPrivacyEmail` unresolved placeholder — same root cause as #2.
+3. `companyPrivacyEmail` unresolved placeholder — **still open**, same live-file re-check as
+   #2 just above (this is the same field as #2's `privacyContactEmail`/`companyPrivacyEmail`,
+   not an independent second gap — the two source docs simply found it via different routes).
    (`docs/rename-verification-2026-09-03.md`, `docs/rename-visual-verification-2026-09-03.md`)
 4. AI spend-cap silent model degradation isn't disclosed anywhere in Terms/Privacy copy, only
-   in-app. (`docs/legal-copy-vs-product-gap-2026-09-02.md`)
+   in-app. **Still open** — re-read `LAWYER_FLAGS.aiModelDegradationDisclosure` directly in
+   today's file, unchanged: neither Terms nor Privacy mentions the mechanism in either
+   language. (`docs/legal-copy-vs-product-gap-2026-09-02.md`)
 5. No marketing-email opt-in consent step or DPIA exists before any promotional email could be
-   sent to a student. (`docs/minor-commercial-email-legal-2026-09-04.md`)
+   sent to a student. **Still open, and confirmed the gap has nothing exercising it yet** —
+   grepped the whole app for any marketing/promotional-email code; none exists. A real but
+   currently inert gap, not a live risk today. (`docs/minor-commercial-email-legal-2026-09-04.md`)
 6. §4 legal question (dual-consent for parent access) still unanswered; `LEGAL_REVIEW.md` §8
-   was never written. (`docs/veli-hesabi-spec-2026-09-04.md`)
+   was never written. **Still open** — `LEGAL_REVIEW.md` now has 7 sections (§6 minor-consent-
+   sequencing and §7 feedback-report-retention were added since this finding was written), and
+   neither is the parent-access dual-consent question; §8 still doesn't exist. Not to be
+   confused with §6, a related but genuinely distinct question — §6 is about age being unknown
+   at the moment of the *student's own* signup consent, not a *parent's* consent to access a
+   linked minor's data. (`docs/veli-hesabi-spec-2026-09-04.md`)
 7. Guardian-consent/minor-capacity question for Ultra purchases — undecided legal/business
-   question, not a code defect. (`docs/ultra-sales-readiness-scope-2026-09-03.md`)
+   question, not a code defect. **Still open, and more concrete than when this was written**:
+   a real checkout action now exists and is wired to the UI (`startUltraCheckoutAction`,
+   `app/(app)/upgrade-interstitial-actions.ts`, calling `lib/payments/checkout.ts`'s
+   `startUltraCheckout`) — but `getPaymentProvider()` (`lib/payments/index.ts`) has no `case`
+   for any provider yet, so every real attempt today resolves to `"not_configured"` and no
+   money can actually change hands. Not a live risk today; becomes one the moment a provider
+   is wired in, with this question still exactly as open. (`docs/ultra-sales-readiness-scope-
+   2026-09-03.md`)
 8. No takedown mechanism or public contact channel exists for an opportunity-image rights
-   holder — manual DB query + storage delete only. (`docs/opportunity-image-licensing.md`)
+   holder — manual DB query + storage delete only. **Still open** — re-read `LAWYER_FLAGS.
+   opportunityImageLicensing` directly in today's file, unchanged. (`docs/opportunity-image-
+   licensing.md`)
+
+**New, found 2026-09-05, same session, after the original 174-item pass — not a re-check,
+a genuinely new finding:**
+
+9. Student-to-student messaging and mutual-consent connections exist, fully built and wired
+   (migrations 0023/0027, real Server Actions, real UI routes) — directly contradicting
+   AGENTS.md §12's own "do not build public student messaging in V1." Traced to a documented,
+   founder-approved scope change (`docs/product-decisions.md`, 2026-08-15) that already quotes
+   this exact line and adds real mitigations (no student directory, mutual consent only,
+   block/report). Currently gated by a server-only env-var kill switch
+   (`ORYN_ENABLE_MESSAGING`/`ORYN_ENABLE_CONNECTIONS`) verified to be actually invoked at
+   every page and Server Action entry point, not merely defined. **The one thing not yet
+   settled: the actual live value of that env var in the real hosting environment** — the
+   code default and three same-week internal docs all say unset, but nobody had queried the
+   host's own config directly; the founder was asked this exact question directly today and
+   the answer was still pending as of this write-up. Added to `LAWYER_FLAGS` as
+   `minorToMinorMessaging` in `lib/legal/content.ts`, commit `00a24b65` (verified reachable
+   from `origin/main`, merged via `27bec513`).
+   (`docs/minor-safe-spec-audit-2026-09-05.md`, `docs/feature-flag-enforcement-audit-2026-09-05.md`)
 
 ---
 
