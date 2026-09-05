@@ -343,12 +343,28 @@ tarihi sütunu, süresi dolunca kendiliğinden düşer.
 alevli logo, fiyat kumandadan. İlk oturumda çıkar, sonra susma süresi artar.
 Sahte ödeme ekranı yok — CTA gerçek akışı çağırır.
 
-**B3. Veli hesabı — kapsam genişletme.** Kurucu: *"çok kapsamsız, ayrı sayfalar
-bile yok."* Üç iş:
-- **B3a.** Ayrı sayfalar: fırsatlar / üniversiteler / başvurular / gelişim ayrı rotalar
-- **B3b.** Ayda bir AI gelişim özeti (şu an haftalık yazılmış, aylığa çevrilecek)
-- **B3c.** Veli üniversite ve fırsat kütüphanesine erişebilsin (şu an sadece
-  çocuğunun seçtiklerini görüyor)
+**B3. Veli hesabı — ✅ ÜÇÜ DE YAPILDI (4 Eylül). Şikâyet düzeltmeden ÖNCEYE ait.**
+Kurucunun *"çok kapsamsız, ayrı sayfalar bile yok"* cümlesi plana **11:01**'de
+girdi; B3a merge'i **14:43** — üç buçuk saat sonra. **Şikâyet eski, iş yapılmış.**
+Zaman damgalarıyla doğrulandı, tahminle değil.
+- **B3a ✅** `c70eb0ca` — `app/parent/(dashboard)/` altında dört gerçek rota
+  (`opportunities/`, `universities/`, ikisi kendi `[id]` sayfasıyla, `applications/`,
+  `progress/`), gerçek Supabase verisi, `ParentNav` beşini de bağlıyor. Dört sayfanın
+  dördünde de **kendi bağlamına özgü** boş durum metni var, hiçbiri diğerini
+  kopyalamıyor. `parent.*` anahtarları EN/TR tam senkron.
+- **B3b ✅** `f656db2a` (kurucunun kendi commit'i) — haftalıktan aylığa çevrildi,
+  30 günlük döngüsel pencere, boş ay için dürüst cümle, uydurma koruması.
+  **Açık kalan tek şey: hiçbir cron'a bağlı değil** — çalışıyor, test edilmiş, ölü.
+  Ve kurucu 5 Eylül'de şeklini değiştirdi: not artık geriye dönük özet değil,
+  **ileriye dönük fırsat** olacak.
+- **B3c ✅** B3a'nın `[id]` detay sayfalarıyla birlikte geldi.
+- **B6 sınırı korunmuş:** `lib/parent/university-detail.ts` `refreshAdmissionOutlook`'u
+  bilerek import etmiyor; `__tests__/parent/university-detail-read-safety.test.ts`
+  bunu kanıtlıyor (4/4).
+
+**Küçük temizlik, sahipsiz:** `origin/feat/parent-separate-pages-b3a-2026-09-04`
+(v2'siz) hâlâ rebase öncesi `c774f901`'e işaret ediyor — ölü remote ref, iş kaybı
+değil.
 
 ---
 
