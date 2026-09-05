@@ -64,7 +64,8 @@
     "audit:requirement-program-linkage": "tsx scripts/audit-requirement-program-linkage.ts",
     "audit:program-corpus-duplicates": "tsx scripts/audit-program-corpus-duplicates.ts",
     "audit:dedup-convention-drift": "tsx scripts/audit-dedup-convention-drift.ts",
-    "validate:research": "tsx scripts/validate-research-records.ts"
+    "validate:research": "tsx scripts/validate-research-records.ts",
+    "measure:unknown-eligibility-top3": "tsx scripts/measure-unknown-eligibility-in-top3.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.117.1",
