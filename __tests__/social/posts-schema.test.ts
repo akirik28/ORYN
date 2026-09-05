@@ -744,6 +744,26 @@ describe("migration numbering", () => {
     // rather than skipped on the grounds that "today's writer never touches these columns" --
     // written up explicitly as defense-in-depth against a writer that doesn't exist yet, not a
     // description of the one that exists now.
+    //
+    // 0141 (advisor_generation_locks_guard) -- item 8, the sweep's last finding, CEO-assigned
+    // after checking every remote branch (0140, the same sweep's §4, assigned alongside it).
+    // The one guard in the whole sweep that isn't a guard trigger: the two RPC functions
+    // (acquire_advisor_generation_lock/release_advisor_generation_lock, migration 0110) are
+    // SECURITY INVOKER, not SECURITY DEFINER as the original sweep pass guessed without reading
+    // them -- meaning the legitimate path and a direct bypass run as the identical role, so no
+    // trigger could ever distinguish them by current_user. Fixed instead by revoking direct
+    // table INSERT/UPDATE/DELETE from authenticated and switching both functions to SECURITY
+    // DEFINER with search_path pinned, bodies otherwise unchanged. Proven to CEO's explicit
+    // dual bar -- not just "the bypass is blocked" but "the full acquire -> release -> acquire
+    // again cycle still works," since over-protecting a concurrency lock can wedge the feature
+    // it exists to protect just as badly as under-protecting it exposes a bypass -- 14
+    // assertions, docs/advisor-generation-locks-guard-proof-2026-09-05.md.
+    //
+    // 0142 (birth_year_changes_export_policy) -- a different, unrelated lane's fix, landed
+    // between this branch's first commit and this rebase. 0140 (recommendations_guard_content_
+    // columns, this sweep's §4) exists on its own sibling branch, not yet merged as of this
+    // commit -- the true max across every migration actually present here is 142, not 141,
+    // since 0142 already exceeds this branch's own new addition.
     expect(Math.max(...numbers.map(Number))).toBe(142);
   });
 });
