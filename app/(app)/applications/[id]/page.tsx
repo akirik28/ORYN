@@ -64,6 +64,10 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   // Requirement check reuses universities/[id]'s own section — same catalog namespace, not
   // a second copy of "Optional" / "Source" / the section heading that could drift from it.
   const tUni = (await getTranslations("universities.detail")) as Translator;
+  // 2026-09-05 — same shared `sourceBadge` namespace universities/[id]'s own page already
+  // passes into RequirementGroup, so this page's requirement check shows the identical
+  // "Checked X ago" chrome rather than a second copy that could drift.
+  const tSourceBadge = (await getTranslations("sourceBadge")) as Translator;
 
   const { data: application } = await supabase.from("applications").select("*").eq("id", id).eq("user_id", session.userId!).single();
   if (!application) notFound();
@@ -192,6 +196,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
                 evaluationByRequirement={evaluationByRequirement}
                 locale={locale}
                 t={tUni}
+                tSourceBadge={tSourceBadge}
               />
             ) : null}
             {universityWideRequirements.length > 0 ? (
@@ -206,6 +211,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
                 evaluationByRequirement={evaluationByRequirement}
                 locale={locale}
                 t={tUni}
+                tSourceBadge={tSourceBadge}
               />
             ) : null}
           </>
