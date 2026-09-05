@@ -22,7 +22,7 @@ import { MediaImage } from "@/components/proxola/media-image";
 import { OpportunityStandingBadge } from "./standing-badge";
 import { setOpportunityStatus } from "@/app/(app)/opportunities/actions";
 import { selectivityLabel, cycleStatusLabel, CYCLE_STATUSES_WORTH_A_DESCRIPTOR } from "@/lib/opportunities/lifecycle";
-import { matchTierKey } from "@/lib/opportunities/matching";
+import { matchTierKey, type EligibilityGapKind } from "@/lib/opportunities/matching";
 import { categoryGlyph } from "@/lib/opportunities/category-glyph";
 import type { Locale } from "@/lib/i18n/config";
 import type { Opportunity, SavedOpportunityStatus } from "@/types/database";
@@ -155,6 +155,7 @@ export function OpportunityCard({
   initialStatus,
   eligible = true,
   eligibilityNotes = null,
+  eligibilityGap = null,
   notActionable = false,
   needsVerification = false,
   featured = false,
@@ -170,6 +171,12 @@ export function OpportunityCard({
    * today isn't a defect in the opportunity. */
   eligible?: boolean;
   eligibilityNotes?: string | null;
+  /** See classifyEligibilityGap (lib/opportunities/matching.ts) — CEO's 2026-09-05 finding.
+   * `profile_incomplete` (the opportunity has a real restriction; only the student's OWN data
+   * is missing) must read as an actionable invitation, never the same warning a genuinely
+   * unresearched or ambiguous row gets — the student can resolve it immediately by completing
+   * their profile, unlike every other case eligibilityNotes covers. */
+  eligibilityGap?: EligibilityGapKind | null;
   /** Set when `eligible` is false purely because this cycle is closed or its deadline has
    * passed — true of everyone, not of this student. Keeps the card from telling a 16-year-old
    * they don't qualify for something nobody can currently apply to. Defaults false, so the
@@ -395,8 +402,16 @@ export function OpportunityCard({
             />
             {/* Eligible-but-unverified is not the same claim as eligible-and-confirmed — a
                 restriction exists but Proxola is missing the fact needed to check it (see
-                computeEligibility's unknownNotes). Never silently badge that as a plain match. */}
-            {eligible && eligibilityNotes ? <StatusBadge label={t("eligibilityUnknown")} tone="warning" /> : null}
+                computeEligibility's unknownNotes). Never silently badge that as a plain match.
+                profile_incomplete gets no badge here at all — see the subtext block below,
+                which turns it into a link instead of a caveat. checked_not_stated gets its own
+                calmer, distinct badge (0129/0133's whole point was that it shouldn't read the
+                same as "nobody has looked at all"). Everything else keeps today's plain warning. */}
+            {eligible && eligibilityNotes && eligibilityGap === "checked_not_stated" ? (
+              <StatusBadge label={t("checkedNotStated")} tone="info" />
+            ) : eligible && eligibilityNotes && eligibilityGap !== "profile_incomplete" ? (
+              <StatusBadge label={t("eligibilityUnknown")} tone="warning" />
+            ) : null}
           </div>
         ) : null}
 
@@ -406,7 +421,20 @@ export function OpportunityCard({
           </p>
         ) : null}
 
-        {eligibilityNotes ? <p className="text-xs text-ink-3">{eligibilityNotes}</p> : null}
+        {/* profile_incomplete: the caveat IS the fix — the sentence already names exactly
+            which field to add (e.g. "add your birth year to check", see matching.ts's
+            ageUnknown/countryUnknown/gradeUnknown), so it becomes the call to action itself
+            rather than a passive note sitting beside a separate warning badge. */}
+        {eligibilityNotes && eligibilityGap === "profile_incomplete" ? (
+          <Link
+            href="/profile"
+            className="text-xs text-ink-3 underline decoration-dotted underline-offset-2 hover:text-ink-2 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          >
+            {eligibilityNotes}
+          </Link>
+        ) : eligibilityNotes ? (
+          <p className="text-xs text-ink-3">{eligibilityNotes}</p>
+        ) : null}
 
         {/* ADDED 2026-09-02 (docs/opportunity-deadline-coverage-2026-09-02.md): a
             no-deadline row today looks identical whether it's rolling admission, a

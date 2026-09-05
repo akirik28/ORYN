@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 // Wallet, not DollarSign: the icon sits beside a figure whose currency is not recorded, so a
@@ -296,13 +297,30 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           needsVerification={needsVerification}
           locale={locale}
         />
-        {eligibility && eligibility.eligible && eligibility.notes ? <StatusBadge label={tCard("eligibilityUnknown")} tone="warning" /> : null}
+        {/* Same three-way split as the card (features/opportunities/opportunity-card.tsx) —
+            CEO's 2026-09-05 finding, confirmed this page shared the identical collapsed badge. */}
+        {eligibility && eligibility.eligible && eligibility.notes && eligibility.eligibilityGap === "checked_not_stated" ? (
+          <StatusBadge label={tCard("checkedNotStated")} tone="info" />
+        ) : eligibility && eligibility.eligible && eligibility.notes && eligibility.eligibilityGap !== "profile_incomplete" ? (
+          <StatusBadge label={tCard("eligibilityUnknown")} tone="warning" />
+        ) : null}
       </div>
 
       {/* Only when the take didn't already carry it (an ineligible or unverifiable row has
-          no take block, and still needs the note). */}
+          no take block, and still needs the note). profile_incomplete becomes a link to
+          /profile, same reasoning as the card: the sentence already names exactly which field
+          to add, so it's the call to action rather than a passive caveat. */}
       {eligibility?.notes && !canGiveTake ? (
-        <p className="rounded-lg bg-surface-tint px-4 py-3 text-sm leading-relaxed text-ink-2">{eligibility.notes}</p>
+        eligibility.eligibilityGap === "profile_incomplete" ? (
+          <Link
+            href="/profile"
+            className="block rounded-lg bg-surface-tint px-4 py-3 text-sm leading-relaxed text-ink-2 underline decoration-dotted underline-offset-2 hover:bg-surface-tint/80 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+          >
+            {eligibility.notes}
+          </Link>
+        ) : (
+          <p className="rounded-lg bg-surface-tint px-4 py-3 text-sm leading-relaxed text-ink-2">{eligibility.notes}</p>
+        )
       ) : null}
       {needsVerification ? (
         <p className="rounded-lg bg-surface-tint px-4 py-3 text-sm leading-relaxed text-ink-2">{insufficientVerificationReason(locale)}</p>

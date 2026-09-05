@@ -265,7 +265,9 @@ describe("insufficientVerificationReason", () => {
 describe("resolveStoredEligibility", () => {
   test("passes an actionable opportunity's stored eligible verdict through untouched", () => {
     const resolved = resolveStoredEligibility(row({ cycle_status: "open", deadline: "2026-09-15" }), { eligible: true, notes: [] }, REFERENCE_DATE);
-    expect(resolved).toEqual({ eligible: true, notes: null, notActionable: false });
+    // eligibilityGap: null (2026-09-05, CEO's badge-collapse finding) -- classifyEligibilityGap
+    // of an empty notes array is always null, see its own dedicated tests in matching.test.ts.
+    expect(resolved).toEqual({ eligible: true, notes: null, notActionable: false, eligibilityGap: null });
   });
 
   test("renders an actionable opportunity's stored INELIGIBLE verdict -- the gate only ever removes a claim, it doesn't rewrite a real one", () => {
@@ -274,7 +276,9 @@ describe("resolveStoredEligibility", () => {
       { eligible: false, notes: [{ code: "country_not_eligible", params: { studentCountry: "Turkey" } }] },
       REFERENCE_DATE
     );
-    expect(resolved).toEqual({ eligible: false, notes: "Not currently open to students from Turkey.", notActionable: false });
+    // eligibilityGap stays null here too -- country_not_eligible is a genuine confirmed
+    // exclusion, not one of the two "unknown" codes classifyEligibilityGap looks for.
+    expect(resolved).toEqual({ eligible: false, notes: "Not currently open to students from Turkey.", notActionable: false, eligibilityGap: null });
   });
 
   test("renders an actionable opportunity's unknown-eligibility note from its stored code", () => {
@@ -320,6 +324,34 @@ describe("resolveStoredEligibility", () => {
     expect(resolveStoredEligibility(row({ cycle_status: "open", deadline: "2026-08-22" }), { eligible: true, notes: [] }, sameDay).eligible).toBe(true);
     const dayAfter = new Date("2026-08-23T00:00:01");
     expect(resolveStoredEligibility(row({ cycle_status: "open", deadline: "2026-08-22" }), { eligible: true, notes: [] }, dayAfter).eligible).toBe(false);
+  });
+
+  // 2026-09-05, CEO's badge-collapse finding: this is the exact function both
+  // features/opportunities/opportunity-card.tsx and app/(app)/opportunities/[id]/page.tsx
+  // read `eligibilityGap` from to decide the badge — proven once here rather than only at the
+  // card's own render-test layer, since the detail page shares this function and has no
+  // dedicated render test of its own (a full page-level harness is a much larger undertaking
+  // than this fix; see __tests__/opportunities/opportunity-card-eligibility-badge.test.tsx's
+  // own header for the fuller reasoning C7 already established for this kind of tradeoff).
+  describe("eligibilityGap", () => {
+    test("classifies a student-side unknown as profile_incomplete on the actionable branch", () => {
+      const resolved = resolveStoredEligibility(row({ cycle_status: "open", deadline: "2026-09-15" }), { eligible: true, notes: [{ code: "age_unknown" }] }, REFERENCE_DATE);
+      expect(resolved.eligibilityGap).toBe("profile_incomplete");
+    });
+
+    test("classifies a researched-but-silent note as checked_not_stated on the actionable branch", () => {
+      const resolved = resolveStoredEligibility(
+        row({ cycle_status: "open", deadline: "2026-09-15" }),
+        { eligible: true, notes: [{ code: "age_eligibility_checked_not_stated", params: { checkedAt: "" } }] },
+        REFERENCE_DATE
+      );
+      expect(resolved.eligibilityGap).toBe("checked_not_stated");
+    });
+
+    test("is always null on the non-actionable (closed/historical/discontinued/past-deadline) branch, regardless of the stored notes", () => {
+      const resolved = resolveStoredEligibility(row({ cycle_status: "closed" }), { eligible: true, notes: [{ code: "age_unknown" }] }, REFERENCE_DATE);
+      expect(resolved.eligibilityGap).toBeNull();
+    });
   });
 });
 

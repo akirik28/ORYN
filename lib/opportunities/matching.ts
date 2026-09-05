@@ -463,6 +463,72 @@ function renderEligibilityNote(note: EligibilityNote, locale: Locale): string {
   }
 }
 
+const PROFILE_INCOMPLETE_CODES = new Set<EligibilityNoteCode>([
+  "age_unknown",
+  "country_unknown",
+  "grade_unknown",
+  "citizenship_unknown",
+]);
+
+const UNVERIFIED_CODES = new Set<EligibilityNoteCode>([
+  "age_eligibility_unverified",
+  "country_eligibility_unverified",
+  "grade_eligibility_unverified",
+  // Real, unstructured evidence about the OPPORTUNITY (not the student) that couldn't be
+  // parsed into a structured gate — closer to "we can't fully verify this" than to a
+  // researched-and-silent row, so grouped here rather than given a fourth bucket CEO's three
+  // named states don't ask for.
+  "citizenship_restriction_on_file",
+  "residency_restriction_on_file",
+]);
+
+const CHECKED_NOT_STATED_CODES = new Set<EligibilityNoteCode>([
+  "age_eligibility_checked_not_stated",
+  "country_eligibility_checked_not_stated",
+  "grade_eligibility_checked_not_stated",
+]);
+
+export type EligibilityGapKind = "profile_incomplete" | "checked_not_stated";
+
+/**
+ * CEO's 2026-09-05 finding: `renderEligibilityNote` above already distinguishes three
+ * meaningfully different "we don't have a confirmed answer" situations by code, but every
+ * caller before this function collapsed them into one identical warning badge (see
+ * features/opportunities/opportunity-card.tsx / app/(app)/opportunities/[id]/page.tsx, pre-fix).
+ * `computeEligibility` already tracks the distinction precisely; nothing downstream read it.
+ *
+ *   profile_incomplete  -> a fact about the STUDENT. The opportunity has a real, recorded
+ *                          restriction; Proxola just doesn't know this student's own value yet
+ *                          (age/country/grade/citizenship). Solvable by the student, right now,
+ *                          by completing their profile — the one case that should read as an
+ *                          invitation, not a warning.
+ *   checked_not_stated  -> a fact about the OPPORTUNITY. A real research pass already checked
+ *                          the official source and it simply doesn't state a rule either way
+ *                          (migrations 0129/0133) — meaningfully calmer than "never researched"
+ *                          and must not collapse back into it, which is the whole reason those
+ *                          two migrations exist.
+ *   null                -> everything else, including the plain "nobody has researched this at
+ *                          all" case (*_eligibility_unverified) and not_yet_computed. Callers
+ *                          keep today's existing plain-warning treatment for `null` — this
+ *                          function only pulls OUT the two cases that must look different,
+ *                          rather than re-classifying every case.
+ *
+ * Precedence when a card carries notes from more than one bucket (realistic: a new account
+ * with an unresearched opportunity can trigger a profile-incomplete note on one axis and an
+ * unverified note on another): profile_incomplete first — it's the one thing the student can
+ * act on immediately, more valuable to surface than any caveat about Proxola's own data. Failing
+ * that, a genuinely unverified dimension keeps the plain warning treatment even if some OTHER
+ * dimension on the same row is checked_not_stated — a row with even one fully-unresearched
+ * dimension hasn't earned the calmer, more specific wording that implies "we looked into this."
+ */
+export function classifyEligibilityGap(notes: readonly EligibilityNote[]): EligibilityGapKind | null {
+  const codes = notes.map((note) => note.code);
+  if (codes.some((code) => PROFILE_INCOMPLETE_CODES.has(code))) return "profile_incomplete";
+  if (codes.some((code) => UNVERIFIED_CODES.has(code))) return null;
+  if (codes.some((code) => CHECKED_NOT_STATED_CODES.has(code))) return "checked_not_stated";
+  return null;
+}
+
 /**
  * `locale` dropped 2026-09-03 (the eligibility_notes -> codes fix, docs/eligibility-notes-
  * codes-2026-09-03.md): this function used to render sentences directly, which is exactly how

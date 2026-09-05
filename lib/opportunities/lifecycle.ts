@@ -1,6 +1,6 @@
 import type { Opportunity } from "@/types/database";
 import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
-import { renderEligibilityNotes, type EligibilityNote } from "./matching";
+import { renderEligibilityNotes, classifyEligibilityGap, type EligibilityNote, type EligibilityGapKind } from "./matching";
 
 /**
  * `cycle_status` already carries the truth about whether an opportunity's current cycle is
@@ -164,6 +164,14 @@ export interface ResolvedEligibility {
    * they don't qualify for something nobody can currently apply to.
    */
   notActionable: boolean;
+  /**
+   * See classifyEligibilityGap (matching.ts) — CEO's 2026-09-05 finding, which of two specific
+   * "unknown" situations `notes` represents, so a surface can give the student-fixable case its
+   * own non-alarming treatment instead of the plain warning every other case still gets. Always
+   * null on the not-actionable branch below: that's a different, higher-precedence badge
+   * entirely (see OpportunityStandingBadge's own precedence-order comment).
+   */
+  eligibilityGap: EligibilityGapKind | null;
 }
 
 /**
@@ -203,9 +211,14 @@ export function resolveStoredEligibility(
   locale: Locale = DEFAULT_LOCALE
 ): ResolvedEligibility {
   if (isOpportunityActionable(opportunity, referenceDate)) {
-    return { eligible: stored.eligible, notes: renderEligibilityNotes(stored.notes, locale), notActionable: false };
+    return {
+      eligible: stored.eligible,
+      notes: renderEligibilityNotes(stored.notes, locale),
+      notActionable: false,
+      eligibilityGap: classifyEligibilityGap(stored.notes),
+    };
   }
-  return { eligible: false, notes: nonActionableOpportunityReason(opportunity, locale), notActionable: true };
+  return { eligible: false, notes: nonActionableOpportunityReason(opportunity, locale), notActionable: true, eligibilityGap: null };
 }
 
 /**
