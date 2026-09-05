@@ -115,3 +115,57 @@ describe("streamAdvisorChat — the connection drops before any final event", ()
     expect(result.conversationId).toBeUndefined();
   });
 });
+
+describe("streamAdvisorChat — a genuine network-level read failure, not a clean close", () => {
+  /**
+   * 2026-09-05 (C2 re-verification): the case above simulates the stream closing cleanly
+   * (controller.close(), reader.read() resolves { done: true }) with no final event -- a
+   * real gap, already fixed, but not the same failure as this one. A real network drop
+   * (WiFi lost, tab suspended, server process killed mid-response) makes reader.read()
+   * ITSELF reject (controller.error(), not controller.close()). Neither call site in
+   * features/advisor/advisor-chat.tsx (submit()/retry()) wraps `await streamAdvisorChat(...)`
+   * in a try/catch, so before this fix, a rejection here propagated as an unhandled
+   * rejection inside startTransition's async callback -- none of submit()'s/retry()'s own
+   * state-cleanup code ever ran, leaving the "thinking" placeholder (or a partially-streamed
+   * bubble) permanently stuck at pending:true with no error shown, recoverable only by a
+   * full page reload. The server side already handles this correctly (the Route Handler's
+   * own ReadableStream.cancel() releases the generation lock on disconnect) -- this was
+   * purely a stuck-client-state bug, not a lock leak or a database-write defect.
+   */
+  test("reader.read() rejecting resolves with a real error, never throws out of streamAdvisorChat", async () => {
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        controller.error(new TypeError("network connection lost"));
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, body: stream }));
+
+    const result = await streamAdvisorChat("/api/advisor/chat", { conversationId: null, content: "x" }, () => {});
+
+    expect(result.error).toBeTruthy();
+    expect(result.conversationId).toBeUndefined();
+    expect(result.assistantMessageId).toBeUndefined();
+  });
+
+  test("some deltas already arrived before the read failure -- still resolves with an error, not a false success", async () => {
+    let pulls = 0;
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulls += 1;
+        if (pulls === 1) {
+          controller.enqueue(encoder.encode('data: {"type":"delta","text":"Research is "}\n\n'));
+        } else {
+          controller.error(new TypeError("network connection lost"));
+        }
+      },
+    });
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, body: stream }));
+    const deltas: string[] = [];
+
+    const result = await streamAdvisorChat("/api/advisor/chat", { conversationId: null, content: "x" }, (d) => deltas.push(d));
+
+    expect(deltas).toEqual(["Research is "]);
+    expect(result.error).toBeTruthy();
+  });
+});
