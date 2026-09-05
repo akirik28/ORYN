@@ -17,22 +17,36 @@ import { DEFAULT_LOCALE, toLocale, type Locale } from "@/lib/i18n/config";
  *
  * FOUR SOURCES, aggregated into one notification per student per run (same "avoid spam"
  * shape lib/deadlines/scan.ts's DeadlineHit union already established for a different
- * category). Two kinds of claim, and it matters which one each source is making:
+ * category). It matters which claim each source is making, and — 2026-09-05, the
+ * university-notification first-fill fix — it turned out to matter at a finer grain than
+ * "which source" alone:
  *
- *   VALUE CHANGED — a row that already existed now holds a different value, proven by a
- *   last_changed_at that only ever advances on a genuine difference (see each writer's own
- *   comparator):
+ *   VALUE CHANGED (further split into "added"/"changed" — see UniversityChangeKind) — a row
+ *   that already existed now holds a different value, proven by a last_changed_at that only
+ *   ever advances on a genuine difference (see each writer's own classifier):
  *     'university'  — a core institutional fact (name/city/type/website/size/external_ids).
  *                      universities.last_changed_at (migration 0006), via
- *                      hasUniversityDataChanged.
+ *                      classifyUniversityDataChange.
  *     'statistics'  — an admission number (admission_rate, SAT/ACT range, graduation_rate,
  *                      cost_of_attendance). university_statistics.last_changed_at
- *                      (migration 0080), via hasStatisticsChanged. Both comparators live in
- *                      lib/universities/sync-us-universities.ts.
+ *                      (migration 0080), via classifyStatisticsDataChange. Both classifiers
+ *                      live in lib/universities/sync-us-universities.ts.
  *
- *   NEW ROW APPEARED — nothing existed before; now something does. This is a weaker claim
- *   on purpose: it says something is new, never that something changed, because for these
- *   two tables "changed" cannot currently be told apart from "touched again":
+ *   Found live 2026-09-05, CEO's own dispatch ("Oxford hiçbir şey yapmadı, biz ilk kez
+ *   baktık"): "VALUE CHANGED" as a single claim was itself dishonest whenever the row's PRIOR
+ *   value was null — a stub's core facts or a university's first-ever statistics being
+ *   researched and written for the first time is not the university changing anything, and
+ *   read identically to a genuine later correction under a plain existing!==incoming check.
+ *   Migration 0143's last_change_kind ('added'/'changed'/null, alongside last_changed_at)
+ *   is what lets 'university'/'statistics' make the correct one of two honest claims instead
+ *   of one dishonest collapsed one — see UniversityChangeKind's own header for the `null`
+ *   case (pre-migration history with no recorded classification), which is a real, deliberate
+ *   third answer, not a bug.
+ *
+ *   NEW ROW APPEARED (`changeKind: "new_row"`) — nothing existed before; now something does.
+ *   This is a weaker claim on purpose: it says something is new, never that something
+ *   changed, because for these two tables "changed" cannot currently be told apart from
+ *   "touched again":
  *     'requirement' — a new university_requirements row, via its own created_at.
  *     'deadline'    — a new university_deadlines row, via its own created_at.
  *
@@ -101,6 +115,23 @@ import { DEFAULT_LOCALE, toLocale, type Locale } from "@/lib/i18n/config";
 const ACTIVE_TARGET_STATUSES = ["exploring", "target", "applying"] as const;
 
 /**
+ * 2026-09-05, the university-notification first-fill fix: the fourth word this file's own
+ * claim can make, alongside the two "VALUE CHANGED" sources' "added"/"changed" and the two
+ * "NEW ROW APPEARED" sources' implicit third claim (now named `"new_row"` explicitly rather
+ * than left as an untyped source-implies-wording assumption in buildUniversityChangeNotification).
+ *
+ * `null` is its OWN, deliberately weak fourth state, not a default for either of the other
+ * two — CEO's own finding: every row whose `last_changed_at` was stamped before migration
+ * 0143 existed has no recorded classification at all, and reading that absence as "changed"
+ * would reproduce this exact bug for all pre-migration history, while reading it as "added"
+ * would misdescribe a real, older correction as if it were new information. Saying "we don't
+ * know which this was" is the honest answer for that population — the same "unknown beats
+ * confidently wrong" lesson this product relearned repeatedly the same night this file's own
+ * `requirement`/`deadline` sources were first built.
+ */
+export type UniversityChangeKind = "added" | "changed" | "new_row" | null;
+
+/**
  * One change worth telling a student about. Collected by the four scan* functions below and
  * aggregated afterward, same shape lib/deadlines/scan.ts's DeadlineHit established.
  *
@@ -108,7 +139,10 @@ const ACTIVE_TARGET_STATUSES = ["exploring", "target", "applying"] as const;
  * university_notification_log (migrations 0078/0080) — see those migrations' own comments
  * for why `source` is part of the key (independently real events about the same university,
  * from different sources, must not collide into one dedupe slot) and why a later
- * `lastChangedAt` for the same source is a new, re-notifiable fact.
+ * `lastChangedAt` for the same source is a new, re-notifiable fact. `changeKind` is not part
+ * of that key on purpose — the same (user, university, source, timestamp) event is the same
+ * fact regardless of which sentence it earns, so it must not create a second, redundant
+ * dedupe slot.
  */
 export interface UniversityChangeHit {
   userId: string;
@@ -117,9 +151,15 @@ export interface UniversityChangeHit {
   universityName: string;
   source: UniversityNotificationSource;
   lastChangedAt: string;
+  changeKind: UniversityChangeKind;
 }
 
-type NotificationKey = "universityDataChangedTitle" | "universityDataChangedDigestTitle";
+type NotificationKey =
+  | "universityDataAddedTitle"
+  | "universityDataChangedTitle"
+  | "universityNewInformationTitle"
+  | "universityDataChangedDigestTitle"
+  | "universityNewInformationDigestTitle";
 type NotificationTranslator = (key: NotificationKey, values?: Record<string, string | number>) => string;
 
 async function loadTranslators(): Promise<Record<Locale, NotificationTranslator>> {
@@ -152,19 +192,21 @@ export function hasChangedSinceTracked(sourceTimestamp: string | null, trackedSi
 }
 
 /**
- * The newest timestamp per university from a flat list of (university_id, timestamp) rows
- * — shared by every "new row appeared" / "newest sibling row" source below (a university
- * with several new requirements, deadlines, or stat-year rows since a student started
- * tracking it is one piece of news, not several, and the newest timestamp is also the
- * correct dedupe key going forward: a still-newer one later is still a new fact and
- * re-fires).
+ * The newest row per university from a flat list of (university_id, timestamp, ...) rows —
+ * shared by every "new row appeared" / "newest sibling row" source below (a university with
+ * several new requirements, deadlines, or stat-year rows since a student started tracking it
+ * is one piece of news, not several, and the newest timestamp is also the correct dedupe key
+ * going forward: a still-newer one later is still a new fact and re-fires). Returns the whole
+ * row, not just its timestamp, so a caller that attached extra fields (statistics' own
+ * `changeKind`, 2026-09-05) can read the winning row's own value for them rather than only
+ * its timestamp.
  */
-function newestTimestampByUniversity(rows: readonly { university_id: string; timestamp: string | null }[]): Map<string, string> {
-  const newest = new Map<string, string>();
+function newestRowByUniversity<T extends { university_id: string; timestamp: string | null }>(rows: readonly T[]): Map<string, T> {
+  const newest = new Map<string, T>();
   for (const row of rows) {
     if (!row.timestamp) continue;
     const current = newest.get(row.university_id);
-    if (!current || row.timestamp > current) newest.set(row.university_id, row.timestamp);
+    if (!current || row.timestamp > current.timestamp!) newest.set(row.university_id, row);
   }
   return newest;
 }
@@ -184,7 +226,9 @@ export async function scanTargetUniversityChanges(supabase: SupabaseClient<Datab
   if (targets.length === 0) return { hits: [], checked: 0 };
 
   const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(supersessionMap, t.university_id)))];
-  const { data: universities } = universityIds.length ? await supabase.from("universities").select("id, name, last_changed_at").in("id", universityIds) : { data: [] };
+  const { data: universities } = universityIds.length
+    ? await supabase.from("universities").select("id, name, last_changed_at, last_change_kind").in("id", universityIds)
+    : { data: [] };
   const universityById = new Map((universities ?? []).map((u) => [u.id, u]));
 
   const localeByUser = await loadLocalesByUser(supabase, [...new Set(targets.map((t) => t.user_id))]);
@@ -203,6 +247,10 @@ export async function scanTargetUniversityChanges(supabase: SupabaseClient<Datab
       universityName: university.name,
       source: "university",
       lastChangedAt: university.last_changed_at!,
+      // `?? null` reads a genuinely-null value and a not-yet-migrated missing column
+      // identically -- both mean "we don't know which kind of change this was", the same
+      // honest answer either way (see UniversityChangeKind's own header).
+      changeKind: university.last_change_kind ?? null,
     });
   }
   return { hits, checked: targets.length };
@@ -225,7 +273,7 @@ async function scanNewRowsAppeared(
     ? await Promise.all([loadRows(universityIds), supabase.from("universities").select("id, name").in("id", universityIds)])
     : [[], { data: [] }];
   const universityNameById = new Map((universities ?? []).map((u) => [u.id, u.name]));
-  const newestByUniversity = newestTimestampByUniversity(rows);
+  const newestByUniversity = newestRowByUniversity(rows);
 
   const localeByUser = await loadLocalesByUser(supabase, [...new Set(targets.map((t) => t.user_id))]);
 
@@ -233,10 +281,10 @@ async function scanNewRowsAppeared(
   let checked = 0;
   for (const target of targets) {
     const canonicalId = canonicalUniversityId(supersessionMap, target.university_id);
-    const newestAt = newestByUniversity.get(canonicalId);
-    if (newestAt === undefined) continue;
+    const newest = newestByUniversity.get(canonicalId);
+    if (newest === undefined) continue;
     checked += 1;
-    if (!hasChangedSinceTracked(newestAt, target.created_at)) continue;
+    if (!hasChangedSinceTracked(newest.timestamp, target.created_at)) continue;
 
     hits.push({
       userId: target.user_id,
@@ -244,7 +292,12 @@ async function scanNewRowsAppeared(
       universityId: canonicalId,
       universityName: universityNameById.get(canonicalId) ?? canonicalId,
       source,
-      lastChangedAt: newestAt,
+      lastChangedAt: newest.timestamp!,
+      // Always "new_row" for these two sources -- this file's own top comment has always
+      // scoped 'requirement'/'deadline' to "something is new", never "something changed";
+      // this just gives that existing, deliberate claim an explicit name instead of leaving
+      // it as an implicit assumption baked into the notification copy.
+      changeKind: "new_row",
     });
   }
   return { hits, checked };
@@ -279,13 +332,13 @@ export async function scanNewUniversityDeadlines(supabase: SupabaseClient<Databa
 }
 
 /**
- * Source 'statistics': an admission number for a tracked university genuinely differed.
- * university_statistics is keyed by (university_id, stat_year), so a university can carry
- * several years' worth of rows — the newest last_changed_at across all of them is the
- * signal, same "one piece of news, not several" reasoning newestTimestampByUniversity
- * documents, applied here via the same shared helper rather than the new-row scanner (this
- * source reads last_changed_at, not created_at — an existing stat_year row updated in
- * place, per hasStatisticsChanged, not a new row appearing).
+ * Source 'statistics': an admission number for a tracked university was added or genuinely
+ * changed. university_statistics is keyed by (university_id, stat_year), so a university can
+ * carry several years' worth of rows — the newest last_changed_at across all of them is the
+ * signal, same "one piece of news, not several" reasoning newestRowByUniversity documents,
+ * applied here via the same shared helper rather than the new-row scanner (this source reads
+ * last_changed_at, not created_at — an existing stat_year row updated in place, per
+ * classifyStatisticsDataChange, not a new row appearing).
  */
 export async function scanUniversityStatisticsChanges(supabase: SupabaseClient<Database>, supersessionMap: SupersessionMap): Promise<{ hits: UniversityChangeHit[]; checked: number }> {
   const targets = await loadActiveTargets(supabase);
@@ -294,12 +347,14 @@ export async function scanUniversityStatisticsChanges(supabase: SupabaseClient<D
   const universityIds = [...new Set(targets.map((t) => canonicalUniversityId(supersessionMap, t.university_id)))];
   const [{ data: stats }, { data: universities }] = universityIds.length
     ? await Promise.all([
-        supabase.from("university_statistics").select("university_id, last_changed_at").in("university_id", universityIds),
+        supabase.from("university_statistics").select("university_id, last_changed_at, last_change_kind").in("university_id", universityIds),
         supabase.from("universities").select("id, name").in("id", universityIds),
       ])
     : [{ data: [] }, { data: [] }];
   const universityNameById = new Map((universities ?? []).map((u) => [u.id, u.name]));
-  const newestByUniversity = newestTimestampByUniversity((stats ?? []).map((s) => ({ university_id: s.university_id, timestamp: s.last_changed_at })));
+  const newestByUniversity = newestRowByUniversity(
+    (stats ?? []).map((s) => ({ university_id: s.university_id, timestamp: s.last_changed_at, changeKind: s.last_change_kind ?? null }))
+  );
 
   const localeByUser = await loadLocalesByUser(supabase, [...new Set(targets.map((t) => t.user_id))]);
 
@@ -307,7 +362,7 @@ export async function scanUniversityStatisticsChanges(supabase: SupabaseClient<D
   let checked = 0;
   for (const target of targets) {
     const canonicalId = canonicalUniversityId(supersessionMap, target.university_id);
-    const newestAt = newestByUniversity.get(canonicalId);
+    const newest = newestByUniversity.get(canonicalId);
     // Unlike the two "new row" sources, absence here is not itself "checked" in the same
     // sense — a university with zero statistics rows at all was never going to produce a
     // hit, but one WITH rows whose last_changed_at is still null (never observed to
@@ -317,7 +372,7 @@ export async function scanUniversityStatisticsChanges(supabase: SupabaseClient<D
     const hasAnyStatsRow = (stats ?? []).some((s) => s.university_id === canonicalId);
     if (!hasAnyStatsRow) continue;
     checked += 1;
-    if (newestAt === undefined || !hasChangedSinceTracked(newestAt, target.created_at)) continue;
+    if (newest === undefined || !hasChangedSinceTracked(newest.timestamp, target.created_at)) continue;
 
     hits.push({
       userId: target.user_id,
@@ -325,7 +380,10 @@ export async function scanUniversityStatisticsChanges(supabase: SupabaseClient<D
       universityId: canonicalId,
       universityName: universityNameById.get(canonicalId) ?? canonicalId,
       source: "statistics",
-      lastChangedAt: newestAt,
+      lastChangedAt: newest.timestamp!,
+      // `?? null` reads a genuinely-null value and a not-yet-migrated missing column
+      // identically, same as the 'university' source above.
+      changeKind: newest.changeKind,
     });
   }
   return { hits, checked };
@@ -344,12 +402,46 @@ async function filterAlreadyNotified(supabase: SupabaseClient<Database>, hits: U
 }
 
 /**
+ * Which single-hit title key matches a hit's own claim. `null` and `"new_row"` share one key
+ * on purpose: both are this file's deliberately weak claim ("there's new information", never
+ * asserting which of the other two is true) — `null` because a pre-migration-0143 row's
+ * history genuinely isn't known, `"new_row"` because 'requirement'/'deadline' have never
+ * claimed anything stronger (see this file's own top comment). `"changed"` and `"added"` each
+ * get their own specific, honest sentence.
+ */
+function titleKeyForKind(kind: UniversityChangeKind): "universityDataAddedTitle" | "universityDataChangedTitle" | "universityNewInformationTitle" {
+  if (kind === "added") return "universityDataAddedTitle";
+  if (kind === "changed") return "universityDataChangedTitle";
+  return "universityNewInformationTitle";
+}
+
+/**
+ * The digest counterpart of titleKeyForKind, applied to a GROUP of hits rather than one. Two
+ * tiers, not three: `"changed"` outranks everything else — the same "a real exclusion
+ * outranks the caveat" precedence OpportunityStandingBadge already uses, since one genuine
+ * correction in the group is a stronger, more specific fact than "some of these have new
+ * information." `"added"`/`"new_row"`/`null` share the same softer digest tier deliberately —
+ * a digest already collapses several different universities into one line with no
+ * per-university detail (this file's own long-standing design: a joined name list in the
+ * body, not a claim per name), so a THIRD digest-only tier just for "added" would buy very
+ * little precision for real awkwardness in the copy ("N universities' info added for the
+ * first time" reads worse than it informs); the single-hit case already carries that exact
+ * distinction where it matters most.
+ */
+function digestTitleKeyForKinds(kinds: readonly UniversityChangeKind[]): "universityDataChangedDigestTitle" | "universityNewInformationDigestTitle" {
+  return kinds.includes("changed") ? "universityDataChangedDigestTitle" : "universityNewInformationDigestTitle";
+}
+
+/**
  * Builds one notification's title/body/link from one student's changed universities this
- * run — pure, no I/O. Deliberately generic copy for every source: this codebase has no
- * field-level change log for any of the four tables involved (a timestamp proves a row
- * changed or a new one appeared, never what — the same limitation this project's own audits
- * have already named for other tables), so the notification can only ever say THAT
- * something changed or appeared, never the specifics.
+ * run — pure, no I/O. 2026-09-05: used to be one generic title for every source ("information
+ * updated"), which was wrong twice over — a first-time fill read exactly like a real
+ * correction, and 'requirement'/'deadline''s own deliberately weaker "something is new" claim
+ * (this file's own top comment) never reached the student either. Three sentences now, picked
+ * by `changeKind` via titleKeyForKind/digestTitleKeyForKinds above — still no field-level
+ * specifics (this codebase has no change log for any of the four tables involved), but the
+ * one distinction that IS known (added vs. changed vs. "something's new, not sure which")
+ * is no longer thrown away between the scan and the screen.
  *
  * A single hit names the university directly in the title, body null (nothing more to
  * honestly add — same "one line already says everything" shape
@@ -364,12 +456,12 @@ async function filterAlreadyNotified(supabase: SupabaseClient<Database>, hits: U
 export function buildUniversityChangeNotification(hits: readonly UniversityChangeHit[], translate: NotificationTranslator): { title: string; body: string | null; link: string } {
   if (hits.length === 1) {
     const hit = hits[0];
-    return { title: translate("universityDataChangedTitle", { name: hit.universityName }), body: null, link: `/universities/${hit.universityId}` };
+    return { title: translate(titleKeyForKind(hit.changeKind), { name: hit.universityName }), body: null, link: `/universities/${hit.universityId}` };
   }
 
   const uniqueNames = [...new Set(hits.map((hit) => hit.universityName))].sort((a, b) => a.localeCompare(b));
   return {
-    title: translate("universityDataChangedDigestTitle", { count: uniqueNames.length }),
+    title: translate(digestTitleKeyForKinds(hits.map((hit) => hit.changeKind)), { count: uniqueNames.length }),
     body: uniqueNames.join("; "),
     link: "/dashboard",
   };

@@ -1701,8 +1701,11 @@
     "completenessMilestoneReached": "Profilin artık %{percent} tamamlandı",
     "newOpportunityMatch": "Yeni eşleşme: {name}",
     "newOpportunityDigestTitle": "Profiline uygun {count} yeni fırsat",
+    "universityDataAddedTitle": "{name} — bilgiler ilk kez eklendi",
     "universityDataChangedTitle": "{name} — bilgiler güncellendi",
+    "universityNewInformationTitle": "{name} — yeni bilgi mevcut",
     "universityDataChangedDigestTitle": "{count} üniversite güncellendi",
+    "universityNewInformationDigestTitle": "{count} üniversitede yeni bilgi var",
     "viewAll": "Tümünü gör",
     "markAsRead": "Okundu işaretle",
     "categories": {

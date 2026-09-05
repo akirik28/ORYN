@@ -209,6 +209,9 @@ function stubUniversity(id: string, name: string, country: string, city: string)
     superseded_by_id: null,
     last_checked_at: daysFromNow(-5),
     last_changed_at: daysFromNow(-60),
+    // Fixture data predates the added/changed distinction (migration 0143) entirely -- null is
+    // the honest value here, not a placeholder, matching how a real pre-migration row reads.
+    last_change_kind: null,
     created_at: daysFromNow(-400),
     updated_at: daysFromNow(-5),
   };
@@ -268,6 +271,7 @@ export const FIXTURE_UNIVERSITY: University = {
   superseded_by_id: null,
   last_checked_at: daysFromNow(-2),
   last_changed_at: daysFromNow(-40),
+  last_change_kind: null,
   created_at: daysFromNow(-400),
   updated_at: daysFromNow(-2),
 };
@@ -302,6 +306,7 @@ export const FIXTURE_UNIVERSITY_STATISTICS: UniversityStatistic = {
   data_confidence: "high" as const,
   retrieved_at: daysFromNow(-10),
   last_changed_at: daysFromNow(-70),
+  last_change_kind: null,
   created_at: daysFromNow(-200),
   updated_at: daysFromNow(-10),
 };
