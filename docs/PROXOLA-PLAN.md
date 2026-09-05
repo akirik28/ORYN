@@ -149,23 +149,26 @@ olmasıdır. **İlk kanıt bunu da göstermeli.**
 
 ---
 
-## 📋 KİMDE NE VAR — 5 Eylül gecesi (CEO tutar, dağıtmadan önce buraya bakar)
+## 📋 KİMDE NE VAR — 6 Eylül, gece (CEO tutar; **bu tablo saatte bir bayatlıyor**)
 
 **Kurucunun kalıcı talimatı: boşta çalışmayan oturum kalmasın.** Bir şerit raporladığı
-anda yeni iş alır. **İş yoksa varsayılan:** fırsat ve üniversite boşluklarını doldurmak,
-**dilim açıkça bölünerek.**
+anda yeni iş alır. İş yoksa varsayılan: **fırsat ve üniversite boşluklarını doldurmak**,
+dilim açıkça bölünerek.
 
-| şerit | iş |
+| şerit | şu anki iş |
 |---|---|
-| `oryn-b1` (kullanım sınırları) | **`createNotification`** — "kullanıcı kapattı" ile "yazma başarısız" aynı `false`'a düşüyor (Job D'nin ikizi) |
-| production deployment | **Fırsat dolgusu** — 190'ın **son 95'i**, ortam sıfırlanınca 4 paket yeniden başladı |
-| i18n | **Danışman/haftalık plan** — ölçüm script'i `server-only` yüzünden çalışmıyor, önce o |
-| academic_tier | **96 kısmi fırsat** — hepsinde `source_url` dolu, "bilinen sayfaya dön" işi |
-| freemium | **`ai_usage` faturalama testi** — yük altında kırılıyor: kırılganlık mı, yarış mı? |
-| yeni ülke | **Üniversite dolgusu** — Birleşik Krallık (79'un 54'ü boş) |
-| fırsatlar görsel | **Üniversite dolgusu** — ABD (131'in 94'ü boş) |
-| hukuki çerçeve | **Şikayet açığı** (ilgisiz öğrenci şikayet edilebiliyor) → sonra bayrak kontrolü |
-| CFO | gözetim + **her turda tek satır durum** (sessizlik = durmuş demek) |
+| `oryn-b1` (kullanım sınırları) | **Öğrenci-tarafı uygunluk kontrolü** — kart, danışmanın kontrolünü benimsiyor (2/8 hesap etkilenir) |
+| production deployment | **Saf-fonksiyon koşumu** belgelendi · sırada iş bekliyor |
+| i18n | **Türkçe metin denetimi** — bugün yazılan onlarca yeni cümle |
+| academic_tier | **`0144`** — yaş/sınıf serbest metin sütunları (31 satır ifade edilemiyor) |
+| freemium | **Keşif hattı** — yeni fırsatlar uygunluk verisiyle mi geliyor, boş mu? |
+| yeni ülke | **Üniversite dolgusu — Almanya** (49'un 32'si boş) |
+| fırsatlar görsel | **Üniversite dolgusu — ABD**, 23 kaldı (10. parti) |
+| hukuki çerçeve | **205 yapılandırılmış kural** — "bu hafta 3 iş"i geri getirecek olan iş |
+| CFO | gözetim · her turda tek satır durum · **her bulgu kendi satırında** |
+
+**Bu tablo 5 Eylül gecesi bir kez bayatladı** — CEO kendi belgesinde, on dokuz kez
+uyardığı şeyi tekrarladı. **Dağıtmadan önce güncelle; okurken tarihe bak.**
 
 **Fırsat kataloğu üç kümeye bölündü, üçü de sahipli ve çakışmıyor** (CEO kendi sorgusuyla
 doğruladı): **190** üç boyut da boş · **96** kısmi · **3** üç boyut da dolu = **289**.
