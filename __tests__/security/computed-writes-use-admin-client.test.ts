@@ -157,12 +157,28 @@ describe("app/(app)/documents/actions.ts", () => {
     expect(src).not.toContain('supabase.from("evidence_files").insert(');
   });
 
-  test("the ownership check, storage upload, evidence_status update, and deleteEvidence all stay RLS-scoped", () => {
+  test("the ownership check, storage upload, and deleteEvidence all stay RLS-scoped", () => {
     expect(src).toContain("supabase.from(linkedTable).select(");
     expect(src).toContain('supabase.storage.from("evidence").upload(');
-    expect(src).toContain("supabase.from(linkedTable).update({ evidence_status:");
     expect(src).toContain('supabase.from("evidence_files").select("*")');
     expect(src).toContain('supabase.from("evidence_files").delete()');
+  });
+
+  // 2026-09-05 (docs/permissive-update-policy-sweep-2026-09-04.md §2): the evidence_status
+  // update moved from `supabase` to `admin` -- unlike evidence_files' own verification_status
+  // (guarded at row-creation time, no legitimate UPDATE path at all, see migration 0063's own
+  // header), these ten tables' evidence_status IS updated after row creation, by this exact
+  // call, on the caller's own RLS-scoped session -- which is precisely what let a student PATCH
+  // their own evidence_status straight to "verified" directly, bypassing this fixed-literal
+  // write entirely. The assertion above no longer covers this line; this file's own established
+  // convention for every other guarded table (a matching "uses admin" + "no write ... still
+  // uses the RLS-scoped client" pair) applies here too, not a special exception.
+  test("the evidence_status update uses admin, not supabase", () => {
+    expect(src).toContain('await admin.from(linkedTable).update({ evidence_status:');
+  });
+
+  test("no evidence_status write still uses the RLS-scoped client", () => {
+    expect(src).not.toMatch(/supabase\.from\(linkedTable\)\.update\(\{ evidence_status:/);
   });
 
   test("returns a clear error rather than throwing when the admin client is unavailable", () => {
@@ -172,6 +188,46 @@ describe("app/(app)/documents/actions.ts", () => {
     // matched here without pinning its exact position in the ternary, since that position
     // is an i18n implementation detail, not the security property this test exists to guard.
     expect(src).toMatch(/return \{ error: [^}]*Evidence upload is temporarily unavailable/);
+  });
+});
+
+// 2026-09-05 (docs/permissive-update-policy-sweep-2026-09-04.md §1): new to this file --
+// target_universities' 8 admission-outlook columns had no guard trigger and no admin-client
+// writer at all before today, unlike the five files above (all already paired with a guard
+// migration by the time this file was first written). See
+// __tests__/admissions/persist-write-uses-admin-client.test.ts for the behavioral proof (the
+// actual client-selection logic, mocked end to end); this block is the same fast text-pin
+// convention as every other describe block above, so a future edit that quietly reverts this
+// write back onto the request-scoped client fails immediately, without needing to run the
+// heavier behavioral test to notice.
+describe("lib/admissions/persist.ts", () => {
+  const src = read("lib/admissions/persist.ts");
+
+  test("imports tryCreateAdminClient", () => {
+    expect(src).toContain('import { tryCreateAdminClient } from "@/lib/supabase/admin";');
+  });
+
+  test("the target_universities outlook update uses a service-role-resolved client, not the request-scoped `supabase`", () => {
+    expect(src).toContain("const writeClient = client ?? tryCreateAdminClient();");
+    expect(src).toContain('await writeClient\n    .from("target_universities")\n    .update({');
+  });
+
+  test("no write to target_universities' outlook columns still uses the RLS-scoped `supabase` directly", () => {
+    expect(src).not.toMatch(/supabase\s*\n?\s*\.from\("target_universities"\)\s*\n?\s*\.update\(/);
+  });
+
+  test("every read (target_universities' own id lookup, profiles, profile_scores, university_statistics, universities, university_programs) stays on whichever client the caller resolved -- never a second, separate admin client of its own for reads", () => {
+    expect(src).toContain('supabase\n    .from("target_universities")\n    .select(');
+    expect(src).not.toMatch(/admin\.from\("profiles"\)/);
+    expect(src).not.toMatch(/admin\.from\("profile_scores"\)/);
+    expect(src).not.toMatch(/admin\.from\("university_statistics"\)/);
+    expect(src).not.toMatch(/admin\.from\("universities"\)/);
+    expect(src).not.toMatch(/admin\.from\("university_programs"\)/);
+  });
+
+  test("degrades with a log, not a throw, when no admin client is available and no explicit client was passed", () => {
+    expect(src).toContain("if (!writeClient) {");
+    expect(src).toContain("admin client unavailable");
   });
 });
 
