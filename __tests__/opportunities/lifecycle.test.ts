@@ -14,6 +14,7 @@ import {
   isOpportunityRecommendable,
   isOpportunitySufficientlyVerified,
   nonActionableOpportunityReason,
+  resolveDetailPageStanding,
   resolveStoredEligibility,
 } from "@/lib/opportunities/lifecycle";
 import type { Opportunity } from "@/types/database";
@@ -352,6 +353,43 @@ describe("resolveStoredEligibility", () => {
       const resolved = resolveStoredEligibility(row({ cycle_status: "closed" }), { eligible: true, notes: [{ code: "age_unknown" }] }, REFERENCE_DATE);
       expect(resolved.eligibilityGap).toBeNull();
     });
+  });
+});
+
+// 2026-09-05, the under_review-graveyard fix's second half: the opportunity detail page
+// (app/(app)/opportunities/[id]/page.tsx) only ever computed eligibility `if (match)` --
+// without a match row, `eligible`/`notActionable` defaulted to `true`/`false`, silently
+// treating ANY status as fine. A student reached via a real algorithmic match saw "Not open
+// right now" for a non-active opportunity; a student who saved the identical opportunity
+// directly via Browse saw nothing at all. resolveDetailPageStanding is the single function
+// both branches now go through.
+describe("resolveDetailPageStanding", () => {
+  test("with no match row, an active opportunity is eligible and actionable -- the ordinary case is unaffected", () => {
+    const standing = resolveDetailPageStanding(row({ cycle_status: "open", deadline: "2026-09-15" }), null, REFERENCE_DATE);
+    expect(standing).toEqual({ eligible: true, notActionable: false });
+  });
+
+  test("with no match row, a non-active opportunity is now correctly flagged not actionable -- THE FIX", () => {
+    const standing = resolveDetailPageStanding(row({ status: "under_review" }), null, REFERENCE_DATE);
+    expect(standing).toEqual({ eligible: false, notActionable: true });
+  });
+
+  test("with no match row, a closed-cycle opportunity is flagged not actionable the same way status is", () => {
+    const standing = resolveDetailPageStanding(row({ cycle_status: "closed", deadline: "2026-01-01" }), null, REFERENCE_DATE);
+    expect(standing).toEqual({ eligible: false, notActionable: true });
+  });
+
+  test("with a match row, defers entirely to the already-resolved eligibility -- unchanged behavior", () => {
+    const resolved = resolveStoredEligibility(row({ status: "under_review" }), { eligible: true, notes: [] }, REFERENCE_DATE);
+    const standing = resolveDetailPageStanding(row({ status: "under_review" }), resolved, REFERENCE_DATE);
+    expect(standing).toEqual({ eligible: resolved.eligible, notActionable: resolved.notActionable });
+    expect(standing).toEqual({ eligible: false, notActionable: true });
+  });
+
+  test("with a match row, a genuine per-student ineligibility on an otherwise-actionable opportunity still reads as ineligible, not not-actionable", () => {
+    const resolved = resolveStoredEligibility(row({ cycle_status: "open", deadline: "2026-09-15" }), { eligible: false, notes: [{ code: "country_unknown" }] }, REFERENCE_DATE);
+    const standing = resolveDetailPageStanding(row({ cycle_status: "open", deadline: "2026-09-15" }), resolved, REFERENCE_DATE);
+    expect(standing).toEqual({ eligible: false, notActionable: false });
   });
 });
 
