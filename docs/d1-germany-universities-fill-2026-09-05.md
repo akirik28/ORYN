@@ -838,3 +838,82 @@ values
 ```
 
 ---
+
+## 22. Universität Bremen
+
+`id = 'ed0ac709-8168-4165-a745-1b0696e851c8'` — QS rank 581. **Cycle-dependent policy: not
+established.**
+
+**Source actually used:** `https://www.uni-bremen.de/en/studies/orientation-application/
+applying-for-studies/applications-from-abroad/applications-non-eu` — official page, directly
+fetched.
+
+**Sixth confirmed uni-assist-member university this batch.** A genuinely useful, actionable
+planning detail confirmed directly: uni-assist processing takes at least 4 weeks, so Bremen
+recommends submitting well before the actual deadline -- 6 June for Winter Semester and 1
+December for Summer Semester, both roughly 5-6 weeks ahead of the likely 15 July / 15 January
+final deadlines seen elsewhere this batch. After the VPD, non-EU applicants submit through
+Bremen's own portal, moin.uni-bremen.de. Application and document processing at the university
+itself is free of charge (though uni-assist's own separate fee still applies).
+
+**What was checked and NOT found:** a specific German proficiency level (C1, per a general
+search, was not itself confirmed on the fetched page, which only states many applicants "do
+not yet have sufficient knowledge of German" and points to preparatory courses); the exact
+final (non-recommended) deadline date; admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('ed0ac709-8168-4165-a745-1b0696e851c8', 'international_requirement',
+   'Confirmed uni-assist VPD member for undergraduate programmes; uni-assist processing takes at least 4 weeks, so Bremen recommends applying by 6 June (Winter) / 1 December (Summer) well ahead of the final deadline; non-EU applicants then apply via Bremen''s own moin.uni-bremen.de portal; document processing at the university itself is free',
+   'Non-EU applicants to undergraduate programmes must obtain a preliminary review documentation (VPD) via uni-assist, submitting certified educational documents. Uni-assist processing takes at least 4 weeks, so Bremen recommends applying by 6 June for Winter Semester or 1 December for Summer Semester admission -- earlier than the likely final deadline, to leave processing time. After the VPD, non-EU applicants submit their application through Bremen''s own portal, moin.uni-bremen.de. Application and document processing at the University of Bremen itself is free of charge (uni-assist''s own separate processing fee still applies). Master''s programmes do not require a VPD and are applied to directly.',
+   true, 'high', 'https://www.uni-bremen.de/en/studies/orientation-application/applying-for-studies/applications-from-abroad/applications-non-eu', now()),
+  ('ed0ac709-8168-4165-a745-1b0696e851c8', 'language_proficiency',
+   'German language proficiency required for most programmes; a general search reports C1, not confirmed on the official page itself, which states many international applicants lack sufficient German and directs them to preparatory programmes',
+   'Many prospective international students reportedly "do not yet have sufficient knowledge of German to be able to study," per the official page, which directs them toward preparatory language study programmes rather than stating one fixed threshold outright. A general search separately reports C1 as the required level for most degree programmes, with international (English-taught) degree programmes being an exception -- neither the C1 figure nor the exception was independently confirmed by this session''s own fetch.',
+   true, 'medium', 'https://www.uni-bremen.de/en/studies/orientation-application/applying-for-studies/applications-from-abroad/applications-non-eu', now());
+```
+
+---
+
+## 23. Saarland University (Universität des Saarlandes)
+
+`id = '289b66cc-5367-46e2-940f-329ebfbf1f90'` — QS rank 588. **Cycle-dependent policy: NO** —
+the English-taught tracks are Winter-Semester-only, a structural fact not a cross-cycle
+variation.
+
+**Source actually used:** `https://www.uni-saarland.de/en/studies/international/undergraduate-
+degree.html` — official page, directly fetched.
+
+**Seventh confirmed uni-assist-member university this batch**, for non-EU/EEA applicants
+specifically; applicants with a German higher education entrance qualification (Abitur) skip
+uni-assist entirely and enroll the same way as German nationals.
+
+**A genuinely distinctive dual-track structure, confirmed directly:** Saarland runs two
+English-medium Bachelor's degrees -- Computer Science (English) and Cybersecurity (English) --
+with a completely SEPARATE application process run by the Saarland Informatics Campus (the CS
+department) rather than the university''s general international-admissions pathway. Applications
+open mid-November of the prior year, both start only in Winter Semester.
+
+**What was checked and NOT found:** a specific German-proficiency test/level for the standard
+German-taught pathway (the page names "German language proficiency" as a resource area without
+stating a specific threshold); the IELTS 6.5/TOEFL 95 figures for the English track, reported
+by a general search but not independently confirmed by direct fetch of the Informatics Campus
+page itself; admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('289b66cc-5367-46e2-940f-329ebfbf1f90', 'international_requirement',
+   'Non-EU/EEA applicants apply via uni-assist for the standard German-taught pathway; applicants with a German Abitur skip uni-assist entirely; two English-medium bachelor''s degrees (Computer Science, Cybersecurity) instead use a completely separate application process run by the Saarland Informatics Campus, applications opening mid-November of the prior year, Winter Semester start only',
+   'Non-EU/EEA applicants to standard (German-taught) programmes apply via uni-assist, confirmed directly on the official page. Applicants who already hold a German higher education entrance qualification (Abitur) apply and enroll the same way as German nationals, without uni-assist. Separately, Saarland offers two English-medium Bachelor''s degrees -- Computer Science (English) and Cybersecurity (English) -- with an entirely distinct application process managed by the Saarland Informatics Campus (the Department of Computer Science) rather than the general international-admissions office; applications for these open mid-November of the previous year, and both programmes start only in the Winter Semester.',
+   true, 'high', 'https://www.uni-saarland.de/en/studies/international/undergraduate-degree.html', now()),
+  ('289b66cc-5367-46e2-940f-329ebfbf1f90', 'language_proficiency',
+   'Standard German-taught pathway: German language proficiency required, specific level not confirmed; English-medium Computer Science/Cybersecurity tracks reportedly recommend a minimum IELTS 6.5 or TOEFL 95, not independently confirmed',
+   'The standard (German-taught) undergraduate pathway requires German language proficiency, named as a critical resource area on the official page without a stated specific test/level. For the separate English-medium Computer Science and Cybersecurity Bachelor''s programmes, a general search reports a recommended minimum of IELTS 6.5 or TOEFL 95, not independently confirmed by this session''s own fetch of the Saarland Informatics Campus''s own application-guide page.',
+   true, 'medium', 'https://www.uni-saarland.de/en/studies/international/undergraduate-degree.html', now());
+```
+
+---
