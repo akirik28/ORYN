@@ -986,3 +986,343 @@ state, distinct from permanently silent; should be rechecked closer to registrat
 6. IEO (rn=97) -- team-structured country model (citizen/resident of ~75 countries OR
    international student in a participating country) doesn't fit a flat list; needs a
    modeling decision.
+
+## Batch 3 results (rows 134-152) -- redispatched after the reset
+
+This agent went further than asked -- cross-checked most claims against raw HTML (curl)
+alongside the fetch tool, on its own initiative, in response to the "tool summary is not
+evidence" instruction.
+
+```
+ID: c2444f7f-e137-411d-9a14-c1ba8052e217
+TITLE: Brown University (RI, USA)
+STATUS: researched
+minimum_age: blank
+maximum_age: blank
+eligible_grades: blank
+eligible_countries: blank
+SOURCE_URL: https://precollege.brown.edu/programs (hub) + /pre-baccalaureate (verified sub-page)
+RETRIEVED: 2026-09-05
+QUOTE: "Explore our programs for high school students..."; Pre-Baccalaureate: "Rising or
+recently graduated High School Seniors, age 17 by June 14, 2026" (raw-HTML verified)
+CONFIDENCE: page_silent
+NOTES: *** FLAG FOR HUMAN DECISION *** -- hub links 8 distinct programs, each with different
+eligibility. Only Pre-Baccalaureate was independently verified. No single number honestly
+represents "Brown University" as a catalog row.
+
+ID: c35f002c-a4b2-4965-b07f-ba775eb0e31e
+TITLE: Wharton Sports Analytics and Business Initiative
+STATUS: researched
+minimum_age: 14
+maximum_age: 18
+eligible_grades: [9,10,11,12]
+eligible_countries: blank
+SOURCE_URL: https://wsb.wharton.upenn.edu/wharton-data-competition/rules/
+RETRIEVED: 2026-09-05
+QUOTE: "'High school' is typically secondary-level (no younger than 14, no older than 18 at
+the start of the competition)... e.g., generally 9th-12th grade in the United States."; "open
+to all current high school students"
+CONFIDENCE: explicit_stated
+NOTES: Verified via raw HTML. Grades 9-12 is explicitly the US EXAMPLE within a
+country-relative definition, other countries' equivalents accepted but not enumerated -- no
+formal country list. *** Same underlying competition as row 150 (cfb32772) -- see that row. ***
+
+ID: c3a16d0e-55d1-4dd7-9c5e-d930a83b0460
+TITLE: Kış Bilim Kampı
+STATUS: researched
+minimum_age: blank
+maximum_age: blank
+eligible_grades: [9,10,11,12] (inferred)
+eligible_countries: blank
+SOURCE_URL: https://www.acibadem.edu.tr/merkezler/asegem/egitim-programlari/akademik-gelisim-programlari/lise-kis-bilim-kampi
+RETRIEVED: 2026-09-05
+QUOTE: "Hedef Kitle Lise öğrencileri." (Target Audience: High school students.)
+CONFIDENCE: explicit_stated (for "lise" itself); [9,10,11,12] inferred, not literal
+NOTES: Same lise=9-12 inferred mapping as other Acıbadem/Sabancı/Galatasaray rows in this
+slice. No age or country restriction stated.
+
+ID: c406c406-41f7-4ef9-8599-d72cd3f53239
+TITLE: Hamilton Olympiad
+STATUS: researched
+minimum_age: blank
+maximum_age: blank
+eligible_grades: [9] (inferred -- see notes)
+eligible_countries: blank
+SOURCE_URL: https://ukmt.org.uk/intermediate-challenges/cayley-hamilton-maclaurin-olympiad-challenge
+RETRIEVED: 2026-09-05
+QUOTE: "Hamilton Maths Olympiad: England, Wales and Overseas: Year 10 Scotland: S3 Northern
+Ireland: Year 11."; "Entry... is by invitation based on a qualifying IMC score, or by
+discretionary entry."
+CONFIDENCE: explicit_stated (UK year facts); [9] is an inferred US-grade equivalent, not literal
+NOTES: *** FLAG *** invitation-only (qualifying score or discretionary entry), not open
+application -- changes what "eligibility" means here. [9] uses standard Year10=S3=NI-Year11
+≈ US Grade 9 (~age 14-15); a human may prefer the raw UK year-group text instead. "Overseas"
+is one of the three listed categories -- non-UK entrants accommodated, no specific list given.
+
+ID: c4e113c2-6e64-40d0-8251-0031ca86c64a
+TITLE: American University, Washington DC
+STATUS: researched
+minimum_age: blank
+maximum_age: blank
+eligible_grades: blank
+eligible_countries: blank
+SOURCE_URL: https://www.american.edu/summer/precollege/
+RETRIEVED: 2026-09-05
+QUOTE: "Community of Scholars: Designed for rising juniors and seniors"; "High School Summer
+Scholars: Rising sophomores, juniors, and seniors"; "Discover the World of Communication: open
+to students entering grades 9 through 12"; "Summer Civics Institute: for high school students"
+CONFIDENCE: page_silent
+NOTES: *** FLAG FOR HUMAN DECISION *** -- hub for 6+ distinct programs, no universal statement.
+Site is Cloudflare-protected, could not cross-verify via raw HTML the way most other rows were
+-- treat with slightly more caution. Batch's source_url (academic-calendar page) has zero
+eligibility content -- likely a data error, flagged as discrepancy.
+
+ID: c640746e-b7df-41df-88ca-31321a430d5b
+TITLE: Taiwan International Student Design Competition (TISDC)
+STATUS: researched
+minimum_age: blank
+maximum_age: 29
+eligible_grades: blank
+eligible_countries: blank
+SOURCE_URL: https://www.tisdc.org/en/rules/faq/
+RETRIEVED: 2026-09-05
+QUOTE: "Students who currently enroll at senior high schools or above... entrants must be born
+after April 27, 1996, and younger than 30 years of age... Fresh graduates... and new students...
+are also eligible."
+CONFIDENCE: explicit_stated
+NOTES: *** FLAG *** eligibility is "senior high school OR ABOVE" -- includes university
+students, broader than a 14-18 audience. max=29 is a reading of "younger than 30"; the real
+rule is a birth-date cutoff plus a maternity extension a single integer can't capture. Taiwan's
+"senior high school" (3-year track) doesn't map cleanly to a 9-12 array, left blank.
+
+ID: c6b985f9-1a40-4e8a-a2fb-63408263e66e
+TITLE: Stanley Prep for Educational Excellence
+STATUS: researched
+minimum_age: blank
+maximum_age: blank
+eligible_grades: [11,12]
+eligible_countries: blank
+SOURCE_URL: https://stanleyprep.com/united-nations-advanced-training/
+RETRIEVED: 2026-09-05
+QUOTE: "Eligibility... College students... OR Rising 11th & 12th graders. Minimum GPA: 3.5
+(unweighted)"; "TOEFL 90+ for non-US students (if applicable)"
+CONFIDENCE: explicit_stated
+NOTES: Two eligible tracks exist (college students; high schoolers) -- recorded grades reflect
+only the high-school track. TOEFL clause implies international students accommodated, no
+specific country list. Also requires 3.5 GPA, outside this schema.
+
+ID: c7223aea-7bb9-4b29-b59d-a054d7bfa02c
+TITLE: 67th London International Youth Science Forum (LIYSF) - 2026
+STATUS: researched
+minimum_age: 16
+maximum_age: 21
+eligible_grades: blank
+eligible_countries: blank
+SOURCE_URL: https://www.liysf.org.uk/liysf/experience-liysf
+RETRIEVED: 2026-09-05
+QUOTE: "Students aged 16-21 with a strong interest in STEM subjects from any country."
+CONFIDENCE: explicit_stated
+NOTES: "From any country" is explicit no-restriction language, left blank per schema.
+Caution: live page currently brands itself "LIYSF 2027"/"68th," mid-rollover between annual
+editions -- core rule (16-21, any country) reads stable, but this row's "67th/2026" framing
+may need a freshness check.
+
+ID: c83420f7-8d0d-48b4-9eee-3659fc39706e
+TITLE: iGEM High School Competition
+STATUS: researched
+minimum_age: 13
+maximum_age: blank
+eligible_grades: blank
+eligible_countries: blank
+SOURCE_URL: https://competition.igem.org/registration/team-roster
+RETRIEVED: 2026-09-05
+QUOTE: "All participants must be at least 13 years old as of March 31, 2026."; "High School
+Competition: All team members are high school students on March 31, 2026."
+CONFIDENCE: explicit_stated
+NOTES: *** OPERATIONAL FLAG *** competition.igem.org is a pure JS-rendered SPA -- curl and
+standard fetch both returned an empty shell; only a real browser render surfaced content. A
+naive fetch on this domain looks exactly like could_not_access when content is actually
+reachable -- worth noting for future research on this domain. Official /high-school page
+itself just says "COMING SOON" for 2026 -- age rule came from the registration/team-roster
+page instead. No country restriction found.
+
+ID: c996443d-7360-4197-850a-339ef959d585
+TITLE: Singularity AI Essay Contest
+STATUS: researched
+minimum_age: blank
+maximum_age: blank
+eligible_grades: [9,10,11,12]
+eligible_countries: blank
+SOURCE_URL: https://www.veritasai.com/singularity-ai-essay-contest
+RETRIEVED: 2026-09-05
+QUOTE: "Students enrolled in grades 9 to 12 as of May 31, 2026 are eligible to apply."; "open
+to students from all countries worldwide"
+CONFIDENCE: explicit_stated
+NOTES: Explicitly a GRADE fact, no age numbers anywhere -- min/max age correctly left blank.
+"All countries worldwide" explicit no-restriction, left blank per schema.
+
+ID: cb2e1b38-c154-4cc7-9186-bb1aa4e724a7
+TITLE: Stanford Summer Humanities Institute
+STATUS: researched
+minimum_age: 15
+maximum_age: 17
+eligible_grades: [10,11]
+eligible_countries: blank
+SOURCE_URL: https://summerhumanities.spcs.stanford.edu/admissions-humanities
+RETRIEVED: 2026-09-05
+QUOTE: "Students in grades 10-11... eligible... will be minors (younger than 18 years old)
+that are at least 15 years old during the program."; "Financial aid can be awarded to both
+domestic and international participants."
+CONFIDENCE: explicit_stated
+NOTES: Found on the admissions FAQ subpage (more specific than the official_url given).
+"Domestic and international" implies non-US accepted, not a formal country list.
+
+ID: cb4a1030-d035-4c1f-8579-37c458a88b0e
+TITLE: Blue Ocean Competition
+STATUS: researched
+minimum_age: blank
+maximum_age: blank
+eligible_grades: blank
+eligible_countries: blank
+SOURCE_URL: https://blueoceancompetition.org/
+RETRIEVED: 2026-09-05
+QUOTE: "attracts the very best high school-aged entrepreneurs from all over the world."
+CONFIDENCE: page_silent
+NOTES: Checked homepage, About x2, FAQ -- none states numeric age/grade. Country list
+(Ireland/Uganda/Italy/etc.) describes past participants, not a rule -- not encoded.
+
+ID: ccc1ff13-8673-4ba0-95fc-17050eee4306
+TITLE: Mathworks (Honors Summer Math Camp)
+STATUS: researched
+minimum_age: blank
+maximum_age: blank
+eligible_grades: blank
+eligible_countries: blank
+SOURCE_URL: https://www.txst.edu/mathworks/mathworks-camps/hsmc.html
+RETRIEVED: 2026-09-05
+QUOTE: "HSMC is a six-week, residential camp for high school students."
+CONFIDENCE: page_silent
+NOTES: Batch's source_url (a faculty CV page) is not an official program page -- data error,
+used official_url instead. Only "high school students" stated, no numbers. Country sentence
+(mostly US, some international students named) describes past participants, not a rule.
+
+ID: ce680bf5-d52a-444e-a7de-ed1789cfc6aa
+TITLE: Immerse Education Essay Competition
+STATUS: researched
+minimum_age: 13
+maximum_age: 18
+eligible_grades: blank
+eligible_countries: blank
+SOURCE_URL: https://www.immerse.education/essay-competition/
+RETRIEVED: 2026-09-05
+QUOTE: "Free for 13-18 year old students worldwide."; "students... will be 13-18 years old
+when the programmes for which the scholarships are valid begin."
+CONFIDENCE: explicit_stated
+NOTES: "Worldwide" explicit no-restriction, left blank per schema. Age measured against
+program start, not submission date -- a borderline 18-year-old could be ineligible if they
+turn 19 before the program starts; flagging since a flat "18" doesn't fully capture this.
+
+ID: ce7d618b-debf-4508-87e1-f6905540bf8d
+TITLE: University of California, Santa Barbara, CA, USA
+STATUS: researched
+minimum_age: blank
+maximum_age: blank
+eligible_grades: [9,10,11] (union of 2 sub-programs)
+eligible_countries: blank
+SOURCE_URL: https://summer.ucsb.edu/programs/research-mentorship-program/admissions +
+/summer-research-academies/admissions
+RETRIEVED: 2026-09-05
+QUOTE: RMP: "High school student in the 10th or 11th grade (outstanding 9th graders accepted
+on a case-by-case basis)"; SRA: "High school student in the 9th, 10th, or 11th grade"; both:
+"TOEFL/English language proficiency exam scores are NOT needed for International applicants."
+CONFIDENCE: explicit_stated
+NOTES: *** FLAG FOR HUMAN DECISION *** -- hub for exactly 2 programs. Both exclude
+12th-graders/seniors, both waive TOEFL for international applicants (implying no nationality
+restriction, no formal list given). [9,10,11] is a union; RMP's 9th-grade path is discretionary
+not standard -- a human may prefer two separate rows.
+
+ID: cf169cf4-a589-4743-a70f-e1efd28fbcd2
+TITLE: John Locke Institute (JLI) Courses
+STATUS: researched
+minimum_age: 12
+maximum_age: 19
+eligible_grades: blank
+eligible_countries: blank
+SOURCE_URL: https://www.johnlockeinstitute.com/jli-courses
+RETRIEVED: 2026-09-05
+QUOTE: "Our summer schools introduce students aged 12-19 to university-level courses..."
+CONFIDENCE: explicit_stated
+NOTES: Age statement found on /jli-courses subpage, not the homepage given. A "100 countries"
+quote on the homepage describes JLI's separate Global Essay Prize product, NOT this Courses
+row -- deliberately not used here to avoid attributing one product's stat to a different one.
+
+ID: cfb32772-6259-4e3a-9ead-bc289b463d08
+TITLE: Wharton Data Science Competition
+STATUS: researched
+minimum_age: 14
+maximum_age: 18
+eligible_grades: [9,10,11,12]
+eligible_countries: blank
+SOURCE_URL: https://wsb.wharton.upenn.edu/wharton-data-competition/rules/ (cross-referenced via
+https://globalyouth.wharton.upenn.edu/competitions/data-science/)
+RETRIEVED: 2026-09-05
+QUOTE: globalyouth page: "The Wharton High School Data Science Competition is a free...
+competition from the Wharton Sports Analytics and Business Initiative, supported by the
+Wharton Global Youth Program."; rules page: same "no younger than 14, no older than 18...
+generally 9th-12th grade in the United States" quote as row 135.
+CONFIDENCE: explicit_stated
+NOTES: *** FLAG FOR HUMAN DECISION, HIGH PRIORITY *** -- this row's official_url is a
+directory entry for the SAME "Wharton High School Data Science Competition" as row 135
+(c35f002c, wsb.wharton.upenn.edu). The globalyouth page only links to it, doesn't restate
+rules itself -- sourced from the same rules page used for row 135. Rows 135 and 150 may be
+DUPLICATE catalog entries for one real opportunity.
+
+ID: cfe42a66-3688-43aa-8e7e-61ffca68adb8
+TITLE: AwesomeMath Summer Program
+STATUS: researched
+minimum_age: 12
+maximum_age: 18
+eligible_grades: blank
+eligible_countries: blank
+SOURCE_URL: https://www.awesomemath.org/summer-program/overview/program-information/
+RETRIEVED: 2026-09-05
+QUOTE: "an intensive three-week online summer math camp for gifted middle and high school
+students ages 12-18 from around the globe."
+CONFIDENCE: explicit_stated
+NOTES: Age range explicit; grade given only as "middle and high school" (~7-12), not specific
+numbers, left blank. Note: page describes this as ONLINE -- if the catalog's existing
+description implies in-person, worth a freshness check.
+
+ID: d12506f1-d77e-49c2-9dc8-55fe610da9b0
+TITLE: Lehigh University
+STATUS: researched
+minimum_age: 14
+maximum_age: 17
+eligible_grades: [10,11,12]
+eligible_countries: blank
+SOURCE_URL: https://academicoutreach.lehigh.edu/pre-college-programs
+RETRIEVED: 2026-09-05
+QUOTE: "Open to rising 10th, 11th, and 12th graders. Participant must be 14-17 years old to
+participate."
+CONFIDENCE: explicit_stated
+NOTES: Single specific program page, no ambiguity. No country restriction found. Batch's
+source_url (global.lehigh.edu, general international-affairs site) confirmed unrelated to
+this program -- discrepancy noted.
+```
+
+### Six items flagged for human decision across batch 3, not research answers:
+1. Brown (134) and American University (138) -- both hub pages linking 6-8 distinct programs
+   each, no single honest value at this row's grain.
+2. UCSB (148) -- hub links 2 programs, merged as a union but blurs a real distinction (RMP's
+   9th-grade path is discretionary, SRA's isn't).
+3. **Rows 135 and 150 -- likely DUPLICATE catalog entries for the same real Wharton High
+   School Data Science Competition, found via cross-reference. Worth checking before
+   dispatching further research to either.**
+4. Hamilton Olympiad (137) -- invitation-only (qualifying score or discretionary entry), not
+   open application like the rest of the batch -- may not belong in an age/grade/country
+   "fit" catalog the same way.
+5. TISDC (139) -- eligibility extends to university students up to ~29, broader than this
+   catalog's 14-18 focus -- worth confirming it belongs at all.
+6. Inferred grade mappings on rows 136/137 (Turkish "lise", UK Year/S-levels) -- flagged as
+   inference per the rules, human/compiler should decide whether to keep converted numbers or
+   store raw source terms.
