@@ -6,134 +6,20 @@
 -- STATUS: WRITTEN, NOT APPLIED. Per instruction: SQL prepared, CEO/founder packages and applies.
 -- Do not run against the live project from here.
 --
--- Sections 1 and 3a write to columns that exist LIVE today (minimum_age, maximum_age,
--- eligible_grades, eligible_countries, country_eligibility_confirmed_open). Sections 2, 3b, and
--- 4 write to columns from migrations 0126/0129/0133, which are NOT yet applied live -- these
--- UPDATEs are no-ops until those migrations land (the WHERE clause matches nothing on a column
--- that doesn't exist... more precisely, they will simply fail with "column does not exist" if
--- run before 0126/0129/0133, exactly like 0129's own header describes for its dependency on
--- 0126 -- apply the three schema migrations FIRST, then this package, matching the founder's
--- own established two-step "migration, then data" pattern from Packages 14/15/16).
-
--- ============================================================================================
--- SECTION 1: age -- specific values found, live-writable today (minimum_age/maximum_age exist)
--- ============================================================================================
-
--- Student Science Training Program (UF SSTP) -- https://www.cpet.ufl.edu/students/uf-cpet-summer-programs/student-science-training-program/, 2026-09-05
--- "Students currently in the 11th grade and who will be 16 years old or older by the start of the program are eligible for UF SSTP."
-update public.opportunities set minimum_age = 16
-  where id = '142a6597-6083-45ba-b9ea-6b92e4a2ab55'::uuid and minimum_age is null and maximum_age is null;
-
--- RISD Pre-College (On-Campus) -- https://precollege.risd.edu/on-campus/application-information, 2026-09-05
--- "you must...be between 16 and 18 years old (born between July 31, 2007 and June 27, 2010)."
-update public.opportunities set minimum_age = 16, maximum_age = 18
-  where id = '5a583dbf-eca9-4219-b306-463f9704cf04'::uuid and minimum_age is null and maximum_age is null;
-
--- Yale Young Global Scholars -- https://globalscholars.yale.edu/eligibility, 2026-09-05
--- "Be between the ages of 16-18 years old by July 19, 2027 (first day of Session III)."
-update public.opportunities set minimum_age = 16, maximum_age = 18
-  where id = 'c3a98c43-dcfb-42cc-a23f-02a8a8154358'::uuid and minimum_age is null and maximum_age is null;
-
--- Barcelona International Youth Science Challenge (BIYSC) -- https://biysc.org/faq, 2026-09-05
--- "Being between 16 and 18 years old during the summer program."
-update public.opportunities set minimum_age = 16, maximum_age = 18
-  where id = 'd9b30fb9-aa85-48ca-ae1b-6c04c5ece736'::uuid and minimum_age is null and maximum_age is null;
-
--- Nuffield Research Placements -- https://nustem.uk/blog/news/nuffield-research-placements/, 2026-09-05
--- "Be over 16, in year 12 (or equivalent) and in full-time education in the UK."
--- CAVEAT: official source (nuffieldfoundation.org) defers to STEM Learning, which returned 403
--- on fetch -- this quote is a university-outreach page's (NUSTEM) reproduction of the official
--- wording, not the primary source read directly. Age part is unambiguous (a plain "over 16");
--- flagged in section 5 for the GRADE half of this same row, which is not (UK Year 12 mapping).
-update public.opportunities set minimum_age = 16
-  where id = 'a4c5a08a-f623-4c77-a55f-5782f395c6ec'::uuid and minimum_age is null and maximum_age is null;
-
--- ============================================================================================
--- SECTION 2: grade -- specific values found, live-writable today (eligible_grades exists)
--- ============================================================================================
-
--- University of Notre Dame Pre-College: Summer Scholars -- https://precollege.nd.edu/summer-scholars/eligibility-and-application-requirements/, 2026-09-05
--- "Current sophomores and juniors (will be rising juniors and seniors)."
-update public.opportunities set eligible_grades = array['10','11']
-  where id = '445f2003-1b9c-4cc9-bc63-22e65e7d8f85'::uuid and cardinality(eligible_grades) = 0;
-
--- Coca-Cola Scholars Program -- https://www.coca-colascholarsfoundation.org/apply/, 2026-09-05
--- "Currently enrolled high school...students...who will graduate high school during the 2026-
--- 2027 academic school year...[applicants may not be] High school graduates." -- i.e. current
--- graduating seniors only.
-update public.opportunities set eligible_grades = array['12']
-  where id = '690eba7f-0de9-4298-b746-c3456391b9b5'::uuid and cardinality(eligible_grades) = 0;
-
--- QuestBridge National College Match -- https://www.questbridge.org/apply-to-college/programs/national-college-match, 2026-09-05
--- "High School Seniors"; "high-achieving high school seniors from low-income backgrounds"
-update public.opportunities set eligible_grades = array['12']
-  where id = 'a2c63505-1481-4a1f-94cc-6ab86dc35405'::uuid and cardinality(eligible_grades) = 0;
-
+-- SECTIONS 1/2/3b (all rows touching a column already live today -- age/grade specific values,
+-- plus country_eligibility_confirmed_open since migration 0060) were split out per CEO's request
+-- into data/opportunity-96-today-writable-2026-09-05.sql -- run that one anytime, no migration
+-- needed. Sections 3c and 4 below write to columns from migrations 0126/0129/0133, not yet
+-- applied live -- apply those three migrations first, then this file, matching Packages
+-- 14/15/16's own two-step pattern.
+--
 -- ============================================================================================
 -- SECTION 3a: country -- specific values found, live-writable today (eligible_countries exists)
 -- ============================================================================================
--- None. Every country finding this pass was either CONFIRMED_NO_RESTRICTION (section 3b) or too
--- structurally complex for a flat allow-list (section 5: Breakthrough's sanctions exclusion,
--- Erasmus+'s tiered EU/associated-region rule, İstanbul Kent Konseyi's city-not-country scope).
-
--- ============================================================================================
--- SECTION 3b: country_eligibility_confirmed_open -- LIVE column (0060, already applied), but
--- per instruction not written from here regardless -- staged exactly like everything else.
--- 21 rows: a clean, explicit "no restriction" statement found on the official page.
--- ============================================================================================
-
--- Student Science Training Program -- https://www.cpet.ufl.edu/students/uf-cpet-summer-programs/student-science-training-program/, 2026-09-05 -- "Non-Florida and international students may apply for UF SSTP."
-update public.opportunities set country_eligibility_confirmed_open = true where id = '142a6597-6083-45ba-b9ea-6b92e4a2ab55'::uuid and cardinality(eligible_countries) = 0;
--- Dive Into Engineering! -- https://precollege.usc.edu/summer-programs/international-participants/, 2026-09-05 -- "USC Summer Programs welcomes international participants from all over the world."
-update public.opportunities set country_eligibility_confirmed_open = true where id = '16b3d6ae-dfcf-4ac7-b1c8-4a038e552bec'::uuid and cardinality(eligible_countries) = 0;
--- Conrad Challenge -- https://conrad.spacecenter.org/the-challenge/rules-and-regulations/, 2026-09-05 -- "The competition is open to international participants."
-update public.opportunities set country_eligibility_confirmed_open = true where id = '1f7b2e52-1900-4953-8271-63224c9e1fc0'::uuid and cardinality(eligible_countries) = 0;
--- The Diamond Challenge -- https://diamondchallenge.org/competition/, 2026-09-05 -- "Any Idea, Any Team, Any Country"
-update public.opportunities set country_eligibility_confirmed_open = true where id = '30a605ab-8c51-4f06-9e66-60cc7347c5df'::uuid and cardinality(eligible_countries) = 0;
--- Tufts Pre-College Programs -- https://universitycollege.tufts.edu/pre-college/registration/frequently-asked-questions, 2026-09-05 -- "Tufts Pre-College welcomes international students in all of its programs."
-update public.opportunities set country_eligibility_confirmed_open = true where id = '310c976c-1a0f-4566-8df2-2e186c898804'::uuid and cardinality(eligible_countries) = 0;
--- NYC Commuter Summer (Columbia) -- https://precollege.sps.columbia.edu/admissions/applying-pre-college-programs, 2026-09-05 -- "domestic and international students are invited to apply"
-update public.opportunities set country_eligibility_confirmed_open = true where id = '3318dba7-e099-4de2-83db-f27d6697f1be'::uuid and cardinality(eligible_countries) = 0;
--- USC Pre-College Summer Programs -- https://precollege.usc.edu/summer-programs/international-participants/, 2026-09-05 -- "welcomes international participants from all over the world."
-update public.opportunities set country_eligibility_confirmed_open = true where id = '4a54159a-58dd-4304-a139-2b76f2a9fe38'::uuid and cardinality(eligible_countries) = 0;
--- NSLC Business & Entrepreneurship -- https://www.nslcleaders.org/international-students/, 2026-09-05 -- "we are proud to welcome students from around the world every year." (spot-checked, verbatim match)
-update public.opportunities set country_eligibility_confirmed_open = true where id = '60184ec3-449b-40ec-bd94-365c115ce612'::uuid and cardinality(eligible_countries) = 0;
--- International Journal of High School Research (IJHSR) -- https://ijhsr.terrajournals.org/submissions.html, 2026-09-05 -- "from any country may submit"
-update public.opportunities set country_eligibility_confirmed_open = true where id = '61558e02-0b11-4221-bbbb-fc98bc765da8'::uuid and cardinality(eligible_countries) = 0;
--- International Philosophy Olympiad (IPO) -- https://www.philosophy-olympiad.org/?page_id=2, 2026-09-05 -- "open to pupils from every country in the world"
-update public.opportunities set country_eligibility_confirmed_open = true where id = '838a79c1-151c-4aef-9622-42db328debb4'::uuid and cardinality(eligible_countries) = 0;
--- Case Western Reserve University Online Pre-College Program -- https://case.precollegeprograms.org/frequently-asked-questions, 2026-09-05 -- "international students...welcome to apply" (spot-check attempted, page unreachable this session; content already independently corroborated by 4 clean matches elsewhere in this batch's pipeline)
-update public.opportunities set country_eligibility_confirmed_open = true where id = '8ff9158a-476a-4f7a-ac5a-de4553dd4d28'::uuid and cardinality(eligible_countries) = 0;
--- Canada/USA Mathcamp -- https://www.mathcamp.org/admission/international/, 2026-09-05 -- "welcomes applications from around the world!"
-update public.opportunities set country_eligibility_confirmed_open = true where id = 'a0571b4a-8d05-4fe1-bb6b-790b1fed786f'::uuid and cardinality(eligible_countries) = 0;
--- Summer Science Program (SSP) -- https://ssp.org/application/, 2026-09-05 -- international applicants are a fully supported standard category with their own deadline and need-blind aid
-update public.opportunities set country_eligibility_confirmed_open = true where id = 'ae174625-5ad8-41b7-9c9a-7f00710c168a'::uuid and cardinality(eligible_countries) = 0;
--- Vanderbilt PTY (VSI) -- https://pty.vanderbilt.edu/vsi/, 2026-09-05 -- "VSI welcomes international applicants." (a funding-only limitation exists separately)
-update public.opportunities set country_eligibility_confirmed_open = true where id = 'b23c2cf0-3c44-40f8-8b0b-67315a066c9f'::uuid and cardinality(eligible_countries) = 0;
--- International Public Policy Forum (IPPF) -- https://www.ippfdebate.com/, 2026-09-05 -- "open to all high school students worldwide." (independently re-verified; corroborates a pre-existing confirmed_open flag)
-update public.opportunities set country_eligibility_confirmed_open = true where id = 'bc303473-ba94-41e4-9b3d-038804858a8c'::uuid and cardinality(eligible_countries) = 0;
--- Pioneer Research Institute -- https://pioneeracademics.com/frequently-asked-questions/, 2026-09-05 -- "from around the world...are encouraged to apply"; alumni from 91 countries (independently re-verified; corroborates a pre-existing confirmed_open flag)
-update public.opportunities set country_eligibility_confirmed_open = true where id = 'bdc4bdb5-5893-4e05-bf9c-e520d7da2817'::uuid and cardinality(eligible_countries) = 0;
--- Wharton Global Youth Program: Leadership in the Business World (LBW) -- https://globalyouth.wharton.upenn.edu/programs-courses/leadership-in-the-business-world/, 2026-09-05 -- "International applicants are welcome."
-update public.opportunities set country_eligibility_confirmed_open = true where id = 'c033f1e9-4642-4a5a-94da-739efadff477'::uuid and cardinality(eligible_countries) = 0;
--- Yale Young Global Scholars -- https://globalscholars.yale.edu/eligibility, 2026-09-05 -- "accepts applications from ALL countries" (spot-checked, verbatim match; independently re-verified, corroborates a pre-existing confirmed_open flag)
-update public.opportunities set country_eligibility_confirmed_open = true where id = 'c3a98c43-dcfb-42cc-a23f-02a8a8154358'::uuid and cardinality(eligible_countries) = 0;
--- The Harvard Crimson Global Essay Competition -- https://www.essaycomp.org/competition-structure-and-dates, 2026-09-05 -- "Open to students aged 10-18 worldwide."
-update public.opportunities set country_eligibility_confirmed_open = true where id = 'c582f1d9-ec28-4335-acd0-4140893dd23f'::uuid and cardinality(eligible_countries) = 0;
--- Tisch Summer High School -- https://tisch.nyu.edu/special-programs/high-school-programs/tisch-summer-high-school.html, 2026-09-05 -- "open to...students...from around the world."
-update public.opportunities set country_eligibility_confirmed_open = true where id = 'd50285d3-87ea-4f9e-a557-92b2af314c9a'::uuid and cardinality(eligible_countries) = 0;
--- The Blackstone Law Review Competition, Junior Division -- https://www.theblackstonereview.org/, 2026-09-05 -- "Students worldwide"
-update public.opportunities set country_eligibility_confirmed_open = true where id = 'e6bdef3f-0a99-4eb0-872f-20ffe40416c6'::uuid and cardinality(eligible_countries) = 0;
--- Iowa Young Writers' Studio -- https://iyws.program.uiowa.edu/how-to-apply/summer-residential-program, 2026-09-05 -- "We welcome applications from students outside the United States."
-update public.opportunities set country_eligibility_confirmed_open = true where id = 'f3487103-c08f-4d56-8ec1-01f93a7eac94'::uuid and cardinality(eligible_countries) = 0;
-
--- Garcia Summer Research Program -- https://www.stonybrook.edu/garcia/summer-program/eligibility.html, 2026-09-05
--- "We accept international students, but the Garcia program cannot support visa applications.
--- If you already possess documents to be legally present in the US...you are eligible to apply."
--- Nationality itself is NOT restricted -- this is a visa-logistics caveat, not a country gate --
--- so confirmed_open is the right shape, but the caveat is worth carrying forward in whatever UI
--- surfaces this (a genuinely different flavor of "open" than the 21 rows above it).
-update public.opportunities set country_eligibility_confirmed_open = true where id = 'a37fa810-d142-4c07-b272-b3d58a6e6ea5'::uuid and cardinality(eligible_countries) = 0;
+-- None. Every country finding this pass was either CONFIRMED_NO_RESTRICTION (moved to the
+-- today-writable file) or too structurally complex for a flat allow-list -- those go to free
+-- text instead, section 6 below, per CEO's rule: "if the schema can't express a restriction,
+-- don't write a guessed encoding -- write the truth to free text."
 
 -- ============================================================================================
 -- SECTION 3c: age_eligibility_confirmed_open / grade_eligibility_confirmed_open (0126) --
@@ -172,13 +58,9 @@ update public.opportunities set grade_eligibility_confirmed_open = true where id
 
 -- ============================================================================================
 -- SECTION 4: checked_not_stated -- staged for migrations 0129 (age/grade) and 0133 (country).
--- 103 rows across all three dimensions -- every one genuinely read via a real page fetch today.
--- ============================================================================================
-
--- SECTION 4: checked_not_stated backfill, staged for migrations 0129 (age/grade) and 0133
--- (country) once applied. Every row below was genuinely read by a real page fetch today --
+-- 104 rows across all three dimensions -- every one genuinely read via a real page fetch today.
 -- 'not_researched' (the current default) would misrepresent these as never looked at.
--- One UPDATE per (row, dimension); id/title/source/date in the comment above each line.
+-- ============================================================================================
 
 -- --- age (37 rows) ---
 -- Aggie STEM Overnight Camp | https://aggiestem.tamu.edu/overnight-camp/ | 2026-09-05
@@ -392,36 +274,69 @@ update public.opportunities set country_eligibility_basis = 'checked_not_stated'
 -- İBB Genç Gönüllü Programı | https://gencgonullu.ibb.istanbul/ | 2026-09-05
 update public.opportunities set country_eligibility_basis = 'checked_not_stated' where id = 'ae702f36-4442-4979-a65f-4af78f6c1b2e'::uuid and country_eligibility_basis = 'not_researched';
 
+-- Stockholm Junior Water Prize, GRADE -- https://dsi.gov.tr/Haber/Detay/16801, 2026-09-05
+-- Reclassified from an original FOUND: the Turkish source repeats the already-known age range
+-- (15-20) and says "lise öğrencileri" (high school students) but names no specific grade number
+-- -- a real page read, genuinely uninformative on grade specifically, not a schema-gap case
+-- like section 6 below.
+update public.opportunities set grade_eligibility_basis = 'checked_not_stated' where id = '17aeb772-5ee4-4448-a4af-36cb508ab305'::uuid and grade_eligibility_basis = 'not_researched';
+
 -- ============================================================================================
--- SECTION 5: FLAGGED -- NOT written above, needs a decision before any SQL is added for these.
--- Full reasoning and the exact quotes are in docs/opportunity-96-partial-eligibility-2026-09-05.md.
+-- SECTION 6: free-text restrictions -- CEO's rule, applied: "if the schema can't express a
+-- restriction, don't write a guessed encoding -- write the truth to free text." These 4 country/
+-- residency findings don't reduce to a flat eligible_countries list or a clean confirmed-open
+-- flag, but citizenship_restrictions/residency_restrictions (migration 0008/0047) already exist,
+-- are already read by lib/counselor/eligibility.ts, and are already surfaced to the student as
+-- an advisory note -- exactly the mechanism this rule calls for. Live-writable today (both
+-- columns already exist), staged here anyway per instruction not to write live from this pass.
+-- ============================================================================================
+
+-- Breakthrough Junior Challenge -- https://breakthroughjuniorchallenge.org/rules, 2026-09-05
+-- Sanctions-list-based, not a stable country name -- would silently go stale the day OFAC's own
+-- list changes, exactly the "freshness field that always says fresh" class flagged elsewhere today.
+update public.opportunities set residency_restrictions = 'Not eligible if you reside in any country or region subject to comprehensive U.S. economic sanctions, or are otherwise a person U.S. persons cannot transact with under U.S. law.'
+  where id = '0412d94f-8b28-4f37-933c-cf6198914c12'::uuid and cardinality(eligible_countries) = 0 and residency_restrictions is null;
+
+-- İstanbul Kent Konseyi Gençlik Meclisi -- https://istanbulkentkonseyi.org.tr/genclik-meclisi/, 2026-09-05
+-- A CITY requirement, not a country one -- "Turkey" would read as true but wrongly admit a
+-- student living anywhere else in the country.
+update public.opportunities set residency_restrictions = 'Open to youth aged 16-29 living in Istanbul specifically (not all of Turkey).'
+  where id = '4d2e55b3-8e5d-431b-8d5c-d8b3bbad2dbc'::uuid and cardinality(eligible_countries) = 0 and residency_restrictions is null;
+
+-- Erasmus+ Youth Exchanges -- https://erasmus-plus.ec.europa.eu/programme-guide/part-b/key-action-1/youth-exchanges, 2026-09-05
+-- A tiered EU/associated/neighboring-region rule, not a flat list.
+update public.opportunities set residency_restrictions = 'Participating organisations must be established in an EU Member State, a non-EU country associated to the Erasmus+ Programme, or a non-associated third country neighbouring the EU (Programme Guide regions 1-4) -- not open by simple country name.'
+  where id = 'eeb768c4-606a-4d28-91cf-a4a6a7693949'::uuid and cardinality(eligible_countries) = 0 and residency_restrictions is null;
+
+-- International Physics Olympiad (IPhO) -- https://www.ipho-new.org/statutes-syllabus/, 2026-09-05 (spot-checked, verbatim match)
+-- The actual eligibility gate is whether a student's own country fields a national team (an
+-- organizing-committee-level invitation system), not a per-student country allow-list.
+update public.opportunities set residency_restrictions = 'Participation is by national team, selected per country -- a student''s real eligibility depends on whether their country has an established IPhO delegation, not a simple list of eligible countries.'
+  where id = '96a185f3-09e9-41db-b568-613d512d0e08'::uuid and cardinality(eligible_countries) = 0 and residency_restrictions is null;
+
+-- ============================================================================================
+-- SECTION 7: FLAGGED -- NOT written above, needs a decision before any SQL is added for these.
+-- Full reasoning in docs/opportunity-96-partial-eligibility-findings-2026-09-05.md.
+--
+-- All 4 remaining items are AGE or GRADE restrictions too complex for the structured columns --
+-- the same shape section 6 just resolved for country. The difference: country/citizenship has a
+-- free-text fallback already wired into eligibility.ts (citizenship_restrictions/
+-- residency_restrictions, migration 0008/0047); AGE and GRADE have no equivalent column at all.
+-- Applying CEO's own rule consistently means NOT reusing `description` (a different field, for a
+-- different purpose) as an improvised substitute -- that would be the same "guessed encoding"
+-- the rule warns against, just at the schema level instead of the value level. Real question for
+-- CEO: add `age_restrictions`/`grade_restrictions` text columns mirroring 0047's own pattern
+-- exactly (a migration, a number needed), or leave these 4 flagged until such a column exists?
 -- ============================================================================================
 -- 1. Wharton Global HS Investment Competition, AGE (2e2f995a) -- "at least 16" applies to the
 --    team LEADER role only, not every applicant -- writing minimum_age=16 would incorrectly
 --    gate every team member.
 -- 2. Millfield Sixth Form Scholarships, GRADE (5d67ce2b) -- source names "Year 9 or the Lower
 --    Sixth" together; this specific opportunity is the Sixth Form scholarship, so likely only
---    "Lower Sixth" applies -- and that's a UK Year value needing a conversion decision (see #6).
--- 3. Breakthrough Junior Challenge, COUNTRY (0412d94f) -- eligibility is "everyone except
---    countries/individuals under comprehensive US sanctions" -- an exclusion list keyed to a
---    changing OFAC list, not a stable allow-list; doesn't fit eligible_countries or
---    confirmed_open cleanly either (a real restriction exists, just not a country-name one).
--- 4. İstanbul Kent Konseyi Gençlik Meclisi, COUNTRY (4d2e55b3) -- the real requirement is CITY
---    residency (Istanbul), narrower than any country value could represent; writing "Turkey"
---    would be true but misleadingly broad.
--- 5. Erasmus+ Youth Exchanges, COUNTRY (eeb768c4) -- a tiered EU-member/associated-third-country/
---    neighboring-region rule, not a flat list -- would need real geographic research to enumerate
---    correctly per region, not a mechanical extraction from this pass.
--- 6. UK/non-US grade-system conversion (Millfield above, Nuffield's "year 12", Blackstone's
---    "Year 12-13 UK, or high school juniors/seniors internationally") -- this codebase's
---    eligible_grades convention was confirmed as plain numeric-grade strings ("9".."12") from
---    existing live rows, but no prior art was found for how a UK Year should map onto that
---    scale -- flagging the convention question once rather than guessing per-row and risking a
---    silent, systematic off-by-one across every UK program this fill (and future ones) touches.
--- 7. IPhO, COUNTRY (96a185f3) -- the actual rule is about which countries the ORGANIZING
---    COMMITTEE may invite/exclude (a national-team selection system), not a per-student country
---    allow-list -- a student's real eligibility depends on whether their country fields a team,
---    which this text doesn't resolve either way.
--- 8. Stockholm Junior Water Prize, GRADE (17aeb772) -- Turkish source repeats the already-known
---    age range (15-20) and says "lise öğrencileri" (high school students) but names no specific
---    grade numbers -- too vague to write a specific eligible_grades value from.
+--    "Lower Sixth" applies -- and that's a UK Year value with nowhere structured to go anyway.
+-- 3. Nuffield Research Placements, GRADE (a4c5a08a) -- "in year 12 (or equivalent)" -- the AGE
+--    half of this same row (over 16) is written in the today-writable file; this half is not.
+-- 4. The Blackstone Law Review Competition, Junior Division, GRADE (e6bdef3f) -- "typically Year
+--    12-13 in the UK, or high school juniors and seniors internationally" -- two systems named
+--    together, neither reducible to this codebase's numeric eligible_grades convention without
+--    inventing a conversion the source itself never states.
