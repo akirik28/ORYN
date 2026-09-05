@@ -7,7 +7,7 @@ import { resolveLocale } from "@/lib/i18n/locale";
 import { refreshAdmissionOutlook } from "@/lib/admissions/persist";
 import { logEvent } from "@/lib/analytics/log";
 import { canonicalUniversityId, loadSupersessionMap, getSupersededUniversityIds } from "@/lib/universities/canonical";
-import { getAllResolvedTuitionAmounts, getAllQsListPositions, getAllResearchDepthUniversityIds } from "@/lib/universities/queries";
+import { getAllResolvedTuitionAmounts, getAllQsListPositions, getAllResearchDepthUniversityIds, getAllSubstantiveContentUniversityIds } from "@/lib/universities/queries";
 import { categorizeAndDedupeResearchTopics } from "@/lib/universities/research-taxonomy";
 import {
   loadUniversityBrowsePage,
@@ -134,19 +134,21 @@ export async function loadMoreUniversities(
     const supersededIds = getSupersededUniversityIds(supersessionMap);
     const needsQsRankMap = !params.q && (params.sort === "ranking" || params.rank !== null);
     // depthIds fetched unconditionally, matching page.tsx's first-page load: it feeds the
-    // "Detailed profile" card badge on every scrolled-in batch too, not just a
-    // detailedOnly-filtered one.
-    const [costMap, qsRankMap, depthIds] = await Promise.all([
+    // "Researched" card badge on every scrolled-in batch too, not just a detailedOnly-filtered
+    // one. substantiveIds is the filter's own stricter signal, only fetched when needed —
+    // same conditional shape as qsRankMap.
+    const [costMap, qsRankMap, depthIds, substantiveIds] = await Promise.all([
       params.cost.length > 0 ? getAllResolvedTuitionAmounts(supabase) : Promise.resolve(null),
       needsQsRankMap ? getAllQsListPositions(supabase) : Promise.resolve(null),
       getAllResearchDepthUniversityIds(supabase),
+      params.detailedOnly ? getAllSubstantiveContentUniversityIds(supabase) : Promise.resolve(undefined),
     ]);
 
     const result = await loadUniversityBrowsePage(
       supabase,
       { ...params, page },
       supersededIds,
-      { costMap: costMap ?? undefined, qsRankMap: qsRankMap ?? undefined, depthIds }
+      { costMap: costMap ?? undefined, qsRankMap: qsRankMap ?? undefined, substantiveIds }
     );
 
     const [meta, targetsRes] = await Promise.all([

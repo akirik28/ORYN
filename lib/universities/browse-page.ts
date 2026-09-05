@@ -63,7 +63,7 @@ export async function loadUniversityBrowsePage(
   supabase: SupabaseClient<Database>,
   params: UniversityBrowseParams,
   supersededIds: readonly string[],
-  rangeData: { costMap?: Map<string, number>; qsRankMap?: Map<string, number>; depthIds?: Set<string> }
+  rangeData: { costMap?: Map<string, number>; qsRankMap?: Map<string, number>; substantiveIds?: Set<string> }
 ): Promise<UniversityBrowseResult> {
   const { q, scopedCountries, type, sort, cost, size, rank, detailedOnly, page } = params;
   const rangeFilters = { size, cost, rank, detailedOnly };

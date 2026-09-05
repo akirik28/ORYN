@@ -210,64 +210,88 @@ export async function getAllQsListPositions(supabase: SupabaseClient<Database>):
   return result;
 }
 
+type DepthTable = "university_programs" | "university_requirements" | "university_sources" | "university_statistics";
+
+/** Shared by getAllResearchDepthUniversityIds and getAllSubstantiveContentUniversityIds below
+ * — both are "every university_id with at least one row in table X", differing only in which
+ * tables they union. Paginated + exact-count-verified so neither silently truncates once a
+ * table crosses PostgREST's 1000-row cap. */
+async function allUniversityIdsForTable(supabase: SupabaseClient<Database>, table: DepthTable, callerName: string): Promise<Set<string>> {
+  const result = new Set<string>();
+  let offset = 0;
+  let expectedTotal: number | null = null;
+  let seen = 0;
+  for (;;) {
+    const { data, count, error } = await supabase
+      .from(table)
+      .select("university_id", { count: "exact" })
+      .order("university_id", { ascending: true })
+      .range(offset, offset + PAGE_SIZE - 1);
+    if (error) throw new Error(`${callerName}/${table}: ${error.message}`);
+    if (expectedTotal === null) expectedTotal = count ?? 0;
+    for (const row of data ?? []) result.add(row.university_id);
+    seen += (data ?? []).length;
+    if (!data || data.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+  if (seen !== expectedTotal) {
+    throw new Error(`${callerName}/${table}: assembled ${seen} rows but the server counts ${expectedTotal}. Refusing to return a partial result.`);
+  }
+  return result;
+}
+
 /**
  * University ids with real research depth — at least one row in programs, requirements,
  * sources, or statistics. See lib/universities/data-depth.ts's lacksResearchDepth, which
  * this is the bulk-list counterpart of: that function answers the question for one
  * university on its own detail page, this answers it for every university at once so the
- * browse page can filter/badge by it without an N-query loop.
+ * browse page can badge by it without an N-query loop.
  *
  * Deliberately the minority (this returns the ~285 well-researched ids, not the ~734
  * without) — CEO's own framing: a marker true for 72% of rows is noise, not information.
- * Every caller of this function is checking "is this one of the researched ones", never
- * the inverse.
  *
- * Four separate paginated reads, unioned, rather than one join: each table is one row (or
- * a few) per university and independently sparse, so a LEFT JOIN across all four would
- * fan out a university with, say, 3 programs AND 2 requirements into 6 rows needing its
- * own dedup step anyway — four flat id lists deduped into one Set by construction is
- * simpler, and the four reads run in parallel. Same paginate + exact-count-verify
- * discipline as getAllCostOfAttendance/getAllQsListPositions for the same reason: none of
- * these four tables are near PostgREST's 1000-row cap today (the largest, sources, is
- * under 200), but built paginated from the start rather than waiting to silently truncate
- * once one of them crosses it.
+ * **Badge signal only as of 2026-09-05 — no longer what the "Detailed profiles only" filter
+ * checks.** A card badge is a label ("some research exists on this one"), not a promise, so
+ * the loose four-table union is the right bar for it. The filter is a request ("show me
+ * profiles worth reading"), which CEO ruled needs a stricter bar: measured live, 315
+ * universities passed this check, and 160 of those (50.8%) — Universidade de Sao Paulo, UC
+ * Santa Cruz, Iowa State, and 157 more — had zero programs and zero requirements, nothing but
+ * a bare source citation or an empty statistics row. See getAllSubstantiveContentUniversityIds
+ * below, which the filter uses instead.
  */
 export async function getAllResearchDepthUniversityIds(supabase: SupabaseClient<Database>): Promise<Set<string>> {
-  async function allUniversityIds(
-    table: "university_programs" | "university_requirements" | "university_sources" | "university_statistics"
-  ): Promise<Set<string>> {
-    const result = new Set<string>();
-    let offset = 0;
-    let expectedTotal: number | null = null;
-    let seen = 0;
-    for (;;) {
-      const { data, count, error } = await supabase
-        .from(table)
-        .select("university_id", { count: "exact" })
-        .order("university_id", { ascending: true })
-        .range(offset, offset + PAGE_SIZE - 1);
-      if (error) throw new Error(`getAllResearchDepthUniversityIds/${table}: ${error.message}`);
-      if (expectedTotal === null) expectedTotal = count ?? 0;
-      for (const row of data ?? []) result.add(row.university_id);
-      seen += (data ?? []).length;
-      if (!data || data.length < PAGE_SIZE) break;
-      offset += PAGE_SIZE;
-    }
-    if (seen !== expectedTotal) {
-      throw new Error(`getAllResearchDepthUniversityIds/${table}: assembled ${seen} rows but the server counts ${expectedTotal}. Refusing to return a partial result.`);
-    }
-    return result;
-  }
-
   const [programs, requirements, sources, statistics] = await Promise.all([
-    allUniversityIds("university_programs"),
-    allUniversityIds("university_requirements"),
-    allUniversityIds("university_sources"),
-    allUniversityIds("university_statistics"),
+    allUniversityIdsForTable(supabase, "university_programs", "getAllResearchDepthUniversityIds"),
+    allUniversityIdsForTable(supabase, "university_requirements", "getAllResearchDepthUniversityIds"),
+    allUniversityIdsForTable(supabase, "university_sources", "getAllResearchDepthUniversityIds"),
+    allUniversityIdsForTable(supabase, "university_statistics", "getAllResearchDepthUniversityIds"),
   ]);
 
   const union = new Set<string>();
   for (const perTable of [programs, requirements, sources, statistics]) {
+    for (const id of perTable) union.add(id);
+  }
+  return union;
+}
+
+/**
+ * University ids with actual admission content on file — at least one row in
+ * `university_programs` OR `university_requirements`. This is what the "Detailed profiles
+ * only" browse filter (`detailedOnly`, lib/universities/filters.ts) checks against, not
+ * `getAllResearchDepthUniversityIds` above — deliberately narrower, and deliberately excludes
+ * a bare `university_sources` citation or a `university_statistics` row on its own from
+ * counting, since neither gives a student anything to actually read about admission. CEO,
+ * 2026-09-05: "the filter is an action, not a label — the student's problem isn't the name,
+ * it's the result."
+ */
+export async function getAllSubstantiveContentUniversityIds(supabase: SupabaseClient<Database>): Promise<Set<string>> {
+  const [programs, requirements] = await Promise.all([
+    allUniversityIdsForTable(supabase, "university_programs", "getAllSubstantiveContentUniversityIds"),
+    allUniversityIdsForTable(supabase, "university_requirements", "getAllSubstantiveContentUniversityIds"),
+  ]);
+
+  const union = new Set<string>();
+  for (const perTable of [programs, requirements]) {
     for (const id of perTable) union.add(id);
   }
   return union;
