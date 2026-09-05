@@ -1215,7 +1215,13 @@
       "heading": "Oturumlar",
       "empty": "Henüz geçmiş oturum yok.",
       "newConversationPlaceholder": "Yeni sohbet",
-      "loadFailed": "Bu oturum yüklenemedi. Tekrar dene."
+      "loadFailed": "Bu oturum yüklenemedi. Tekrar dene.",
+      "delete": "Sil",
+      "deleteLabel": "\"{title}\" oturumunu sil",
+      "deleteConfirmTitle": "Bu oturum silinsin mi?",
+      "deleteConfirmDescription": "\"{title}\" ve içindeki her şey kalıcı olarak silinecek. Bu işlem geri alınamaz.",
+      "deleteFailed": "Bu oturum silinemedi. Tekrar dene.",
+      "cancel": "Vazgeç"
     },
     "usageMeter": {
       "thisMonth": "Bu ay",

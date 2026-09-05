@@ -1215,7 +1215,13 @@
       "heading": "Sessions",
       "empty": "No past sessions yet.",
       "newConversationPlaceholder": "New conversation",
-      "loadFailed": "Couldn't load this session. Try again."
+      "loadFailed": "Couldn't load this session. Try again.",
+      "delete": "Delete",
+      "deleteLabel": "Delete \"{title}\"",
+      "deleteConfirmTitle": "Delete this session?",
+      "deleteConfirmDescription": "\"{title}\" and everything in it will be permanently deleted. This can't be undone.",
+      "deleteFailed": "Couldn't delete this session. Try again.",
+      "cancel": "Cancel"
     },
     "usageMeter": {
       "thisMonth": "This month",
