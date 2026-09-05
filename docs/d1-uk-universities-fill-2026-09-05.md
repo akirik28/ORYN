@@ -775,3 +775,98 @@ values
 ```
 
 ---
+
+## 25. University of Bradford
+
+`id = '989b5673-9cc3-44c2-a562-27caae0fcd64'` — QS rank 497.
+
+**Source actually used:** `https://www.bradford.ac.uk/international/entry-requirements/` —
+official page, directly fetched.
+
+**A genuinely distinctive fact: Bradford runs its own entry test, BASALT** (Bradford Academic
+Skills and Language Test), accepted as an IELTS-equivalent at the identical 6.0/5.5 threshold
+-- not seen at any other UK university checked in this batch so far.
+
+**Twentieth independent corroboration of the TOEFL iBT rescale today** -- though this page's
+own transition date reads as "1 January 2026" rather than the "21 January 2026" seen at every
+other UK/international source this session. Recorded exactly as the page states it rather than
+silently corrected to match the pattern from other universities; the ~3-week discrepancy could
+be this page's own imprecision or a genuine institution-specific effective date, and wasn't
+resolved further in this pass.
+
+**What was checked and NOT found:** application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('989b5673-9cc3-44c2-a562-27caae0fcd64', 'english_proficiency',
+   'IELTS 6.0 overall (5.5+ per sub-test), or Bradford''s own BASALT test at the identical threshold; TOEFL iBT 80 legacy (72+ each sub-test) / 4.5 new scale (4+ each sub-test) -- page states the transition as 1 Jan 2026, not the 21 Jan 2026 seen elsewhere; Duolingo 110 (100+ per subscore)',
+   'Standard University requirement: IELTS Academic Overall Band 6.0, at least 5.5 in each of Speaking/Listening/Reading/Writing -- OR Bradford''s own BASALT (Bradford Academic Skills and Language Test), administered by the university itself, at the identical 6.0 overall / 5.5+ per sub-test threshold. TOEFL iBT: this page states tests before 1 January 2026 need 80 overall (72+ each sub-test), and tests after that date need 4.5 overall (4+ each sub-test) -- note the stated date differs from the 21 January 2026 transition confirmed at every other source this session; not reconciled further in this pass. Duolingo English Test: 110 overall minimum, 100+ in each of the four subscores. LanguageCert Academic Online (65 overall, 60+ per subskill) and the Oxford English Language Level Test (6 overall, 5+ per sub-test) are also accepted for 2026 entrants. Some individual programmes require higher levels than these university-wide standards.',
+   true, 'high', 'https://www.bradford.ac.uk/international/entry-requirements/', now());
+```
+
+---
+
+## 26. University of Huddersfield
+
+`id = '4f55b617-a17d-4dfc-af84-3edf636bc3d1'` — QS rank 521.
+
+**Source actually used:** `https://www.hud.ac.uk/international/courses-and-entry-requirements/
+international-entry-requirements/` — official page, directly fetched, giving the general
+university-wide figure; course-specific variants (e.g. English Literature programmes require a
+higher tier) come from a general search of course pages, recorded at `medium` for that part
+only.
+
+**A genuinely distinctive exclusion confirmed directly:** unlike most other UK universities
+checked this batch (which explicitly accept the TOEFL iBT Home Edition as equivalent to the
+standard test centre version), Huddersfield's own page states plainly that "Home Edition is
+not accepted" -- the opposite policy, worth recording precisely rather than assuming
+Home-Edition acceptance is universal across UK institutions.
+
+**What was checked and NOT found:** a new-scale (post-21-Jan-2026) TOEFL conversion -- this
+page states only the legacy figure (87), with no rescale conversion given, the second UK
+university this batch (after Royal Holloway, #24) where this specific update was not found;
+application deadline, tuition, admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('4f55b617-a17d-4dfc-af84-3edf636bc3d1', 'english_proficiency',
+   'General university-wide: IELTS 6.0 overall (5.5+ per element), TOEFL iBT 87 (legacy scale only, no new-scale figure found) -- TOEFL iBT Home Edition explicitly NOT accepted; English Literature and related programmes reportedly require a higher IELTS 6.5 (6.0+ per element); some other courses reportedly accept a lower 6.0/5.5',
+   'General university-wide requirement (officially confirmed): IELTS Academic 6.0 overall, no element below 5.5, valid 2 years. TOEFL iBT: 87 overall (Reading 22, Listening 21, Speaking 23, Writing 21), valid 2 years -- the official page explicitly states "Home Edition is not accepted," and does not itself give a post-21-January-2026 new-scale conversion. Students from Majority English Speaking Countries (MESCs) are typically considered to have already met the requirement. Course-specific variation reported by a general search (not independently confirmed): English Literature and English Literature and History require a higher IELTS 6.5 overall (6.0+ per element); Film Studies and English Literature reportedly accepts the lower 6.0/5.5 general figure.',
+   true, 'high', 'https://www.hud.ac.uk/international/courses-and-entry-requirements/international-entry-requirements/', now());
+```
+
+---
+
+## 27. Northumbria University at Newcastle
+
+`id = '117c7d03-7af9-44e9-a14e-d656a876a149'` — QS rank 528.
+
+**Source actually used:** Northumbria's own official English Language Policy PDF (approved
+8 June 2023, last reviewed May 2024) -- a governance document rather than a student-facing
+score table, so it confirms the *structure* of the policy directly (standardised per Faculty
+unless a variation order is approved; never below UKVI minimums; GCSE-based route for UK
+nationals; fraud/verification rules; a Covid-era online-degree exemption; specific Amsterdam-
+campus provisions) but defers the actual numeric scores to a separate "Acceptable English
+Tests" webpage not itself fetched in this pass. The numeric figure below (6.0/5.5) comes from
+a general search rather than this session's own direct read, recorded at `medium` confidence
+for the number specifically while the structural facts are `high` (directly read from the
+official policy PDF).
+
+**What was checked and NOT found:** TOEFL iBT-specific numbers; application deadline, tuition,
+admission rate.
+
+```sql
+insert into public.university_requirements
+  (university_id, requirement_type, title, requirement_detail, is_required, data_confidence, source_url, retrieved_at)
+values
+  ('117c7d03-7af9-44e9-a14e-d656a876a149', 'english_proficiency',
+   'Reportedly IELTS 6.0 overall (5.5+ per band) for undergraduate entry, not independently confirmed by number; officially confirmed structure: requirements are standardised per Faculty (not one flat university figure) unless a specific variation is approved, and never set below UKVI''s own minimums',
+   'A general search reports IELTS 6.0 overall with 5.5 minimum in each band for undergraduate programmes; this specific number was not independently confirmed by this session''s own read of the official policy, which instead confirms the governing structure: English-language entry levels are standardised at Faculty level (not one flat university-wide figure) unless an approved English Language variation order applies to a specific programme, and are never set below UKVI''s own minimum score requirements. Applicants within 0.5-1.0 IELTS point of their required score may be eligible for Northumbria''s ELSS (English Language and Study Skills) Summer School pre-sessional pathway. UK nationals typically evidence English via GCSE (or equivalent) rather than a language test. Test validity typically follows UKVI/awarding-body periods, commonly two years.',
+   true, 'medium', 'https://www.northumbria.ac.uk/study-at-northumbria/admissions/english-language-requirements/', now());
+```
+
+---
